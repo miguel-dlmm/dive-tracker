@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { Plus, Trash2, Pencil, Check, X, Search } from "lucide-react";
+import { Plus, Pencil, Check, X, Search } from "lucide-react";
 import { NAVY, TEAL, DISPLAY_FONT } from "./App";
-import { inputCls, Select, Field, colorFor } from "./shared";
+import { inputCls, Select, Field, colorFor, DeleteButton } from "./shared";
 
 // schools / activities / paymentTypes: { rows: [...] } — de useSupabaseTable
 // rates / commissionRates: { rows, insertRow, updateRow, deleteRow }
@@ -65,7 +65,7 @@ export default function RatesTab({ schools, activities, paymentTypes, rates, com
         ))}
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
         <p className="mb-3 text-xs text-gray-400">
           {mode === "instructor"
             ? "Lo que cobras por impartir tú la actividad."
@@ -82,7 +82,7 @@ export default function RatesTab({ schools, activities, paymentTypes, rates, com
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
           <h3 className="text-sm font-bold" style={{ fontFamily: DISPLAY_FONT, color: NAVY }}>{filtered.length} tarifas</h3>
           <div className="relative w-32">
@@ -125,7 +125,7 @@ export default function RatesTab({ schools, activities, paymentTypes, rates, com
                 </div>
                 <div className="shrink-0 font-semibold" style={{ color: NAVY }}>{eur(r.rate)}</div>
                 <button onClick={() => startEdit(r)} className="shrink-0 text-gray-300 hover:text-gray-600"><Pencil size={15} /></button>
-                <button onClick={() => table.deleteRow(r.id)} className="shrink-0 text-gray-300 hover:text-red-500"><Trash2 size={15} /></button>
+                <DeleteButton onConfirm={() => table.deleteRow(r.id)} />
               </div>
             );
           })}

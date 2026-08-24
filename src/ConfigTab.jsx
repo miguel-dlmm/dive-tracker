@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { Plus, Trash2, Star, Pencil, Check, X, Search } from "lucide-react";
+import { Plus, Star, Pencil, Check, X, Search } from "lucide-react";
 import { NAVY, TEAL } from "./App";
+import { DeleteButton } from "./shared";
 
 const inputCls = "rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 transition-shadow";
 
@@ -160,7 +161,7 @@ function CrudTable({ title, table, pkField = "id", fields, hasDefault = false, s
                     </button>
                   )}
                   <button onClick={() => startEdit(row)} className="text-slate-300 hover:text-slate-600"><Pencil size={14} /></button>
-                  <button onClick={() => table.deleteRow(pk)} className="text-slate-300 hover:text-red-500"><Trash2 size={14} /></button>
+                  <DeleteButton onConfirm={() => table.deleteRow(pk)} size={14} />
                 </>
               )}
             </li>
