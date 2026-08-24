@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Plus, Pencil, Check, X } from "lucide-react";
 import { NAVY, CORAL, GREEN } from "./App";
-import { inputCls, formatMoney, Money, Field, Select, CurrencySearchSelect, colorFor, StatusPill, ListFilterBar, applyListFilters, DeleteButton } from "./shared";
+import { inputCls, formatMoney, Money, Field, Select, CurrencySearchSelect, colorFor, StatusPill, ListFilterBar, applyListFilters, DeleteButton, DatePicker, MoneyInput } from "./shared";
 
 // schools / activities / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates: { rows: [...] } — para filtrar actividades relevantes de cada escuela
@@ -59,7 +59,7 @@ export default function CompanerosTab({ schools, activities, paymentStatuses, cu
         <p className="mb-3 text-xs text-gray-400">Importe positivo si te paga a ti; negativo si le pagas tú a él/ella.</p>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           <Field label="Fecha">
-            <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={`${inputCls} w-full`} />
+            <DatePicker value={form.date} onChange={(v) => setForm({ ...form, date: v })} />
           </Field>
           <Field label="Escuela">
             <Select value={form.school} onChange={(v) => setForm({ ...form, school: v, activity: "" })} options={schoolNames} />
@@ -80,7 +80,7 @@ export default function CompanerosTab({ schools, activities, paymentStatuses, cu
             </datalist>
           </Field>
           <Field label="Importe (puede ser negativo)">
-            <input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className={`${inputCls} w-full`} placeholder="90 ó -30" />
+            <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
           </Field>
           <Field label="Moneda">
             <CurrencySearchSelect value={form.currency} onChange={(v) => setForm({ ...form, currency: v })} currencyRows={currencies.rows} />
@@ -116,11 +116,11 @@ export default function CompanerosTab({ schools, activities, paymentStatuses, cu
             if (isEditing) {
               return (
                 <div key={p.id} className="grid grid-cols-2 gap-2 px-4 py-3 sm:grid-cols-6">
-                  <input type="date" value={editForm.date} onChange={(ev) => setEditForm({ ...editForm, date: ev.target.value })} className={inputCls} />
+                  <DatePicker value={editForm.date} onChange={(v) => setEditForm({ ...editForm, date: v })} />
                   <Select value={editForm.school} onChange={(v) => setEditForm({ ...editForm, school: v })} options={schoolNames} />
                   <Select value={editForm.activity} onChange={(v) => setEditForm({ ...editForm, activity: v })} options={activitiesForSchool(editForm.school)} />
                   <input value={editForm.colleague_name} onChange={(ev) => setEditForm({ ...editForm, colleague_name: ev.target.value })} className={inputCls} />
-                  <input type="number" step="0.01" value={editForm.amount} onChange={(ev) => setEditForm({ ...editForm, amount: ev.target.value })} className={inputCls} />
+                  <MoneyInput value={editForm.amount} onChange={(v) => setEditForm({ ...editForm, amount: v })} />
                   <CurrencySearchSelect value={editForm.currency} onChange={(v) => setEditForm({ ...editForm, currency: v })} currencyRows={currencies.rows} />
                   <input value={editForm.notes} onChange={(ev) => setEditForm({ ...editForm, notes: ev.target.value })} placeholder="Notas" className={`${inputCls} col-span-2 sm:col-span-5`} />
                   <div className="flex items-center justify-end gap-2">
@@ -135,15 +135,15 @@ export default function CompanerosTab({ schools, activities, paymentStatuses, cu
             return (
               <div key={p.id} className="px-4 py-2.5 text-sm">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
+                  <div className="min-w-0 truncate">
                     <span className="font-medium text-gray-800">{p.colleague_name}</span>
                     <span className="text-gray-400"> · {p.school} · </span>
                     <span style={{ color: activityColor(p.activity) }}>{p.activity}</span>
-                    <div className="text-xs text-gray-400">{p.date}{p.notes && ` · ${p.notes}`}</div>
                   </div>
                   <StatusPill status={p.status} paymentStatusRows={paymentStatuses.rows} />
                 </div>
-                <div className="mt-1.5 flex items-center justify-end gap-3">
+                <div className="mt-0.5 truncate text-xs text-gray-400">{p.date}{p.notes && ` · ${p.notes}`}</div>
+                <div className="mt-1.5 flex flex-wrap items-center justify-end gap-2.5">
                   <span className="flex items-center font-semibold" style={{ color: positive ? GREEN : CORAL }}>
                     {positive ? "+" : "−"}
                     <Money amount={Math.abs(p.amount)} code={p.currency} currencyRows={currencies.rows} />

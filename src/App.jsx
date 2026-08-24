@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Waves, ListChecks, Wallet, BarChart3, Loader2, Handshake, Menu, X, Settings2, SlidersHorizontal, Users } from "lucide-react";
+import { Waves, Home as HomeIcon, ListChecks, BarChart3, Loader2, Handshake, Users } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
+import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
 import RatesTab from "./RatesTab";
@@ -10,34 +11,31 @@ import CompanerosTab from "./CompanerosTab";
 import SummaryTab from "./SummaryTab";
 
 // ---------------------------------------------------------------
-// Paleta — profesional y contenida: un único acento (teal apagado),
-// fondo neutro casi blanco, tinta oscura para texto. Coral/verde
-// se quedan solo para semántica (negativo/positivo, estados), no
-// como color decorativo de marca.
+// Paleta — profesional y contenida: un único acento neutro, fondo
+// casi blanco, tinta oscura para texto. Los colores de Registro y
+// Comisiones NO están aquí — vienen de la tabla nav_sections.
 // ---------------------------------------------------------------
-export const NAVY = "#0F172A";   // texto / tinta
-export const TEAL = "#0F766E";   // marca / acción principal (apagado, no neón)
-export const AQUA = "#0D9488";   // variante del acento, para el segundo KPI
-export const CORAL = "#C2542F";  // contraste cálido, uso semántico
-export const GREEN = "#15803D";  // positivo, uso semántico
+export const NAVY = "#0F172A";
+export const TEAL = "#0F766E";
+export const AQUA = "#0D9488";
+export const CORAL = "#C2542F";
+export const GREEN = "#15803D";
 export const SUN = "#B45309";
-export const BG = "#F7F8F8";     // fondo neutro, casi blanco
+export const BG = "#F7F8F8";
 
 export const DISPLAY_FONT = "'Inter', sans-serif";
 export const BODY_FONT = "'Inter', sans-serif";
 
+// Barra inferior: los 5 destinos que se usan a diario. Pagos, Tarifas y
+// Configuración ya no viven en un menú aparte — son accesos rápidos
+// dentro de Home, más "de app" que un overflow escondido.
 const PRIMARY_TABS = [
+  { id: "home", label: "Home", icon: HomeIcon },
   { id: "log", label: "Registro", icon: ListChecks },
   { id: "comisiones", label: "Comisiones", icon: Handshake },
-  { id: "payments", label: "Pagos", icon: Wallet },
+  { id: "colegas", label: "Compañeros", icon: Users },
   { id: "summary", label: "Resumen", icon: BarChart3 },
 ];
-const MORE_TABS = [
-  { id: "colegas", label: "Compañeros", icon: Users },
-  { id: "rates", label: "Tarifas", icon: Settings2 },
-  { id: "config", label: "Configuración", icon: SlidersHorizontal },
-];
-const ALL_TABS = [...PRIMARY_TABS, ...MORE_TABS];
 
 export default function App() {
   const schools = useSupabaseTable("schools", "name");
@@ -50,14 +48,18 @@ export default function App() {
   const worklog = useSupabaseTable("worklog", "date");
   const comisiones = useSupabaseTable("comisiones", "date");
   const colleaguePayments = useSupabaseTable("colleague_payments", "date");
+  const navSections = useSupabaseTable("nav_sections", "key", "key");
 
-  const [tab, setTab] = useState("log");
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [tab, setTab] = useState("home");
+
   const loaded = schools.loaded && activities.loaded && paymentTypes.loaded && paymentStatuses.loaded
     && currencies.loaded && rates.loaded && commissionRates.loaded && worklog.loaded
-    && comisiones.loaded && colleaguePayments.loaded;
+    && comisiones.loaded && colleaguePayments.loaded && navSections.loaded;
 
-  const isMoreActive = MORE_TABS.some((t) => t.id === tab);
+  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
+  // Pagos/Tarifas/Configuración son accesos secundarios (desde Home) —
+  // si estás en alguno, la barra inferior no resalta ninguno de sus 5 items.
+  const bottomTabActive = PRIMARY_TABS.some((t) => t.id === tab) ? tab : null;
 
   if (!loaded) {
     return (
@@ -73,83 +75,44 @@ export default function App() {
         <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-5 py-4">
           <Waves size={20} style={{ color: TEAL }} strokeWidth={2.2} />
           <div className="leading-tight">
-            <h1 className="text-[15px] font-bold tracking-tight" style={{ fontFamily: DISPLAY_FONT, color: NAVY }}>DiveFlow</h1>
+            <h1 className="text-[15px] font-bold tracking-tight" style={{ color: NAVY }}>Ocean Pulse</h1>
             <p className="text-[10.5px] font-medium text-gray-400">by Ocean Flow</p>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 pb-28 pt-5 sm:px-5">
-        {tab === "log" && <WorkLogTab schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} />}
-        {tab === "comisiones" && <ComisionesTab schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones} />}
+      <main className="mx-auto max-w-3xl px-4 pb-24 pt-5 sm:px-5">
+        {tab === "home" && <HomeTab worklog={worklog} rates={rates} activities={activities} schools={schools} currencies={currencies} navSections={navSections} onNavigate={setTab} />}
+        {tab === "log" && <WorkLogTab schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} accentColor={sectionColor("log")} />}
+        {tab === "comisiones" && <ComisionesTab schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones} accentColor={sectionColor("comisiones")} />}
         {tab === "payments" && <PaymentsTab schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} />}
         {tab === "colegas" && <CompanerosTab schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} colleaguePayments={colleaguePayments} />}
-        {tab === "rates" && <RatesTab schools={schools} activities={activities} paymentTypes={paymentTypes} rates={rates} commissionRates={commissionRates} />}
-        {tab === "config" && <ConfigTab schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} />}
-        {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
+        {tab === "rates" && <RatesTab schools={schools} activities={activities} paymentTypes={paymentTypes} currencies={currencies} rates={rates} commissionRates={commissionRates} />}
+        {tab === "config" && <ConfigTab schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} navSections={navSections} />}
+        {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
       </main>
 
-      {/* Barra inferior — navegación mobile-first */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/5 bg-white" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      {/* Barra inferior — 5 destinos de uso diario */}
+      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-black/5 bg-white" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="mx-auto flex max-w-3xl items-stretch justify-around px-2 py-1">
           {PRIMARY_TABS.map((t) => {
             const Icon = t.icon;
-            const active = tab === t.id;
+            const active = bottomTabActive === t.id;
+            const c = ["log", "comisiones"].includes(t.id) ? sectionColor(t.id) : TEAL;
             return (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className="flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-2.5 transition-colors"
-                style={{ color: active ? TEAL : "#9CA3AF" }}
+                className="flex flex-1 flex-col items-center gap-0.5 rounded-md px-2 py-2.5 transition-colors"
+                style={{ color: active ? c : "#9CA3AF" }}
               >
                 <Icon size={19} strokeWidth={active ? 2.2 : 1.8} />
                 <span className="text-[10.5px] font-medium">{t.label}</span>
               </button>
             );
           })}
-          <button
-            onClick={() => setMoreOpen(true)}
-            className="flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-2.5 transition-colors"
-            style={{ color: isMoreActive ? TEAL : "#9CA3AF" }}
-          >
-            <Menu size={19} strokeWidth={isMoreActive ? 2.2 : 1.8} />
-            <span className="text-[10.5px] font-medium">Más</span>
-          </button>
         </div>
       </nav>
-
-      {/* Hoja inferior "Más" */}
-      {moreOpen && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={() => setMoreOpen(false)}>
-          <div
-            className="w-full max-w-3xl rounded-t-xl bg-white p-5 pb-8 shadow-xl"
-            style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-bold" style={{ fontFamily: DISPLAY_FONT, color: NAVY }}>Más</h2>
-              <button onClick={() => setMoreOpen(false)} className="text-gray-400"><X size={19} /></button>
-            </div>
-            <div className="grid grid-cols-3 gap-2.5">
-              {MORE_TABS.map((t) => {
-                const Icon = t.icon;
-                const active = tab === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => { setTab(t.id); setMoreOpen(false); }}
-                    className="flex flex-col items-center gap-2 rounded-lg border p-4 transition-colors"
-                    style={active ? { backgroundColor: "#F0FDFA", borderColor: "#CCFBF1", color: TEAL } : { backgroundColor: "white", borderColor: "#E5E7EB", color: NAVY }}
-                  >
-                    <Icon size={20} strokeWidth={1.8} />
-                    <span className="text-xs font-medium">{t.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
