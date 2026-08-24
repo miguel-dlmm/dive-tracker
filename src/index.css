@@ -9,4 +9,4 @@ body {
   font-feature-settings: "tnum" 1; /* cifras tabulares por defecto */
 }
 
-@import "tailwindcss";
+@import "tailwindcss";// vercel test

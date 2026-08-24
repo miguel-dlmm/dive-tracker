@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { RefreshCw } from "lucide-react";
-import { NAVY, TEAL, DISPLAY_FONT } from "./App";
-import { inputCls, formatMoney, Select, colorFor, StatusSwitch, oppositeStatus } from "./shared";
+import { NAVY, TEAL } from "./App";
+import { formatMoney, Select, Field, colorFor, StatusSwitch, oppositeStatus, DatePicker } from "./shared";
 
 // schools / activities / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates / worklog: { rows: [...], updateRow, bulkUpdateWhere }
@@ -16,7 +16,6 @@ export default function PaymentsTab({ activities, paymentStatuses, currencies, r
     if (!r) return 0;
     return r.payment_type === "Per Person" ? r.rate * e.people : r.rate;
   };
-
   const presentValues = (key) => [...new Set(worklog.rows.map((r) => r[key]).filter(Boolean))].sort();
 
   const filtered = useMemo(() => {
@@ -48,8 +47,8 @@ export default function PaymentsTab({ activities, paymentStatuses, currencies, r
   return (
     <div className="space-y-5">
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-          <h3 className="text-sm font-bold" style={{ fontFamily: DISPLAY_FONT, color: NAVY }}>{filtered.length} pagos</h3>
+        <div className="flex items-center justify-between px-4 py-3">
+          <h3 className="text-sm font-semibold" style={{ color: NAVY }}>{filtered.length} pagos</h3>
           {hasFilters && (
             <button onClick={() => setFilters({ from: "", to: "", school: "", activity: "", status: "" })} className="text-xs font-medium text-gray-400 hover:text-gray-600">
               Limpiar filtros
@@ -57,18 +56,22 @@ export default function PaymentsTab({ activities, paymentStatuses, currencies, r
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 border-b border-gray-100 bg-gray-50/60 px-4 py-3 sm:grid-cols-5">
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="font-medium text-gray-500">Desde</span>
-            <input type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} className={`${inputCls} w-full py-1.5`} />
-          </label>
-          <label className="flex flex-col gap-1 text-xs">
-            <span className="font-medium text-gray-500">Hasta</span>
-            <input type="date" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} className={`${inputCls} w-full py-1.5`} />
-          </label>
-          <Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Escuela" />
-          <Select value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder="Actividad" />
-          <Select value={filters.status} onChange={(v) => setFilters({ ...filters, status: v })} options={presentValues("status")} placeholder="Estado" />
+        <div className="grid grid-cols-2 gap-2 border-y border-gray-100 bg-gray-50/60 px-4 py-3 sm:grid-cols-5">
+          <Field label="Desde">
+            <DatePicker value={filters.from} onChange={(v) => setFilters({ ...filters, from: v })} placeholder="Sin límite" />
+          </Field>
+          <Field label="Hasta">
+            <DatePicker value={filters.to} onChange={(v) => setFilters({ ...filters, to: v })} placeholder="Sin límite" />
+          </Field>
+          <Field label="Escuela">
+            <Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Todas" />
+          </Field>
+          <Field label="Actividad">
+            <Select value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder="Todas" />
+          </Field>
+          <Field label="Estado">
+            <Select value={filters.status} onChange={(v) => setFilters({ ...filters, status: v })} options={presentValues("status")} placeholder="Todos" />
+          </Field>
         </div>
 
         <div className="divide-y divide-gray-100">
@@ -81,7 +84,7 @@ export default function PaymentsTab({ activities, paymentStatuses, currencies, r
                 <div className="text-xs text-gray-400">{e.date}</div>
               </div>
               <div className="mt-1.5 flex items-center justify-end gap-3">
-                <span className="font-semibold" style={{ color: NAVY }}>{formatMoney(totalFor(e), e.currency, currencies.rows)}</span>
+                <span className="font-semibold" style={{ color: NAVY }}>{formatMoney(totalFor(e), rateFor(e.school, e.activity)?.currency, currencies.rows)}</span>
                 <StatusSwitch value={e.status} onChange={() => toggleSingle(e)} paymentStatusRows={paymentStatuses.rows} />
               </div>
             </div>

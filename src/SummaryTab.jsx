@@ -1,11 +1,46 @@
 import React, { useState, useMemo } from "react";
-import { formatMoney, Select, colorFor } from "./shared";
-import { NAVY, AQUA, CORAL, GREEN, DISPLAY_FONT } from "./App";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { formatMoney, Money, colorFor, DatePicker, MoneyLine, MonthCalendar, Select } from "./shared";
+import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const fmtInt = (n) => (n || 0).toLocaleString("es-ES");
 
-// Suma `total` de `entries` agrupado por `keyFn`, separado por moneda,
-// y opcionalmente el nº de personas. Devuelve [{ key, totals, people }]
+const UNITS_PER_YEAR = { mensual: 12, trimestral: 4, semestral: 2, anual: 1 };
+
+function periodRange(granularity, year, unitIndex, customFrom, customTo) {
+  if (granularity === "personalizado") return [customFrom || null, customTo || null];
+  if (granularity === "mensual") {
+    const start = new Date(year, unitIndex, 1);
+    const end = new Date(year, unitIndex + 1, 0);
+    return [start, end];
+  }
+  if (granularity === "trimestral") {
+    const m0 = unitIndex * 3;
+    return [new Date(year, m0, 1), new Date(year, m0 + 3, 0)];
+  }
+  if (granularity === "semestral") {
+    const m0 = unitIndex * 6;
+    return [new Date(year, m0, 1), new Date(year, m0 + 6, 0)];
+  }
+  return [new Date(year, 0, 1), new Date(year, 11, 31)]; // anual
+}
+
+function periodLabel(granularity, year, unitIndex) {
+  if (granularity === "mensual") return `${MONTHS[unitIndex]} ${year}`;
+  if (granularity === "trimestral") return `T${unitIndex + 1} ${year}`;
+  if (granularity === "semestral") return `S${unitIndex + 1} ${year}`;
+  return `${year}`;
+}
+
+// current-period unit index para cada granularidad, a partir de "hoy"
+function currentUnitFor(granularity, now) {
+  if (granularity === "mensual") return now.getMonth();
+  if (granularity === "trimestral") return Math.floor(now.getMonth() / 3);
+  if (granularity === "semestral") return Math.floor(now.getMonth() / 6);
+  return 0;
+}
+
 function groupSum(entries, keyFn, opts = {}) {
   const { amountKey = "total", currencyKey = "currency", withPeople = false } = opts;
   const map = {};
@@ -18,44 +53,29 @@ function groupSum(entries, keyFn, opts = {}) {
   return Object.entries(map).map(([key, v]) => ({ key, totals: v.totals, people: v.people }));
 }
 
-function MoneyLine({ totals, currencyRows }) {
-  const entries = Object.entries(totals || {});
-  if (entries.length === 0) return <span className="text-slate-400">—</span>;
+function BreakdownCard({ title, rows, currencyRows, textColor }) {
   return (
-    <span>
-      {entries.map(([code, amt], i) => (
-        <span key={code}>{i > 0 && " + "}{formatMoney(amt, code, currencyRows)}</span>
-      ))}
-    </span>
-  );
-}
-
-// Tabla real con columnas separadas: etiqueta | Personas | Importe.
-function BreakdownCard({ title, rows, currencyRows, textColor, showPeople }) {
-  return (
-    <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-      <h3 className="mb-3 font-bold" style={{ fontFamily: DISPLAY_FONT, color: NAVY }}>{title}</h3>
+    <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <h3 className="mb-3 text-sm font-semibold text-gray-800">{title}</h3>
       {rows.length === 0 ? (
-        <p className="text-sm text-slate-400">Sin datos.</p>
+        <p className="text-sm text-gray-400">Sin datos.</p>
       ) : (
         <table className="w-full text-sm">
-          {showPeople && (
-            <thead>
-              <tr className="text-xs text-slate-400">
-                <th className="pb-2 text-left font-medium"></th>
-                <th className="w-16 pb-2 text-right font-medium">Personas</th>
-                <th className="pb-2 text-right font-medium">Importe</th>
-              </tr>
-            </thead>
-          )}
-          <tbody className="divide-y divide-black/5">
+          <thead>
+            <tr className="text-xs text-gray-400">
+              <th className="pb-2 text-left font-medium"></th>
+              <th className="w-14 pb-2 text-center font-medium">Pers.</th>
+              <th className="pb-2 text-right font-medium">Importe</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
             {rows.map((r) => (
               <tr key={r.key}>
-                <td className="py-2.5 pr-2 font-medium" style={textColor ? { color: textColor(r.key) } : { color: "#334155" }}>
+                <td className="py-2 pr-2 font-medium" style={textColor ? { color: textColor(r.key) } : { color: "#334155" }}>
                   {r.key}
                 </td>
-                {showPeople && <td className="w-16 py-2.5 text-right text-slate-400">{r.people}</td>}
-                <td className="py-2.5 text-right font-semibold" style={{ color: NAVY }}>
+                <td className="w-14 py-2 text-center tabular-nums text-gray-500">{fmtInt(r.people)}</td>
+                <td className="py-2 text-right font-semibold" style={{ color: NAVY }}>
                   <MoneyLine totals={r.totals} currencyRows={currencyRows} />
                 </td>
               </tr>
@@ -67,99 +87,174 @@ function BreakdownCard({ title, rows, currencyRows, textColor, showPeople }) {
   );
 }
 
-// worklog / rates / activities / schools / currencies / colleaguePayments: hooks de useSupabaseTable
-// NOTA: esto cubre solo Work Log (Instructor) por ahora. Comisiones se
-// integrará en el Resumen en un paso posterior, según lo hablado.
-export default function SummaryTab({ worklog, rates, activities, schools, currencies, colleaguePayments }) {
+// worklog / rates / comisiones / commissionRates / activities / schools / currencies / colleaguePayments: hooks de useSupabaseTable
+export default function SummaryTab({ worklog, rates, comisiones, commissionRates, activities, schools, currencies, colleaguePayments }) {
   const now = new Date();
+  const [granularity, setGranularity] = useState("mensual");
+  const [source, setSource] = useState("ganado"); // "ganado" (Work Log) | "comision" (Comisiones)
   const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
+  const [unitIndex, setUnitIndex] = useState(now.getMonth());
+  const [customFrom, setCustomFrom] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10));
+  const [customTo, setCustomTo] = useState(now.toISOString().slice(0, 10));
   const [selectedSchool, setSelectedSchool] = useState(schools.rows.find((s) => s.is_default)?.name || schools.rows[0]?.name || "");
 
-  const schoolNames = schools.rows.map((s) => s.name);
+  const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
   const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
+  const sourceColor = source === "ganado" ? TEAL : SUN;
 
-  const rateFor = (school, activity) =>
-    rates.rows.find((r) => r.school === school && r.activity === activity);
+  const entriesTable = source === "ganado" ? worklog : comisiones;
+  const ratesTable = source === "ganado" ? rates : commissionRates;
+  const rateFor = (school, activity) => ratesTable.rows.find((r) => r.school === school && r.activity === activity);
 
-  const withTotals = useMemo(() => worklog.rows.map((e) => {
+  const withTotals = useMemo(() => entriesTable.rows.map((e) => {
     const r = rateFor(e.school, e.activity);
     const total = r ? (r.payment_type === "Per Person" ? r.rate * e.people : r.rate) : 0;
-    return { ...e, total };
-  }), [worklog.rows, rates.rows]);
+    return { ...e, total, currency: r?.currency || e.currency || fallbackCurrency };
+  }), [entriesTable.rows, ratesTable.rows, fallbackCurrency]);
 
-  const monthEntries = useMemo(() => withTotals.filter((e) => {
+  // ---- navegación de periodo — cambiar de granularidad siempre salta al
+  // periodo actual de esa granularidad (nunca se queda "colgado" en un
+  // índice que no corresponde a hoy). ----
+  const unitsPerYear = UNITS_PER_YEAR[granularity] || 12;
+  const changeGranularity = (g) => {
+    setGranularity(g);
+    setYear(now.getFullYear());
+    setUnitIndex(currentUnitFor(g, now));
+  };
+  const goPrev = () => {
+    if (granularity === "anual") { setYear((y) => y - 1); return; }
+    if (unitIndex === 0) { setUnitIndex(unitsPerYear - 1); setYear((y) => y - 1); }
+    else setUnitIndex((u) => u - 1);
+  };
+  const goNext = () => {
+    if (granularity === "anual") { setYear((y) => y + 1); return; }
+    if (unitIndex === unitsPerYear - 1) { setUnitIndex(0); setYear((y) => y + 1); }
+    else setUnitIndex((u) => u + 1);
+  };
+
+  const [rangeStart, rangeEnd] = periodRange(granularity, year, unitIndex, customFrom ? new Date(customFrom) : null, customTo ? new Date(customTo) : null);
+
+  const periodEntries = useMemo(() => withTotals.filter((e) => {
+    if (!rangeStart || !rangeEnd) return false;
     const d = new Date(e.date);
-    return d.getFullYear() === year && d.getMonth() === month;
-  }), [withTotals, year, month]);
+    return d >= rangeStart && d <= rangeEnd;
+  }), [withTotals, rangeStart, rangeEnd]);
 
-  const schoolEntries = useMemo(() => monthEntries.filter((e) => e.school === selectedSchool), [monthEntries, selectedSchool]);
+  const schoolEntries = useMemo(() => periodEntries.filter((e) => e.school === selectedSchool), [periodEntries, selectedSchool]);
 
-  // ---- Global ----
-  const globalTotal = groupSum(monthEntries, () => "Total")[0]?.totals || {};
-  const globalBySchool = groupSum(monthEntries, (e) => e.school, { withPeople: true });
-  const globalByActivity = groupSum(monthEntries, (e) => e.activity, { withPeople: true });
+  const globalTotal = groupSum(periodEntries, () => "Total")[0]?.totals || {};
+  const globalBySchool = groupSum(periodEntries, (e) => e.school, { withPeople: true });
+  const globalByActivity = groupSum(periodEntries, (e) => e.activity, { withPeople: true });
 
-  // ---- Por escuela ----
   const schoolTotal = groupSum(schoolEntries, () => "Total")[0]?.totals || {};
   const schoolByActivity = groupSum(schoolEntries, (e) => e.activity, { withPeople: true });
 
-  // ---- Compañeros agrupados por nombre, para la escuela + mes seleccionados ----
-  const colleagueMonthEntries = useMemo(() => colleaguePayments.rows.filter((p) => {
+  const colleaguePeriodEntries = useMemo(() => colleaguePayments.rows.filter((p) => {
+    if (!rangeStart || !rangeEnd) return false;
     const d = new Date(p.date);
-    return p.school === selectedSchool && d.getFullYear() === year && d.getMonth() === month;
-  }), [colleaguePayments.rows, selectedSchool, year, month]);
-  const colleagueByName = groupSum(colleagueMonthEntries, (p) => p.colleague_name, { amountKey: "amount", currencyKey: "currency" });
+    return d >= rangeStart && d <= rangeEnd && p.school === selectedSchool;
+  }), [colleaguePayments.rows, selectedSchool, rangeStart, rangeEnd]);
+  const colleagueByName = groupSum(colleaguePeriodEntries, (p) => p.colleague_name, { amountKey: "amount", currencyKey: "currency" });
+
+  const schoolNames = schools.rows.map((s) => s.name);
+  const label = granularity === "personalizado"
+    ? (customFrom && customTo ? `${customFrom} → ${customTo}` : "Elige un rango")
+    : periodLabel(granularity, year, unitIndex);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <Select value={String(year)} onChange={(v) => setYear(Number(v))} options={[year - 1, year, year + 1].map(String)} />
-        <Select value={String(month)} onChange={(v) => setMonth(Number(v))} options={MONTHS.map((_, i) => String(i))} />
-        <span className="text-sm text-slate-400">→ {MONTHS[month]} {year}</span>
+    <div className="space-y-4">
+      {/* Mensual / Trimestral / Semestral / Anual / Personalizado */}
+      <div className="flex flex-wrap gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5">
+        {[["mensual", "Mensual"], ["trimestral", "Trimestral"], ["semestral", "Semestral"], ["anual", "Anual"], ["personalizado", "Personalizado"]].map(([key, l]) => (
+          <button
+            key={key}
+            onClick={() => changeGranularity(key)}
+            className="rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+            style={granularity === key ? { backgroundColor: NAVY, color: "white" } : { color: "#6B7280" }}
+          >
+            {l}
+          </button>
+        ))}
       </div>
+
+      {/* Navegación de periodo */}
+      {granularity === "personalizado" ? (
+        <div className="grid grid-cols-2 gap-2 rounded-lg border border-gray-200 bg-white p-3">
+          <div>
+            <span className="mb-1 block text-xs font-medium text-gray-500">Desde</span>
+            <DatePicker value={customFrom} onChange={setCustomFrom} />
+          </div>
+          <div>
+            <span className="mb-1 block text-xs font-medium text-gray-500">Hasta</span>
+            <DatePicker value={customTo} onChange={setCustomTo} />
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2">
+          <button onClick={goPrev} className="rounded-md p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={18} /></button>
+          <span className="text-sm font-semibold tabular-nums" style={{ color: NAVY }}>{label}</span>
+          <button onClick={goNext} className="rounded-md p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={18} /></button>
+        </div>
+      )}
+
+      {/* Ganado / Comisión */}
+      <div className="inline-flex gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5">
+        {[["ganado", "Ganado"], ["comision", "Comisión"]].map(([key, l]) => (
+          <button
+            key={key}
+            onClick={() => setSource(key)}
+            className="rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors"
+            style={source === key ? { backgroundColor: sourceColor, color: "white" } : { color: "#6B7280" }}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {granularity === "mensual" && (
+        <MonthCalendar year={year} month={unitIndex} entries={periodEntries} dotColor={sourceColor} currencyRows={currencies.rows} activityColor={activityColor} />
+      )}
 
       {/* ================= GLOBAL ================= */}
       <div>
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">Vista global del mes</h2>
-        <div className="mb-4 rounded-3xl p-5 text-white shadow-sm" style={{ backgroundColor: AQUA }}>
-          <div className="text-xs font-medium opacity-80">Total Ganado (todas las escuelas)</div>
-          <div className="mt-1 text-3xl font-bold" style={{ fontFamily: DISPLAY_FONT }}><MoneyLine totals={globalTotal} currencyRows={currencies.rows} /></div>
+        <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">Vista global — {label}</h2>
+        <div className="mb-3 rounded-lg p-4 text-white" style={{ backgroundColor: sourceColor }}>
+          <div className="text-xs font-medium opacity-80">Total {source === "ganado" ? "Ganado" : "Comisión"} (todas las escuelas)</div>
+          <div className="mt-1 text-2xl font-bold tabular-nums"><MoneyLine totals={globalTotal} currencyRows={currencies.rows} /></div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <BreakdownCard title="Por escuela" rows={globalBySchool} currencyRows={currencies.rows} textColor={schoolColor} showPeople />
-          <BreakdownCard title="Por actividad" rows={globalByActivity} currencyRows={currencies.rows} textColor={activityColor} showPeople />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <BreakdownCard title="Por escuela" rows={globalBySchool} currencyRows={currencies.rows} textColor={schoolColor} />
+          <BreakdownCard title="Por actividad" rows={globalByActivity} currencyRows={currencies.rows} textColor={activityColor} />
         </div>
       </div>
 
       {/* ================= POR ESCUELA ================= */}
       <div>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Vista por escuela</h2>
-          <div className="w-48">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">Por escuela</h2>
+          <div className="w-40">
             <Select value={selectedSchool} onChange={setSelectedSchool} options={schoolNames} />
           </div>
         </div>
-        <div className="mb-4 rounded-3xl p-5 text-white shadow-sm" style={{ backgroundColor: schoolColor(selectedSchool) }}>
-          <div className="text-xs font-medium opacity-80">Total Ganado — {selectedSchool || "—"}</div>
-          <div className="mt-1 text-3xl font-bold" style={{ fontFamily: DISPLAY_FONT }}><MoneyLine totals={schoolTotal} currencyRows={currencies.rows} /></div>
+        <div className="mb-3 rounded-lg p-4 text-white" style={{ backgroundColor: schoolColor(selectedSchool) }}>
+          <div className="text-xs font-medium opacity-80">Total {source === "ganado" ? "Ganado" : "Comisión"} — {selectedSchool || "—"}</div>
+          <div className="mt-1 text-2xl font-bold tabular-nums"><MoneyLine totals={schoolTotal} currencyRows={currencies.rows} /></div>
         </div>
-        <BreakdownCard title="Por actividad" rows={schoolByActivity} currencyRows={currencies.rows} textColor={activityColor} showPeople />
+        <BreakdownCard title="Por actividad" rows={schoolByActivity} currencyRows={currencies.rows} textColor={activityColor} />
 
-        {/* Compañeros agrupados por nombre */}
-        <div className="mt-4 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5">
-          <h3 className="mb-3 font-bold" style={{ fontFamily: DISPLAY_FONT, color: NAVY }}>Pagos de compañeros — {selectedSchool || "—"} ({MONTHS[month]})</h3>
+        <div className="mt-3 rounded-lg border border-gray-200 bg-white p-4">
+          <h3 className="mb-3 text-sm font-semibold text-gray-800">Pagos de compañeros — {selectedSchool || "—"} ({label})</h3>
           {colleagueByName.length === 0 ? (
-            <p className="text-sm text-slate-400">Sin pagos de compañeros este mes para esta escuela.</p>
+            <p className="text-sm text-gray-400">Sin pagos de compañeros en este periodo para esta escuela.</p>
           ) : (
-            <ul className="divide-y divide-black/5">
+            <ul className="divide-y divide-gray-100">
               {colleagueByName.map((r) => {
                 const netPositive = Object.values(r.totals).reduce((s, v) => s + v, 0) >= 0;
                 return (
-                  <li key={r.key} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                    <span className="text-slate-700">{r.key}</span>
-                    <span className="font-semibold" style={{ color: netPositive ? GREEN : CORAL }}>
+                  <li key={r.key} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <span className="text-gray-700">{r.key}</span>
+                    <span className="font-semibold tabular-nums" style={{ color: netPositive ? GREEN : CORAL }}>
                       <MoneyLine totals={r.totals} currencyRows={currencies.rows} />
                     </span>
                   </li>
@@ -168,10 +263,15 @@ export default function SummaryTab({ worklog, rates, activities, schools, curren
             </ul>
           )}
         </div>
-      </div>
 
-      <div className="rounded-2xl border border-dashed border-black/10 px-4 py-3 text-xs text-slate-400">
-        Pendiente de integrar en este Resumen: Comisiones (Fase 7b, junto con los calendarios del mes por escuela).
+        {granularity === "mensual" && (
+          <div className="mt-3">
+            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">
+              Calendario por escuela — {selectedSchool || "—"}
+            </h3>
+            <MonthCalendar year={year} month={unitIndex} entries={schoolEntries} dotColor={schoolColor(selectedSchool)} currencyRows={currencies.rows} activityColor={activityColor} />
+          </div>
+        )}
       </div>
     </div>
   );
