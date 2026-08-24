@@ -23,8 +23,8 @@ export const GREEN = "#15803D";  // positivo, uso semántico
 export const SUN = "#B45309";
 export const BG = "#F7F8F8";     // fondo neutro, casi blanco
 
-export const DISPLAY_FONT = "'Space Grotesk', sans-serif";
-export const BODY_FONT = "'Plus Jakarta Sans', sans-serif";
+export const DISPLAY_FONT = "'Inter', sans-serif";
+export const BODY_FONT = "'Inter', sans-serif";
 
 const PRIMARY_TABS = [
   { id: "log", label: "Registro", icon: ListChecks },
@@ -122,7 +122,7 @@ export default function App() {
       {moreOpen && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={() => setMoreOpen(false)}>
           <div
-            className="w-full max-w-3xl rounded-t-2xl bg-white p-5 pb-8 shadow-xl"
+            className="w-full max-w-3xl rounded-t-xl bg-white p-5 pb-8 shadow-xl"
             style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -138,7 +138,7 @@ export default function App() {
                   <button
                     key={t.id}
                     onClick={() => { setTab(t.id); setMoreOpen(false); }}
-                    className="flex flex-col items-center gap-2 rounded-xl border p-4 transition-colors"
+                    className="flex flex-col items-center gap-2 rounded-lg border p-4 transition-colors"
                     style={active ? { backgroundColor: "#F0FDFA", borderColor: "#CCFBF1", color: TEAL } : { backgroundColor: "white", borderColor: "#E5E7EB", color: NAVY }}
                   >
                     <Icon size={20} strokeWidth={1.8} />

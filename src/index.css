@@ -1,7 +1,12 @@
-/* Añade esto AL PRINCIPIO de src/index.css, antes de @import "tailwindcss" */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+/* Sustituye el @import de fuentes anterior en src/index.css por este —
+   una sola tipografía (Inter) en vez de mezclar dos. Jerarquía por
+   peso/tamaño, no por cambiar de fuente — es el patrón que usan
+   Stripe, Linear, Mercury. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
+  font-feature-settings: "tnum" 1; /* cifras tabulares por defecto */
 }
+
 @import "tailwindcss";

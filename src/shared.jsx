@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Check } from "lucide-react";
-import { TEAL } from "./App";
+import { ChevronDown, Check, Trash2 } from "lucide-react";
+import { TEAL, CORAL } from "./App";
 
-export const inputCls = "rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition-colors focus:border-gray-300";
+export const inputCls = "rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400";
 
 export function focusRingStyle() {
   return {};
@@ -15,12 +15,64 @@ export function formatMoney(amount, code, currencyRows) {
   return `${n} ${symbol}`;
 }
 
+// Cifra monetaria "de verdad": tabular-nums para que las columnas de
+// importes alineen, símbolo de moneda más apagado que la cifra — el
+// patrón que comparten Stripe y Mercury en sus paneles financieros.
+export function Money({ amount, code, currencyRows, className = "", muted = false, style = {} }) {
+  const cur = currencyRows.find((c) => c.code === code);
+  const symbol = cur?.symbol || code || "";
+  const n = (amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (
+    <span className={`tabular-nums ${className}`} style={{ color: muted ? "#6B7280" : undefined, ...style }}>
+      {n}
+      <span className="ml-0.5 text-[0.82em] font-normal text-gray-400">{symbol}</span>
+    </span>
+  );
+}
+
 export function Field({ label, children }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
       <span className="text-xs font-medium text-gray-500">{label}</span>
       {children}
     </label>
+  );
+}
+
+// Botón de eliminar con confirmación en dos pasos, en el propio sitio
+// (sin modal): primer clic pide confirmación, segundo clic (o "Sí")
+// ejecuta. Se usa en cualquier "eliminar" de la app.
+export function DeleteButton({ onConfirm, size = 15 }) {
+  const [confirming, setConfirming] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!confirming) return;
+    function handler(e) { if (ref.current && !ref.current.contains(e.target)) setConfirming(false); }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [confirming]);
+
+  if (confirming) {
+    return (
+      <span ref={ref} className="flex shrink-0 items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-1 py-0.5">
+        <span className="px-0.5 text-[10px] font-medium text-gray-400">¿Eliminar?</span>
+        <button
+          onClick={() => { onConfirm(); setConfirming(false); }}
+          className="rounded px-1.5 py-0.5 text-[11px] font-semibold text-white"
+          style={{ backgroundColor: CORAL }}
+        >
+          Sí
+        </button>
+        <button onClick={() => setConfirming(false)} className="rounded px-1.5 py-0.5 text-[11px] font-medium text-gray-400 hover:text-gray-600">
+          No
+        </button>
+      </span>
+    );
+  }
+  return (
+    <button type="button" onClick={() => setConfirming(true)} className="shrink-0 text-gray-300 hover:text-red-500">
+      <Trash2 size={size} />
+    </button>
   );
 }
 
@@ -53,7 +105,7 @@ export function Select({ value, onChange, options, placeholder }) {
         <ChevronDown size={15} className={`shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute z-20 mt-1 max-h-60 w-full min-w-max overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+        <div className="absolute z-20 mt-1 max-h-60 w-full min-w-max overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
           {placeholder && (
             <button
               type="button"
@@ -102,7 +154,7 @@ export function SearchSelect({ value, onChange, options, placeholder }) {
         className={`${inputCls} w-full`}
       />
       {open && (
-        <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+        <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
           {filtered.length === 0 && <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>}
           {filtered.slice(0, 200).map((o) => (
             <button
@@ -128,30 +180,29 @@ export function CurrencySearchSelect({ value, onChange, currencyRows, placeholde
 }
 
 // Barra de filtros reutilizable: fecha desde/hasta, escuela, y actividad
-// (opcional — si no se pasa activityOptions, ese filtro no se muestra).
+// (opcional). Grid fijo en móvil para que nunca desborde ni empuje scroll
+// lateral — nada de flex-wrap suelto.
 export function ListFilterBar({ filters, setFilters, schoolOptions, activityOptions }) {
   const hasFilters = filters.from || filters.to || filters.school || filters.activity;
   return (
-    <div className="flex flex-wrap items-end gap-2 border-t border-gray-100 bg-gray-50/60 px-4 py-3">
-      <label className="flex flex-col gap-1 text-xs">
-        <span className="font-medium text-gray-500">Desde</span>
-        <input type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} className={`${inputCls} py-1.5`} />
-      </label>
-      <label className="flex flex-col gap-1 text-xs">
-        <span className="font-medium text-gray-500">Hasta</span>
-        <input type="date" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} className={`${inputCls} py-1.5`} />
-      </label>
-      <div className="w-32">
+    <div className="border-t border-gray-100 bg-gray-50/60 px-4 py-3">
+      <div className="grid grid-cols-2 gap-2">
+        <label className="flex flex-col gap-1 text-xs">
+          <span className="font-medium text-gray-500">Desde</span>
+          <input type="date" value={filters.from} onChange={(e) => setFilters({ ...filters, from: e.target.value })} className={`${inputCls} w-full py-1.5`} />
+        </label>
+        <label className="flex flex-col gap-1 text-xs">
+          <span className="font-medium text-gray-500">Hasta</span>
+          <input type="date" value={filters.to} onChange={(e) => setFilters({ ...filters, to: e.target.value })} className={`${inputCls} w-full py-1.5`} />
+        </label>
         <Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={schoolOptions} placeholder="Escuela" />
-      </div>
-      {activityOptions && (
-        <div className="w-32">
+        {activityOptions && (
           <Select value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={activityOptions} placeholder="Actividad" />
-        </div>
-      )}
+        )}
+      </div>
       {hasFilters && (
-        <button onClick={() => setFilters({ ...filters, from: "", to: "", school: "", activity: "" })} className="text-xs font-medium text-gray-400 hover:text-gray-600">
-          Limpiar
+        <button onClick={() => setFilters({ ...filters, from: "", to: "", school: "", activity: "" })} className="mt-2 text-xs font-medium text-gray-400 hover:text-gray-600">
+          Limpiar filtros
         </button>
       )}
     </div>
@@ -189,7 +240,7 @@ export function lighten(hex, amount = 0.88) {
 export function StatusPill({ status, paymentStatusRows }) {
   const color = colorFor(paymentStatusRows, status);
   return (
-    <span className="rounded-md px-2 py-1 text-xs font-medium" style={{ backgroundColor: lighten(color), color }}>
+    <span className="rounded px-2 py-0.5 text-[11px] font-medium" style={{ backgroundColor: lighten(color), color }}>
       {status}
     </span>
   );
@@ -233,7 +284,7 @@ export function ChipGroup({ value, onChange, options }) {
             key={o}
             type="button"
             onClick={() => onChange(o)}
-            className="rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
+            className="rounded border px-3 py-1.5 text-sm font-medium transition-colors"
             style={active
               ? { backgroundColor: "#F0FDFA", borderColor: TEAL, color: TEAL }
               : { backgroundColor: "white", borderColor: "#E5E7EB", color: "#4B5563" }}
