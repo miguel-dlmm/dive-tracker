@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from "react";
-import { Plus, Pencil, Check, X } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import { Plus, Pencil, X } from "lucide-react";
 import { NAVY, TEAL } from "./App";
-import { inputCls, formatMoney, Money, Field, Select, ListFilterBar, applyListFilters, colorFor, StatusPill, DeleteButton, DatePicker } from "./shared";
+import { inputCls, formatMoney, Money, Field, Select, ListFilterBar, applyListFilters, colorFor, StatusPill, DeleteButton, DatePicker, EditActions, useToast } from "./shared";
 
 // schools / activities / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // commissionRates / comisiones: { rows: [...], insertRow, updateRow, deleteRow }
 // accentColor: color de sección (nav_sections), para el botón flotante de crear
 // La moneda ya NO se elige aquí — se toma de la tarifa de comisión en Tarifas.
-export default function ComisionesTab({ schools, activities, paymentStatuses, currencies, commissionRates, comisiones, accentColor = TEAL }) {
+export default function ComisionesTab({ schools, activities, paymentStatuses, currencies, commissionRates, comisiones, accentColor = TEAL, autoOpenSheet = false, onAutoOpened }) {
   const defaultStatus = paymentStatuses.rows.find((s) => s.is_default)?.name || paymentStatuses.rows[0]?.name || "Pending";
   const defaultSchool = schools.rows.find((s) => s.is_default)?.name || "";
   const defaultActivity = activities.rows.find((a) => a.is_default)?.name || "";
@@ -18,6 +18,16 @@ export default function ComisionesTab({ schools, activities, paymentStatuses, cu
   };
   const [form, setForm] = useState(emptyForm);
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Llegado desde el acceso directo de Home: abre la hoja de creación sola.
+  useEffect(() => {
+    if (autoOpenSheet) {
+      setSheetOpen(true);
+      onAutoOpened?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [filters, setFilters] = useState({ from: "", to: "", school: "", activity: "" });
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -37,11 +47,18 @@ export default function ComisionesTab({ schools, activities, paymentStatuses, cu
     return { rate: r.rate, paymentType: r.payment_type, total, currency: r.currency };
   }, [form, commissionRates.rows]);
 
+  const toast = useToast();
+
   const addEntry = async () => {
     if (!form.date || !form.school || !form.activity) return;
-    await comisiones.insertRow({ ...form, people: Number(form.people) || 0, status: defaultStatus });
-    setForm({ ...emptyForm, school: form.school });
-    setSheetOpen(false);
+    try {
+      await comisiones.insertRow({ ...form, people: Number(form.people) || 0, status: defaultStatus });
+      setForm({ ...emptyForm, school: form.school });
+      setSheetOpen(false);
+      toast?.success("Comisión añadida");
+    } catch {
+      toast?.error("No se pudo guardar. Inténtalo de nuevo.");
+    }
   };
 
   const startEdit = (e) => {
@@ -49,8 +66,13 @@ export default function ComisionesTab({ schools, activities, paymentStatuses, cu
     setEditForm({ date: e.date, school: e.school, activity: e.activity, people: e.people, notes: e.notes || "" });
   };
   const saveEdit = async () => {
-    await comisiones.updateRow(editingId, { ...editForm, people: Number(editForm.people) || 0 });
-    setEditingId(null);
+    try {
+      await comisiones.updateRow(editingId, { ...editForm, people: Number(editForm.people) || 0 });
+      setEditingId(null);
+      toast?.success("Cambios guardados");
+    } catch {
+      toast?.error("No se pudo guardar. Inténtalo de nuevo.");
+    }
   };
 
   const sorted = [...comisiones.rows].sort((a, b) => b.date.localeCompare(a.date));
@@ -77,8 +99,7 @@ export default function ComisionesTab({ schools, activities, paymentStatuses, cu
                   <input type="number" value={editForm.people} onChange={(ev) => setEditForm({ ...editForm, people: ev.target.value })} className={inputCls} />
                   <input value={editForm.notes} onChange={(ev) => setEditForm({ ...editForm, notes: ev.target.value })} placeholder="Notas" className={`${inputCls} col-span-2 sm:col-span-4`} />
                   <div className="flex items-center justify-end gap-2">
-                    <button onClick={saveEdit} className="text-emerald-600 hover:text-emerald-700"><Check size={17} /></button>
-                    <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-red-500"><X size={17} /></button>
+                    <EditActions onSave={saveEdit} onCancel={() => setEditingId(null)} />
                   </div>
                 </div>
               );

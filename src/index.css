@@ -8,5 +8,11 @@ body {
   font-family: 'Inter', sans-serif;
   font-feature-settings: "tnum" 1; /* cifras tabulares por defecto */
 }
-
+/* Añade esto a src/index.css, después de lo que ya tenías (fuentes) —
+   animación de "relleno" para el loading genérico de la app */
+@keyframes oceanFill {
+  0%   { clip-path: inset(100% 0 0 0); }
+  50%  { clip-path: inset(0% 0 0 0); }
+  100% { clip-path: inset(100% 0 0 0); }
+}
 @import "tailwindcss";// vercel test
