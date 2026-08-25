@@ -2,6 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabaseClient";
 
 // pkField: nombre de la columna clave primaria ('id' normalmente, 'code' para currencies)
+//
+// insertRow/updateRow/deleteRow LANZAN si Supabase devuelve error — así el
+// código que llama (p. ej. DeleteButton, o un botón "Guardar" con toast de
+// confirmación/error) puede usar try/catch para saber si de verdad funcionó,
+// en vez de asumir éxito silenciosamente.
 export function useSupabaseTable(table, orderBy = "id", pkField = "id") {
   const [rows, setRows] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -17,19 +22,21 @@ export function useSupabaseTable(table, orderBy = "id", pkField = "id") {
 
   const insertRow = async (row) => {
     const { data, error } = await supabase.from(table).insert(row).select();
-    if (error) { console.error(error); return; }
+    if (error) { console.error(error); throw error; }
     setRows((prev) => [...prev, ...data]);
+    return data[0];
   };
 
   const updateRow = async (pk, patch) => {
     const { data, error } = await supabase.from(table).update(patch).eq(pkField, pk).select();
-    if (error) { console.error(error); return; }
+    if (error) { console.error(error); throw error; }
     setRows((prev) => prev.map((r) => (r[pkField] === pk ? data[0] : r)));
+    return data[0];
   };
 
   const deleteRow = async (pk) => {
     const { error } = await supabase.from(table).delete().eq(pkField, pk);
-    if (error) { console.error(error); return; }
+    if (error) { console.error(error); throw error; }
     setRows((prev) => prev.filter((r) => r[pkField] !== pk));
   };
 
@@ -40,7 +47,7 @@ export function useSupabaseTable(table, orderBy = "id", pkField = "id") {
     if (targets.length === 0) return 0;
     const ids = targets.map((r) => r[pkField]);
     const { error } = await supabase.from(table).update(patch).in(pkField, ids);
-    if (error) { console.error(error); return 0; }
+    if (error) { console.error(error); throw error; }
     await reload();
     return ids.length;
   };
@@ -53,7 +60,7 @@ export function useSupabaseTable(table, orderBy = "id", pkField = "id") {
       others.map((r) => supabase.from(table).update({ is_default: false }).eq(pkField, r[pkField]))
     );
     const { error } = await supabase.from(table).update({ is_default: true }).eq(pkField, pk);
-    if (error) console.error(error);
+    if (error) { console.error(error); throw error; }
     await reload();
   };
 

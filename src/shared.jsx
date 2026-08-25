@@ -1,8 +1,126 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { TEAL, CORAL } from "./App";
+import React, { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
+import * as Icons from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, Loader2 } from "lucide-react";
+import { TEAL, CORAL, GREEN } from "./App";
 
-export const inputCls = "rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400";
+export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
+
+// =================================================================
+// Toasts — mensaje genérico de confirmación/error para cualquier
+// operación de creación/edición/borrado. ToastProvider se monta una
+// vez en App.jsx; cualquier componente llama a useToast().success(...)
+// o .error(...).
+// =================================================================
+const ToastContext = createContext(null);
+
+export function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+  const push = useCallback((type, message) => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts((t) => [...t, { id, type, message }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3000);
+  }, []);
+  const api = useMemo(() => ({
+    success: (m) => push("success", m),
+    error: (m) => push("error", m),
+  }), [push]);
+
+  return (
+    <ToastContext.Provider value={api}>
+      {children}
+      <div className="pointer-events-none fixed inset-x-0 top-4 z-[60] flex flex-col items-center gap-2 px-4" aria-live="polite" aria-atomic="true">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            role="status"
+            className="pointer-events-auto flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-lg"
+            style={{ backgroundColor: t.type === "success" ? GREEN : CORAL }}
+          >
+            {t.type === "success" ? <Check size={15} aria-hidden="true" /> : <X size={15} aria-hidden="true" />}
+            {t.message}
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+}
+
+export function useToast() {
+  return useContext(ToastContext);
+}
+
+// =================================================================
+// Loading genérico de la app — un icono que "se rellena" en bucle.
+// El icono es configurable desde Configuración (tabla app_settings),
+// para poder cambiarlo por el logo oficial cuando esté listo, sin
+// tocar código.
+// =================================================================
+export function AppLoading({ iconName = "Waves", color = TEAL, size = 40, label = "Cargando" }) {
+  const Icon = Icons[iconName] || Icons.Waves;
+  return (
+    <div className="flex flex-col items-center gap-3" role="status" aria-label={label}>
+      <div className="relative" style={{ width: size, height: size }}>
+        <Icon size={size} style={{ color: "#E5E7EB" }} strokeWidth={2} aria-hidden="true" />
+        <div className="absolute inset-0" style={{ animation: "oceanFill 1.6s ease-in-out infinite" }}>
+          <Icon size={size} style={{ color }} strokeWidth={2} aria-hidden="true" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =================================================================
+// Diálogo de confirmación centrado — sustituye al chip inline de
+// "¿Eliminar? Sí/No", que quedaba poco visible. Con estado de carga
+// mientras se ejecuta la acción.
+// =================================================================
+export function ConfirmDialog({ open, title, message, onConfirm, onCancel, loading, confirmLabel = "Eliminar", danger = true }) {
+  useEscapeClose(open, loading ? () => {} : onCancel);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={loading ? undefined : onCancel}>
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        className="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 id="confirm-dialog-title" className="mb-1 text-sm font-semibold text-gray-800">{title}</h3>
+        <p className="mb-4 text-sm text-gray-500">{message}</p>
+        <div className="flex justify-end gap-2">
+          <button onClick={onCancel} disabled={loading} className="min-h-11 rounded-md border border-gray-200 px-3.5 text-sm font-medium text-gray-600 disabled:opacity-50">
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex min-h-11 items-center gap-1.5 rounded-md px-3.5 text-sm font-medium text-white disabled:opacity-70"
+            style={{ backgroundColor: danger ? CORAL : TEAL }}
+          >
+            {loading && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Botones "Guardar / Cancelar" unificados para cualquier formulario de
+// edición en línea (antes cada pantalla tenía su propio estilo).
+export function EditActions({ onSave, onCancel, saveLabel = "Guardar" }) {
+  return (
+    <div className="flex justify-end gap-2">
+      <button onClick={onSave} className="flex min-h-9 items-center gap-1 rounded-lg px-3 text-xs font-medium text-white" style={{ backgroundColor: TEAL }}>
+        <Check size={13} aria-hidden="true" /> {saveLabel}
+      </button>
+      <button onClick={onCancel} className="min-h-9 rounded-lg border border-gray-200 px-3 text-xs font-medium text-gray-500">
+        Cancelar
+      </button>
+    </div>
+  );
+}
 
 export function focusRingStyle() {
   return {};
@@ -42,37 +160,46 @@ export function Field({ label, children }) {
 // Botón de eliminar con confirmación en dos pasos, en el propio sitio
 // (sin modal): primer clic pide confirmación, segundo clic (o "Sí")
 // ejecuta. Se usa en cualquier "eliminar" de la app.
-export function DeleteButton({ onConfirm, size = 15 }) {
-  const [confirming, setConfirming] = useState(false);
-  const ref = useRef(null);
-  useEffect(() => {
-    if (!confirming) return;
-    function handler(e) { if (ref.current && !ref.current.contains(e.target)) setConfirming(false); }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [confirming]);
+// Botón de eliminar — diálogo de confirmación centrado (no un chip
+// inline, que quedaba poco visible), con loading mientras se ejecuta
+// y un toast de confirmación al terminar.
+export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLabel = "este elemento" }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
-  if (confirming) {
-    return (
-      <span ref={ref} className="flex shrink-0 items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-1 py-0.5">
-        <span className="px-0.5 text-[10px] font-medium text-gray-400">¿Eliminar?</span>
-        <button
-          onClick={() => { onConfirm(); setConfirming(false); }}
-          className="rounded px-1.5 py-0.5 text-[11px] font-semibold text-white"
-          style={{ backgroundColor: CORAL }}
-        >
-          Sí
-        </button>
-        <button onClick={() => setConfirming(false)} className="rounded px-1.5 py-0.5 text-[11px] font-medium text-gray-400 hover:text-gray-600">
-          No
-        </button>
-      </span>
-    );
-  }
+  const handleConfirm = async () => {
+    setLoading(true);
+    try {
+      await onConfirm();
+      toast?.success("Eliminado correctamente");
+      setOpen(false);
+    } catch (e) {
+      toast?.error("No se pudo eliminar. Inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <button type="button" onClick={() => setConfirming(true)} className="shrink-0 text-gray-300 hover:text-red-500">
-      <Trash2 size={size} />
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={label}
+        className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded p-2 text-gray-300 hover:text-red-500"
+      >
+        <Trash2 size={size} aria-hidden="true" />
+      </button>
+      <ConfirmDialog
+        open={open}
+        title="¿Eliminar este registro?"
+        message={`Vas a eliminar ${itemLabel}. Esta acción no se puede deshacer.`}
+        onConfirm={handleConfirm}
+        onCancel={() => setOpen(false)}
+        loading={loading}
+      />
+    </>
   );
 }
 
@@ -91,6 +218,8 @@ function parseDateStr(s) {
 export function DatePicker({ value, onChange, placeholder }) {
   const [open, setOpen] = useState(false);
   const ref = useClickOutside(() => setOpen(false));
+  useEscapeClose(open, () => setOpen(false));
+  const openUp = useDropdownFlip(open, ref);
   const parsed = parseDateStr(value);
   const today = new Date();
   const [viewY, setViewY] = useState(parsed?.y ?? today.getFullYear());
@@ -121,16 +250,23 @@ export function DatePicker({ value, onChange, placeholder }) {
 
   return (
     <div className="relative" ref={ref}>
-      <button type="button" onClick={() => setOpen((o) => !o)} className={`${inputCls} flex w-full items-center gap-1.5 text-left`}>
-        <CalendarIcon size={14} className="shrink-0 text-gray-400" />
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={placeholder || "Elegir fecha"}
+        className={`${inputCls} flex min-h-11 w-full items-center gap-1.5 text-left`}
+      >
+        <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
         <span className={parsed ? "text-gray-800" : "text-gray-400"}>{display}</span>
       </button>
       {open && (
-        <div className="absolute z-30 mt-1 w-64 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+        <div role="dialog" aria-label="Selector de fecha" className={`absolute z-30 w-64 rounded-lg border border-gray-200 bg-white p-3 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}>
           <div className="mb-2 flex items-center justify-between">
-            <button type="button" onClick={goPrev} className="rounded p-1 text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+            <button type="button" onClick={goPrev} aria-label="Mes anterior" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
             <span className="text-sm font-semibold text-gray-800">{MONTHS_ES[viewM]} {viewY}</span>
-            <button type="button" onClick={goNext} className="rounded p-1 text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+            <button type="button" onClick={goNext} aria-label="Mes siguiente" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
           </div>
           <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
             {WEEKDAYS_ES.map((w) => <div key={w} className="py-1">{w}</div>)}
@@ -144,8 +280,10 @@ export function DatePicker({ value, onChange, placeholder }) {
                   type="button"
                   key={i}
                   disabled={!d}
+                  aria-label={d ? `${d} de ${MONTHS_ES[viewM]}` : undefined}
+                  aria-selected={isSelected || undefined}
                   onClick={() => d && selectDay(d)}
-                  className="flex h-8 items-center justify-center rounded-md text-xs transition-colors"
+                  className="flex h-9 items-center justify-center rounded-md text-xs transition-colors"
                   style={isSelected ? { backgroundColor: TEAL, color: "white", fontWeight: 600 } : isToday ? { color: TEAL, fontWeight: 600 } : { color: d ? "#374151" : "transparent" }}
                 >
                   {d || ""}
@@ -212,7 +350,7 @@ const CAL_WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
 // día (nº personas + importe). Ancho limitado a propósito: en pantallas
 // grandes (escritorio) una cuadrícula de 7 columnas a ancho completo deja
 // los días sueltos y muy separados — se ve mejor compacta y centrada.
-export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor }) {
+export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, groupBySchool = false, schoolColor }) {
   const [selectedDay, setSelectedDay] = useState(null);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
@@ -233,8 +371,9 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  const dayBreakdown = (d) => {
-    const list = byDay[d] || [];
+  // Sin agrupar por escuela: lista plana por actividad (comportamiento
+  // de siempre — se usa cuando el calendario ya está filtrado a una escuela).
+  const flatBreakdown = (list) => {
     const map = {};
     list.forEach((e) => {
       if (!map[e.activity]) map[e.activity] = { people: 0, totals: {} };
@@ -242,6 +381,22 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
       map[e.activity].totals[e.currency] = (map[e.activity].totals[e.currency] || 0) + e.total;
     });
     return Object.entries(map).map(([activity, v]) => ({ activity, ...v }));
+  };
+
+  // Agrupado por escuela primero (calendarios con varias escuelas mezcladas,
+  // como el de Home): { school, activities: [...] }
+  const schoolGroupedBreakdown = (list) => {
+    const bySchool = {};
+    list.forEach((e) => { (bySchool[e.school] ||= []).push(e); });
+    return Object.entries(bySchool).map(([school, schoolList]) => ({
+      school,
+      activities: flatBreakdown(schoolList),
+    }));
+  };
+
+  const dayBreakdown = (d) => {
+    const list = byDay[d] || [];
+    return groupBySchool ? schoolGroupedBreakdown(list) : flatBreakdown(list);
   };
 
   return (
@@ -284,17 +439,38 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
             <span className="text-xs font-semibold text-gray-600">Día {selectedDay} de {CAL_MONTHS[month]}</span>
             <button onClick={() => setSelectedDay(null)} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
           </div>
-          <ul className="space-y-1.5">
-            {dayBreakdown(selectedDay).map((a) => (
-              <li key={a.activity} className="flex items-center justify-between text-sm">
-                <span style={{ color: activityColor(a.activity) }} className="font-medium">{a.activity}</span>
-                <span className="flex items-center gap-2 tabular-nums text-gray-600">
-                  <span className="text-xs text-gray-400">{a.people}p</span>
-                  <MoneyLine totals={a.totals} currencyRows={currencyRows} />
-                </span>
-              </li>
-            ))}
-          </ul>
+          {groupBySchool ? (
+            <div className="space-y-2.5">
+              {dayBreakdown(selectedDay).map((group) => (
+                <div key={group.school}>
+                  <div className="mb-1 text-xs font-semibold" style={{ color: schoolColor ? schoolColor(group.school) : "#334155" }}>{group.school}</div>
+                  <ul className="space-y-1">
+                    {group.activities.map((a) => (
+                      <li key={a.activity} className="flex items-center justify-between pl-2 text-sm">
+                        <span style={{ color: activityColor(a.activity) }} className="font-medium">{a.activity}</span>
+                        <span className="flex items-center gap-2 tabular-nums text-gray-600">
+                          <span className="text-xs text-gray-400">{a.people}p</span>
+                          <MoneyLine totals={a.totals} currencyRows={currencyRows} />
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ul className="space-y-1.5">
+              {dayBreakdown(selectedDay).map((a) => (
+                <li key={a.activity} className="flex items-center justify-between text-sm">
+                  <span style={{ color: activityColor(a.activity) }} className="font-medium">{a.activity}</span>
+                  <span className="flex items-center gap-2 tabular-nums text-gray-600">
+                    <span className="text-xs text-gray-400">{a.people}p</span>
+                    <MoneyLine totals={a.totals} currencyRows={currencyRows} />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>
@@ -313,29 +489,67 @@ function useClickOutside(onOutside) {
   return ref;
 }
 
+// Cierra con Escape — navegación por teclado básica en todos los
+// desplegables (Select, SearchSelect, DatePicker).
+function useEscapeClose(open, onClose) {
+  useEffect(() => {
+    if (!open) return;
+    function handler(e) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [open, onClose]);
+}
+
+// Decide si el panel de un desplegable debe abrirse hacia arriba: si el
+// disparador está en la mitad inferior de la pantalla y no hay ~260px
+// libres debajo, se abre hacia arriba para no quedar cortado ni obligar
+// a hacer scroll — la causa más habitual de que un selector "se sienta
+// raro" en móvil.
+function useDropdownFlip(open, triggerRef) {
+  const [openUp, setOpenUp] = useState(false);
+  useEffect(() => {
+    if (open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setOpenUp(spaceBelow < 280 && rect.top > 280);
+    }
+  }, [open, triggerRef]);
+  return openUp;
+}
+
 // Selector propio (no <select> nativo) — mismo aspecto en cualquier
 // navegador, panel flotante limpio con estado activo marcado.
-export function Select({ value, onChange, options, placeholder }) {
+export function Select({ value, onChange, options, placeholder, label }) {
   const [open, setOpen] = useState(false);
   const ref = useClickOutside(() => setOpen(false));
+  useEscapeClose(open, () => setOpen(false));
+  const openUp = useDropdownFlip(open, ref);
 
   return (
     <div className="relative" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`${inputCls} flex w-full items-center justify-between gap-2 text-left`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={label || placeholder}
+        className={`${inputCls} flex min-h-11 w-full items-center justify-between gap-2 text-left`}
       >
         <span className={`truncate ${value ? "text-gray-800" : "text-gray-400"}`}>{value || placeholder || "Selecciona..."}</span>
-        <ChevronDown size={15} className={`shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={15} className={`shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
       </button>
       {open && (
-        <div className="absolute z-20 mt-1 max-h-60 w-full min-w-max overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+        <div
+          role="listbox"
+          className={`absolute z-20 max-h-60 w-full min-w-max overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}
+        >
           {placeholder && (
             <button
               type="button"
+              role="option"
+              aria-selected={!value}
               onClick={() => { onChange(""); setOpen(false); }}
-              className="block w-full px-3 py-2 text-left text-sm text-gray-400 hover:bg-gray-50"
+              className="block min-h-11 w-full px-3 py-2 text-left text-sm text-gray-400 hover:bg-gray-50"
             >
               {placeholder}
             </button>
@@ -344,8 +558,10 @@ export function Select({ value, onChange, options, placeholder }) {
             <button
               key={o}
               type="button"
+              role="option"
+              aria-selected={value === o}
               onClick={() => { onChange(o); setOpen(false); }}
-              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
+              className="flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
               style={value === o ? { color: TEAL, backgroundColor: "#F0FDFA" } : { color: "#374151" }}
             >
               {o}
@@ -358,12 +574,74 @@ export function Select({ value, onChange, options, placeholder }) {
   );
 }
 
+// Selector de selección múltiple — para filtros de Actividad (puedes
+// querer ver varias a la vez). value es un array; [] = "todas".
+export function MultiSelect({ value = [], onChange, options, placeholder = "Todas" }) {
+  const [open, setOpen] = useState(false);
+  const ref = useClickOutside(() => setOpen(false));
+  useEscapeClose(open, () => setOpen(false));
+  const openUp = useDropdownFlip(open, ref);
+
+  const toggle = (o) => {
+    onChange(value.includes(o) ? value.filter((v) => v !== o) : [...value, o]);
+  };
+  const label = value.length === 0 ? placeholder : value.length === 1 ? value[0] : `${value.length} seleccionadas`;
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={placeholder}
+        className={`${inputCls} flex min-h-11 w-full items-center justify-between gap-2 text-left`}
+      >
+        <span className={`truncate ${value.length ? "text-gray-800" : "text-gray-400"}`}>{label}</span>
+        <ChevronDown size={15} className={`shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+      </button>
+      {open && (
+        <div role="listbox" aria-multiselectable="true" className={`absolute z-20 max-h-64 w-full min-w-max overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}>
+          {value.length > 0 && (
+            <button type="button" onClick={() => onChange([])} className="block min-h-9 w-full px-3 py-1.5 text-left text-xs font-medium text-gray-400 hover:bg-gray-50">
+              Limpiar selección
+            </button>
+          )}
+          {options.map((o) => {
+            const checked = value.includes(o);
+            return (
+              <button
+                key={o}
+                type="button"
+                role="option"
+                aria-selected={checked}
+                onClick={() => toggle(o)}
+                className="flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
+              >
+                <span
+                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded border"
+                  style={checked ? { backgroundColor: TEAL, borderColor: TEAL } : { borderColor: "#D1D5DB" }}
+                >
+                  {checked && <Check size={12} className="text-white" aria-hidden="true" />}
+                </span>
+                <span className="text-gray-700">{o}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Combobox con buscador — listas largas (Moneda: 144 opciones).
 // options: [{ value, label }]
 export function SearchSelect({ value, onChange, options, placeholder }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useClickOutside(() => setOpen(false));
+  useEscapeClose(open, () => setOpen(false));
+  const openUp = useDropdownFlip(open, ref);
   const selected = options.find((o) => o.value === value);
   const filtered = query.trim()
     ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
@@ -376,18 +654,23 @@ export function SearchSelect({ value, onChange, options, placeholder }) {
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => { setQuery(""); setOpen(true); }}
         placeholder={placeholder || "Buscar..."}
-        className={`${inputCls} w-full`}
+        aria-label={placeholder || "Buscar"}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={`${inputCls} min-h-11 w-full`}
       />
       {open && (
-        <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+        <div role="listbox" className={`absolute z-20 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}>
           {filtered.length === 0 && <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>}
           {filtered.slice(0, 200).map((o) => (
             <button
               key={o.value}
               type="button"
+              role="option"
+              aria-selected={value === o.value}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => { onChange(o.value); setOpen(false); setQuery(""); }}
-              className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+              className="block min-h-11 w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
             >
               {o.label}
             </button>
@@ -405,10 +688,10 @@ export function CurrencySearchSelect({ value, onChange, currencyRows, placeholde
 }
 
 // Barra de filtros reutilizable: fecha desde/hasta, escuela, y actividad
-// (opcional). Grid fijo en móvil para que nunca desborde ni empuje scroll
-// lateral — nada de flex-wrap suelto.
+// (opcional, selección múltiple). Grid fijo en móvil para que nunca
+// desborde ni empuje scroll lateral — nada de flex-wrap suelto.
 export function ListFilterBar({ filters, setFilters, schoolOptions, activityOptions }) {
-  const hasFilters = filters.from || filters.to || filters.school || filters.activity;
+  const hasFilters = filters.from || filters.to || filters.school || (filters.activity && filters.activity.length > 0);
   return (
     <div className="border-t border-gray-100 bg-gray-50/60 px-4 py-3">
       <div className="grid grid-cols-2 gap-2">
@@ -423,12 +706,12 @@ export function ListFilterBar({ filters, setFilters, schoolOptions, activityOpti
         </Field>
         {activityOptions && (
           <Field label="Actividad">
-            <Select value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={activityOptions} placeholder="Todas" />
+            <MultiSelect value={filters.activity || []} onChange={(v) => setFilters({ ...filters, activity: v })} options={activityOptions} placeholder="Todas" />
           </Field>
         )}
       </div>
       {hasFilters && (
-        <button onClick={() => setFilters({ ...filters, from: "", to: "", school: "", activity: "" })} className="mt-2 text-xs font-medium text-gray-400 hover:text-gray-600">
+        <button onClick={() => setFilters({ ...filters, from: "", to: "", school: "", activity: [] })} className="mt-2 min-h-9 text-xs font-medium text-gray-400 hover:text-gray-600">
           Limpiar filtros
         </button>
       )}
@@ -437,13 +720,13 @@ export function ListFilterBar({ filters, setFilters, schoolOptions, activityOpti
 }
 
 // Dado a un listado con `date`/`school`/`activity`, aplica un objeto de
-// filtros { from, to, school, activity } (todos opcionales).
+// filtros { from, to, school, activity: [] } (todos opcionales).
 export function applyListFilters(rows, filters) {
   return rows.filter((r) => {
     if (filters.from && r.date < filters.from) return false;
     if (filters.to && r.date > filters.to) return false;
     if (filters.school && r.school !== filters.school) return false;
-    if (filters.activity && r.activity !== filters.activity) return false;
+    if (filters.activity && filters.activity.length > 0 && !filters.activity.includes(r.activity)) return false;
     return true;
   });
 }
@@ -477,18 +760,24 @@ export function StatusSwitch({ value, onChange, paymentStatusRows }) {
   const current = paymentStatusRows.find((s) => s.name === value);
   const color = current?.color || "#6B7280";
   const knobRight = current ? !current.is_default : false;
+  const nextValue = oppositeStatus(value, paymentStatusRows);
   return (
     <button
       type="button"
-      onClick={() => onChange(oppositeStatus(value, paymentStatusRows))}
-      title={`${value} — clic para pasar a "${oppositeStatus(value, paymentStatusRows)}"`}
-      className="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors"
-      style={{ backgroundColor: color }}
+      role="switch"
+      aria-checked={knobRight}
+      aria-label={`Estado: ${value}. Pulsa para pasar a ${nextValue}`}
+      onClick={() => onChange(nextValue)}
+      title={`${value} — clic para pasar a "${nextValue}"`}
+      className="relative -m-2 flex shrink-0 items-center justify-center p-2"
+      style={{ minHeight: 36, minWidth: 52 }}
     >
-      <span
-        className="inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform"
-        style={{ transform: knobRight ? "translateX(18px)" : "translateX(3px)" }}
-      />
+      <span className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors" style={{ backgroundColor: color }}>
+        <span
+          className="inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform"
+          style={{ transform: knobRight ? "translateX(18px)" : "translateX(3px)" }}
+        />
+      </span>
     </button>
   );
 }
@@ -503,15 +792,17 @@ export function oppositeStatus(currentName, paymentStatusRows) {
 
 export function ChipGroup({ value, onChange, options }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-1.5" role="radiogroup">
       {options.map((o) => {
         const active = value === o;
         return (
           <button
             key={o}
             type="button"
+            role="radio"
+            aria-checked={active}
             onClick={() => onChange(o)}
-            className="rounded border px-3 py-1.5 text-sm font-medium transition-colors"
+            className="min-h-11 rounded border px-3 py-1.5 text-sm font-medium transition-colors"
             style={active
               ? { backgroundColor: "#F0FDFA", borderColor: TEAL, color: TEAL }
               : { backgroundColor: "white", borderColor: "#E5E7EB", color: "#4B5563" }}

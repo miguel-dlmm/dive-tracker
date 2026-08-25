@@ -1,10 +1,53 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dive-tracker</title>
+    <!-- viewport-fit=cover es necesario para que env(safe-area-inset-*)
+         funcione en iPhone (notch / barra inferior) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <title>Ocean Pulse — Control de ingresos para instructores de buceo</title>
+    <meta name="description" content="Ocean Pulse: registra tus clases de buceo, comisiones y pagos por escuela, con resumen mensual y anual. Una app de Ocean Flow." />
+    <meta name="robots" content="noindex, nofollow" />
+    <!-- noindex a propósito: es una herramienta personal/privada con datos
+         de facturación, no contenido pensado para aparecer en buscadores.
+         Si en algún momento tiene login multiusuario y quieres promocionarla
+         como producto, cambia esto a "index, follow" y añade contenido
+         público real (una landing, no la app en sí). -->
+
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0F172A" />
+
+    <!-- Open Graph / redes sociales -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ocean Pulse" />
+    <meta property="og:title" content="Ocean Pulse — Control de ingresos para instructores de buceo" />
+    <meta property="og:description" content="Registra clases, comisiones y pagos por escuela, con resumen mensual y anual." />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:locale" content="es_ES" />
+
+    <!-- Twitter/X card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ocean Pulse" />
+    <meta name="twitter:description" content="Control de ingresos para instructores de buceo — por Ocean Flow." />
+    <meta name="twitter:image" content="/og-image.png" />
+
+    <!-- Datos estructurados: ayuda tanto a buscadores clásicos como a
+         motores de respuesta con IA (Google SGE, Perplexity, etc.) a
+         entender qué es la app sin tener que interpretar el HTML -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Ocean Pulse",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "Control de ingresos para instructores de buceo: registro de clases, comisiones, pagos por escuela y resumen mensual/anual.",
+      "author": { "@type": "Organization", "name": "Ocean Flow" }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

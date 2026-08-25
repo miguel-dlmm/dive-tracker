@@ -1,0 +1,4 @@
+# Ocean Pulse es una herramienta personal/privada (datos de facturación),
+# no un sitio de contenido — se pide a los rastreadores que no la indexen.
+User-agent: *
+Disallow: /
