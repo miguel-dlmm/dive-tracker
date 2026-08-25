@@ -106,6 +106,10 @@ export async function handleCreateUser({ method, headers, body }) {
   // ya está creada, así que un fallo aquí no debe impedir la respuesta de
   // éxito. Si falla, el admin puede seguir compartiendo la contraseña
   // inicial a mano (ver comentario de arriba).
+  if (!process.env.APP_URL) {
+    console.error("create-user: falta la variable de entorno APP_URL — el enlace de primer acceso usará el Site URL por defecto de Supabase");
+  }
+
   let emailSent = false;
   let emailError = null;
   const { data: linkData, error: linkError } = await getServiceRoleClient().auth.admin.generateLink({
