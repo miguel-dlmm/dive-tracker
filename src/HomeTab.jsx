@@ -77,6 +77,8 @@ export default function HomeTab({ worklog, rates, activities, schools, currencie
         dotColor={TEAL}
         currencyRows={currencies.rows}
         activityColor={activityColor}
+        autoSelectFirstDay
+        showSchool
       />
 
       {/* Accesos rápidos a lo menos frecuente */}
