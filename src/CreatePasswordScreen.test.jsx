@@ -9,26 +9,28 @@ async function fillAndSubmit(user, { password, confirm }) {
 }
 
 describe("CreatePasswordScreen", () => {
-  it("no llama a onSubmit si la contraseña es demasiado corta", async () => {
+  it("mantiene el botón deshabilitado si la contraseña es demasiado corta", async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
     render(<CreatePasswordScreen onSubmit={onSubmit} />);
 
-    await fillAndSubmit(user, { password: "1234567", confirm: "1234567" });
+    await user.type(screen.getByLabelText("Nueva contraseña"), "1234567");
+    await user.type(screen.getByLabelText("Confirmar contraseña"), "1234567");
 
+    expect(screen.getByRole("button", { name: /crear contraseña/i })).toBeDisabled();
     expect(onSubmit).not.toHaveBeenCalled();
-    expect(screen.getByRole("alert")).toHaveTextContent("al menos 8 caracteres");
   });
 
-  it("no llama a onSubmit si las contraseñas no coinciden", async () => {
+  it("mantiene el botón deshabilitado si las contraseñas no coinciden", async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
     render(<CreatePasswordScreen onSubmit={onSubmit} />);
 
-    await fillAndSubmit(user, { password: "password123", confirm: "password124" });
+    await user.type(screen.getByLabelText("Nueva contraseña"), "password123");
+    await user.type(screen.getByLabelText("Confirmar contraseña"), "password124");
 
+    expect(screen.getByRole("button", { name: /crear contraseña/i })).toBeDisabled();
     expect(onSubmit).not.toHaveBeenCalled();
-    expect(screen.getByRole("alert")).toHaveTextContent("no coinciden");
   });
 
   it("llama a onSubmit con la contraseña cuando pasa las validaciones", async () => {
