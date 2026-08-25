@@ -162,8 +162,12 @@ create table if not exists worklog (
   notes text default '',
   status text not null default 'Pending',
   currency text not null default 'EUR', -- legado; el importe real usa la moneda de `rates`, no esta columna
-  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
+  user_id uuid not null references auth.users(id) default auth.uid()
 );
+
+alter table worklog enable row level security;
+drop policy if exists "allow all" on worklog;
+create policy "own rows" on worklog for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- Comisiones: clientes que refieres a la escuela (no los impartes tú).
 create table if not exists comisiones (
@@ -175,8 +179,12 @@ create table if not exists comisiones (
   currency text not null default 'EUR', -- legado; ver nota en worklog.currency
   notes text default '',
   status text not null default 'Pending',
-  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
+  user_id uuid not null references auth.users(id) default auth.uid()
 );
+
+alter table comisiones enable row level security;
+drop policy if exists "allow all" on comisiones;
+create policy "own rows" on comisiones for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- Pagos entre compañeros (cubrirse turnos, etc.) — independiente de rates.
 create table if not exists colleague_payments (
@@ -189,8 +197,12 @@ create table if not exists colleague_payments (
   status text not null default 'Pending',
   notes text default '',
   currency text not null default 'EUR',
-  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
+  user_id uuid not null references auth.users(id) default auth.uid()
 );
+
+alter table colleague_payments enable row level security;
+drop policy if exists "allow all" on colleague_payments;
+create policy "own rows" on colleague_payments for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ---------- Auth (Supabase Auth) y perfiles ----------
 
@@ -301,22 +313,14 @@ create policy "update own or admin updates any" on public.profiles
 -- update public.profiles set is_admin = true, is_superadmin = true where username = 'admin';
 
 -- ---------- RLS ----------
--- Estado actual — pendiente solo worklog/comisiones/colleague_payments
--- (paso 6b-ii de la migración):
+-- Estado actual — migración de RLS completa en las 12 tablas:
 -- - profiles: privado por defecto, admins ven/editan todo (ver arriba).
--- - schools/activities/payment_types/payment_statuses/rates/commission_rates:
---   auth.uid() = user_id (ver arriba).
+-- - schools/activities/payment_types/payment_statuses/rates/commission_rates/
+--   worklog/comisiones/colleague_payments: auth.uid() = user_id (ver arriba).
 -- - currencies/nav_sections/app_config: select abierto a cualquier
 --   autenticado, insert/update/delete solo is_admin(auth.uid()) (ver arriba).
--- - worklog/comisiones/colleague_payments: siguen con RLS "allow all"
---   (patrón de abajo) — ya tienen user_id y backfill hecho, falta activar
---   RLS real.
 --
--- Patrón "allow all" repetido por tabla (aún vigente en las 3 de arriba):
---
--- alter table <tabla> enable row level security;
--- drop policy if exists "allow all" on <tabla>;
--- create policy "allow all" on <tabla> for all using (true) with check (true);
+-- Ninguna tabla usa ya el patrón "allow all" (using(true)/with check(true)).
 
 -- ---------- Notas de diseño del esquema ----------
 -- - No existe tabla "activity_types" (Instructor/Comisión) — se eliminó al
