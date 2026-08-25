@@ -46,7 +46,7 @@ const PRIMARY_TABS = [
 // app que una miga de pan (que es un patrón más de web de escritorio).
 const SECONDARY_TITLES = { payments: "Pagos", rates: "Tarifas", config: "Configuración" };
 
-function AppShell({ onSignOut }) {
+function AppShell({ onSignOut, userId }) {
   const schools = useSupabaseTable("schools", "name");
   const activities = useSupabaseTable("activities", "name");
   const paymentTypes = useSupabaseTable("payment_types", "name");
@@ -58,7 +58,7 @@ function AppShell({ onSignOut }) {
   const comisiones = useSupabaseTable("comisiones", "date");
   const colleaguePayments = useSupabaseTable("colleague_payments", "date");
   const navSections = useSupabaseTable("nav_sections", "key", "key");
-  const appSettings = useSupabaseTable("app_settings", "id", "id");
+  const appSettings = useSupabaseTable("app_settings", "user_id", "user_id");
 
   const [tab, setTab] = useState("home");
   // Al venir de un acceso rápido de Home, además de cambiar de pestaña,
@@ -75,7 +75,7 @@ function AppShell({ onSignOut }) {
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const bottomTabActive = PRIMARY_TABS.some((t) => t.id === tab) ? tab : null;
   const isSecondary = tab in SECONDARY_TITLES;
-  const logoIcon = appSettings.rows[0]?.logo_icon || "Waves";
+  const logoIcon = appSettings.rows.find((r) => r.user_id === userId)?.logo_icon || "Waves";
 
   if (!loaded) {
     return (
@@ -126,14 +126,14 @@ function AppShell({ onSignOut }) {
         )}
         {tab === "log" && (
           <WorkLogTab
-            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} appSettings={appSettings}
+            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} appSettings={appSettings} userId={userId}
             accentColor={sectionColor("log")}
             autoOpenSheet={pendingOpen === "log"} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
         {tab === "comisiones" && (
           <ComisionesTab
-            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones} appSettings={appSettings}
+            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones} appSettings={appSettings} userId={userId}
             accentColor={sectionColor("comisiones")}
             autoOpenSheet={pendingOpen === "comisiones"} onAutoOpened={() => setPendingOpen(null)}
           />
@@ -154,7 +154,7 @@ function AppShell({ onSignOut }) {
             autoOpenSheet={pendingOpen === "rates"} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
-        {tab === "config" && <ConfigTab schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} navSections={navSections} appSettings={appSettings} />}
+        {tab === "config" && <ConfigTab schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} navSections={navSections} appSettings={appSettings} userId={userId} />}
         {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
       </main>
 
@@ -208,7 +208,7 @@ function AuthGate() {
 
   if (!session) return <LoginScreen signIn={signIn} />;
 
-  return <AppShell onSignOut={signOut} />;
+  return <AppShell onSignOut={signOut} userId={session.user.id} />;
 }
 
 export default function App() {

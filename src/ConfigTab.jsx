@@ -209,14 +209,14 @@ function SectionColors({ navSections }) {
 // poder cambiarlo por el logo oficial cuando esté listo, sin tocar código).
 const ICON_OPTIONS = ["Waves", "Anchor", "Sailboat", "LifeBuoy", "Fish", "Compass"];
 
-function GeneralSettings({ appSettings }) {
-  const row = appSettings.rows[0];
+function GeneralSettings({ appSettings, userId }) {
+  const row = appSettings.rows.find((r) => r.user_id === userId);
   const toast = useToast();
   if (!row) return null;
 
   const setIcon = async (name) => {
     try {
-      await appSettings.updateRow(true, { logo_icon: name });
+      await appSettings.updateRow(userId, { logo_icon: name });
       toast?.success("Icono actualizado");
     } catch {
       toast?.error("No se pudo guardar. Inténtalo de nuevo.");
@@ -250,7 +250,8 @@ function GeneralSettings({ appSettings }) {
 const SECTIONS = ["Escuelas", "Actividades", "Tipos de pago", "Estados de pago", "Monedas", "Secciones", "Ajustes"];
 
 // schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appSettings: hooks de useSupabaseTable
-export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, navSections, appSettings }) {
+// userId: id del usuario autenticado (auth.uid()), para resolver la fila propia de appSettings
+export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, navSections, appSettings, userId }) {
   const [section, setSection] = useState("Escuelas");
 
   return (
@@ -288,7 +289,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
           fields={[{ key: "code", label: "Código (ej. EUR)" }, { key: "name", label: "Nombre" }, { key: "symbol", label: "Símbolo" }]} />
       )}
       {section === "Secciones" && <SectionColors navSections={navSections} />}
-      {section === "Ajustes" && <GeneralSettings appSettings={appSettings} />}
+      {section === "Ajustes" && <GeneralSettings appSettings={appSettings} userId={userId} />}
     </div>
   );
 }
