@@ -83,9 +83,9 @@ compañeros, Tarifas, Resumen). Producto de la marca personal "Ocean Flow".
   en las 12 tablas)
 - Interacción real en los calendarios (hoy son de solo lectura con un
   desglose al pulsar un día; no filtran el resto de la pantalla)
-- Integración de Comisiones en la portada de Home (solo Work Log/"Ganado" se
-  muestra ahí; Comisiones sí está integrada en el Resumen con el switch
-  Ganado/Comisión)
+- El KPI superior de Home ("Ganado este mes") solo cuenta Work Log — el
+  desglose al pulsar un día del calendario de Home sí junta Ganado +
+  Comisiones + Pagos de compañeros (agrupados por tipo, como en el Resumen)
 - Los iconos/imágenes que referencia `index.html` (`/icon.svg`,
   `/icon-192.png`, `/icon-512.png`, `/og-image.png`) son placeholders — hay
   que generarlos
