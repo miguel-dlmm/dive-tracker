@@ -3,22 +3,23 @@ import { Waves, Loader2 } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
 import { inputCls, Field } from "./shared";
 
-// signIn: (username, password) => Promise — de useSession. Lanza en error.
+// signIn: (identifier, password) => Promise — de useSession. identifier
+// acepta email o nickname indistintamente. Lanza en error.
 export default function LoginScreen({ signIn }) {
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username || !password) return;
+    if (!identifier || !password) return;
     setLoading(true);
     setError("");
     try {
-      await signIn(username, password);
+      await signIn(identifier, password);
     } catch {
-      setError("Usuario o contraseña incorrectos.");
+      setError("Email/nickname o contraseña incorrectos.");
     } finally {
       setLoading(false);
     }
@@ -36,11 +37,11 @@ export default function LoginScreen({ signIn }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <Field label="Usuario">
+          <Field label="Email o nickname">
             <input
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               autoComplete="username"
               autoFocus
               className={`${inputCls} w-full`}

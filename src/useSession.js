@@ -1,37 +1,51 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabaseClient";
 
-// Mapa provisional username -> email interno de Supabase Auth. Hoy solo
-// existe la cuenta admin (ver CLAUDE.md, migración de auth por pasos).
-// Cuando exista alta de usuarios real, esto se sustituye por una consulta
-// a profiles en vez de un mapa fijo.
-const USERNAME_TO_EMAIL = {
-  admin: "migueldlmm@gmail.com",
-};
+async function loadProfile(userId) {
+  if (!userId) return null;
+  const { data, error } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
+  if (error) {
+    console.error(error);
+    return null;
+  }
+  return data;
+}
 
 export function useSession() {
   const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
+      setProfile(await loadProfile(data.session?.user?.id));
       setLoading(false);
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession);
+      setProfile(await loadProfile(newSession?.user?.id));
     });
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const signIn = useCallback(async (username, password) => {
-    const key = username.trim().toLowerCase();
-    const email = USERNAME_TO_EMAIL[key] || username.trim();
+  // identifier: email o nickname. Si no contiene "@" se resuelve a email vía
+  // la RPC email_for_nickname (security definer, solo expone el email) antes
+  // de autenticar. Nickname desconocido y contraseña incorrecta lanzan el
+  // mismo error genérico — no hay que revelar cuál de las dos falló.
+  const signIn = useCallback(async (identifier, password) => {
+    const value = identifier.trim();
+    let email = value;
+    if (!value.includes("@")) {
+      const { data, error } = await supabase.rpc("email_for_nickname", { p_nickname: value });
+      if (error || !data) throw new Error("invalid_credentials");
+      email = data;
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   }, []);
 
   const signOut = useCallback(() => supabase.auth.signOut(), []);
 
-  return { session, loading, signIn, signOut };
+  return { session, profile, loading, signIn, signOut };
 }
