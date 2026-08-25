@@ -1,12 +1,12 @@
 import { getServiceRoleClient, verifyCaller, isSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
+import { sendWelcomeEmail } from "../email/sendWelcomeEmail.js";
 
-// Alta de usuarios (MVP) — el superadmin fija una contraseña inicial a mano
-// en el momento de crear la cuenta, sin invitación ni email de confirmación.
-// Esto es deliberadamente temporal: cuando se implemente un flujo de
-// invitación o de "restablecer contraseña", esta función deja de aceptar
-// `password` en el body y pasa a generar un link de invitación/reset en su
-// lugar (p. ej. supabase.auth.admin.inviteUserByEmail /
-// generateLink({ type: "recovery" })).
+// Alta de usuarios (MVP) — el superadmin sigue fijando una contraseña
+// inicial a mano (respaldo temporal mientras se valida el flujo nuevo:
+// justo debajo, se genera además un enlace de recovery de un solo uso y se
+// envía por email, para que el usuario pueda entrar y fijar su propia
+// contraseña sin que nadie se la tenga que compartir). Cuando ese flujo
+// esté validado, `password` dejará de ser obligatorio en el body.
 //
 // Lógica de negocio pura, sin nada de Netlify ni de Vercel: recibe una
 // petición ya normalizada ({ method, headers, body }) y devuelve una
@@ -102,5 +102,34 @@ export async function handleCreateUser({ method, headers, body }) {
     return { status: 400, payload: { error: friendlyError(createError.message) } };
   }
 
-  return { status: 200, payload: { user_id: created.user.id } };
+  // Enlace de primer acceso + email de bienvenida — best-effort: la cuenta
+  // ya está creada, así que un fallo aquí no debe impedir la respuesta de
+  // éxito. Si falla, el admin puede seguir compartiendo la contraseña
+  // inicial a mano (ver comentario de arriba).
+  let emailSent = false;
+  let emailError = null;
+  const { data: linkData, error: linkError } = await getServiceRoleClient().auth.admin.generateLink({
+    type: "recovery",
+    email,
+    options: { redirectTo: process.env.APP_URL },
+  });
+
+  if (linkError) {
+    console.error("create-user: no se pudo generar el enlace de primer acceso", linkError);
+    emailError = "No se pudo generar el enlace de acceso.";
+  } else {
+    const result = await sendWelcomeEmail({
+      email,
+      firstName: first_name,
+      nickname,
+      actionLink: linkData?.properties?.action_link,
+    });
+    emailSent = result.sent;
+    if (!result.sent) emailError = result.error;
+  }
+
+  return {
+    status: 200,
+    payload: { user_id: created.user.id, email_sent: emailSent, ...(emailError ? { email_error: emailError } : {}) },
+  };
 }

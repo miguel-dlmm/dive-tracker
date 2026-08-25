@@ -5,8 +5,13 @@ vi.mock("../supabaseAdmin.js", () => ({
   getServiceRoleClient: vi.fn(),
 }));
 
+vi.mock("../email/sendWelcomeEmail.js", () => ({
+  sendWelcomeEmail: vi.fn(),
+}));
+
 import { handleCreateUser } from "./createUser.js";
 import { getServiceRoleClient, verifyCaller, isSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
+import { sendWelcomeEmail } from "../email/sendWelcomeEmail.js";
 
 const VALID_BODY = {
   email: "diver@example.com",
@@ -95,18 +100,25 @@ it("devuelve 403 si quien llama no es superadmin, sin tocar Supabase Admin API",
 
 describe("con permisos válidos", () => {
   let createUser;
+  let generateLink;
 
   beforeEach(() => {
     createUser = vi.fn();
-    getServiceRoleClient.mockReturnValue({ auth: { admin: { createUser } } });
+    generateLink = vi.fn().mockResolvedValue({
+      data: { properties: { action_link: "https://example.supabase.co/verify?token=abc" } },
+      error: null,
+    });
+    getServiceRoleClient.mockReturnValue({ auth: { admin: { createUser, generateLink } } });
+    sendWelcomeEmail.mockReset();
+    sendWelcomeEmail.mockResolvedValue({ sent: true });
   });
 
-  it("crea el usuario y devuelve exactamente { user_id }", async () => {
+  it("crea el usuario y devuelve { user_id, email_sent: true } cuando todo va bien", async () => {
     createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
 
     const result = await handleCreateUser(request());
 
-    expect(result).toEqual({ status: 200, payload: { user_id: "new-user-1" } });
+    expect(result).toEqual({ status: 200, payload: { user_id: "new-user-1", email_sent: true } });
   });
 
   it("envía a Supabase solo los campos esperados, ignorando is_admin/is_superadmin del body", async () => {
@@ -124,6 +136,49 @@ describe("con permisos válidos", () => {
         last_name: VALID_BODY.last_name,
         nickname: VALID_BODY.nickname,
       },
+    });
+  });
+
+  it("genera un enlace de recovery de un solo uso y lo pasa al email de bienvenida", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+
+    await handleCreateUser(request());
+
+    expect(generateLink).toHaveBeenCalledWith({
+      type: "recovery",
+      email: VALID_BODY.email,
+      options: { redirectTo: process.env.APP_URL },
+    });
+    expect(sendWelcomeEmail).toHaveBeenCalledWith({
+      email: VALID_BODY.email,
+      firstName: VALID_BODY.first_name,
+      nickname: VALID_BODY.nickname,
+      actionLink: "https://example.supabase.co/verify?token=abc",
+    });
+  });
+
+  it("no bloquea la creación si falla la generación del enlace — la cuenta ya existe", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+    generateLink.mockResolvedValue({ data: null, error: { message: "rate limit" } });
+
+    const result = await handleCreateUser(request());
+
+    expect(result).toEqual({
+      status: 200,
+      payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de acceso." },
+    });
+    expect(sendWelcomeEmail).not.toHaveBeenCalled();
+  });
+
+  it("no bloquea la creación si falla el envío del email — la cuenta ya existe", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+    sendWelcomeEmail.mockResolvedValue({ sent: false, error: "No se pudo enviar el email de bienvenida." });
+
+    const result = await handleCreateUser(request());
+
+    expect(result).toEqual({
+      status: 200,
+      payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo enviar el email de bienvenida." },
     });
   });
 
