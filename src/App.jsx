@@ -4,6 +4,7 @@ import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { ToastProvider, AppLoading } from "./shared";
 import LoginScreen from "./LoginScreen";
+import CreatePasswordScreen from "./CreatePasswordScreen";
 import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
@@ -45,7 +46,7 @@ const PRIMARY_TABS = [
 // app que una miga de pan (que es un patrón más de web de escritorio).
 const SECONDARY_TITLES = { config: "Configuración", help: "Ayuda" };
 
-function AppShell({ onSignOut, profile }) {
+function AppShell({ onSignOut, profile, initialTab = "home" }) {
   const schools = useSupabaseTable("schools", "name");
   const activities = useSupabaseTable("activities", "name");
   const paymentTypes = useSupabaseTable("payment_types", "name");
@@ -59,7 +60,7 @@ function AppShell({ onSignOut, profile }) {
   const navSections = useSupabaseTable("nav_sections", "key", "key");
   const appConfig = useSupabaseTable("app_config", "id", "id");
 
-  const [tab, setTab] = useState("home");
+  const [tab, setTab] = useState(initialTab);
   // Al venir de un acceso rápido de Home, además de cambiar de pestaña,
   // esa pestaña abre su hoja de creación sola. Se limpia en cuanto se usa
   // (ver onAutoOpened), así no se vuelve a disparar si luego navegas
@@ -194,11 +195,17 @@ function AppShell({ onSignOut, profile }) {
   );
 }
 
-// Puerta de sesión: sin sesión activa, pantalla de login; con sesión, la
-// app normal. Vive fuera de AppShell para no depender de que carguen las
-// tablas de negocio solo para saber si hay que mostrar el login.
+// Puerta de sesión: sin sesión activa, pantalla de login; con sesión pero
+// sin contraseña propia todavía (primer acceso vía el enlace del email de
+// bienvenida, ver createUser.js), pantalla de crear contraseña; con todo
+// listo, la app normal. Vive fuera de AppShell para no depender de que
+// carguen las tablas de negocio solo para decidir cuál de las tres tocar.
 function AuthGate() {
-  const { session, profile, loading, signIn, signOut } = useSession();
+  const { session, profile, loading, signIn, signOut, completePasswordChange } = useSession();
+  // Justo tras completar el primer acceso, AppShell debe abrir directamente
+  // en Ayuda en vez de Home — se limpia solo (no persiste entre sesiones),
+  // ver App.jsx → AppShell → initialTab.
+  const [justActivated, setJustActivated] = useState(false);
 
   if (loading) {
     return (
@@ -210,7 +217,18 @@ function AuthGate() {
 
   if (!session) return <LoginScreen signIn={signIn} />;
 
-  return <AppShell onSignOut={signOut} profile={profile} />;
+  if (profile && !profile.password_set) {
+    return (
+      <CreatePasswordScreen
+        onSubmit={async (newPassword) => {
+          await completePasswordChange(newPassword);
+          setJustActivated(true);
+        }}
+      />
+    );
+  }
+
+  return <AppShell onSignOut={signOut} profile={profile} initialTab={justActivated ? "help" : "home"} />;
 }
 
 export default function App() {
