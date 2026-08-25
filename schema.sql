@@ -235,6 +235,12 @@ create table if not exists public.profiles (
   default_currency text references currencies(code), -- preferencia personal; distinto de currencies.is_default (el respaldo global de la app)
   is_admin boolean not null default false,
   is_superadmin boolean not null default false,
+  -- true en cuanto el usuario ha fijado su propia contraseña al menos una
+  -- vez (via auth.updateUser, tras entrar por el enlace de primer acceso).
+  -- Por defecto false para no afectar a cuentas ya existentes ni al
+  -- superadmin de arranque; el gate de la app usa este campo para saber si
+  -- debe forzar la pantalla de "crear tu contraseña" antes de dejar entrar.
+  password_set boolean not null default false,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
