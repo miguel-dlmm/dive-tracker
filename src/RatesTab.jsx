@@ -5,10 +5,12 @@ import { inputCls, Select, MultiSelect, Field, colorFor, DeleteButton, Money, Cu
 
 // schools / activities / paymentTypes / currencies: { rows: [...] } — de useSupabaseTable
 // rates / commissionRates: { rows, insertRow, updateRow, deleteRow }
+// worklog / comisiones: { rows: [...] } — para comprobar si una tarifa está en uso antes de dejar borrarla
 // accentColor: color de sección (nav_sections), para el botón flotante de crear
-export default function RatesTab({ schools, activities, paymentTypes, currencies, rates, commissionRates, accentColor = TEAL, autoOpenSheet = false, onAutoOpened }) {
+export default function RatesTab({ schools, activities, paymentTypes, currencies, rates, commissionRates, worklog, comisiones, accentColor = TEAL, autoOpenSheet = false, onAutoOpened }) {
   const [mode, setMode] = useState("instructor"); // "instructor" | "comision"
   const table = mode === "instructor" ? rates : commissionRates;
+  const entriesForMode = mode === "instructor" ? worklog.rows : comisiones.rows;
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
   const toast = useToast();
 
@@ -72,6 +74,17 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
     } catch {
       toast?.error("No se pudo guardar. Inténtalo de nuevo.");
     }
+  };
+
+  // Antes de borrar, comprobamos que ningún registro/comisión ya guardado
+  // dependa de esta tarifa — si se borrara igualmente, esas filas se
+  // quedarían sin tarifa que las emparejara y mostrarían 0,00 sin avisar.
+  const deleteRate = async (r) => {
+    const inUse = entriesForMode.filter((e) => e.school === r.school && e.activity === r.activity).length;
+    if (inUse > 0) {
+      throw new Error(`No se puede eliminar: hay ${inUse} ${inUse === 1 ? "registro que usa" : "registros que usan"} esta tarifa.`);
+    }
+    await table.deleteRow(r.id);
   };
 
   return (
@@ -139,7 +152,7 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
                 </div>
                 <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} className="shrink-0 font-semibold" style={{ color: NAVY }} />
                 <button onClick={() => startEdit(r)} className="shrink-0 text-gray-300 hover:text-gray-600"><Pencil size={15} /></button>
-                <DeleteButton onConfirm={() => table.deleteRow(r.id)} itemLabel={`la tarifa de ${r.school} - ${r.activity}`} />
+                <DeleteButton onConfirm={() => deleteRate(r)} itemLabel={`la tarifa de ${r.school} - ${r.activity}`} />
               </div>
             );
           })}
