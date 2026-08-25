@@ -206,10 +206,21 @@ create policy "own rows" on colleague_payments for all using (auth.uid() = user_
 
 -- ---------- Auth (Supabase Auth) y perfiles ----------
 
--- Identidad real vía Supabase Auth (tabla auth.users, gestionada por
--- Supabase — no se toca directamente, contraseñas ya con hash). public.
--- profiles guarda los campos propios de la app que auth.users no tiene,
--- 1:1 con auth.users.
+-- Regla arquitectónica — se mantiene para todo desarrollo futuro:
+-- - auth.users es la ÚNICA fuente de verdad para datos de autenticación
+--   (email, password/hash, confirmación, MFA, ciclo de vida de la sesión).
+--   Gestionada por Supabase — no se toca directamente. NUNCA se duplica el
+--   email (ni ningún otro campo de auth.users) en public.profiles.
+-- - public.profiles guarda EXCLUSIVAMENTE datos de perfil de la aplicación
+--   que auth.users no tiene: nombre, nickname, preferencias, roles
+--   (is_admin/is_superadmin), etc. Es 1:1 con auth.users vía user_id, pero
+--   es una tabla separada, no una extensión con columnas de auth mezcladas.
+-- - Cuando la app necesita cruzar ambas (p. ej. mostrar el email de otro
+--   usuario), se hace vía una función security definer dedicada que decide
+--   ella misma quién puede ver qué (ver email_for_nickname y
+--   admin_list_profiles más abajo) — nunca dando acceso de cliente directo
+--   a auth.users ni copiando su contenido a profiles.
+--
 -- nickname: identificador público dentro de la app, único (comparación
 -- case-insensitive vía el índice de abajo) y alternativa a el email para
 -- iniciar sesión (ver email_for_nickname más abajo). No puede contener "@"
@@ -277,6 +288,43 @@ language sql security definer set search_path = public stable as $$
 $$;
 
 grant execute on function public.email_for_nickname(text) to anon, authenticated;
+
+-- RPC admin-only para el directorio de usuarios (Configuración → Usuarios).
+-- profiles no tiene columna email a propósito (ver regla arquitectónica de
+-- arriba) y RLS no da acceso de cliente a auth.users, así que esta función
+-- security definer hace el join y decide ella misma si quien llama puede
+-- ver algo: la propia consulta filtra por is_admin(auth.uid()), así que un
+-- usuario normal recibe un conjunto vacío, nunca un error que confirme que
+-- la función existe con datos de otros. A diferencia de email_for_nickname
+-- (pensada para el login, antes de autenticar), esta solo es invocable por
+-- "authenticated" — nunca "anon".
+create or replace function public.admin_list_profiles()
+returns table (
+  user_id uuid,
+  first_name text,
+  last_name text,
+  nickname text,
+  email text,
+  is_admin boolean,
+  is_superadmin boolean,
+  created_at timestamptz
+)
+language sql security definer set search_path = public stable as $$
+  select p.user_id, p.first_name, p.last_name, p.nickname, au.email, p.is_admin, p.is_superadmin, p.created_at
+  from public.profiles p
+  join auth.users au on au.id = p.user_id
+  where public.is_admin(auth.uid())
+  order by p.nickname;
+$$;
+
+grant execute on function public.admin_list_profiles() to authenticated;
+
+-- PostgREST (la API que usa supabase-js para .rpc()) cachea qué funciones
+-- existen. Tras crear/reemplazar una función nueva, si no se avisa, .rpc()
+-- puede devolver temporalmente un error tipo "Could not find the function
+-- ... in the schema cache" aunque la función ya exista en la BD. Este NOTIFY
+-- fuerza a PostgREST a recargar su caché de esquema inmediatamente.
+notify pgrst, 'reload schema';
 
 -- Protección de roles a nivel de base de datos — se aplica pase lo que pase
 -- en el frontend, incluso si una policy RLS ya dejó pasar el UPDATE:
@@ -347,6 +395,9 @@ create policy "update own or admin updates any" on public.profiles
 --   worklog/comisiones/colleague_payments: auth.uid() = user_id (ver arriba).
 -- - currencies/nav_sections/app_config: select abierto a cualquier
 --   autenticado, insert/update/delete solo is_admin(auth.uid()) (ver arriba).
+-- - El email (auth.users) nunca se expone vía RLS directa — solo a través
+--   de las funciones security definer email_for_nickname (login) y
+--   admin_list_profiles (directorio de usuarios, solo admins/superadmins).
 --
 -- Ninguna tabla usa ya el patrón "allow all" (using(true)/with check(true)).
 
