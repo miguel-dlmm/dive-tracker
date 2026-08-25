@@ -542,6 +542,37 @@ $$;
 
 grant execute on function public.clone_setup_dataset(text, uuid) to service_role;
 
+-- ---------- RGPD/LOPD — consentimiento legal ----------
+
+-- Evidencia de aceptación de la Política de Privacidad y los Términos de
+-- Uso. El CONTENIDO de cada documento vive versionado en código
+-- (src/legal/privacyPolicy.js, src/legal/termsOfUse.js — cada uno exporta
+-- su propio DOCUMENT_TYPE/VERSION), no en esta tabla: aquí solo se guarda
+-- qué versión aceptó cada usuario y cuándo, lo mínimo necesario para poder
+-- demostrar el consentimiento. Publicar una versión nueva de un documento
+-- es cambiar la constante VERSION en el código — todavía no hay una tabla
+-- legal_documents ni CMS para ello (deliberado, MVP; ver CLAUDE.md).
+create table if not exists public.legal_consents (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  document_type text not null,     -- 'privacy_policy' | 'terms_of_use'
+  document_version text not null,  -- p. ej. 'v1'
+  accepted_at timestamptz not null default now(),
+  unique (user_id, document_type, document_version)
+);
+
+-- RLS: registro de auditoría de solo-inserción. Cada usuario inserta y lee
+-- únicamente su propio consentimiento; admins pueden leer el de cualquiera
+-- (para poder comprobar en el futuro quién falta por aceptar una versión
+-- nueva). Sin policy de update/delete a propósito — es un log inmutable.
+alter table public.legal_consents enable row level security;
+drop policy if exists "insert own consent" on public.legal_consents;
+create policy "insert own consent" on public.legal_consents
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "select own or admin sees all" on public.legal_consents;
+create policy "select own or admin sees all" on public.legal_consents
+  for select using (auth.uid() = user_id or public.is_admin(auth.uid()));
+
 -- ---------- Notas de diseño del esquema ----------
 -- - No existe tabla "activity_types" (Instructor/Comisión) — se eliminó al
 --   separar Work Log y Comisiones en flujos independientes.
