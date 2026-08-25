@@ -15,4 +15,13 @@ body {
   50%  { clip-path: inset(0% 0 0 0); }
   100% { clip-path: inset(100% 0 0 0); }
 }
+/* Transición ligera entre categorías/artículo del Manual de Ayuda —
+   sin librería de animación, coherente con oceanFill de arriba. */
+@keyframes helpFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-help-fade-in {
+  animation: helpFadeIn 200ms ease-out;
+}
 @import "tailwindcss";// vercel test

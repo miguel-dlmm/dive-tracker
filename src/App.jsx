@@ -12,6 +12,7 @@ import ConfigTab from "./ConfigTab";
 import PaymentsTab from "./PaymentsTab";
 import CompanerosTab from "./CompanerosTab";
 import SummaryTab from "./SummaryTab";
+import HelpTab from "./HelpTab";
 
 // ---------------------------------------------------------------
 // Paleta — profesional y contenida: un único acento neutro, fondo
@@ -44,7 +45,7 @@ const PRIMARY_TABS = [
 // cabecera muestra "‹ Volver" + el nombre de la pantalla, el patrón
 // nativo de iOS/Android para "dónde estoy y cómo vuelvo", más propio de
 // app que una miga de pan (que es un patrón más de web de escritorio).
-const SECONDARY_TITLES = { payments: "Pagos", rates: "Tarifas", config: "Configuración" };
+const SECONDARY_TITLES = { payments: "Pagos", rates: "Tarifas", config: "Configuración", help: "Ayuda" };
 
 function AppShell({ onSignOut, profile }) {
   const schools = useSupabaseTable("schools", "name");
@@ -155,6 +156,7 @@ function AppShell({ onSignOut, profile }) {
           />
         )}
         {tab === "config" && <ConfigTab schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} navSections={navSections} appConfig={appConfig} profile={profile} onNavigate={setTab} />}
+        {tab === "help" && <HelpTab navSections={navSections} profile={profile} />}
         {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
       </main>
 
