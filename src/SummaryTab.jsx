@@ -1,7 +1,15 @@
 import React, { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatMoney, Money, colorFor, DatePicker, MoneyLine, MonthCalendar, Select } from "./shared";
-import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
+import { NAVY, TEAL, SUN, AQUA, CORAL, GREEN } from "./App";
+
+const NEUTRAL_GRAY = "#94A3B8";
+const SOURCES = [
+  ["total", "Total"],
+  ["ganado", "Ganado"],
+  ["comision", "Comisión"],
+  ["companeros", "Compañeros"],
+];
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const fmtInt = (n) => (n || 0).toLocaleString("es-ES");
@@ -91,27 +99,40 @@ function BreakdownCard({ title, rows, currencyRows, textColor }) {
 export default function SummaryTab({ worklog, rates, comisiones, commissionRates, activities, schools, currencies, colleaguePayments }) {
   const now = new Date();
   const [granularity, setGranularity] = useState("mensual");
-  const [source, setSource] = useState("ganado"); // "ganado" (Work Log) | "comision" (Comisiones)
+  const [source, setSource] = useState("total"); // "total" | "ganado" | "comision" | "companeros"
   const [year, setYear] = useState(now.getFullYear());
   const [unitIndex, setUnitIndex] = useState(now.getMonth());
   const [customFrom, setCustomFrom] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10));
   const [customTo, setCustomTo] = useState(now.toISOString().slice(0, 10));
   const [selectedSchool, setSelectedSchool] = useState(schools.rows.find((s) => s.is_default)?.name || schools.rows[0]?.name || "");
 
+  const SOURCE_META = {
+    ganado: { label: "Ganado", color: TEAL },
+    comision: { label: "Comisión", color: SUN },
+    companeros: { label: "Compañeros", color: AQUA },
+  };
+
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
   const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
-  const sourceColor = source === "ganado" ? TEAL : SUN;
+  const sourceColor = source === "total" ? NAVY : SOURCE_META[source].color;
+  const sourceLabel = source === "total" ? "Total combinado" : `Total ${SOURCE_META[source].label}`;
 
-  const entriesTable = source === "ganado" ? worklog : comisiones;
-  const ratesTable = source === "ganado" ? rates : commissionRates;
-  const rateFor = (school, activity) => ratesTable.rows.find((r) => r.school === school && r.activity === activity);
+  const rateTotal = (e, ratesTable) => {
+    const r = ratesTable.rows.find((r) => r.school === e.school && r.activity === e.activity);
+    return { total: r ? (r.payment_type === "Per Person" ? r.rate * e.people : r.rate) : 0, currency: r?.currency || e.currency || fallbackCurrency };
+  };
 
-  const withTotals = useMemo(() => entriesTable.rows.map((e) => {
-    const r = rateFor(e.school, e.activity);
-    const total = r ? (r.payment_type === "Per Person" ? r.rate * e.people : r.rate) : 0;
-    return { ...e, total, currency: r?.currency || e.currency || fallbackCurrency };
-  }), [entriesTable.rows, ratesTable.rows, fallbackCurrency]);
+  const ganadoEntries = useMemo(() => worklog.rows.map((e) => ({ ...e, ...rateTotal(e, rates), _source: "ganado" })), [worklog.rows, rates.rows, fallbackCurrency]);
+  const comisionEntries = useMemo(() => comisiones.rows.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" })), [comisiones.rows, commissionRates.rows, fallbackCurrency]);
+  const companerosEntries = useMemo(() => colleaguePayments.rows.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" })), [colleaguePayments.rows]);
+
+  const withTotals = useMemo(() => {
+    if (source === "total") return [...ganadoEntries, ...comisionEntries, ...companerosEntries];
+    if (source === "ganado") return ganadoEntries;
+    if (source === "comision") return comisionEntries;
+    return companerosEntries;
+  }, [source, ganadoEntries, comisionEntries, companerosEntries]);
 
   // ---- navegación de periodo — cambiar de granularidad siempre salta al
   // periodo actual de esa granularidad (nunca se queda "colgado" en un
@@ -143,12 +164,42 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
 
   const schoolEntries = useMemo(() => periodEntries.filter((e) => e.school === selectedSchool), [periodEntries, selectedSchool]);
 
+  // Color del círculo de cada día en el calendario global: el de la escuela
+  // que más ha facturado ese día (sumando importes sin convertir divisas —
+  // aproximación suficiente para elegir "cuál domina"), o gris neutro si hay
+  // empate.
+  const topSchoolColorForDay = (list) => {
+    const sums = {};
+    list.forEach((e) => { sums[e.school] = (sums[e.school] || 0) + (e.total || 0); });
+    const sorted = Object.entries(sums).sort((a, b) => b[1] - a[1]);
+    if (sorted.length === 0) return NEUTRAL_GRAY;
+    if (sorted.length > 1 && sorted[0][1] === sorted[1][1]) return NEUTRAL_GRAY;
+    return schoolColor(sorted[0][0]);
+  };
+
+  const globalLegend = useMemo(() => {
+    const names = [...new Set(periodEntries.map((e) => e.school))];
+    return names.map((n) => ({ label: n, color: schoolColor(n) }));
+  }, [periodEntries, schools.rows]);
+
   const globalTotal = groupSum(periodEntries, () => "Total")[0]?.totals || {};
   const globalBySchool = groupSum(periodEntries, (e) => e.school, { withPeople: true });
   const globalByActivity = groupSum(periodEntries, (e) => e.activity, { withPeople: true });
 
   const schoolTotal = groupSum(schoolEntries, () => "Total")[0]?.totals || {};
   const schoolByActivity = groupSum(schoolEntries, (e) => e.activity, { withPeople: true });
+
+  // En modo Total, el combinado por escuela/actividad no distingue de dónde
+  // viene el dinero — se añade aparte el desglose solo de Comisiones para
+  // no perder esa cifra dentro del total.
+  const comisionPeriodEntries = useMemo(() => comisionEntries.filter((e) => {
+    if (!rangeStart || !rangeEnd) return false;
+    const d = new Date(e.date);
+    return d >= rangeStart && d <= rangeEnd;
+  }), [comisionEntries, rangeStart, rangeEnd]);
+  const comisionBySchool = groupSum(comisionPeriodEntries, (e) => e.school, { withPeople: true });
+  const comisionByActivity = groupSum(comisionPeriodEntries, (e) => e.activity, { withPeople: true });
+  const comisionSchoolByActivity = groupSum(comisionPeriodEntries.filter((e) => e.school === selectedSchool), (e) => e.activity, { withPeople: true });
 
   const colleaguePeriodEntries = useMemo(() => colleaguePayments.rows.filter((p) => {
     if (!rangeStart || !rangeEnd) return false;
@@ -198,14 +249,14 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         </div>
       )}
 
-      {/* Ganado / Comisión */}
+      {/* Total / Ganado / Comisión / Compañeros */}
       <div className="inline-flex gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5">
-        {[["ganado", "Ganado"], ["comision", "Comisión"]].map(([key, l]) => (
+        {SOURCES.map(([key, l]) => (
           <button
             key={key}
             onClick={() => setSource(key)}
             className="rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors"
-            style={source === key ? { backgroundColor: sourceColor, color: "white" } : { color: "#6B7280" }}
+            style={source === key ? { backgroundColor: key === "total" ? NAVY : SOURCE_META[key].color, color: "white" } : { color: "#6B7280" }}
           >
             {l}
           </button>
@@ -213,63 +264,101 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
       </div>
 
       {granularity === "mensual" && (
-        <MonthCalendar year={year} month={unitIndex} entries={periodEntries} dotColor={sourceColor} currencyRows={currencies.rows} activityColor={activityColor} />
+        <MonthCalendar
+          year={year}
+          month={unitIndex}
+          entries={periodEntries}
+          dotColor={topSchoolColorForDay}
+          legend={globalLegend}
+          currencyRows={currencies.rows}
+          activityColor={activityColor}
+          groupBySource={source === "total"}
+          sourceMeta={SOURCE_META}
+        />
       )}
 
       {/* ================= GLOBAL ================= */}
       <div>
         <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">Vista global — {label}</h2>
         <div className="mb-3 rounded-lg p-4 text-white" style={{ backgroundColor: sourceColor }}>
-          <div className="text-xs font-medium opacity-80">Total {source === "ganado" ? "Ganado" : "Comisión"} (todas las escuelas)</div>
+          <div className="text-xs font-medium opacity-80">{sourceLabel} (todas las escuelas)</div>
           <div className="mt-1 text-2xl font-bold tabular-nums"><MoneyLine totals={globalTotal} currencyRows={currencies.rows} /></div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <BreakdownCard title="Por escuela" rows={globalBySchool} currencyRows={currencies.rows} textColor={schoolColor} />
           <BreakdownCard title="Por actividad" rows={globalByActivity} currencyRows={currencies.rows} textColor={activityColor} />
         </div>
+
+        {source === "total" && (
+          <div className="mt-3">
+            <h3 className="mb-2 text-xs font-semibold" style={{ color: SOURCE_META.comision.color }}>Comisiones</h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <BreakdownCard title="Por escuela" rows={comisionBySchool} currencyRows={currencies.rows} textColor={schoolColor} />
+              <BreakdownCard title="Por actividad" rows={comisionByActivity} currencyRows={currencies.rows} textColor={activityColor} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ================= POR ESCUELA ================= */}
       <div>
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex items-center gap-2">
           <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">Por escuela</h2>
           <div className="w-40">
             <Select value={selectedSchool} onChange={setSelectedSchool} options={schoolNames} />
           </div>
         </div>
         <div className="mb-3 rounded-lg p-4 text-white" style={{ backgroundColor: schoolColor(selectedSchool) }}>
-          <div className="text-xs font-medium opacity-80">Total {source === "ganado" ? "Ganado" : "Comisión"} — {selectedSchool || "—"}</div>
+          <div className="text-xs font-medium opacity-80">{sourceLabel} — {selectedSchool || "—"}</div>
           <div className="mt-1 text-2xl font-bold tabular-nums"><MoneyLine totals={schoolTotal} currencyRows={currencies.rows} /></div>
         </div>
         <BreakdownCard title="Por actividad" rows={schoolByActivity} currencyRows={currencies.rows} textColor={activityColor} />
 
-        <div className="mt-3 rounded-lg border border-gray-200 bg-white p-4">
-          <h3 className="mb-3 text-sm font-semibold text-gray-800">Pagos de compañeros — {selectedSchool || "—"} ({label})</h3>
-          {colleagueByName.length === 0 ? (
-            <p className="text-sm text-gray-400">Sin pagos de compañeros en este periodo para esta escuela.</p>
-          ) : (
-            <ul className="divide-y divide-gray-100">
-              {colleagueByName.map((r) => {
-                const netPositive = Object.values(r.totals).reduce((s, v) => s + v, 0) >= 0;
-                return (
-                  <li key={r.key} className="flex items-center justify-between gap-3 py-2 text-sm">
-                    <span className="text-gray-700">{r.key}</span>
-                    <span className="font-semibold tabular-nums" style={{ color: netPositive ? GREEN : CORAL }}>
-                      <MoneyLine totals={r.totals} currencyRows={currencies.rows} />
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+        {source === "total" && (
+          <div className="mt-3">
+            <BreakdownCard title="Comisiones — por actividad" rows={comisionSchoolByActivity} currencyRows={currencies.rows} textColor={activityColor} />
+          </div>
+        )}
+
+        {(source === "total" || source === "companeros") && (
+          <div className="mt-3 rounded-lg border border-gray-200 bg-white p-4">
+            <h3 className="mb-3 text-sm font-semibold text-gray-800">Pagos de compañeros — {selectedSchool || "—"} ({label})</h3>
+            {colleagueByName.length === 0 ? (
+              <p className="text-sm text-gray-400">Sin pagos de compañeros en este periodo para esta escuela.</p>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {colleagueByName.map((r) => {
+                  const netPositive = Object.values(r.totals).reduce((s, v) => s + v, 0) >= 0;
+                  return (
+                    <li key={r.key} className="flex items-center justify-between gap-3 py-2 text-sm">
+                      <span className="text-gray-700">{r.key}</span>
+                      <span className="font-semibold tabular-nums" style={{ color: netPositive ? GREEN : CORAL }}>
+                        <MoneyLine totals={r.totals} currencyRows={currencies.rows} />
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        )}
 
         {granularity === "mensual" && (
           <div className="mt-3">
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">
               Calendario por escuela — {selectedSchool || "—"}
             </h3>
-            <MonthCalendar year={year} month={unitIndex} entries={schoolEntries} dotColor={schoolColor(selectedSchool)} currencyRows={currencies.rows} activityColor={activityColor} />
+            <MonthCalendar
+              year={year}
+              month={unitIndex}
+              entries={schoolEntries}
+              dotColor={schoolColor(selectedSchool)}
+              currencyRows={currencies.rows}
+              activityColor={activityColor}
+              detailed={source !== "total"}
+              groupBySource={source === "total"}
+              sourceMeta={SOURCE_META}
+            />
           </div>
         )}
       </div>

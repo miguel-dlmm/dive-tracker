@@ -345,12 +345,18 @@ export function MoneyLine({ totals, currencyRows }) {
 const CAL_MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const CAL_WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
 
-// Mini calendario del mes — el día con actividad lleva un anillo del color
-// de la fuente activa; al pulsarlo se abre el desglose por actividad de ese
-// día (nº personas + importe). Ancho limitado a propósito: en pantallas
-// grandes (escritorio) una cuadrícula de 7 columnas a ancho completo deja
-// los días sueltos y muy separados — se ve mejor compacta y centrada.
-export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, groupBySchool = false, schoolColor }) {
+const CAL_NEUTRAL = "#94A3B8";
+
+// Mini calendario del mes — el día con actividad lleva un anillo de color;
+// al pulsarlo se abre el desglose de ese día. `dotColor` admite un color fijo
+// o, para calendarios con varias escuelas mezcladas, una función
+// `(dayEntries) => color` (p.ej. el color de la escuela que más ha
+// facturado ese día). El desglose al pulsar un día tiene tres modos:
+// agregado por actividad (por defecto), `detailed` (una fila por apunte,
+// con comentario — para el calendario ya filtrado a una escuela) o
+// `groupBySource` (agrupado por Ganado/Comisión/Compañeros y luego por
+// actividad — cuando el filtro superior está en "Total").
+export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, detailed = false, groupBySource = false, sourceMeta }) {
   const [selectedDay, setSelectedDay] = useState(null);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
@@ -371,8 +377,10 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  // Sin agrupar por escuela: lista plana por actividad (comportamiento
-  // de siempre — se usa cuando el calendario ya está filtrado a una escuela).
+  const dayList = (d) => byDay[d] || [];
+  const colorForDay = (list) => (typeof dotColor === "function" ? (dotColor(list) || CAL_NEUTRAL) : dotColor);
+
+  // Agregado por actividad (comportamiento por defecto).
   const flatBreakdown = (list) => {
     const map = {};
     list.forEach((e) => {
@@ -383,67 +391,75 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
     return Object.entries(map).map(([activity, v]) => ({ activity, ...v }));
   };
 
-  // Agrupado por escuela primero (calendarios con varias escuelas mezcladas,
-  // como el de Home): { school, activities: [...] }
-  const schoolGroupedBreakdown = (list) => {
-    const bySchool = {};
-    list.forEach((e) => { (bySchool[e.school] ||= []).push(e); });
-    return Object.entries(bySchool).map(([school, schoolList]) => ({
-      school,
-      activities: flatBreakdown(schoolList),
+  // Agrupado por fuente (Ganado / Comisión / Compañeros) y luego por actividad.
+  const sourceGroupedBreakdown = (list) => {
+    const bySource = {};
+    list.forEach((e) => { (bySource[e._source] ||= []).push(e); });
+    return Object.entries(bySource).map(([key, sourceList]) => ({
+      key,
+      label: sourceMeta?.[key]?.label || key,
+      color: sourceMeta?.[key]?.color || CAL_NEUTRAL,
+      activities: flatBreakdown(sourceList),
     }));
-  };
-
-  const dayBreakdown = (d) => {
-    const list = byDay[d] || [];
-    return groupBySchool ? schoolGroupedBreakdown(list) : flatBreakdown(list);
   };
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <div className="mx-auto max-w-[280px]">
-        <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-gray-400">
-          {CAL_WEEKDAYS.map((w) => <div key={w}>{w}</div>)}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {cells.map((d, i) => {
-            const hasActivity = d && byDay[d];
-            const isSelected = d === selectedDay;
-            return (
-              <button
-                key={i}
-                type="button"
-                disabled={!d || !hasActivity}
-                onClick={() => setSelectedDay(isSelected ? null : d)}
-                className="flex h-9 items-center justify-center"
-              >
-                {d && (
-                  <span
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-xs"
-                    style={hasActivity
-                      ? { border: `2px solid ${dotColor}`, color: isSelected ? "white" : "#374151", backgroundColor: isSelected ? dotColor : "transparent", fontWeight: 600 }
-                      : { color: "#9CA3AF" }}
-                  >
-                    {d}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+      <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-gray-400">
+        {CAL_WEEKDAYS.map((w) => <div key={w}>{w}</div>)}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {cells.map((d, i) => {
+          const list = d ? dayList(d) : [];
+          const hasActivity = d && list.length > 0;
+          const isSelected = d === selectedDay;
+          const color = hasActivity ? colorForDay(list) : null;
+          return (
+            <button
+              key={i}
+              type="button"
+              disabled={!d || !hasActivity}
+              onClick={() => setSelectedDay(isSelected ? null : d)}
+              className="flex h-9 items-center justify-center"
+            >
+              {d && (
+                <span
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-xs"
+                  style={hasActivity
+                    ? { border: `2px solid ${color}`, color: isSelected ? "white" : "#374151", backgroundColor: isSelected ? color : "transparent", fontWeight: 600 }
+                    : { color: "#9CA3AF" }}
+                >
+                  {d}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
+      {legend && legend.length > 0 && (
+        <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1.5 border-t border-gray-100 pt-3">
+          {legend.map((l) => (
+            <span key={l.label} className="inline-flex items-center gap-1.5 text-[11px] text-gray-500">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: l.color }} aria-hidden="true" />
+              {l.label}
+            </span>
+          ))}
+        </div>
+      )}
+
       {selectedDay && (
-        <div className="mx-auto mt-3 max-w-[280px] rounded-md bg-gray-50 p-3">
+        <div className="mt-3 rounded-md bg-gray-50 p-3">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-600">Día {selectedDay} de {CAL_MONTHS[month]}</span>
-            <button onClick={() => setSelectedDay(null)} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
+            <button onClick={() => setSelectedDay(null)} className="text-gray-400 hover:text-gray-600" aria-label="Cerrar detalle del día"><X size={14} /></button>
           </div>
-          {groupBySchool ? (
+
+          {groupBySource ? (
             <div className="space-y-2.5">
-              {dayBreakdown(selectedDay).map((group) => (
-                <div key={group.school}>
-                  <div className="mb-1 text-xs font-semibold" style={{ color: schoolColor ? schoolColor(group.school) : "#334155" }}>{group.school}</div>
+              {sourceGroupedBreakdown(dayList(selectedDay)).map((group) => (
+                <div key={group.key}>
+                  <div className="mb-1 text-xs font-semibold" style={{ color: group.color }}>{group.label}</div>
                   <ul className="space-y-1">
                     {group.activities.map((a) => (
                       <li key={a.activity} className="flex items-center justify-between pl-2 text-sm">
@@ -458,9 +474,32 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
                 </div>
               ))}
             </div>
+          ) : detailed ? (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-gray-400">
+                  <th className="pb-1.5 text-left font-medium">Actividad</th>
+                  <th className="pb-1.5 text-left font-medium">Comentario</th>
+                  <th className="w-10 pb-1.5 text-center font-medium">Pers.</th>
+                  <th className="pb-1.5 text-right font-medium">Importe</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {dayList(selectedDay).map((e) => (
+                  <tr key={e.id}>
+                    <td className="py-1.5 pr-2 align-top font-medium" style={{ color: activityColor(e.activity) }}>{e.activity}</td>
+                    <td className="py-1.5 pr-2 align-top text-gray-500">{e.notes || "—"}</td>
+                    <td className="w-10 py-1.5 text-center align-top tabular-nums text-gray-500">{e.people || 0}</td>
+                    <td className="py-1.5 text-right align-top font-semibold tabular-nums text-gray-800">
+                      <Money amount={e.total} code={e.currency} currencyRows={currencyRows} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
             <ul className="space-y-1.5">
-              {dayBreakdown(selectedDay).map((a) => (
+              {flatBreakdown(dayList(selectedDay)).map((a) => (
                 <li key={a.activity} className="flex items-center justify-between text-sm">
                   <span style={{ color: activityColor(a.activity) }} className="font-medium">{a.activity}</span>
                   <span className="flex items-center gap-2 tabular-nums text-gray-600">
