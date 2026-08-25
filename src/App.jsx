@@ -46,7 +46,7 @@ const PRIMARY_TABS = [
 // app que una miga de pan (que es un patrón más de web de escritorio).
 const SECONDARY_TITLES = { payments: "Pagos", rates: "Tarifas", config: "Configuración" };
 
-function AppShell({ onSignOut }) {
+function AppShell({ onSignOut, profile }) {
   const schools = useSupabaseTable("schools", "name");
   const activities = useSupabaseTable("activities", "name");
   const paymentTypes = useSupabaseTable("payment_types", "name");
@@ -154,7 +154,7 @@ function AppShell({ onSignOut }) {
             autoOpenSheet={pendingOpen === "rates"} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
-        {tab === "config" && <ConfigTab schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} navSections={navSections} appConfig={appConfig} />}
+        {tab === "config" && <ConfigTab schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} navSections={navSections} appConfig={appConfig} profile={profile} />}
         {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
       </main>
 
@@ -196,7 +196,7 @@ function AppShell({ onSignOut }) {
 // app normal. Vive fuera de AppShell para no depender de que carguen las
 // tablas de negocio solo para saber si hay que mostrar el login.
 function AuthGate() {
-  const { session, loading, signIn, signOut } = useSession();
+  const { session, profile, loading, signIn, signOut } = useSession();
 
   if (loading) {
     return (
@@ -208,7 +208,7 @@ function AuthGate() {
 
   if (!session) return <LoginScreen signIn={signIn} />;
 
-  return <AppShell onSignOut={signOut} />;
+  return <AppShell onSignOut={signOut} profile={profile} />;
 }
 
 export default function App() {
