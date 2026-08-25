@@ -121,7 +121,7 @@ function AppShell({ onSignOut, profile }) {
           <HomeTab
             worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
             activities={activities} schools={schools} currencies={currencies} navSections={navSections}
-            onNavigate={setTab} onQuickCreate={navigateAndCreate}
+            onQuickCreate={navigateAndCreate}
           />
         )}
         {tab === "log" && (
@@ -154,7 +154,7 @@ function AppShell({ onSignOut, profile }) {
             autoOpenSheet={pendingOpen === "rates"} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
-        {tab === "config" && <ConfigTab schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} navSections={navSections} appConfig={appConfig} profile={profile} />}
+        {tab === "config" && <ConfigTab schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} navSections={navSections} appConfig={appConfig} profile={profile} onNavigate={setTab} />}
         {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
       </main>
 
