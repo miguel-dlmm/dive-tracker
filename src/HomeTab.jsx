@@ -1,17 +1,17 @@
 import React, { useMemo } from "react";
-import { Wallet, Settings2, SlidersHorizontal, Handshake, ListChecks, Users } from "lucide-react";
+import { Wallet, Settings2, Handshake, ListChecks, Users } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import { Money, MonthCalendar, colorFor } from "./shared";
 
 const SHORTCUTS = [
   { id: "payments", label: "Pagos", icon: Wallet },
   { id: "rates", label: "Tarifas", icon: Settings2 },
-  { id: "config", label: "Configuración", icon: SlidersHorizontal },
 ];
 
 // worklog / rates / activities / schools / currencies / navSections: hooks de useSupabaseTable
 // onNavigate: (tabId) => cambia de pestaña — se pasa setTab desde App.jsx
-export default function HomeTab({ worklog, rates, activities, schools, currencies, navSections, onNavigate }) {
+// onQuickCreate: (tabId) => cambia de pestaña y abre su hoja de creación sola
+export default function HomeTab({ worklog, rates, activities, schools, currencies, navSections, onNavigate, onQuickCreate }) {
   const now = new Date();
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
@@ -40,14 +40,14 @@ export default function HomeTab({ worklog, rates, activities, schools, currencie
     <div className="space-y-4">
       {/* Accesos directos de creación */}
       <div className="grid grid-cols-2 gap-3">
-        <button onClick={() => onNavigate("log")} className="flex items-center justify-between rounded-lg p-4 text-white transition-transform active:scale-[0.98]" style={{ backgroundColor: sectionColor("log") }}>
+        <button onClick={() => onQuickCreate("log")} className="flex items-center justify-between rounded-lg p-4 text-white transition-transform active:scale-[0.98]" style={{ backgroundColor: sectionColor("log") }}>
           <div className="text-left">
             <div className="text-xs opacity-80">Registro</div>
             <div className="text-sm font-semibold">+ Nuevo</div>
           </div>
           <ListChecks size={20} />
         </button>
-        <button onClick={() => onNavigate("comisiones")} className="flex items-center justify-between rounded-lg p-4 text-white transition-transform active:scale-[0.98]" style={{ backgroundColor: sectionColor("comisiones") }}>
+        <button onClick={() => onQuickCreate("comisiones")} className="flex items-center justify-between rounded-lg p-4 text-white transition-transform active:scale-[0.98]" style={{ backgroundColor: sectionColor("comisiones") }}>
           <div className="text-left">
             <div className="text-xs opacity-80">Comisiones</div>
             <div className="text-sm font-semibold">+ Nueva</div>

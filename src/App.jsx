@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Waves, Home as HomeIcon, ListChecks, BarChart3, Handshake, Users, ArrowLeft } from "lucide-react";
+import { Waves, Home as HomeIcon, ListChecks, BarChart3, Handshake, Users, ArrowLeft, Settings } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { ToastProvider, AppLoading } from "./shared";
 import HomeTab from "./HomeTab";
@@ -86,7 +86,7 @@ function AppShell() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
       <header className="border-b border-black/5 bg-white">
-        <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-5 py-4">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-2.5 px-5 py-4">
           {isSecondary ? (
             <button onClick={() => setTab("home")} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Volver a Home">
               <ArrowLeft size={20} style={{ color: NAVY }} aria-hidden="true" />
@@ -99,6 +99,11 @@ function AppShell() {
                 <h1 className="text-[15px] font-bold tracking-tight" style={{ color: NAVY }}>Ocean Pulse</h1>
                 <p className="text-[10.5px] font-medium text-gray-400">by Ocean Flow</p>
               </div>
+            </button>
+          )}
+          {tab !== "config" && (
+            <button onClick={() => setTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Configuración">
+              <Settings size={20} style={{ color: NAVY }} aria-hidden="true" />
             </button>
           )}
         </div>
