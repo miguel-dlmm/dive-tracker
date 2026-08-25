@@ -14,27 +14,31 @@ create table if not exists schools (
   id uuid primary key default gen_random_uuid(),
   name text unique not null,
   is_default boolean not null default false,
-  color text not null default '#0F766E'
+  color text not null default '#0F766E',
+  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
 );
 
 create table if not exists activities (
   id uuid primary key default gen_random_uuid(),
   name text unique not null,
   color text not null default '#0E7C7B',
-  is_default boolean not null default false
+  is_default boolean not null default false,
+  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
 );
 
 create table if not exists payment_types (
   id uuid primary key default gen_random_uuid(),
   name text unique not null,
-  is_default boolean not null default false
+  is_default boolean not null default false,
+  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
 );
 
 create table if not exists payment_statuses (
   id uuid primary key default gen_random_uuid(),
   name text unique not null,
   is_default boolean not null default false,
-  color text not null default '#64748B'
+  color text not null default '#64748B',
+  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
 );
 
 create table if not exists currencies (
@@ -68,7 +72,8 @@ create table if not exists rates (
   activity text not null,
   payment_type text not null,
   rate numeric not null,
-  currency text not null default 'EUR'
+  currency text not null default 'EUR',
+  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
 );
 
 -- Lo que cobras por traer un cliente que hace la actividad con otra persona.
@@ -78,7 +83,8 @@ create table if not exists commission_rates (
   activity text not null,
   payment_type text not null,
   rate numeric not null,
-  currency text not null default 'EUR'
+  currency text not null default 'EUR',
+  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
 );
 
 -- ---------- Movimientos ----------
@@ -92,7 +98,8 @@ create table if not exists worklog (
   people int not null default 0,
   notes text default '',
   status text not null default 'Pending',
-  currency text not null default 'EUR' -- legado; el importe real usa la moneda de `rates`, no esta columna
+  currency text not null default 'EUR', -- legado; el importe real usa la moneda de `rates`, no esta columna
+  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
 );
 
 -- Comisiones: clientes que refieres a la escuela (no los impartes tú).
@@ -104,7 +111,8 @@ create table if not exists comisiones (
   people int not null default 0,
   currency text not null default 'EUR', -- legado; ver nota en worklog.currency
   notes text default '',
-  status text not null default 'Pending'
+  status text not null default 'Pending',
+  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
 );
 
 -- Pagos entre compañeros (cubrirse turnos, etc.) — independiente de rates.
@@ -117,7 +125,8 @@ create table if not exists colleague_payments (
   amount numeric not null, -- puede ser negativo
   status text not null default 'Pending',
   notes text default '',
-  currency text not null default 'EUR'
+  currency text not null default 'EUR',
+  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
 );
 
 -- ---------- Auth (Supabase Auth) y perfiles ----------
