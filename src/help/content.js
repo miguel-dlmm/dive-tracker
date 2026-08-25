@@ -221,23 +221,6 @@ export const HELP_CATEGORIES = [
         ],
         expectedResult: "La nueva escuela o actividad está disponible al momento en Registro, Comisiones y Tarifas.",
       },
-      {
-        id: "gestionar-usuarios",
-        adminOnly: true,
-        title: "Gestionar quién tiene acceso a la app",
-        summary: "Como administrador, invita a nuevas personas y controla quién más puede administrar.",
-        whatYouCanDo: "Solo los administradores pueden crear cuentas nuevas y conceder o retirar el rol de administrador a otras personas.",
-        whenToUseIt: "Cuando alguien nuevo del equipo necesita entrar en la app.",
-        steps: [
-          "Entra en Configuración → Usuarios (solo visible si eres administrador).",
-          "Pulsa 'Crear usuario' e indica email, nombre y una contraseña inicial.",
-          "Comparte esa contraseña directamente con la persona — todavía no hay invitación por email.",
-        ],
-        tips: [
-          "Solo puede haber un superadministrador y no es editable desde aquí — es una protección del sistema.",
-        ],
-        expectedResult: "La persona ya puede iniciar sesión con la contraseña que le has compartido.",
-      },
     ],
   },
 ];

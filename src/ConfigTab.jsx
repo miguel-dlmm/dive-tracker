@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Plus, Star, Pencil, Search, Lock, UserPlus, X, Wallet, Settings2, HelpCircle, ChevronRight } from "lucide-react";
+import { Plus, Star, Pencil, Search, Lock, UserPlus, X } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
 import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog } from "./shared";
 import { supabase } from "./supabaseClient";
+import RatesTab from "./RatesTab";
+import PaymentsTab from "./PaymentsTab";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
 
@@ -585,17 +587,17 @@ function UsersDirectory({ profile }) {
   );
 }
 
-const SECTIONS = ["Escuelas", "Actividades"];
+const SECTIONS = ["Escuelas", "Actividades", "Tarifas", "Pagos"];
 const ADMIN_SECTIONS = ["Tipos de pago", "Estados de pago", "Monedas", "Secciones", "Ajustes", "Usuarios"];
 
 // schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
+// rates / commissionRates / worklog / comisiones: hooks que necesitan las secciones Tarifas y Pagos, embebidas aquí
 // profile: fila propia de profiles (useSession) — is_admin/is_superadmin deciden qué secciones se ven
-// onNavigate: (tabId) => cambia de pestaña a nivel de App — se pasa setTab, para
-// los accesos a Pagos/Tarifas (pantallas propias, no secciones internas de aquí)
-export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, navSections, appConfig, profile, onNavigate }) {
+export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile }) {
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
   const [section, setSection] = useState("Escuelas");
   const sections = isAdmin ? [...SECTIONS, ...ADMIN_SECTIONS] : SECTIONS;
+  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
 
   return (
     <div className="space-y-4">
@@ -610,29 +612,6 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
             {s}
           </button>
         ))}
-        <span className="mx-1 h-5 w-px bg-gray-200" aria-hidden="true" />
-        {/* Pagos y Tarifas son pantallas propias (con su cabecera "‹ Volver"),
-            no secciones internas de Configuración — de ahí el estilo distinto
-            (nunca resaltadas, con flecha) y que naveguen con onNavigate en vez
-            de cambiar `section`. */}
-        <button
-          onClick={() => onNavigate("payments")}
-          className="flex min-h-11 items-center gap-1.5 rounded-md px-3 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50"
-        >
-          <Wallet size={14} aria-hidden="true" /> Pagos <ChevronRight size={12} className="text-gray-300" aria-hidden="true" />
-        </button>
-        <button
-          onClick={() => onNavigate("rates")}
-          className="flex min-h-11 items-center gap-1.5 rounded-md px-3 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50"
-        >
-          <Settings2 size={14} aria-hidden="true" /> Tarifas <ChevronRight size={12} className="text-gray-300" aria-hidden="true" />
-        </button>
-        <button
-          onClick={() => onNavigate("help")}
-          className="flex min-h-11 items-center gap-1.5 rounded-md px-3 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50"
-        >
-          <HelpCircle size={14} aria-hidden="true" /> Ayuda <ChevronRight size={12} className="text-gray-300" aria-hidden="true" />
-        </button>
       </div>
 
       {section === "Escuelas" && (
@@ -642,6 +621,16 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
       {section === "Actividades" && (
         <CrudTable title="Actividades" table={activities} hasDefault searchable pullDefaultOut colorizeText
           fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
+      )}
+      {section === "Tarifas" && (
+        <RatesTab
+          schools={schools} activities={activities} paymentTypes={paymentTypes} currencies={currencies}
+          rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
+          accentColor={sectionColor("rates")}
+        />
+      )}
+      {section === "Pagos" && (
+        <PaymentsTab schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} />
       )}
       {isAdmin && section === "Tipos de pago" && (
         <CrudTable title="Tipos de pago" table={paymentTypes} hasDefault fields={[{ key: "name", label: "Nombre" }]} />
