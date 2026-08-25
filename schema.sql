@@ -272,6 +272,17 @@ returns boolean language sql security definer set search_path = public stable as
   select coalesce((select is_admin or is_superadmin from public.profiles where user_id = uid), false);
 $$;
 
+-- Permiso específico: ¿es esta persona superadmin? Gemela de is_admin(uid),
+-- pero sin el "or is_superadmin" — is_admin() sigue devolviendo true para
+-- admin O superadmin (se usa donde cualquiera de los dos vale, p. ej.
+-- lectura de currencies/nav_sections/app_config); esta función es para los
+-- sitios donde hace falta distinguir estrictamente superadmin, como el
+-- cambio de is_admin de otra cuenta (ver protect_profile_roles() abajo).
+create or replace function public.is_superadmin(uid uuid)
+returns boolean language sql security definer set search_path = public stable as $$
+  select coalesce((select is_superadmin from public.profiles where user_id = uid), false);
+$$;
+
 -- RPC estrecha para el login por nickname: recibe un nickname y devuelve
 -- solo el email asociado (o null), nada más de la fila de profiles.
 -- security definer para saltar la RLS privada de profiles — pero como solo
@@ -332,7 +343,8 @@ notify pgrst, 'reload schema';
 --   forma de crear o quitar un superadmin es una migración directa contra
 --   la base de datos (SQL editor / dashboard de Supabase), nunca la UI.
 -- - Un admin no puede quitarle is_admin a una cuenta protegida (superadmin).
--- - Solo un admin puede cambiar is_admin en OTRA cuenta (no la propia).
+-- - Solo un SUPERADMIN puede cambiar is_admin en OTRA cuenta (no la propia,
+--   y no un admin normal — ver server/users/updateAdminStatus.js).
 create or replace function public.protect_profile_roles()
 returns trigger as $$
 begin
@@ -345,8 +357,8 @@ begin
   end if;
 
   if new.is_admin is distinct from old.is_admin then
-    if not public.is_admin(auth.uid()) then
-      raise exception 'only admins can grant or revoke admin privileges';
+    if not public.is_superadmin(auth.uid()) then
+      raise exception 'only a superadmin can grant or revoke admin privileges';
     end if;
     if auth.uid() = old.user_id then
       raise exception 'cannot change your own admin status';
