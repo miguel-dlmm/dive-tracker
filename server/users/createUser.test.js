@@ -113,7 +113,7 @@ describe("con permisos válidos", () => {
     sendWelcomeEmail.mockResolvedValue({ sent: true });
   });
 
-  it("crea el usuario y devuelve { user_id, email_sent: true } cuando todo va bien", async () => {
+  it("crea el usuario y devuelve exactamente { user_id, email_sent: true } cuando el email se envía bien, sin exponer el enlace", async () => {
     createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
 
     const result = await handleCreateUser(request());
@@ -170,7 +170,7 @@ describe("con permisos válidos", () => {
     expect(sendWelcomeEmail).not.toHaveBeenCalled();
   });
 
-  it("no bloquea la creación si falla el envío del email — la cuenta ya existe", async () => {
+  it("no bloquea la creación si falla el envío del email — la cuenta ya existe, y devuelve el enlace igualmente para probar el flujo a mano", async () => {
     createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
     sendWelcomeEmail.mockResolvedValue({ sent: false, error: "No se pudo enviar el email de bienvenida." });
 
@@ -178,7 +178,29 @@ describe("con permisos válidos", () => {
 
     expect(result).toEqual({
       status: 200,
-      payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo enviar el email de bienvenida." },
+      payload: {
+        user_id: "new-user-1",
+        email_sent: false,
+        email_error: "No se pudo enviar el email de bienvenida.",
+        action_link: "https://example.supabase.co/verify?token=abc",
+      },
+    });
+  });
+
+  it("no bloquea la creación ni deja email_sent:true si sendWelcomeEmail lanza una excepción inesperada", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+    sendWelcomeEmail.mockRejectedValue(new Error("boom"));
+
+    const result = await handleCreateUser(request());
+
+    expect(result).toEqual({
+      status: 200,
+      payload: {
+        user_id: "new-user-1",
+        email_sent: false,
+        email_error: "No se pudo enviar el email de bienvenida.",
+        action_link: "https://example.supabase.co/verify?token=abc",
+      },
     });
   });
 

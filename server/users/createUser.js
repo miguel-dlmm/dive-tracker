@@ -118,18 +118,39 @@ export async function handleCreateUser({ method, headers, body }) {
     console.error("create-user: no se pudo generar el enlace de primer acceso", linkError);
     emailError = "No se pudo generar el enlace de acceso.";
   } else {
-    const result = await sendWelcomeEmail({
-      email,
-      firstName: first_name,
-      nickname,
-      actionLink: linkData?.properties?.action_link,
-    });
-    emailSent = result.sent;
-    if (!result.sent) emailError = result.error;
+    // try/catch defensivo: sendWelcomeEmail está documentado como "nunca
+    // lanza", pero no dependemos solo de esa convención — si algún día deja
+    // de cumplirse, esto sigue garantizando email_sent:false + el fallback
+    // de action_link en vez de tumbar toda la petición sin respuesta útil.
+    try {
+      const result = await sendWelcomeEmail({
+        email,
+        firstName: first_name,
+        nickname,
+        actionLink: linkData?.properties?.action_link,
+      });
+      emailSent = result.sent;
+      if (!result.sent) emailError = result.error;
+    } catch (err) {
+      console.error("create-user: sendWelcomeEmail lanzó una excepción inesperada", err);
+      emailError = "No se pudo enviar el email de bienvenida.";
+    }
   }
+
+  // Fallback operativo MVP. Permite activar usuarios manualmente si el
+  // proveedor de email falla. Revisar/eliminar antes de producción pública.
+  // Solo se devuelve cuando el email NO se ha enviado (fallo de envío o
+  // configuración incompleta) — si el envío funciona, la respuesta no
+  // incluye el enlace y se comporta igual que antes de este fallback.
+  const actionLink = !emailSent ? linkData?.properties?.action_link : undefined;
 
   return {
     status: 200,
-    payload: { user_id: created.user.id, email_sent: emailSent, ...(emailError ? { email_error: emailError } : {}) },
+    payload: {
+      user_id: created.user.id,
+      email_sent: emailSent,
+      ...(emailError ? { email_error: emailError } : {}),
+      ...(actionLink ? { action_link: actionLink } : {}),
+    },
   };
 }

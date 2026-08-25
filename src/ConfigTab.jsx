@@ -350,6 +350,12 @@ const emptyUserForm = { email: "", first_name: "", last_name: "", nickname: "", 
 function CreateUserSheet({ onClose, onCreated }) {
   const [form, setForm] = useState(emptyUserForm);
   const [submitting, setSubmitting] = useState(false);
+  // Fallback operativo MVP. Permite activar usuarios manualmente si el
+  // proveedor de email falla. Revisar/eliminar antes de producción pública.
+  // El backend (createUser.js) solo incluye action_link en la respuesta
+  // cuando el email NO se ha podido enviar — si el envío funciona, esto
+  // nunca se activa y el flujo se comporta como uno normal.
+  const [emailFailure, setEmailFailure] = useState(null);
   const toast = useToast();
 
   const submit = async () => {
@@ -371,14 +377,66 @@ function CreateUserSheet({ onClose, onCreated }) {
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(payload.error || "No se pudo crear el usuario.");
-      toast?.success("Usuario creado correctamente");
-      onCreated();
+      if (payload.action_link) {
+        toast?.success("Usuario creado (el email no se pudo enviar)");
+        setEmailFailure(payload);
+      } else {
+        toast?.success("Usuario creado correctamente");
+        onCreated();
+      }
     } catch (err) {
       toast?.error(err.message || "No se pudo crear el usuario.");
     } finally {
       setSubmitting(false);
     }
   };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(emailFailure.action_link);
+      toast?.success("Enlace copiado");
+    } catch {
+      toast?.error("No se pudo copiar. Selecciónalo a mano.");
+    }
+  };
+
+  // Fallback operativo MVP. Permite activar usuarios manualmente si el
+  // proveedor de email falla. Revisar/eliminar antes de producción pública.
+  if (emailFailure) {
+    return (
+      <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={onCreated}>
+        <div
+          className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
+          style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-amber-700">No se pudo enviar el email</h3>
+            <button onClick={onCreated} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+          </div>
+          <p className="mb-2 text-xs text-gray-500">
+            No se pudo enviar el email de activación. Puedes compartir este enlace manualmente.
+          </p>
+          <p className="mb-3 break-all rounded-md bg-gray-50 px-3 py-2 font-mono text-xs text-gray-700">{emailFailure.action_link}</p>
+          <div className="flex gap-2">
+            <button
+              onClick={copyLink}
+              className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-medium text-white"
+              style={{ backgroundColor: TEAL }}
+            >
+              Copiar enlace
+            </button>
+            <button
+              onClick={onCreated}
+              className="flex min-h-11 flex-1 items-center justify-center rounded-md border border-gray-200 text-sm font-medium text-gray-600"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={() => !submitting && onClose()}>
