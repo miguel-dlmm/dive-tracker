@@ -882,6 +882,28 @@ export function lighten(hex, amount = 0.88) {
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 }
 
+// Cabecera "Actividad + Escuela" estandarizada en las filas de listado de
+// Registro/Comisiones/Tarifas/Pagos: la actividad es el dato principal (su
+// propio color + un punto de acento, para escanear la lista de un vistazo),
+// la escuela queda debajo como contexto secundario, más pequeña y con su
+// propio acento pero sin competir en peso — sustituye al antiguo
+// "Escuela - Actividad" en una sola línea, donde ambos datos competían por
+// la misma jerarquía visual.
+export function EntryTitle({ school, activity, schoolColor, activityColor }) {
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5">
+        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: activityColor }} aria-hidden="true" />
+        <span className="truncate text-[15px] font-semibold leading-tight" style={{ color: activityColor }}>{activity}</span>
+      </div>
+      <div className="mt-1 flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: schoolColor }} aria-hidden="true" />
+        <span className="truncate text-[11.5px] font-medium text-gray-400">{school}</span>
+      </div>
+    </div>
+  );
+}
+
 export function StatusPill({ status, paymentStatusRows }) {
   const color = colorFor(paymentStatusRows, status);
   return (

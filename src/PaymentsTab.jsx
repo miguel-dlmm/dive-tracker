@@ -1,15 +1,16 @@
 import React, { useState, useMemo } from "react";
 import { RefreshCw } from "lucide-react";
 import { NAVY, TEAL } from "./App";
-import { formatMoney, Select, MultiSelect, Field, colorFor, StatusSwitch, oppositeStatus, DatePicker, useToast } from "./shared";
+import { Money, Select, MultiSelect, Field, colorFor, StatusSwitch, oppositeStatus, DatePicker, EntryTitle, useToast } from "./shared";
 
 // schools / activities / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates / worklog: { rows: [...], updateRow, bulkUpdateWhere }
 // No hay alta aquí — Pagos solo cambia el estado (único campo editable).
-export default function PaymentsTab({ activities, paymentStatuses, currencies, rates, worklog }) {
+export default function PaymentsTab({ schools, activities, paymentStatuses, currencies, rates, worklog }) {
   const [filters, setFilters] = useState({ from: "", to: "", school: "", activity: [], status: "" });
 
   const activityColor = (name) => colorFor(activities.rows, name, "#374151");
+  const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
   const rateFor = (sch, activity) => rates.rows.find((r) => r.school === sch && r.activity === activity);
   const totalFor = (e) => {
     const r = rateFor(e.school, e.activity);
@@ -88,14 +89,11 @@ export default function PaymentsTab({ activities, paymentStatuses, currencies, r
         <div className="divide-y divide-gray-100">
           {filtered.length === 0 && <p className="px-4 py-6 text-center text-sm text-gray-400">Sin registros con estos filtros.</p>}
           {filtered.map((e) => (
-            <div key={e.id} className="px-4 py-2.5 text-sm">
-              <div className="min-w-0">
-                <span className="font-medium" style={{ color: activityColor(e.activity) }}>{e.activity}</span>
-                <span className="text-gray-400"> · {e.school}</span>
-                <div className="text-xs text-gray-400">{e.date}</div>
-              </div>
-              <div className="mt-1.5 flex items-center justify-end gap-3">
-                <span className="font-semibold" style={{ color: NAVY }}>{formatMoney(totalFor(e), rateFor(e.school, e.activity)?.currency, currencies.rows)}</span>
+            <div key={e.id} className="px-4 py-3 text-sm">
+              <EntryTitle school={e.school} activity={e.activity} schoolColor={schoolColor(e.school)} activityColor={activityColor(e.activity)} />
+              <div className="mt-2 truncate pl-3.5 text-xs text-gray-400">{e.date}</div>
+              <div className="mt-2 flex items-center justify-end gap-2.5">
+                <Money amount={totalFor(e)} code={rateFor(e.school, e.activity)?.currency} currencyRows={currencies.rows} className="font-semibold" style={{ color: NAVY }} />
                 <StatusSwitch value={e.status} onChange={() => toggleSingle(e)} paymentStatusRows={paymentStatuses.rows} />
               </div>
             </div>
