@@ -247,16 +247,20 @@ function GeneralSettings({ appConfig }) {
   );
 }
 
-const SECTIONS = ["Escuelas", "Actividades", "Tipos de pago", "Estados de pago", "Monedas", "Secciones", "Ajustes"];
+const SECTIONS = ["Escuelas", "Actividades", "Tipos de pago", "Estados de pago"];
+const ADMIN_SECTIONS = ["Monedas", "Secciones", "Ajustes", "Usuarios"];
 
 // schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
-export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, navSections, appConfig }) {
+// profile: fila propia de profiles (useSession) — is_admin/is_superadmin deciden qué secciones se ven
+export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, navSections, appConfig, profile }) {
+  const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
   const [section, setSection] = useState("Escuelas");
+  const sections = isAdmin ? [...SECTIONS, ...ADMIN_SECTIONS] : SECTIONS;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-1">
-        {SECTIONS.map((s) => (
+        {sections.map((s) => (
           <button
             key={s}
             onClick={() => setSection(s)}
@@ -283,12 +287,17 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
         <CrudTable title="Estados de pago" table={paymentStatuses} hasDefault
           fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
       )}
-      {section === "Monedas" && (
+      {isAdmin && section === "Monedas" && (
         <CrudTable title="Monedas" table={currencies} pkField="code" hasDefault searchable pullDefaultOut
           fields={[{ key: "code", label: "Código (ej. EUR)" }, { key: "name", label: "Nombre" }, { key: "symbol", label: "Símbolo" }]} />
       )}
-      {section === "Secciones" && <SectionColors navSections={navSections} />}
-      {section === "Ajustes" && <GeneralSettings appConfig={appConfig} />}
+      {isAdmin && section === "Secciones" && <SectionColors navSections={navSections} />}
+      {isAdmin && section === "Ajustes" && <GeneralSettings appConfig={appConfig} />}
+      {isAdmin && section === "Usuarios" && (
+        <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-400">
+          Gestión de usuarios — próximamente.
+        </div>
+      )}
     </div>
   );
 }
