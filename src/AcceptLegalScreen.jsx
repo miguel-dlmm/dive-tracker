@@ -1,35 +1,19 @@
 import React, { useState } from "react";
-import { Waves, Loader2, FileText } from "lucide-react";
+import { Waves, Loader2 } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
-import LegalDocumentViewer from "./LegalDocumentViewer";
-import * as privacyPolicy from "./legal/privacyPolicy";
-import * as termsOfUse from "./legal/termsOfUse";
-
-// Botón que abre uno de los dos documentos legales en el visor.
-function DocumentLink({ label, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex min-h-11 w-full items-center gap-2 rounded-md border border-gray-200 px-3 text-left text-sm font-medium hover:bg-gray-50"
-      style={{ color: NAVY }}
-    >
-      <FileText size={16} style={{ color: TEAL }} aria-hidden="true" />
-      {label}
-    </button>
-  );
-}
+import LegalConsentFields from "./legal/LegalConsentFields";
 
 // onSubmit: () => Promise — acceptLegalConsents de useSession. Lanza en
 // error, mismo contrato que CreatePasswordScreen. Se muestra en vez de la
 // app normal mientras pendingLegalConsents no esté vacío (ver AuthGate en
-// App.jsx) — primer acceso tras crear contraseña, o tras publicar una
-// versión nueva de un documento para usuarios ya existentes.
+// App.jsx) — reconsentimiento de usuarios ya existentes (password_set ya en
+// true) tras publicar una versión nueva de un documento. El primer acceso
+// de un usuario nuevo acepta los documentos dentro de CreatePasswordScreen,
+// no aquí — ver LegalConsentFields, reutilizado en ambas pantallas.
 export default function AcceptLegalScreen({ onSubmit }) {
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [openDoc, setOpenDoc] = useState(null); // "privacy" | "terms" | null
 
   const canSubmit = accepted && !loading;
 
@@ -65,21 +49,7 @@ export default function AcceptLegalScreen({ onSubmit }) {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="space-y-2">
-            <DocumentLink label={privacyPolicy.TITLE} onClick={() => setOpenDoc("privacy")} />
-            <DocumentLink label={termsOfUse.TITLE} onClick={() => setOpenDoc("terms")} />
-          </div>
-
-          <label className="flex items-start gap-2.5 rounded-md bg-gray-50 px-3 py-2.5 text-sm text-gray-700">
-            <input
-              type="checkbox"
-              checked={accepted}
-              onChange={(e) => setAccepted(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300"
-              style={{ accentColor: TEAL }}
-            />
-            He leído y acepto la Política de Privacidad y los Términos de Uso
-          </label>
+          <LegalConsentFields accepted={accepted} onAcceptedChange={setAccepted} />
 
           {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
@@ -94,13 +64,6 @@ export default function AcceptLegalScreen({ onSubmit }) {
           </button>
         </form>
       </div>
-
-      {openDoc === "privacy" && (
-        <LegalDocumentViewer title={privacyPolicy.TITLE} sections={privacyPolicy.SECTIONS} onClose={() => setOpenDoc(null)} />
-      )}
-      {openDoc === "terms" && (
-        <LegalDocumentViewer title={termsOfUse.TITLE} sections={termsOfUse.SECTIONS} onClose={() => setOpenDoc(null)} />
-      )}
     </div>
   );
 }
