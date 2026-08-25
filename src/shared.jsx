@@ -356,8 +356,13 @@ const CAL_NEUTRAL = "#94A3B8";
 // con comentario — para el calendario ya filtrado a una escuela) o
 // `groupBySource` (agrupado por Ganado/Comisión/Compañeros y luego por
 // actividad — cuando el filtro superior está en "Total").
-export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, detailed = false, groupBySource = false, sourceMeta }) {
-  const [selectedDay, setSelectedDay] = useState(null);
+export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false }) {
+  const [selectedDay, setSelectedDayState] = useState(null);
+  const userSelectedRef = useRef(false);
+  const setSelectedDay = (day) => {
+    userSelectedRef.current = true;
+    setSelectedDayState(day);
+  };
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
 
@@ -373,6 +378,16 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
     return map;
   }, [entries, year, month]);
 
+  // Si se pide auto-selección, marca el primer día con datos en cuanto
+  // llegan (p. ej. tras la carga asíncrona de Supabase) — pero solo
+  // mientras el usuario no haya tocado el calendario, para no pisar una
+  // selección manual con un re-render posterior.
+  useEffect(() => {
+    if (!autoSelectFirstDay || userSelectedRef.current) return;
+    const days = Object.keys(byDay).map(Number);
+    if (days.length > 0) setSelectedDayState(Math.min(...days));
+  }, [autoSelectFirstDay, byDay]);
+
   const cells = [];
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
@@ -380,15 +395,18 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   const dayList = (d) => byDay[d] || [];
   const colorForDay = (list) => (typeof dotColor === "function" ? (dotColor(list) || CAL_NEUTRAL) : dotColor);
 
-  // Agregado por actividad (comportamiento por defecto).
+  // Agregado por actividad (comportamiento por defecto); si showSchool
+  // está activo, se agrupa por escuela+actividad para poder mostrar la
+  // escuela junto a cada línea.
   const flatBreakdown = (list) => {
     const map = {};
     list.forEach((e) => {
-      if (!map[e.activity]) map[e.activity] = { people: 0, totals: {} };
-      map[e.activity].people += e.people || 0;
-      map[e.activity].totals[e.currency] = (map[e.activity].totals[e.currency] || 0) + e.total;
+      const key = showSchool ? `${e.school}||${e.activity}` : e.activity;
+      if (!map[key]) map[key] = { activity: e.activity, school: e.school, people: 0, totals: {} };
+      map[key].people += e.people || 0;
+      map[key].totals[e.currency] = (map[key].totals[e.currency] || 0) + e.total;
     });
-    return Object.entries(map).map(([activity, v]) => ({ activity, ...v }));
+    return Object.values(map);
   };
 
   // Agrupado por fuente (Ganado / Comisión / Compañeros) y luego por actividad.
@@ -500,8 +518,11 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           ) : (
             <ul className="space-y-1.5">
               {flatBreakdown(dayList(selectedDay)).map((a) => (
-                <li key={a.activity} className="flex items-center justify-between text-sm">
-                  <span style={{ color: activityColor(a.activity) }} className="font-medium">{a.activity}</span>
+                <li key={showSchool ? `${a.school}-${a.activity}` : a.activity} className="flex items-center justify-between text-sm">
+                  <span className="flex flex-col">
+                    <span style={{ color: activityColor(a.activity) }} className="font-medium">{a.activity}</span>
+                    {showSchool && <span className="text-[11px] text-gray-400">{a.school}</span>}
+                  </span>
                   <span className="flex items-center gap-2 tabular-nums text-gray-600">
                     <span className="text-xs text-gray-400">{a.people}p</span>
                     <MoneyLine totals={a.totals} currencyRows={currencyRows} />
