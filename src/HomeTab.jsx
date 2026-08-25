@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Handshake, ListChecks } from "lucide-react";
 import { TEAL, SUN, AQUA } from "./App";
 import { Money, MonthCalendar, colorFor } from "./shared";
+import { computeRateTotal } from "./rateCalc";
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
 // schools / currencies / navSections: hooks de useSupabaseTable
@@ -19,7 +20,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
   const rateTotal = (e, ratesTable) => {
     const r = ratesTable.rows.find((r) => r.school === e.school && r.activity === e.activity);
-    return { total: r ? (r.payment_type === "Per Person" ? r.rate * e.people : r.rate) : 0, currency: r?.currency || e.currency || fallbackCurrency };
+    return { total: computeRateTotal(r, e.people), currency: r?.currency || e.currency || fallbackCurrency };
   };
 
   // Ganado es el único que cuenta para el KPI del mes y el color de los

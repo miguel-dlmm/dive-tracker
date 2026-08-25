@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Pencil, X } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import { inputCls, formatMoney, Money, Field, Select, CurrencySearchSelect, MoneyInput, ListFilterBar, applyListFilters, colorFor, StatusPill, DeleteButton, DatePicker, EditActions, AppLoading, EntryTitle, useToast } from "./shared";
+import { computeRateTotal } from "./rateCalc";
 
 // schools / activities / paymentTypes / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates / worklog: { rows: [...], insertRow, updateRow, deleteRow }
@@ -54,7 +55,7 @@ export default function WorkLogTab({ schools, activities, paymentTypes, paymentS
   const preview = useMemo(() => {
     const r = rateFor(form.school, form.activity);
     if (!r) return null;
-    const total = r.payment_type === "Per Person" ? r.rate * (Number(form.people) || 0) : r.rate;
+    const total = computeRateTotal(r, form.people);
     return { rate: r.rate, paymentType: r.payment_type, total, currency: r.currency };
   }, [form, rates.rows]);
 
@@ -141,7 +142,7 @@ export default function WorkLogTab({ schools, activities, paymentTypes, paymentS
             }
 
             const r = rateFor(e.school, e.activity);
-            const total = r ? (r.payment_type === "Per Person" ? r.rate * e.people : r.rate) : 0;
+            const total = computeRateTotal(r, e.people);
             return (
               <div key={e.id} className="px-4 py-3 text-sm">
                 <div className="flex items-start justify-between gap-2">
