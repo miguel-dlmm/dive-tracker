@@ -15,7 +15,6 @@ import { sendWelcomeEmail } from "../email/sendWelcomeEmail.js";
 
 const VALID_BODY = {
   email: "diver@example.com",
-  password: "s3cret!",
   first_name: "Ada",
   last_name: "Lovelace",
   nickname: "ada",
@@ -65,7 +64,7 @@ it("devuelve 400 si el cuerpo no es JSON válido", async () => {
   expect(result).toEqual({ status: 400, payload: { error: "Cuerpo de la petición inválido." } });
 });
 
-it.each(["email", "password", "nickname"])("devuelve 400 si falta el campo %s", async (field) => {
+it.each(["email", "nickname"])("devuelve 400 si falta el campo %s", async (field) => {
   const body = { ...VALID_BODY };
   delete body[field];
 
@@ -73,7 +72,7 @@ it.each(["email", "password", "nickname"])("devuelve 400 si falta el campo %s", 
 
   expect(result).toEqual({
     status: 400,
-    payload: { error: "Email, nickname y contraseña son obligatorios." },
+    payload: { error: "Email y nickname son obligatorios." },
   });
   expect(verifyCaller).not.toHaveBeenCalled();
 });
@@ -129,7 +128,6 @@ describe("con permisos válidos", () => {
 
     expect(createUser).toHaveBeenCalledWith({
       email: VALID_BODY.email,
-      password: VALID_BODY.password,
       email_confirm: true,
       user_metadata: {
         first_name: VALID_BODY.first_name,

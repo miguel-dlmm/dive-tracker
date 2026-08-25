@@ -342,7 +342,7 @@ function UsersTable({ rows, currentUserId, viewerIsSuperadmin, onRequestToggle }
 // auth.users y solo devuelve filas si quien llama es admin/superadmin — ver
 // schema.sql. No es un fetch de la tabla profiles, así que no compite con
 // ningún otro hook de useSupabaseTable ya cargado en App.jsx.
-const emptyUserForm = { email: "", first_name: "", last_name: "", nickname: "", password: "" };
+const emptyUserForm = { email: "", first_name: "", last_name: "", nickname: "" };
 
 // Hoja de creación de usuario — solo visible/usable para superadmin (ver
 // UsersDirectory). Llama a la función Netlify create-user, que es la única
@@ -359,8 +359,8 @@ function CreateUserSheet({ onClose, onCreated }) {
   const toast = useToast();
 
   const submit = async () => {
-    if (!form.email || !form.nickname || !form.password) {
-      toast?.error("Email, nickname y contraseña son obligatorios.");
+    if (!form.email || !form.nickname) {
+      toast?.error("Email y nickname son obligatorios.");
       return;
     }
     setSubmitting(true);
@@ -464,17 +464,10 @@ function CreateUserSheet({ onClose, onCreated }) {
           <Field label="Nickname">
             <input value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} className={`${inputCls} w-full`} />
           </Field>
-          <Field label="Contraseña inicial">
-            <input type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={`${inputCls} w-full`} />
-          </Field>
         </div>
 
-        {/* MVP: contraseña fijada a mano por el superadmin, sin invitación ni
-            email de confirmación — ver el mismo aviso junto a create-user.js.
-            Se muestra aquí para que quien crea la cuenta sepa que tiene que
-            comunicársela a la persona por su cuenta. */}
         <p className="mt-2 text-xs text-gray-400">
-          Contraseña temporal: compártela directamente con la persona. Más adelante esto podrá sustituirse por una invitación o un restablecimiento de contraseña.
+          La persona recibirá un email con un enlace de un solo uso para entrar y crear su propia contraseña.
         </p>
 
         <button
