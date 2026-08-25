@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Waves, Home as HomeIcon, ListChecks, BarChart3, Handshake, Users, ArrowLeft, Settings, LogOut } from "lucide-react";
+import { Waves, Home as HomeIcon, ListChecks, BarChart3, Handshake, Users, ArrowLeft, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { ToastProvider, AppLoading } from "./shared";
@@ -7,9 +7,7 @@ import LoginScreen from "./LoginScreen";
 import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
-import RatesTab from "./RatesTab";
 import ConfigTab from "./ConfigTab";
-import PaymentsTab from "./PaymentsTab";
 import CompanerosTab from "./CompanerosTab";
 import SummaryTab from "./SummaryTab";
 import HelpTab from "./HelpTab";
@@ -45,7 +43,7 @@ const PRIMARY_TABS = [
 // cabecera muestra "‹ Volver" + el nombre de la pantalla, el patrón
 // nativo de iOS/Android para "dónde estoy y cómo vuelvo", más propio de
 // app que una miga de pan (que es un patrón más de web de escritorio).
-const SECONDARY_TITLES = { payments: "Pagos", rates: "Tarifas", config: "Configuración", help: "Ayuda" };
+const SECONDARY_TITLES = { config: "Configuración", help: "Ayuda" };
 
 function AppShell({ onSignOut, profile }) {
   const schools = useSupabaseTable("schools", "name");
@@ -105,6 +103,11 @@ function AppShell({ onSignOut, profile }) {
             </button>
           )}
           <div className="flex items-center gap-1">
+            {tab !== "help" && (
+              <button onClick={() => setTab("help")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Ayuda">
+                <HelpCircle size={20} style={{ color: NAVY }} aria-hidden="true" />
+              </button>
+            )}
             {tab !== "config" && (
               <button onClick={() => setTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Configuración">
                 <Settings size={20} style={{ color: NAVY }} aria-hidden="true" />
@@ -139,7 +142,6 @@ function AppShell({ onSignOut, profile }) {
             autoOpenSheet={pendingOpen === "comisiones"} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
-        {tab === "payments" && <PaymentsTab schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} />}
         {tab === "colegas" && (
           <CompanerosTab
             schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} colleaguePayments={colleaguePayments}
@@ -147,15 +149,13 @@ function AppShell({ onSignOut, profile }) {
             autoOpenSheet={pendingOpen === "colegas"} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
-        {tab === "rates" && (
-          <RatesTab
-            schools={schools} activities={activities} paymentTypes={paymentTypes} currencies={currencies} rates={rates} commissionRates={commissionRates}
-            worklog={worklog} comisiones={comisiones}
-            accentColor={sectionColor("rates")}
-            autoOpenSheet={pendingOpen === "rates"} onAutoOpened={() => setPendingOpen(null)}
+        {tab === "config" && (
+          <ConfigTab
+            schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
+            rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
+            navSections={navSections} appConfig={appConfig} profile={profile}
           />
         )}
-        {tab === "config" && <ConfigTab schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} navSections={navSections} appConfig={appConfig} profile={profile} onNavigate={setTab} />}
         {tab === "help" && <HelpTab navSections={navSections} profile={profile} />}
         {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
       </main>

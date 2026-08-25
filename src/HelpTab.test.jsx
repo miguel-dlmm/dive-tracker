@@ -2,10 +2,11 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import HelpTab from "./HelpTab";
 
-// Navegación categorías → artículos → detalle → volver, y el filtrado de
-// contenido adminOnly (ver "Gestionar quién tiene acceso a la app" en
-// help/content.js). No se prueba el contenido exacto de cada artículo
-// (es texto, no lógica) — solo el comportamiento de navegación y permisos.
+// Navegación categorías → artículos → detalle → volver. No se prueba el
+// contenido exacto de cada artículo (es texto, no lógica) — solo el
+// comportamiento de navegación. El filtrado adminOnly (ver content.js)
+// no tiene hoy ningún artículo real que lo ejercite — el manual quedó
+// orientado solo a usuario final tras revisar el contenido.
 const navSections = { rows: [] };
 
 describe("HelpTab", () => {
@@ -31,21 +32,5 @@ describe("HelpTab", () => {
 
     expect(screen.getByText("Pasos")).toBeInTheDocument();
     expect(screen.getByText("Resultado esperado")).toBeInTheDocument();
-  });
-
-  it("oculta el contenido adminOnly a un perfil sin permisos de admin", async () => {
-    const user = userEvent.setup();
-    render(<HelpTab navSections={navSections} profile={{ is_admin: false, is_superadmin: false }} />);
-
-    await user.click(screen.getByText("Configuración"));
-    expect(screen.queryByText("Gestionar quién tiene acceso a la app")).not.toBeInTheDocument();
-  });
-
-  it("muestra el contenido adminOnly a un perfil admin", async () => {
-    const user = userEvent.setup();
-    render(<HelpTab navSections={navSections} profile={{ is_admin: true, is_superadmin: false }} />);
-
-    await user.click(screen.getByText("Configuración"));
-    expect(screen.getByText("Gestionar quién tiene acceso a la app")).toBeInTheDocument();
   });
 });
