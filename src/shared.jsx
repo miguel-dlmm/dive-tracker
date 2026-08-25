@@ -51,7 +51,7 @@ export function useToast() {
 
 // =================================================================
 // Loading genérico de la app — un icono que "se rellena" en bucle.
-// El icono es configurable desde Configuración (tabla app_settings),
+// El icono es configurable desde Configuración (tabla app_config),
 // para poder cambiarlo por el logo oficial cuando esté listo, sin
 // tocar código.
 // =================================================================

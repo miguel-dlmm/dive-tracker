@@ -10,36 +10,61 @@
 
 -- ---------- Catálogos de configuración ----------
 
+-- schools/activities/payment_types/payment_statuses: user-owned catálogos.
+-- unique(user_id, name) en vez de unique(name) — cada usuario tiene su
+-- propio espacio de nombres, dos usuarios pueden tener ambos una escuela
+-- "PADI Cozumel" sin chocar entre sí.
 create table if not exists schools (
   id uuid primary key default gen_random_uuid(),
-  name text unique not null,
+  name text not null,
   is_default boolean not null default false,
   color text not null default '#0F766E',
-  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  unique (user_id, name)
 );
 
 create table if not exists activities (
   id uuid primary key default gen_random_uuid(),
-  name text unique not null,
+  name text not null,
   color text not null default '#0E7C7B',
   is_default boolean not null default false,
-  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  unique (user_id, name)
 );
 
 create table if not exists payment_types (
   id uuid primary key default gen_random_uuid(),
-  name text unique not null,
+  name text not null,
   is_default boolean not null default false,
-  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  unique (user_id, name)
 );
 
 create table if not exists payment_statuses (
   id uuid primary key default gen_random_uuid(),
-  name text unique not null,
+  name text not null,
   is_default boolean not null default false,
   color text not null default '#64748B',
-  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
+  user_id uuid not null references auth.users(id) default auth.uid(),
+  unique (user_id, name)
 );
+
+-- RLS: aislamiento por usuario en los 4 catálogos de arriba.
+alter table schools enable row level security;
+drop policy if exists "allow all" on schools;
+create policy "own rows" on schools for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+alter table activities enable row level security;
+drop policy if exists "allow all" on activities;
+create policy "own rows" on activities for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+alter table payment_types enable row level security;
+drop policy if exists "allow all" on payment_types;
+create policy "own rows" on payment_types for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+alter table payment_statuses enable row level security;
+drop policy if exists "allow all" on payment_statuses;
+create policy "own rows" on payment_statuses for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create table if not exists currencies (
   code text primary key,
@@ -56,11 +81,15 @@ create table if not exists nav_sections (
   color text not null default '#0F766E'
 );
 
--- Ajustes por usuario (hoy: icono del loading) — una fila por usuario,
--- no una fila única global.
-create table if not exists app_settings (
-  user_id uuid primary key references auth.users(id),
-  logo_icon text not null default 'Waves'
+-- Configuración global de la aplicación (hoy: icono del loading; mañana:
+-- nombre de la app, branding, ajustes tipo CMS). Fila única compartida por
+-- todos los usuarios — NO es una preferencia de usuario, es la app misma.
+-- (Existió brevemente como una fila por usuario; se revirtió porque no
+-- representaba el concepto correcto — ver migración de arquitectura.)
+create table if not exists app_config (
+  id boolean primary key default true,
+  logo_icon text not null default 'Waves',
+  constraint app_config_single_row check (id)
 );
 
 -- ---------- Tarifas ----------
@@ -139,6 +168,9 @@ create table if not exists public.profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   username text unique not null,
   display_name text,
+  default_currency text references currencies(code), -- preferencia personal; distinto de currencies.is_default (el respaldo global de la app)
+  is_admin boolean not null default false,
+  is_superadmin boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -165,20 +197,85 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- profiles no tiene RLS todavía (igual que el resto de tablas de este
--- fichero, ver nota de RLS justo debajo) — se activa en el paso de la
--- migración que sustituya "allow all" por políticas reales en toda la BD.
+-- Helper para políticas de otras tablas ("¿es admin quien llama?"). security
+-- definer para no reevaluar RLS de profiles recursivamente al consultarla.
+create or replace function public.is_admin(uid uuid)
+returns boolean language sql security definer set search_path = public stable as $$
+  select coalesce((select is_admin or is_superadmin from public.profiles where user_id = uid), false);
+$$;
+
+-- Protección de roles a nivel de base de datos — se aplica pase lo que pase
+-- en el frontend, incluso si una policy RLS ya dejó pasar el UPDATE:
+-- - is_superadmin NUNCA es modificable desde la app, por nadie. La única
+--   forma de crear o quitar un superadmin es una migración directa contra
+--   la base de datos (SQL editor / dashboard de Supabase), nunca la UI.
+-- - Un admin no puede quitarle is_admin a una cuenta protegida (superadmin).
+-- - Solo un admin puede cambiar is_admin en OTRA cuenta (no la propia).
+create or replace function public.protect_profile_roles()
+returns trigger as $$
+begin
+  if new.is_superadmin is distinct from old.is_superadmin then
+    raise exception 'is_superadmin cannot be changed through the app';
+  end if;
+
+  if old.is_superadmin and new.is_admin is distinct from old.is_admin then
+    raise exception 'cannot modify admin status of a protected superadmin account';
+  end if;
+
+  if new.is_admin is distinct from old.is_admin then
+    if not public.is_admin(auth.uid()) then
+      raise exception 'only admins can grant or revoke admin privileges';
+    end if;
+    if auth.uid() = old.user_id then
+      raise exception 'cannot change your own admin status';
+    end if;
+  end if;
+
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists protect_profile_roles_trigger on public.profiles;
+create trigger protect_profile_roles_trigger
+  before update on public.profiles
+  for each row execute function public.protect_profile_roles();
+
+-- profiles: privado por defecto. Cada usuario ve/edita su propia fila;
+-- admins y superadmins ven y editan cualquier fila (la propia gestión fina
+-- de qué columnas puede tocar cada cual la hace el trigger de arriba, no
+-- esta policy). Sin policy de insert/delete: las filas solo se crean via
+-- el trigger handle_new_user (security definer, no pasa por RLS).
+alter table public.profiles enable row level security;
+
+drop policy if exists "select own or admin sees all" on public.profiles;
+create policy "select own or admin sees all" on public.profiles
+  for select using (auth.uid() = user_id or public.is_admin(auth.uid()));
+
+drop policy if exists "update own or admin updates any" on public.profiles;
+create policy "update own or admin updates any" on public.profiles
+  for update using (auth.uid() = user_id or public.is_admin(auth.uid()))
+  with check (auth.uid() = user_id or public.is_admin(auth.uid()));
 
 -- ---------- RLS ----------
--- Todas las tablas: RLS activado con política "allow all" (sin auth
--- todavía, single-user). Patrón repetido por tabla:
+-- Estado actual:
+-- - profiles: políticas reales (ver arriba) — privado por defecto, admins ven todo.
+-- - schools/activities/payment_types/payment_statuses: políticas reales
+--   (ver arriba) — auth.uid() = user_id, aislamiento por usuario.
+-- - currencies/nav_sections: políticas reales aplicadas directamente en
+--   Supabase (select para cualquier autenticado, insert/update/delete solo
+--   para is_admin(auth.uid())) — mismo patrón que app_config, sin reflejar
+--   aún el SQL exacto aquí.
+-- - app_config: igual que currencies/nav_sections — pendiente de reflejar
+--   la policy exacta en este fichero.
+-- - rates/commission_rates/worklog/comisiones/colleague_payments: siguen
+--   con RLS "allow all" (patrón de abajo), pendientes del siguiente paso
+--   de migración — ya tienen user_id y backfill hecho, falta activar RLS.
+--
+-- Patrón "allow all" repetido por tabla (aún vigente en las de arriba):
 --
 -- alter table <tabla> enable row level security;
 -- drop policy if exists "allow all" on <tabla>;
 -- create policy "allow all" on <tabla> for all using (true) with check (true);
---
--- Cuando se añada autenticación, esto es lo primero que cambia: añadir
--- user_id a cada tabla y sustituir "allow all" por políticas reales.
 
 -- ---------- Notas de diseño del esquema ----------
 -- - No existe tabla "activity_types" (Instructor/Comisión) — se eliminó al

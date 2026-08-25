@@ -6,10 +6,9 @@ import { inputCls, formatMoney, Money, Field, Select, CurrencySearchSelect, Mone
 // schools / activities / paymentTypes / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates / worklog: { rows: [...], insertRow, updateRow, deleteRow }
 // accentColor: color de sección (nav_sections), para el botón flotante de crear
-// appSettings: { rows: [...] } — para el icono de carga configurado, usado en el loading al dar de alta una tarifa al vuelo
-// userId: id del usuario autenticado (auth.uid()), para resolver la fila propia de appSettings
+// appConfig: { rows: [...] } — para el icono de carga configurado, usado en el loading al dar de alta una tarifa al vuelo
 // La moneda ya NO se elige aquí — se toma de la tarifa (Escuela+Actividad) en Tarifas.
-export default function WorkLogTab({ schools, activities, paymentTypes, paymentStatuses, currencies, rates, worklog, appSettings, userId, accentColor = TEAL, autoOpenSheet = false, onAutoOpened }) {
+export default function WorkLogTab({ schools, activities, paymentTypes, paymentStatuses, currencies, rates, worklog, appConfig, accentColor = TEAL, autoOpenSheet = false, onAutoOpened }) {
   const defaultStatus = paymentStatuses.rows.find((s) => s.is_default)?.name || paymentStatuses.rows[0]?.name || "Pending";
   const defaultSchool = schools.rows.find((s) => s.is_default)?.name || "";
   const defaultActivity = activities.rows.find((a) => a.is_default)?.name || "";
@@ -274,7 +273,7 @@ export default function WorkLogTab({ schools, activities, paymentTypes, paymentS
 
       {savingRate && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white/80">
-          <AppLoading iconName={appSettings?.rows?.find((r) => r.user_id === userId)?.logo_icon} color={accentColor} label="Guardando tarifa" />
+          <AppLoading iconName={appConfig?.rows?.[0]?.logo_icon} color={accentColor} label="Guardando tarifa" />
         </div>
       )}
     </div>
