@@ -103,3 +103,88 @@ For database and architecture changes:
 Always propose a migration plan first.
 Never implement authentication, permissions or schema changes in a single step.
 Prefer incremental migrations.
+
+## Reglas de trabajo obligatorias
+
+Estas reglas son obligatorias para todos los cambios futuros del proyecto,
+salvo que se acuerde explícitamente una excepción.
+
+### 1. Control de cambios y gestión de commits
+
+- Nunca hacer commit ni push directamente sin revisión previa del cambio.
+- Antes de cualquier commit, mostrar siempre: resumen funcional de los
+  cambios, objetivo del cambio y problema que resuelve, lista completa de
+  archivos modificados/creados/eliminados, dependencias añadidas o
+  modificadas, riesgos técnicos identificados, impacto sobre la arquitectura
+  existente, resultado de todas las verificaciones ejecutadas, y el mensaje
+  de commit propuesto.
+- El mensaje de commit se pide siempre para aprobación antes de ejecutar
+  `git commit`.
+- Convención semántica siempre: `feat`, `fix`, `refactor`, `test`, `chore`,
+  `perf`, `docs`.
+- Commits pequeños, coherentes, una única intención técnica. Evitar mezclar
+  en un mismo commit: refactor + funcionalidad nueva, cambios visuales +
+  cambios de arquitectura, configuración + lógica de negocio.
+
+### 2. Validación obligatoria antes de push
+
+- Antes de cualquier push, ejecutar siempre `npm run test` y `npm run build`.
+- Deben pasar todos los tests y el build debe finalizar correctamente.
+- Si falla un test: NO commit ni push. Detener e informar nombre del test,
+  archivo, error completo, contexto del fallo, posible causa y propuesta de
+  solución.
+- Si falla el build: NO push. Informar error completo, archivo afectado,
+  posible causa y solución propuesta.
+- Solo tras aprobación del mensaje de commit + tests correctos + build
+  correcto: `git add <archivos>`, `git commit -m "mensaje aprobado"`,
+  `git push origin develop`.
+- Tras el push, informar siempre: hash del commit, rama utilizada, resumen
+  final de cambios, resultado final de tests, resultado final del build.
+
+### 3. Principios de diseño y arquitectura
+
+- Priorizar código mantenible frente a soluciones rápidas; evitar
+  duplicación de lógica; una única fuente de verdad para reglas de negocio;
+  separar responsabilidades; favorecer composición frente a componentes
+  gigantes con demasiadas condiciones; extraer abstracciones solo cuando
+  exista una necesidad real; evitar sobreingeniería y patrones introducidos
+  solo por moda.
+- Antes de crear un componente/hook/servicio/capa/librería nueva, analizar
+  si existe duplicación real, si mejora la mantenibilidad, si reduce
+  complejidad, y si el coste supera al beneficio.
+
+### 4. Estándares de testing
+
+- Estrategia basada en comportamiento, priorizando en este orden: (1)
+  unitarios — funciones puras, cálculos, validaciones, reglas de negocio;
+  (2) integración ligera — componentes React críticos, interacción de
+  usuario, llamadas a servicios, flujos importantes; (3) seguridad —
+  permisos, autenticación, autorización, endpoints sensibles.
+- Evitar tests frágiles basados en clases CSS, estructura exacta del HTML,
+  implementación interna del componente o estados privados. Validar
+  comportamiento visible, llamadas externas, datos enviados y resultados
+  obtenidos.
+- Mockear únicamente los límites del sistema (API, Supabase, servicios
+  externos); no mockear innecesariamente lógica interna propia.
+
+### 5. Revisión arquitectónica continua
+
+- Actuar también como responsable técnico del proyecto: si se detecta un
+  problema de diseño, no ignorarlo. Comunicar problema detectado, impacto
+  futuro, posibles soluciones, recomendación profesional y coste
+  aproximado del cambio.
+- No implementar estas mejoras automáticamente — presentar la propuesta y
+  esperar aprobación primero.
+
+### 6. Investigación y criterio profesional
+
+- En decisiones arquitectónicas importantes, no limitarse a seguir
+  instrucciones literales: analizar alternativas como lo haría un
+  desarrollador senior (patrones actuales de la industria, características
+  reales del stack, coste/beneficio, evitando soluciones empresariales
+  innecesarias para el tamaño del proyecto).
+- Si hay una aproximación mejor que la planteada inicialmente,
+  presentarla argumentando por qué mejora el diseño, qué problema resuelve,
+  qué coste añade y cuándo sería recomendable aplicarla.
+- La decisión final siempre debe buscar código simple, seguro, mantenible,
+  fácil de evolucionar y sin complejidad innecesaria.
