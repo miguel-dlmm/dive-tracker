@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { Waves, Home as HomeIcon, ListChecks, BarChart3, Handshake, Users, ArrowLeft, Settings } from "lucide-react";
+import { Waves, Home as HomeIcon, ListChecks, BarChart3, Handshake, Users, ArrowLeft, Settings, LogOut } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
+import { useSession } from "./useSession";
 import { ToastProvider, AppLoading } from "./shared";
+import LoginScreen from "./LoginScreen";
 import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
@@ -44,7 +46,7 @@ const PRIMARY_TABS = [
 // app que una miga de pan (que es un patrón más de web de escritorio).
 const SECONDARY_TITLES = { payments: "Pagos", rates: "Tarifas", config: "Configuración" };
 
-function AppShell() {
+function AppShell({ onSignOut }) {
   const schools = useSupabaseTable("schools", "name");
   const activities = useSupabaseTable("activities", "name");
   const paymentTypes = useSupabaseTable("payment_types", "name");
@@ -101,11 +103,16 @@ function AppShell() {
               </div>
             </button>
           )}
-          {tab !== "config" && (
-            <button onClick={() => setTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Configuración">
-              <Settings size={20} style={{ color: NAVY }} aria-hidden="true" />
+          <div className="flex items-center gap-1">
+            {tab !== "config" && (
+              <button onClick={() => setTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Configuración">
+                <Settings size={20} style={{ color: NAVY }} aria-hidden="true" />
+              </button>
+            )}
+            <button onClick={onSignOut} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Cerrar sesión">
+              <LogOut size={20} style={{ color: NAVY }} aria-hidden="true" />
             </button>
-          )}
+          </div>
         </div>
       </header>
 
@@ -185,10 +192,29 @@ function AppShell() {
   );
 }
 
+// Puerta de sesión: sin sesión activa, pantalla de login; con sesión, la
+// app normal. Vive fuera de AppShell para no depender de que carguen las
+// tablas de negocio solo para saber si hay que mostrar el login.
+function AuthGate() {
+  const { session, loading, signIn, signOut } = useSession();
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+        <AppLoading color={TEAL} />
+      </div>
+    );
+  }
+
+  if (!session) return <LoginScreen signIn={signIn} />;
+
+  return <AppShell onSignOut={signOut} />;
+}
+
 export default function App() {
   return (
     <ToastProvider>
-      <AppShell />
+      <AuthGate />
     </ToastProvider>
   );
 }
