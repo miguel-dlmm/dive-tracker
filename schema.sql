@@ -120,6 +120,46 @@ create table if not exists colleague_payments (
   currency text not null default 'EUR'
 );
 
+-- ---------- Auth (Supabase Auth) y perfiles ----------
+
+-- Identidad real vía Supabase Auth (tabla auth.users, gestionada por
+-- Supabase — no se toca directamente, contraseñas ya con hash). public.
+-- profiles guarda los campos propios de la app que auth.users no tiene,
+-- 1:1 con auth.users.
+create table if not exists public.profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  username text unique not null,
+  display_name text,
+  created_at timestamptz not null default now()
+);
+
+-- Crea automáticamente la fila de profiles al darse de alta un auth.users
+-- nuevo (hoy: solo el alta manual del admin; mañana: también altas por
+-- signup público, sin cambios en este trigger). Lee username/display_name
+-- de los metadatos del usuario (raw_user_meta_data) pasados al crear la
+-- cuenta; si no hay username en los metadatos, usa la parte local del email.
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (user_id, username, display_name)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
+    new.raw_user_meta_data->>'display_name'
+  );
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- profiles no tiene RLS todavía (igual que el resto de tablas de este
+-- fichero, ver nota de RLS justo debajo) — se activa en el paso de la
+-- migración que sustituya "allow all" por políticas reales en toda la BD.
+
 -- ---------- RLS ----------
 -- Todas las tablas: RLS activado con política "allow all" (sin auth
 -- todavía, single-user). Patrón repetido por tabla:
