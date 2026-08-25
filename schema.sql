@@ -210,29 +210,40 @@ create policy "own rows" on colleague_payments for all using (auth.uid() = user_
 -- Supabase — no se toca directamente, contraseñas ya con hash). public.
 -- profiles guarda los campos propios de la app que auth.users no tiene,
 -- 1:1 con auth.users.
+-- nickname: identificador público dentro de la app, único (comparación
+-- case-insensitive vía el índice de abajo) y alternativa a el email para
+-- iniciar sesión (ver email_for_nickname más abajo). No puede contener "@"
+-- porque el login decide si lo que se ha escrito es email o nickname
+-- comprobando justo eso — si el nickname pudiera llevar "@" el flujo de
+-- login sería ambiguo.
 create table if not exists public.profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  username text unique not null,
-  display_name text,
+  first_name text,
+  last_name text,
+  nickname text not null,
   default_currency text references currencies(code), -- preferencia personal; distinto de currencies.is_default (el respaldo global de la app)
   is_admin boolean not null default false,
   is_superadmin boolean not null default false,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint profiles_nickname_no_at check (nickname !~ '@')
 );
 
+create unique index if not exists profiles_nickname_lower_key on public.profiles (lower(nickname));
+
 -- Crea automáticamente la fila de profiles al darse de alta un auth.users
--- nuevo (hoy: solo el alta manual del admin; mañana: también altas por
--- signup público, sin cambios en este trigger). Lee username/display_name
--- de los metadatos del usuario (raw_user_meta_data) pasados al crear la
--- cuenta; si no hay username en los metadatos, usa la parte local del email.
+-- nuevo (hoy: solo el alta manual del admin vía la función de creación de
+-- usuarios; mañana: también altas por signup público, sin cambios en este
+-- trigger). Lee first_name/last_name/nickname de los metadatos del usuario
+-- (raw_user_meta_data) pasados al crear la cuenta.
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (user_id, username, display_name)
+  insert into public.profiles (user_id, first_name, last_name, nickname)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
-    new.raw_user_meta_data->>'display_name'
+    new.raw_user_meta_data->>'first_name',
+    new.raw_user_meta_data->>'last_name',
+    new.raw_user_meta_data->>'nickname'
   );
   return new;
 end;
@@ -249,6 +260,23 @@ create or replace function public.is_admin(uid uuid)
 returns boolean language sql security definer set search_path = public stable as $$
   select coalesce((select is_admin or is_superadmin from public.profiles where user_id = uid), false);
 $$;
+
+-- RPC estrecha para el login por nickname: recibe un nickname y devuelve
+-- solo el email asociado (o null), nada más de la fila de profiles.
+-- security definer para saltar la RLS privada de profiles — pero como solo
+-- expone el email, no hay fuga de datos. Debe ser invocable por "anon"
+-- porque se llama ANTES de autenticar, desde la pantalla de login.
+create or replace function public.email_for_nickname(p_nickname text)
+returns text
+language sql security definer set search_path = public stable as $$
+  select au.email
+  from public.profiles p
+  join auth.users au on au.id = p.user_id
+  where lower(p.nickname) = lower(p_nickname)
+  limit 1;
+$$;
+
+grant execute on function public.email_for_nickname(text) to anon, authenticated;
 
 -- Protección de roles a nivel de base de datos — se aplica pase lo que pase
 -- en el frontend, incluso si una policy RLS ya dejó pasar el UPDATE:
@@ -305,12 +333,12 @@ create policy "update own or admin updates any" on public.profiles
 -- ---------- Bootstrap: primer superadmin ----------
 -- En una base de datos nueva, handle_new_user() crea cada profiles row con
 -- is_admin = false, is_superadmin = false por defecto — no hay forma de
--- volverse admin desde la app. Tras crear la primera cuenta (username
+-- volverse admin desde la app. Tras crear la primera cuenta (nickname
 -- "admin") vía el dashboard de Supabase, hay que promoverla a mano UNA VEZ
 -- con esta consulta (no forma parte de ningún flujo de la app a propósito,
 -- ver protect_profile_roles_trigger más arriba):
 --
--- update public.profiles set is_admin = true, is_superadmin = true where username = 'admin';
+-- update public.profiles set is_admin = true, is_superadmin = true where nickname = 'admin';
 
 -- ---------- RLS ----------
 -- Estado actual — migración de RLS completa en las 12 tablas:
