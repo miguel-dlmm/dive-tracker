@@ -5,6 +5,7 @@ import { useSession } from "./useSession";
 import { ToastProvider, AppLoading } from "./shared";
 import LoginScreen from "./LoginScreen";
 import CreatePasswordScreen from "./CreatePasswordScreen";
+import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
@@ -197,11 +198,14 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
 
 // Puerta de sesión: sin sesión activa, pantalla de login; con sesión pero
 // sin contraseña propia todavía (primer acceso vía el enlace del email de
-// bienvenida, ver createUser.js), pantalla de crear contraseña; con todo
+// bienvenida, ver createUser.js), pantalla de crear contraseña; con
+// contraseña fijada pero consentimiento legal pendiente (primer acceso, o
+// republicación de una versión nueva de un documento para usuarios ya
+// existentes — ver useSession.js), pantalla de aceptación legal; con todo
 // listo, la app normal. Vive fuera de AppShell para no depender de que
-// carguen las tablas de negocio solo para decidir cuál de las tres tocar.
+// carguen las tablas de negocio solo para decidir cuál de las cuatro tocar.
 function AuthGate() {
-  const { session, profile, loading, signIn, signOut, completePasswordChange } = useSession();
+  const { session, profile, loading, signIn, signOut, completePasswordChange, pendingLegalConsents, acceptLegalConsents } = useSession();
   // Justo tras completar el primer acceso, AppShell debe abrir directamente
   // en Ayuda en vez de Home — se limpia solo (no persiste entre sesiones),
   // ver App.jsx → AppShell → initialTab.
@@ -226,6 +230,10 @@ function AuthGate() {
         }}
       />
     );
+  }
+
+  if (profile && profile.password_set && pendingLegalConsents.length > 0) {
+    return <AcceptLegalScreen onSubmit={acceptLegalConsents} />;
   }
 
   return <AppShell onSignOut={signOut} profile={profile} initialTab={justActivated ? "help" : "home"} />;
