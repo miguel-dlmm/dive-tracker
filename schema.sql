@@ -73,6 +73,16 @@ create table if not exists currencies (
   is_default boolean not null default false
 );
 
+-- RLS: catálogo global — cualquier autenticado puede leerlo, solo
+-- admins/superadmins pueden gestionarlo. is_admin(auth.uid()) ya cubre
+-- is_admin OR is_superadmin internamente (ver definición de la función).
+alter table currencies enable row level security;
+drop policy if exists "allow all" on currencies;
+drop policy if exists "select all authenticated" on currencies;
+create policy "select all authenticated" on currencies for select using (auth.uid() is not null);
+drop policy if exists "admin write" on currencies;
+create policy "admin write" on currencies for all using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+
 -- Color de cada área de la app (Home, Registro, Comisiones, Compañeros,
 -- Pagos, Tarifas, Configuración) — usado en nav inferior y botones FAB.
 create table if not exists nav_sections (
@@ -80,6 +90,14 @@ create table if not exists nav_sections (
   label text not null,
   color text not null default '#0F766E'
 );
+
+-- RLS: mismo patrón que currencies — lectura abierta, escritura solo admin.
+alter table nav_sections enable row level security;
+drop policy if exists "allow all" on nav_sections;
+drop policy if exists "select all authenticated" on nav_sections;
+create policy "select all authenticated" on nav_sections for select using (auth.uid() is not null);
+drop policy if exists "admin write" on nav_sections;
+create policy "admin write" on nav_sections for all using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
 
 -- Configuración global de la aplicación (hoy: icono del loading; mañana:
 -- nombre de la app, branding, ajustes tipo CMS). Fila única compartida por
@@ -91,6 +109,14 @@ create table if not exists app_config (
   logo_icon text not null default 'Waves',
   constraint app_config_single_row check (id)
 );
+
+-- RLS: mismo patrón que currencies/nav_sections — lectura abierta, escritura solo admin.
+alter table app_config enable row level security;
+drop policy if exists "allow all" on app_config;
+drop policy if exists "select all authenticated" on app_config;
+create policy "select all authenticated" on app_config for select using (auth.uid() is not null);
+drop policy if exists "admin write" on app_config;
+create policy "admin write" on app_config for all using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
 
 -- ---------- Tarifas ----------
 
@@ -256,22 +282,30 @@ create policy "update own or admin updates any" on public.profiles
   for update using (auth.uid() = user_id or public.is_admin(auth.uid()))
   with check (auth.uid() = user_id or public.is_admin(auth.uid()));
 
--- ---------- RLS ----------
--- Estado actual:
--- - profiles: políticas reales (ver arriba) — privado por defecto, admins ven todo.
--- - schools/activities/payment_types/payment_statuses: políticas reales
---   (ver arriba) — auth.uid() = user_id, aislamiento por usuario.
--- - currencies/nav_sections: políticas reales aplicadas directamente en
---   Supabase (select para cualquier autenticado, insert/update/delete solo
---   para is_admin(auth.uid())) — mismo patrón que app_config, sin reflejar
---   aún el SQL exacto aquí.
--- - app_config: igual que currencies/nav_sections — pendiente de reflejar
---   la policy exacta en este fichero.
--- - rates/commission_rates/worklog/comisiones/colleague_payments: siguen
---   con RLS "allow all" (patrón de abajo), pendientes del siguiente paso
---   de migración — ya tienen user_id y backfill hecho, falta activar RLS.
+-- ---------- Bootstrap: primer superadmin ----------
+-- En una base de datos nueva, handle_new_user() crea cada profiles row con
+-- is_admin = false, is_superadmin = false por defecto — no hay forma de
+-- volverse admin desde la app. Tras crear la primera cuenta (username
+-- "admin") vía el dashboard de Supabase, hay que promoverla a mano UNA VEZ
+-- con esta consulta (no forma parte de ningún flujo de la app a propósito,
+-- ver protect_profile_roles_trigger más arriba):
 --
--- Patrón "allow all" repetido por tabla (aún vigente en las de arriba):
+-- update public.profiles set is_admin = true, is_superadmin = true where username = 'admin';
+
+-- ---------- RLS ----------
+-- Estado actual — todas las tablas de negocio y de configuración tienen ya
+-- políticas reales, excepto las 5 de movimientos financieros (siguiente
+-- paso de migración pendiente):
+-- - profiles: privado por defecto, admins ven/editan todo (ver arriba).
+-- - schools/activities/payment_types/payment_statuses: auth.uid() = user_id
+--   (ver arriba).
+-- - currencies/nav_sections/app_config: select abierto a cualquier
+--   autenticado, insert/update/delete solo is_admin(auth.uid()) (ver arriba).
+-- - rates/commission_rates/worklog/comisiones/colleague_payments: siguen
+--   con RLS "allow all" (patrón de abajo) — ya tienen user_id y backfill
+--   hecho, falta activar RLS real.
+--
+-- Patrón "allow all" repetido por tabla (aún vigente en las 5 de arriba):
 --
 -- alter table <tabla> enable row level security;
 -- drop policy if exists "allow all" on <tabla>;
