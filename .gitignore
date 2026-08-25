@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Cualquier archivo de entorno (.env, .env.vercel, .env.production.local...)
+# puede llevar secretos — ninguno de estos se comitea nunca.
+.env
+.env.*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
