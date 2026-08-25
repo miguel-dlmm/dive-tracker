@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Waves, Loader2, Eye, EyeOff, Check } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
 import { inputCls, Field } from "./shared";
+import LegalConsentFields from "./legal/LegalConsentFields";
 
 const MIN_LENGTH = 8;
 
@@ -50,22 +51,24 @@ function PasswordField({ label, value, onChange, autoComplete, autoFocus, visibl
   );
 }
 
-// onSubmit: (newPassword) => Promise — de completePasswordChange en
-// useSession. Lanza en error (mismo contrato que signIn en LoginScreen).
-// Se muestra en vez de la app normal mientras profile.password_set sea
-// false (ver AuthGate en App.jsx) — primer acceso tras entrar por el
-// enlace de bienvenida.
+// onSubmit: (newPassword) => Promise — en AuthGate compone
+// completePasswordChange + acceptLegalConsents de useSession (el
+// consentimiento se acepta como parte del mismo primer acceso). Lanza en
+// error, mismo contrato que signIn en LoginScreen. Se muestra en vez de la
+// app normal mientras profile.password_set sea false (ver AuthGate en
+// App.jsx) — primer acceso tras entrar por el enlace de bienvenida.
 export default function CreatePasswordScreen({ onSubmit }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [legalAccepted, setLegalAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const lengthOk = password.length >= MIN_LENGTH;
   const matchOk = confirm.length > 0 && password === confirm;
-  const canSubmit = lengthOk && matchOk && !loading;
+  const canSubmit = lengthOk && matchOk && legalAccepted && !loading;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -122,6 +125,8 @@ export default function CreatePasswordScreen({ onSubmit }) {
             visible={showConfirm}
             onToggleVisible={() => setShowConfirm((v) => !v)}
           />
+
+          <LegalConsentFields accepted={legalAccepted} onAcceptedChange={setLegalAccepted} />
 
           {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 

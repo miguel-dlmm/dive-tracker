@@ -198,18 +198,27 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
 
 // Puerta de sesión: sin sesión activa, pantalla de login; con sesión pero
 // sin contraseña propia todavía (primer acceso vía el enlace del email de
-// bienvenida, ver createUser.js), pantalla de crear contraseña; con
-// contraseña fijada pero consentimiento legal pendiente (primer acceso, o
-// republicación de una versión nueva de un documento para usuarios ya
-// existentes — ver useSession.js), pantalla de aceptación legal; con todo
-// listo, la app normal. Vive fuera de AppShell para no depender de que
-// carguen las tablas de negocio solo para decidir cuál de las cuatro tocar.
+// bienvenida, ver createUser.js), pantalla de crear contraseña — que ya
+// incluye aceptar los documentos legales, ver CreatePasswordScreen; con
+// contraseña fijada pero consentimiento legal pendiente (republicación de
+// una versión nueva de un documento para un usuario ya existente — ver
+// useSession.js), pantalla de aceptación legal; con todo listo, la app
+// normal. Vive fuera de AppShell para no depender de que carguen las
+// tablas de negocio solo para decidir cuál de las cuatro tocar.
 function AuthGate() {
   const { session, profile, loading, signIn, signOut, completePasswordChange, pendingLegalConsents, acceptLegalConsents } = useSession();
   // Justo tras completar el primer acceso, AppShell debe abrir directamente
   // en Ayuda en vez de Home — se limpia solo (no persiste entre sesiones),
   // ver App.jsx → AppShell → initialTab.
   const [justActivated, setJustActivated] = useState(false);
+  // completePasswordChange marca password_set=true ANTES de que
+  // acceptLegalConsents termine — sin este flag, AuthGate re-renderizaría
+  // en ese hueco con password_set ya en true y pendingLegalConsents todavía
+  // sin vaciar, y saltaría un instante a AcceptLegalScreen en mitad de un
+  // primer acceso normal. Se mantiene en true durante toda la operación
+  // compuesta para que CreatePasswordScreen siga siendo quien decide qué
+  // mostrar mientras dura.
+  const [completingFirstAccess, setCompletingFirstAccess] = useState(false);
 
   if (loading) {
     return (
@@ -221,12 +230,18 @@ function AuthGate() {
 
   if (!session) return <LoginScreen signIn={signIn} />;
 
-  if (profile && !profile.password_set) {
+  if ((profile && !profile.password_set) || completingFirstAccess) {
     return (
       <CreatePasswordScreen
         onSubmit={async (newPassword) => {
-          await completePasswordChange(newPassword);
-          setJustActivated(true);
+          setCompletingFirstAccess(true);
+          try {
+            await completePasswordChange(newPassword);
+            await acceptLegalConsents();
+            setJustActivated(true);
+          } finally {
+            setCompletingFirstAccess(false);
+          }
         }}
       />
     );
