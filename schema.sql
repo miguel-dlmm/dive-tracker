@@ -56,11 +56,11 @@ create table if not exists nav_sections (
   color text not null default '#0F766E'
 );
 
--- Fila única de ajustes globales (hoy: icono del loading).
+-- Ajustes por usuario (hoy: icono del loading) — una fila por usuario,
+-- no una fila única global.
 create table if not exists app_settings (
-  id boolean primary key default true,
-  logo_icon text not null default 'Waves',
-  constraint app_settings_single_row check (id)
+  user_id uuid primary key references auth.users(id),
+  logo_icon text not null default 'Waves'
 );
 
 -- ---------- Tarifas ----------
