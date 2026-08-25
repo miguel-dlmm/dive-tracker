@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Pencil, X } from "lucide-react";
 import { NAVY, TEAL } from "./App";
-import { inputCls, formatMoney, Money, Field, Select, CurrencySearchSelect, MoneyInput, ListFilterBar, applyListFilters, colorFor, StatusPill, DeleteButton, DatePicker, EditActions, AppLoading, useToast } from "./shared";
+import { inputCls, formatMoney, Money, Field, Select, CurrencySearchSelect, MoneyInput, ListFilterBar, applyListFilters, colorFor, StatusPill, DeleteButton, DatePicker, EditActions, AppLoading, EntryTitle, useToast } from "./shared";
 
 // schools / activities / paymentTypes / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates / worklog: { rows: [...], insertRow, updateRow, deleteRow }
@@ -49,6 +49,7 @@ export default function WorkLogTab({ schools, activities, paymentTypes, paymentS
     rates.rows.find((r) => r.school === school && r.activity === activity);
 
   const activityColor = (name) => colorFor(activities.rows, name, "#6B7280");
+  const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
 
   const preview = useMemo(() => {
     const r = rateFor(form.school, form.activity);
@@ -142,15 +143,13 @@ export default function WorkLogTab({ schools, activities, paymentTypes, paymentS
             const r = rateFor(e.school, e.activity);
             const total = r ? (r.payment_type === "Per Person" ? r.rate * e.people : r.rate) : 0;
             return (
-              <div key={e.id} className="px-4 py-2.5 text-sm">
+              <div key={e.id} className="px-4 py-3 text-sm">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 truncate font-medium text-gray-800">
-                    {e.school} - <span style={{ color: activityColor(e.activity) }}>{e.activity}</span>
-                  </div>
+                  <EntryTitle school={e.school} activity={e.activity} schoolColor={schoolColor(e.school)} activityColor={activityColor(e.activity)} />
                   <StatusPill status={e.status} paymentStatusRows={paymentStatuses.rows} />
                 </div>
-                <div className="mt-0.5 truncate text-xs text-gray-400">{e.date}{e.notes && ` · ${e.notes}`}</div>
-                <div className="mt-1.5 flex flex-wrap items-center justify-end gap-2.5">
+                <div className="mt-2 truncate pl-3.5 text-xs text-gray-400">{e.date}{e.notes && ` · ${e.notes}`}</div>
+                <div className="mt-2 flex flex-wrap items-center justify-end gap-2.5">
                   <span className="text-xs text-gray-400">{e.people}p</span>
                   <Money amount={total} code={r?.currency} currencyRows={currencies.rows} className="font-semibold" style={{ color: NAVY }} />
                   <button onClick={() => startEdit(e)} className="text-gray-300 hover:text-gray-600"><Pencil size={15} /></button>
