@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Globe, Building2 } from "lucide-react";
 import { formatMoney, Money, colorFor, DatePicker, MoneyLine, MonthCalendar, Select } from "./shared";
 import { NAVY, TEAL, SUN, AQUA, CORAL, GREEN } from "./App";
 
@@ -263,24 +263,31 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         ))}
       </div>
 
-      {granularity === "mensual" && (
-        <MonthCalendar
-          year={year}
-          month={unitIndex}
-          entries={periodEntries}
-          dotColor={topSchoolColorForDay}
-          legend={globalLegend}
-          currencyRows={currencies.rows}
-          activityColor={activityColor}
-          groupBySource={source === "total"}
-          sourceMeta={SOURCE_META}
-        />
-      )}
-
       {/* ================= GLOBAL ================= */}
       <div>
-        <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">Vista global — {label}</h2>
-        <div className="mb-3 rounded-lg p-4 text-white" style={{ backgroundColor: sourceColor }}>
+        <div className="mb-3 flex items-baseline gap-1.5">
+          <Globe size={16} style={{ color: NAVY }} aria-hidden="true" className="shrink-0 translate-y-px" />
+          <h2 className="text-[15px] font-bold text-slate-800">Vista global</h2>
+          <span className="text-xs font-medium text-gray-400">— {label}</span>
+        </div>
+
+        {granularity === "mensual" && (
+          <div className="mb-3">
+            <MonthCalendar
+              year={year}
+              month={unitIndex}
+              entries={periodEntries}
+              dotColor={topSchoolColorForDay}
+              legend={globalLegend}
+              currencyRows={currencies.rows}
+              activityColor={activityColor}
+              groupBySource={source === "total"}
+              sourceMeta={SOURCE_META}
+            />
+          </div>
+        )}
+
+        <div className="mb-3 rounded-lg p-4 text-white shadow-sm" style={{ backgroundColor: sourceColor }}>
           <div className="text-xs font-medium opacity-80">{sourceLabel} (todas las escuelas)</div>
           <div className="mt-1 text-2xl font-bold tabular-nums"><MoneyLine totals={globalTotal} currencyRows={currencies.rows} /></div>
         </div>
@@ -301,14 +308,22 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
       </div>
 
       {/* ================= POR ESCUELA ================= */}
-      <div>
-        <div className="mb-2 flex items-center gap-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400">Por escuela</h2>
+      {/* Mismos datos que arriba, filtrados a una escuela: se envuelve en un
+          panel propio (fondo e borde) para que se lea como una vista aparte,
+          no como una continuación plana de la vista global. */}
+      <div className="rounded-lg border border-slate-200 bg-slate-100 p-3">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-baseline gap-1.5">
+            <Building2 size={16} style={{ color: schoolColor(selectedSchool) }} aria-hidden="true" className="shrink-0 translate-y-px" />
+            <h2 className="text-[15px] font-bold text-slate-800">Por escuela</h2>
+            <span className="text-xs font-medium text-gray-400">— {label}</span>
+          </div>
           <div className="w-40">
             <Select value={selectedSchool} onChange={setSelectedSchool} options={schoolNames} />
           </div>
         </div>
-        <div className="mb-3 rounded-lg p-4 text-white" style={{ backgroundColor: schoolColor(selectedSchool) }}>
+
+        <div className="mb-3 rounded-lg p-4 text-white shadow-sm" style={{ backgroundColor: schoolColor(selectedSchool) }}>
           <div className="text-xs font-medium opacity-80">{sourceLabel} — {selectedSchool || "—"}</div>
           <div className="mt-1 text-2xl font-bold tabular-nums"><MoneyLine totals={schoolTotal} currencyRows={currencies.rows} /></div>
         </div>
@@ -346,7 +361,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         {granularity === "mensual" && (
           <div className="mt-3">
             <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">
-              Calendario por escuela — {selectedSchool || "—"}
+              Calendario — {selectedSchool || "—"}
             </h3>
             <MonthCalendar
               year={year}
