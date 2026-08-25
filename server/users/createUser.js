@@ -1,12 +1,13 @@
 import { getServiceRoleClient, verifyCaller, isSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 import { sendWelcomeEmail } from "../email/sendWelcomeEmail.js";
 
-// Alta de usuarios (MVP) — el superadmin sigue fijando una contraseña
-// inicial a mano (respaldo temporal mientras se valida el flujo nuevo:
-// justo debajo, se genera además un enlace de recovery de un solo uso y se
-// envía por email, para que el usuario pueda entrar y fijar su propia
-// contraseña sin que nadie se la tenga que compartir). Cuando ese flujo
-// esté validado, `password` dejará de ser obligatorio en el body.
+// Alta de usuarios (MVP) — el acceso depende exclusivamente del enlace de
+// primer acceso: justo debajo se genera un enlace de recovery de un solo
+// uso y se envía por email, para que el usuario entre y fije su propia
+// contraseña (ver CreatePasswordScreen) sin que nadie tenga que
+// comunicarle ninguna. auth.admin.createUser() no recibe password —
+// Supabase permite crear la cuenta sin ella; la cuenta queda sin
+// contraseña utilizable hasta que el propio usuario la fija.
 //
 // Lógica de negocio pura, sin nada de Netlify ni de Vercel: recibe una
 // petición ya normalizada ({ method, headers, body }) y devuelve una
@@ -67,9 +68,9 @@ export async function handleCreateUser({ method, headers, body }) {
     return { status: 400, payload: { error: "Cuerpo de la petición inválido." } };
   }
 
-  const { email, password, first_name, last_name, nickname } = input;
-  if (!email || !password || !nickname) {
-    return { status: 400, payload: { error: "Email, nickname y contraseña son obligatorios." } };
+  const { email, first_name, last_name, nickname } = input;
+  if (!email || !nickname) {
+    return { status: 400, payload: { error: "Email y nickname son obligatorios." } };
   }
 
   const caller = await verifyCaller(token);
@@ -88,7 +89,6 @@ export async function handleCreateUser({ method, headers, body }) {
   // ambos en false, sin importar lo que llegue en el body de esta función.
   const { data: created, error: createError } = await getServiceRoleClient().auth.admin.createUser({
     email,
-    password,
     email_confirm: true,
     user_metadata: {
       first_name: first_name || null,
