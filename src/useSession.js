@@ -47,5 +47,23 @@ export function useSession() {
 
   const signOut = useCallback(() => supabase.auth.signOut(), []);
 
-  return { session, profile, loading, signIn, signOut };
+  // Cierra el primer acceso: fija la contraseña propia del usuario (la
+  // sesión ya existe porque llegó por el enlace de recovery del email de
+  // bienvenida, ver createUser.js) y marca profiles.password_set = true —
+  // permitido por la RLS existente (auth.uid() = user_id), sin RPC nueva.
+  // Lanza en error, mismo contrato que signIn.
+  const completePasswordChange = useCallback(async (newPassword) => {
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    if (updateError) throw updateError;
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ password_set: true })
+      .eq("user_id", session.user.id);
+    if (profileError) throw profileError;
+
+    setProfile((p) => (p ? { ...p, password_set: true } : p));
+  }, [session]);
+
+  return { session, profile, loading, signIn, signOut, completePasswordChange };
 }
