@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Plus, Star, Pencil, Search, Lock, UserPlus, X } from "lucide-react";
+import { Plus, Star, Pencil, Search, Lock, UserPlus, X, Wallet, Settings2, ChevronRight } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
 import { DeleteButton, EditActions, useToast, AppLoading, Field } from "./shared";
 import { supabase } from "./supabaseClient";
@@ -504,19 +504,21 @@ function UsersDirectory({ profile }) {
   );
 }
 
-const SECTIONS = ["Escuelas", "Actividades", "Tipos de pago", "Estados de pago"];
-const ADMIN_SECTIONS = ["Monedas", "Secciones", "Ajustes", "Usuarios"];
+const SECTIONS = ["Escuelas", "Actividades"];
+const ADMIN_SECTIONS = ["Tipos de pago", "Estados de pago", "Monedas", "Secciones", "Ajustes", "Usuarios"];
 
 // schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
 // profile: fila propia de profiles (useSession) — is_admin/is_superadmin deciden qué secciones se ven
-export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, navSections, appConfig, profile }) {
+// onNavigate: (tabId) => cambia de pestaña a nivel de App — se pasa setTab, para
+// los accesos a Pagos/Tarifas (pantallas propias, no secciones internas de aquí)
+export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, navSections, appConfig, profile, onNavigate }) {
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
   const [section, setSection] = useState("Escuelas");
   const sections = isAdmin ? [...SECTIONS, ...ADMIN_SECTIONS] : SECTIONS;
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-1">
+      <div className="flex flex-wrap items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
         {sections.map((s) => (
           <button
             key={s}
@@ -527,6 +529,23 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
             {s}
           </button>
         ))}
+        <span className="mx-1 h-5 w-px bg-gray-200" aria-hidden="true" />
+        {/* Pagos y Tarifas son pantallas propias (con su cabecera "‹ Volver"),
+            no secciones internas de Configuración — de ahí el estilo distinto
+            (nunca resaltadas, con flecha) y que naveguen con onNavigate en vez
+            de cambiar `section`. */}
+        <button
+          onClick={() => onNavigate("payments")}
+          className="flex min-h-11 items-center gap-1.5 rounded-md px-3 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50"
+        >
+          <Wallet size={14} aria-hidden="true" /> Pagos <ChevronRight size={12} className="text-gray-300" aria-hidden="true" />
+        </button>
+        <button
+          onClick={() => onNavigate("rates")}
+          className="flex min-h-11 items-center gap-1.5 rounded-md px-3 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50"
+        >
+          <Settings2 size={14} aria-hidden="true" /> Tarifas <ChevronRight size={12} className="text-gray-300" aria-hidden="true" />
+        </button>
       </div>
 
       {section === "Escuelas" && (
@@ -537,10 +556,10 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
         <CrudTable title="Actividades" table={activities} hasDefault searchable pullDefaultOut colorizeText
           fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
       )}
-      {section === "Tipos de pago" && (
+      {isAdmin && section === "Tipos de pago" && (
         <CrudTable title="Tipos de pago" table={paymentTypes} hasDefault fields={[{ key: "name", label: "Nombre" }]} />
       )}
-      {section === "Estados de pago" && (
+      {isAdmin && section === "Estados de pago" && (
         <CrudTable title="Estados de pago" table={paymentStatuses} hasDefault
           fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
       )}

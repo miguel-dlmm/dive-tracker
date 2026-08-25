@@ -1,18 +1,12 @@
 import React, { useMemo } from "react";
-import { Wallet, Settings2, Handshake, ListChecks, ChevronRight } from "lucide-react";
-import { NAVY, TEAL, SUN, AQUA } from "./App";
+import { Handshake, ListChecks } from "lucide-react";
+import { TEAL, SUN, AQUA } from "./App";
 import { Money, MonthCalendar, colorFor } from "./shared";
-
-const SHORTCUTS = [
-  { id: "payments", label: "Pagos", icon: Wallet },
-  { id: "rates", label: "Tarifas", icon: Settings2 },
-];
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
 // schools / currencies / navSections: hooks de useSupabaseTable
-// onNavigate: (tabId) => cambia de pestaña — se pasa setTab desde App.jsx
 // onQuickCreate: (tabId) => cambia de pestaña y abre su hoja de creación sola
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, schools, currencies, navSections, onNavigate, onQuickCreate }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, schools, currencies, navSections, onQuickCreate }) {
   const now = new Date();
   const SOURCE_META = {
     ganado: { label: "Ganado", color: TEAL },
@@ -98,29 +92,6 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         groupBySource
         sourceMeta={SOURCE_META}
       />
-
-      {/* Accesos rápidos a lo menos frecuente — fila fina tipo lista de
-          ajustes: peso visual bajo a propósito, para que no compitan con
-          las tarjetas de creación de arriba. */}
-      <div>
-        <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">Accesos rápidos</h2>
-        <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
-          {SHORTCUTS.map((s) => {
-            const Icon = s.icon;
-            return (
-              <button
-                key={s.id}
-                onClick={() => onNavigate(s.id)}
-                className="flex min-h-11 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
-              >
-                <Icon size={18} style={{ color: NAVY }} aria-hidden="true" />
-                <span className="flex-1 text-sm font-medium text-gray-700">{s.label}</span>
-                <ChevronRight size={16} className="text-gray-300" aria-hidden="true" />
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }

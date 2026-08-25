@@ -401,6 +401,129 @@ create policy "update own or admin updates any" on public.profiles
 --
 -- Ninguna tabla usa ya el patrón "allow all" (using(true)/with check(true)).
 
+-- ---------- Datasets de configuración inicial (snapshots) ----------
+
+-- Snapshot de una configuración de escuela+actividades+tarifas en un
+-- momento dado, para poder clonarla en la cuenta de un usuario nuevo (o,
+-- más adelante, importarla a mano desde Configuración). NO es una plantilla
+-- viva: una vez creado un dataset, cambios posteriores en schools/
+-- activities/rates del admin NUNCA lo modifican, y clone_setup_dataset()
+-- (próximo paso) SOLO lee de estas tablas, nunca de las tablas en vivo del
+-- admin. El admin es exclusivamente el origen de un volcado puntual y
+-- manual (ver el script de generación, ejecutado una vez); a partir de ahí
+-- el dataset es la única fuente de verdad para clonar.
+create table if not exists public.setup_datasets (
+  id uuid primary key default gen_random_uuid(),
+  key text not null unique,   -- slug estable, p. ej. 'ihasia' — lo referencian frontend/RPC
+  label text not null,        -- p. ej. 'Ihasia' — lo que ve el superadmin en el desplegable
+  created_at timestamptz not null default now(),
+  constraint setup_datasets_key_lowercase check (key = lower(key))
+);
+
+-- school/activity en setup_dataset_rates son texto, igual que en la propia
+-- tabla rates — no hace falta remapear ids entre el dataset y las filas
+-- nuevas del usuario clonado, el enlace ya es por nombre en todo el esquema.
+create table if not exists public.setup_dataset_schools (
+  dataset_id uuid not null references public.setup_datasets(id) on delete cascade,
+  name text not null,
+  color text not null default '#0F766E',
+  is_default boolean not null default false,
+  primary key (dataset_id, name)
+);
+
+create table if not exists public.setup_dataset_activities (
+  dataset_id uuid not null references public.setup_datasets(id) on delete cascade,
+  name text not null,
+  color text not null default '#0E7C7B',
+  is_default boolean not null default false,
+  primary key (dataset_id, name)
+);
+
+create table if not exists public.setup_dataset_rates (
+  dataset_id uuid not null references public.setup_datasets(id) on delete cascade,
+  school text not null,
+  activity text not null,
+  payment_type text not null,
+  rate numeric not null,
+  currency text not null default 'EUR',
+  primary key (dataset_id, school, activity, payment_type)
+);
+
+-- setup_datasets: solo admin/superadmin necesita verlo (desplegable de
+-- "configuración inicial" al crear un usuario, y más adelante la import
+-- manual desde Configuración). Sin policy de insert/update/delete: los
+-- datasets se crean a mano vía SQL editor, no desde la app.
+alter table public.setup_datasets enable row level security;
+drop policy if exists "admin reads datasets" on public.setup_datasets;
+create policy "admin reads datasets" on public.setup_datasets
+  for select using (public.is_admin(auth.uid()));
+
+-- setup_dataset_schools/activities/rates: RLS activada, SIN policies —
+-- cerradas por defecto, a propósito. Nada del frontend las lee nunca
+-- directamente ni las leerá en el futuro: todo acceso (clonar al crear un
+-- usuario, o la futura importación manual desde Configuración) pasa
+-- exclusivamente por funciones security definer (clone_setup_dataset(),
+-- próximo paso), nunca por un select/insert/update/delete directo del
+-- cliente contra estas tablas.
+alter table public.setup_dataset_schools enable row level security;
+alter table public.setup_dataset_activities enable row level security;
+alter table public.setup_dataset_rates enable row level security;
+
+-- Clona un dataset de configuración inicial (setup_dataset_*) en las
+-- tablas en vivo de un usuario. Fuente EXCLUSIVA: setup_dataset_schools/
+-- activities/rates, filtradas por dataset_id — nunca lee schools/
+-- activities/rates de ningún otro usuario, ni referencia la cuenta admin
+-- en absoluto (esa conexión se cortó en el volcado puntual del paso 2).
+-- Cada fila insertada obtiene un id nuevo (default gen_random_uuid()) y
+-- user_id = p_target_user_id — sin ninguna referencia compartida con las
+-- filas del dataset ni con la cuenta origen del volcado.
+--
+-- Atómico: el cuerpo de una función plpgsql se ejecuta como una única
+-- sentencia desde la perspectiva de quien llama — si cualquier insert
+-- falla (p. ej. p_target_user_id no existe en auth.users, violando la FK
+-- de schools/activities/rates), toda la función se revierte, no quedan
+-- filas parciales.
+--
+-- security definer, concedida SOLO a service_role (nunca a authenticated
+-- ni anon): esto es intencional y aplica también a su segundo uso futuro.
+-- Tanto el alta de usuario como la futura importación manual desde
+-- Configuración deben invocar esta función desde código de servidor
+-- (server/, con el cliente de service role) — igual que create-user ya
+-- hace hoy — nunca con una llamada RPC directa desde la sesión del
+-- cliente. Así se evita depender de auth.uid() dentro de la función (que
+-- sería null en el contexto de service_role) para decidir permisos: la
+-- autorización ya ocurre antes, en el código de servidor que llama a esta
+-- función, igual que el chequeo de superadmin en create-user.
+create or replace function public.clone_setup_dataset(p_dataset_key text, p_target_user_id uuid)
+returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  v_dataset_id uuid;
+begin
+  select id into v_dataset_id from public.setup_datasets where key = p_dataset_key;
+  if v_dataset_id is null then
+    raise exception 'unknown setup dataset: %', p_dataset_key;
+  end if;
+
+  insert into public.schools (name, color, is_default, user_id)
+  select name, color, is_default, p_target_user_id
+  from public.setup_dataset_schools
+  where dataset_id = v_dataset_id;
+
+  insert into public.activities (name, color, is_default, user_id)
+  select name, color, is_default, p_target_user_id
+  from public.setup_dataset_activities
+  where dataset_id = v_dataset_id;
+
+  insert into public.rates (school, activity, payment_type, rate, currency, user_id)
+  select school, activity, payment_type, rate, currency, p_target_user_id
+  from public.setup_dataset_rates
+  where dataset_id = v_dataset_id;
+end;
+$$;
+
+grant execute on function public.clone_setup_dataset(text, uuid) to service_role;
+
 -- ---------- Notas de diseño del esquema ----------
 -- - No existe tabla "activity_types" (Instructor/Comisión) — se eliminó al
 --   separar Work Log y Comisiones en flujos independientes.
