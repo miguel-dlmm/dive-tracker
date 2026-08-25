@@ -108,14 +108,14 @@ function AppShell() {
         {tab === "home" && <HomeTab worklog={worklog} rates={rates} activities={activities} schools={schools} currencies={currencies} navSections={navSections} onNavigate={setTab} onQuickCreate={navigateAndCreate} />}
         {tab === "log" && (
           <WorkLogTab
-            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog}
+            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} appSettings={appSettings}
             accentColor={sectionColor("log")}
             autoOpenSheet={pendingOpen === "log"} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
         {tab === "comisiones" && (
           <ComisionesTab
-            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones}
+            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones} appSettings={appSettings}
             accentColor={sectionColor("comisiones")}
             autoOpenSheet={pendingOpen === "comisiones"} onAutoOpened={() => setPendingOpen(null)}
           />
@@ -131,6 +131,7 @@ function AppShell() {
         {tab === "rates" && (
           <RatesTab
             schools={schools} activities={activities} paymentTypes={paymentTypes} currencies={currencies} rates={rates} commissionRates={commissionRates}
+            worklog={worklog} comisiones={comisiones}
             accentColor={sectionColor("rates")}
             autoOpenSheet={pendingOpen === "rates"} onAutoOpened={() => setPendingOpen(null)}
           />

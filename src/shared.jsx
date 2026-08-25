@@ -175,7 +175,7 @@ export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLab
       toast?.success("Eliminado correctamente");
       setOpen(false);
     } catch (e) {
-      toast?.error("No se pudo eliminar. Inténtalo de nuevo.");
+      toast?.error(e?.message || "No se pudo eliminar. Inténtalo de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -544,13 +544,34 @@ function useEscapeClose(open, onClose) {
 // libres debajo, se abre hacia arriba para no quedar cortado ni obligar
 // a hacer scroll — la causa más habitual de que un selector "se sienta
 // raro" en móvil.
+//
+// El espacio disponible se mide contra el ANCESTRO SCROLLEABLE más
+// cercano (p. ej. la hoja `overflow-y-auto` de "Nueva entrada"), no
+// contra la ventana entera: un campo cerca de la parte de arriba de esa
+// hoja tiene mucho espacio debajo (dentro de la ventana) pero casi
+// ninguno arriba (dentro de la propia hoja) — medir contra la ventana
+// hacía que el panel se abriera hacia arriba y quedara cortado por el
+// borde superior de la hoja, mostrando solo 1-2 opciones.
+function nearestScrollParent(el) {
+  let node = el?.parentElement;
+  while (node && node !== document.body) {
+    const { overflowY } = getComputedStyle(node);
+    if (overflowY === "auto" || overflowY === "scroll") return node;
+    node = node.parentElement;
+  }
+  return null;
+}
+
 function useDropdownFlip(open, triggerRef) {
   const [openUp, setOpenUp] = useState(false);
   useEffect(() => {
     if (open && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      setOpenUp(spaceBelow < 280 && rect.top > 280);
+      const scrollParent = nearestScrollParent(triggerRef.current);
+      const bounds = scrollParent ? scrollParent.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+      const spaceBelow = bounds.bottom - rect.bottom;
+      const spaceAbove = rect.top - bounds.top;
+      setOpenUp(spaceBelow < 280 && spaceAbove > 280);
     }
   }, [open, triggerRef]);
   return openUp;

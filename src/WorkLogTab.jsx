@@ -1,23 +1,33 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Pencil, X } from "lucide-react";
 import { NAVY, TEAL } from "./App";
-import { inputCls, formatMoney, Money, Field, Select, ListFilterBar, applyListFilters, colorFor, StatusPill, DeleteButton, DatePicker, EditActions, useToast } from "./shared";
+import { inputCls, formatMoney, Money, Field, Select, CurrencySearchSelect, MoneyInput, ListFilterBar, applyListFilters, colorFor, StatusPill, DeleteButton, DatePicker, EditActions, AppLoading, useToast } from "./shared";
 
-// schools / activities / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
+// schools / activities / paymentTypes / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates / worklog: { rows: [...], insertRow, updateRow, deleteRow }
 // accentColor: color de sección (nav_sections), para el botón flotante de crear
+// appSettings: { rows: [...] } — para el icono de carga configurado, usado en el loading al dar de alta una tarifa al vuelo
 // La moneda ya NO se elige aquí — se toma de la tarifa (Escuela+Actividad) en Tarifas.
-export default function WorkLogTab({ schools, activities, paymentStatuses, currencies, rates, worklog, accentColor = TEAL, autoOpenSheet = false, onAutoOpened }) {
+export default function WorkLogTab({ schools, activities, paymentTypes, paymentStatuses, currencies, rates, worklog, appSettings, accentColor = TEAL, autoOpenSheet = false, onAutoOpened }) {
   const defaultStatus = paymentStatuses.rows.find((s) => s.is_default)?.name || paymentStatuses.rows[0]?.name || "Pending";
   const defaultSchool = schools.rows.find((s) => s.is_default)?.name || "";
   const defaultActivity = activities.rows.find((a) => a.is_default)?.name || "";
+  const defaultPaymentType = paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "";
+  const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
 
-  const emptyForm = {
+  const emptyForm = () => ({
     date: new Date().toISOString().slice(0, 10),
     school: defaultSchool, activity: defaultActivity, people: 1, notes: "",
-  };
+  });
   const [form, setForm] = useState(emptyForm);
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Alta de tarifa al vuelo, cuando no existe una para la escuela+actividad
+  // elegidas en el formulario de arriba.
+  const [rateSheetOpen, setRateSheetOpen] = useState(false);
+  const [rateForm, setRateForm] = useState(null);
+  const [savingRate, setSavingRate] = useState(false);
+  const paymentTypeNames = paymentTypes.rows.map((t) => t.name);
 
   // Llegado desde el acceso directo de Home: abre la hoja de creación sola.
   useEffect(() => {
@@ -48,16 +58,42 @@ export default function WorkLogTab({ schools, activities, paymentStatuses, curre
   }, [form, rates.rows]);
 
   const toast = useToast();
+  const disableSave = !form.date || !form.school || !form.activity || !preview;
 
   const addEntry = async () => {
-    if (!form.date || !form.school || !form.activity) return;
+    if (disableSave) return;
     try {
       await worklog.insertRow({ ...form, people: Number(form.people) || 0, status: defaultStatus });
-      setForm({ ...emptyForm, school: form.school });
+      setForm({ ...emptyForm(), school: form.school });
       setSheetOpen(false);
       toast?.success("Registro añadido");
     } catch {
       toast?.error("No se pudo guardar el registro. Inténtalo de nuevo.");
+    }
+  };
+
+  // Alta de tarifa al vuelo desde el aviso de "sin tarifa configurada".
+  const openRateSheet = () => {
+    setRateForm({
+      school: form.school || defaultSchool,
+      activity: form.activity || defaultActivity,
+      payment_type: defaultPaymentType,
+      currency: defaultCurrency,
+      rate: "",
+    });
+    setRateSheetOpen(true);
+  };
+  const saveRate = async () => {
+    if (!rateForm.school || !rateForm.activity || !rateForm.payment_type || !rateForm.rate) return;
+    setSavingRate(true);
+    try {
+      await rates.insertRow({ ...rateForm, rate: Number(rateForm.rate) });
+      setRateSheetOpen(false);
+      toast?.success("Tarifa añadida");
+    } catch {
+      toast?.error("No se pudo guardar la tarifa. Inténtalo de nuevo.");
+    } finally {
+      setSavingRate(false);
     }
   };
 
@@ -127,7 +163,7 @@ export default function WorkLogTab({ schools, activities, paymentStatuses, curre
       </div>
 
       <button
-        onClick={() => setSheetOpen(true)}
+        onClick={() => { setForm(emptyForm()); setSheetOpen(true); }}
         className="fixed bottom-24 right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-90"
         style={{ backgroundColor: accentColor, width: 52, height: 52 }}
       >
@@ -172,7 +208,12 @@ export default function WorkLogTab({ schools, activities, paymentStatuses, curre
                   {" "}Total: <b style={{ color: TEAL }}>{formatMoney(preview.total, preview.currency, currencies.rows)}</b>
                 </span>
               ) : form.school && form.activity ? (
-                <span className="text-amber-600">Sin tarifa configurada — ve a Tarifas para añadirla.</span>
+                <span className="text-amber-600">
+                  Sin tarifa configurada —{" "}
+                  <button type="button" onClick={openRateSheet} className="font-semibold underline underline-offset-2">
+                    añadir tarifa
+                  </button>.
+                </span>
               ) : (
                 <span>Elige escuela y actividad para ver el importe estimado.</span>
               )}
@@ -180,12 +221,60 @@ export default function WorkLogTab({ schools, activities, paymentStatuses, curre
 
             <button
               onClick={addEntry}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"
+              disabled={disableSave}
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
               style={{ backgroundColor: accentColor }}
             >
               <Plus size={16} /> Guardar
             </button>
           </div>
+        </div>
+      )}
+
+      {rateSheetOpen && rateForm && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/25" onClick={() => !savingRate && setRateSheetOpen(false)}>
+          <div
+            className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
+            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-800">Nueva tarifa</h3>
+              <button onClick={() => setRateSheetOpen(false)} disabled={savingRate} className="text-gray-400" aria-label="Cerrar"><X size={19} /></button>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+              <Field label="Escuela">
+                <Select value={rateForm.school} onChange={(v) => setRateForm({ ...rateForm, school: v })} options={schoolNames} />
+              </Field>
+              <Field label="Actividad">
+                <Select value={rateForm.activity} onChange={(v) => setRateForm({ ...rateForm, activity: v })} options={activityNames} />
+              </Field>
+              <Field label="Tipo de pago">
+                <Select value={rateForm.payment_type} onChange={(v) => setRateForm({ ...rateForm, payment_type: v })} options={paymentTypeNames} />
+              </Field>
+              <Field label="Moneda">
+                <CurrencySearchSelect value={rateForm.currency} onChange={(v) => setRateForm({ ...rateForm, currency: v })} currencyRows={currencies.rows} />
+              </Field>
+              <Field label="Tarifa">
+                <MoneyInput value={rateForm.rate} onChange={(v) => setRateForm({ ...rateForm, rate: v })} />
+              </Field>
+            </div>
+
+            <button
+              onClick={saveRate}
+              disabled={savingRate || !rateForm.school || !rateForm.activity || !rateForm.payment_type || !rateForm.rate}
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ backgroundColor: accentColor }}
+            >
+              <Plus size={16} /> Guardar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {savingRate && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white/80">
+          <AppLoading iconName={appSettings?.rows?.[0]?.logo_icon} color={accentColor} label="Guardando tarifa" />
         </div>
       )}
     </div>
