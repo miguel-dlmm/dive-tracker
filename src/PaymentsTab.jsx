@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { RefreshCw } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import { Money, Select, MultiSelect, Field, colorFor, StatusSwitch, oppositeStatus, DatePicker, EntryTitle, useToast } from "./shared";
+import { computeRateTotal } from "./rateCalc";
 
 // schools / activities / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates / worklog: { rows: [...], updateRow, bulkUpdateWhere }
@@ -14,8 +15,7 @@ export default function PaymentsTab({ schools, activities, paymentStatuses, curr
   const rateFor = (sch, activity) => rates.rows.find((r) => r.school === sch && r.activity === activity);
   const totalFor = (e) => {
     const r = rateFor(e.school, e.activity);
-    if (!r) return 0;
-    return r.payment_type === "Per Person" ? r.rate * e.people : r.rate;
+    return computeRateTotal(r, e.people);
   };
   const presentValues = (key) => [...new Set(worklog.rows.map((r) => r[key]).filter(Boolean))].sort();
 

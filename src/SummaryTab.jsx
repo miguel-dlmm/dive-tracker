@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Globe, Building2 } from "lucide-react";
 import { formatMoney, Money, colorFor, DatePicker, MoneyLine, MonthCalendar, Select } from "./shared";
+import { computeRateTotal } from "./rateCalc";
 import { NAVY, TEAL, SUN, AQUA, CORAL, GREEN } from "./App";
 
 const NEUTRAL_GRAY = "#94A3B8";
@@ -120,7 +121,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
 
   const rateTotal = (e, ratesTable) => {
     const r = ratesTable.rows.find((r) => r.school === e.school && r.activity === e.activity);
-    return { total: r ? (r.payment_type === "Per Person" ? r.rate * e.people : r.rate) : 0, currency: r?.currency || e.currency || fallbackCurrency };
+    return { total: computeRateTotal(r, e.people), currency: r?.currency || e.currency || fallbackCurrency };
   };
 
   const ganadoEntries = useMemo(() => worklog.rows.map((e) => ({ ...e, ...rateTotal(e, rates), _source: "ganado" })), [worklog.rows, rates.rows, fallbackCurrency]);
