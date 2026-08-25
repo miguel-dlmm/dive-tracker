@@ -128,8 +128,12 @@ create table if not exists rates (
   payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
-  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
+  user_id uuid not null references auth.users(id) default auth.uid()
 );
+
+alter table rates enable row level security;
+drop policy if exists "allow all" on rates;
+create policy "own rows" on rates for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- Lo que cobras por traer un cliente que hace la actividad con otra persona.
 create table if not exists commission_rates (
@@ -139,8 +143,12 @@ create table if not exists commission_rates (
   payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
-  user_id uuid references auth.users(id) -- nullable por ahora; se rellena en el paso de backfill
+  user_id uuid not null references auth.users(id) default auth.uid()
 );
+
+alter table commission_rates enable row level security;
+drop policy if exists "allow all" on commission_rates;
+create policy "own rows" on commission_rates for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ---------- Movimientos ----------
 
@@ -293,19 +301,18 @@ create policy "update own or admin updates any" on public.profiles
 -- update public.profiles set is_admin = true, is_superadmin = true where username = 'admin';
 
 -- ---------- RLS ----------
--- Estado actual — todas las tablas de negocio y de configuración tienen ya
--- políticas reales, excepto las 5 de movimientos financieros (siguiente
--- paso de migración pendiente):
+-- Estado actual — pendiente solo worklog/comisiones/colleague_payments
+-- (paso 6b-ii de la migración):
 -- - profiles: privado por defecto, admins ven/editan todo (ver arriba).
--- - schools/activities/payment_types/payment_statuses: auth.uid() = user_id
---   (ver arriba).
+-- - schools/activities/payment_types/payment_statuses/rates/commission_rates:
+--   auth.uid() = user_id (ver arriba).
 -- - currencies/nav_sections/app_config: select abierto a cualquier
 --   autenticado, insert/update/delete solo is_admin(auth.uid()) (ver arriba).
--- - rates/commission_rates/worklog/comisiones/colleague_payments: siguen
---   con RLS "allow all" (patrón de abajo) — ya tienen user_id y backfill
---   hecho, falta activar RLS real.
+-- - worklog/comisiones/colleague_payments: siguen con RLS "allow all"
+--   (patrón de abajo) — ya tienen user_id y backfill hecho, falta activar
+--   RLS real.
 --
--- Patrón "allow all" repetido por tabla (aún vigente en las 5 de arriba):
+-- Patrón "allow all" repetido por tabla (aún vigente en las 3 de arriba):
 --
 -- alter table <tabla> enable row level security;
 -- drop policy if exists "allow all" on <tabla>;
