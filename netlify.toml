@@ -15,3 +15,8 @@
   from = "/api/create-user"
   to = "/.netlify/functions/create-user"
   status = 200
+
+[[redirects]]
+  from = "/api/update-admin-status"
+  to = "/.netlify/functions/update-admin-status"
+  status = 200

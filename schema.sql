@@ -357,7 +357,7 @@ begin
   end if;
 
   if new.is_admin is distinct from old.is_admin then
-    if not public.is_superadmin(auth.uid()) then
+    if auth.uid() is not null and not public.is_superadmin(auth.uid()) then
       raise exception 'only a superadmin can grant or revoke admin privileges';
     end if;
     if auth.uid() = old.user_id then
