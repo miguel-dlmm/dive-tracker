@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from "react";
-import { Plus, Star, Pencil, Search } from "lucide-react";
-import { NAVY, TEAL } from "./App";
-import { DeleteButton, EditActions, useToast, AppLoading } from "./shared";
+import React, { useState, useMemo, useEffect } from "react";
+import { Plus, Star, Pencil, Search, Lock, UserPlus, X } from "lucide-react";
+import { NAVY, TEAL, GREEN, SUN } from "./App";
+import { DeleteButton, EditActions, useToast, AppLoading, Field } from "./shared";
+import { supabase } from "./supabaseClient";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
 
@@ -247,6 +248,262 @@ function GeneralSettings({ appConfig }) {
   );
 }
 
+// Casilla de solo lectura para un rol. checked+disabled sin onChange es el
+// patrón estándar de React para un checkbox no interactivo (no dispara el
+// warning de "checked sin onChange" porque está disabled).
+// - Admin: color neutro — es un permiso que en un paso futuro será
+//   gestionable (checkbox real con onChange), de ahí que ya se vea como tal.
+// - Superadmin: locked=true añade un candado y un color distinto para dejar
+//   claro que es un rol de sistema protegido, nunca editable desde la UI
+//   (solo puede haber un superadmin, y protect_profile_roles_trigger en la
+//   base de datos impide cambiarlo aunque alguien lo intente saltándose
+//   esta pantalla).
+function RoleCheckbox({ checked, label, locked = false }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1"
+      title={locked ? `${label} — rol de sistema protegido, no editable` : label}
+    >
+      <input
+        type="checkbox"
+        checked={!!checked}
+        disabled
+        aria-label={`${label}: ${checked ? "sí" : "no"}`}
+        className="h-4 w-4 shrink-0 cursor-not-allowed rounded border-gray-300 disabled:opacity-100"
+        style={{ accentColor: checked ? (locked ? SUN : GREEN) : undefined }}
+      />
+      {locked && <Lock size={11} className="shrink-0 text-amber-500" aria-hidden="true" />}
+    </span>
+  );
+}
+
+// Tabla presentacional pura — separada de UsersDirectory para poder añadir
+// acciones de edición por fila más adelante sin tocar la lógica de búsqueda.
+function UsersTable({ rows }) {
+  if (rows.length === 0) {
+    return <p className="px-3 py-6 text-center text-sm text-gray-400">Sin resultados.</p>;
+  }
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[680px] text-left text-sm">
+        <thead>
+          <tr className="border-b border-gray-100 text-[11px] uppercase tracking-wide text-gray-400">
+            <th className="px-3 py-2 font-medium">Nombre</th>
+            <th className="px-3 py-2 font-medium">Apellidos</th>
+            <th className="px-3 py-2 font-medium">Nickname</th>
+            <th className="px-3 py-2 font-medium">Email</th>
+            <th className="px-3 py-2 font-medium">Admin</th>
+            <th className="px-3 py-2 font-medium">Superadmin</th>
+            <th className="px-3 py-2 font-medium">Alta</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((p) => (
+            <tr key={p.user_id} className="border-b border-gray-50 last:border-0">
+              <td className="px-3 py-2 text-gray-700">{p.first_name || "—"}</td>
+              <td className="px-3 py-2 text-gray-700">{p.last_name || "—"}</td>
+              <td className="px-3 py-2 font-medium text-gray-800">{p.nickname}</td>
+              <td className="px-3 py-2 text-gray-500">{p.email || "—"}</td>
+              <td className="px-3 py-2"><RoleCheckbox checked={p.is_admin} label="Admin" /></td>
+              <td className="px-3 py-2"><RoleCheckbox checked={p.is_superadmin} label="Superadmin" locked /></td>
+              <td className="px-3 py-2 text-gray-500">{p.created_at ? new Date(p.created_at).toLocaleDateString("es-ES") : "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// Directorio de usuarios — de momento solo lectura. Los datos vienen del RPC
+// admin_list_profiles (security definer): junta profiles con el email de
+// auth.users y solo devuelve filas si quien llama es admin/superadmin — ver
+// schema.sql. No es un fetch de la tabla profiles, así que no compite con
+// ningún otro hook de useSupabaseTable ya cargado en App.jsx.
+const emptyUserForm = { email: "", first_name: "", last_name: "", nickname: "", password: "" };
+
+// Hoja de creación de usuario — solo visible/usable para superadmin (ver
+// UsersDirectory). Llama a la función Netlify create-user, que es la única
+// pieza con permiso para invocar el Admin API de Supabase Auth.
+function CreateUserSheet({ onClose, onCreated }) {
+  const [form, setForm] = useState(emptyUserForm);
+  const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
+
+  const submit = async () => {
+    if (!form.email || !form.nickname || !form.password) {
+      toast?.error("Email, nickname y contraseña son obligatorios.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      // Ruta única e independiente del proveedor: en Vercel /api/create-user
+      // ya sirve directamente api/create-user.js; en Netlify, netlify.toml
+      // reescribe esta misma ruta hacia la función en netlify/functions/.
+      const res = await fetch("/api/create-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(form),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || "No se pudo crear el usuario.");
+      toast?.success("Usuario creado correctamente");
+      onCreated();
+    } catch (err) {
+      toast?.error(err.message || "No se pudo crear el usuario.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={() => !submitting && onClose()}>
+      <div
+        className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
+        style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-800">Crear usuario</h3>
+          <button onClick={() => !submitting && onClose()} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="col-span-2">
+            <Field label="Email">
+              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={`${inputCls} w-full`} />
+            </Field>
+          </div>
+          <Field label="Nombre">
+            <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} className={`${inputCls} w-full`} />
+          </Field>
+          <Field label="Apellidos">
+            <input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className={`${inputCls} w-full`} />
+          </Field>
+          <Field label="Nickname">
+            <input value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} className={`${inputCls} w-full`} />
+          </Field>
+          <Field label="Contraseña inicial">
+            <input type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={`${inputCls} w-full`} />
+          </Field>
+        </div>
+
+        {/* MVP: contraseña fijada a mano por el superadmin, sin invitación ni
+            email de confirmación — ver el mismo aviso junto a create-user.js.
+            Se muestra aquí para que quien crea la cuenta sepa que tiene que
+            comunicársela a la persona por su cuenta. */}
+        <p className="mt-2 text-xs text-gray-400">
+          Contraseña temporal: compártela directamente con la persona. Más adelante esto podrá sustituirse por una invitación o un restablecimiento de contraseña.
+        </p>
+
+        <button
+          onClick={submit}
+          disabled={submitting}
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ backgroundColor: TEAL }}
+        >
+          <UserPlus size={16} /> {submitting ? "Creando…" : "Crear usuario"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function UsersDirectory({ profile }) {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [query, setQuery] = useState("");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const toast = useToast();
+
+  const applyResult = ({ data, error }) => {
+    if (error) {
+      // Se muestra el mensaje real de Postgres/PostgREST (no uno genérico)
+      // porque el motivo casi siempre es diagnosticable desde aquí mismo:
+      // función inexistente en la BD todavía, falta de grant, etc.
+      console.error(error);
+      setLoadError(error.message || "Error desconocido");
+      toast?.error("No se pudo cargar el listado de usuarios.");
+    } else {
+      setLoadError(null);
+      setRows(data || []);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    let active = true;
+    supabase.rpc("admin_list_profiles").then((result) => { if (active) applyResult(result); });
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Igual que el fetch de montaje, pero invocable a demanda (tras crear un
+  // usuario) — fuera de un useEffect, así que no aplica la regla que exige
+  // que un setState dentro de un efecto quede envuelto en un callback.
+  const reload = () => {
+    setLoading(true);
+    supabase.rpc("admin_list_profiles").then(applyResult);
+  };
+
+  const filteredRows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((p) =>
+      [p.first_name, p.last_name, p.nickname, p.email].some((v) => String(v || "").toLowerCase().includes(q))
+    );
+  }, [rows, query]);
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-gray-800">Usuarios</h3>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search size={14} className="pointer-events-none absolute left-2.5 top-3.5 text-gray-400" aria-hidden="true" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar..."
+              aria-label="Buscar usuarios"
+              className={`${inputCls} w-44 pl-8`}
+            />
+          </div>
+          {/* Solo superadmin: los admins normales solo tienen acceso de lectura al directorio. */}
+          {profile?.is_superadmin && (
+            <button
+              onClick={() => setSheetOpen(true)}
+              className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-white"
+              style={{ backgroundColor: TEAL }}
+            >
+              <UserPlus size={15} aria-hidden="true" /> Crear usuario
+            </button>
+          )}
+        </div>
+      </div>
+      {loadError && (
+        <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">
+          No se pudo cargar el listado: {loadError}
+        </p>
+      )}
+      {loading ? (
+        <p className="px-3 py-6 text-center text-sm text-gray-400">Cargando usuarios…</p>
+      ) : (
+        <UsersTable rows={filteredRows} />
+      )}
+
+      {sheetOpen && (
+        <CreateUserSheet
+          onClose={() => setSheetOpen(false)}
+          onCreated={() => { setSheetOpen(false); reload(); }}
+        />
+      )}
+    </div>
+  );
+}
+
 const SECTIONS = ["Escuelas", "Actividades", "Tipos de pago", "Estados de pago"];
 const ADMIN_SECTIONS = ["Monedas", "Secciones", "Ajustes", "Usuarios"];
 
@@ -293,11 +550,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
       )}
       {isAdmin && section === "Secciones" && <SectionColors navSections={navSections} />}
       {isAdmin && section === "Ajustes" && <GeneralSettings appConfig={appConfig} />}
-      {isAdmin && section === "Usuarios" && (
-        <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-400">
-          Gestión de usuarios — próximamente.
-        </div>
-      )}
+      {isAdmin && section === "Usuarios" && <UsersDirectory profile={profile} />}
     </div>
   );
 }

@@ -1,0 +1,17 @@
+# Solo declara dónde viven las funciones serverless (netlify/functions/,
+# empezando por create-user). Deliberadamente NO se tocan aquí [build]
+# command/publish — se asume que ya están configurados en el dashboard de
+# Netlify, y no queremos pisarlos sin confirmar primero cómo están hoy.
+[functions]
+  directory = "netlify/functions"
+
+# El frontend siempre llama a /api/<nombre> (la misma ruta que Vercel sirve
+# de forma nativa desde api/) para no acoplarse a ningún proveedor. En
+# Netlify no existe esa carpeta, así que se reescribe hacia la función
+# equivalente en netlify/functions/. status = 200 = rewrite transparente
+# (proxy), no una redirección visible — el método y el body de la petición
+# original se conservan.
+[[redirects]]
+  from = "/api/create-user"
+  to = "/.netlify/functions/create-user"
+  status = 200
