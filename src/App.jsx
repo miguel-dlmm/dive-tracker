@@ -110,7 +110,13 @@ function AppShell() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 pb-24 pt-5 sm:px-5">
-        {tab === "home" && <HomeTab worklog={worklog} rates={rates} activities={activities} schools={schools} currencies={currencies} navSections={navSections} onNavigate={setTab} onQuickCreate={navigateAndCreate} />}
+        {tab === "home" && (
+          <HomeTab
+            worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
+            activities={activities} schools={schools} currencies={currencies} navSections={navSections}
+            onNavigate={setTab} onQuickCreate={navigateAndCreate}
+          />
+        )}
         {tab === "log" && (
           <WorkLogTab
             schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} appSettings={appSettings}

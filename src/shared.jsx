@@ -421,6 +421,22 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
     }));
   };
 
+  // Igual que sourceGroupedBreakdown, pero sin agregar por actividad: cada
+  // ocurrencia (fila real de worklog/comisiones/pagos) se lista aparte. Para
+  // el detalle de un solo día interesa ver cada evento tal cual quedó
+  // registrado (con su comentario, sus personas...), no un total agregado
+  // por actividad como en las vistas de mes/periodo.
+  const sourceGroupedEntries = (list) => {
+    const bySource = {};
+    list.forEach((e) => { (bySource[e._source] ||= []).push(e); });
+    return Object.entries(bySource).map(([key, entries]) => ({
+      key,
+      label: sourceMeta?.[key]?.label || key,
+      color: sourceMeta?.[key]?.color || CAL_NEUTRAL,
+      entries,
+    }));
+  };
+
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-gray-400">
@@ -473,7 +489,45 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
             <button onClick={() => setSelectedDay(null)} className="text-gray-400 hover:text-gray-600" aria-label="Cerrar detalle del día"><X size={14} /></button>
           </div>
 
-          {groupBySource ? (
+          {groupBySource && detailed ? (
+            <div className="space-y-3">
+              {sourceGroupedEntries(dayList(selectedDay)).map((group) => (
+                <div key={group.key}>
+                  <div className="mb-1.5 text-xs font-semibold" style={{ color: group.color }}>{group.label}</div>
+                  <ul className="space-y-1.5 pl-2">
+                    {group.entries.map((e) => {
+                      const isColleague = group.key === "companeros";
+                      return (
+                        <li key={e.id} className="flex items-start justify-between gap-2 text-sm">
+                          <div className="min-w-0">
+                            {isColleague ? (
+                              <div className="truncate font-medium text-gray-700">{e.colleague_name}</div>
+                            ) : (
+                              <div className="truncate font-medium" style={{ color: activityColor(e.activity) }}>{e.activity}</div>
+                            )}
+                            <div className="truncate text-[11px] text-gray-400">
+                              {e.school}
+                              {isColleague && e.activity && ` · ${e.activity}`}
+                              {e.notes && ` · ${e.notes}`}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2 pt-0.5 tabular-nums text-gray-600">
+                            {!isColleague && <span className="text-xs text-gray-400">{e.people || 0}p</span>}
+                            <span
+                              className="font-semibold"
+                              style={isColleague ? { color: e.total >= 0 ? GREEN : CORAL } : { color: "#1F2937" }}
+                            >
+                              <Money amount={Math.abs(e.total)} code={e.currency} currencyRows={currencyRows} />
+                            </span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          ) : groupBySource ? (
             <div className="space-y-2.5">
               {sourceGroupedBreakdown(dayList(selectedDay)).map((group) => (
                 <div key={group.key}>

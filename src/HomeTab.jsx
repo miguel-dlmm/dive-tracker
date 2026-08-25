@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { Wallet, Settings2, Handshake, ListChecks, Users } from "lucide-react";
-import { NAVY, TEAL } from "./App";
+import { Wallet, Settings2, Handshake, ListChecks, ChevronRight } from "lucide-react";
+import { NAVY, TEAL, SUN, AQUA } from "./App";
 import { Money, MonthCalendar, colorFor } from "./shared";
 
 const SHORTCUTS = [
@@ -8,27 +8,43 @@ const SHORTCUTS = [
   { id: "rates", label: "Tarifas", icon: Settings2 },
 ];
 
-// worklog / rates / activities / schools / currencies / navSections: hooks de useSupabaseTable
+// worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
+// schools / currencies / navSections: hooks de useSupabaseTable
 // onNavigate: (tabId) => cambia de pestaña — se pasa setTab desde App.jsx
 // onQuickCreate: (tabId) => cambia de pestaña y abre su hoja de creación sola
-export default function HomeTab({ worklog, rates, activities, schools, currencies, navSections, onNavigate, onQuickCreate }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, schools, currencies, navSections, onNavigate, onQuickCreate }) {
   const now = new Date();
+  const SOURCE_META = {
+    ganado: { label: "Ganado", color: TEAL },
+    comision: { label: "Comisión", color: SUN },
+    companeros: { label: "Compañeros", color: AQUA },
+  };
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
 
-  const rateFor = (school, activity) => rates.rows.find((r) => r.school === school && r.activity === activity);
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
+  const rateTotal = (e, ratesTable) => {
+    const r = ratesTable.rows.find((r) => r.school === e.school && r.activity === e.activity);
+    return { total: r ? (r.payment_type === "Per Person" ? r.rate * e.people : r.rate) : 0, currency: r?.currency || e.currency || fallbackCurrency };
+  };
 
-  const withTotals = useMemo(() => worklog.rows.map((e) => {
-    const r = rateFor(e.school, e.activity);
-    const total = r ? (r.payment_type === "Per Person" ? r.rate * e.people : r.rate) : 0;
-    return { ...e, total, currency: r?.currency || e.currency || fallbackCurrency };
-  }), [worklog.rows, rates.rows, fallbackCurrency]);
+  // Ganado es el único que cuenta para el KPI del mes y el color de los
+  // puntos del calendario (ver notas en CLAUDE.md); comisiones y pagos de
+  // compañeros solo se suman para que, al pulsar un día, se vean TODAS sus
+  // ocurrencias — no solo las de Registro.
+  const ganadoEntries = useMemo(() => worklog.rows.map((e) => ({ ...e, ...rateTotal(e, rates), _source: "ganado" })), [worklog.rows, rates.rows, fallbackCurrency]);
+  const comisionEntries = useMemo(() => comisiones.rows.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" })), [comisiones.rows, commissionRates.rows, fallbackCurrency]);
+  const companerosEntries = useMemo(() => colleaguePayments.rows.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" })), [colleaguePayments.rows]);
 
-  const monthEntries = useMemo(() => withTotals.filter((e) => {
+  const monthEntries = useMemo(() => ganadoEntries.filter((e) => {
     const d = new Date(e.date);
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-  }), [withTotals]);
+  }), [ganadoEntries]);
+
+  const monthAllEntries = useMemo(() => [...ganadoEntries, ...comisionEntries, ...companerosEntries].filter((e) => {
+    const d = new Date(e.date);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }), [ganadoEntries, comisionEntries, companerosEntries]);
 
   const monthTotals = useMemo(() => {
     const map = {};
@@ -73,28 +89,33 @@ export default function HomeTab({ worklog, rates, activities, schools, currencie
       <MonthCalendar
         year={now.getFullYear()}
         month={now.getMonth()}
-        entries={monthEntries}
+        entries={monthAllEntries}
         dotColor={TEAL}
         currencyRows={currencies.rows}
         activityColor={activityColor}
         autoSelectFirstDay
-        showSchool
+        detailed
+        groupBySource
+        sourceMeta={SOURCE_META}
       />
 
-      {/* Accesos rápidos a lo menos frecuente */}
+      {/* Accesos rápidos a lo menos frecuente — fila fina tipo lista de
+          ajustes: peso visual bajo a propósito, para que no compitan con
+          las tarjetas de creación de arriba. */}
       <div>
         <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">Accesos rápidos</h2>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
           {SHORTCUTS.map((s) => {
             const Icon = s.icon;
             return (
               <button
                 key={s.id}
                 onClick={() => onNavigate(s.id)}
-                className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50"
+                className="flex min-h-11 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
               >
-                <Icon size={20} style={{ color: NAVY }} />
-                <span className="text-xs font-medium text-gray-700">{s.label}</span>
+                <Icon size={18} style={{ color: NAVY }} aria-hidden="true" />
+                <span className="flex-1 text-sm font-medium text-gray-700">{s.label}</span>
+                <ChevronRight size={16} className="text-gray-300" aria-hidden="true" />
               </button>
             );
           })}
