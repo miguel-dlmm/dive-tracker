@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Star, Pencil, Search, Lock, UserPlus, X, Wallet, Settings2, ChevronRight } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
-import { DeleteButton, EditActions, useToast, AppLoading, Field } from "./shared";
+import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog } from "./shared";
 import { supabase } from "./supabaseClient";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
@@ -248,17 +248,23 @@ function GeneralSettings({ appConfig }) {
   );
 }
 
-// Casilla de solo lectura para un rol. checked+disabled sin onChange es el
-// patrón estándar de React para un checkbox no interactivo (no dispara el
-// warning de "checked sin onChange" porque está disabled).
-// - Admin: color neutro — es un permiso que en un paso futuro será
-//   gestionable (checkbox real con onChange), de ahí que ya se vea como tal.
+// Casilla para un rol. Por defecto (sin onChange, o locked) es de solo
+// lectura: checked+disabled sin onChange es el patrón estándar de React
+// para un checkbox no interactivo (no dispara el warning de "checked sin
+// onChange" porque está disabled). Si se pasa onChange y no está locked,
+// se vuelve interactiva — pero el click NO cambia el valor directamente,
+// solo dispara la petición de cambio (ver onRequestToggle en UsersTable);
+// el checkbox sigue reflejando el valor real del servidor hasta que la
+// mutación se confirma y se recarga el listado.
+// - Admin: color neutro, editable por superadmin (ver UsersTable).
 // - Superadmin: locked=true añade un candado y un color distinto para dejar
 //   claro que es un rol de sistema protegido, nunca editable desde la UI
 //   (solo puede haber un superadmin, y protect_profile_roles_trigger en la
 //   base de datos impide cambiarlo aunque alguien lo intente saltándose
-//   esta pantalla).
-function RoleCheckbox({ checked, label, locked = false }) {
+//   esta pantalla) — nunca recibe onChange, así que siempre cae en la rama
+//   de solo lectura de abajo.
+function RoleCheckbox({ checked, label, locked = false, onChange }) {
+  const editable = !locked && !!onChange;
   return (
     <span
       className="inline-flex items-center gap-1"
@@ -267,9 +273,10 @@ function RoleCheckbox({ checked, label, locked = false }) {
       <input
         type="checkbox"
         checked={!!checked}
-        disabled
+        disabled={!editable}
+        onChange={editable ? onChange : undefined}
         aria-label={`${label}: ${checked ? "sí" : "no"}`}
-        className="h-4 w-4 shrink-0 cursor-not-allowed rounded border-gray-300 disabled:opacity-100"
+        className={`h-4 w-4 shrink-0 rounded border-gray-300 disabled:opacity-100 ${editable ? "cursor-pointer" : "cursor-not-allowed"}`}
         style={{ accentColor: checked ? (locked ? SUN : GREEN) : undefined }}
       />
       {locked && <Lock size={11} className="shrink-0 text-amber-500" aria-hidden="true" />}
@@ -279,7 +286,11 @@ function RoleCheckbox({ checked, label, locked = false }) {
 
 // Tabla presentacional pura — separada de UsersDirectory para poder añadir
 // acciones de edición por fila más adelante sin tocar la lógica de búsqueda.
-function UsersTable({ rows }) {
+// currentUserId / viewerIsSuperadmin: de profile (el que mira la pantalla),
+// nunca de la propia fila — decide qué checkbox Admin queda editable.
+// onRequestToggle(row): se llama al pulsar un checkbox Admin editable; no
+// cambia nada por sí sola, solo abre la confirmación en UsersDirectory.
+function UsersTable({ rows, currentUserId, viewerIsSuperadmin, onRequestToggle }) {
   if (rows.length === 0) {
     return <p className="px-3 py-6 text-center text-sm text-gray-400">Sin resultados.</p>;
   }
@@ -298,17 +309,26 @@ function UsersTable({ rows }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((p) => (
-            <tr key={p.user_id} className="border-b border-gray-50 last:border-0">
-              <td className="px-3 py-2 text-gray-700">{p.first_name || "—"}</td>
-              <td className="px-3 py-2 text-gray-700">{p.last_name || "—"}</td>
-              <td className="px-3 py-2 font-medium text-gray-800">{p.nickname}</td>
-              <td className="px-3 py-2 text-gray-500">{p.email || "—"}</td>
-              <td className="px-3 py-2"><RoleCheckbox checked={p.is_admin} label="Admin" /></td>
-              <td className="px-3 py-2"><RoleCheckbox checked={p.is_superadmin} label="Superadmin" locked /></td>
-              <td className="px-3 py-2 text-gray-500">{p.created_at ? new Date(p.created_at).toLocaleDateString("es-ES") : "—"}</td>
-            </tr>
-          ))}
+          {rows.map((p) => {
+            const editable = viewerIsSuperadmin && p.user_id !== currentUserId && !p.is_superadmin;
+            return (
+              <tr key={p.user_id} className="border-b border-gray-50 last:border-0">
+                <td className="px-3 py-2 text-gray-700">{p.first_name || "—"}</td>
+                <td className="px-3 py-2 text-gray-700">{p.last_name || "—"}</td>
+                <td className="px-3 py-2 font-medium text-gray-800">{p.nickname}</td>
+                <td className="px-3 py-2 text-gray-500">{p.email || "—"}</td>
+                <td className="px-3 py-2">
+                  <RoleCheckbox
+                    checked={p.is_admin}
+                    label="Admin"
+                    onChange={editable ? () => onRequestToggle(p) : undefined}
+                  />
+                </td>
+                <td className="px-3 py-2"><RoleCheckbox checked={p.is_superadmin} label="Superadmin" locked /></td>
+                <td className="px-3 py-2 text-gray-500">{p.created_at ? new Date(p.created_at).toLocaleDateString("es-ES") : "—"}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -416,6 +436,8 @@ function UsersDirectory({ profile }) {
   const [loadError, setLoadError] = useState(null);
   const [query, setQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [pendingToggle, setPendingToggle] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
 
   const applyResult = ({ data, error }) => {
@@ -456,6 +478,43 @@ function UsersDirectory({ profile }) {
     );
   }, [rows, query]);
 
+  // No cambia nada por sí solo — solo abre la confirmación. El checkbox
+  // sigue mostrando el valor real hasta que la mutación se confirma.
+  const requestAdminToggle = (row) => {
+    setPendingToggle({ user_id: row.user_id, nickname: row.nickname, currentValue: row.is_admin, nextValue: !row.is_admin });
+  };
+
+  const cancelAdminToggle = () => {
+    if (submitting) return;
+    setPendingToggle(null);
+  };
+
+  const confirmAdminToggle = async () => {
+    if (!pendingToggle) return;
+    setSubmitting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      // Mismo patrón exacto que CreateUserSheet.submit(): ruta única
+      // independiente del proveedor, cuerpo estrecho — nunca is_superadmin
+      // ni datos del usuario que llama, ese siempre sale del token.
+      const res = await fetch("/api/update-admin-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ target_user_id: pendingToggle.user_id, is_admin: pendingToggle.nextValue }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || "No se pudo actualizar el rol.");
+      toast?.success("Rol actualizado correctamente");
+      setPendingToggle(null);
+      reload();
+    } catch (err) {
+      toast?.error(err.message || "No se pudo actualizar el rol.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -491,7 +550,12 @@ function UsersDirectory({ profile }) {
       {loading ? (
         <p className="px-3 py-6 text-center text-sm text-gray-400">Cargando usuarios…</p>
       ) : (
-        <UsersTable rows={filteredRows} />
+        <UsersTable
+          rows={filteredRows}
+          currentUserId={profile?.user_id}
+          viewerIsSuperadmin={!!profile?.is_superadmin}
+          onRequestToggle={requestAdminToggle}
+        />
       )}
 
       {sheetOpen && (
@@ -500,6 +564,23 @@ function UsersDirectory({ profile }) {
           onCreated={() => { setSheetOpen(false); reload(); }}
         />
       )}
+
+      <ConfirmDialog
+        open={!!pendingToggle}
+        title="Cambiar rol de admin"
+        message={pendingToggle && (
+          <>
+            Usuario: {pendingToggle.nickname}
+            <br />
+            Admin: {pendingToggle.currentValue ? "Sí" : "No"} → {pendingToggle.nextValue ? "Sí" : "No"}
+          </>
+        )}
+        onConfirm={confirmAdminToggle}
+        onCancel={cancelAdminToggle}
+        loading={submitting}
+        confirmLabel="Confirmar"
+        danger={false}
+      />
     </div>
   );
 }
