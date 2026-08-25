@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Plus, Star, Pencil, Search, Lock, UserPlus, X, Wallet, Settings2, ChevronRight } from "lucide-react";
+import { Plus, Star, Pencil, Search, Lock, UserPlus, X, Wallet, Settings2, HelpCircle, ChevronRight } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
 import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog } from "./shared";
 import { supabase } from "./supabaseClient";
@@ -626,6 +626,12 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
           className="flex min-h-11 items-center gap-1.5 rounded-md px-3 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50"
         >
           <Settings2 size={14} aria-hidden="true" /> Tarifas <ChevronRight size={12} className="text-gray-300" aria-hidden="true" />
+        </button>
+        <button
+          onClick={() => onNavigate("help")}
+          className="flex min-h-11 items-center gap-1.5 rounded-md px-3 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50"
+        >
+          <HelpCircle size={14} aria-hidden="true" /> Ayuda <ChevronRight size={12} className="text-gray-300" aria-hidden="true" />
         </button>
       </div>
 
