@@ -98,3 +98,8 @@ compañeros, Tarifas, Resumen). Producto de la marca personal "Ocean Flow".
 Ver `schema.sql` — es el esquema consolidado actual (sustituye a las ~10
 migraciones sueltas del historial de chat, que ya no hace falta volver a
 mirar salvo para entender el porqué de alguna decisión).
+
+For database and architecture changes:
+Always propose a migration plan first.
+Never implement authentication, permissions or schema changes in a single step.
+Prefer incremental migrations.
