@@ -6,10 +6,16 @@
 // por el mismo primer acceso que cualquier usuario real (CreatePasswordScreen
 // + aceptación de documentos legales) en vez de nacer con password_set ya
 // resuelto. Además deja la cuenta lista para probar Dashboard, Actividades,
-// Tarifas, Pagos, Comisiones y Configuración: dataset Ihasia clonado vía el
+// Tarifas, Comisiones y Configuración: dataset Ihasia clonado vía el
 // mecanismo existente (clone_setup_dataset, sin duplicar a mano schools/
-// activities/rates/commission_rates/payment_statuses/payment_types — el
-// dataset ya es un snapshot completo de estas 6 tablas).
+// activities/rates/commission_rates).
+//
+// payment_statuses/payment_types quedan FUERA del dataset a propósito (no
+// dependen de la escuela, son configuración de cuenta/aplicación — ver
+// schema.sql) y este script no los siembra por ningún otro mecanismo: el
+// usuario demo nace con Pagos y el desplegable de tipos de pago vacíos,
+// igual que cualquier usuario real hoy. Gestión global pendiente de una
+// fase futura, fuera de esta feature.
 //
 // A diferencia del alta real, no envía email de bienvenida (sendWelcomeEmail
 // no se llama) — el enlace de activación se imprime directamente por
@@ -63,7 +69,7 @@ async function main() {
     process.exit(1);
   };
 
-  console.log("Clonando dataset Ihasia (schools/activities/rates/commission_rates/payment_statuses/payment_types)...");
+  console.log("Clonando dataset Ihasia (schools/activities/rates/commission_rates)...");
   const { error: cloneError } = await client.rpc("clone_setup_dataset", {
     p_dataset_key: "ihasia",
     p_target_user_id: userId,
@@ -107,6 +113,9 @@ async function main() {
   console.log(`  Tarifas comisión:  ${commissionRates}`);
   console.log(`  Estados de pago:   ${statuses}`);
   console.log(`  Tipos de pago:     ${types}`);
+  if (statuses === 0 || types === 0) {
+    console.warn("\nAviso: sin estados/tipos de pago — payment_statuses/payment_types no forman parte del dataset (son config de cuenta, no de escuela). Pagos y el desplegable de tipos de pago aparecerán vacíos hasta que exista gestión global.");
+  }
   if (actionLink) {
     console.log(`\nEnlace de primer acceso (crear contraseña + aceptar documentos legales):\n  ${actionLink}`);
   } else {

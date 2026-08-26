@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Star, Pencil, Search, Lock, UserPlus, X } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
-import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog } from "./shared";
+import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog, Select } from "./shared";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
 import PaymentsTab from "./PaymentsTab";
@@ -349,6 +349,9 @@ const emptyUserForm = { email: "", first_name: "", last_name: "", nickname: "" }
 // pieza con permiso para invocar el Admin API de Supabase Auth.
 function CreateUserSheet({ onClose, onCreated }) {
   const [form, setForm] = useState(emptyUserForm);
+  const [datasetLabel, setDatasetLabel] = useState("");
+  const [datasets, setDatasets] = useState([]);
+  const [datasetsLoading, setDatasetsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   // Fallback operativo MVP. Permite activar usuarios manualmente si el
   // proveedor de email falla. Revisar/eliminar antes de producción pública.
@@ -358,9 +361,30 @@ function CreateUserSheet({ onClose, onCreated }) {
   const [emailFailure, setEmailFailure] = useState(null);
   const toast = useToast();
 
+  // setup_datasets tiene una policy propia de solo-lectura para admins
+  // (ver schema.sql) pensada exactamente para este desplegable — nunca se
+  // lee aquí setup_dataset_schools/activities/rates/..., esas siguen
+  // cerradas y solo accesibles vía clone_setup_dataset() en el servidor.
+  useEffect(() => {
+    let active = true;
+    supabase.from("setup_datasets").select("key, label").order("label").then(({ data, error }) => {
+      if (!active) return;
+      if (error) {
+        console.error(error);
+        toast?.error("No se pudieron cargar los datasets disponibles.");
+      } else {
+        setDatasets(data || []);
+      }
+      setDatasetsLoading(false);
+    });
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const submit = async () => {
-    if (!form.email || !form.nickname) {
-      toast?.error("Email y nickname son obligatorios.");
+    const dataset = datasets.find((d) => d.label === datasetLabel);
+    if (!form.email || !form.nickname || !dataset) {
+      toast?.error("Email, nickname y dataset inicial son obligatorios.");
       return;
     }
     setSubmitting(true);
@@ -373,7 +397,7 @@ function CreateUserSheet({ onClose, onCreated }) {
       const res = await fetch("/api/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, dataset_key: dataset.key }),
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(payload.error || "No se pudo crear el usuario.");
@@ -464,9 +488,20 @@ function CreateUserSheet({ onClose, onCreated }) {
           <Field label="Nickname">
             <input value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} className={`${inputCls} w-full`} />
           </Field>
+          <div className="col-span-2">
+            <Field label="Dataset inicial">
+              <Select
+                value={datasetLabel}
+                onChange={setDatasetLabel}
+                options={datasets.map((d) => d.label)}
+                placeholder={datasetsLoading ? "Cargando…" : datasets.length ? "Selecciona un dataset" : "No hay datasets disponibles"}
+              />
+            </Field>
+          </div>
         </div>
 
         <p className="mt-2 text-xs text-gray-400">
+          El dataset elegido carga automáticamente escuelas, actividades, tarifas, comisiones y catálogos de pago iniciales.
           La persona recibirá un email con un enlace de un solo uso para entrar y crear su propia contraseña.
         </p>
 
