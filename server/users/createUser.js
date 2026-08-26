@@ -23,6 +23,7 @@ function friendlyError(message) {
   if (!message) return "Error desconocido";
   if (message.includes("profiles_nickname_lower_key")) return "Ese nickname ya está en uso.";
   if (message.includes("profiles_nickname_no_at")) return 'El nickname no puede contener "@".';
+  if (message.includes("unknown setup dataset")) return "El dataset seleccionado ya no existe. Recarga la página e inténtalo de nuevo.";
   return message;
 }
 
@@ -90,9 +91,9 @@ export async function handleCreateUser({ method, headers, body }) {
     return { status: 400, payload: { error: "Cuerpo de la petición inválido." } };
   }
 
-  const { email, first_name, last_name, nickname } = input;
-  if (!email || !nickname) {
-    return { status: 400, payload: { error: "Email y nickname son obligatorios." } };
+  const { email, first_name, last_name, nickname, dataset_key } = input;
+  if (!email || !nickname || !dataset_key) {
+    return { status: 400, payload: { error: "Email, nickname y dataset inicial son obligatorios." } };
   }
 
   const caller = await verifyCaller(token);
@@ -122,6 +123,21 @@ export async function handleCreateUser({ method, headers, body }) {
   if (createError) {
     console.error(createError);
     return { status: 400, payload: { error: friendlyError(createError.message) } };
+  }
+
+  // Dataset inicial obligatorio: sin esto, el alta dejaría al usuario con
+  // escuelas/actividades/tarifas/comisiones/catálogos de pago completamente
+  // vacíos. A diferencia del bloque best-effort de más abajo, un fallo aquí
+  // SÍ deshace el alta — no se deja un usuario a medias, sin configuración
+  // inicial (mismo criterio que ya sigue scripts/create-demo-user.js).
+  const { error: cloneError } = await getServiceRoleClient().rpc("clone_setup_dataset", {
+    p_dataset_key: dataset_key,
+    p_target_user_id: created.user.id,
+  });
+  if (cloneError) {
+    console.error(cloneError);
+    await getServiceRoleClient().auth.admin.deleteUser(created.user.id);
+    return { status: 400, payload: { error: friendlyError(cloneError.message) } };
   }
 
   // Enlace de primer acceso + email de bienvenida — best-effort: la cuenta

@@ -18,6 +18,7 @@ const VALID_BODY = {
   first_name: "Ada",
   last_name: "Lovelace",
   nickname: "ada",
+  dataset_key: "ihasia",
 };
 
 function request(overrides = {}) {
@@ -71,7 +72,7 @@ it("devuelve 400 si el cuerpo no es JSON válido", async () => {
   expect(result).toEqual({ status: 400, payload: { error: "Cuerpo de la petición inválido." } });
 });
 
-it.each(["email", "nickname"])("devuelve 400 si falta el campo %s", async (field) => {
+it.each(["email", "nickname", "dataset_key"])("devuelve 400 si falta el campo %s", async (field) => {
   const body = { ...VALID_BODY };
   delete body[field];
 
@@ -79,7 +80,7 @@ it.each(["email", "nickname"])("devuelve 400 si falta el campo %s", async (field
 
   expect(result).toEqual({
     status: 400,
-    payload: { error: "Email y nickname son obligatorios." },
+    payload: { error: "Email, nickname y dataset inicial son obligatorios." },
   });
   expect(verifyCaller).not.toHaveBeenCalled();
 });
@@ -119,6 +120,8 @@ function expectedActivationLink({ tokenHash, email }) {
 describe("con permisos válidos", () => {
   let createUser;
   let generateLink;
+  let deleteUser;
+  let rpc;
 
   beforeEach(() => {
     createUser = vi.fn();
@@ -126,7 +129,9 @@ describe("con permisos válidos", () => {
       data: { properties: { hashed_token: "hashed-token-abc" } },
       error: null,
     });
-    getServiceRoleClient.mockReturnValue({ auth: { admin: { createUser, generateLink } } });
+    deleteUser = vi.fn().mockResolvedValue({ error: null });
+    rpc = vi.fn().mockResolvedValue({ error: null });
+    getServiceRoleClient.mockReturnValue({ auth: { admin: { createUser, generateLink, deleteUser } }, rpc });
     sendWelcomeEmail.mockReset();
     sendWelcomeEmail.mockResolvedValue({ sent: true });
   });
@@ -153,6 +158,31 @@ describe("con permisos válidos", () => {
         last_name: VALID_BODY.last_name,
         nickname: VALID_BODY.nickname,
       },
+    });
+  });
+
+  it("clona el dataset elegido en el usuario recién creado", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+
+    await handleCreateUser(request());
+
+    expect(rpc).toHaveBeenCalledWith("clone_setup_dataset", {
+      p_dataset_key: VALID_BODY.dataset_key,
+      p_target_user_id: "new-user-1",
+    });
+  });
+
+  it("revierte el alta si falla el clonado del dataset, sin enviar email de bienvenida", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+    rpc.mockResolvedValue({ error: { message: "unknown setup dataset: ihasia" } });
+
+    const result = await handleCreateUser(request());
+
+    expect(deleteUser).toHaveBeenCalledWith("new-user-1");
+    expect(sendWelcomeEmail).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      status: 400,
+      payload: { error: "El dataset seleccionado ya no existe. Recarga la página e inténtalo de nuevo." },
     });
   });
 
