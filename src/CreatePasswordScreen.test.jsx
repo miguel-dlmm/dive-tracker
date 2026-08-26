@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CreatePasswordScreen from "./CreatePasswordScreen";
 import { TITLE as PRIVACY_TITLE } from "./legal/privacyPolicy";
@@ -61,14 +61,43 @@ describe("CreatePasswordScreen", () => {
     expect(onSubmit).toHaveBeenCalledWith("password123");
   });
 
-  it("muestra un mensaje amigable si onSubmit lanza", async () => {
-    const onSubmit = vi.fn().mockRejectedValue(new Error("network"));
+  it("muestra el mensaje de onSubmit tal cual cuando lanza (contrato de activateAccount)", async () => {
+    const onSubmit = vi.fn().mockRejectedValue(new Error("Este enlace ya no es válido."));
+    const user = userEvent.setup();
+    render(<CreatePasswordScreen onSubmit={onSubmit} />);
+
+    await fillAndSubmit(user, { password: "password123", confirm: "password123" });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Este enlace ya no es válido.");
+  });
+
+  it("usa un mensaje genérico de respaldo si onSubmit lanza un error sin mensaje", async () => {
+    const onSubmit = vi.fn().mockRejectedValue(new Error());
     const user = userEvent.setup();
     render(<CreatePasswordScreen onSubmit={onSubmit} />);
 
     await fillAndSubmit(user, { password: "password123", confirm: "password123" });
 
     expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo guardar");
+  });
+
+  it("deshabilita el botón mientras onSubmit está en curso, evitando doble envío", async () => {
+    let resolveSubmit;
+    const onSubmit = vi.fn(() => new Promise((resolve) => { resolveSubmit = resolve; }));
+    const user = userEvent.setup();
+    render(<CreatePasswordScreen onSubmit={onSubmit} />);
+
+    await fillAndSubmit(user, { password: "password123", confirm: "password123" });
+
+    const button = screen.getByRole("button", { name: /crear contraseña/i });
+    expect(button).toBeDisabled();
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+
+    await user.click(button);
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+
+    resolveSubmit();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
   });
 
   it("abre el visor de la Política de Privacidad al pulsar su enlace", async () => {

@@ -6,6 +6,11 @@ import LegalConsentFields from "./legal/LegalConsentFields";
 
 const MIN_LENGTH = 8;
 
+// Único caso en que se usa: onSubmit lanza sin .message (no debería pasar,
+// ver el contrato de activateAccount más abajo, pero evita dejar el error
+// en blanco si algún día deja de cumplirse).
+const GENERIC_ERROR = "No se pudo guardar la contraseña. Inténtalo de nuevo.";
+
 // Fila de un requisito de contraseña con feedback en vivo: círculo relleno
 // con check cuando se cumple, anillo vacío cuando no.
 function RequirementRow({ met, children }) {
@@ -51,12 +56,14 @@ function PasswordField({ label, value, onChange, autoComplete, autoFocus, visibl
   );
 }
 
-// onSubmit: (newPassword) => Promise — en AuthGate compone
-// completePasswordChange + acceptLegalConsents de useSession (el
-// consentimiento se acepta como parte del mismo primer acceso). Lanza en
-// error, mismo contrato que signIn en LoginScreen. Se muestra en vez de la
-// app normal mientras profile.password_set sea false (ver AuthGate en
-// App.jsx) — primer acceso tras entrar por el enlace de bienvenida.
+// onSubmit: (newPassword) => Promise — en AuthGate es activateAccount() de
+// useSession con tokenHash/type/expectedEmail ya aplicados (ver App.jsx).
+// activateAccount lanza siempre un Error con un mensaje ya pensado para
+// mostrarse tal cual (enlace inválido, sesión ajena o el genérico de abajo)
+// — nunca un error crudo de Supabase, así que el catch de este componente
+// se limita a mostrar err.message. Se muestra en vez de la app normal
+// mientras profile.activated_at sea null (ver AuthGate en App.jsx) —
+// primer acceso o reanudación tras entrar por el enlace de bienvenida.
 export default function CreatePasswordScreen({ onSubmit }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -77,8 +84,8 @@ export default function CreatePasswordScreen({ onSubmit }) {
     setError("");
     try {
       await onSubmit(password);
-    } catch {
-      setError("No se pudo guardar la contraseña. Inténtalo de nuevo.");
+    } catch (err) {
+      setError(err.message || GENERIC_ERROR);
       setLoading(false);
     }
   };

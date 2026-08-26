@@ -196,29 +196,54 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   );
 }
 
-// Puerta de sesión: sin sesión activa, pantalla de login; con sesión pero
-// sin contraseña propia todavía (primer acceso vía el enlace del email de
-// bienvenida, ver createUser.js), pantalla de crear contraseña — que ya
-// incluye aceptar los documentos legales, ver CreatePasswordScreen; con
-// contraseña fijada pero consentimiento legal pendiente (republicación de
-// una versión nueva de un documento para un usuario ya existente — ver
-// useSession.js), pantalla de aceptación legal; con todo listo, la app
-// normal. Vive fuera de AppShell para no depender de que carguen las
-// tablas de negocio solo para decidir cuál de las cuatro tocar.
+// Puerta de sesión: sin sesión activa, pantalla de login (o, si la URL trae
+// enlace de activación, pantalla de crear contraseña — ver más abajo); con
+// sesión pero activated_at aún sin fijar, pantalla de crear contraseña vía
+// activateAccount() (ver useSession.js) — que ya incluye aceptar los
+// documentos legales, ver CreatePasswordScreen; con activated_at fijado pero
+// consentimiento legal pendiente (republicación de una versión nueva de un
+// documento para un usuario ya existente), pantalla de aceptación legal; con
+// todo listo, la app normal. Vive fuera de AppShell para no depender de que
+// carguen las tablas de negocio solo para decidir cuál de las pantallas
+// tocar.
+//
+// MVP: mientras haya sesión y activated_at siga sin fijar, se trata siempre
+// como una activación reanudable (Caso B), sin comprobar si esa sesión
+// corresponde de verdad al enlace de la URL — el enlace de activación hoy
+// solo lleva token_hash+type, sin el email de destino, así que esa
+// comprobación (Caso C, "sesión ajena") no es implementable todavía. Queda
+// pendiente para cuando la fase de generación de enlaces incorpore el email;
+// no se ha añadido ninguna lógica parcial a propósito, para no dejar un
+// comportamiento provisional que haya que deshacer luego.
 function AuthGate() {
-  const { session, profile, loading, signIn, signOut, completePasswordChange, pendingLegalConsents, acceptLegalConsents } = useSession();
-  // Justo tras completar el primer acceso, AppShell debe abrir directamente
-  // en Ayuda en vez de Home — se limpia solo (no persiste entre sesiones),
-  // ver App.jsx → AppShell → initialTab.
+  const { session, profile, loading, signIn, signOut, activateAccount, pendingLegalConsents, acceptLegalConsents } = useSession();
+  // Justo tras completar la activación, AppShell debe abrir directamente en
+  // Ayuda en vez de Home — se limpia solo (no persiste entre sesiones), ver
+  // App.jsx → AppShell → initialTab.
   const [justActivated, setJustActivated] = useState(false);
-  // completePasswordChange marca password_set=true ANTES de que
-  // acceptLegalConsents termine — sin este flag, AuthGate re-renderizaría
-  // en ese hueco con password_set ya en true y pendingLegalConsents todavía
-  // sin vaciar, y saltaría un instante a AcceptLegalScreen en mitad de un
-  // primer acceso normal. Se mantiene en true durante toda la operación
+  // activateAccount encadena completePasswordChange + markAccountActivated +
+  // acceptLegalConsents — sin este flag, AuthGate re-renderizaría en el
+  // hueco entre pasos (p. ej. activated_at ya fijado pero consentimientos
+  // aún sin insertar) y saltaría un instante a AcceptLegalScreen en mitad de
+  // una activación normal. Se mantiene en true durante toda la operación
   // compuesta para que CreatePasswordScreen siga siendo quien decide qué
   // mostrar mientras dura.
-  const [completingFirstAccess, setCompletingFirstAccess] = useState(false);
+  const [activating, setActivating] = useState(false);
+
+  const params = new URLSearchParams(window.location.search);
+  const tokenHash = params.get("token_hash");
+  const type = params.get("type");
+  const hasActivationLink = Boolean(tokenHash && type);
+
+  const handleActivate = async (password) => {
+    setActivating(true);
+    try {
+      await activateAccount({ tokenHash, type, expectedEmail: session?.user?.email, password });
+      setJustActivated(true);
+    } finally {
+      setActivating(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -228,26 +253,16 @@ function AuthGate() {
     );
   }
 
-  if (!session) return <LoginScreen signIn={signIn} />;
-
-  if ((profile && !profile.password_set) || completingFirstAccess) {
-    return (
-      <CreatePasswordScreen
-        onSubmit={async (newPassword) => {
-          setCompletingFirstAccess(true);
-          try {
-            await completePasswordChange(newPassword);
-            await acceptLegalConsents();
-            setJustActivated(true);
-          } finally {
-            setCompletingFirstAccess(false);
-          }
-        }}
-      />
-    );
+  if (!session && !activating) {
+    if (!hasActivationLink) return <LoginScreen signIn={signIn} />;
+    return <CreatePasswordScreen onSubmit={handleActivate} />;
   }
 
-  if (profile && profile.password_set && pendingLegalConsents.length > 0) {
+  if (activating || !profile || !profile.activated_at) {
+    return <CreatePasswordScreen onSubmit={handleActivate} />;
+  }
+
+  if (pendingLegalConsents.length > 0) {
     return <AcceptLegalScreen onSubmit={acceptLegalConsents} />;
   }
 
