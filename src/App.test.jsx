@@ -73,7 +73,7 @@ describe("AuthGate", () => {
   it("Caso D — activated_at ya fijado y sin consentimientos pendientes, entra directo a la app sin mostrar activación", async () => {
     mockUseSession({
       session: SESSION,
-      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z" },
+      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
       pendingLegalConsents: [],
     });
 
@@ -81,6 +81,7 @@ describe("AuthGate", () => {
 
     expect(await screen.findByText("Ocean Pulse")).toBeInTheDocument();
     expect(screen.queryByLabelText("Nueva contraseña")).not.toBeInTheDocument();
+    expect(screen.getByText("ada")).toBeInTheDocument();
   });
 
   it("activated_at fijado pero con consentimiento legal pendiente, muestra la pantalla de aceptación legal en vez de la app", () => {
