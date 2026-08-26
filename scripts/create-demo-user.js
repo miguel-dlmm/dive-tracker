@@ -7,9 +7,9 @@
 // + aceptación de documentos legales) en vez de nacer con password_set ya
 // resuelto. Además deja la cuenta lista para probar Dashboard, Actividades,
 // Tarifas, Pagos, Comisiones y Configuración: dataset Ihasia clonado vía el
-// mecanismo existente (clone_setup_dataset, sin duplicar escuelas/
-// actividades/tarifas a mano), y payment_statuses/payment_types mínimos
-// para que Pagos y Tarifas no aparezcan vacíos.
+// mecanismo existente (clone_setup_dataset, sin duplicar a mano schools/
+// activities/rates/commission_rates/payment_statuses/payment_types — el
+// dataset ya es un snapshot completo de estas 6 tablas).
 //
 // A diferencia del alta real, no envía email de bienvenida (sendWelcomeEmail
 // no se llama) — el enlace de activación se imprime directamente por
@@ -63,26 +63,12 @@ async function main() {
     process.exit(1);
   };
 
-  console.log("Clonando dataset Ihasia (schools/activities/rates)...");
+  console.log("Clonando dataset Ihasia (schools/activities/rates/commission_rates/payment_statuses/payment_types)...");
   const { error: cloneError } = await client.rpc("clone_setup_dataset", {
     p_dataset_key: "ihasia",
     p_target_user_id: userId,
   });
   if (cloneError) await rollback("No se pudo clonar el dataset Ihasia:", cloneError);
-
-  console.log("Sembrando payment_statuses (Pending, Paid)...");
-  const { error: statusError } = await client.from("payment_statuses").insert([
-    { name: "Pending", user_id: userId, is_default: true },
-    { name: "Paid", user_id: userId, is_default: false },
-  ]);
-  if (statusError) await rollback("No se pudieron crear los payment_statuses:", statusError);
-
-  console.log("Sembrando payment_types (Instructor, Comisión)...");
-  const { error: typeError } = await client.from("payment_types").insert([
-    { name: "Instructor", user_id: userId, is_default: true },
-    { name: "Comisión", user_id: userId, is_default: false },
-  ]);
-  if (typeError) await rollback("No se pudieron crear los payment_types:", typeError);
 
   // Enlace de primer acceso — igual que server/users/createUser.js: mismo
   // best-effort (un fallo aquí no deshace la cuenta ni el dataset ya
@@ -107,8 +93,8 @@ async function main() {
     return count;
   };
 
-  const [schools, activities, rates, statuses, types] = await Promise.all([
-    count("schools"), count("activities"), count("rates"), count("payment_statuses"), count("payment_types"),
+  const [schools, activities, rates, commissionRates, statuses, types] = await Promise.all([
+    count("schools"), count("activities"), count("rates"), count("commission_rates"), count("payment_statuses"), count("payment_types"),
   ]);
 
   console.log("\nUsuario demo creado correctamente:");
@@ -118,8 +104,9 @@ async function main() {
   console.log(`  Escuelas:          ${schools}`);
   console.log(`  Actividades:       ${activities}`);
   console.log(`  Tarifas:           ${rates}`);
-  console.log(`  Estados de pago:   ${statuses} (Pending, Paid)`);
-  console.log(`  Tipos de pago:     ${types} (Instructor, Comisión)`);
+  console.log(`  Tarifas comisión:  ${commissionRates}`);
+  console.log(`  Estados de pago:   ${statuses}`);
+  console.log(`  Tipos de pago:     ${types}`);
   if (actionLink) {
     console.log(`\nEnlace de primer acceso (crear contraseña + aceptar documentos legales):\n  ${actionLink}`);
   } else {

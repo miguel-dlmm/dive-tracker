@@ -497,6 +497,39 @@ create table if not exists public.setup_dataset_rates (
   primary key (dataset_id, school, activity, payment_type)
 );
 
+-- Igual que setup_dataset_rates pero para comisiones (referir un cliente a
+-- la escuela en vez de impartir tú la actividad).
+create table if not exists public.setup_dataset_commission_rates (
+  dataset_id uuid not null references public.setup_datasets(id) on delete cascade,
+  school text not null,
+  activity text not null,
+  payment_type text not null,
+  rate numeric not null,
+  currency text not null default 'EUR',
+  primary key (dataset_id, school, activity, payment_type)
+);
+
+-- payment_statuses/payment_types no tienen columna school: a diferencia de
+-- schools/activities/rates, son la config de pagos de la cuenta completa,
+-- no de una escuela concreta — pero de momento viajan dentro del dataset
+-- igual que el resto (snapshot completo MVP), sin una tabla de
+-- configuración global separada. Si en el futuro se decide que sean
+-- globales de verdad, es una migración aparte.
+create table if not exists public.setup_dataset_payment_statuses (
+  dataset_id uuid not null references public.setup_datasets(id) on delete cascade,
+  name text not null,
+  color text not null default '#64748B',
+  is_default boolean not null default false,
+  primary key (dataset_id, name)
+);
+
+create table if not exists public.setup_dataset_payment_types (
+  dataset_id uuid not null references public.setup_datasets(id) on delete cascade,
+  name text not null,
+  is_default boolean not null default false,
+  primary key (dataset_id, name)
+);
+
 -- setup_datasets: solo admin/superadmin necesita verlo (desplegable de
 -- "configuración inicial" al crear un usuario, y más adelante la import
 -- manual desde Configuración). Sin policy de insert/update/delete: los
@@ -506,22 +539,27 @@ drop policy if exists "admin reads datasets" on public.setup_datasets;
 create policy "admin reads datasets" on public.setup_datasets
   for select using (public.is_admin(auth.uid()));
 
--- setup_dataset_schools/activities/rates: RLS activada, SIN policies —
--- cerradas por defecto, a propósito. Nada del frontend las lee nunca
--- directamente ni las leerá en el futuro: todo acceso (clonar al crear un
--- usuario, o la futura importación manual desde Configuración) pasa
--- exclusivamente por funciones security definer (clone_setup_dataset(),
--- próximo paso), nunca por un select/insert/update/delete directo del
--- cliente contra estas tablas.
+-- setup_dataset_schools/activities/rates/commission_rates/payment_statuses/
+-- payment_types: RLS activada, SIN policies — cerradas por defecto, a
+-- propósito. Nada del frontend las lee nunca directamente ni las leerá en
+-- el futuro: todo acceso (clonar al crear un usuario, o la futura
+-- importación manual desde Configuración) pasa exclusivamente por
+-- funciones security definer (clone_setup_dataset(), próximo paso), nunca
+-- por un select/insert/update/delete directo del cliente contra estas
+-- tablas.
 alter table public.setup_dataset_schools enable row level security;
 alter table public.setup_dataset_activities enable row level security;
 alter table public.setup_dataset_rates enable row level security;
+alter table public.setup_dataset_commission_rates enable row level security;
+alter table public.setup_dataset_payment_statuses enable row level security;
+alter table public.setup_dataset_payment_types enable row level security;
 
 -- Clona un dataset de configuración inicial (setup_dataset_*) en las
 -- tablas en vivo de un usuario. Fuente EXCLUSIVA: setup_dataset_schools/
--- activities/rates, filtradas por dataset_id — nunca lee schools/
--- activities/rates de ningún otro usuario, ni referencia la cuenta admin
--- en absoluto (esa conexión se cortó en el volcado puntual del paso 2).
+-- activities/rates/commission_rates/payment_statuses/payment_types,
+-- filtradas por dataset_id — nunca lee schools/activities/rates/... de
+-- ningún otro usuario, ni referencia la cuenta admin en absoluto (esa
+-- conexión se cortó en el volcado puntual del paso 2).
 -- Cada fila insertada obtiene un id nuevo (default gen_random_uuid()) y
 -- user_id = p_target_user_id — sin ninguna referencia compartida con las
 -- filas del dataset ni con la cuenta origen del volcado.
@@ -566,6 +604,21 @@ begin
   insert into public.rates (school, activity, payment_type, rate, currency, user_id)
   select school, activity, payment_type, rate, currency, p_target_user_id
   from public.setup_dataset_rates
+  where dataset_id = v_dataset_id;
+
+  insert into public.commission_rates (school, activity, payment_type, rate, currency, user_id)
+  select school, activity, payment_type, rate, currency, p_target_user_id
+  from public.setup_dataset_commission_rates
+  where dataset_id = v_dataset_id;
+
+  insert into public.payment_statuses (name, color, is_default, user_id)
+  select name, color, is_default, p_target_user_id
+  from public.setup_dataset_payment_statuses
+  where dataset_id = v_dataset_id;
+
+  insert into public.payment_types (name, is_default, user_id)
+  select name, is_default, p_target_user_id
+  from public.setup_dataset_payment_types
   where dataset_id = v_dataset_id;
 end;
 $$;
