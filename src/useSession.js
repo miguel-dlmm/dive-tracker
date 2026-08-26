@@ -99,13 +99,18 @@ export function useSession() {
   // Cambia solo la contraseña de Supabase Auth — nunca toca profiles.
   // updateUser siempre actúa sobre quien esté autenticado en este
   // navegador, así que no hace falta (ni tiene sentido) pasarle un userId.
-  // La usan tanto el branch legacy de AuthGate como activateAccount (ver
-  // más abajo), que la componen junto con markAccountActivated y
-  // acceptLegalConsents en vez de duplicar esta llamada. Lanza en error,
-  // mismo contrato que signIn.
+  // La usa activateAccount (ver más abajo), que la compone junto con
+  // markAccountActivated y acceptLegalConsents. Lanza en error, mismo
+  // contrato que signIn — salvo error.code "same_password" (GoTrue lo
+  // devuelve si la contraseña nueva coincide con la ya guardada), que se
+  // trata como éxito: en un reintento tras un fallo parcial (ver Caso A en
+  // activateAccount) esta llamada ya tuvo éxito la vez anterior, y el
+  // usuario reintenta con la misma contraseña que ya escribió — bloquear
+  // ahí dejaría la activación atascada para siempre. Mismo espíritu que el
+  // 23505 de acceptLegalConsents más abajo.
   const completePasswordChange = useCallback(async (newPassword) => {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) throw error;
+    if (error && error.code !== "same_password") throw error;
   }, []);
 
   // Marca que la fase de contraseña de la activación ha terminado — NO

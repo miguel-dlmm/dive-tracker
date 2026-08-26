@@ -86,6 +86,15 @@ describe("completePasswordChange", () => {
 
     await expect(result.current.completePasswordChange("x")).rejects.toBeTruthy();
   });
+
+  it("trata same_password (reintento con la misma contraseña ya guardada) como éxito, no como fallo", async () => {
+    const { result } = await renderReadySession();
+    supabase.auth.updateUser.mockResolvedValue({
+      error: { message: "New password should be different from the old password.", code: "same_password" },
+    });
+
+    await expect(result.current.completePasswordChange("nueva-123")).resolves.toBeUndefined();
+  });
 });
 
 describe("markAccountActivated", () => {
@@ -309,6 +318,30 @@ describe("activateAccount", () => {
     });
 
     expect(supabase.auth.verifyOtp).toHaveBeenCalledTimes(1);
+
+    replaceStateSpy.mockRestore();
+  });
+
+  it("reintento con la misma contraseña ya guardada (la contraseña sí se fijó la vez anterior, otro paso falló después): completa la activación en vez de quedarse atascada", async () => {
+    const { result } = await renderWithoutSession();
+    const mocks = setupFromMock({ profile: { user_id: "u1", activated_at: null }, consents: [] });
+    supabase.auth.verifyOtp.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+    supabase.auth.updateUser.mockResolvedValue({
+      error: { message: "New password should be different from the old password.", code: "same_password" },
+    });
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState").mockImplementation(() => {});
+
+    await act(async () => {
+      await result.current.activateAccount({
+        tokenHash: "hash-1",
+        type: "recovery",
+        expectedEmail: "diver@example.com",
+        password: "nueva-123",
+      });
+    });
+
+    expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({ activated_at: expect.any(String) }));
+    expect(mocks.consentsInsert).toHaveBeenCalled();
 
     replaceStateSpy.mockRestore();
   });
