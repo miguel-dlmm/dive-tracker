@@ -115,6 +115,11 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
                 <Settings size={20} style={{ color: NAVY }} aria-hidden="true" />
               </button>
             )}
+            {profile?.nickname && (
+              <span className="max-w-[104px] truncate text-[12px] font-medium text-gray-500" title={profile.nickname}>
+                {profile.nickname}
+              </span>
+            )}
             <button onClick={onSignOut} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Cerrar sesión">
               <LogOut size={20} style={{ color: NAVY }} aria-hidden="true" />
             </button>
