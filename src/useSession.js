@@ -12,6 +12,20 @@ const REQUIRED_LEGAL_DOCS = [
   { document_type: TERMS_TYPE, document_version: TERMS_VERSION },
 ];
 
+// Mensajes propios de activateAccount() — nunca se deja escapar un error
+// crudo de Supabase hacia la UI. Ver activateAccount más abajo para cuándo
+// se usa cada uno.
+const ACTIVATION_LINK_INVALID =
+  "Este enlace ya no es válido. Puede que ya se haya usado o que haya " +
+  "caducado. Si ya creaste tu contraseña, inicia sesión. Si no, pide a " +
+  "un administrador que te envíe un enlace nuevo.";
+
+// Texto idéntico al que CreatePasswordScreen ya usa como mensaje genérico
+// de error — así su catch no necesita distinguir el origen del fallo.
+const ACTIVATION_GENERIC_RETRY = "No se pudo guardar la contraseña. Inténtalo de nuevo.";
+
+const ACTIVATION_SESSION_MISMATCH = "No se pudo activar esta cuenta desde la sesión actual.";
+
 async function loadProfile(userId) {
   if (!userId) return null;
   const { data, error } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
@@ -82,37 +96,124 @@ export function useSession() {
 
   const signOut = useCallback(() => supabase.auth.signOut(), []);
 
-  // Cierra el primer acceso: fija la contraseña propia del usuario (la
-  // sesión ya existe porque llegó por el enlace de recovery del email de
-  // bienvenida, ver createUser.js) y marca profiles.password_set = true —
-  // permitido por la RLS existente (auth.uid() = user_id), sin RPC nueva.
-  // Lanza en error, mismo contrato que signIn.
+  // Cambia solo la contraseña de Supabase Auth — nunca toca profiles.
+  // updateUser siempre actúa sobre quien esté autenticado en este
+  // navegador, así que no hace falta (ni tiene sentido) pasarle un userId.
+  // La usan tanto el branch legacy de AuthGate como activateAccount (ver
+  // más abajo), que la componen junto con markAccountActivated y
+  // acceptLegalConsents en vez de duplicar esta llamada. Lanza en error,
+  // mismo contrato que signIn.
   const completePasswordChange = useCallback(async (newPassword) => {
-    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-    if (updateError) throw updateError;
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  }, []);
 
-    const { error: profileError } = await supabase
+  // Marca que la fase de contraseña de la activación ha terminado — NO
+  // significa que se haya completado todo el onboarding, ver
+  // pendingLegalConsents más abajo, que es una puerta aparte. Un único
+  // trabajo, deliberadamente separado de completePasswordChange y de
+  // acceptLegalConsents (ver activateAccount). El filtro
+  // .is("activated_at", null) hace que repetir la llamada sea un no-op
+  // real, no solo inofensivo — el instante guardado nunca se adelanta en
+  // un reintento. userId siempre explícito, nunca el `session` del
+  // closure: activateAccount puede llamar a esto justo después de que
+  // verifyOtp cree la sesión, antes de que el listener de
+  // onAuthStateChange haya tenido tiempo de actualizar el estado de React.
+  const markAccountActivated = useCallback(async (userId) => {
+    const { error } = await supabase
       .from("profiles")
-      .update({ password_set: true })
-      .eq("user_id", session.user.id);
-    if (profileError) throw profileError;
+      .update({ activated_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .is("activated_at", null);
+    if (error) throw error;
 
-    setProfile((p) => (p ? { ...p, password_set: true } : p));
-  }, [session]);
+    setProfile((p) => (p ? { ...p, activated_at: p.activated_at || new Date().toISOString() } : p));
+  }, []);
 
   const pendingLegalConsents = pendingConsentsFor(consents);
 
   // Inserta de una vez las filas de consentimiento que falten (un único
   // checkbox en AcceptLegalScreen acepta todos los documentos pendientes a
-  // la vez). Lanza en error, mismo contrato que signIn/completePasswordChange.
-  const acceptLegalConsents = useCallback(async () => {
+  // la vez). userId explícito opcional, mismo motivo que markAccountActivated
+  // — el call site existente (AcceptLegalScreen vía AuthGate) sigue sin
+  // pasarlo, usa la sesión ya establecida; activateAccount lo pasa siempre.
+  // 23505 = unique_violation: un intento anterior insertó esta fila con
+  // éxito pero la respuesta se perdió por red — se trata como éxito, no
+  // como fallo, en vez de bloquear un reintento legítimo. Lanza en
+  // cualquier otro error, mismo contrato que signIn/completePasswordChange.
+  const acceptLegalConsents = useCallback(async (userId = session?.user?.id) => {
     const missing = pendingConsentsFor(consents);
     if (missing.length === 0) return;
-    const rows = missing.map((doc) => ({ user_id: session.user.id, ...doc }));
+    const rows = missing.map((doc) => ({ user_id: userId, ...doc }));
     const { error } = await supabase.from("legal_consents").insert(rows);
-    if (error) throw error;
+    if (error && error.code !== "23505") throw error;
     setConsents((c) => [...c, ...rows]);
   }, [session, consents]);
 
-  return { session, profile, loading, signIn, signOut, completePasswordChange, pendingLegalConsents, acceptLegalConsents };
+  // Punto de entrada único y resumible para todo el primer acceso: valida
+  // o consume el enlace de invitación (verifyOtp, una sola vez en la vida
+  // de ese token), fija la contraseña, marca profiles.activated_at y
+  // registra el consentimiento legal, en ese orden — así un fallo que solo
+  // afecte al consentimiento legal deja activated_at ya fijado y el
+  // usuario converge en AcceptLegalScreen en vez de tener que repetir el
+  // formulario de contraseña.
+  //
+  // Resumible: si ya existe una sesión (un intento previo ya llamó a
+  // verifyOtp con éxito, o esta llamada es un reintento tras un fallo
+  // parcial), se salta verifyOtp por completo — volver a llamarlo con el
+  // mismo token fallaría, ya está consumido.
+  //
+  // expectedEmail es una defensa adicional, no la única: quien llama
+  // (AuthGate) ya decide si corresponde invocar esto, pero la función no
+  // confía ciegamente en esa decisión — si hay sesión y no coincide con
+  // expectedEmail, nunca la reutiliza en silencio. No se repite la
+  // comprobación tras un verifyOtp fresco: el token ya es la frontera de
+  // seguridad real ahí, solo puede resolver a la cuenta para la que se
+  // emitió.
+  //
+  // Lanza siempre un Error con uno de los tres mensajes de arriba, nunca
+  // un error crudo de Supabase — CreatePasswordScreen solo tiene que
+  // mostrar err.message tal cual.
+  const activateAccount = useCallback(async ({ tokenHash, type, expectedEmail, password }) => {
+    const { data: { session: existing } } = await supabase.auth.getSession();
+
+    let userId;
+    if (existing) {
+      if (existing.user.email.toLowerCase() !== expectedEmail.toLowerCase()) {
+        throw new Error(ACTIVATION_SESSION_MISMATCH);
+      }
+      userId = existing.user.id;
+    } else {
+      const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+      if (error) throw new Error(ACTIVATION_LINK_INVALID, { cause: error });
+      userId = data.user.id;
+      // onAuthStateChange actualiza `session` (estado React) de forma
+      // asíncrona a partir de aquí — todo lo de abajo usa `userId`, nunca
+      // `session`.
+    }
+
+    try {
+      await completePasswordChange(password);
+      await markAccountActivated(userId);
+      await acceptLegalConsents(userId);
+    } catch (err) {
+      throw new Error(ACTIVATION_GENERIC_RETRY, { cause: err });
+    }
+
+    window.history.replaceState(null, "", window.location.pathname);
+    return { userId };
+  }, [completePasswordChange, markAccountActivated, acceptLegalConsents]);
+
+  return {
+    session,
+    profile,
+    loading,
+    signIn,
+    signOut,
+    completePasswordChange,
+    markAccountActivated,
+    acceptLegalConsents,
+    activateAccount,
+    pendingLegalConsents,
+  };
 }
