@@ -240,12 +240,42 @@ create table if not exists public.profiles (
   -- Por defecto false para no afectar a cuentas ya existentes ni al
   -- superadmin de arranque; el gate de la app usa este campo para saber si
   -- debe forzar la pantalla de "crear tu contraseña" antes de dejar entrar.
+  -- DEPRECATED: sustituido por activated_at (ver justo abajo). Se mantiene
+  -- sin tocar durante la migración y se retira en un paso aparte, no en
+  -- este mismo cambio — ver la migración aditiva más abajo.
   password_set boolean not null default false,
+  -- Momento en que la activación de la cuenta completó la fase de
+  -- contraseña (ver activateAccount() en useSession.js) — null mientras
+  -- esté pendiente. Sustituye a password_set con la misma semántica de
+  -- "puede pasar" pero como instante, no como flag. IMPORTANTE: no
+  -- significa que se haya completado TODO el onboarding — un usuario puede
+  -- tener activated_at con fecha y aun así tener consentimiento legal
+  -- pendiente (ver pendingLegalConsents); son dos puertas independientes
+  -- que AuthGate comprueba por separado, nunca una sustituye a la otra.
+  activated_at timestamptz,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
 
 create unique index if not exists profiles_nickname_lower_key on public.profiles (lower(nickname));
+
+-- Migración aditiva password_set -> activated_at (fase 1 de 2). Ejecutar a
+-- mano en el SQL editor de Supabase antes o junto con el despliegue del
+-- código que empieza a leer/escribir activated_at — password_set se deja
+-- intacto a propósito, así el código que todavía no se ha desplegado sigue
+-- funcionando durante la ventana de transición. No requiere cambios de
+-- RLS/triggers/RPCs: ninguno de los tres referencia password_set hoy.
+-- Fase 2 (retirar password_set con `alter table ... drop column`) es una
+-- migración aparte, deliberadamente no incluida aquí — solo debe ejecutarse
+-- una vez el código nuevo lleve un tiempo estable en producción.
+--
+--   alter table public.profiles
+--     add column if not exists activated_at timestamptz;
+--
+--   update public.profiles
+--     set activated_at = now()
+--     where password_set = true
+--       and activated_at is null;
 
 -- Crea automáticamente la fila de profiles al darse de alta un auth.users
 -- nuevo (hoy: solo el alta manual del admin vía la función de creación de
