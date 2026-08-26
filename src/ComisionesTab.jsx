@@ -13,7 +13,10 @@ export default function ComisionesTab({ schools, activities, paymentTypes, payme
   const defaultStatus = paymentStatuses.rows.find((s) => s.is_default)?.name || paymentStatuses.rows[0]?.name || "Pending";
   const defaultSchool = schools.rows.find((s) => s.is_default)?.name || "";
   const defaultActivity = activities.rows.find((a) => a.is_default)?.name || "";
-  const defaultPaymentType = paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "";
+  // El tipo de pago ya no se elige en ningún formulario — toda tarifa nueva
+  // se crea como "Per Person" (si no existe esa fila en payment_types, cae
+  // al is_default de la tabla y, si tampoco hay, al primero).
+  const defaultPaymentType = paymentTypes.rows.find((t) => t.name === "Per Person")?.name || paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "";
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
 
   const emptyForm = () => ({
@@ -28,7 +31,6 @@ export default function ComisionesTab({ schools, activities, paymentTypes, payme
   const [rateSheetOpen, setRateSheetOpen] = useState(false);
   const [rateForm, setRateForm] = useState(null);
   const [savingRate, setSavingRate] = useState(false);
-  const paymentTypeNames = paymentTypes.rows.map((t) => t.name);
 
   // Llegado desde el acceso directo de Home: abre la hoja de creación sola.
   useEffect(() => {
@@ -251,9 +253,6 @@ export default function ComisionesTab({ schools, activities, paymentTypes, payme
               </Field>
               <Field label="Actividad">
                 <Select value={rateForm.activity} onChange={(v) => setRateForm({ ...rateForm, activity: v })} options={activityNames} />
-              </Field>
-              <Field label="Tipo de pago">
-                <Select value={rateForm.payment_type} onChange={(v) => setRateForm({ ...rateForm, payment_type: v })} options={paymentTypeNames} />
               </Field>
               <Field label="Moneda">
                 <CurrencySearchSelect value={rateForm.currency} onChange={(v) => setRateForm({ ...rateForm, currency: v })} currencyRows={currencies.rows} />

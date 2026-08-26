@@ -12,9 +12,13 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
   const table = mode === "instructor" ? rates : commissionRates;
   const entriesForMode = mode === "instructor" ? worklog.rows : comisiones.rows;
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
+  // El tipo de pago ya no se elige en ningún formulario — toda tarifa nueva
+  // se crea como "Per Person" (si no existe esa fila en payment_types, cae
+  // al is_default de la tabla y, si tampoco hay, al primero).
+  const defaultPaymentType = paymentTypes.rows.find((t) => t.name === "Per Person")?.name || paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "";
   const toast = useToast();
 
-  const emptyForm = { school: "", activity: "", payment_type: "", currency: defaultCurrency, rate: "" };
+  const emptyForm = { school: "", activity: "", payment_type: defaultPaymentType, currency: defaultCurrency, rate: "" };
   const [form, setForm] = useState(emptyForm);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -32,7 +36,6 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
 
   const schoolNames = schools.rows.map((s) => s.name);
   const activityNames = activities.rows.map((a) => a.name);
-  const paymentTypeNames = paymentTypes.rows.map((t) => t.name);
   const activityColor = (name) => colorFor(activities.rows, name, "#374151");
   const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
 
@@ -135,7 +138,6 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
                   <div className="grid grid-cols-2 gap-2">
                     <Select value={editForm.school} onChange={(v) => setEditForm({ ...editForm, school: v })} options={schoolNames} />
                     <Select value={editForm.activity} onChange={(v) => setEditForm({ ...editForm, activity: v })} options={activityNames} />
-                    <Select value={editForm.payment_type} onChange={(v) => setEditForm({ ...editForm, payment_type: v })} options={paymentTypeNames} />
                     <CurrencySearchSelect value={editForm.currency} onChange={(v) => setEditForm({ ...editForm, currency: v })} currencyRows={currencies.rows} />
                     <MoneyInput value={editForm.rate} onChange={(v) => setEditForm({ ...editForm, rate: v })} />
                   </div>
@@ -189,9 +191,6 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
               </Field>
               <Field label="Actividad">
                 <Select value={form.activity} onChange={(v) => setForm({ ...form, activity: v })} options={activityNames} />
-              </Field>
-              <Field label="Tipo de pago">
-                <Select value={form.payment_type} onChange={(v) => setForm({ ...form, payment_type: v })} options={paymentTypeNames} />
               </Field>
               <Field label="Moneda">
                 <CurrencySearchSelect value={form.currency} onChange={(v) => setForm({ ...form, currency: v })} currencyRows={currencies.rows} />
