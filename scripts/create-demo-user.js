@@ -1,29 +1,38 @@
 #!/usr/bin/env node
-// Herramienta de desarrollo/testing — NO forma parte del flujo real de
-// creación de usuarios (server/users/createUser.js no se toca). Crea una
-// cuenta completa lista para probar Dashboard, Actividades, Tarifas,
-// Pagos, Comisiones y Configuración: usuario en auth.users + profiles
-// (misma Admin API que usa la app real), el dataset Ihasia clonado vía el
+// Herramienta de desarrollo/testing — replica el flujo real de creación de
+// usuarios (server/users/createUser.js, que no se toca) en vez de tomar un
+// atajo: auth.admin.createUser() SIN contraseña + auth.admin.generateLink()
+// tipo "recovery", igual que el alta real, para que el usuario demo pase
+// por el mismo primer acceso que cualquier usuario real (CreatePasswordScreen
+// + aceptación de documentos legales) en vez de nacer con password_set ya
+// resuelto. Además deja la cuenta lista para probar Dashboard, Actividades,
+// Tarifas, Pagos, Comisiones y Configuración: dataset Ihasia clonado vía el
 // mecanismo existente (clone_setup_dataset, sin duplicar escuelas/
 // actividades/tarifas a mano), y payment_statuses/payment_types mínimos
 // para que Pagos y Tarifas no aparezcan vacíos.
 //
+// A diferencia del alta real, no envía email de bienvenida (sendWelcomeEmail
+// no se llama) — el enlace de activación se imprime directamente por
+// consola para pegarlo en el navegador.
+//
 // Uso:
 //   node --env-file=.env.local scripts/create-demo-user.js \
-//     --email=demo@example.com --nickname=demo --password=Demo1234 \
+//     --email=demo@example.com --nickname=demo \
 //     [--first-name=Nombre] [--last-name=Apellido]
 //
 // Requiere SUPABASE_SERVICE_ROLE_KEY en el entorno (junto a las VITE_*
-// que ya tienes en .env.local) — nunca se expone al frontend.
+// que ya tienes en .env.local) — nunca se expone al frontend. Si además
+// tienes APP_URL en el entorno, el enlace redirige ahí tras fijar la
+// contraseña; si no, Supabase usa el Site URL configurado en el proyecto.
 
 import { checkEnv, getServiceRoleClient, parseArgs } from "./lib/demoEnv.js";
 
 async function main() {
   const args = parseArgs();
-  const { email, nickname, password, "first-name": firstName, "last-name": lastName } = args;
+  const { email, nickname, "first-name": firstName, "last-name": lastName } = args;
 
-  if (!email || !nickname || !password) {
-    console.error("Uso: node --env-file=.env.local scripts/create-demo-user.js --email=... --nickname=... --password=... [--first-name=...] [--last-name=...]");
+  if (!email || !nickname) {
+    console.error("Uso: node --env-file=.env.local scripts/create-demo-user.js --email=... --nickname=... [--first-name=...] [--last-name=...]");
     process.exit(1);
   }
 
@@ -34,7 +43,6 @@ async function main() {
   console.log(`Creando usuario demo: ${email} (${nickname})...`);
   const { data: created, error: createError } = await client.auth.admin.createUser({
     email,
-    password,
     email_confirm: true,
     user_metadata: { first_name: firstName || null, last_name: lastName || null, nickname },
   });
@@ -76,6 +84,23 @@ async function main() {
   ]);
   if (typeError) await rollback("No se pudieron crear los payment_types:", typeError);
 
+  // Enlace de primer acceso — igual que server/users/createUser.js: mismo
+  // best-effort (un fallo aquí no deshace la cuenta ni el dataset ya
+  // sembrado, se informa y ya está).
+  if (!process.env.APP_URL) {
+    console.warn("Aviso: falta APP_URL en el entorno — el enlace usará el Site URL por defecto de Supabase.");
+  }
+  console.log("Generando enlace de primer acceso...");
+  const { data: linkData, error: linkError } = await client.auth.admin.generateLink({
+    type: "recovery",
+    email,
+    options: { redirectTo: process.env.APP_URL },
+  });
+  if (linkError) {
+    console.error("No se pudo generar el enlace de primer acceso:", linkError.message);
+  }
+  const actionLink = linkData?.properties?.action_link;
+
   const count = async (table) => {
     const { count, error } = await client.from(table).select("*", { count: "exact", head: true }).eq("user_id", userId);
     if (error) throw error;
@@ -95,6 +120,11 @@ async function main() {
   console.log(`  Tarifas:           ${rates}`);
   console.log(`  Estados de pago:   ${statuses} (Pending, Paid)`);
   console.log(`  Tipos de pago:     ${types} (Instructor, Comisión)`);
+  if (actionLink) {
+    console.log(`\nEnlace de primer acceso (crear contraseña + aceptar documentos legales):\n  ${actionLink}`);
+  } else {
+    console.log("\nNo se generó enlace de primer acceso — usa 'Olvidé mi contraseña' desde el login para generarlo.");
+  }
 }
 
 main().catch((err) => {
