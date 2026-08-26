@@ -29,11 +29,18 @@ function request(overrides = {}) {
   };
 }
 
+const APP_URL = "https://app.oceanpulse.example";
+
 beforeEach(() => {
   hasServerConfig.mockReturnValue(true);
   verifyCaller.mockResolvedValue({ id: "caller-1" });
   isSuperadmin.mockResolvedValue(true);
   getServiceRoleClient.mockReset();
+  process.env.APP_URL = APP_URL;
+});
+
+afterEach(() => {
+  delete process.env.APP_URL;
 });
 
 it("rechaza métodos distintos de POST sin tocar Supabase", async () => {
@@ -97,6 +104,18 @@ it("devuelve 403 si quien llama no es superadmin, sin tocar Supabase Admin API",
   expect(getServiceRoleClient).not.toHaveBeenCalled();
 });
 
+// URL de activación que buildActivationUrl() (createUser.js) debería
+// construir para el hashed_token de generateLink() de más abajo — se
+// recalcula con las mismas APIs (URL/URLSearchParams) en vez de escribirla
+// a mano, para no arrastrar un error de escape/orden si el helper cambia.
+function expectedActivationLink({ tokenHash, email }) {
+  const url = new URL(APP_URL);
+  url.searchParams.set("token_hash", tokenHash);
+  url.searchParams.set("type", "recovery");
+  url.searchParams.set("email", email);
+  return url.toString();
+}
+
 describe("con permisos válidos", () => {
   let createUser;
   let generateLink;
@@ -104,7 +123,7 @@ describe("con permisos válidos", () => {
   beforeEach(() => {
     createUser = vi.fn();
     generateLink = vi.fn().mockResolvedValue({
-      data: { properties: { action_link: "https://example.supabase.co/verify?token=abc" } },
+      data: { properties: { hashed_token: "hashed-token-abc" } },
       error: null,
     });
     getServiceRoleClient.mockReturnValue({ auth: { admin: { createUser, generateLink } } });
@@ -137,7 +156,7 @@ describe("con permisos válidos", () => {
     });
   });
 
-  it("genera un enlace de recovery de un solo uso y lo pasa al email de bienvenida", async () => {
+  it("genera un enlace de recovery de un solo uso con el email como destinatario", async () => {
     createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
 
     await handleCreateUser(request());
@@ -147,11 +166,26 @@ describe("con permisos válidos", () => {
       email: VALID_BODY.email,
       options: { redirectTo: process.env.APP_URL },
     });
+  });
+
+  it("construye la URL de activación propia (no el action_link de Supabase) y se la pasa al email de bienvenida", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+
+    await handleCreateUser(request());
+
+    expect(sendWelcomeEmail).toHaveBeenCalledTimes(1);
+    const { actionLink } = sendWelcomeEmail.mock.calls[0][0];
+    const url = new URL(actionLink);
+
+    expect(url.origin).toBe(new URL(APP_URL).origin);
+    expect(url.searchParams.get("token_hash")).toBe("hashed-token-abc");
+    expect(url.searchParams.get("type")).toBe("recovery");
+    expect(url.searchParams.get("email")).toBe(VALID_BODY.email);
     expect(sendWelcomeEmail).toHaveBeenCalledWith({
       email: VALID_BODY.email,
       firstName: VALID_BODY.first_name,
       nickname: VALID_BODY.nickname,
-      actionLink: "https://example.supabase.co/verify?token=abc",
+      actionLink: expectedActivationLink({ tokenHash: "hashed-token-abc", email: VALID_BODY.email }),
     });
   });
 
@@ -168,7 +202,33 @@ describe("con permisos válidos", () => {
     expect(sendWelcomeEmail).not.toHaveBeenCalled();
   });
 
-  it("no bloquea la creación si falla el envío del email — la cuenta ya existe, y devuelve el enlace igualmente para probar el flujo a mano", async () => {
+  it("no bloquea la creación si falta APP_URL — no hay base para construir el enlace de activación", async () => {
+    delete process.env.APP_URL;
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+
+    const result = await handleCreateUser(request());
+
+    expect(result).toEqual({
+      status: 200,
+      payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de acceso." },
+    });
+    expect(sendWelcomeEmail).not.toHaveBeenCalled();
+  });
+
+  it("no bloquea la creación si generateLink no devuelve hashed_token", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+    generateLink.mockResolvedValue({ data: { properties: {} }, error: null });
+
+    const result = await handleCreateUser(request());
+
+    expect(result).toEqual({
+      status: 200,
+      payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de acceso." },
+    });
+    expect(sendWelcomeEmail).not.toHaveBeenCalled();
+  });
+
+  it("no bloquea la creación si falla el envío del email — la cuenta ya existe, y devuelve la URL de activación igualmente para probar el flujo a mano", async () => {
     createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
     sendWelcomeEmail.mockResolvedValue({ sent: false, error: "No se pudo enviar el email de bienvenida." });
 
@@ -180,7 +240,7 @@ describe("con permisos válidos", () => {
         user_id: "new-user-1",
         email_sent: false,
         email_error: "No se pudo enviar el email de bienvenida.",
-        action_link: "https://example.supabase.co/verify?token=abc",
+        action_link: expectedActivationLink({ tokenHash: "hashed-token-abc", email: VALID_BODY.email }),
       },
     });
   });
@@ -197,7 +257,7 @@ describe("con permisos válidos", () => {
         user_id: "new-user-1",
         email_sent: false,
         email_error: "No se pudo enviar el email de bienvenida.",
-        action_link: "https://example.supabase.co/verify?token=abc",
+        action_link: expectedActivationLink({ tokenHash: "hashed-token-abc", email: VALID_BODY.email }),
       },
     });
   });

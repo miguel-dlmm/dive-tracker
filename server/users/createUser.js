@@ -47,6 +47,28 @@ function getHeader(headers, name) {
   return key ? headers[key] : undefined;
 }
 
+// Se reutiliza tanto al pedir el enlace a Supabase como al construir la URL
+// de activación de abajo, para que ambos usos no puedan desincronizarse.
+const ACTIVATION_LINK_TYPE = "recovery";
+
+// URL de activación propia de la app — NUNCA se envía el action_link de
+// Supabase directamente (ver el uso más abajo). Ese enlace apunta al
+// endpoint público de verificación de Supabase, que consume el token con un
+// simple GET: un escáner de email/link-preview que lo precargue lo
+// invalidaría antes de que el usuario llegue a pulsarlo. Con esta URL
+// propia, cargar la página no consume nada — solo lo hace activateAccount()
+// al enviar el formulario (ver useSession.js). email va en la URL a
+// propósito: AuthGate lo necesitará para poder detectar una sesión ajena
+// más adelante (ver App.jsx), y no añade exposición nueva — es el mismo
+// email al que ya se envía este correo.
+function buildActivationUrl(baseUrl, { tokenHash, email }) {
+  const url = new URL(baseUrl);
+  url.searchParams.set("token_hash", tokenHash);
+  url.searchParams.set("type", ACTIVATION_LINK_TYPE);
+  url.searchParams.set("email", email);
+  return url.toString();
+}
+
 export async function handleCreateUser({ method, headers, body }) {
   if (method !== "POST") {
     return { status: 405, payload: { error: "Method not allowed" } };
@@ -106,14 +128,11 @@ export async function handleCreateUser({ method, headers, body }) {
   // ya está creada, así que un fallo aquí no debe impedir la respuesta de
   // éxito. Si falla, el admin puede seguir compartiendo la contraseña
   // inicial a mano (ver comentario de arriba).
-  if (!process.env.APP_URL) {
-    console.error("create-user: falta la variable de entorno APP_URL — el enlace de primer acceso usará el Site URL por defecto de Supabase");
-  }
-
   let emailSent = false;
   let emailError = null;
+  let activationLink;
   const { data: linkData, error: linkError } = await getServiceRoleClient().auth.admin.generateLink({
-    type: "recovery",
+    type: ACTIVATION_LINK_TYPE,
     email,
     options: { redirectTo: process.env.APP_URL },
   });
@@ -121,7 +140,14 @@ export async function handleCreateUser({ method, headers, body }) {
   if (linkError) {
     console.error("create-user: no se pudo generar el enlace de primer acceso", linkError);
     emailError = "No se pudo generar el enlace de acceso.";
+  } else if (!process.env.APP_URL || !linkData?.properties?.hashed_token) {
+    // Ya no hay Site URL de Supabase de respaldo como antes: el
+    // action_link de Supabase no se usa (ver buildActivationUrl), así que
+    // sin APP_URL no hay base para construir ningún enlace de activación.
+    console.error("create-user: no se pudo construir el enlace de activación — falta APP_URL o hashed_token en la respuesta de generateLink");
+    emailError = "No se pudo generar el enlace de acceso.";
   } else {
+    activationLink = buildActivationUrl(process.env.APP_URL, { tokenHash: linkData.properties.hashed_token, email });
     // try/catch defensivo: sendWelcomeEmail está documentado como "nunca
     // lanza", pero no dependemos solo de esa convención — si algún día deja
     // de cumplirse, esto sigue garantizando email_sent:false + el fallback
@@ -131,7 +157,7 @@ export async function handleCreateUser({ method, headers, body }) {
         email,
         firstName: first_name,
         nickname,
-        actionLink: linkData?.properties?.action_link,
+        actionLink: activationLink,
       });
       emailSent = result.sent;
       if (!result.sent) emailError = result.error;
@@ -146,7 +172,7 @@ export async function handleCreateUser({ method, headers, body }) {
   // Solo se devuelve cuando el email NO se ha enviado (fallo de envío o
   // configuración incompleta) — si el envío funciona, la respuesta no
   // incluye el enlace y se comporta igual que antes de este fallback.
-  const actionLink = !emailSent ? linkData?.properties?.action_link : undefined;
+  const actionLink = !emailSent ? activationLink : undefined;
 
   return {
     status: 200,
