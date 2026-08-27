@@ -1,0 +1,143 @@
+// Tokens de las 5 direcciones visuales del laboratorio. Cada entrada es un
+// objeto plano — nada de CSS global ni variables en :root — así que
+// seleccionar un diseño en el laboratorio no puede afectar a la app real
+// bajo ninguna circunstancia: los componentes de src/lab/ reciben estos
+// valores por prop y los aplican con inline style, en un árbol de React
+// que solo existe mientras el overlay del laboratorio está abierto.
+//
+// Restricción compartida por los 5 (pedida explícitamente): legibilidad al
+// sol. Por eso ninguno baja el contraste texto/fondo por debajo de lo que
+// se leería bien con reflejos — el "glass"/profundidad se reserva para
+// capas flotantes (cabecera, FAB), nunca para el fondo del contenido.
+
+export const DESIGNS = [
+  {
+    id: "current",
+    label: "Diseño actual",
+    tagline: "El de producción — línea base para comparar.",
+    nav: "5tab",
+    homeStyle: "kpi-stack",
+    density: "comfortable",
+    bg: "#F7F8F8",
+    bgImage: "none",
+    surface: "#FFFFFF",
+    border: "#E5E7EB",
+    ink: "#0F172A",
+    inkMuted: "#6B7280",
+    accent: "#0F766E",
+    accentSoft: "#F0FDFA",
+    warn: "#C2542F",
+    warnSoft: "#FCEEE7",
+    good: "#15803D",
+    radius: "10px",
+    radiusLg: "14px",
+    shadow: "0 1px 2px rgba(15,23,42,0.06)",
+    depth: "plano",
+  },
+  {
+    id: "refinado",
+    label: "Diseño 1 — Refinado / Editorial",
+    tagline: "Más aire, tinta cálida, acentos desaturados.",
+    nav: "5tab",
+    homeStyle: "kpi-stack",
+    density: "airy",
+    bg: "#FAFAF8",
+    bgImage: "none",
+    surface: "#FFFFFF",
+    border: "#EDEBE6",
+    ink: "#1C1917",
+    inkMuted: "#8A8579",
+    accent: "#4B7B73",
+    accentSoft: "#F1F5F3",
+    warn: "#B4744F",
+    warnSoft: "#F7EEE7",
+    good: "#5B7C55",
+    radius: "18px",
+    radiusLg: "22px",
+    shadow: "0 8px 24px rgba(28,25,23,0.06)",
+    depth: "sombra difusa suave",
+  },
+  {
+    id: "denso",
+    label: "Diseño 2 — Estructural / Denso",
+    tagline: "Filas compactas, barra de color por entidad, cero decoración.",
+    nav: "5tab",
+    homeStyle: "dense-list",
+    density: "compact",
+    bg: "#FFFFFF",
+    bgImage: "none",
+    surface: "#FFFFFF",
+    border: "#E4E4E7",
+    ink: "#09090B",
+    inkMuted: "#71717A",
+    accent: "#4F46E5",
+    accentSoft: "#EEF2FF",
+    warn: "#B45309",
+    warnSoft: "#FEF3E2",
+    good: "#15803D",
+    radius: "6px",
+    radiusLg: "8px",
+    shadow: "none",
+    depth: "sin sombra, solo bordes de 1px",
+  },
+  {
+    id: "vivido",
+    label: "Diseño 3 — Vívido / Ilustrativo",
+    tagline: "Degradados suaves por sección, tarjetas KPI grandes.",
+    nav: "5tab",
+    homeStyle: "illustrative",
+    density: "comfortable",
+    bg: "#F5FAFA",
+    bgImage: "radial-gradient(circle at 15% -10%, rgba(13,148,136,0.14), transparent 55%), radial-gradient(circle at 100% 0%, rgba(194,84,47,0.10), transparent 45%)",
+    surface: "#FFFFFF",
+    border: "#E3EFEE",
+    ink: "#0B2A2E",
+    inkMuted: "#5C7A78",
+    accent: "#0D9488",
+    accentSoft: "#E6FBF8",
+    warn: "#C2542F",
+    warnSoft: "#FDEEE6",
+    good: "#15803D",
+    radius: "20px",
+    radiusLg: "26px",
+    shadow: "0 10px 30px rgba(13,148,136,0.14)",
+    depth: "sombra teñida del color de acento",
+  },
+  {
+    id: "next",
+    label: "Diseño 4 — Ocean Pulse Next",
+    tagline: "Bento, jerarquía por urgencia, shell de 4 destinos.",
+    nav: "4tab",
+    homeStyle: "bento",
+    density: "comfortable",
+    bg: "#F6F8FA",
+    bgImage: "none",
+    surface: "#FFFFFF",
+    border: "#E7EAF0",
+    ink: "#0A1628",
+    inkMuted: "#5B6B82",
+    accent: "#0057FF",
+    accentSoft: "#EAF1FF",
+    warn: "#E0522F",
+    warnSoft: "#FDECE6",
+    good: "#0F9D58",
+    radius: "16px",
+    radiusLg: "22px",
+    shadow: "0 6px 20px rgba(10,22,40,0.08)",
+    // Único hueco donde se admite "glass": la cabecera fija y el FAB — ver
+    // ContextualFab / LabTopBar en labComponents.jsx. Nunca en el fondo del
+    // contenido, para no perder contraste al sol.
+    glassChrome: "rgba(255,255,255,0.72)",
+    depth: "glass moderado solo en cabecera/FAB, resto plano",
+  },
+];
+
+export const getDesign = (id) => DESIGNS.find((d) => d.id === id) || DESIGNS[0];
+
+export const LAB_SCREENS = [
+  { id: "home", label: "Home" },
+  { id: "worklog", label: "Registro" },
+  { id: "comisiones", label: "Comisiones" },
+  { id: "pagos", label: "Pagos" },
+  { id: "config", label: "Configuración" },
+];

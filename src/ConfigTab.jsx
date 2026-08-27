@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Plus, Star, Pencil, Search, Lock, UserPlus, X } from "lucide-react";
+import { Plus, Star, Pencil, Search, Lock, UserPlus, X, FlaskConical } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
 import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog, Select } from "./shared";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
 import PaymentsTab from "./PaymentsTab";
+import DesignLabOverlay from "./lab/DesignLabOverlay";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
 
@@ -673,16 +674,45 @@ function UsersDirectory({ profile }) {
   );
 }
 
+// Laboratorio visual — solo maqueta con datos ficticios (ver src/lab/), no
+// escribe nada ni depende de ningún hook de datos. Se muestra únicamente a
+// superadmin, más restrictivo que el resto de secciones de admin.
+function ExperimentalLab() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="mb-1 flex items-center gap-2">
+        <FlaskConical size={16} style={{ color: TEAL }} aria-hidden="true" />
+        <h3 className="text-sm font-semibold text-gray-800">Preview de diseños</h3>
+      </div>
+      <p className="mb-3 text-xs text-gray-400">
+        Explora 4 direcciones visuales alternativas sobre pantallas de ejemplo con datos ficticios.
+        No toca la app real, no lee ni escribe en Supabase — se puede cerrar y no deja ningún cambio.
+      </p>
+      <button
+        onClick={() => setOpen(true)}
+        className="flex min-h-11 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-white"
+        style={{ backgroundColor: TEAL }}
+      >
+        <FlaskConical size={15} aria-hidden="true" /> Abrir laboratorio visual
+      </button>
+      <DesignLabOverlay open={open} onClose={() => setOpen(false)} />
+    </div>
+  );
+}
+
 const SECTIONS = ["Escuelas", "Actividades", "Tarifas", "Pagos"];
 const ADMIN_SECTIONS = ["Tipos de pago", "Estados de pago", "Monedas", "Secciones", "Ajustes", "Usuarios"];
+const SUPERADMIN_SECTIONS = ["Experimental"];
 
 // schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
 // rates / commissionRates / worklog / comisiones: hooks que necesitan las secciones Tarifas y Pagos, embebidas aquí
 // profile: fila propia de profiles (useSession) — is_admin/is_superadmin deciden qué secciones se ven
 export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile }) {
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
+  const isSuperadmin = !!profile?.is_superadmin;
   const [section, setSection] = useState("Escuelas");
-  const sections = isAdmin ? [...SECTIONS, ...ADMIN_SECTIONS] : SECTIONS;
+  const sections = isAdmin ? [...SECTIONS, ...ADMIN_SECTIONS, ...(isSuperadmin ? SUPERADMIN_SECTIONS : [])] : SECTIONS;
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
 
   return (
@@ -732,6 +762,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
       {isAdmin && section === "Secciones" && <SectionColors navSections={navSections} />}
       {isAdmin && section === "Ajustes" && <GeneralSettings appConfig={appConfig} />}
       {isAdmin && section === "Usuarios" && <UsersDirectory profile={profile} />}
+      {isSuperadmin && section === "Experimental" && <ExperimentalLab />}
     </div>
   );
 }
