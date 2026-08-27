@@ -4,7 +4,6 @@ import { NAVY, TEAL, GREEN, SUN } from "./App";
 import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog, Select } from "./shared";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
-import PaymentsTab from "./PaymentsTab";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
 
@@ -673,7 +672,10 @@ function UsersDirectory({ profile }) {
   );
 }
 
-const SECTIONS = ["Escuelas", "Actividades", "Tarifas", "Pagos"];
+// Pagos ya no vive aquí — es pantalla secundaria propia, alcanzable desde
+// la tarjeta "Pendiente de cobrar" de Home (ver
+// docs/ADR/0004-home-dashboard-operativo-instructor.md).
+const SECTIONS = ["Escuelas", "Actividades", "Tarifas"];
 const ADMIN_SECTIONS = ["Tipos de pago", "Estados de pago", "Monedas", "Secciones", "Ajustes", "Usuarios"];
 
 // schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
@@ -714,9 +716,6 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
           rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
           accentColor={sectionColor("rates")}
         />
-      )}
-      {section === "Pagos" && (
-        <PaymentsTab schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} />
       )}
       {isAdmin && section === "Tipos de pago" && (
         <CrudTable title="Tipos de pago" table={paymentTypes} hasDefault fields={[{ key: "name", label: "Nombre" }]} />
