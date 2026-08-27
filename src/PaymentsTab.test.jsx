@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PaymentsTab from "./PaymentsTab";
+import { ToastProvider } from "./shared";
 
 const rowsHook = (rows) => ({
   rows, loaded: true,
@@ -17,14 +17,13 @@ const PAYMENT_STATUSES = rowsHook([
   { name: "Paid", is_default: false },
 ]);
 const CURRENCIES = rowsHook([{ code: "EUR", symbol: "€", is_default: true }]);
-const SCHOOLS = rowsHook([{ name: "PADI Cozumel" }]);
 const ACTIVITIES = rowsHook([{ name: "Open Water" }]);
 const RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 20, currency: "EUR" }];
 const COMMISSION_RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 5, currency: "EUR" }];
 
 // <Money> separa cifra y símbolo en nodos distintos (para atenuar el
 // símbolo); este matcher compara el texto combinado del nodo sin espacios,
-// sin importar cómo lo reparta el DOM (mismo patrón que HomeTab.test.jsx).
+// sin importar cómo lo reparta el DOM.
 function money(expected) {
   const target = expected.replace(/\s+/g, "");
   return (_content, node) => {
@@ -34,7 +33,7 @@ function money(expected) {
   };
 }
 
-function renderPayments({ worklog = [], comisiones = [], colleaguePayments = [] } = {}) {
+function renderPayments({ worklog = [], comisiones = [], colleaguePayments = [], withToast = false } = {}) {
   const hooks = {
     worklog: rowsHook(worklog),
     comisiones: rowsHook(comisiones),
@@ -42,162 +41,132 @@ function renderPayments({ worklog = [], comisiones = [], colleaguePayments = [] 
     rates: rowsHook(RATES_ROWS),
     commissionRates: rowsHook(COMMISSION_RATES_ROWS),
   };
-  render(
+  const ui = (
     <PaymentsTab
-      schools={SCHOOLS} activities={ACTIVITIES} paymentStatuses={PAYMENT_STATUSES} currencies={CURRENCIES}
+      activities={ACTIVITIES} paymentStatuses={PAYMENT_STATUSES} currencies={CURRENCIES}
       rates={hooks.rates} commissionRates={hooks.commissionRates}
       worklog={hooks.worklog} comisiones={hooks.comisiones} colleaguePayments={hooks.colleaguePayments}
     />
   );
+  render(withToast ? <ToastProvider>{ui}</ToastProvider> : ui);
   return hooks;
 }
 
-describe("PaymentsTab", () => {
-  it("agrupa las 3 fuentes en Pendiente e ignora lo ya cobrado", () => {
-    renderPayments({
-      worklog: [
-        { id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }, // 20€
-        { id: "w2", date: "2026-08-05", school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }, // 40€, ya cobrado
-      ],
-      comisiones: [
-        { id: "c1", date: "2026-08-12", school: "PADI Cozumel", activity: "Open Water", people: 3, status: "Pending" }, // 15€
-      ],
-      colleaguePayments: [
-        { id: "p1", date: "2026-08-01", school: "PADI Cozumel", activity: "Open Water", colleague_name: "Ana", amount: 30, currency: "EUR", status: "Pending" },
-      ],
-    });
+// 2 fuentes pendientes (20€ + 10€) para que el total de la cabecera (30€)
+// nunca coincida por casualidad con el importe de una sola fila.
+function mixedDataset() {
+  return {
+    worklog: [
+      { id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }, // 20€
+      { id: "w2", date: "2026-08-05", school: "PADI Cozumel", activity: "Open Water", people: 3, status: "Paid" }, // 60€
+    ],
+    comisiones: [
+      { id: "c1", date: "2026-08-11", school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Pending" }, // 10€
+    ],
+  };
+}
 
-    // 20 (Registro) + 15 (Comisión) + 30 (Compañero) = 65 — el pagado (40) no cuenta.
-    expect(screen.getByText(money("65,00 €"))).toBeInTheDocument();
-    expect(screen.getByText("3 pagos")).toBeInTheDocument();
-    expect(screen.getByText("Ana")).toBeInTheDocument();
+describe("PaymentsTab — filtro de estado (Pendientes/Cobrados)", () => {
+  it("por defecto muestra solo Pendientes, con el contador en la pestaña", () => {
+    renderPayments(mixedDataset());
+
+    expect(screen.getByRole("button", { name: "Pendientes · 2" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText(money("30,00 €"))).toBeInTheDocument(); // total cabecera: 20+10
+    expect(screen.getByText(money("20,00 €"))).toBeInTheDocument();
+    expect(screen.getByText(money("10,00 €"))).toBeInTheDocument();
+    expect(screen.queryByText(money("60,00 €"))).not.toBeInTheDocument();
   });
 
-  it("Cobrar actualiza la tabla correcta con el estado opuesto", async () => {
+  it("la pestaña Cobrados muestra solo los cobrados", async () => {
     const user = userEvent.setup();
-    const { worklog } = renderPayments({
-      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }],
-    });
+    renderPayments(mixedDataset());
 
-    await user.click(screen.getByRole("button", { name: /^Cobrar$/ }));
+    await user.click(screen.getByRole("button", { name: "Cobrados" }));
 
-    expect(worklog.updateRow).toHaveBeenCalledWith("w1", { status: "Paid" });
+    expect(screen.getByText(money("60,00 €"))).toBeInTheDocument();
+    expect(screen.queryByText(money("20,00 €"))).not.toBeInTheDocument();
+    expect(screen.queryByText(money("10,00 €"))).not.toBeInTheDocument();
+    // La cabecera sigue mostrando el total pendiente, sea cual sea la pestaña activa.
+    expect(screen.getByText(money("30,00 €"))).toBeInTheDocument();
   });
 
-  // rowsHook es un mock estático — updateRow no cambia rows de verdad, así
-  // que no sirve para comprobar que la UI se mueve tras la acción (el hook
-  // real sí dispara un re-render con datos nuevos). Este arnés simula ese
-  // comportamiento con useState de verdad, solo para este test.
-  function useStatefulTable(initialRows) {
-    const [rows, setRows] = useState(initialRows);
-    return {
-      rows, loaded: true,
-      insertRow: vi.fn(),
-      updateRow: vi.fn(async (pk, patch) => {
-        setRows((prev) => prev.map((r) => (r.id === pk ? { ...r, ...patch } : r)));
-        return null;
-      }),
-      deleteRow: vi.fn(),
-      bulkUpdateWhere: vi.fn(async (predicate, patch) => {
-        let count = 0;
-        setRows((prev) => prev.map((r) => {
-          if (!predicate(r)) return r;
-          count += 1;
-          return { ...r, ...patch };
-        }));
-        return count;
-      }),
-      setDefault: vi.fn(),
-    };
-  }
-
-  function StatefulPayments({ worklog: initialWorklog }) {
-    const worklog = useStatefulTable(initialWorklog);
-    return (
-      <PaymentsTab
-        schools={SCHOOLS} activities={ACTIVITIES} paymentStatuses={PAYMENT_STATUSES} currencies={CURRENCIES}
-        rates={rowsHook(RATES_ROWS)} commissionRates={rowsHook(COMMISSION_RATES_ROWS)}
-        worklog={worklog} comisiones={rowsHook([])} colleaguePayments={rowsHook([])}
-      />
-    );
-  }
-
-  it("al cobrar, el grupo 'Cobrado recientemente' se abre solo y el pago queda arriba, resaltado", async () => {
-    const user = userEvent.setup();
-    render(
-      <StatefulPayments
-        worklog={[
-          { id: "w1", date: "2026-08-01", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }, // se cobrará ahora
-          { id: "w2", date: "2026-08-20", school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }, // ya cobrado, fecha más reciente
-        ]}
-      />
-    );
-
-    // Antes de cobrar, el grupo está colapsado — no se ve ningún resaltado.
-    expect(screen.queryByText("Recién cobrado")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /^Cobrar$/ }));
-
-    // Se abre solo, sin pulsar el desplegable "Cobrado recientemente".
-    // findAllByText espera a que se asiente el estado tras el updateRow async.
-    expect(await screen.findAllByText("Recién cobrado")).toHaveLength(1);
-
-    // w1 (recién cobrado) aparece antes que w2 en el DOM, aunque w2 tenga
-    // fecha más reciente — el usuario no debería tener que buscarlo.
-    const dateNodes = screen.getAllByText(/2026-08-\d{2}/);
-    expect(dateNodes[0].textContent).toContain("2026-08-01");
-    expect(dateNodes[1].textContent).toContain("2026-08-20");
-  });
-
-  it("el filtro de fuente reduce la lista a esa fuente", async () => {
-    const user = userEvent.setup();
-    renderPayments({
-      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }], // 20€
-      comisiones: [
-        { id: "c1", date: "2026-08-12", school: "PADI Cozumel", activity: "Open Water", people: 3, status: "Pending" }, // 15€
-        { id: "c2", date: "2026-08-13", school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Pending" }, // 10€
-      ],
-    });
-
-    // Sin filtrar: 20 + 15 + 10 = 45 — distinto de cualquier fila individual, sin ambigüedad.
-    expect(screen.getByText(money("45,00 €"))).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Todas las fuentes" }));
-    await user.click(screen.getByRole("option", { name: "Comisiones" }));
-
-    // Filtrado a Comisiones: 15 + 10 = 25 — tampoco coincide con ninguna fila.
-    expect(screen.getByText(money("25,00 €"))).toBeInTheDocument();
-    expect(screen.getByText("2 pagos")).toBeInTheDocument();
-  });
-
-  it("Cobrado recientemente se limita a 10 y avisa si hay más", async () => {
+  it("Cobrados se limita a los últimos 10 y avisa si hay más", async () => {
     const user = userEvent.setup();
     const paidEntries = Array.from({ length: 12 }, (_, i) => ({
       id: `w${i}`, date: `2026-08-${String(i + 1).padStart(2, "0")}`, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid",
     }));
     renderPayments({ worklog: paidEntries });
 
-    await user.click(screen.getByRole("button", { name: "Cobrado recientemente" }));
+    await user.click(screen.getByRole("button", { name: "Cobrados" }));
 
-    expect(screen.getAllByText("Deshacer")).toHaveLength(10);
-    expect(screen.getByText(/Mostrando los 10 más recientes de 12/)).toBeInTheDocument();
+    expect(screen.getAllByText("Marcar pendiente")).toHaveLength(10);
+    expect(screen.getByText(/Mostrando los 10 cobrados más recientes de 12/)).toBeInTheDocument();
+  });
+});
+
+describe("PaymentsTab — acciones de cobro", () => {
+  it("Confirmar cobro actualiza la tabla correcta con el estado opuesto", async () => {
+    const user = userEvent.setup();
+    const { worklog } = renderPayments({
+      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }],
+    });
+
+    await user.click(screen.getByRole("button", { name: /^Confirmar cobro$/ }));
+
+    expect(worklog.updateRow).toHaveBeenCalledWith("w1", { status: "Paid" });
   });
 
-  it("estado vacío distingue 'al día' de 'sin resultados con filtros'", () => {
-    renderPayments({});
-    expect(screen.getByText("Estás al día — nada pendiente de cobrar.")).toBeInTheDocument();
+  it("avisa por toast cómo encontrar el pago cuando desaparece del filtro activo (Pendientes)", async () => {
+    const user = userEvent.setup();
+    renderPayments({
+      withToast: true,
+      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }],
+    });
+
+    await user.click(screen.getByRole("button", { name: /^Confirmar cobro$/ }));
+
+    expect(await screen.findByText(/cámbialo a "Cobrados" para verlo/)).toBeInTheDocument();
   });
 
-  it("Cobrar todos actualiza en bloque cada tabla implicada", async () => {
+  it("Confirmar todos actualiza en bloque cada tabla implicada", async () => {
     const user = userEvent.setup();
     const { worklog, comisiones } = renderPayments({
       worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }],
       comisiones: [{ id: "c1", date: "2026-08-12", school: "PADI Cozumel", activity: "Open Water", people: 3, status: "Pending" }],
     });
 
-    await user.click(screen.getByRole("button", { name: "Cobrar todos" }));
+    await user.click(screen.getByRole("button", { name: "Confirmar todos" }));
 
     expect(worklog.bulkUpdateWhere).toHaveBeenCalled();
     expect(comisiones.bulkUpdateWhere).toHaveBeenCalled();
+  });
+});
+
+describe("PaymentsTab — estado visual", () => {
+  it("el botón Filtrar comunica visualmente si el panel está abierto o cerrado", async () => {
+    const user = userEvent.setup();
+    renderPayments({});
+
+    const filterButton = screen.getByRole("button", { name: "Filtrar" });
+    expect(filterButton).toHaveAttribute("aria-expanded", "false");
+    expect(filterButton.className).not.toContain("text-white");
+
+    await user.click(filterButton);
+
+    expect(filterButton).toHaveAttribute("aria-expanded", "true");
+    expect(filterButton.className).toContain("text-white");
+  });
+
+  it("las pestañas Pendientes/Cobrados reflejan cuál está activa (aria-pressed)", async () => {
+    const user = userEvent.setup();
+    renderPayments({});
+
+    expect(screen.getByRole("button", { name: /^Pendientes/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Cobrados" })).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(screen.getByRole("button", { name: "Cobrados" }));
+
+    expect(screen.getByRole("button", { name: /^Pendientes/ })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Cobrados" })).toHaveAttribute("aria-pressed", "true");
   });
 });
