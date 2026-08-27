@@ -947,6 +947,17 @@ export function oppositeStatus(currentName, paymentStatusRows) {
   return (preferred || others[0]).name;
 }
 
+// "Pendiente" se determina hoy por is_default en payment_statuses — es el
+// único campo con significado especial del catálogo, y hoy el catálogo es
+// binario (Pending/Paid). Si en el futuro crece con más estados (Partial/
+// Cancelled/Refunded, ya previsto en docs/ADR/0003-eliminar-payment-type.md),
+// is_default dejará de bastar para saber qué cuenta como "todavía te deben
+// esto" y hará falta un flag semántico propio en el catálogo — no antes,
+// mientras el catálogo siga siendo binario.
+export function isPendingStatus(statusName, paymentStatusRows) {
+  return paymentStatusRows.find((s) => s.name === statusName)?.is_default ?? false;
+}
+
 export function ChipGroup({ value, onChange, options }) {
   return (
     <div className="flex flex-wrap gap-1.5" role="radiogroup">

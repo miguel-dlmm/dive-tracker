@@ -1,4 +1,4 @@
-import { colorFor, applyListFilters, formatMoney, oppositeStatus, lighten } from "./shared";
+import { colorFor, applyListFilters, formatMoney, oppositeStatus, isPendingStatus, lighten } from "./shared";
 
 // Estos tests documentan el comportamiento ACTUAL de las funciones puras de
 // shared.jsx, como red de seguridad antes de dividir/refactorizar el
@@ -156,6 +156,29 @@ describe("oppositeStatus", () => {
 
   it("si el estado actual no existe en la lista, lo trata como si fuera 'por defecto' y salta al primer no-default", () => {
     expect(oppositeStatus("Desconocido", TWO_STATES)).toBe("Pagado");
+  });
+});
+
+describe("isPendingStatus", () => {
+  const STATES = [
+    { name: "Pendiente", is_default: true },
+    { name: "Pagado", is_default: false },
+  ];
+
+  it("es true para el estado marcado is_default", () => {
+    expect(isPendingStatus("Pendiente", STATES)).toBe(true);
+  });
+
+  it("es false para un estado que no es is_default", () => {
+    expect(isPendingStatus("Pagado", STATES)).toBe(false);
+  });
+
+  it("es false si el estado no existe en el catálogo", () => {
+    expect(isPendingStatus("Desconocido", STATES)).toBe(false);
+  });
+
+  it("es false si el catálogo está vacío", () => {
+    expect(isPendingStatus("Pendiente", [])).toBe(false);
   });
 });
 
