@@ -188,3 +188,37 @@ salvo que se acuerde explícitamente una excepción.
   qué coste añade y cuándo sería recomendable aplicarla.
 - La decisión final siempre debe buscar código simple, seguro, mantenible,
   fácil de evolucionar y sin complejidad innecesaria.
+
+### 7. Documentación viva de decisiones
+
+La conversación no es la fuente de verdad del proyecto: cada decisión
+relevante que se apruebe en una sesión debe quedar reflejada en la
+documentación, para que una sesión futura entienda el contexto sin
+depender del historial de chat.
+
+Es "decisión relevante" cualquier decisión de:
+- **Producto** (alcance, usuarios objetivo, flujos, prioridades,
+  funcionalidades descartadas).
+- **Arquitectura** (modelo de datos, estructura de código, patrones,
+  decisiones técnicas con impacto futuro).
+- **Seguridad/autenticación/permisos.**
+- **UX con impacto transversal** (no un ajuste puntual de una pantalla).
+
+Proceso obligatorio:
+1. Al detectar una decisión de este tipo, proponer dónde documentarla
+   antes de escribir nada: `docs/PRODUCT.md` si es visión o principio de
+   producto; un ADR nuevo en `docs/ADR/` si es una decisión arquitectónica
+   o de diseño con alternativas y trade-offs; `docs/BACKLOG.md` si es
+   priorización o algo pendiente; este mismo `CLAUDE.md` si es una regla
+   permanente de trabajo o desarrollo.
+2. No documentar nunca automáticamente sin avisar antes. Indicar primero:
+   que la decisión debería quedar registrada, el documento y sección
+   propuestos, y un resumen breve de lo que se guardaría.
+3. Actualizar el documento solo tras la aprobación.
+4. Toda respuesta que incluya un cambio documental cierra con una sección
+   final **"Documentación actualizada"**: archivo modificado, sección
+   afectada, resumen de la decisión registrada.
+
+Evitar llenar el proyecto de documentación innecesaria — esta regla es
+para decisiones que cambiarían de verdad el comportamiento de una sesión
+futura, no para cada detalle de implementación.

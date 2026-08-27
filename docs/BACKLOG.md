@@ -6,6 +6,11 @@
 > arquitectura/modelo de datos que estén "Aprobado" aquí deben tener un
 > ADR en `docs/ADR/` antes de implementarse.
 
+Alcance del producto (instructor freelance, no B2B) ya decidido — ver
+`docs/PRODUCT.md` y `docs/ADR/0001-alcance-instructor-freelance-no-b2b.md`.
+Este backlog no vuelve a discutir esa decisión, solo construye dentro de
+ella.
+
 ## Cómo leer esta tabla
 
 - **Impacto**: cuánto nota el instructor freelance el cambio.
@@ -45,8 +50,8 @@
 |---|---|---|
 | Unificar `worklog` + `comisiones` + `colleague_payments` en un único concepto de "Movimiento" con tipo | Que la duplicación de código y el gap de "Pagos" sigan doliendo después de los dos entregables de arriba, o que aparezca una cuarta fuente de ingreso/gasto que haga evidente el patrón | Requiere experimento — ver decisión D2 |
 | Unificar `rates` / `commission_rates` en una tabla con un tipo | Igual que la anterior — de menor riesgo, se revisita junto con Movimiento, no antes | Requiere experimento — ver decisión D2 |
-| Separar navegación instructor / administración de plataforma | Que Ocean Pulse pase a operar cuentas de terceros de forma habitual (más allá del propio operador dando de alta instructores) | No hacer por ahora — ver decisión D5 |
-| Vender/ceder cuentas a otros instructores como negocio | Decisión de negocio, no de producto — fuera del alcance de este documento | Abierta, sin dueño de decisión todavía |
+| Separar navegación instructor / administración de plataforma | Que Ocean Pulse pase a operar cuentas de terceros de forma habitual (más allá del propio operador dando de alta instructores) — ver condiciones de revisión en `ADR-0001` | No hacer por ahora — ver `docs/ADR/0001-alcance-instructor-freelance-no-b2b.md` |
+| Vender/ceder cuentas a otros instructores como negocio | Decisión de negocio, no de producto — distinta de lo que decide `ADR-0001` (esa decide cómo se *diseña* el producto hoy, no si algún día se *vende* a terceros) | Abierta, sin dueño de decisión todavía |
 
 ## Rechazado
 
