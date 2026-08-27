@@ -2,13 +2,14 @@ import React, { useMemo } from "react";
 import { Handshake, ListChecks } from "lucide-react";
 import { TEAL, SUN, AQUA } from "./App";
 import { Money, MonthCalendar, colorFor, isPendingStatus } from "./shared";
-import { computeRateTotal } from "./rateCalc";
+import { computeRateTotal, buildIncomeEntries } from "./rateCalc";
 import PendingCollectionCard from "./PendingCollectionCard";
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
 // schools / currencies / navSections / paymentStatuses: hooks de useSupabaseTable
 // onQuickCreate: (tabId) => cambia de pestaña y abre su hoja de creación sola
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, schools, currencies, navSections, paymentStatuses, onQuickCreate }) {
+// onOpenPayments: () => navega a la pantalla de Pagos (tarjeta "Pendiente de cobrar")
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, schools, currencies, navSections, paymentStatuses, onQuickCreate, onOpenPayments }) {
   const now = new Date();
   const SOURCE_META = {
     ganado: { label: "Ganado", color: TEAL },
@@ -36,17 +37,13 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }), [ganadoEntries, comisionEntries, companerosEntries]);
 
-  // Base común de las dos métricas financieras del dashboard (ver
-  // docs/ADR/0004-home-dashboard-operativo-instructor.md): dinero que
-  // generas o te deben — Registro + Comisiones + pagos de compañeros que TE
-  // pagan a ti. Los pagos de compañeros con importe negativo (tú le pagas a
-  // alguien) quedan fuera de las dos: es un concepto distinto ("lo que
-  // debo yo"), que hoy no tiene su propio KPI. "Generado este mes" y
-  // "Pendiente de cobrar" parten de este mismo array — solo cambia el
-  // filtro que le aplican, nunca la fuente de datos.
+  // Base común de las dos métricas financieras del dashboard — ver
+  // buildIncomeEntries en rateCalc.js y docs/ADR/0004-home-dashboard-operativo-instructor.md.
+  // "Generado este mes" y "Pendiente de cobrar" parten de este mismo array
+  // (también lo usa PaymentsTab), solo cambia el filtro que le aplican.
   const incomeEntries = useMemo(
-    () => [...ganadoEntries, ...comisionEntries, ...companerosEntries.filter((p) => p.total > 0)],
-    [ganadoEntries, comisionEntries, companerosEntries]
+    () => buildIncomeEntries({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
 
   // "Generado este mes": filtro de fecha (mes actual), sin filtro de
@@ -89,14 +86,13 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         </button>
       </div>
 
-      {/* Pendiente de cobrar — información financiera principal (ADR-0004).
-          onPress queda sin definir a propósito: no hay todavía pantalla de
-          Pagos a la que navegar. */}
+      {/* Pendiente de cobrar — información financiera principal (ADR-0004). */}
       <PendingCollectionCard
         totals={pendingSummary.totals}
         count={pendingSummary.count}
         currencyRows={currencies.rows}
         color={SUN}
+        onPress={onOpenPayments}
       />
 
       {/* KPI del mes — información secundaria (ADR-0004). Se llama "Generado"

@@ -13,6 +13,7 @@ import ConfigTab from "./ConfigTab";
 import CompanerosTab from "./CompanerosTab";
 import SummaryTab from "./SummaryTab";
 import HelpTab from "./HelpTab";
+import PaymentsTab from "./PaymentsTab";
 
 // ---------------------------------------------------------------
 // Paleta — profesional y contenida: un único acento neutro, fondo
@@ -45,7 +46,7 @@ const PRIMARY_TABS = [
 // cabecera muestra "‹ Volver" + el nombre de la pantalla, el patrón
 // nativo de iOS/Android para "dónde estoy y cómo vuelvo", más propio de
 // app que una miga de pan (que es un patrón más de web de escritorio).
-const SECONDARY_TITLES = { config: "Configuración", help: "Ayuda" };
+const SECONDARY_TITLES = { config: "Configuración", help: "Ayuda", pagos: "Pagos" };
 
 function AppShell({ onSignOut, profile, initialTab = "home" }) {
   const schools = useSupabaseTable("schools", "name");
@@ -133,6 +134,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
             activities={activities} schools={schools} currencies={currencies} navSections={navSections} paymentStatuses={paymentStatuses}
             onQuickCreate={navigateAndCreate}
+            onOpenPayments={() => setTab("pagos")}
           />
         )}
         {tab === "log" && (
@@ -164,6 +166,12 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
           />
         )}
         {tab === "help" && <HelpTab navSections={navSections} profile={profile} />}
+        {tab === "pagos" && (
+          <PaymentsTab
+            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies}
+            rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
+          />
+        )}
         {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
       </main>
 

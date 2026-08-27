@@ -119,6 +119,75 @@ decisión estética.
   tendrá, durante un tiempo, la nueva jerarquía de contenido sin el
   pulido estético completo.
 
+## Arquitectura de la pantalla Pagos
+
+Ejecuta la parte de esta decisión que dejaba Pagos como pantalla
+secundaria pendiente de rediseñar. No es una decisión nueva — es la
+arquitectura concreta de lo que este documento ya anticipaba.
+
+**Estado anterior:** lista plana de `worklog` (solo Registro) ordenada por
+fecha, con filtros de fecha/escuela/actividad/estado siempre visibles y
+una única acción destacada ("Invertir todos", pensada para edición masiva,
+no para el uso diario de marcar un pago como cobrado).
+
+**Estructura nueva:**
+1. **Cabecera-resumen** — mismo dato que la tarjeta de Home ("Pendiente de
+   cobrar", importe + nº de pagos), para no perder el ancla numérica al
+   entrar desde ahí.
+2. **Filtro de fuente + filtros avanzados en una sola fila** — un `Select`
+   compacto ("Todas las fuentes" / Registro / Comisiones / Compañeros) en
+   vez de un selector de chips: con las 4 etiquetas reales, los chips no
+   entrían en una fila en pantallas de 375px sin scroll lateral, que
+   `CLAUDE.md` ya prohíbe para filtros. Los filtros avanzados (fecha,
+   escuela, actividad) quedan detrás de un botón "Filtrar", colapsados por
+   defecto — no son el caso de uso principal.
+3. **Grupo "Pendiente"**, siempre expandido, ordenado por fecha más
+   antigua primero (lo más urgente arriba). Acción de un toque por fila
+   ("Marcar cobrado"). "Marcar todos cobrados" reaparece aquí como acción
+   contextual del grupo, ya no como la única CTA de la pantalla.
+4. **Grupo "Cobrado recientemente"**, colapsado por defecto, **limitado a
+   los últimos 10** pagos cobrados (por fecha). No es un histórico: si hay
+   más de 10, se muestra un aviso que redirige a los filtros de fecha ya
+   existentes para consultar un periodo concreto, en vez de construir
+   paginación o un histórico infinito. La acción de deshacer ("Marcar
+   pendiente") vive solo aquí, nunca en el grupo Pendiente.
+5. **Estados vacíos diferenciados** — "Estás al día, nada pendiente de
+   cobrar" cuando no hay filtros activos; "Sin pagos pendientes con estos
+   filtros" cuando sí los hay, para no dar una falsa sensación de estar al
+   día por culpa de un filtro.
+
+**Cobertura de las 3 fuentes sin triplicar pantalla ni modelo de datos:**
+`buildIncomeEntries` (nueva función en `rateCalc.js`) es ahora la única
+fuente de verdad de "qué cuenta como ingreso" — la usan tanto `HomeTab`
+como `PaymentsTab`, así que las dos pantallas no pueden divergir entre sí
+en qué consideran pendiente o generado. Sigue siendo una combinación en la
+capa de presentación de tres tablas separadas (`worklog`, `comisiones`,
+`colleague_payments`) — **no** el modelo "Movimiento" unificado que sigue
+como hipótesis sin validar en `docs/BACKLOG.md`.
+
+**Estado interno vs. lenguaje de la UI:** `StatusSwitch`/`oppositeStatus`
+se retiran de esta pantalla, pero el estado en sí (Pending/Paid vía
+`is_default`) no cambia — la UI ahora habla en acciones ("Marcar
+cobrado"/"Marcar pendiente") en vez de un control genérico de estado,
+sobre la misma lógica de negocio de siempre.
+
+**Qué se elimina y dónde queda cubierto:**
+- El filtro explícito de "Estado" (Pending/Paid) — la agrupación
+  Pendiente/Cobrado ya cumple esa función de forma más directa; mantenerlo
+  además habría sido redundante (¿filtrar a "Paid" mientras el grupo
+  Pendiente sigue visible arriba, para qué?).
+- El aviso "Estados distintos en la selección" antes de invertir en
+  bloque — ya no puede ocurrir: todo lo que aparece en el grupo Pendiente
+  comparte el mismo estado por construcción (`isPendingStatus` se basa en
+  `is_default`, y solo puede haber un estado `is_default` a la vez).
+
+**Trade-offs aceptados:** cambiar de fuente pasa de 1 toque (chip) a 2
+(abrir el Select y elegir) — aceptable porque no es algo que se cambie
+varias veces en la misma sesión. El límite de 10 en "Cobrado recientemente"
+es una cifra fija, no configurable — si en el futuro un instructor de alto
+volumen la encuentra corta, es una revisión de ese número, no de la
+arquitectura.
+
 ## Condiciones que justificarían revisar esta decisión
 
 - Si en el uso real "Pendiente de cobrar" no resulta ser la pregunta más

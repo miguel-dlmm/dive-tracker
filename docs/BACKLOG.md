@@ -20,7 +20,6 @@ ADR en `docs/ADR/` antes de implementarse, esté en "Ahora" o en "Después".
 
 | Ítem | Problema que resuelve | Valor | Esfuerzo | Riesgo | Dependencia |
 |---|---|---|---|---|---|
-| Promover Pagos a pantalla secundaria propia (fuera de Configuración), cubriendo las 3 fuentes | Pagos hoy solo gestiona Registro y vive enterrado en Configuración, a varios toques de la pregunta más frecuente. La tarjeta "Pendiente de cobrar" ya está en Home (ver `docs/ADR/0004-home-dashboard-operativo-instructor.md`) sin ningún sitio al que llevar todavía | Alto | S | Bajo | Ninguna |
 | Sembrar `payment_statuses` (Pending/Paid) en el alta + autoservicio del instructor | Cuenta nueva nace sin estados de pago y hoy no puede gestionarlos ella misma | Medio-Alto | S | Bajo | Ninguna |
 | Corregir `CLAUDE.md` — la sección "qué no existe todavía" sigue describiendo auth como pendiente | Documentación desalineada con el código real | Bajo | XS | Nulo | Ninguna |
 
@@ -29,7 +28,7 @@ ADR en `docs/ADR/` antes de implementarse, esté en "Ahora" o en "Después".
 | Ítem | Problema que resuelve | Valor | Esfuerzo | Riesgo | Dependencia |
 |---|---|---|---|---|---|
 | Eliminar `payment_type` del todo (frontend + esquema) | Causa raíz del incidente de altas nuevas; retira también el workaround temporal ya desplegado | Indirecto hoy, alto en fiabilidad | M | Bajo — plan incremental, ver `docs/ADR/0003-eliminar-payment-type.md` | Mejor después de sembrar `payment_statuses` — misma zona de catálogos |
-| Pulido visual completo de Home (jerarquía, densidad, estilo) | Home tendrá la nueva jerarquía de contenido (ver `ADR-0004`) sin el pulido estético — inspirarse en la exploración ya hecha en `src/lab/` | Medio (percepción de calidad, no funcional) | M | Bajo | Después de que la tarjeta de "Pendiente de cobrar" y Pagos estén desplegadas. Decisión estética, no funcional — sin ADR propio salvo que surjan alternativas reales |
+| Pulido visual completo de Home + Pagos (jerarquía, densidad, estilo) | Las dos pantallas tienen ya la estructura final (ver `ADR-0004`) sin el pulido estético — inspirarse en la exploración ya hecha en `src/lab/` | Medio (percepción de calidad, no funcional) | M | Bajo | Ninguna — ya desplegadas ambas, lista para tomarse cuando toque. Decisión estética, no funcional — sin ADR propio salvo que surjan alternativas reales |
 | Reutilizar componente entre Home y Resumen (calendario/agregación mensual) | La misma lógica de calendario mensual está reimplementada dos veces | Bajo (invisible) | S | Bajo | Ninguna — hacerlo cuando se toque cualquiera de las dos pantallas por otro motivo |
 | Extraer componente de hoja de creación compartido (Registro/Comisiones) | ~285 líneas casi duplicadas — ya costó tiempo real en el hotfix de `payment_type` (hubo que tocar 3 archivos idénticos) | Bajo directo, medio en velocidad futura | M | Bajo | Después de resolver la hipótesis de "Movimiento" — si se fusiona el modelo, este componente se rehace igualmente |
 | Decidir mitigación de `email_for_nickname` (RPC pública sin autenticar) | Superficie de enumeración de email — sin rate limit | Reducción de riesgo, no feature | S | Bajo hoy, crece si cambia el alcance de usuarios | Es una decisión de apetito de riesgo, no solo técnica |
