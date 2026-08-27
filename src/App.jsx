@@ -131,7 +131,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
         {tab === "home" && (
           <HomeTab
             worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
-            activities={activities} schools={schools} currencies={currencies} navSections={navSections}
+            activities={activities} schools={schools} currencies={currencies} navSections={navSections} paymentStatuses={paymentStatuses}
             onQuickCreate={navigateAndCreate}
           />
         )}
