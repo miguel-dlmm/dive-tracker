@@ -16,7 +16,13 @@ export default function ComisionesTab({ schools, activities, paymentTypes, payme
   // El tipo de pago ya no se elige en ningún formulario — toda tarifa nueva
   // se crea como "Per Person" (si no existe esa fila en payment_types, cae
   // al is_default de la tabla y, si tampoco hay, al primero).
-  const defaultPaymentType = paymentTypes.rows.find((t) => t.name === "Per Person")?.name || paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "";
+  // WORKAROUND TEMPORAL (ver docs/BACKLOG.md y docs/ADR/0003): una cuenta
+  // nueva nace con payment_types vacío (clone_setup_dataset no lo siembra),
+  // así que sin este último fallback a "Per Person" el alta de tarifa al
+  // vuelo queda bloqueada para todo instructor recién dado de alta.
+  // payment_type como concepto está aprobado para eliminarse (ADR-0003) —
+  // este fallback desaparece con esa migración, no antes.
+  const defaultPaymentType = paymentTypes.rows.find((t) => t.name === "Per Person")?.name || paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "Per Person";
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
 
   const emptyForm = () => ({
