@@ -141,20 +141,49 @@ no para el uso diario de marcar un pago como cobrado).
    `CLAUDE.md` ya prohíbe para filtros. Los filtros avanzados (fecha,
    escuela, actividad) quedan detrás de un botón "Filtrar", colapsados por
    defecto — no son el caso de uso principal.
-3. **Grupo "Pendiente"**, siempre expandido, ordenado por fecha más
-   antigua primero (lo más urgente arriba). Acción de un toque por fila
-   ("Marcar cobrado"). "Marcar todos cobrados" reaparece aquí como acción
-   contextual del grupo, ya no como la única CTA de la pantalla.
-4. **Grupo "Cobrado recientemente"**, colapsado por defecto, **limitado a
-   los últimos 10** pagos cobrados (por fecha). No es un histórico: si hay
-   más de 10, se muestra un aviso que redirige a los filtros de fecha ya
-   existentes para consultar un periodo concreto, en vez de construir
-   paginación o un histórico infinito. La acción de deshacer ("Marcar
-   pendiente") vive solo aquí, nunca en el grupo Pendiente.
-5. **Estados vacíos diferenciados** — "Estás al día, nada pendiente de
-   cobrar" cuando no hay filtros activos; "Sin pagos pendientes con estos
-   filtros" cuando sí los hay, para no dar una falsa sensación de estar al
-   día por culpa de un filtro.
+3. **Un único listado, sin bloques separados**, con un filtro de estado de
+   dos posiciones (**Pendientes / Cobrados**, por defecto "Pendientes").
+   Revisado dos veces tras probar el flujo real:
+   - Primero se descartaron los dos bloques fijos originales ("Pendiente"
+     siempre expandido, "Cobrado recientemente" colapsado): marcar un pago
+     como cobrado lo hacía desaparecer de un bloque y reaparecer en otro
+     colapsado, dando sensación de pérdida.
+   - El reemplazo inicial (segmented control de 3 posiciones, Pendientes/
+     Cobrados/Todos, con el mismo estilo en caja que usa `RatesTab` para
+     Instructor/Comisión) funcionaba pero se descartó también: leía como
+     un panel de filtros administrativo, y "Todos" resultó ser la opción
+     menos necesaria de las tres — la pregunta real del instructor es
+     binaria ("¿qué me deben?" / "¿qué ya cobré?"), no de tres estados.
+   - **Diseño final: pestañas de texto subrayadas** (sin caja ni borde,
+     peso e infrarrayado en vez de relleno), **solo Pendientes/Cobrados**,
+     con el número de pendientes en la propia pestaña ("Pendientes · 4")
+     para que la pantalla comunique la respuesta antes incluso de leer la
+     lista. Menos opciones y menos chrome visual — más cercano a una
+     pestaña de contenido (como las de perfil en apps de consumo) que a un
+     control de un panel de ajustes.
+   - **Pendientes**: nunca se recorta, ordenado de fecha más antigua a más
+     reciente (lo más urgente arriba).
+   - **Cobrados**: **limitado a los últimos 10** (por fecha). No es un
+     histórico: si hay más, un aviso redirige a los filtros de fecha ya
+     existentes, en vez de construir paginación.
+4. **Confirmar una acción sin que parezca que el pago desaparece.** Si el
+   filtro activo es "Pendientes", marcar un pago como cobrado lo saca de la
+   vista (es correcto: ya no cumple el filtro) — pero el toast de
+   confirmación lo dice explícitamente y explica dónde encontrarlo
+   ("cámbialo a 'Cobrados' para verlo"), en vez de dejar que parezca un
+   fallo. Se descartó mantenerlo visible con una animación o un resaltado
+   temporal (una versión intermedia de este documento sí lo proponía) por
+   ser más complejidad de la necesaria para lo que el toast ya resuelve
+   con claridad.
+5. **Botón "Filtrar" con estado visual propio** — relleno sólido cuando el
+   panel de filtros avanzados está abierto, borde neutro cuando está
+   cerrado (además de `aria-expanded`), siguiendo el patrón mobile de
+   invertir el color de un icono de filtro activo.
+6. **Estados vacíos diferenciados por pestaña y por si hay filtros
+   activos** — "Estás al día" solo en Pendientes sin filtros; mensajes
+   neutros ("Sin pagos... con estos filtros", "Todavía no has marcado
+   ningún pago como cobrado") en el resto de combinaciones, para no dar
+   una falsa sensación de estar al día por culpa de un filtro.
 
 **Cobertura de las 3 fuentes sin triplicar pantalla ni modelo de datos:**
 `buildIncomeEntries` (nueva función en `rateCalc.js`) es ahora la única
@@ -167,26 +196,43 @@ como hipótesis sin validar en `docs/BACKLOG.md`.
 
 **Estado interno vs. lenguaje de la UI:** `StatusSwitch`/`oppositeStatus`
 se retiran de esta pantalla, pero el estado en sí (Pending/Paid vía
-`is_default`) no cambia — la UI ahora habla en acciones ("Marcar
-cobrado"/"Marcar pendiente") en vez de un control genérico de estado,
-sobre la misma lógica de negocio de siempre.
+`is_default`) no cambia — la UI habla en acciones, no en un control
+genérico de estado, sobre la misma lógica de negocio de siempre. El texto
+pasó por tres iteraciones: "Marcar cobrado" (demasiado administrativo) →
+"Confirmar" (más claro, pero genérico — confirmar ¿qué?) →
+**"Confirmar cobro"**, final: nombra el objeto de la acción sin ser tan
+largo como "Marcar como cobrado", y no colisiona con ningún estado o
+etiqueta visible en la pantalla. Lo mismo para deshacer: "Deshacer" no
+decía qué se deshacía (¿el filtro? ¿la última acción?) — se sustituyó por
+**"Marcar pendiente"**, que nombra el estado resultante igual que hace
+"Confirmar cobro" en la otra dirección. Se descartó "Registrar cobro" por
+chocar con "Registro", el nombre ya establecido en la app para la fuente
+Work Log (aparece en el propio selector de fuente de esta pantalla).
+
+**Sin marcador delante del título de cada fila.** La versión anterior
+usaba un punto de color (mismo patrón que `EntryTitle` en `shared.jsx`).
+Aquí se sustituye por jerarquía tipográfica pura (peso, tamaño, contraste)
+— cambio acotado a `PaymentsTab.jsx`, no a `EntryTitle`, que sigue
+usándose con su punto de color en Registro/Comisiones/Compañeros/Tarifas
+sin cambios.
 
 **Qué se elimina y dónde queda cubierto:**
-- El filtro explícito de "Estado" (Pending/Paid) — la agrupación
-  Pendiente/Cobrado ya cumple esa función de forma más directa; mantenerlo
-  además habría sido redundante (¿filtrar a "Paid" mientras el grupo
-  Pendiente sigue visible arriba, para qué?).
+- Los dos bloques fijos "Pendiente"/"Cobrado recientemente" — sustituidos
+  por un único listado con filtro de estado (ver punto 3 de la estructura).
 - El aviso "Estados distintos en la selección" antes de invertir en
-  bloque — ya no puede ocurrir: todo lo que aparece en el grupo Pendiente
-  comparte el mismo estado por construcción (`isPendingStatus` se basa en
-  `is_default`, y solo puede haber un estado `is_default` a la vez).
+  bloque — no puede ocurrir: todo lo pendiente comparte el mismo estado
+  por construcción (`isPendingStatus` se basa en `is_default`, y solo
+  puede haber un estado `is_default` a la vez).
 
 **Trade-offs aceptados:** cambiar de fuente pasa de 1 toque (chip) a 2
 (abrir el Select y elegir) — aceptable porque no es algo que se cambie
-varias veces en la misma sesión. El límite de 10 en "Cobrado recientemente"
-es una cifra fija, no configurable — si en el futuro un instructor de alto
+varias veces en la misma sesión. El límite de 10 en "Cobrados" es una
+cifra fija, no configurable — si en el futuro un instructor de alto
 volumen la encuentra corta, es una revisión de ese número, no de la
-arquitectura.
+arquitectura. Confiar la continuidad de la acción a un toast (en vez de
+una animación) asume que el usuario lee el toast — si en uso real
+resultara insuficiente, es una revisión de este punto, no de toda la
+pantalla.
 
 ## Condiciones que justificarían revisar esta decisión
 
