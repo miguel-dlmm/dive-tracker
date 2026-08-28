@@ -1,9 +1,22 @@
 import React, { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Globe, Building2 } from "lucide-react";
-import { formatMoney, Money, colorFor, DatePicker, MoneyLine, MonthCalendar, Select, MOVEMENT_TYPE_META } from "./shared";
+import { motion, AnimatePresence } from "motion/react";
+import { ChevronLeft, ChevronRight, ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { formatMoney, colorFor, DatePicker, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META } from "./shared";
+import { listItemVariants, usePrefersReducedMotion } from "./motion";
 import { computeRateTotal } from "./rateCalc";
 import { NAVY, CORAL, GREEN } from "./App";
 
+// Rediseño 2026-08-29 (ver docs/ADR/0009-rediseno-resumen.md): Resumen deja
+// de mostrar todo a la vez (antes: calendario global + total + 2 desgloses,
+// y luego una SEGUNDA sección casi idéntica solo para la escuela elegida,
+// siempre montada) y pasa a "vistazo rápido primero, profundidad bajo
+// demanda" — un único total protagonista arriba (con comparación al
+// periodo anterior, la pregunta de 5 segundos: "¿cómo voy?") y el resto
+// como tarjetas plegables (ExpandableCard) que no ocupan espacio hasta que
+// se piden. Las listas rankeadas (Por escuela/Por curso) son ahora la
+// misma exploración progresiva: tocar una escuela expande su desglose por
+// curso en el sitio, en vez de una segunda sección de página completa
+// dedicada a una sola escuela elegida en un desplegable aparte.
 const NEUTRAL_GRAY = "#94A3B8";
 // MOVEMENT_TYPE_META.companeros.color es un neutro claro pensado para texto
 // (cabeceras de categoría del calendario, sobre fondo blanco) — aquí hace
@@ -12,10 +25,6 @@ const NEUTRAL_GRAY = "#94A3B8";
 // suficiente. AJUSTE_FILL es un escalón más oscuro de la misma familia
 // neutra (slate), no un color inventado aparte.
 const AJUSTE_FILL = "#64748B";
-// SOURCES/SOURCE_META se derivan de MOVEMENT_TYPE_META dentro del propio
-// componente, no aquí arriba, para no depender del orden exacto de
-// inicialización de módulos — ver colors.js para el ciclo de imports real
-// (App.jsx ⇄ shared.jsx) que esto evitaba, ya corregido de raíz allí.
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const fmtInt = (n) => (n || 0).toLocaleString("es-ES");
@@ -55,6 +64,18 @@ function currentUnitFor(granularity, now) {
   return 0;
 }
 
+// Unidad anterior a (year, unitIndex) en la misma granularidad — usada para
+// la comparación de la tarjeta principal ("¿cómo voy respecto al periodo
+// anterior?"). "personalizado" no tiene un "periodo anterior" natural (el
+// usuario ha elegido un rango arbitrario), así que no se le llama con esa
+// granularidad — ver canCompare en Hero.
+function previousUnit(granularity, year, unitIndex) {
+  const unitsPerYear = UNITS_PER_YEAR[granularity] || 12;
+  if (granularity === "anual") return { year: year - 1, unitIndex: 0 };
+  if (unitIndex === 0) return { year: year - 1, unitIndex: unitsPerYear - 1 };
+  return { year, unitIndex: unitIndex - 1 };
+}
+
 function groupSum(entries, keyFn, opts = {}) {
   const { amountKey = "total", currencyKey = "currency", withPeople = false } = opts;
   const map = {};
@@ -67,35 +88,125 @@ function groupSum(entries, keyFn, opts = {}) {
   return Object.entries(map).map(([key, v]) => ({ key, totals: v.totals, people: v.people }));
 }
 
-function BreakdownCard({ title, rows, currencyRows, textColor }) {
+// Suma todas las monedas de un total sin convertir — aproximación ya usada
+// en este archivo desde antes (ver topSchoolColorForDay) para decidir
+// "cuál domina" cuando no hace falta precisión contable, solo orden. Sirve
+// igual para rankear listas (mayor primero) que para elegir el color del
+// día dominante en el calendario.
+function magnitude(totals) {
+  return Object.values(totals).reduce((s, v) => s + v, 0);
+}
+
+// Único punto de comparación numérica exacta (no aproximada): solo tiene
+// sentido si ambos periodos están en la misma moneda única — con varias
+// monedas mezcladas, un delta agregado sería engañoso, así que se omite en
+// vez de mostrar un número que parezca preciso sin serlo.
+function singleCurrencyAmount(totals) {
+  const keys = Object.keys(totals || {});
+  return keys.length === 1 ? { code: keys[0], amount: totals[keys[0]] } : null;
+}
+
+// Cabecera plegable reutilizada por todas las tarjetas de profundidad de
+// Resumen (Por escuela, Por curso, Calendario, Comisiones, Pagos de
+// compañeros) — mismo componente para las 5, no una implementación por
+// tarjeta. Anima con listItemVariants (ver src/motion.js), la misma
+// convención de motion de toda la app, no una animación propia de Resumen.
+function ExpandableCard({ title, icon: Icon, iconColor = NAVY, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const reduced = usePrefersReducedMotion();
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <h3 className="mb-3 text-sm font-semibold text-gray-800">{title}</h3>
-      {rows.length === 0 ? (
-        <p className="text-sm text-gray-400">Sin datos.</p>
-      ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-xs text-gray-400">
-              <th className="pb-2 text-left font-medium"></th>
-              <th className="w-14 pb-2 text-center font-medium">Pers.</th>
-              <th className="pb-2 text-right font-medium">Importe</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {rows.map((r) => (
-              <tr key={r.key}>
-                <td className="py-2 pr-2 font-medium" style={textColor ? { color: textColor(r.key) } : { color: "#334155" }}>
-                  {r.key}
-                </td>
-                <td className="w-14 py-2 text-center tabular-nums text-gray-500">{fmtInt(r.people)}</td>
-                <td className="py-2 text-right font-semibold" style={{ color: NAVY }}>
-                  <MoneyLine totals={r.totals} currencyRows={currencyRows} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex min-h-[52px] w-full items-center gap-2 px-4 py-3 text-left"
+      >
+        {Icon && <Icon size={16} style={{ color: iconColor }} aria-hidden="true" className="shrink-0" />}
+        <span className="flex-1 text-sm font-semibold text-gray-800">{title}</span>
+        <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-gray-400 transition-transform" style={{ transform: open ? "rotate(180deg)" : "none" }} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div {...listItemVariants(reduced)} className="border-t border-gray-100 px-4 py-3">
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// Lista rankeada (mayor importe primero, ver magnitude()) reutilizada por
+// Por escuela / Por curso / los desgloses de Comisiones. onToggle+
+// expandedKey+renderExpanded son opcionales: solo Por escuela los usa hoy,
+// para expandir el desglose por curso de una escuela al tocarla — la misma
+// exploración progresiva que el resto de la tarjeta, sin una segunda
+// pantalla ni un selector aparte.
+function RankedList({ rows, currencyRows, textColor, emptyLabel = "Sin datos.", expandedKey, onToggle, renderExpanded }) {
+  const reduced = usePrefersReducedMotion();
+  const sorted = useMemo(() => [...rows].sort((a, b) => magnitude(b.totals) - magnitude(a.totals)), [rows]);
+  if (sorted.length === 0) return <p className="px-1 py-1 text-sm text-gray-400">{emptyLabel}</p>;
+  return (
+    <ul className="divide-y divide-gray-100">
+      {sorted.map((r) => (
+        <li key={r.key}>
+          <button
+            type="button"
+            onClick={onToggle ? () => onToggle(r.key) : undefined}
+            aria-expanded={onToggle ? expandedKey === r.key : undefined}
+            className={`flex min-h-11 w-full items-center justify-between gap-3 py-2 text-left text-sm ${onToggle ? "" : "cursor-default"}`}
+          >
+            <span className="flex min-w-0 items-center gap-1.5 truncate font-medium" style={{ color: textColor ? textColor(r.key) : "#334155" }}>
+              <span className="truncate">{r.key}</span>
+              {onToggle && (
+                <ChevronDown size={13} aria-hidden="true" className="shrink-0 text-gray-300 transition-transform" style={{ transform: expandedKey === r.key ? "rotate(180deg)" : "none" }} />
+              )}
+            </span>
+            <span className="flex shrink-0 items-center gap-2 tabular-nums">
+              <span className="text-xs text-gray-400">{fmtInt(r.people)}p</span>
+              <span className="font-semibold" style={{ color: NAVY }}><MoneyLine totals={r.totals} currencyRows={currencyRows} /></span>
+            </span>
+          </button>
+          {onToggle && (
+            <AnimatePresence initial={false}>
+              {expandedKey === r.key && (
+                <motion.div {...listItemVariants(reduced)} className="pb-2 pl-3">
+                  {renderExpanded(r.key)}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// Tarjeta protagonista — "¿cómo voy?" en 5 segundos: el total del periodo
+// elegido, y cuánto ha cambiado respecto al periodo anterior equivalente
+// (mismo mes/trimestre/semestre/año, uno antes). Sin comparación cuando no
+// es una cifra exacta y con sentido: rango personalizado (sin "periodo
+// anterior" natural), o cuando alguno de los dos totales mezcla más de una
+// moneda (ver singleCurrencyAmount) — antes callar que mostrar un delta
+// que parezca preciso sin serlo.
+function HeroTotal({ label, period, color, total, previousTotal, canCompare, currencyRows }) {
+  const cur = singleCurrencyAmount(total);
+  const prev = singleCurrencyAmount(previousTotal);
+  const comparable = canCompare && cur && prev && cur.code === prev.code;
+  const delta = comparable ? cur.amount - prev.amount : null;
+  const pct = comparable && prev.amount !== 0 ? (delta / Math.abs(prev.amount)) * 100 : null;
+
+  return (
+    <div className="rounded-lg p-4 text-white shadow-sm" style={{ backgroundColor: color }}>
+      <div className="text-xs font-medium opacity-80">{label} — {period}</div>
+      <div className="mt-1 text-3xl font-bold tabular-nums"><MoneyLine totals={total} currencyRows={currencyRows} /></div>
+      {comparable && (
+        <div className="mt-1.5 flex items-center gap-1 text-xs font-medium opacity-90">
+          {delta > 0 ? <TrendingUp size={13} aria-hidden="true" /> : delta < 0 ? <TrendingDown size={13} aria-hidden="true" /> : <Minus size={13} aria-hidden="true" />}
+          {pct !== null
+            ? `${delta >= 0 ? "+" : ""}${pct.toFixed(0)}% vs periodo anterior`
+            : `${delta >= 0 ? "+" : ""}${formatMoney(delta, cur.code, currencyRows)} vs periodo anterior`}
+        </div>
       )}
     </div>
   );
@@ -110,7 +221,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   const [unitIndex, setUnitIndex] = useState(now.getMonth());
   const [customFrom, setCustomFrom] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10));
   const [customTo, setCustomTo] = useState(now.toISOString().slice(0, 10));
-  const [selectedSchool, setSelectedSchool] = useState(schools.rows.find((s) => s.is_default)?.name || schools.rows[0]?.name || "");
+  const [expandedSchool, setExpandedSchool] = useState(null);
 
   const SOURCES = [
     ["total", "Total"],
@@ -163,19 +274,26 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   };
 
   const [rangeStart, rangeEnd] = periodRange(granularity, year, unitIndex, customFrom ? new Date(customFrom) : null, customTo ? new Date(customTo) : null);
-
-  const periodEntries = useMemo(() => withTotals.filter((e) => {
+  const withinRange = (list, dateKey = "date") => list.filter((e) => {
     if (!rangeStart || !rangeEnd) return false;
-    const d = new Date(e.date);
+    const d = new Date(e[dateKey]);
     return d >= rangeStart && d <= rangeEnd;
-  }), [withTotals, rangeStart, rangeEnd]);
+  });
 
-  const schoolEntries = useMemo(() => periodEntries.filter((e) => e.school === selectedSchool), [periodEntries, selectedSchool]);
+  const periodEntries = useMemo(() => withinRange(withTotals), [withTotals, rangeStart, rangeEnd]);
 
-  // Color del círculo de cada día en el calendario global: el de la escuela
-  // que más ha facturado ese día (sumando importes sin convertir divisas —
-  // aproximación suficiente para elegir "cuál domina"), o gris neutro si hay
-  // empate.
+  // Periodo anterior equivalente, solo para el delta de la tarjeta
+  // principal — no alimenta ningún otro desglose de la pantalla.
+  const { year: prevYear, unitIndex: prevUnitIndex } = previousUnit(granularity, year, unitIndex);
+  const [prevStart, prevEnd] = periodRange(granularity, prevYear, prevUnitIndex);
+  const previousPeriodEntries = useMemo(() => {
+    if (granularity === "personalizado") return [];
+    return withTotals.filter((e) => { const d = new Date(e.date); return d >= prevStart && d <= prevEnd; });
+  }, [withTotals, granularity, prevStart, prevEnd]);
+
+  // Color del círculo de cada día en el calendario: el de la escuela que
+  // más ha facturado ese día (sumando importes sin convertir divisas —
+  // ver magnitude()), o gris neutro si hay empate.
   const topSchoolColorForDay = (list) => {
     const sums = {};
     list.forEach((e) => { sums[e.school] = (sums[e.school] || 0) + (e.total || 0); });
@@ -191,35 +309,32 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   }, [periodEntries, schools.rows]);
 
   const globalTotal = groupSum(periodEntries, () => "Total")[0]?.totals || {};
+  const previousTotal = groupSum(previousPeriodEntries, () => "Total")[0]?.totals || {};
   const globalBySchool = groupSum(periodEntries, (e) => e.school, { withPeople: true });
   const globalByActivity = groupSum(periodEntries, (e) => e.activity, { withPeople: true });
 
-  const schoolTotal = groupSum(schoolEntries, () => "Total")[0]?.totals || {};
-  const schoolByActivity = groupSum(schoolEntries, (e) => e.activity, { withPeople: true });
-
-  // En modo Total, el combinado por escuela/actividad no distingue de dónde
+  // En modo Total, el combinado por escuela/curso no distingue de dónde
   // viene el dinero — se añade aparte el desglose solo de Comisiones para
   // no perder esa cifra dentro del total.
-  const comisionPeriodEntries = useMemo(() => comisionEntries.filter((e) => {
-    if (!rangeStart || !rangeEnd) return false;
-    const d = new Date(e.date);
-    return d >= rangeStart && d <= rangeEnd;
-  }), [comisionEntries, rangeStart, rangeEnd]);
+  const comisionPeriodEntries = useMemo(() => withinRange(comisionEntries), [comisionEntries, rangeStart, rangeEnd]);
   const comisionBySchool = groupSum(comisionPeriodEntries, (e) => e.school, { withPeople: true });
   const comisionByActivity = groupSum(comisionPeriodEntries, (e) => e.activity, { withPeople: true });
-  const comisionSchoolByActivity = groupSum(comisionPeriodEntries.filter((e) => e.school === selectedSchool), (e) => e.activity, { withPeople: true });
 
-  const colleaguePeriodEntries = useMemo(() => colleaguePayments.rows.filter((p) => {
-    if (!rangeStart || !rangeEnd) return false;
-    const d = new Date(p.date);
-    return d >= rangeStart && d <= rangeEnd && p.school === selectedSchool;
-  }), [colleaguePayments.rows, selectedSchool, rangeStart, rangeEnd]);
+  // Pagos de compañeros del periodo — ya no filtrados a una escuela
+  // elegida en un desplegable (ese filtro de página desapareció con la
+  // sección "Por escuela" dedicada): un pago a un compañero es sobre una
+  // persona, no algo que tenga sentido mirar escuela a escuela.
+  const colleaguePeriodEntries = useMemo(() => withinRange(colleaguePayments.rows), [colleaguePayments.rows, rangeStart, rangeEnd]);
   const colleagueByName = groupSum(colleaguePeriodEntries, (p) => p.colleague_name, { amountKey: "amount", currencyKey: "currency" });
 
-  const schoolNames = schools.rows.map((s) => s.name);
   const label = granularity === "personalizado"
     ? (customFrom && customTo ? `${customFrom} → ${customTo}` : "Elige un rango")
     : periodLabel(granularity, year, unitIndex);
+
+  const renderSchoolActivities = (schoolName) => {
+    const rows = groupSum(periodEntries.filter((e) => e.school === schoolName), (e) => e.activity, { withPeople: true });
+    return <RankedList rows={rows} currencyRows={currencies.rows} textColor={activityColor} emptyLabel="Sin cursos en este periodo." />;
+  };
 
   return (
     <div className="space-y-4">
@@ -229,7 +344,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
           <button
             key={key}
             onClick={() => changeGranularity(key)}
-            className="rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+            className="min-h-9 rounded-md px-3 text-xs font-medium transition-colors"
             style={granularity === key ? { backgroundColor: NAVY, color: "white" } : { color: "#6B7280" }}
           >
             {l}
@@ -251,19 +366,19 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         </div>
       ) : (
         <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2">
-          <button onClick={goPrev} className="rounded-md p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={18} /></button>
+          <button onClick={goPrev} aria-label="Periodo anterior" className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={18} aria-hidden="true" /></button>
           <span className="text-sm font-semibold tabular-nums" style={{ color: NAVY }}>{label}</span>
-          <button onClick={goNext} className="rounded-md p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={18} /></button>
+          <button onClick={goNext} aria-label="Periodo siguiente" className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={18} aria-hidden="true" /></button>
         </div>
       )}
 
-      {/* Total / Ganado / Comisión / Compañeros */}
-      <div className="inline-flex gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5">
+      {/* Total / Curso / Comisión / Ajuste */}
+      <div className="inline-flex flex-wrap gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5">
         {SOURCES.map(([key, l]) => (
           <button
             key={key}
             onClick={() => setSource(key)}
-            className="rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors"
+            className="min-h-9 rounded-md px-3.5 text-sm font-medium transition-colors"
             style={source === key ? { backgroundColor: key === "total" ? NAVY : SOURCE_META[key].color, color: "white" } : { color: "#6B7280" }}
           >
             {l}
@@ -271,120 +386,86 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         ))}
       </div>
 
-      {/* ================= GLOBAL ================= */}
-      <div>
-        <div className="mb-3 flex items-baseline gap-1.5">
-          <Globe size={16} style={{ color: NAVY }} aria-hidden="true" className="shrink-0 translate-y-px" />
-          <h2 className="text-[15px] font-bold text-slate-800">Vista global</h2>
-          <span className="text-xs font-medium text-gray-400">— {label}</span>
-        </div>
+      {/* Protagonista: la respuesta de 5 segundos. */}
+      <HeroTotal
+        label={sourceLabel}
+        period={label}
+        color={sourceColor}
+        total={globalTotal}
+        previousTotal={previousTotal}
+        canCompare={granularity !== "personalizado"}
+        currencyRows={currencies.rows}
+      />
 
-        {granularity === "mensual" && (
-          <div className="mb-3">
-            <MonthCalendar
-              year={year}
-              month={unitIndex}
-              entries={periodEntries}
-              dotColor={topSchoolColorForDay}
-              legend={globalLegend}
-              currencyRows={currencies.rows}
-              activityColor={activityColor}
-              groupBySource={source === "total"}
-              sourceMeta={SOURCE_META}
-            />
-          </div>
-        )}
+      {/* Todo lo demás es profundidad bajo demanda — nada de esto ocupa
+          espacio hasta que se pide, ver ADR-0009. */}
+      <ExpandableCard title="Por escuela" icon={Building2} iconColor={NAVY} defaultOpen>
+        <RankedList
+          rows={globalBySchool}
+          currencyRows={currencies.rows}
+          textColor={schoolColor}
+          expandedKey={expandedSchool}
+          onToggle={(key) => setExpandedSchool((cur) => (cur === key ? null : key))}
+          renderExpanded={renderSchoolActivities}
+        />
+      </ExpandableCard>
 
-        <div className="mb-3 rounded-lg p-4 text-white shadow-sm" style={{ backgroundColor: sourceColor }}>
-          <div className="text-xs font-medium opacity-80">{sourceLabel} (todas las escuelas)</div>
-          <div className="mt-1 text-2xl font-bold tabular-nums"><MoneyLine totals={globalTotal} currencyRows={currencies.rows} /></div>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <BreakdownCard title="Por escuela" rows={globalBySchool} currencyRows={currencies.rows} textColor={schoolColor} />
-          <BreakdownCard title="Por actividad" rows={globalByActivity} currencyRows={currencies.rows} textColor={activityColor} />
-        </div>
+      <ExpandableCard title="Por curso" icon={GraduationCap} iconColor={MOVEMENT_TYPE_META.ganado.color}>
+        <RankedList rows={globalByActivity} currencyRows={currencies.rows} textColor={activityColor} />
+      </ExpandableCard>
 
-        {source === "total" && (
-          <div className="mt-3">
-            <h3 className="mb-2 text-xs font-semibold" style={{ color: SOURCE_META.comision.color }}>Comisiones</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <BreakdownCard title="Por escuela" rows={comisionBySchool} currencyRows={currencies.rows} textColor={schoolColor} />
-              <BreakdownCard title="Por actividad" rows={comisionByActivity} currencyRows={currencies.rows} textColor={activityColor} />
+      {granularity === "mensual" && (
+        <ExpandableCard title="Calendario" icon={Calendar} iconColor={NAVY}>
+          <MonthCalendar
+            year={year}
+            month={unitIndex}
+            entries={periodEntries}
+            dotColor={topSchoolColorForDay}
+            legend={globalLegend}
+            currencyRows={currencies.rows}
+            activityColor={activityColor}
+            groupBySource={source === "total"}
+            sourceMeta={SOURCE_META}
+          />
+        </ExpandableCard>
+      )}
+
+      {source === "total" && (
+        <ExpandableCard title="Comisiones" icon={Handshake} iconColor={SOURCE_META.comision.color}>
+          <div className="space-y-3">
+            <div>
+              <h4 className="mb-1.5 text-xs font-semibold text-gray-500">Por escuela</h4>
+              <RankedList rows={comisionBySchool} currencyRows={currencies.rows} textColor={schoolColor} />
+            </div>
+            <div>
+              <h4 className="mb-1.5 text-xs font-semibold text-gray-500">Por curso</h4>
+              <RankedList rows={comisionByActivity} currencyRows={currencies.rows} textColor={activityColor} />
             </div>
           </div>
-        )}
-      </div>
+        </ExpandableCard>
+      )}
 
-      {/* ================= POR ESCUELA ================= */}
-      {/* Mismos datos que arriba, filtrados a una escuela: se envuelve en un
-          panel propio (fondo e borde) para que se lea como una vista aparte,
-          no como una continuación plana de la vista global. */}
-      <div className="rounded-lg border border-slate-200 bg-slate-100 p-3">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-baseline gap-1.5">
-            <Building2 size={16} style={{ color: schoolColor(selectedSchool) }} aria-hidden="true" className="shrink-0 translate-y-px" />
-            <h2 className="text-[15px] font-bold text-slate-800">Por escuela</h2>
-            <span className="text-xs font-medium text-gray-400">— {label}</span>
-          </div>
-          <div className="w-40">
-            <Select value={selectedSchool} onChange={setSelectedSchool} options={schoolNames} />
-          </div>
-        </div>
-
-        <div className="mb-3 rounded-lg p-4 text-white shadow-sm" style={{ backgroundColor: schoolColor(selectedSchool) }}>
-          <div className="text-xs font-medium opacity-80">{sourceLabel} — {selectedSchool || "—"}</div>
-          <div className="mt-1 text-2xl font-bold tabular-nums"><MoneyLine totals={schoolTotal} currencyRows={currencies.rows} /></div>
-        </div>
-        <BreakdownCard title="Por actividad" rows={schoolByActivity} currencyRows={currencies.rows} textColor={activityColor} />
-
-        {source === "total" && (
-          <div className="mt-3">
-            <BreakdownCard title="Comisiones — por actividad" rows={comisionSchoolByActivity} currencyRows={currencies.rows} textColor={activityColor} />
-          </div>
-        )}
-
-        {(source === "total" || source === "companeros") && (
-          <div className="mt-3 rounded-lg border border-gray-200 bg-white p-4">
-            <h3 className="mb-3 text-sm font-semibold text-gray-800">Pagos de compañeros — {selectedSchool || "—"} ({label})</h3>
-            {colleagueByName.length === 0 ? (
-              <p className="text-sm text-gray-400">Sin pagos de compañeros en este periodo para esta escuela.</p>
-            ) : (
-              <ul className="divide-y divide-gray-100">
-                {colleagueByName.map((r) => {
-                  const netPositive = Object.values(r.totals).reduce((s, v) => s + v, 0) >= 0;
-                  return (
-                    <li key={r.key} className="flex items-center justify-between gap-3 py-2 text-sm">
-                      <span className="text-gray-700">{r.key}</span>
-                      <span className="font-semibold tabular-nums" style={{ color: netPositive ? GREEN : CORAL }}>
-                        <MoneyLine totals={r.totals} currencyRows={currencies.rows} />
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {granularity === "mensual" && (
-          <div className="mt-3">
-            <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">
-              Calendario — {selectedSchool || "—"}
-            </h3>
-            <MonthCalendar
-              year={year}
-              month={unitIndex}
-              entries={schoolEntries}
-              dotColor={schoolColor(selectedSchool)}
-              currencyRows={currencies.rows}
-              activityColor={activityColor}
-              detailed={source !== "total"}
-              groupBySource={source === "total"}
-              sourceMeta={SOURCE_META}
-            />
-          </div>
-        )}
-      </div>
+      {(source === "total" || source === "companeros") && (
+        <ExpandableCard title="Pagos de compañeros" icon={Users} iconColor={SOURCE_META.companeros.color}>
+          {colleagueByName.length === 0 ? (
+            <p className="text-sm text-gray-400">Sin pagos de compañeros en este periodo.</p>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {colleagueByName.map((r) => {
+                const netPositive = magnitude(r.totals) >= 0;
+                return (
+                  <li key={r.key} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <span className="text-gray-700">{r.key}</span>
+                    <span className="font-semibold tabular-nums" style={{ color: netPositive ? GREEN : CORAL }}>
+                      <MoneyLine totals={r.totals} currencyRows={currencies.rows} />
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </ExpandableCard>
+      )}
     </div>
   );
 }

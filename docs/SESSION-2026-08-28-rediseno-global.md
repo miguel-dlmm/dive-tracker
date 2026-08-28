@@ -30,7 +30,39 @@ Bug de la animación de cobro (ver más abajo) se resuelve en el punto que corre
 |---|---|---|
 | `737b4be` | Home crea sin salir de pantalla + acceso integrado en tarjeta de pendientes (trabajo de la ronda anterior, commiteado al empezar esta sesión) | ✅ hecho, validado antes de esta sesión |
 | `317fbc3` | Fix: animación de salida rota al marcar como cobrado (doble rAF) | ✅ hecho, validado |
-| (pendiente de commitear) | **Commit 1 — Rediseño de Configuración**: menú agrupado con drill-down, `CrudTable` crea vía FAB+hoja, Tarifas con filtro colapsable (coherencia Mi trabajo), rename texto Actividades→Cursos (fase 1, parcial), eliminar usuario (backend+UI) | ✅ hecho, validado (201/201 tests, build, mobile-check), a falta de commit |
+| `d8104b7` | **Commit 1 — Rediseño de Configuración**: menú agrupado con drill-down, `CrudTable` crea vía FAB+hoja, Tarifas con filtro colapsable (coherencia Mi trabajo), rename texto Actividades→Cursos (fase 1, parcial), eliminar usuario (backend+UI) | ✅ hecho, validado, commiteado |
+| (pendiente de commitear) | **Commit 2 — Rediseño de Resumen**: tarjeta principal con comparación al periodo anterior + tarjetas plegables bajo demanda, fusión de "Por escuela"/"Por escuela dedicada" en una sola lista con drill-down inline, un único calendario (antes había dos), rename texto Actividades→Cursos completado | ✅ hecho, validado (206/206 tests, build, mobile-check), a falta de commit |
+
+## Commit 2 — Rediseño de Resumen (detalle)
+
+Ver `docs/ADR/0009-rediseno-resumen.md` para la decisión completa. Resumen:
+
+- `HeroTotal`: tarjeta principal con el total del periodo y comparación
+  (▲/▼/=) vs el periodo anterior equivalente — "¿cómo voy?" en 5 segundos.
+  Se omite la comparación en "Personalizado" o si alguno de los dos
+  totales mezcla más de una moneda (evita un delta engañoso).
+- `ExpandableCard` (nuevo, local a SummaryTab.jsx): Por escuela (abierta
+  por defecto), Por curso, Calendario, Comisiones, Pagos de compañeros —
+  todo colapsado salvo la primera, nada de trabajo/render hasta pedirlo.
+  Anima con `listItemVariants` (convención de motion ya existente).
+- `RankedList`: lista rankeada (mayor importe primero) reutilizada por
+  Por escuela/Por curso/los desgloses de Comisiones; en "Por escuela"
+  admite tocar una fila para expandir su desglose por curso EN EL SITIO
+  — sustituye a la segunda sección de página completa (total + desglose
+  + segundo calendario) que existía solo para la escuela elegida en un
+  `<Select>` aparte.
+- Cambios de comportamiento (no solo de presentación, documentados en el
+  ADR): pagos de compañeros dejan de filtrarse por escuela (ahora todo el
+  periodo, por persona); un único calendario en vez de dos casi iguales.
+- "Por actividad" → "Por curso" (cierra la fase 1 del rename en toda la
+  app — BACKLOG actualizado, fase 2 (renombrar variables internas) queda
+  como ítem "Después" aparte, sin urgencia).
+
+**Validado:** 206/206 tests (nuevo `SummaryTab.test.jsx`, 5 tests sobre
+HeroTotal + tarjetas plegables + drill-down), build correcto,
+`mobile-check` sin errores de consola — capturas revisadas visualmente
+(vistazo rápido, escuela expandida mostrando su curso, Calendario y
+Comisiones expandidos, scroll).
 
 ## Commit 1 — Rediseño de Configuración (detalle)
 
