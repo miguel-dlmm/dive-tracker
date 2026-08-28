@@ -311,7 +311,15 @@ async function main() {
   console.log("→ Ayuda/Configuración: acceso secundario con 'X Cerrar' en cabecera (vuelve a la pestaña de origen, ver App.jsx returnTab)");
   await page.locator('button[aria-label="Ayuda"]').tap();
   await page.waitForTimeout(300);
-  await shot(page, "ayuda");
+  await shot(page, "ayuda-menu-agrupado");
+
+  console.log("→ Ayuda: entrar en una categoría de 'Quiero...', abrir un artículo y volver");
+  await page.locator("text=Registrar un movimiento").first().tap();
+  await page.waitForTimeout(200);
+  await shot(page, "ayuda-lista-articulos");
+  await page.locator("text=Crear un movimiento").first().tap();
+  await page.waitForTimeout(200);
+  await shot(page, "ayuda-articulo");
   await page.mouse.wheel(0, 500);
   await page.waitForTimeout(250);
   await shot(page, "ayuda-scroll-cabecera");

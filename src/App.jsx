@@ -129,6 +129,16 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   useEffect(() => {
     try { sessionStorage.setItem(NAV_STORAGE_KEY, JSON.stringify({ tab, returnTab })); } catch { /* no-op */ }
   }, [tab, returnTab]);
+  // Sin esto, cambiar de pestaña conserva el scroll de la pantalla
+  // anterior — si venías de una lista larga, entrabas a la siguiente
+  // pestaña a mitad de página en vez de arriba del todo (detectado al
+  // revisar el rediseño de Ayuda: la cabecera "Quiero..." y "Primeros
+  // pasos" quedaban fuera de vista tras haber hecho scroll en Resumen).
+  // No es un problema de un rediseño concreto — es la navegación entre
+  // pestañas en general, por eso vive aquí y no en una pantalla suelta.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [tab]);
   // El acceso rápido de Home (botón "Añadir movimiento" o tocar un día del
   // calendario) abre MovementSheet sin cambiar de pestaña — Home sigue
   // visible mientras se rellena el formulario. Solo al guardar con éxito

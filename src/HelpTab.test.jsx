@@ -10,25 +10,33 @@ import HelpTab from "./HelpTab";
 const navSections = { rows: [] };
 
 describe("HelpTab", () => {
+  it("agrupa las categorías en 'Quiero...' y 'Funcionalidades'", () => {
+    render(<HelpTab navSections={navSections} profile={null} />);
+
+    expect(screen.getByText("Quiero...")).toBeInTheDocument();
+    expect(screen.getByText("Funcionalidades")).toBeInTheDocument();
+    expect(screen.getByText("Mi trabajo")).toBeInTheDocument();
+  });
+
   it("navega de categorías a la lista de artículos y de vuelta", async () => {
     const user = userEvent.setup();
     render(<HelpTab navSections={navSections} profile={null} />);
 
-    expect(screen.getByText("Registro")).toBeInTheDocument();
-    await user.click(screen.getByText("Registro"));
+    expect(screen.getByText("Mi trabajo")).toBeInTheDocument();
+    await user.click(screen.getByText("Mi trabajo"));
 
-    expect(screen.getByText("Registrar una nueva actividad")).toBeInTheDocument();
+    expect(screen.getByText("Mi trabajo, de un vistazo")).toBeInTheDocument();
 
     await user.click(screen.getByText("Categorías"));
-    expect(screen.getByText("Registro")).toBeInTheDocument();
+    expect(screen.getByText("Mi trabajo")).toBeInTheDocument();
   });
 
   it("abre un artículo y muestra sus pasos y resultado esperado", async () => {
     const user = userEvent.setup();
     render(<HelpTab navSections={navSections} profile={null} />);
 
-    await user.click(screen.getByText("Registro"));
-    await user.click(screen.getByText("Registrar una nueva actividad"));
+    await user.click(screen.getByText("Mi trabajo"));
+    await user.click(screen.getByText("Mi trabajo, de un vistazo"));
 
     expect(screen.getByText("Pasos")).toBeInTheDocument();
     expect(screen.getByText("Resultado esperado")).toBeInTheDocument();

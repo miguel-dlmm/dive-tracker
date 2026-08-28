@@ -289,7 +289,44 @@ retroceder, terminar con "Empezar", cerrar con "Cerrar"), build correcto,
 `mobile-check` sin errores — las 2 diapositivas capturadas (primera y
 última) revisadas visualmente.
 
+## Commit 8 — Rediseño de Ayuda
+
+`src/help/content.js` reescrito por completo — describía una versión de
+la app que ya no existe (Registro/Comisiones/Compañeros/Pagos
+separados, "Ganado este mes", pestañas en Configuración). Mismo formato
+de artículo de siempre (`whatYouCanDo`/`whenToUseIt`/`steps`/`tips`/
+`expectedResult`, sin cambios en `HelpArticleView.jsx`) — lo que cambia
+es el contenido, no la plantilla.
+
+`HELP_CATEGORIES` gana un campo `group` opcional; `HelpCategoryList.jsx`
+agrupa en **"Quiero..."** (Registrar un movimiento, Cobrar pendientes,
+Consultar cuánto has generado, Configurar tu aplicación) y
+**"Funcionalidades"** (Mi trabajo, Resumen, Configuración, Filtros y
+búsqueda) — mismo patrón visual que el menú de Configuración
+(ADR-0008), reutilizado en vez de inventado. "Primeros pasos" queda
+suelta, sin cabecera, siempre primera. Ver `docs/ADR/0011-rediseno-ayuda.md`.
+
+Sin capturas de pantalla, misma decisión y mismo motivo que en Commit 7
+(las generadas esta sesión mostraban la cuenta "dev-bypass" y datos de
+prueba repetidos).
+
+**Efecto colateral encontrado y corregido:** verificando el menú
+agrupado con `mobile-check`, "Primeros pasos" y la cabecera "Quiero..."
+no aparecían en la primera captura — no un fallo del contenido, sino que
+`AppShell` nunca reiniciaba el scroll de la página al cambiar de
+pestaña (heredaba la posición de scroll de Resumen tras haber hecho
+scroll ahí). Corregido con un `useEffect(() => window.scrollTo(0, 0),
+[tab])` en `App.jsx` — beneficia a toda la navegación entre pestañas,
+no solo a Ayuda.
+
+**Validado:** 211/211 tests (`HelpTab.test.jsx` actualizado al nuevo
+contenido/agrupación), build correcto, `mobile-check` sin errores —
+menú agrupado, lista de artículos y vista de artículo revisados
+visualmente, confirmando que el fix de scroll resuelve lo observado.
+
 ## Siguiente paso
 
-Commits 1, 2, 3, 5, 6 y 7 completados. Continuar con Commit 8 (rediseño
-de Ayuda) según el orden acordado — el último de la lista.
+Los 7 commits del orden acordado están completos (1, 2, 3, 5, 6, 7, 8).
+Pendiente: informe final acumulativo para el usuario y propuesta de
+commit — no se ha hecho ningún push, y la release v0.2.0 sigue sin
+ejecutarse, a la espera de aprobación explícita (ver Commit 3).
