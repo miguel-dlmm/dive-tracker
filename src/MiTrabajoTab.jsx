@@ -18,6 +18,22 @@ const RECENT_PAID_LIMIT = 10;
 // docs/ADR/0005-mi-trabajo-unificacion-economica.md).
 const TYPE_OPTIONS = ["Curso", "Comisión", "Ajuste de curso"];
 const TYPE_KEY = { "Curso": "ganado", "Comisión": "comision", "Ajuste de curso": "companeros" };
+// Identidad estable de una fila entre tablas (worklog/comisiones/
+// colleague_payments comparten espacio de ids independientes) — misma
+// clave para el elemento de lista (key de React) y para el mapa de
+// animaciones por fila (ver rowAnim en el componente principal).
+const entryKey = (e) => `${e._source}-${e.id}`;
+// Filtro puro, sin depender del render — usado tanto por la lista
+// (filteredEntries) como por changeStatus para decidir si un cambio de
+// estado hace que una fila entre o salga de la lista actualmente visible.
+function matchesEntryFilters(e, f) {
+  if (f.type && e._source !== TYPE_KEY[f.type]) return false;
+  if (f.from && e.date < f.from) return false;
+  if (f.to && e.date > f.to) return false;
+  if (f.school && e.school !== f.school) return false;
+  if (f.activity.length > 0 && !f.activity.includes(e.activity)) return false;
+  return true;
+}
 // Antes solo Comisión/Ajuste llevaban esta etiqueta de texto junto a la
 // fecha — Curso se quedaba sin ninguna, apoyándose solo en el color del
 // borde lateral. Para que el color no sea la ÚNICA señal del tipo (accesible
@@ -155,7 +171,7 @@ const HEIGHT_DELAY_MS = 60;
 const HEIGHT_MS = 220;
 const EXIT_MS = HEIGHT_DELAY_MS + HEIGHT_MS + 30; // margen antes de disparar el borrado real
 
-function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onEdit, onDelete }) {
+function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onEdit, onDelete, animPhase }) {
   const isAjuste = entry._source === "companeros";
   const negative = isAjuste && entry.total < 0;
   const amountColor = isAjuste ? (negative ? CORAL : GREEN) : NAVY;
@@ -199,12 +215,48 @@ function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onE
     });
   });
 
+  // Cambiar de estado (cobrar/marcar pendiente, incluido "Deshacer" desde
+  // el toast) reutiliza exactamente esta misma coreografía — mismo
+  // lenguaje de movimiento que borrar, con el tiempo invertido para la
+  // entrada. La dispara el padre marcando `animPhase` (ver changeStatus en
+  // MiTrabajoTab) en vez de un clic local: así una fila puede animarse
+  // aunque el cambio venga de fuera de la fila (el botón "Deshacer" del
+  // toast, que puede pulsarse con la fila ya desmontada o recién
+  // remontada). "exiting": la fila, ya visible, sale de la lista activa.
+  // "entering": la fila reaparece en la lista activa — arranca colapsada/
+  // invisible en el propio montaje y crece hasta su altura real un frame
+  // después, el mismo mecanismo de medir-y-diferir que usa la salida.
+  const [toggleExiting, setToggleExiting] = useState(false);
+  const [entering, setEntering] = useState(animPhase === "entering");
+
+  useEffect(() => {
+    if (animPhase !== "exiting" || toggleExiting) return;
+    const el = rowRef.current;
+    if (el) setFixedHeight(el.scrollHeight);
+    const raf = requestAnimationFrame(() => setToggleExiting(true));
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animPhase]);
+
+  useEffect(() => {
+    if (!entering) return;
+    const el = rowRef.current;
+    const h = el ? el.scrollHeight : 0;
+    setFixedHeight(h);
+    const raf = requestAnimationFrame(() => setEntering(false));
+    const t = setTimeout(() => setFixedHeight(null), EXIT_MS);
+    return () => { cancelAnimationFrame(raf); clearTimeout(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const collapsed = exiting || toggleExiting || entering;
+
   return (
     <div
       ref={rowRef}
       className="overflow-hidden"
       style={{
-        maxHeight: fixedHeight == null ? "none" : (exiting ? 0 : fixedHeight),
+        maxHeight: collapsed ? 0 : (fixedHeight == null ? "none" : fixedHeight),
         transition: `max-height ${HEIGHT_MS}ms ${EXIT_EASING} ${HEIGHT_DELAY_MS}ms`,
       }}
     >
@@ -212,8 +264,8 @@ function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onE
         className="border-l-4 px-4 py-3.5 text-sm"
         style={{
           borderColor: rowAccent(entry, amountColor),
-          opacity: exiting ? 0 : 1,
-          transform: exiting ? "translateX(-16px) scale(0.97)" : "translateX(0) scale(1)",
+          opacity: collapsed ? 0 : 1,
+          transform: collapsed ? "translateX(-16px) scale(0.97)" : "translateX(0) scale(1)",
           transition: `opacity ${CONTENT_MS}ms ${EXIT_EASING}, transform ${CONTENT_MS}ms ${EXIT_EASING}`,
         }}
       >
@@ -379,18 +431,16 @@ export default function MiTrabajoTab({
   const activeFilterCount = [Boolean(filters.from || filters.to), Boolean(filters.school), filters.activity.length > 0, Boolean(filters.type)].filter(Boolean).length;
   const clearFilters = () => setFilters({ from: "", to: "", school: "", activity: [], type: "" });
 
-  const filteredEntries = useMemo(() => {
-    let list = activityEntries;
-    if (filters.type) list = list.filter((e) => e._source === TYPE_KEY[filters.type]);
-    if (filters.from) list = list.filter((e) => e.date >= filters.from);
-    if (filters.to) list = list.filter((e) => e.date <= filters.to);
-    if (filters.school) list = list.filter((e) => e.school === filters.school);
-    if (filters.activity.length > 0) list = list.filter((e) => filters.activity.includes(e.activity));
-    return list;
-  }, [activityEntries, filters]);
+  const filteredEntries = useMemo(
+    () => activityEntries.filter((e) => matchesEntryFilters(e, filters)),
+    [activityEntries, filters]
+  );
 
+  // Mismo orden (fecha descendente) en Pendientes y Cobrados — lo más
+  // reciente primero en toda la pantalla, un único criterio en vez de que
+  // cada pestaña ordene al revés de la otra.
   const pendingAll = useMemo(
-    () => filteredEntries.filter((e) => isPendingStatus(e.status, paymentStatuses.rows)).sort((a, b) => a.date.localeCompare(b.date)),
+    () => filteredEntries.filter((e) => isPendingStatus(e.status, paymentStatuses.rows)).sort((a, b) => b.date.localeCompare(a.date)),
     [filteredEntries, paymentStatuses.rows]
   );
   const paidAll = useMemo(
@@ -415,6 +465,77 @@ export default function MiTrabajoTab({
   // "cargando". Un esqueleto breve evita ese vistazo equivocado.
   const dataLoaded = worklog.loaded && comisiones.loaded && colleaguePayments.loaded && rates.loaded && commissionRates.loaded;
 
+  // -----------------------------------------------------------------
+  // Animación de fila al cambiar de estado — mismo lenguaje de movimiento
+  // que borrar (ver EXIT_EASING/CONTENT_MS/HEIGHT_MS/HEIGHT_DELAY_MS/
+  // EXIT_MS más arriba), aplicado también a "cobrar"/"marcar pendiente" y
+  // a "Deshacer" desde el toast. rowAnim vive aquí (no en cada fila)
+  // porque "Deshacer" puede dispararse cuando la fila original ya no está
+  // montada (cambió de lista) — es el padre quien decide si la fila debe
+  // salir animada de la lista activa o entrar en ella, y se lo pasa a
+  // EntryRow como `animPhase`.
+  const [rowAnim, setRowAnim] = useState({});
+  const markAnim = (key, phase) => setRowAnim((a) => ({ ...a, [key]: phase }));
+  const clearAnim = (key) => setRowAnim((a) => (key in a ? Object.fromEntries(Object.entries(a).filter(([k]) => k !== key)) : a));
+
+  // filters/statusFilter "en vivo" — changeStatus puede ejecutarse mucho
+  // después de haberse creado (el "Deshacer" del toast permanece pulsable
+  // varios segundos, tiempo de sobra para cambiar de pestaña o de
+  // filtro); leer el cierre de la función que definió el toast daría un
+  // valor obsoleto. Un ref actualizado en cada render evita esa condición
+  // de carrera sin depender de que el usuario no haya tocado nada.
+  const liveRef = useRef({ filters, statusFilter });
+  liveRef.current = { filters, statusFilter };
+  const matchesActiveTab = (status, tab) =>
+    tab === "pendientes" ? isPendingStatus(status, paymentStatuses.rows) : !isPendingStatus(status, paymentStatuses.rows);
+
+  // Ejecuta la mutación real diferida hasta que la fila termina de
+  // animarse fuera de la lista activa — mismo EXIT_MS que ya usaba borrar
+  // (ver handleDelete en EntryRow), para que la desaparición real de
+  // `visibleList` coincida con el instante en que la fila ya es invisible.
+  const animateExitThen = (key, run) => new Promise((resolve, reject) => {
+    markAnim(key, "exiting");
+    setTimeout(async () => {
+      try {
+        const result = await run();
+        clearAnim(key);
+        resolve(result);
+      } catch (e) {
+        clearAnim(key);
+        reject(e);
+      }
+    }, EXIT_MS);
+  });
+  // Marca la fila para que, en cuanto vuelva a aparecer en la lista activa
+  // (la mutación real ya ha surtido efecto), se monte con la animación de
+  // entrada — nunca antes de que el cambio ya sea real, para no mostrar
+  // una fila "entrando" que en realidad no está ahí todavía.
+  const markEntering = (key) => {
+    markAnim(key, "entering");
+    setTimeout(() => clearAnim(key), EXIT_MS);
+  };
+
+  // Único punto de mutación de estado de una fila — lo usan tanto el
+  // botón de la propia fila (siempre visible al pulsarlo, así que siempre
+  // "sale") como "Deshacer" desde el toast (que puede, según en qué
+  // pestaña/filtro esté el usuario en ese momento, hacer que la fila
+  // "salga" o "entre" de la lista activa). Decide con datos en vivo
+  // (liveRef), no con los del momento en que se llamó a toggleStatus.
+  const changeStatus = async (entry, targetStatus) => {
+    const key = entryKey(entry);
+    const { filters: liveFilters, statusFilter: liveTab } = liveRef.current;
+    const passesFilters = matchesEntryFilters(entry, liveFilters);
+    const wasVisible = passesFilters && matchesActiveTab(entry.status, liveTab);
+    const willBeVisible = passesFilters && matchesActiveTab(targetStatus, liveTab);
+    const run = () => tableFor(entry._source).updateRow(entry.id, { status: targetStatus });
+    if (wasVisible) {
+      await animateExitThen(key, run);
+    } else {
+      await run();
+      if (willBeVisible) markEntering(key);
+    }
+  };
+
   // El toggle sigue siendo de un solo toque, tan rápido como antes — la
   // capa de seguridad es el "Deshacer" del toast, no un diálogo previo
   // que frenaría el caso normal (acertar) para proteger el caso raro
@@ -425,10 +546,10 @@ export default function MiTrabajoTab({
     const previousStatus = entry.status;
     const target = oppositeStatus(entry.status, paymentStatuses.rows);
     try {
-      await tableFor(entry._source).updateRow(entry.id, { status: target });
+      await changeStatus(entry, target);
       const undo = async () => {
         try {
-          await tableFor(entry._source).updateRow(entry.id, { status: previousStatus });
+          await changeStatus({ ...entry, status: target }, previousStatus);
           toast?.success("Deshecho");
         } catch {
           toast?.error("No se pudo deshacer. Inténtalo de nuevo.");
@@ -456,22 +577,28 @@ export default function MiTrabajoTab({
   // pagas tú.
   const hasNegativeAjuste = pendingAll.some((e) => e._source === "companeros" && e.total < 0);
 
-  // Acción masiva (afecta a todos los pendientes visibles a la vez, sin
-  // Deshacer por lote) — a diferencia del toggle de una fila, aquí sí hace
-  // falta una confirmación explícita antes de ejecutar (ver
-  // confirmingCollectAll más abajo). No traga el error aquí: lo relanza
-  // para que quien confirma decida si cierra el diálogo o lo deja abierto
-  // para reintentar, igual que DeleteButton.
-  const collectAllPending = async () => {
-    if (pendingAll.length === 0) return;
-    const targetStatus = oppositeStatus(pendingAll[0].status, paymentStatuses.rows);
+  // Acciones masivas (afectan a todos los elementos visibles de la
+  // pestaña activa a la vez, sin Deshacer por lote ni animación por fila
+  // — la lista entera se sustituye de golpe tras confirmar, igual que ya
+  // hacía "Cobrar todos") — a diferencia del toggle de una fila, aquí sí
+  // hace falta una confirmación explícita antes de ejecutar. No traga el
+  // error aquí: lo relanza para que quien confirma decida si cierra el
+  // diálogo o lo deja abierto para reintentar, igual que DeleteButton.
+  const bulkUpdateStatus = async (entries, targetStatus) => {
     const bySource = { ganado: [], comision: [], companeros: [] };
-    pendingAll.forEach((e) => bySource[e._source].push(e.id));
+    entries.forEach((e) => bySource[e._source].push(e.id));
     let count = 0;
     for (const [source, ids] of Object.entries(bySource)) {
       if (ids.length === 0) continue;
       count += await tableFor(source).bulkUpdateWhere((e) => ids.includes(e.id), { status: targetStatus });
     }
+    return count;
+  };
+
+  const collectAllPending = async () => {
+    if (pendingAll.length === 0) return;
+    const targetStatus = oppositeStatus(pendingAll[0].status, paymentStatuses.rows);
+    const count = await bulkUpdateStatus(pendingAll, targetStatus);
     const verb = hasNegativeAjuste ? "cobrado o liquidado" : "cobrado";
     const verbPlural = hasNegativeAjuste ? "cobrados o liquidados" : "cobrados";
     const msg = statusFilter === "pendientes"
@@ -491,6 +618,31 @@ export default function MiTrabajoTab({
       toast?.error("No se pudo actualizar. Inténtalo de nuevo.");
     } finally {
       setCollectingAll(false);
+    }
+  };
+
+  // Mismo patrón que "Cobrar todos", en sentido inverso — vive en
+  // Cobrados, opera sobre `paidAll` (respeta los filtros activos, igual
+  // que su contraparte) y reutiliza bulkUpdateStatus/ConfirmDialog sin
+  // introducir un segundo mecanismo.
+  const markAllPaidAsPending = async () => {
+    if (paidAll.length === 0) return;
+    const targetStatus = oppositeStatus(paidAll[0].status, paymentStatuses.rows);
+    const count = await bulkUpdateStatus(paidAll, targetStatus);
+    toast?.success(`${count} ${count === 1 ? "movimiento marcado como pendiente" : "movimientos marcados como pendientes"}`);
+  };
+
+  const [confirmingMarkAllPending, setConfirmingMarkAllPending] = useState(false);
+  const [markingAllPending, setMarkingAllPending] = useState(false);
+  const confirmMarkAllPending = async () => {
+    setMarkingAllPending(true);
+    try {
+      await markAllPaidAsPending();
+      setConfirmingMarkAllPending(false);
+    } catch {
+      toast?.error("No se pudo actualizar. Inténtalo de nuevo.");
+    } finally {
+      setMarkingAllPending(false);
     }
   };
 
@@ -699,6 +851,11 @@ export default function MiTrabajoTab({
             Cobrar todos
           </button>
         )}
+        {statusFilter === "cobrados" && paidAll.length > 0 && (
+          <button onClick={() => setConfirmingMarkAllPending(true)} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
+            Marcar todos como pendientes
+          </button>
+        )}
       </div>
 
       <ConfirmDialog
@@ -713,6 +870,20 @@ export default function MiTrabajoTab({
         onCancel={() => setConfirmingCollectAll(false)}
         loading={collectingAll}
         confirmLabel="Cobrar"
+        danger={false}
+      />
+
+      {/* Misma lógica que "Cobrar todos" en sentido inverso — vive en
+          Cobrados, opera sobre los elementos visibles con los filtros
+          activos (paidAll), mismo componente de confirmación. */}
+      <ConfirmDialog
+        open={confirmingMarkAllPending}
+        title={`¿Marcar ${paidAll.length} ${paidAll.length === 1 ? "movimiento cobrado" : "movimientos cobrados"} como pendientes?`}
+        message={`Vas a devolver ${paidAll.length === 1 ? "este movimiento" : `estos ${paidAll.length} movimientos`} a pendiente de golpe. Puedes revertir cada uno por separado después, igual que al hacerlo de uno en uno.`}
+        onConfirm={confirmMarkAllPending}
+        onCancel={() => setConfirmingMarkAllPending(false)}
+        loading={markingAllPending}
+        confirmLabel="Marcar pendientes"
         danger={false}
       />
 
@@ -751,7 +922,12 @@ export default function MiTrabajoTab({
             ))}
           </div>
         ) : visibleList.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+          // animate-help-fade-in (index.css): sin él, cuando la última fila
+          // pendiente se anima fuera de la lista, este bloque aparece de
+          // golpe al terminar la animación de la fila y "salta" al tomar su
+          // propia altura de un tirón — reutiliza la única animación de
+          // aparición ya existente en la app en vez de crear una nueva.
+          <div className="flex flex-col items-center gap-2 px-4 py-10 text-center animate-help-fade-in">
             {statusFilter === "pendientes" && !hasActiveFilters && <PartyPopper size={26} className="text-gray-300" aria-hidden="true" />}
             <p className="text-sm text-gray-400">{emptyMessage(statusFilter, hasActiveFilters)}</p>
             {hasActiveFilters && (
@@ -765,7 +941,7 @@ export default function MiTrabajoTab({
             {visibleList.map((e, i) => {
               const showGroupHeader = i === 0 || visibleList[i - 1].date !== e.date;
               return (
-                <React.Fragment key={`${e._source}-${e.id}`}>
+                <React.Fragment key={entryKey(e)}>
                   {showGroupHeader && (
                     <div className="bg-gray-50/80 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                       {dateGroupLabel(e.date)}
@@ -777,6 +953,7 @@ export default function MiTrabajoTab({
                     onToggle={() => toggleStatus(e)}
                     onEdit={() => startEdit(e)}
                     onDelete={() => tableFor(e._source).deleteRow(e.id)}
+                    animPhase={rowAnim[entryKey(e)]}
                   />
                 </React.Fragment>
               );
@@ -911,23 +1088,35 @@ export default function MiTrabajoTab({
                         <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
                       </Field>
                       <Field label="Moneda">
-                        <CurrencySearchSelect
-                          value={form.currency}
-                          onChange={(v) => { setForm({ ...form, currency: v }); setCurrencyTouched(true); }}
-                          currencyRows={currencies.rows}
-                        />
+                        {/* Botón de favorita integrado junto al propio campo
+                            (icono solo, mismo objetivo táctil 44×44 que el
+                            resto de la app) en vez de una píldora de texto
+                            suelta debajo — aparece pegado a la moneda que
+                            describe, no como un elemento aparte más abajo
+                            en el formulario. */}
+                        <div className="flex items-center gap-1.5">
+                          <div className="min-w-0 flex-1">
+                            <CurrencySearchSelect
+                              value={form.currency}
+                              onChange={(v) => { setForm({ ...form, currency: v }); setCurrencyTouched(true); }}
+                              currencyRows={currencies.rows}
+                            />
+                          </div>
+                          {currencyTouched && form.currency && form.currency !== favoriteCurrency && (
+                            <button
+                              type="button"
+                              onClick={() => markFavoriteCurrency(form.currency)}
+                              aria-label={`Usar ${form.currency} como favorita`}
+                              title={`Usar ${form.currency} como favorita`}
+                              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border"
+                              style={{ borderColor: TEAL, color: TEAL }}
+                            >
+                              <Star size={16} aria-hidden="true" />
+                            </button>
+                          )}
+                        </div>
                       </Field>
                     </div>
-                    {currencyTouched && form.currency && form.currency !== favoriteCurrency && (
-                      <button
-                        type="button"
-                        onClick={() => markFavoriteCurrency(form.currency)}
-                        className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium"
-                        style={{ borderColor: TEAL, color: TEAL }}
-                      >
-                        <Star size={11} aria-hidden="true" /> Usar {form.currency} como favorita
-                      </button>
-                    )}
                   </>
                 ) : (
                   // Nº personas y Total emparejados: el total es
