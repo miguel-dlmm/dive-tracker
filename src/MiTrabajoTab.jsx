@@ -3,7 +3,7 @@ import { Plus, X, Pencil, Check, RotateCcw, MoreVertical, SlidersHorizontal, Par
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   inputCls, formatMoney, Money, Field, Select, MultiSelect, CurrencySearchSelect, MoneyInput,
-  DatePicker, EditActions, DeleteButton, AppLoading, colorFor, isPendingStatus, oppositeStatus, useToast,
+  DatePicker, DeleteButton, AppLoading, colorFor, isPendingStatus, oppositeStatus, useToast,
   useClickOutside, useEscapeClose,
 } from "./shared";
 import { computeRateTotal, buildActivityEntries, buildIncomeEntries } from "./rateCalc";
@@ -271,13 +271,6 @@ export default function MiTrabajoTab({
     }
   };
 
-  // -----------------------------------------------------------------
-  // Edición en línea — un formulario distinto por tipo, igual que las
-  // 3 pantallas actuales de las que viene cada uno.
-  // -----------------------------------------------------------------
-  const [editingKey, setEditingKey] = useState(null);
-  const [editForm, setEditForm] = useState({});
-
   const activitiesForSchool = (school) => {
     const names = [...new Set(rates.rows.filter((r) => r.school === school).map((r) => r.activity))];
     return names.length > 0 ? names : activityNames;
@@ -285,35 +278,31 @@ export default function MiTrabajoTab({
   const colleagueSuggestions = (school) =>
     [...new Set(colleaguePayments.rows.filter((p) => p.school === school).map((p) => p.colleague_name))];
 
-  const startEdit = (entry) => {
-    setEditingKey(`${entry._source}-${entry.id}`);
-    if (entry._source === "companeros") {
-      setEditForm({ date: entry.date, school: entry.school, activity: entry.activity, colleague_name: entry.colleague_name, amount: entry.amount, currency: entry.currency, notes: entry.notes || "" });
-    } else {
-      setEditForm({ date: entry.date, school: entry.school, activity: entry.activity, people: entry.people, notes: entry.notes || "" });
-    }
-  };
-  const saveEdit = async (entry) => {
-    try {
-      const patch = entry._source === "companeros"
-        ? { ...editForm, amount: Number(editForm.amount) }
-        : { ...editForm, people: Number(editForm.people) || 0 };
-      await tableFor(entry._source).updateRow(entry.id, patch);
-      setEditingKey(null);
-      toast?.success("Cambios guardados");
-    } catch {
-      toast?.error("No se pudo guardar. Inténtalo de nuevo.");
-    }
-  };
-
   // -----------------------------------------------------------------
-  // Creación — FAB con selector de tipo previo, luego formulario
-  // específico reutilizado de Registro/Comisiones/Compañeros.
-  // -----------------------------------------------------------------
+  // Creación y edición comparten la misma hoja inferior — misma
+  // disposición de campos, mismo botón "Guardar", solo cambia el título
+  // y si se hace insert o update al confirmar. Antes la edición usaba una
+  // fila en línea de hasta 6 columnas dentro de la propia lista: en móvil
+  // eso obligaba a repartir 6 campos en 3 filas de 2 columnas muy
+  // estrechas, con dos selects abiertos pudiendo solaparse entre sí. Un
+  // único formulario para ambos casos es también el patrón habitual en
+  // apps profesionales (Linear, Stripe) y coincide con la convención ya
+  // establecida de "crear = hoja inferior" (ver CLAUDE.md) — editar sigue
+  // la misma convención en vez de tener un patrón de interacción propio.
   const [pickerOpen, setPickerOpen] = useState(false);
   const [creating, setCreating] = useState(null); // null | "ganado" | "comision" | "companeros"
   const [form, setForm] = useState(null);
+  const [editingEntry, setEditingEntry] = useState(null); // null = creando; si no, la entrada que se está editando
   const fabVisible = useHideFabOnScroll();
+
+  const startEdit = (entry) => {
+    setEditingEntry(entry);
+    setCreating(entry._source);
+    setForm(entry._source === "companeros"
+      ? { date: entry.date, school: entry.school, activity: entry.activity, colleague_name: entry.colleague_name, amount: entry.amount, currency: entry.currency, notes: entry.notes || "" }
+      : { date: entry.date, school: entry.school, activity: entry.activity, people: entry.people, notes: entry.notes || "" });
+  };
+  const closeSheet = () => { setCreating(null); setForm(null); setEditingEntry(null); };
 
   const [rateSheetOpen, setRateSheetOpen] = useState(false);
   const [rateForm, setRateForm] = useState(null);
@@ -327,6 +316,7 @@ export default function MiTrabajoTab({
   const openCreate = (type) => {
     setCreating(type);
     setForm(emptyFormFor(type));
+    setEditingEntry(null);
     setPickerOpen(false);
   };
 
@@ -353,18 +343,23 @@ export default function MiTrabajoTab({
   const disableSaveAjuste = creating === "companeros" && (!form?.date || !form?.school || !form?.activity || !form?.colleague_name || form?.amount === "");
   const disableSave = creating === "companeros" ? disableSaveAjuste : disableSaveCurso;
 
-  const addEntry = async () => {
+  const saveEntry = async () => {
     if (disableSave) return;
     try {
-      if (creating === "companeros") {
+      if (editingEntry) {
+        const patch = creating === "companeros"
+          ? { ...form, amount: Number(form.amount) }
+          : { ...form, people: Number(form.people) || 0 };
+        await tableFor(creating).updateRow(editingEntry.id, patch);
+        toast?.success("Cambios guardados");
+      } else if (creating === "companeros") {
         await colleaguePayments.insertRow({ ...form, amount: Number(form.amount), status: defaultStatus });
         toast?.success("Ajuste añadido");
       } else {
         await tableFor(creating).insertRow({ ...form, people: Number(form.people) || 0, status: defaultStatus });
         toast?.success(creating === "ganado" ? "Curso añadido" : "Comisión añadida");
       }
-      setCreating(null);
-      setForm(null);
+      closeSheet();
     } catch {
       toast?.error("No se pudo guardar. Inténtalo de nuevo.");
     }
@@ -388,7 +383,9 @@ export default function MiTrabajoTab({
     }
   };
 
-  const creationTitle = { ganado: "Nuevo curso impartido", comision: "Nueva comisión", companeros: "Nuevo ajuste de curso" }[creating];
+  const sheetTitle = editingEntry
+    ? { ganado: "Editar curso impartido", comision: "Editar comisión", companeros: "Editar ajuste de curso" }[creating]
+    : { ganado: "Nuevo curso impartido", comision: "Nueva comisión", companeros: "Nuevo ajuste de curso" }[creating];
 
   return (
     <div className="relative space-y-4 pb-24">
@@ -449,44 +446,15 @@ export default function MiTrabajoTab({
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {visibleList.map((e) => {
-              const key = `${e._source}-${e.id}`;
-              if (editingKey === key) {
-                if (e._source === "companeros") {
-                  return (
-                    <div key={key} className="grid grid-cols-2 gap-2 px-4 py-3 sm:grid-cols-6">
-                      <DatePicker value={editForm.date} onChange={(v) => setEditForm({ ...editForm, date: v })} />
-                      <Select value={editForm.school} onChange={(v) => setEditForm({ ...editForm, school: v })} options={schoolNames} />
-                      <Select value={editForm.activity} onChange={(v) => setEditForm({ ...editForm, activity: v })} options={activitiesForSchool(editForm.school)} />
-                      <input value={editForm.colleague_name} onChange={(ev) => setEditForm({ ...editForm, colleague_name: ev.target.value })} className={inputCls} />
-                      <MoneyInput value={editForm.amount} onChange={(v) => setEditForm({ ...editForm, amount: v })} />
-                      <CurrencySearchSelect value={editForm.currency} onChange={(v) => setEditForm({ ...editForm, currency: v })} currencyRows={currencies.rows} />
-                      <input value={editForm.notes} onChange={(ev) => setEditForm({ ...editForm, notes: ev.target.value })} placeholder="Notas" className={`${inputCls} col-span-2 sm:col-span-5`} />
-                      <EditActions onSave={() => saveEdit(e)} onCancel={() => setEditingKey(null)} />
-                    </div>
-                  );
-                }
-                return (
-                  <div key={key} className="grid grid-cols-2 gap-2 px-4 py-3 sm:grid-cols-5">
-                    <div className="col-span-2 sm:col-span-1"><DatePicker value={editForm.date} onChange={(v) => setEditForm({ ...editForm, date: v })} /></div>
-                    <Select value={editForm.school} onChange={(v) => setEditForm({ ...editForm, school: v })} options={schoolNames} />
-                    <Select value={editForm.activity} onChange={(v) => setEditForm({ ...editForm, activity: v })} options={activityNames} />
-                    <input type="number" value={editForm.people} onChange={(ev) => setEditForm({ ...editForm, people: ev.target.value })} className={inputCls} />
-                    <input value={editForm.notes} onChange={(ev) => setEditForm({ ...editForm, notes: ev.target.value })} placeholder="Notas" className={`${inputCls} col-span-2 sm:col-span-4`} />
-                    <EditActions onSave={() => saveEdit(e)} onCancel={() => setEditingKey(null)} />
-                  </div>
-                );
-              }
-              return (
-                <EntryRow
-                  key={key} entry={e} activityColor={activityColor} currencyRows={currencies.rows}
-                  isPending={statusFilter === "pendientes"}
-                  onToggle={() => toggleStatus(e)}
-                  onEdit={() => startEdit(e)}
-                  onDelete={() => tableFor(e._source).deleteRow(e.id)}
-                />
-              );
-            })}
+            {visibleList.map((e) => (
+              <EntryRow
+                key={`${e._source}-${e.id}`} entry={e} activityColor={activityColor} currencyRows={currencies.rows}
+                isPending={statusFilter === "pendientes"}
+                onToggle={() => toggleStatus(e)}
+                onEdit={() => startEdit(e)}
+                onDelete={() => tableFor(e._source).deleteRow(e.id)}
+              />
+            ))}
             {showPaidCapHint && (
               <p className="px-4 py-3 text-center text-xs text-gray-400">
                 Mostrando los {RECENT_PAID_LIMIT} cobrados más recientes de {paidAll.length} — usa "Filtrar" para ver un periodo concreto.
@@ -540,31 +508,39 @@ export default function MiTrabajoTab({
       )}
 
       {creating && form && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={() => { setCreating(null); setForm(null); }}>
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={closeSheet}>
           <div
             className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
             style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-800">{creationTitle}</h3>
-              <button onClick={() => { setCreating(null); setForm(null); }} className="text-gray-400" aria-label="Cerrar"><X size={19} /></button>
+              <h3 className="text-sm font-semibold text-gray-800">{sheetTitle}</h3>
+              <button onClick={closeSheet} className="text-gray-400" aria-label="Cerrar"><X size={19} /></button>
             </div>
             {creating === "companeros" && (
               <p className="mb-3 text-xs text-gray-400">Importe positivo si te paga a ti; negativo si le pagas tú a él/ella.</p>
             )}
 
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-              <Field label="Fecha">
-                <DatePicker value={form.date} onChange={(v) => setForm({ ...form, date: v })} />
-              </Field>
-              <Field label="Escuela">
-                <Select
-                  value={form.school}
-                  onChange={(v) => setForm(creating === "companeros" ? { ...form, school: v, activity: "" } : { ...form, school: v })}
-                  options={schoolNames}
-                />
-              </Field>
+            {/* Fecha+Escuela primero (contexto), Curso siempre en su propia
+                fila: depende de Escuela y sus nombres pueden ser largos —
+                emparejarlo con otro select ancho es lo que provocaba paneles
+                solapados (ver comentario de Select en shared.jsx). Campos
+                específicos del tipo debajo, Notas siempre al final por ser
+                el de menor frecuencia de uso. */}
+            <div className="space-y-2.5">
+              <div className="grid grid-cols-2 gap-2.5">
+                <Field label="Fecha">
+                  <DatePicker value={form.date} onChange={(v) => setForm({ ...form, date: v })} />
+                </Field>
+                <Field label="Escuela">
+                  <Select
+                    value={form.school}
+                    onChange={(v) => setForm(creating === "companeros" ? { ...form, school: v, activity: "" } : { ...form, school: v })}
+                    options={schoolNames}
+                  />
+                </Field>
+              </div>
               <Field label="Curso">
                 <Select value={form.activity} onChange={(v) => setForm({ ...form, activity: v })} options={creating === "companeros" ? activitiesForSchool(form.school) : activityNames} />
               </Field>
@@ -583,53 +559,55 @@ export default function MiTrabajoTab({
                       {colleagueSuggestions(form.school).map((n) => <option key={n} value={n} />)}
                     </datalist>
                   </Field>
-                  <Field label="Importe (puede ser negativo)">
-                    <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
-                  </Field>
-                  <Field label="Moneda">
-                    <CurrencySearchSelect value={form.currency} onChange={(v) => setForm({ ...form, currency: v })} currencyRows={currencies.rows} />
-                  </Field>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <Field label="Importe (puede ser negativo)">
+                      <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
+                    </Field>
+                    <Field label="Moneda">
+                      <CurrencySearchSelect value={form.currency} onChange={(v) => setForm({ ...form, currency: v })} currencyRows={currencies.rows} />
+                    </Field>
+                  </div>
                 </>
               ) : (
-                <Field label="Nº personas">
-                  <input type="number" min={0} value={form.people} onChange={(e) => setForm({ ...form, people: e.target.value })} className={`${inputCls} w-full`} />
-                </Field>
+                <div className="w-28">
+                  <Field label="Nº personas">
+                    <input type="number" min={0} value={form.people} onChange={(e) => setForm({ ...form, people: e.target.value })} className={`${inputCls} w-full`} />
+                  </Field>
+                </div>
               )}
 
-              <div className="col-span-2 sm:col-span-3">
-                <Field label="Notas">
-                  <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={`${inputCls} w-full`} placeholder="Opcional" />
-                </Field>
-              </div>
+              {creating !== "companeros" && (
+                <div className="rounded-md bg-gray-50 px-3 py-2.5 text-xs text-gray-600">
+                  {preview ? (
+                    <span>
+                      Tarifa: <b>{formatMoney(preview.rate, preview.currency, currencies.rows)}</b> ({preview.paymentType}) →
+                      {" "}Total: <b style={{ color: TEAL }}>{formatMoney(preview.total, preview.currency, currencies.rows)}</b>
+                    </span>
+                  ) : form.school && form.activity ? (
+                    <span className="text-amber-600">
+                      Sin tarifa{creating === "comision" ? " de comisión" : ""} configurada —{" "}
+                      <button type="button" onClick={openRateSheet} className="font-semibold underline underline-offset-2">
+                        añadir tarifa
+                      </button>.
+                    </span>
+                  ) : (
+                    <span>Elige escuela y curso para ver el importe estimado.</span>
+                  )}
+                </div>
+              )}
+
+              <Field label="Notas">
+                <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={`${inputCls} w-full`} placeholder="Opcional" />
+              </Field>
             </div>
 
-            {creating !== "companeros" && (
-              <div className="mt-3 rounded-md bg-gray-50 px-3 py-2.5 text-xs text-gray-600">
-                {preview ? (
-                  <span>
-                    Tarifa: <b>{formatMoney(preview.rate, preview.currency, currencies.rows)}</b> ({preview.paymentType}) →
-                    {" "}Total: <b style={{ color: TEAL }}>{formatMoney(preview.total, preview.currency, currencies.rows)}</b>
-                  </span>
-                ) : form.school && form.activity ? (
-                  <span className="text-amber-600">
-                    Sin tarifa{creating === "comision" ? " de comisión" : ""} configurada —{" "}
-                    <button type="button" onClick={openRateSheet} className="font-semibold underline underline-offset-2">
-                      añadir tarifa
-                    </button>.
-                  </span>
-                ) : (
-                  <span>Elige escuela y curso para ver el importe estimado.</span>
-                )}
-              </div>
-            )}
-
             <button
-              onClick={addEntry}
+              onClick={saveEntry}
               disabled={disableSave}
               className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
               style={{ backgroundColor: accentColor }}
             >
-              <Plus size={16} aria-hidden="true" /> Guardar
+              {editingEntry ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />} Guardar
             </button>
           </div>
         </div>

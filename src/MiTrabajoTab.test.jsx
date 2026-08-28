@@ -115,13 +115,15 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     expect(colleaguePayments.deleteRow).toHaveBeenCalledWith("p1");
   });
 
-  it("edición en línea guarda los cambios en la tabla del curso, desde el menú '⋯'", async () => {
+  it("editar desde el menú '⋯' abre la misma hoja que crear, precargada, y guarda los cambios en la tabla del curso", async () => {
     const user = userEvent.setup();
     const { worklog } = renderMiTrabajo(mixedDataset());
 
     await user.click(screen.getAllByLabelText("Más acciones")[0]);
     await user.click(screen.getByRole("menuitem", { name: "Editar" }));
-    const notesInput = screen.getByPlaceholderText("Notas");
+
+    expect(screen.getByRole("heading", { name: "Editar curso impartido" })).toBeInTheDocument();
+    const notesInput = screen.getByLabelText("Notas");
     await user.type(notesInput, "Grupo grande");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
