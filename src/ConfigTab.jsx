@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Star, Pencil, Search, Lock, UserPlus, X } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
-import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog, Select } from "./shared";
+import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog, Select, useBodyScrollLock } from "./shared";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
 
@@ -354,6 +354,9 @@ const emptyUserForm = { email: "", first_name: "", last_name: "", nickname: "" }
 // UsersDirectory). Llama a la función Netlify create-user, que es la única
 // pieza con permiso para invocar el Admin API de Supabase Auth.
 function CreateUserSheet({ onClose, onCreated }) {
+  // Solo existe montada mientras la hoja está abierta — no hace falta un
+  // booleano de estado, basta con bloquear el scroll de fondo siempre.
+  useBodyScrollLock(true);
   const [form, setForm] = useState(emptyUserForm);
   const [datasetLabel, setDatasetLabel] = useState("");
   const [datasets, setDatasets] = useState([]);

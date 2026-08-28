@@ -4,7 +4,7 @@ import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   inputCls, formatMoney, Money, Field, Select, MultiSelect, CurrencySearchSelect, MoneyInput,
   DatePicker, DateRangePicker, DeleteButton, ConfirmDialog, colorFor, lighten, isPendingStatus, oppositeStatus, useToast,
-  useFloatingDropdown, FloatingPanel, todayStr, addDays,
+  useFloatingDropdown, FloatingPanel, useBodyScrollLock, todayStr, addDays,
 } from "./shared";
 import { computeRateTotal, buildActivityEntries, buildIncomeEntries } from "./rateCalc";
 import PendingCollectionCard from "./PendingCollectionCard";
@@ -537,6 +537,11 @@ export default function MiTrabajoTab({
   const [notesOpen, setNotesOpen] = useState(false);
   const notesRef = useAutoResizeTextarea(form?.notes);
   const fabVisible = useHideFabOnScroll();
+  // La hoja de creación/edición es la única superficie de esta pantalla
+  // que no pasa por useFloatingDropdown (no es un panel flotante, es una
+  // hoja inferior a pantalla completa) — bloquea el scroll de fondo por
+  // su cuenta con el mismo hook compartido.
+  useBodyScrollLock(!!creating);
 
   const startEdit = (entry) => {
     setEditingEntry(entry);

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Plus, Pencil, X, Search } from "lucide-react";
 import { NAVY, TEAL } from "./App";
-import { inputCls, Select, MultiSelect, Field, colorFor, DeleteButton, Money, CurrencySearchSelect, MoneyInput, EditActions, EntryTitle, useToast } from "./shared";
+import { inputCls, Select, MultiSelect, Field, colorFor, DeleteButton, Money, CurrencySearchSelect, MoneyInput, EditActions, EntryTitle, useToast, useBodyScrollLock } from "./shared";
 
 // schools / activities / paymentTypes / currencies: { rows: [...] } — de useSupabaseTable
 // rates / commissionRates: { rows, insertRow, updateRow, deleteRow }
@@ -27,6 +27,7 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
   const emptyForm = { school: "", activity: "", payment_type: defaultPaymentType, currency: defaultCurrency, rate: "" };
   const [form, setForm] = useState(emptyForm);
   const [sheetOpen, setSheetOpen] = useState(false);
+  useBodyScrollLock(sheetOpen);
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ school: "", activity: [], payment_type: "" });
   const [editingId, setEditingId] = useState(null);
