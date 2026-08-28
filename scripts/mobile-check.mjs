@@ -261,10 +261,31 @@ async function main() {
     console.log("  (sin filas en Cobrados para probar el borrado — omitido)");
   }
 
-  console.log("→ Resumen: cabecera sticky con sombra al hacer scroll");
+  console.log("→ Resumen: vistazo rápido (tarjeta principal + Por escuela abierta), y profundidad bajo demanda");
   await page.locator("text=Resumen").first().tap();
   await page.waitForTimeout(300);
-  await shot(page, "resumen");
+  await shot(page, "resumen-vistazo-rapido");
+
+  console.log("→ Resumen: expandir Calendario y Comisiones (tarjetas plegables)");
+  await page.getByRole("button", { name: "Calendario", exact: false }).tap();
+  await page.waitForTimeout(350);
+  await shot(page, "resumen-calendario-expandido");
+  await page.getByRole("button", { name: "Comisiones", exact: false }).tap();
+  await page.waitForTimeout(350);
+  await shot(page, "resumen-comisiones-expandida");
+
+  console.log("→ Resumen: tocar una escuela en 'Por escuela' expande su desglose por curso en el sitio");
+  const porEscuelaCard = page.getByRole("button", { name: "Por escuela", exact: false }).locator("xpath=..");
+  const schoolToggle = porEscuelaCard.locator("ul li button").first();
+  if (await schoolToggle.count() > 0) {
+    await schoolToggle.tap();
+    await page.waitForTimeout(350);
+    await shot(page, "resumen-escuela-expandida");
+  } else {
+    console.log("  (sin escuelas con datos en el periodo actual — omitido)");
+  }
+
+  console.log("→ Resumen: cabecera sticky con sombra al hacer scroll");
   await page.mouse.wheel(0, 600);
   await page.waitForTimeout(250);
   await shot(page, "resumen-scroll-cabecera-sticky");
