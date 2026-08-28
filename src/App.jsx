@@ -45,11 +45,14 @@ const PRIMARY_TABS = [
   { id: "summary", label: "Resumen", icon: BarChart3 },
 ];
 
-// Pagos/Tarifas/Configuración son accesos secundarios (desde Home). Al
+// Configuración/Ayuda son accesos secundarios (desde la cabecera). Al
 // entrar en uno, la barra inferior no resalta nada — en su lugar, la
 // cabecera muestra "‹ Volver" + el nombre de la pantalla, el patrón
 // nativo de iOS/Android para "dónde estoy y cómo vuelvo", más propio de
 // app que una miga de pan (que es un patrón más de web de escritorio).
+// "pagos" sigue en este mapa por si se reactiva, pero ya no tiene ningún
+// punto de entrada en la UI — ver docs/ADR/0005 (Mi trabajo cubre su
+// función con "Cobrar todos" + filtro por escuela).
 const SECONDARY_TITLES = { config: "Configuración", help: "Ayuda", pagos: "Pagos" };
 
 function AppShell({ onSignOut, profile, initialTab = "home" }) {
@@ -142,7 +145,6 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
             activities={activities} schools={schools} currencies={currencies} navSections={navSections} paymentStatuses={paymentStatuses}
             onQuickCreate={navigateAndCreate}
-            onOpenPayments={() => setTab("pagos")}
           />
         )}
         {tab === "log" && (
@@ -172,7 +174,6 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
             accentColor={sectionColor("trabajo")} userId={profile?.user_id}
             autoOpenType={pendingOpen} onAutoOpened={() => setPendingOpen(null)}
-            onOpenPayments={() => setTab("pagos")}
           />
         )}
         {tab === "config" && (
