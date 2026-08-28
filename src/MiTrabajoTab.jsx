@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Plus, X, Pencil, Check, RotateCcw, MoreVertical, SlidersHorizontal, PartyPopper, ListChecks, Handshake, Users } from "lucide-react";
+import { Plus, X, Pencil, Check, RotateCcw, MoreVertical, SlidersHorizontal, PartyPopper, ListChecks, Handshake, Users, Star } from "lucide-react";
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   inputCls, formatMoney, Money, Field, Select, MultiSelect, CurrencySearchSelect, MoneyInput,
-  DatePicker, DeleteButton, colorFor, isPendingStatus, oppositeStatus, useToast,
-  useClickOutside, useEscapeClose,
+  DatePicker, DateRangePicker, DeleteButton, colorFor, lighten, isPendingStatus, oppositeStatus, useToast,
+  useClickOutside, useEscapeClose, todayStr, addDays,
 } from "./shared";
 import { computeRateTotal, buildActivityEntries, buildIncomeEntries } from "./rateCalc";
 import PendingCollectionCard from "./PendingCollectionCard";
@@ -148,6 +148,19 @@ function useHideFabOnScroll() {
   return visible;
 }
 
+// Cabecera de grupo por día en la lista — "Hoy"/"Ayer" para orientarse de
+// un vistazo, día+mes abreviado el resto. Ayuda a escanear rápido cuando
+// hay muchos elementos, sin necesitar abrir "Filtrar" para acotar fechas.
+const WEEKDAYS_SHORT_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const MONTHS_SHORT_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+function dateGroupLabel(dateStr) {
+  if (dateStr === todayStr()) return "Hoy";
+  if (dateStr === addDays(todayStr(), -1)) return "Ayer";
+  const [, m, d] = dateStr.split("-").map(Number);
+  const weekday = (new Date(dateStr + "T00:00:00").getDay() + 6) % 7;
+  return `${WEEKDAYS_SHORT_ES[weekday]}, ${d} ${MONTHS_SHORT_ES[m - 1]}`;
+}
+
 function emptyMessage(statusFilter, hasActiveFilters) {
   if (statusFilter === "pendientes") {
     return hasActiveFilters ? "Sin elementos pendientes con estos filtros." : "Estás al día — nada pendiente.";
@@ -224,6 +237,9 @@ export default function MiTrabajoTab({
 
   const presentValues = (key) => [...new Set(activityEntries.map((e) => e[key]).filter(Boolean))].sort();
   const hasActiveFilters = Boolean(filters.type || filters.from || filters.to || filters.school || filters.activity.length > 0);
+  // Desde/Hasta cuentan como un único filtro de "Periodo" — es un solo
+  // control (DateRangePicker), no dos independientes.
+  const activeFilterCount = [Boolean(filters.from || filters.to), Boolean(filters.school), filters.activity.length > 0, Boolean(filters.type)].filter(Boolean).length;
   const clearFilters = () => setFilters({ from: "", to: "", school: "", activity: [], type: "" });
 
   const filteredEntries = useMemo(() => {
@@ -256,6 +272,11 @@ export default function MiTrabajoTab({
   const pendingIncomeCount = incomeEntries.filter((e) => isPendingStatus(e.status, paymentStatuses.rows)).length;
 
   const tableFor = (source) => (source === "ganado" ? worklog : source === "comision" ? comisiones : colleaguePayments);
+  // Sin esto, la pantalla mostraba "Estás al día — nada pendiente" durante
+  // el instante entre montar y recibir la primera respuesta de Supabase —
+  // un usuario nuevo lo leía como "esta app no tiene nada", no como
+  // "cargando". Un esqueleto breve evita ese vistazo equivocado.
+  const dataLoaded = worklog.loaded && comisiones.loaded && colleaguePayments.loaded && rates.loaded && commissionRates.loaded;
 
   const toggleStatus = async (entry) => {
     const target = oppositeStatus(entry.status, paymentStatuses.rows);
@@ -419,6 +440,10 @@ export default function MiTrabajoTab({
   const sheetTitle = editingEntry
     ? { ganado: "Editar curso impartido", comision: "Editar comisión", companeros: "Editar ajuste de curso" }[creating]
     : { ganado: "Nuevo curso impartido", comision: "Nueva comisión", companeros: "Nuevo ajuste de curso" }[creating];
+  // Mismo icono que su fila en "¿Qué quieres añadir?" — conecta visualmente
+  // el paso 1 (elegir tipo) con el paso 2 (el formulario), y da a la hoja
+  // la misma identidad visual que ya usa el resto de "Movimientos".
+  const SheetIcon = CREATE_TYPES.find((t) => t.key === creating)?.icon;
 
   return (
     <div className="relative space-y-4 pb-24">
@@ -445,7 +470,7 @@ export default function MiTrabajoTab({
           className={`flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors ${filtersOpen ? "border-transparent text-white" : "border-gray-200 bg-white text-gray-600"}`}
           style={filtersOpen ? { backgroundColor: TEAL } : {}}
         >
-          <SlidersHorizontal size={15} aria-hidden="true" /> Filtrar
+          <SlidersHorizontal size={15} aria-hidden="true" /> Filtrar{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
         </button>
         {statusFilter === "pendientes" && pendingAll.length > 0 && (
           <button onClick={collectAllPending} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
@@ -456,9 +481,10 @@ export default function MiTrabajoTab({
 
       {filtersOpen && (
         <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50/60 p-3">
+          <Field label="Periodo">
+            <DateRangePicker from={filters.from} to={filters.to} onChange={(r) => setFilters({ ...filters, ...r })} />
+          </Field>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            <Field label="Desde"><DatePicker value={filters.from} onChange={(v) => setFilters({ ...filters, from: v })} placeholder="Sin límite" /></Field>
-            <Field label="Hasta"><DatePicker value={filters.to} onChange={(v) => setFilters({ ...filters, to: v })} placeholder="Sin límite" /></Field>
             <Field label="Escuela"><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Todas" /></Field>
             <Field label="Curso"><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder="Todos" /></Field>
             <Field label="Tipo"><Select value={filters.type} onChange={(v) => setFilters({ ...filters, type: v })} options={TYPE_OPTIONS} placeholder="Todos" /></Field>
@@ -472,22 +498,52 @@ export default function MiTrabajoTab({
       )}
 
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        {visibleList.length === 0 ? (
+        {!dataLoaded ? (
+          <div className="divide-y divide-gray-100" aria-hidden="true">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="animate-pulse px-4 py-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="h-3.5 w-32 rounded bg-gray-200" />
+                  <div className="h-3.5 w-14 rounded bg-gray-200" />
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <div className="h-3 w-20 rounded bg-gray-100" />
+                  <div className="h-3 w-16 rounded bg-gray-100" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : visibleList.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
             {statusFilter === "pendientes" && !hasActiveFilters && <PartyPopper size={26} className="text-gray-300" aria-hidden="true" />}
             <p className="text-sm text-gray-400">{emptyMessage(statusFilter, hasActiveFilters)}</p>
+            {hasActiveFilters && (
+              <button onClick={clearFilters} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
+                Limpiar filtros
+              </button>
+            )}
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {visibleList.map((e) => (
-              <EntryRow
-                key={`${e._source}-${e.id}`} entry={e} activityColor={activityColor} currencyRows={currencies.rows}
-                isPending={statusFilter === "pendientes"}
-                onToggle={() => toggleStatus(e)}
-                onEdit={() => startEdit(e)}
-                onDelete={() => tableFor(e._source).deleteRow(e.id)}
-              />
-            ))}
+            {visibleList.map((e, i) => {
+              const showGroupHeader = i === 0 || visibleList[i - 1].date !== e.date;
+              return (
+                <React.Fragment key={`${e._source}-${e.id}`}>
+                  {showGroupHeader && (
+                    <div className="bg-gray-50/80 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                      {dateGroupLabel(e.date)}
+                    </div>
+                  )}
+                  <EntryRow
+                    entry={e} activityColor={activityColor} currencyRows={currencies.rows}
+                    isPending={statusFilter === "pendientes"}
+                    onToggle={() => toggleStatus(e)}
+                    onEdit={() => startEdit(e)}
+                    onDelete={() => tableFor(e._source).deleteRow(e.id)}
+                  />
+                </React.Fragment>
+              );
+            })}
             {showPaidCapHint && (
               <p className="px-4 py-3 text-center text-xs text-gray-400">
                 Mostrando los {RECENT_PAID_LIMIT} cobrados más recientes de {paidAll.length} — usa "Filtrar" para ver un periodo concreto.
@@ -548,7 +604,14 @@ export default function MiTrabajoTab({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-800">{sheetTitle}</h3>
+              <div className="flex items-center gap-2">
+                {SheetIcon && (
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: lighten(accentColor) }}>
+                    <SheetIcon size={14} style={{ color: accentColor }} aria-hidden="true" />
+                  </span>
+                )}
+                <h3 className="text-sm font-semibold text-gray-800">{sheetTitle}</h3>
+              </div>
               <button onClick={closeSheet} className="text-gray-400" aria-label="Cerrar"><X size={19} /></button>
             </div>
             {creating === "companeros" && (
@@ -578,103 +641,114 @@ export default function MiTrabajoTab({
                 <Select value={form.activity} onChange={(v) => setForm({ ...form, activity: v })} options={creating === "companeros" ? activitiesForSchool(form.school) : activityNames} />
               </Field>
 
-              {creating === "companeros" ? (
-                <>
-                  <Field label="Instructor relacionado">
-                    <input
-                      list="mi-trabajo-colleague-names"
-                      value={form.colleague_name}
-                      onChange={(e) => setForm({ ...form, colleague_name: e.target.value })}
-                      className={`${inputCls} w-full`}
-                      placeholder="Ana, Marc..."
-                    />
-                    <datalist id="mi-trabajo-colleague-names">
-                      {colleagueSuggestions(form.school).map((n) => <option key={n} value={n} />)}
-                    </datalist>
-                  </Field>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <Field label="Importe (puede ser negativo)">
-                      <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
-                    </Field>
-                    <Field label="Moneda">
-                      <CurrencySearchSelect
-                        value={form.currency}
-                        onChange={(v) => { setForm({ ...form, currency: v }); setCurrencyTouched(true); }}
-                        currencyRows={currencies.rows}
+              {/* Separa visualmente "contexto" (cuándo/dónde) de "detalle"
+                  (qué importe, con quién) — mismo criterio de agrupación que
+                  el panel de filtros (Periodo aparte de Escuela/Curso/Tipo). */}
+              <div className="space-y-2.5 border-t border-gray-100 pt-2.5">
+                {creating === "companeros" ? (
+                  <>
+                    <Field label="Instructor relacionado">
+                      <input
+                        list="mi-trabajo-colleague-names"
+                        value={form.colleague_name}
+                        onChange={(e) => setForm({ ...form, colleague_name: e.target.value })}
+                        className={`${inputCls} w-full`}
+                        placeholder="Ana, Marc..."
                       />
+                      <datalist id="mi-trabajo-colleague-names">
+                        {colleagueSuggestions(form.school).map((n) => <option key={n} value={n} />)}
+                      </datalist>
+                    </Field>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <Field label="Importe (puede ser negativo)">
+                        <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
+                      </Field>
+                      <Field label="Moneda">
+                        <CurrencySearchSelect
+                          value={form.currency}
+                          onChange={(v) => { setForm({ ...form, currency: v }); setCurrencyTouched(true); }}
+                          currencyRows={currencies.rows}
+                        />
+                      </Field>
+                    </div>
+                    {currencyTouched && form.currency && form.currency !== favoriteCurrency && (
+                      <button
+                        type="button"
+                        onClick={() => markFavoriteCurrency(form.currency)}
+                        className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium"
+                        style={{ borderColor: TEAL, color: TEAL }}
+                      >
+                        <Star size={11} aria-hidden="true" /> Usar {form.currency} como favorita
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div className="w-28">
+                    <Field label="Nº personas">
+                      <input type="number" min={0} value={form.people} onChange={(e) => setForm({ ...form, people: e.target.value })} className={`${inputCls} w-full`} />
                     </Field>
                   </div>
-                  {currencyTouched && form.currency && form.currency !== favoriteCurrency && (
-                    <button
-                      type="button"
-                      onClick={() => markFavoriteCurrency(form.currency)}
-                      className="text-xs font-medium underline underline-offset-2"
-                      style={{ color: TEAL }}
-                    >
-                      Usar {form.currency} como moneda favorita
-                    </button>
-                  )}
-                </>
-              ) : (
-                <div className="w-28">
-                  <Field label="Nº personas">
-                    <input type="number" min={0} value={form.people} onChange={(e) => setForm({ ...form, people: e.target.value })} className={`${inputCls} w-full`} />
-                  </Field>
-                </div>
-              )}
+                )}
 
-              {creating !== "companeros" && (
-                <div className="rounded-md bg-gray-50 px-3 py-2.5 text-xs text-gray-600">
-                  {preview ? (
-                    <span>
-                      Tarifa: <b>{formatMoney(preview.rate, preview.currency, currencies.rows)}</b> ({preview.paymentType}) →
-                      {" "}Total: <b style={{ color: TEAL }}>{formatMoney(preview.total, preview.currency, currencies.rows)}</b>
-                    </span>
-                  ) : addingRate ? (
-                    <div className="space-y-2">
-                      <p className="font-medium text-gray-700">
-                        Nueva tarifa{creating === "comision" ? " de comisión" : ""} — {form.school} · {form.activity}
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Field label="Moneda">
-                          <CurrencySearchSelect value={rateForm.currency} onChange={(v) => setRateForm({ ...rateForm, currency: v })} currencyRows={currencies.rows} />
-                        </Field>
-                        <Field label="Tarifa">
-                          <MoneyInput value={rateForm.rate} onChange={(v) => setRateForm({ ...rateForm, rate: v })} />
-                        </Field>
+                {creating !== "companeros" && (
+                  <div
+                    className="rounded-lg border px-3 py-2.5 text-xs"
+                    style={
+                      preview ? { borderColor: "#99F6E4", backgroundColor: "#F0FDFA", color: "#374151" }
+                      : { borderColor: "#E5E7EB", backgroundColor: "#F9FAFB", color: "#4B5563" }
+                    }
+                  >
+                    {preview ? (
+                      <span>
+                        Tarifa: <b>{formatMoney(preview.rate, preview.currency, currencies.rows)}</b> ({preview.paymentType}) →
+                        {" "}Total: <b style={{ color: TEAL }}>{formatMoney(preview.total, preview.currency, currencies.rows)}</b>
+                      </span>
+                    ) : addingRate ? (
+                      <div className="space-y-2">
+                        <p className="font-medium text-gray-700">
+                          Nueva tarifa{creating === "comision" ? " de comisión" : ""} — {form.school} · {form.activity}
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Field label="Moneda">
+                            <CurrencySearchSelect value={rateForm.currency} onChange={(v) => setRateForm({ ...rateForm, currency: v })} currencyRows={currencies.rows} />
+                          </Field>
+                          <Field label="Tarifa">
+                            <MoneyInput value={rateForm.rate} onChange={(v) => setRateForm({ ...rateForm, rate: v })} />
+                          </Field>
+                        </div>
+                        <div className="flex gap-2 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={saveRate}
+                            disabled={savingRate || !rateForm.rate}
+                            className="min-h-9 flex-1 rounded-md text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            style={{ backgroundColor: accentColor }}
+                          >
+                            {savingRate ? "Guardando..." : "Guardar tarifa"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setAddingRate(false); setRateForm(null); }}
+                            disabled={savingRate}
+                            className="min-h-9 rounded-md border border-gray-200 px-3 text-xs font-medium text-gray-500"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex gap-2 pt-0.5">
-                        <button
-                          type="button"
-                          onClick={saveRate}
-                          disabled={savingRate || !rateForm.rate}
-                          className="min-h-9 flex-1 rounded-md text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                          style={{ backgroundColor: accentColor }}
-                        >
-                          {savingRate ? "Guardando..." : "Guardar tarifa"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setAddingRate(false); setRateForm(null); }}
-                          disabled={savingRate}
-                          className="min-h-9 rounded-md border border-gray-200 px-3 text-xs font-medium text-gray-500"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </div>
-                  ) : form.school && form.activity ? (
-                    <span className="text-amber-600">
-                      Sin tarifa{creating === "comision" ? " de comisión" : ""} configurada —{" "}
-                      <button type="button" onClick={openInlineRate} className="font-semibold underline underline-offset-2">
-                        añadir tarifa
-                      </button>.
-                    </span>
-                  ) : (
-                    <span>Elige escuela y curso para ver el importe estimado.</span>
-                  )}
-                </div>
-              )}
+                    ) : form.school && form.activity ? (
+                      <span className="text-amber-600">
+                        Sin tarifa{creating === "comision" ? " de comisión" : ""} configurada —{" "}
+                        <button type="button" onClick={openInlineRate} className="font-semibold underline underline-offset-2">
+                          añadir tarifa
+                        </button>.
+                      </span>
+                    ) : (
+                      <span>Elige escuela y curso para ver el importe estimado.</span>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <Field label="Notas">
                 <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={`${inputCls} w-full`} placeholder="Opcional" />

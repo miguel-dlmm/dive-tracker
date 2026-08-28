@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
 import * as Icons from "lucide-react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, Loader2 } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2 } from "lucide-react";
 import { TEAL, CORAL, GREEN } from "./App";
 
 export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
@@ -306,6 +306,175 @@ export function DatePicker({ value, onChange, placeholder }) {
               );
             })}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Utilidades de fecha en formato YYYY-MM-DD (mismo formato que value en
+// toda la app) — sin librería de fechas, para los accesos rápidos de
+// DateRangePicker y las cabeceras de fecha de las listas.
+export function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+export function addDays(dateStr, days) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+function startOfWeek(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // semana empieza en lunes
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+const startOfMonth = (dateStr) => dateStr.slice(0, 8) + "01";
+const formatDMY = (dateStr) => {
+  const p = parseDateStr(dateStr);
+  return p ? `${pad2(p.d)}/${pad2(p.m + 1)}/${p.y}` : "";
+};
+
+const RANGE_PRESETS = [
+  { label: "Hoy", range: () => ({ from: todayStr(), to: todayStr() }) },
+  { label: "Esta semana", range: () => ({ from: startOfWeek(todayStr()), to: todayStr() }) },
+  { label: "Este mes", range: () => ({ from: startOfMonth(todayStr()), to: todayStr() }) },
+  { label: "Últimos 30 días", range: () => ({ from: addDays(todayStr(), -29), to: todayStr() }) },
+];
+
+// Selector de rango de fechas — un único calendario compartido para
+// "Desde" y "Hasta" en vez de dos DatePicker independientes, con el
+// periodo intermedio coloreado. Patrón tomado de los selectores de rango
+// de apps de reserva (Airbnb, Google Flights), simplificado para este
+// caso: aquí no hace falta bloquear fechas ni previsualizar dos meses a
+// la vez.
+//
+// Tocar "Desde" inicia un rango: la fecha elegida fija el inicio y el
+// propio selector seguirá abierto pidiendo el fin, con "OK" como salida
+// para quedarse solo con el inicio (sin fin). Tocar "Hasta" es siempre
+// independiente — una única fecha, se aplica y cierra al momento, sin
+// pasar por "Desde" primero.
+export function DateRangePicker({ from, to, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState("range"); // "range" (vía Desde) | "end-only" (vía Hasta)
+  const [step, setStep] = useState("from"); // "from" | "to"
+  const ref = useClickOutside(() => setOpen(false));
+  useEscapeClose(open, () => setOpen(false));
+  const openUp = useDropdownFlip(open, ref);
+
+  const today = new Date();
+  const [viewY, setViewY] = useState(today.getFullYear());
+  const [viewM, setViewM] = useState(today.getMonth());
+
+  useEffect(() => {
+    if (!open) return;
+    const ref = (step === "from" ? from : to || from) || todayStr();
+    const p = parseDateStr(ref) || { y: today.getFullYear(), m: today.getMonth() };
+    setViewY(p.y);
+    setViewM(p.m);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, step]);
+
+  const openFrom = () => { setMode("range"); setStep("from"); setOpen(true); };
+  const openTo = () => { setMode("end-only"); setStep("to"); setOpen(true); };
+
+  const selectDay = (dateStr) => {
+    if (step === "from") {
+      onChange({ from: dateStr, to: "" });
+      setStep("to");
+      return;
+    }
+    if (mode === "range" && from && dateStr < from) {
+      // Fecha de fin anterior al inicio — se reinicia el inicio en vez de
+      // aceptar un rango invertido, y se sigue pidiendo un fin nuevo.
+      onChange({ from: dateStr, to: "" });
+      return;
+    }
+    onChange({ from, to: dateStr });
+    setOpen(false);
+  };
+
+  const applyPreset = (preset) => { onChange(preset.range()); setOpen(false); };
+
+  const daysInMonth = new Date(viewY, viewM + 1, 0).getDate();
+  const firstWeekday = (new Date(viewY, viewM, 1).getDay() + 6) % 7;
+  const cells = [];
+  for (let i = 0; i < firstWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  const goPrev = () => { if (viewM === 0) { setViewM(11); setViewY(viewY - 1); } else setViewM(viewM - 1); };
+  const goNext = () => { if (viewM === 11) { setViewM(0); setViewY(viewY + 1); } else setViewM(viewM + 1); };
+
+  return (
+    <div className="relative" ref={ref}>
+      <div className={`${inputCls} flex min-h-11 w-full items-stretch gap-0 p-0`}>
+        <button type="button" onClick={openFrom} aria-label="Fecha desde" className="flex flex-1 items-center gap-1.5 truncate px-2.5 text-left">
+          <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
+          <span className={`truncate text-sm ${from ? "text-gray-800" : "text-gray-400"}`}>{from ? formatDMY(from) : "Desde"}</span>
+        </button>
+        <span className="flex items-center text-gray-300" aria-hidden="true"><ArrowRight size={13} /></span>
+        <button type="button" onClick={openTo} aria-label="Fecha hasta" className="flex flex-1 items-center truncate px-2.5 text-left">
+          <span className={`truncate text-sm ${to ? "text-gray-800" : "text-gray-400"}`}>{to ? formatDMY(to) : "Hasta"}</span>
+        </button>
+      </div>
+      {open && (
+        <div role="dialog" aria-label="Selector de rango de fechas" className={`absolute z-30 w-72 max-w-[90vw] rounded-lg border border-gray-200 bg-white p-3 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}>
+          <p className="mb-2 text-xs font-medium text-gray-500">
+            {step === "from" ? "Elige la fecha de inicio" : mode === "range" ? "Elige la fecha de fin" : "Elige una fecha"}
+          </p>
+          {mode === "range" && step === "from" && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {RANGE_PRESETS.map((p) => (
+                <button
+                  key={p.label} type="button" onClick={() => applyPreset(p)}
+                  className="rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="mb-2 flex items-center justify-between">
+            <button type="button" onClick={goPrev} aria-label="Mes anterior" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+            <span className="text-sm font-semibold text-gray-800">{MONTHS_ES[viewM]} {viewY}</span>
+            <button type="button" onClick={goNext} aria-label="Mes siguiente" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+          </div>
+          <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
+            {WEEKDAYS_ES.map((w) => <div key={w} className="py-1">{w}</div>)}
+          </div>
+          <div className="grid grid-cols-7 gap-0.5">
+            {cells.map((d, i) => {
+              if (!d) return <div key={i} />;
+              const dateStr = `${viewY}-${pad2(viewM + 1)}-${pad2(d)}`;
+              const isEndpoint = dateStr === from || dateStr === to;
+              const inRange = from && to && dateStr > from && dateStr < to;
+              const isToday = dateStr === todayStr();
+              return (
+                <button
+                  type="button" key={i} onClick={() => selectDay(dateStr)}
+                  aria-label={`${d} de ${MONTHS_ES[viewM]}`}
+                  aria-selected={isEndpoint || undefined}
+                  className="flex h-9 items-center justify-center text-xs transition-colors"
+                  style={
+                    isEndpoint ? { backgroundColor: TEAL, color: "white", fontWeight: 600, borderRadius: 9999 }
+                    : inRange ? { backgroundColor: "#F0FDFA", color: "#0F766E" }
+                    : isToday ? { color: TEAL, fontWeight: 600 }
+                    : { color: "#374151" }
+                  }
+                >
+                  {d}
+                </button>
+              );
+            })}
+          </div>
+          {mode === "range" && step === "to" && (
+            <button
+              type="button" onClick={() => setOpen(false)}
+              className="mt-2 w-full rounded-md py-2 text-xs font-semibold text-white"
+              style={{ backgroundColor: TEAL }}
+            >
+              OK — solo desde {formatDMY(from)}
+            </button>
+          )}
         </div>
       )}
     </div>
