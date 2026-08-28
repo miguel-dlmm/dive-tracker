@@ -139,6 +139,74 @@ hoja de creación). No se pudo verificar visualmente el grupo
 
 - Bloqueo de pantalla al añadir tarifa inline en el formulario de Mi trabajo — se investigará en Commit 5 si hay recursos, con causa raíz (no workaround).
 
+## Commit 3 — Proceso de release (detalle + candidato pendiente de aprobación)
+
+Ver `docs/ADR/0010-proceso-de-release.md` para el proceso general
+(investigado sobre Keep a Changelog, SemVer y GitHub Releases —
+fuentes primarias). Esta sección es la **simulación concreta** pedida:
+ramas reales confirmadas, changelog preparado, versión decidida — nada
+de esto se ha ejecutado (ni merge, ni tag, ni push).
+
+### Ramas reales confirmadas (`git fetch` + `git log`/`git merge-base`)
+
+- `develop` (remoto y local en `0cf625e`) — única rama de entorno real,
+  producción actual.
+- `feature/global-redesign` (esta rama, en `27f482d`) contiene **todos**
+  los commits de `develop` como ancestros (`merge-base(develop,
+  feature/global-redesign) == develop` exactamente) — no hay divergencia,
+  solo commits de más.
+- `v0.1.0` es ancestro tanto de `develop` como de `feature/global-redesign`.
+- Entre `v0.1.0` y `feature/global-redesign` hay **22 commits** sin
+  publicar (5 ya fusionados en `develop` — Payments/Home dashboard/fix de
+  tarifas — y 17 más solo en esta rama de trabajo — Mi trabajo, Motion,
+  navegación, Configuración, Resumen...).
+- `feature/mi-trabajo` local está 9 commits por delante de su remoto
+  (`origin/feature/mi-trabajo` en `3439056`) — esos 9 commits ya están
+  también en `feature/global-redesign`, así que no hace falta tocar esa
+  rama aparte.
+- `feature/design-lab-preview` — sandbox experimental sin intención de
+  merge (excepción ya reconocida en `ADR-0006`), no participa en esta
+  release.
+
+### Changelog preparado
+
+`CHANGELOG.md` → sección `## Unreleased` ya redactada con los 22 commits
+agrupados en `Added`/`Changed`/`Fixed` (formato Keep a Changelog). Commit
+de este cambio + el propio `ADR-0010` ya hechos en esta rama.
+
+### Versión propuesta: `v0.2.0`
+
+Por la tabla de `ADR-0010`: la mayor parte del contenido es
+funcionalidad nueva o rediseño (Mi trabajo, Configuración, Resumen,
+Motion, navegación), no solo corrección de errores → `MINOR`. El
+proyecto sigue en `0.y.z` (MVP, sin API/superficie estable declarada),
+así que no aplica `MAJOR`.
+
+### Pasos pendientes de tu aprobación (ninguno ejecutado)
+
+1. Revisar y fusionar `feature/global-redesign` → `develop` (fast-forward
+   o merge commit, a decidir en el momento — no hay conflictos previstos
+   porque `develop` es un ancestro directo).
+2. Sobre `develop` ya actualizada: `npm run test && npm run build` (y
+   `npm run mobile-check` si quieres una última pasada) — ya validado en
+   cada commit individual de esta rama, pero repetirlo sobre `develop`
+   tras el merge es la validación de release, no redundante.
+3. Renombrar `## Unreleased` a `## [0.2.0] - <fecha del día que se
+   ejecute>` en `CHANGELOG.md`.
+4. Commit `chore: preparar release v0.2.0`.
+5. `git tag -a v0.2.0 -m "v0.2.0"` sobre ese commit.
+6. `git push origin develop --tags`.
+7. `gh release create v0.2.0 --notes-file <extracto del CHANGELOG>`
+   (opcional, espejo en GitHub).
+8. Ningún paso de despliegue manual — Vercel despliega automáticamente
+   el push a `develop`.
+
+No se ha tocado `develop` ni se ha creado ningún tag todavía. En cuanto
+des el OK, estos 8 pasos son mecánicos y no requieren volver a redecidir
+nada.
+
 ## Siguiente paso
 
-Investigar y (si el alcance es acotado y seguro) corregir el bug de animación al cobrar, en `MiTrabajoTab.jsx` / `EntryRow`, comparando el camino de "cobrar" con el de "deshacer" para ver dónde diverge. Después, empezar Commit 1 (Configuración).
+Commit 3 completado (investigación + simulación, sin push). Continuar
+con Commit 5 (bug de tarifa inline) si quedan recursos, según el orden
+acordado.
