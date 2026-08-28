@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Plus, Star, Pencil, Search, Lock, UserPlus, X } from "lucide-react";
+import { Plus, Star, Pencil, Search, Lock, UserPlus, X, Trash2 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
 import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog, Select, useBodyScrollLock } from "./shared";
 import { supabase } from "./supabaseClient";
@@ -10,7 +10,7 @@ const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 
 /**
  * Tabla CRUD genérica reutilizada por las secciones de Configuración.
  */
-function CrudTable({ title, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false }) {
+function CrudTable({ title, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false }) {
   const emptyForm = Object.fromEntries(fields.map((f) => [
     f.key,
     f.type === "color" ? "#0E7C7B" : f.type === "boolean" ? (f.default ?? false) : "",
@@ -173,7 +173,25 @@ function CrudTable({ title, table, pkField = "id", fields, hasDefault = false, s
                 </button>
               )}
               <button onClick={() => startEdit(row)} aria-label="Editar" className="-m-2 flex min-h-11 min-w-11 items-center justify-center rounded p-2 text-gray-300 hover:text-gray-600"><Pencil size={14} aria-hidden="true" /></button>
-              <DeleteButton onConfirm={() => table.deleteRow(pk)} size={14} itemLabel={row.name ? `"${row.name}"` : "este elemento"} />
+              {protectDefaultFromDelete && row.is_default ? (
+                // Sin esto, borrar el estado predeterminado deja el
+                // catálogo sin ningún is_default=true — para Estados de
+                // pago eso no es un detalle de UX menor: is_default es el
+                // único campo con el que la app decide qué cuenta como
+                // "pendiente" (ver isPendingStatus, shared.jsx), así que
+                // perderlo rompe el bucket de pendientes/cobrados de toda
+                // la app, no solo el valor por defecto de un formulario.
+                <button
+                  type="button" disabled
+                  title={'Es el estado predeterminado (representa "pendiente") — marca otro como predeterminado antes de eliminar este'}
+                  aria-label="No se puede eliminar: es el estado predeterminado"
+                  className="-m-2 flex min-h-11 min-w-11 shrink-0 cursor-not-allowed items-center justify-center rounded p-2 text-gray-200"
+                >
+                  <Trash2 size={14} aria-hidden="true" />
+                </button>
+              ) : (
+                <DeleteButton onConfirm={() => table.deleteRow(pk)} size={14} itemLabel={row.name ? `"${row.name}"` : "este elemento"} />
+              )}
             </li>
           );
         })}
@@ -731,7 +749,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
         <CrudTable title="Tipos de pago" table={paymentTypes} hasDefault fields={[{ key: "name", label: "Nombre" }]} />
       )}
       {isAdmin && section === "Estados de pago" && (
-        <CrudTable title="Estados de pago" table={paymentStatuses} hasDefault
+        <CrudTable title="Estados de pago" table={paymentStatuses} hasDefault protectDefaultFromDelete
           fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
       )}
       {isAdmin && section === "Monedas" && (

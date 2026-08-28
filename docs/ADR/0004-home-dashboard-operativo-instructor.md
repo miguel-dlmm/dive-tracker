@@ -250,3 +250,35 @@ pantalla.
   propio ítem de backlog, sin ADR propio salvo que implique una decisión
   con alternativas reales — hoy es "inspirarse en `src/lab/`", no una
   decisión cerrada.
+
+## Addendum (2026-08-28) — revisión de la jerarquía en la fase de rediseño global
+
+Al ejecutar el "rediseño visual completo" que este ADR dejaba pendiente
+como fase aparte, se revisó también el orden de la jerarquía original
+(Pendiente de cobrar → Generado este mes → Acciones frecuentes →
+Calendario), no solo su estilo — el encargo de esa fase pedía
+explícitamente no tratar el orden aquí fijado como una limitación de
+diseño absoluta si aparecía una razón de peso para cambiarlo.
+
+**Cambio:** las acciones frecuentes (crear Curso/Comisión) pasan a la
+posición 2, por delante de "Generado este mes" (que baja a la posición
+3). Pendiente de cobrar se mantiene en la posición 1 — la investigación
+de categoría citada en este documento (QuickBooks Self-Employed, Wave,
+FreshBooks) sigue siendo el argumento más fuerte para esa cabecera, y
+nada en el rediseño la contradice.
+
+**Por qué:** "Generado este mes" es información puramente reflexiva —
+se consulta, no se actúa sobre ella. Crear un Curso/Comisión es, en
+cambio, la acción más repetida de toda la app (es la razón por la que el
+FAB de Mi trabajo entra directo a "Curso impartido" sin hoja
+intermedia, ver ADR-0005) y suele dispararse justo al abrir la app
+("acabo de terminar una clase, la registro ahora"). Un dato de solo
+lectura no debería anteponerse a la acción que de verdad justifica
+abrir la app en ese momento — este documento no argumentaba esta
+posición relativa cuando se escribió, así que no se contradice una
+decisión ya razonada, se completa un hueco que quedó abierto.
+
+**Qué no cambia:** el resto de las decisiones de este ADR sigue vigente
+tal cual — "Generado" no vuelve a llamarse "Ganado", las dos métricas
+siguen partiendo de la misma base (`buildIncomeEntries`), y Pagos sigue
+sin punto de entrada en la UI (ADR-0005).

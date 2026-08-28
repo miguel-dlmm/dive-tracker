@@ -270,3 +270,60 @@ en una tabla) solo se plantea si el adaptador demuestra no ser suficiente
   decisión independiente que este documento asume como ya aprobada para
   el lenguaje de "Mi trabajo", sin depender de cuándo se ejecute su
   propia migración interna.
+
+## Addendum (2026-08-28) — el mismo patrón de entrada se extiende a Home
+
+Al rediseñar Home (fase de rediseño global), se decidió que sus accesos
+de creación siguieran exactamente el mismo patrón que este documento ya
+fijó para el FAB de Mi trabajo: entrar directo al caso dominante (Curso
+impartido) y resolver el resto con el selector de tipo ya existente
+dentro de la propia hoja, en vez de multiplicar puntos de entrada.
+
+Home tenía dos botones ("Curso impartido"/"Comisión") con nombres y
+colores de las secciones ya retiradas por esta misma unificación. Se
+sustituyen por un único "Añadir movimiento" — no por preferencia
+estética, sino para no introducir un segundo patrón de creación
+distinto al que el FAB y el calendario de Home (que también abre esta
+misma hoja al tocar un día) ya usan. Un tercer botón por "Ajuste de
+curso" habría sido igual de inconsistente con la jerarquía de frecuencia
+que ya justifica por qué el FAB no lo trata como caso por defecto.
+
+No cambia nada de lo ya decidido en el cuerpo de este documento — es la
+misma decisión, aplicada a una segunda superficie de entrada.
+
+## Addendum (2026-08-28) — extracción de `MovementSheet.jsx` y ubicación final en Home
+
+El addendum anterior fijó que Home debía usar el mismo patrón de entrada
+que el FAB de Mi trabajo, pero la primera implementación lo resolvía
+navegando primero a Mi trabajo y abriendo la hoja allí — un salto de
+pantalla antes de que el usuario escribiera nada, que además dejaba
+Home ya cambiado de pestaña aunque el usuario cancelara sin guardar.
+
+Se extrajo la hoja de creación/edición (antes vivía dentro de
+`MiTrabajoTab.jsx`) a `src/MovementSheet.jsx`, un componente controlado
+por un objeto `request` (`null | {type, editingEntry, date?}`) más
+`onClose`/`onSaved`, sin conocimiento de en qué pestaña se está
+montando. Esto permite montarlo también a nivel de `AppShell` en
+`App.jsx`, fuera del `tab` condicional, para que Home pueda abrirlo sin
+cambiar de pestaña: el usuario permanece en Home mientras rellena el
+formulario, y solo se navega a Mi trabajo cuando `onSaved` confirma que
+Supabase guardó con éxito (cancelar o cerrar sin guardar te deja en
+Home). Mi trabajo sigue usando la misma hoja para su FAB y para editar,
+sin cambios de comportamiento — verificado como refactor puro (mismos
+180 tests pasando sin modificar antes de añadir la nueva capacidad).
+
+El botón "Añadir movimiento" pasó además de fila independiente bajo la
+tarjeta "Pendiente de cobrar" a un botón "+" integrado en el lado
+derecho de esa misma tarjeta (`onQuickAdd`, prop opcional de
+`PendingCollectionCard` que Mi trabajo no usa — ya tiene su FAB). Una
+fila propia con el mismo ancho que la tarjeta de encima competía en
+peso visual con la cifra pendiente, la información más consultada de
+Home; integrarlo en el espacio libre de esa tarjeta evita una fila más
+en una pantalla ya densa sin perder tamaño táctil (44×44) ni claridad
+de acción.
+
+No cambia la decisión de fondo (un único acceso, mismo patrón que el
+FAB) — es una revisión de cómo se ejecuta esa decisión a nivel de
+navegación y de layout, tras detectar que la primera implementación no
+cumplía del todo el criterio de "Home permanece visible durante la
+creación".
