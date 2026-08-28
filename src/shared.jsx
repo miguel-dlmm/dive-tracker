@@ -99,6 +99,7 @@ export function AppLoading({ iconName = "Waves", color = TEAL, size = 40, label 
 // =================================================================
 export function ConfirmDialog({ open, title, message, onConfirm, onCancel, loading, confirmLabel = "Eliminar", danger = true }) {
   useEscapeClose(open, loading ? () => {} : onCancel);
+  useBodyScrollLock(open);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={loading ? undefined : onCancel}>
@@ -839,6 +840,58 @@ export function useEscapeClose(open, onClose) {
 }
 
 // =================================================================
+// Bloqueo de scroll de fondo — cualquier overlay que deba comportarse
+// como capa modal (hoja inferior, ConfirmDialog, cualquier panel
+// flotante vía useFloatingDropdown) llama a este hook con `active`. Un
+// simple `overflow:hidden` en <body> no basta en iOS Safari: el "rebote"
+// de scroll de fondo se sigue colando por debajo de un overlay fixed. La
+// técnica que sí funciona ahí es fijar el body en su posición actual
+// (position:fixed + top negativo con el scroll guardado) y restaurar el
+// scroll exacto al soltar.
+//
+// Contador global, no un booleano: puede haber más de un overlay abierto
+// a la vez (p. ej. un Select dentro de una hoja inferior ya abierta) y
+// cada uno debe poder pedir/soltar el bloqueo sin desbloquear de más
+// mientras otro overlay lo siga necesitando — el body solo se libera de
+// verdad cuando el último lock activo se suelta.
+// =================================================================
+let scrollLockCount = 0;
+let savedScrollY = 0;
+function acquireScrollLock() {
+  if (scrollLockCount === 0) {
+    savedScrollY = window.scrollY;
+    const s = document.body.style;
+    s.position = "fixed";
+    s.top = `-${savedScrollY}px`;
+    s.left = "0";
+    s.right = "0";
+    s.overflow = "hidden";
+  }
+  scrollLockCount += 1;
+}
+function releaseScrollLock() {
+  scrollLockCount = Math.max(0, scrollLockCount - 1);
+  if (scrollLockCount === 0) {
+    const s = document.body.style;
+    s.position = "";
+    s.top = "";
+    s.left = "";
+    s.right = "";
+    s.overflow = "";
+    // jsdom (tests) no implementa scrollTo — no es un fallo real, solo
+    // ruido en la consola de test si no se protege.
+    try { window.scrollTo(0, savedScrollY); } catch { /* no-op */ }
+  }
+}
+export function useBodyScrollLock(active) {
+  useEffect(() => {
+    if (!active) return;
+    acquireScrollLock();
+    return () => releaseScrollLock();
+  }, [active]);
+}
+
+// =================================================================
 // Panel flotante compartido — Select, MultiSelect, SearchSelect,
 // DatePicker, DateRangePicker y RowMenu (MiTrabajoTab) usan todos este
 // mismo mecanismo, en vez de que cada uno resuelva "abrir/cerrar/no
@@ -929,6 +982,9 @@ export function useFloatingDropdown() {
     return () => document.removeEventListener("pointerdown", handler);
   }, []);
   useEscapeClose(open, () => setOpen(false));
+  // Cualquier panel flotante (Select, SearchSelect, DatePicker, RowMenu...)
+  // bloquea el scroll de fondo mientras está abierto — ver useBodyScrollLock.
+  useBodyScrollLock(open);
 
   const pos = useFloatingPosition(open, anchorRef);
   return { open, setOpen, anchorRef, panelRef, pos };
