@@ -163,7 +163,11 @@ export function Field({ label, children }) {
 // Botón de eliminar — diálogo de confirmación centrado (no un chip
 // inline, que quedaba poco visible), con loading mientras se ejecuta
 // y un toast de confirmación al terminar.
-export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLabel = "este elemento" }) {
+// variant "icon" (por defecto, sin cambios): botón solo-icono, para usarlo
+// suelto junto a otras acciones. variant "menuItem": fila de ancho completo
+// con icono+texto y role="menuitem", para vivir dentro de un menú "⋯" (ver
+// RowMenu en MiTrabajoTab.jsx) — mismo flujo de confirmación en ambos casos.
+export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLabel = "este elemento", variant = "icon" }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
@@ -183,14 +187,25 @@ export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLab
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label={label}
-        className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded p-2 text-gray-300 hover:text-red-500"
-      >
-        <Trash2 size={size} aria-hidden="true" />
-      </button>
+      {variant === "menuItem" ? (
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => setOpen(true)}
+          className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-red-500 hover:bg-red-50"
+        >
+          <Trash2 size={14} aria-hidden="true" /> {label}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={label}
+          className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded p-2 text-gray-300 hover:text-red-500"
+        >
+          <Trash2 size={size} aria-hidden="true" />
+        </button>
+      )}
       <ConfirmDialog
         open={open}
         title="¿Eliminar este registro?"
@@ -591,7 +606,10 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   );
 }
 
-function useClickOutside(onOutside) {
+// Exportado (además de usarse internamente en Select/DatePicker/etc.) para
+// que cualquier desplegable/menú nuevo (p. ej. el menú "⋯" de una fila) lo
+// reutilice en vez de reinventar el patrón — ver convención en CLAUDE.md.
+export function useClickOutside(onOutside) {
   const ref = useRef(null);
   useEffect(() => {
     function handler(e) {
@@ -605,7 +623,7 @@ function useClickOutside(onOutside) {
 
 // Cierra con Escape — navegación por teclado básica en todos los
 // desplegables (Select, SearchSelect, DatePicker).
-function useEscapeClose(open, onClose) {
+export function useEscapeClose(open, onClose) {
   useEffect(() => {
     if (!open) return;
     function handler(e) { if (e.key === "Escape") onClose(); }
