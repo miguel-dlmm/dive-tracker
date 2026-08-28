@@ -828,6 +828,22 @@ export function useClickOutside(onOutside) {
   return ref;
 }
 
+// Para la cabecera global (App.jsx): si el usuario ha hecho scroll más allá
+// de `threshold`, la cabecera deja de leerse como "parte del contenido" y
+// pasa a leerse como "flotando encima" — se le añade una sombra sutil, el
+// mismo indicio de profundidad que usan Linear/Notion/Stripe en sus
+// cabeceras sticky. No se usa `passive:false` porque no llama a
+// preventDefault — el listener nunca bloquea el scroll real.
+export function useScrolled(threshold = 4) {
+  const [scrolled, setScrolled] = useState(() => (typeof window !== "undefined" ? window.scrollY > threshold : false));
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > threshold);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [threshold]);
+  return scrolled;
+}
+
 // Cierra con Escape — navegación por teclado básica en todos los
 // desplegables (Select, SearchSelect, DatePicker).
 export function useEscapeClose(open, onClose) {
