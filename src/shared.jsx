@@ -34,7 +34,15 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 top-4 z-[60] flex flex-col items-center gap-2 px-4" aria-live="polite" aria-atomic="true">
+      {/* top: la cabecera (App.jsx) mide ~4.75rem (padding + botones
+          min-h-11) — un top-4 fijo caía dentro de ese espacio y el toast
+          tapaba la cabecera. env(safe-area-inset-top) suma el notch, igual
+          que la barra inferior ya hace con safe-area-inset-bottom. */}
+      <div
+        className="pointer-events-none fixed inset-x-0 z-[60] flex flex-col items-center gap-2 px-4"
+        style={{ top: "calc(env(safe-area-inset-top) + 5rem)" }}
+        aria-live="polite" aria-atomic="true"
+      >
         {toasts.map((t) => (
           <div
             key={t.id}

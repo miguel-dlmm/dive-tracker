@@ -26,7 +26,7 @@ export default function LoginScreen({ signIn }) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-5" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+    <div className="flex min-h-dvh items-center justify-center px-5" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-2">
           <Waves size={28} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />

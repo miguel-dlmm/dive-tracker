@@ -183,7 +183,7 @@ export default function ComisionesTab({ schools, activities, paymentTypes, payme
       {sheetOpen && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={() => setSheetOpen(false)}>
           <div
-            className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
+            className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
             style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -245,7 +245,7 @@ export default function ComisionesTab({ schools, activities, paymentTypes, payme
       {rateSheetOpen && rateForm && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/25" onClick={() => !savingRate && setRateSheetOpen(false)}>
           <div
-            className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
+            className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
             style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
             onClick={(e) => e.stopPropagation()}
           >
