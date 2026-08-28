@@ -671,7 +671,12 @@ function useDropdownFlip(open, triggerRef) {
 }
 
 // Selector propio (no <select> nativo) — mismo aspecto en cualquier
-// navegador, panel flotante limpio con estado activo marcado.
+// navegador, panel flotante limpio con estado activo marcado. El panel usa
+// min-w-max para no truncar opciones largas en triggers estrechos, pero se
+// limita con max-w (22rem/90vw) para que nunca se salga por encima de un
+// campo vecino en un formulario de varias columnas — sin el límite, un
+// panel ancho podía tapar el siguiente campo y el toque no llegaba a la
+// opción real.
 export function Select({ value, onChange, options, placeholder, label }) {
   const [open, setOpen] = useState(false);
   const ref = useClickOutside(() => setOpen(false));
@@ -694,7 +699,7 @@ export function Select({ value, onChange, options, placeholder, label }) {
       {open && (
         <div
           role="listbox"
-          className={`absolute z-20 max-h-60 w-full min-w-max overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}
+          className={`absolute z-20 max-h-60 w-full min-w-max max-w-[min(22rem,90vw)] overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}
         >
           {placeholder && (
             <button
@@ -754,7 +759,7 @@ export function MultiSelect({ value = [], onChange, options, placeholder = "Toda
         <ChevronDown size={15} className={`shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
       </button>
       {open && (
-        <div role="listbox" aria-multiselectable="true" className={`absolute z-20 max-h-64 w-full min-w-max overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}>
+        <div role="listbox" aria-multiselectable="true" className={`absolute z-20 max-h-64 w-full min-w-max max-w-[min(22rem,90vw)] overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}>
           {value.length > 0 && (
             <button type="button" onClick={() => onChange([])} className="block min-h-9 w-full px-3 py-1.5 text-left text-xs font-medium text-gray-400 hover:bg-gray-50">
               Limpiar selección
