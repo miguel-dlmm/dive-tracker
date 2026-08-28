@@ -163,7 +163,7 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
 
     await user.click(screen.getByLabelText("Moneda"));
     await user.click(screen.getByRole("option", { name: /USD/ }));
-    await user.click(screen.getByRole("button", { name: "Usar USD como moneda favorita" }));
+    await user.click(screen.getByRole("button", { name: "Usar USD como favorita" }));
 
     await user.click(screen.getByRole("button", { name: "Cerrar" }));
     await user.click(screen.getByRole("button", { name: "Añadir" }));
