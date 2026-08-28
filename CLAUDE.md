@@ -30,6 +30,17 @@ compañeros, Tarifas, Resumen). Producto de la marca personal "Ocean Flow".
   `CompanerosTab.jsx`, `RatesTab.jsx`, `PaymentsTab.jsx`, `ConfigTab.jsx`,
   `SummaryTab.jsx`
 
+## Ramas y entornos
+
+Modelo completo en `docs/ADR/0006-estrategia-de-ramas-y-entornos.md`. Hoy:
+`develop` es la única rama de entorno (test **y** producción a la vez
+para el grupo reducido de usuarios actual — decisión consciente, no una
+mala práctica pendiente de corregir). Todo cambio nace en una rama
+`feature/*`/`fix/*`/`hotfix/*` creada desde `develop` y vuelve a fusionarse
+ahí — nunca commits directos sobre `develop`. No existen todavía `test`
+ni `main`; se crean solo cuando se cumpla alguno de los disparadores
+objetivos que describe el ADR, no por adelantado.
+
 ## Convenciones — seguirlas es más importante que "queda bien"
 
 1. **Nada hardcodeado que sea configuración del negocio.** Escuelas,
@@ -111,6 +122,9 @@ salvo que se acuerde explícitamente una excepción.
 
 ### 1. Control de cambios y gestión de commits
 
+- Todo cambio se desarrolla en una rama `feature/*`/`fix/*`/`hotfix/*`
+  creada desde `develop` — nunca se commitea directamente sobre `develop`
+  (ver "Ramas y entornos" arriba y `docs/ADR/0006-...md`).
 - Nunca hacer commit ni push directamente sin revisión previa del cambio.
 - Antes de cualquier commit, mostrar siempre: resumen funcional de los
   cambios, objetivo del cambio y problema que resuelve, lista completa de
@@ -136,8 +150,9 @@ salvo que se acuerde explícitamente una excepción.
 - Si falla el build: NO push. Informar error completo, archivo afectado,
   posible causa y solución propuesta.
 - Solo tras aprobación del mensaje de commit + tests correctos + build
-  correcto: `git add <archivos>`, `git commit -m "mensaje aprobado"`,
-  `git push origin develop`.
+  correcto: `git add <archivos>`, `git commit -m "mensaje aprobado"` sobre
+  la rama `feature/*`/`fix/*`/`hotfix/*` correspondiente, fusionarla a
+  `develop` y `git push origin develop`.
 - Tras el push, informar siempre: hash del commit, rama utilizada, resumen
   final de cambios, resultado final de tests, resultado final del build.
 
