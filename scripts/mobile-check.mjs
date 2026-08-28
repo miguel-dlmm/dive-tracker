@@ -69,6 +69,23 @@ async function main() {
 
   await page.goto(BASE_URL);
   await page.waitForSelector("text=Mi trabajo", { timeout: 15000 });
+
+  console.log("→ 'Qué hay de nuevo': recorrer las diapositivas y cerrar con 'Empezar'");
+  if (await page.getByRole("dialog").isVisible().catch(() => false)) {
+    await shot(page, "whats-new-primera-diapositiva");
+    let guard = 0;
+    while (await page.getByRole("button", { name: "Siguiente" }).isVisible().catch(() => false) && guard < 10) {
+      await page.getByRole("button", { name: "Siguiente" }).tap();
+      await page.waitForTimeout(250);
+      guard += 1;
+    }
+    await shot(page, "whats-new-ultima-diapositiva");
+    await page.getByRole("button", { name: "Empezar" }).tap();
+    await page.waitForTimeout(200);
+  } else {
+    console.log("  (no apareció — ya se había marcado como vista para esta cuenta)");
+  }
+
   await shot(page, "home");
 
   console.log("→ Home: 'Añadir movimiento' (integrado en la tarjeta Pendiente de cobrar) abre el formulario SIN salir de Home");
