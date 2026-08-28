@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { Plus, Minus, X, Pencil, Check, RotateCcw, MoreVertical, SlidersHorizontal, PartyPopper, GraduationCap, Handshake, Users, Star, Loader2, StickyNote } from "lucide-react";
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
@@ -6,6 +7,7 @@ import {
   DatePicker, DateRangePicker, DeleteButton, ConfirmDialog, colorFor, lighten, isPendingStatus, oppositeStatus, useToast,
   useFloatingDropdown, FloatingPanel, useBodyScrollLock, todayStr, addDays,
 } from "./shared";
+import { DURATION, sheetVariants, usePrefersReducedMotion } from "./motion";
 import { computeRateTotal, buildActivityEntries, buildIncomeEntries } from "./rateCalc";
 import PendingCollectionCard from "./PendingCollectionCard";
 
@@ -694,6 +696,14 @@ export default function MiTrabajoTab({
   // hoja inferior a pantalla completa) — bloquea el scroll de fondo por
   // su cuenta con el mismo hook compartido.
   useBodyScrollLock(!!creating);
+  // Prueba de concepto de Motion (ver docs/ADR pendiente de motion): la
+  // hoja de creación/edición gana entrada/salida animadas y un gesto de
+  // arrastre para cerrar, en vez del aparecer/desaparecer instantáneo que
+  // tenía antes. reducedMotion colapsa la duración sin quitar el gesto —
+  // arrastrar para cerrar es una interacción iniciada por el usuario, no
+  // una animación decorativa automática, así que sigue disponible.
+  const reducedMotion = usePrefersReducedMotion();
+  const dragControls = useDragControls();
 
   const startEdit = (entry) => {
     setEditingEntry(entry);
@@ -990,13 +1000,43 @@ export default function MiTrabajoTab({
         <Plus size={24} aria-hidden="true" />
       </button>
 
-      {creating && form && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={closeSheet}>
-          <div
-            className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
-            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence>
+        {creating && form && (
+          <motion.div
+            key="mi-trabajo-sheet-backdrop"
+            className="fixed inset-0 z-40 flex items-end justify-center bg-black/25"
+            onClick={closeSheet}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: reducedMotion ? 0.01 : DURATION.sm } }}
+            exit={{ opacity: 0, transition: { duration: reducedMotion ? 0.01 : DURATION.sm } }}
           >
+            <motion.div
+              className="flex max-h-[85dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-xl bg-white shadow-xl"
+              variants={sheetVariants(reducedMotion)}
+              initial="initial" animate="animate" exit="exit"
+              drag="y"
+              dragControls={dragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.6 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 100 || info.velocity.y > 500) closeSheet(); }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Tirador — único punto que inicia el arrastre (dragListener={false}
+                  arriba), para no competir con el scroll o la selección normal
+                  dentro del formulario. Arrastrar hacia abajo para cerrar es el
+                  gesto nativo esperado en una hoja inferior de iOS. */}
+              <div
+                onPointerDown={(e) => dragControls.start(e)}
+                className="flex shrink-0 touch-none cursor-grab justify-center py-2.5 active:cursor-grabbing"
+                aria-hidden="true"
+              >
+                <span className="h-1.5 w-10 rounded-full bg-gray-300" />
+              </div>
+              <div
+                className="overflow-y-auto px-4 pt-1"
+                style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+              >
             <div className="mb-1 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {SheetIcon && (
@@ -1239,9 +1279,11 @@ export default function MiTrabajoTab({
             >
               {editingEntry ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />} Guardar
             </button>
-          </div>
-        </div>
-      )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
