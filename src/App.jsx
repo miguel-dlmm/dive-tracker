@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Waves, Home as HomeIcon, Briefcase, BarChart3, ArrowLeft, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
@@ -244,8 +244,47 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
 // pendiente para cuando la fase de generación de enlaces incorpore el email;
 // no se ha añadido ninguna lógica parcial a propósito, para no dejar un
 // comportamiento provisional que haya que deshacer luego.
+// Bypass de login SOLO en desarrollo — ver CLAUDE.md "Bypass de login en
+// desarrollo". import.meta.env.MODE es una constante que Vite resuelve en
+// build time: en `vite build` (producción, mode "production") es distinta
+// de "development" de forma estática y esta rama se elimina del bundle por
+// completo, no es un simple `if` que pueda quedar activo por error en
+// producción. Se compara con "development" en vez de usar el flag DEV
+// porque DEV también es true bajo vitest (mode "test") — con DEV, los
+// tests que cargan .env.local (donde vive VITE_DEV_AUTH_BYPASS) activarían
+// el auto-login real y romperían el flujo de login que esos tests
+// verifican. Además exige el opt-in explícito VITE_DEV_AUTH_BYPASS=true —
+// no está activo por defecto ni siquiera en desarrollo. No crea ninguna
+// ruta de autenticación nueva: se limita a llamar automáticamente al
+// signIn() real que ya existe, con la cuenta demo configurada en
+// .env.local — misma sesión de Supabase, mismo RLS, que si se tecleara el
+// login a mano.
+const DEV_AUTH_BYPASS = import.meta.env.MODE === "development" && import.meta.env.VITE_DEV_AUTH_BYPASS === "true";
+
 function AuthGate() {
   const { session, profile, loading, signIn, signOut, activateAccount, pendingLegalConsents, acceptLegalConsents } = useSession();
+  const [bypassAttempted, setBypassAttempted] = useState(false);
+  // Mientras esté en true, se muestra el mismo loading que "loading" en vez
+  // de dejar parpadear LoginScreen durante el auto-signIn. Si falla o
+  // faltan las variables, se pone a false y cae al login normal — nunca se
+  // queda bloqueado.
+  const [bypassPending, setBypassPending] = useState(DEV_AUTH_BYPASS);
+
+  useEffect(() => {
+    if (!DEV_AUTH_BYPASS || loading || session || bypassAttempted) return;
+    setBypassAttempted(true);
+    const email = import.meta.env.VITE_DEV_DEMO_EMAIL;
+    const password = import.meta.env.VITE_DEV_DEMO_PASSWORD;
+    if (!email || !password) {
+      console.error("[dev-auth-bypass] Faltan VITE_DEV_DEMO_EMAIL/VITE_DEV_DEMO_PASSWORD en .env.local — se muestra el login normal.");
+      setBypassPending(false);
+      return;
+    }
+    signIn(email, password).catch((err) => {
+      console.error("[dev-auth-bypass] No se pudo iniciar sesión automáticamente:", err.message);
+      setBypassPending(false);
+    });
+  }, [loading, session, bypassAttempted, signIn]);
   // Justo tras completar la activación, AppShell debe abrir directamente en
   // Ayuda en vez de Home — se limpia solo (no persiste entre sesiones), ver
   // App.jsx → AppShell → initialTab.
@@ -274,7 +313,7 @@ function AuthGate() {
     }
   };
 
-  if (loading) {
+  if (loading || (DEV_AUTH_BYPASS && bypassPending && !session)) {
     return (
       <div className="flex h-screen items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
         <AppLoading color={TEAL} />
