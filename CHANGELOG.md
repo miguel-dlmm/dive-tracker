@@ -45,6 +45,8 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   en Mi trabajo.
 - Se oculta el acceso directo a "Pagos" de la navegación — Mi trabajo
   cubre su función ("Cobrar todos", filtro por escuela).
+- Home: el calendario del mes sube al segundo lugar (tras "Pendiente de
+  cobrar"), por delante de "Generado este mes".
 - Estabilidad general en iPhone: zoom involuntario, barra de navegación
   inferior y toasts.
 

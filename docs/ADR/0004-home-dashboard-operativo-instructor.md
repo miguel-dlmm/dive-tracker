@@ -282,3 +282,34 @@ decisión ya razonada, se completa un hueco que quedó abierto.
 tal cual — "Generado" no vuelve a llamarse "Ganado", las dos métricas
 siguen partiendo de la misma base (`buildIncomeEntries`), y Pagos sigue
 sin punto de entrada en la UI (ADR-0005).
+
+## Addendum (2026-08-29) — el calendario sube al segundo lugar, por delante de "Generado este mes"
+
+Revisión pedida explícitamente por el usuario ("revisa la información
+alrededor del calendario; decide si debería ir antes o después"), con
+libertad total sobre la decisión.
+
+**Antes:** Pendiente de cobrar → Generado este mes → Calendario (con su
+desglose del día seleccionado). El calendario, con su información
+asociada, quedaba al final de la pantalla, tras dos tarjetas.
+
+**Ahora:** Pendiente de cobrar → Calendario (con desglose del día) →
+Generado este mes.
+
+**Por qué:** en el uso real, un día concreto casi nunca acumula más de
+1-2 movimientos — el propio desglose del día lo confirma cada vez que
+se abre. No hacía falta "reservarle" el fondo de la pantalla a algo tan
+ligero. El calendario, además, hace doble función que "Generado este
+mes" no hace: es la vía más directa de creación (tocar un día vacío) y
+da una lectura del mes día a día (qué días hubo actividad, de qué tipo,
+vía los colores de `MOVEMENT_TYPE_META`) — más rica que una única cifra
+agregada. "Generado este mes" sigue siendo información válida, pero es
+puramente reflexiva (se consulta, no se actúa sobre ella, mismo
+argumento que ya justificó bajar "Generado" por detrás de "Pendiente de
+cobrar" en el addendum anterior) — pasa a cerrar la pantalla en vez de
+abrir el segundo tramo.
+
+**Qué no cambia:** ninguna lógica de cálculo, ningún dato nuevo, ninguna
+funcionalidad añadida — es exclusivamente una revisión de orden y de qué
+tarjeta antecede a cuál. `docs/BACKLOG.md` cierra el ítem "Revisar la
+información bajo el calendario de Home" con esta decisión.

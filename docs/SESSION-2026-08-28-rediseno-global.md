@@ -231,7 +231,24 @@ relación de código con el bug de tarifa ni impacto de rendimiento — el
 sin roadmap de explotación de datos por compañero (confirmado fuera de
 alcance).
 
+## Commit 6 — Calendario de Home (reordenado)
+
+Decisión (libertad total, ver `docs/ADR/0004-...md` addendum
+2026-08-29): el calendario sube al segundo lugar (justo tras "Pendiente
+de cobrar"), por delante de "Generado este mes" — antes era el último
+elemento de la pantalla. Motivo: un día normal casi nunca acumula más de
+1-2 movimientos, así que no justifica quedar "escondido" al fondo; el
+calendario además permite crear (tocar un día vacío) y da una lectura
+del mes día a día que una cifra agregada no da. Sin funcionalidad nueva
+— solo reordenar dos bloques ya existentes en `HomeTab.jsx`. BACKLOG.md
+cierra el ítem correspondiente.
+
+**Validado:** 206/206 tests, build correcto, `mobile-check` sin errores
+— captura de Home revisada visualmente, calendario visible sin scroll
+tras la tarjeta de pendientes.
+
 ## Siguiente paso
 
-Commits 1-3 y 5 completados. Continuar con Commit 6 (calendario de Home)
-si quedan recursos, según el orden acordado.
+Commits 1, 2, 3, 5 y 6 completados. Continuar con Commit 7 ("Qué hay de
+nuevo") según el orden acordado, ahora que el proceso de release
+(Commit 3) ya está definido.
