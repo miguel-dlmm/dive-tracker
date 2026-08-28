@@ -91,7 +91,7 @@ export default function CreatePasswordScreen({ onSubmit }) {
   };
 
   return (
-    <div className="flex min-h-screen items-start justify-center px-5 py-10" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+    <div className="flex min-h-dvh items-start justify-center px-5 py-10" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>

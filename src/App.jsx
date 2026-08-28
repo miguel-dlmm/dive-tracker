@@ -92,14 +92,14 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
 
   if (!loaded) {
     return (
-      <div className="flex h-screen items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+      <div className="flex h-dvh items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
         <AppLoading iconName={logoIcon} color={TEAL} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+    <div className="min-h-dvh" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
       <header className="border-b border-black/5 bg-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-2.5 px-5 py-4">
           {isSecondary ? (
@@ -317,7 +317,7 @@ function AuthGate() {
 
   if (loading || (DEV_AUTH_BYPASS && bypassPending && !session)) {
     return (
-      <div className="flex h-screen items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+      <div className="flex h-dvh items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
         <AppLoading color={TEAL} />
       </div>
     );
