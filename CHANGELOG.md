@@ -52,12 +52,20 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   cobrar"), por delante de "Generado este mes".
 - Estabilidad general en iPhone: zoom involuntario, barra de navegación
   inferior y toasts.
+- Ayuda: contenido reescrito por completo para reflejar Mi trabajo, Home,
+  Resumen y Configuración actuales (antes describía Registro/Comisiones/
+  Compañeros/Pagos como pantallas separadas). Menú agrupado en
+  "Quiero..." (historias de uso) y "Funcionalidades" (referencia por
+  pantalla), mismo patrón visual que el menú de Configuración.
 
 ### Fixed
 - Alta de tarifas bloqueada en cuentas nuevas sin `payment_types`
   configurado.
 - Animación de colapso rota al marcar un movimiento como cobrado o
   pendiente (la fila saltaba en vez de animarse).
+- El scroll no se reiniciaba al cambiar de pestaña — la pantalla nueva
+  heredaba la posición de scroll de la anterior en vez de abrir desde
+  arriba.
 
 ## [0.1.0] - 2026-08-26
 
