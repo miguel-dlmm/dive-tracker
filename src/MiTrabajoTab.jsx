@@ -208,8 +208,25 @@ function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onE
     if (animPhase !== "exiting" || toggleExiting) return;
     const el = rowRef.current;
     if (el) setFixedHeight(el.scrollHeight);
-    const raf = requestAnimationFrame(() => setToggleExiting(true));
-    return () => cancelAnimationFrame(raf);
+    // Doble rAF, no uno: a diferencia de handleDelete (donde fixedHeight se
+    // fija de forma síncrona dentro del propio manejador de clic, así que
+    // React ya pintó ese fotograma intermedio antes de que el rAF llegue a
+    // ejecutarse), aquí fixedHeight se fija dentro de un efecto que
+    // reacciona a un cambio de prop — un solo rAF puede ejecutarse ANTES
+    // de que el navegador llegue a pintar ese fotograma intermedio, y
+    // entonces "colapsar" se aplica en el mismo pintado que "medir": la
+    // transición de max-height no tiene fotograma de partida real desde el
+    // que animar y salta directa a 0 (confirmado con muestreo por rAF:
+    // maxHeight pasaba de "none" a "0px" en un único fotograma, sin
+    // ningún valor intermedio). El primer rAF solo garantiza que se
+    // ejecute antes del próximo repintado, no que ESE repintado ya haya
+    // ocurrido — el segundo rAF, anidado dentro del primero, sí lo
+    // garantiza. Mismo patrón estándar usado para animar layout mid-FLIP.
+    let raf2;
+    const raf = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setToggleExiting(true));
+    });
+    return () => { cancelAnimationFrame(raf); if (raf2) cancelAnimationFrame(raf2); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animPhase]);
 
