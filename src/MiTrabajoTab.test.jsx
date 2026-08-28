@@ -13,10 +13,13 @@ const rowsHook = (rows) => ({
 });
 
 const SCHOOLS = rowsHook([{ name: "PADI Cozumel", is_default: true }]);
-const ACTIVITIES = rowsHook([{ name: "Open Water", is_default: true }]);
+const ACTIVITIES = rowsHook([{ name: "Open Water", is_default: true }, { name: "Advanced", is_default: false }]);
 const PAYMENT_TYPES = rowsHook([{ name: "Per Person", is_default: true }]);
 const PAYMENT_STATUSES = rowsHook([{ name: "Pending", is_default: true }, { name: "Paid", is_default: false }]);
-const CURRENCIES = rowsHook([{ code: "EUR", symbol: "€", name: "Euro", is_default: true }]);
+const CURRENCIES = rowsHook([
+  { code: "EUR", symbol: "€", name: "Euro", is_default: true },
+  { code: "USD", symbol: "$", name: "Dólar estadounidense", is_default: false },
+]);
 const RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 20, currency: "EUR" }];
 const COMMISSION_RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 5, currency: "EUR" }];
 
@@ -62,6 +65,8 @@ function mixedDataset() {
 }
 
 describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
+  beforeEach(() => localStorage.clear());
+
   it("por defecto muestra los pendientes de los 3 tipos, con la cabecera limitada a lo que te deben (sin el ajuste negativo)", () => {
     renderMiTrabajo(mixedDataset());
 
@@ -143,6 +148,51 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
 
     expect(comisiones.insertRow).toHaveBeenCalledWith(expect.objectContaining({
       school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Pending",
+    }));
+  });
+
+  it("Ajuste usa la moneda global por defecto, y ofrece guardar la elegida como favorita para la próxima vez", async () => {
+    const user = userEvent.setup();
+    renderMiTrabajo({});
+
+    await user.click(screen.getByRole("button", { name: "Añadir" }));
+    await user.click(screen.getByRole("button", { name: /Ajuste de curso/ }));
+
+    expect(screen.getByLabelText("Moneda")).toHaveValue("EUR — Euro (€)");
+    expect(screen.queryByText(/como moneda favorita/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Moneda"));
+    await user.click(screen.getByRole("option", { name: /USD/ }));
+    await user.click(screen.getByRole("button", { name: "Usar USD como moneda favorita" }));
+
+    await user.click(screen.getByRole("button", { name: "Cerrar" }));
+    await user.click(screen.getByRole("button", { name: "Añadir" }));
+    await user.click(screen.getByRole("button", { name: /Ajuste de curso/ }));
+
+    expect(screen.getByLabelText("Moneda")).toHaveValue("USD — Dólar estadounidense ($)");
+  });
+
+  it("añadir tarifa se expande dentro de la misma hoja (no abre un segundo modal) y guarda la tarifa nueva", async () => {
+    const user = userEvent.setup();
+    const { rates } = renderMiTrabajo({});
+
+    await user.click(screen.getByRole("button", { name: "Añadir" }));
+    await user.click(screen.getByRole("button", { name: /Curso impartido/ }));
+    await user.click(screen.getByLabelText("Curso"));
+    await user.click(screen.getByRole("option", { name: "Advanced" }));
+
+    expect(screen.getByText(/Sin tarifa configurada/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "añadir tarifa" }));
+
+    // Sigue siendo la misma hoja de creación — un único título, no un
+    // segundo modal apilado encima.
+    expect(screen.getAllByRole("heading", { name: /curso impartido/i })).toHaveLength(1);
+
+    await user.type(screen.getByLabelText("Tarifa"), "30");
+    await user.click(screen.getByRole("button", { name: "Guardar tarifa" }));
+
+    expect(rates.insertRow).toHaveBeenCalledWith(expect.objectContaining({
+      school: "PADI Cozumel", activity: "Advanced", currency: "EUR", rate: 30,
     }));
   });
 });

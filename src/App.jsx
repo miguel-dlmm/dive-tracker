@@ -170,7 +170,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
           <MiTrabajoTab
             schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
-            appConfig={appConfig} accentColor={sectionColor("trabajo")}
+            accentColor={sectionColor("trabajo")} userId={profile?.user_id}
             autoOpenType={pendingOpen} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
