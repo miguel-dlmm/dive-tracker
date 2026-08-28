@@ -814,7 +814,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-gray-400">
-                  <th className="pb-1.5 text-left font-medium">Actividad</th>
+                  <th className="pb-1.5 text-left font-medium">Curso</th>
                   <th className="pb-1.5 text-left font-medium">Comentario</th>
                   <th className="w-10 pb-1.5 text-center font-medium">Pers.</th>
                   <th className="pb-1.5 text-right font-medium">Importe</th>

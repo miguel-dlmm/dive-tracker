@@ -29,7 +29,45 @@ Bug de la animación de cobro (ver más abajo) se resuelve en el punto que corre
 | Commit | Resumen | Estado |
 |---|---|---|
 | `737b4be` | Home crea sin salir de pantalla + acceso integrado en tarjeta de pendientes (trabajo de la ronda anterior, commiteado al empezar esta sesión) | ✅ hecho, validado antes de esta sesión |
-| (pendiente de commitear) | Fix: animación de salida rota al marcar como cobrado — ver diagnóstico abajo | ✅ corregido y validado, a falta de commit |
+| `317fbc3` | Fix: animación de salida rota al marcar como cobrado (doble rAF) | ✅ hecho, validado |
+| (pendiente de commitear) | **Commit 1 — Rediseño de Configuración**: menú agrupado con drill-down, `CrudTable` crea vía FAB+hoja, Tarifas con filtro colapsable (coherencia Mi trabajo), rename texto Actividades→Cursos (fase 1, parcial), eliminar usuario (backend+UI) | ✅ hecho, validado (201/201 tests, build, mobile-check), a falta de commit |
+
+## Commit 1 — Rediseño de Configuración (detalle)
+
+Ver `docs/ADR/0008-rediseno-configuracion.md` para la decisión completa
+con alternativas descartadas. Resumen:
+
+- Menú de Configuración: pestañas horizontales → menú agrupado con
+  drill-down (patrón de Ajustes iOS/Android), grupo "Administración"
+  separado y solo visible para admin/superadmin. Deja hueco para un
+  futuro grupo de personalización (widgets) sin rediseñar de nuevo.
+- `CrudTable` (Escuelas, Cursos, Tipos de pago, Estados de pago, Monedas):
+  crear pasa de formulario fijo a FAB + hoja inferior, alineado con el
+  resto de la app.
+- `RatesTab` (Tarifas): filtros pasan a colapsables con contador "Filtrar
+  · N", mismo patrón que Mi trabajo. Se eliminó plumbing muerto
+  (`autoOpenSheet`/`onAutoOpened`, ya no llamado desde ningún sitio).
+- "Actividades" se muestra como "Cursos" en Configuración/Tarifas/Home
+  (Resumen queda para cuando se rediseñe esa pantalla, backlog
+  actualizado).
+- **Eliminar usuario**: implementado completo (server/API/UI,
+  superadmin-only, con confirmación danger, mismo patrón que
+  create-user/update-admin-status).
+- **Desactivar usuario**: NO implementado — requiere tocar
+  `admin_list_profiles()` (exposición de estado de autenticación), lo que
+  CLAUDE.md exige proponer como plan de migración antes de tocar en un
+  solo paso. Plan completo dejado en el ADR y en BACKLOG, pendiente de
+  aprobación explícita del usuario.
+
+**Validado:** 201/201 tests (incluye 2 archivos de test nuevos:
+`ConfigTab.test.jsx`, `server/users/deleteUser.test.js`, más
+`RatesTab.test.jsx` actualizado), build correcto, `mobile-check` sin
+errores de consola — capturas revisadas visualmente (menú, drill-down,
+hoja de creación). No se pudo verificar visualmente el grupo
+"Administración"/Usuarios con `mobile-check` porque la cuenta
+`dev-bypass` no tiene rol admin/superadmin; cubierto en su lugar por
+`ConfigTab.test.jsx` (verifica que el grupo aparece/desaparece según
+`profile.is_admin`).
 
 ## Bugs
 

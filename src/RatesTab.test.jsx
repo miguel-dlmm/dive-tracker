@@ -37,14 +37,12 @@ describe("RatesTab — alta de tarifa con catálogo de tipos de pago vacío (cue
 
     await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
 
-    // "Escuela"/"Actividad" también existen como filtro de la lista, fuera
-    // de la hoja — con la hoja abierta hay dos: el segundo es el del
-    // formulario de alta.
-    const [, schoolField] = screen.getAllByRole("button", { name: "Escuela" });
-    await user.click(schoolField);
+    // El filtro "Escuela"/"Curso" de la lista vive detrás de "Filtrar",
+    // colapsado por defecto (ver filtersOpen) — con la hoja abierta y los
+    // filtros cerrados, solo existe un "Escuela"/"Curso": el del formulario.
+    await user.click(screen.getByRole("button", { name: "Escuela" }));
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
-    const [, activityField] = screen.getAllByRole("button", { name: "Actividad" });
-    await user.click(activityField);
+    await user.click(screen.getByRole("button", { name: "Curso" }));
     await user.click(screen.getByRole("option", { name: "Open Water" }));
     await user.type(screen.getByRole("textbox", { name: "Tarifa" }), "25");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
