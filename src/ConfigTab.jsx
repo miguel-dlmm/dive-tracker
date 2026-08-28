@@ -183,12 +183,19 @@ function CrudTable({ title, table, pkField = "id", fields, hasDefault = false, s
   );
 }
 
-// Bloque dedicado para los colores de sección — filas fijas (una por
-// área de la app), sin alta/baja, solo editar color en vivo.
+// Bloque dedicado para los colores de navegación — filas fijas (una por
+// área de la app), sin alta/baja, solo editar color en vivo. Antes se
+// llamaba "Secciones"/"Colores de sección": desde que Movimientos tiene su
+// propia identidad visual por tipo (barra lateral de cada tarjeta, colores
+// fijos de marca — ver rowAccent en MiTrabajoTab.jsx, deliberadamente NO
+// configurable, mismo criterio que NAVY/TEAL/CORAL/GREEN), "sección" se
+// había vuelto ambiguo: esto no es eso, es el color de cada área de la
+// navegación (pestaña + botón de "+ Nuevo"), no el de los tipos de
+// movimiento dentro de Mi trabajo.
 function SectionColors({ navSections }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <h3 className="mb-3 text-sm font-semibold text-gray-800">Colores de sección</h3>
+      <h3 className="mb-3 text-sm font-semibold text-gray-800">Colores de navegación</h3>
       <p className="mb-3 text-xs text-gray-400">Usados en la barra de navegación y en los botones de crear registro de cada área.</p>
       <ul className="space-y-1">
         {navSections.rows.map((s) => (
@@ -676,7 +683,7 @@ function UsersDirectory({ profile }) {
 // la tarjeta "Pendiente de cobrar" de Home (ver
 // docs/ADR/0004-home-dashboard-operativo-instructor.md).
 const SECTIONS = ["Escuelas", "Actividades", "Tarifas"];
-const ADMIN_SECTIONS = ["Tipos de pago", "Estados de pago", "Monedas", "Secciones", "Ajustes", "Usuarios"];
+const ADMIN_SECTIONS = ["Tipos de pago", "Estados de pago", "Monedas", "Navegación", "Ajustes", "Usuarios"];
 
 // schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
 // rates / commissionRates / worklog / comisiones: hooks que necesitan las secciones Tarifas y Pagos, embebidas aquí
@@ -728,7 +735,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
         <CrudTable title="Monedas" table={currencies} pkField="code" hasDefault searchable pullDefaultOut
           fields={[{ key: "code", label: "Código (ej. EUR)" }, { key: "name", label: "Nombre" }, { key: "symbol", label: "Símbolo" }]} />
       )}
-      {isAdmin && section === "Secciones" && <SectionColors navSections={navSections} />}
+      {isAdmin && section === "Navegación" && <SectionColors navSections={navSections} />}
       {isAdmin && section === "Ajustes" && <GeneralSettings appConfig={appConfig} />}
       {isAdmin && section === "Usuarios" && <UsersDirectory profile={profile} />}
     </div>

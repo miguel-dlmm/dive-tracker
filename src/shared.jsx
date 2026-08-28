@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
+import { createPortal } from "react-dom";
 import * as Icons from "lucide-react";
 import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2 } from "lucide-react";
 import { TEAL, CORAL, GREEN } from "./App";
@@ -15,14 +16,19 @@ const ToastContext = createContext(null);
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
-  const push = useCallback((type, message) => {
+  // action opcional ({ label, onClick }) — para acciones rápidas de un
+  // toque que conviene poder deshacer sin frenar el flujo (p. ej. marcar
+  // un cobro por error): el toast en sí ya es la capa de seguridad, no un
+  // diálogo de confirmación previo. Con acción, se queda más tiempo en
+  // pantalla (da margen real a pulsar "Deshacer") que un toast normal.
+  const push = useCallback((type, message, action) => {
     const id = Math.random().toString(36).slice(2);
-    setToasts((t) => [...t, { id, type, message }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3000);
+    setToasts((t) => [...t, { id, type, message, action }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), action ? 5000 : 3000);
   }, []);
   const api = useMemo(() => ({
-    success: (m) => push("success", m),
-    error: (m) => push("error", m),
+    success: (m, opts) => push("success", m, opts?.action),
+    error: (m, opts) => push("error", m, opts?.action),
   }), [push]);
 
   return (
@@ -38,6 +44,15 @@ export function ToastProvider({ children }) {
           >
             {t.type === "success" ? <Check size={15} aria-hidden="true" /> : <X size={15} aria-hidden="true" />}
             {t.message}
+            {t.action && (
+              <button
+                type="button"
+                onClick={() => { t.action.onClick(); setToasts((ts) => ts.filter((x) => x.id !== t.id)); }}
+                className="-my-1 ml-1 rounded px-1.5 py-1 text-sm font-semibold underline underline-offset-2"
+              >
+                {t.action.label}
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -167,12 +182,29 @@ export function Field({ label, children }) {
 // suelto junto a otras acciones. variant "menuItem": fila de ancho completo
 // con icono+texto y role="menuitem", para vivir dentro de un menú "⋯" (ver
 // RowMenu en MiTrabajoTab.jsx) — mismo flujo de confirmación en ambos casos.
-export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLabel = "este elemento", variant = "icon" }) {
+// optimistic=true: cierra el diálogo al instante en vez de esperar a
+// onConfirm — lo necesita cualquier fila que quiera reproducir su propia
+// animación de salida (el diálogo, al ser un modal a pantalla completa,
+// tapa la lista mientras está abierto; si se queda abierto durante la
+// animación, esta transcurre oculta detrás y nunca se llega a ver). El
+// error, si lo hay, se sigue avisando por toast — solo cambia cuándo se
+// cierra el diálogo, no el manejo de errores.
+export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLabel = "este elemento", variant = "icon", optimistic = false }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
 
   const handleConfirm = async () => {
+    if (optimistic) {
+      setOpen(false);
+      try {
+        await onConfirm();
+        toast?.success("Eliminado correctamente");
+      } catch (e) {
+        toast?.error(e?.message || "No se pudo eliminar. Inténtalo de nuevo.");
+      }
+      return;
+    }
     setLoading(true);
     try {
       await onConfirm();
@@ -231,10 +263,7 @@ function parseDateStr(s) {
 }
 
 export function DatePicker({ value, onChange, placeholder }) {
-  const [open, setOpen] = useState(false);
-  const ref = useClickOutside(() => setOpen(false));
-  useEscapeClose(open, () => setOpen(false));
-  const openUp = useDropdownFlip(open, ref);
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const parsed = parseDateStr(value);
   const today = new Date();
   const [viewY, setViewY] = useState(parsed?.y ?? today.getFullYear());
@@ -264,8 +293,9 @@ export function DatePicker({ value, onChange, placeholder }) {
   const goNext = () => { if (viewM === 11) { setViewM(0); setViewY(viewY + 1); } else setViewM(viewM + 1); };
 
   return (
-    <div className="relative" ref={ref}>
+    <>
       <button
+        ref={anchorRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
@@ -276,39 +306,37 @@ export function DatePicker({ value, onChange, placeholder }) {
         <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
         <span className={parsed ? "text-gray-800" : "text-gray-400"}>{display}</span>
       </button>
-      {open && (
-        <div role="dialog" aria-label="Selector de fecha" className={`absolute z-30 w-64 rounded-lg border border-gray-200 bg-white p-3 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}>
-          <div className="mb-2 flex items-center justify-between">
-            <button type="button" onClick={goPrev} aria-label="Mes anterior" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
-            <span className="text-sm font-semibold text-gray-800">{MONTHS_ES[viewM]} {viewY}</span>
-            <button type="button" onClick={goNext} aria-label="Mes siguiente" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
-          </div>
-          <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
-            {WEEKDAYS_ES.map((w) => <div key={w} className="py-1">{w}</div>)}
-          </div>
-          <div className="grid grid-cols-7 gap-0.5">
-            {cells.map((d, i) => {
-              const isSelected = d && parsed && parsed.y === viewY && parsed.m === viewM && parsed.d === d;
-              const isToday = d && viewY === today.getFullYear() && viewM === today.getMonth() && d === today.getDate();
-              return (
-                <button
-                  type="button"
-                  key={i}
-                  disabled={!d}
-                  aria-label={d ? `${d} de ${MONTHS_ES[viewM]}` : undefined}
-                  aria-selected={isSelected || undefined}
-                  onClick={() => d && selectDay(d)}
-                  className="flex h-9 items-center justify-center rounded-md text-xs transition-colors"
-                  style={isSelected ? { backgroundColor: TEAL, color: "white", fontWeight: 600 } : isToday ? { color: TEAL, fontWeight: 600 } : { color: d ? "#374151" : "transparent" }}
-                >
-                  {d || ""}
-                </button>
-              );
-            })}
-          </div>
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label="Selector de fecha" className="w-64 p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <button type="button" onClick={goPrev} aria-label="Mes anterior" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          <span className="text-sm font-semibold text-gray-800">{MONTHS_ES[viewM]} {viewY}</span>
+          <button type="button" onClick={goNext} aria-label="Mes siguiente" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
         </div>
-      )}
-    </div>
+        <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
+          {WEEKDAYS_ES.map((w) => <div key={w} className="py-1">{w}</div>)}
+        </div>
+        <div className="grid grid-cols-7 gap-0.5">
+          {cells.map((d, i) => {
+            const isSelected = d && parsed && parsed.y === viewY && parsed.m === viewM && parsed.d === d;
+            const isToday = d && viewY === today.getFullYear() && viewM === today.getMonth() && d === today.getDate();
+            return (
+              <button
+                type="button"
+                key={i}
+                disabled={!d}
+                aria-label={d ? `${d} de ${MONTHS_ES[viewM]}` : undefined}
+                aria-selected={isSelected || undefined}
+                onClick={() => d && selectDay(d)}
+                className="flex h-9 items-center justify-center rounded-md text-xs transition-colors"
+                style={isSelected ? { backgroundColor: TEAL, color: "white", fontWeight: 600 } : isToday ? { color: TEAL, fontWeight: 600 } : { color: d ? "#374151" : "transparent" }}
+              >
+                {d || ""}
+              </button>
+            );
+          })}
+        </div>
+      </FloatingPanel>
+    </>
   );
 }
 
@@ -355,12 +383,9 @@ const RANGE_PRESETS = [
 // independiente — una única fecha, se aplica y cierra al momento, sin
 // pasar por "Desde" primero.
 export function DateRangePicker({ from, to, onChange }) {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const [mode, setMode] = useState("range"); // "range" (vía Desde) | "end-only" (vía Hasta)
   const [step, setStep] = useState("from"); // "from" | "to"
-  const ref = useClickOutside(() => setOpen(false));
-  useEscapeClose(open, () => setOpen(false));
-  const openUp = useDropdownFlip(open, ref);
 
   const today = new Date();
   const [viewY, setViewY] = useState(today.getFullYear());
@@ -405,7 +430,7 @@ export function DateRangePicker({ from, to, onChange }) {
   const goNext = () => { if (viewM === 11) { setViewM(0); setViewY(viewY + 1); } else setViewM(viewM + 1); };
 
   return (
-    <div className="relative" ref={ref}>
+    <div ref={anchorRef}>
       <div className={`${inputCls} flex min-h-11 w-full items-stretch gap-0 p-0`}>
         <button type="button" onClick={openFrom} aria-label="Fecha desde" className="flex flex-1 items-center gap-1.5 truncate px-2.5 text-left">
           <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
@@ -416,67 +441,65 @@ export function DateRangePicker({ from, to, onChange }) {
           <span className={`truncate text-sm ${to ? "text-gray-800" : "text-gray-400"}`}>{to ? formatDMY(to) : "Hasta"}</span>
         </button>
       </div>
-      {open && (
-        <div role="dialog" aria-label="Selector de rango de fechas" className={`absolute z-30 w-72 max-w-[90vw] rounded-lg border border-gray-200 bg-white p-3 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}>
-          <p className="mb-2 text-xs font-medium text-gray-500">
-            {step === "from" ? "Elige la fecha de inicio" : mode === "range" ? "Elige la fecha de fin" : "Elige una fecha"}
-          </p>
-          {mode === "range" && step === "from" && (
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {RANGE_PRESETS.map((p) => (
-                <button
-                  key={p.label} type="button" onClick={() => applyPreset(p)}
-                  className="rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="mb-2 flex items-center justify-between">
-            <button type="button" onClick={goPrev} aria-label="Mes anterior" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
-            <span className="text-sm font-semibold text-gray-800">{MONTHS_ES[viewM]} {viewY}</span>
-            <button type="button" onClick={goNext} aria-label="Mes siguiente" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label="Selector de rango de fechas" className="w-72 max-w-[90vw] p-3">
+        <p className="mb-2 text-xs font-medium text-gray-500">
+          {step === "from" ? "Elige la fecha de inicio" : mode === "range" ? "Elige la fecha de fin" : "Elige una fecha"}
+        </p>
+        {mode === "range" && step === "from" && (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {RANGE_PRESETS.map((p) => (
+              <button
+                key={p.label} type="button" onClick={() => applyPreset(p)}
+                className="rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
-          <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
-            {WEEKDAYS_ES.map((w) => <div key={w} className="py-1">{w}</div>)}
-          </div>
-          <div className="grid grid-cols-7 gap-0.5">
-            {cells.map((d, i) => {
-              if (!d) return <div key={i} />;
-              const dateStr = `${viewY}-${pad2(viewM + 1)}-${pad2(d)}`;
-              const isEndpoint = dateStr === from || dateStr === to;
-              const inRange = from && to && dateStr > from && dateStr < to;
-              const isToday = dateStr === todayStr();
-              return (
-                <button
-                  type="button" key={i} onClick={() => selectDay(dateStr)}
-                  aria-label={`${d} de ${MONTHS_ES[viewM]}`}
-                  aria-selected={isEndpoint || undefined}
-                  className="flex h-9 items-center justify-center text-xs transition-colors"
-                  style={
-                    isEndpoint ? { backgroundColor: TEAL, color: "white", fontWeight: 600, borderRadius: 9999 }
-                    : inRange ? { backgroundColor: "#F0FDFA", color: "#0F766E" }
-                    : isToday ? { color: TEAL, fontWeight: 600 }
-                    : { color: "#374151" }
-                  }
-                >
-                  {d}
-                </button>
-              );
-            })}
-          </div>
-          {mode === "range" && step === "to" && (
-            <button
-              type="button" onClick={() => setOpen(false)}
-              className="mt-2 w-full rounded-md py-2 text-xs font-semibold text-white"
-              style={{ backgroundColor: TEAL }}
-            >
-              OK — solo desde {formatDMY(from)}
-            </button>
-          )}
+        )}
+        <div className="mb-2 flex items-center justify-between">
+          <button type="button" onClick={goPrev} aria-label="Mes anterior" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          <span className="text-sm font-semibold text-gray-800">{MONTHS_ES[viewM]} {viewY}</span>
+          <button type="button" onClick={goNext} aria-label="Mes siguiente" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
         </div>
-      )}
+        <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
+          {WEEKDAYS_ES.map((w) => <div key={w} className="py-1">{w}</div>)}
+        </div>
+        <div className="grid grid-cols-7 gap-0.5">
+          {cells.map((d, i) => {
+            if (!d) return <div key={i} />;
+            const dateStr = `${viewY}-${pad2(viewM + 1)}-${pad2(d)}`;
+            const isEndpoint = dateStr === from || dateStr === to;
+            const inRange = from && to && dateStr > from && dateStr < to;
+            const isToday = dateStr === todayStr();
+            return (
+              <button
+                type="button" key={i} onClick={() => selectDay(dateStr)}
+                aria-label={`${d} de ${MONTHS_ES[viewM]}`}
+                aria-selected={isEndpoint || undefined}
+                className="flex h-9 items-center justify-center text-xs transition-colors"
+                style={
+                  isEndpoint ? { backgroundColor: TEAL, color: "white", fontWeight: 600, borderRadius: 9999 }
+                  : inRange ? { backgroundColor: "#F0FDFA", color: "#0F766E" }
+                  : isToday ? { color: TEAL, fontWeight: 600 }
+                  : { color: "#374151" }
+                }
+              >
+                {d}
+              </button>
+            );
+          })}
+        </div>
+        {mode === "range" && step === "to" && (
+          <button
+            type="button" onClick={() => setOpen(false)}
+            className="mt-2 w-full rounded-md py-2 text-xs font-semibold text-white"
+            style={{ backgroundColor: TEAL }}
+          >
+            OK — solo desde {formatDMY(from)}
+          </button>
+        )}
+      </FloatingPanel>
     </div>
   );
 }
@@ -484,7 +507,7 @@ export function DateRangePicker({ from, to, onChange }) {
 // Input de importe: mientras escribes, número plano y libre; al perder el
 // foco, se muestra formateado con separador de miles (es-ES). Así el campo
 // de Tarifa/Importe también respeta el separador, no solo la visualización.
-export function MoneyInput({ value, onChange, className = "", placeholder }) {
+export function MoneyInput({ value, onChange, className = "", placeholder, "aria-label": ariaLabel }) {
   const [editing, setEditing] = useState(false);
   const [raw, setRaw] = useState(value != null && value !== "" ? String(value) : "");
 
@@ -502,6 +525,7 @@ export function MoneyInput({ value, onChange, className = "", placeholder }) {
       inputMode="decimal"
       value={display}
       placeholder={placeholder}
+      aria-label={ariaLabel}
       onFocus={() => { setEditing(true); setRaw(value != null && value !== "" ? String(value) : ""); }}
       onChange={(e) => {
         const v = e.target.value.replace(/[^\d.,-]/g, "").replace(",", ".");
@@ -778,14 +802,19 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
 // Exportado (además de usarse internamente en Select/DatePicker/etc.) para
 // que cualquier desplegable/menú nuevo (p. ej. el menú "⋯" de una fila) lo
 // reutilice en vez de reinventar el patrón — ver convención en CLAUDE.md.
+// pointerdown, no mousedown: en iOS Safari/Chrome, los eventos "mouse"
+// sintéticos para un toque no se disparan con la misma fiabilidad que en
+// escritorio (retraso o ausencia según el elemento tocado) — pointerdown
+// unifica ratón/táctil/lápiz y sí se dispara de forma consistente al tocar
+// cualquier elemento, sea o no "clicable" en el sentido clásico de iOS.
 export function useClickOutside(onOutside) {
   const ref = useRef(null);
   useEffect(() => {
     function handler(e) {
       if (ref.current && !ref.current.contains(e.target)) onOutside();
     }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
   }, [onOutside]);
   return ref;
 }
@@ -801,42 +830,129 @@ export function useEscapeClose(open, onClose) {
   }, [open, onClose]);
 }
 
-// Decide si el panel de un desplegable debe abrirse hacia arriba: si el
-// disparador está en la mitad inferior de la pantalla y no hay ~260px
-// libres debajo, se abre hacia arriba para no quedar cortado ni obligar
-// a hacer scroll — la causa más habitual de que un selector "se sienta
-// raro" en móvil.
+// =================================================================
+// Panel flotante compartido — Select, MultiSelect, SearchSelect,
+// DatePicker, DateRangePicker y RowMenu (MiTrabajoTab) usan todos este
+// mismo mecanismo, en vez de que cada uno resuelva "abrir/cerrar/no
+// recortarse" por su cuenta.
 //
-// El espacio disponible se mide contra el ANCESTRO SCROLLEABLE más
-// cercano (p. ej. la hoja `overflow-y-auto` de "Nueva entrada"), no
-// contra la ventana entera: un campo cerca de la parte de arriba de esa
-// hoja tiene mucho espacio debajo (dentro de la ventana) pero casi
-// ninguno arriba (dentro de la propia hoja) — medir contra la ventana
-// hacía que el panel se abriera hacia arriba y quedara cortado por el
-// borde superior de la hoja, mostrando solo 1-2 opciones.
-function nearestScrollParent(el) {
-  let node = el?.parentElement;
-  while (node && node !== document.body) {
-    const { overflowY } = getComputedStyle(node);
-    if (overflowY === "auto" || overflowY === "scroll") return node;
-    node = node.parentElement;
-  }
-  return null;
+// Investigado a raíz de un bug real en móvil (iOS/Chrome Android): los
+// selects "no cerraban bien" y el de Moneda "salía hacia arriba y
+// descuadraba la vista". La causa NO era el cierre en sí — DatePicker,
+// por ejemplo, ya llamaba a setOpen(false) al elegir un día — sino el
+// POSICIONAMIENTO: el panel se calculaba una única vez al abrir
+// (position:absolute + una medición de espacio hecha en ese instante) y
+// nunca se recalculaba. En un campo de texto (el buscador de moneda,
+// p. ej.), el teclado virtual aparece DESPUÉS de esa medición y encoge
+// el viewport visible — el panel quedaba en la posición vieja, debajo
+// del teclado o cortado, el toque no llegaba a la opción real y por
+// fuera parecía "no se cierra". Además, al vivir dentro del
+// `overflow-y-auto` de la hoja inferior, cualquier stacking context o
+// recorte de un ancestro podía tapar el panel sin que hubiera forma de
+// evitarlo con position:absolute.
+//
+// La solución: un portal a document.body (fuera de cualquier ancestro
+// que recorte) con position:fixed, y la posición se recalcula en vivo
+// mientras el panel está abierto — no solo al abrirlo — escuchando
+// window.visualViewport (la API correcta para detectar el teclado
+// virtual, a diferencia de window.innerHeight, que no cambia con él) y
+// scroll/resize normales.
+function useFloatingPosition(open, anchorRef) {
+  const [pos, setPos] = useState(null);
+  const recalc = useCallback(() => {
+    const el = anchorRef.current;
+    if (!open || !el) return;
+    const rect = el.getBoundingClientRect();
+    const vh = window.visualViewport?.height || window.innerHeight;
+    const vw = window.visualViewport?.width || window.innerWidth;
+    const spaceBelow = vh - rect.bottom;
+    const spaceAbove = rect.top;
+    const openUp = spaceBelow < 280 && spaceAbove > 280;
+    setPos({
+      left: rect.left,
+      right: vw - rect.right, // alineación por la derecha (p. ej. RowMenu) — evita salirse por el borde derecho en vez de calcular un ancho que no se conoce de antemano
+      width: rect.width,
+      maxWidth: Math.max(160, vw - rect.left - 8),
+      top: openUp ? null : rect.bottom + 4,
+      bottom: openUp ? vh - rect.top + 4 : null,
+    });
+  }, [open, anchorRef]);
+
+  useEffect(() => { recalc(); }, [recalc]);
+  useEffect(() => {
+    if (!open) return;
+    const vv = window.visualViewport;
+    window.addEventListener("scroll", recalc, true);
+    window.addEventListener("resize", recalc);
+    vv?.addEventListener("resize", recalc);
+    vv?.addEventListener("scroll", recalc);
+    return () => {
+      window.removeEventListener("scroll", recalc, true);
+      window.removeEventListener("resize", recalc);
+      vv?.removeEventListener("resize", recalc);
+      vv?.removeEventListener("scroll", recalc);
+    };
+  }, [open, recalc]);
+
+  return pos;
 }
 
-function useDropdownFlip(open, triggerRef) {
-  const [openUp, setOpenUp] = useState(false);
+// Hook único para cualquier desplegable/calendario/menú: sustituye a
+// useClickOutside + useEscapeClose + (antes) useDropdownFlip llamados
+// sueltos en cada componente. anchorRef va en el disparador (el botón o
+// input que abre el panel); panelRef va en <FloatingPanel> — el clic
+// fuera comprueba los dos, porque una vez portado a document.body el
+// panel deja de ser un descendiente DOM del disparador.
+export function useFloatingDropdown() {
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef(null);
+  const panelRef = useRef(null);
+
   useEffect(() => {
-    if (open && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const scrollParent = nearestScrollParent(triggerRef.current);
-      const bounds = scrollParent ? scrollParent.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
-      const spaceBelow = bounds.bottom - rect.bottom;
-      const spaceAbove = rect.top - bounds.top;
-      setOpenUp(spaceBelow < 280 && spaceAbove > 280);
+    // pointerdown, no mousedown: ver la nota en useClickOutside — en iOS
+    // Safari/Chrome, el toque de un dedo no genera mousedown de forma
+    // fiable en cualquier elemento, mientras que pointerdown sí.
+    function handler(e) {
+      if (anchorRef.current?.contains(e.target)) return;
+      if (panelRef.current?.contains(e.target)) return;
+      setOpen(false);
     }
-  }, [open, triggerRef]);
-  return openUp;
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
+  }, []);
+  useEscapeClose(open, () => setOpen(false));
+
+  const pos = useFloatingPosition(open, anchorRef);
+  return { open, setOpen, anchorRef, panelRef, pos };
+}
+
+// Presentacional — cada llamador aporta su propio className (radio,
+// padding, max-h, min-w-max...); esto solo resuelve portal + posición +
+// el chip visual común (borde/fondo/sombra). matchWidth=false para
+// paneles con ancho propio (calendarios), true para los que deben
+// coincidir con el ancho del campo (selects).
+export function FloatingPanel({ open, pos, panelRef, matchWidth = true, align = "left", className = "", role, "aria-label": ariaLabel, "aria-multiselectable": ariaMultiselectable, children }) {
+  if (!open || !pos) return null;
+  return createPortal(
+    <div
+      ref={panelRef}
+      role={role}
+      aria-label={ariaLabel}
+      aria-multiselectable={ariaMultiselectable}
+      className={`fixed z-50 overscroll-contain rounded-md border border-gray-200 bg-white shadow-lg ${className}`}
+      style={{
+        left: align === "left" ? pos.left : undefined,
+        right: align === "right" ? pos.right : undefined,
+        maxWidth: pos.maxWidth,
+        width: matchWidth ? pos.width : undefined,
+        top: pos.top ?? undefined,
+        bottom: pos.bottom ?? undefined,
+      }}
+    >
+      {children}
+    </div>,
+    document.body
+  );
 }
 
 // Selector propio (no <select> nativo) — mismo aspecto en cualquier
@@ -846,68 +962,58 @@ function useDropdownFlip(open, triggerRef) {
 // campo vecino en un formulario de varias columnas — sin el límite, un
 // panel ancho podía tapar el siguiente campo y el toque no llegaba a la
 // opción real.
-export function Select({ value, onChange, options, placeholder, label }) {
-  const [open, setOpen] = useState(false);
-  const ref = useClickOutside(() => setOpen(false));
-  useEscapeClose(open, () => setOpen(false));
-  const openUp = useDropdownFlip(open, ref);
+export function Select({ value, onChange, options, placeholder, label, className = "" }) {
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
 
   return (
-    <div className="relative" ref={ref}>
+    <>
       <button
+        ref={anchorRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={label || placeholder}
-        className={`${inputCls} flex min-h-11 w-full items-center justify-between gap-2 text-left`}
+        className={`${inputCls} flex min-h-11 w-full items-center justify-between gap-2 text-left ${className}`}
       >
         <span className={`truncate ${value ? "text-gray-800" : "text-gray-400"}`}>{value || placeholder || "Selecciona..."}</span>
         <ChevronDown size={15} className={`shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
       </button>
-      {open && (
-        <div
-          role="listbox"
-          className={`absolute z-20 max-h-60 w-full min-w-max max-w-[min(22rem,90vw)] overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}
-        >
-          {placeholder && (
-            <button
-              type="button"
-              role="option"
-              aria-selected={!value}
-              onClick={() => { onChange(""); setOpen(false); }}
-              className="block min-h-11 w-full px-3 py-2 text-left text-sm text-gray-400 hover:bg-gray-50"
-            >
-              {placeholder}
-            </button>
-          )}
-          {options.map((o) => (
-            <button
-              key={o}
-              type="button"
-              role="option"
-              aria-selected={value === o}
-              onClick={() => { onChange(o); setOpen(false); }}
-              className="flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
-              style={value === o ? { color: TEAL, backgroundColor: "#F0FDFA" } : { color: "#374151" }}
-            >
-              {o}
-              {value === o && <Check size={14} />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} role="listbox" className="max-h-60 min-w-max overflow-y-auto py-1">
+        {placeholder && (
+          <button
+            type="button"
+            role="option"
+            aria-selected={!value}
+            onClick={() => { onChange(""); setOpen(false); }}
+            className="block min-h-11 w-full px-3 py-2 text-left text-sm text-gray-400 hover:bg-gray-50"
+          >
+            {placeholder}
+          </button>
+        )}
+        {options.map((o) => (
+          <button
+            key={o}
+            type="button"
+            role="option"
+            aria-selected={value === o}
+            onClick={() => { onChange(o); setOpen(false); }}
+            className="flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
+            style={value === o ? { color: TEAL, backgroundColor: "#F0FDFA" } : { color: "#374151" }}
+          >
+            {o}
+            {value === o && <Check size={14} />}
+          </button>
+        ))}
+      </FloatingPanel>
+    </>
   );
 }
 
 // Selector de selección múltiple — para filtros de Actividad (puedes
 // querer ver varias a la vez). value es un array; [] = "todas".
 export function MultiSelect({ value = [], onChange, options, placeholder = "Todas" }) {
-  const [open, setOpen] = useState(false);
-  const ref = useClickOutside(() => setOpen(false));
-  useEscapeClose(open, () => setOpen(false));
-  const openUp = useDropdownFlip(open, ref);
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
 
   const toggle = (o) => {
     onChange(value.includes(o) ? value.filter((v) => v !== o) : [...value, o]);
@@ -915,8 +1021,9 @@ export function MultiSelect({ value = [], onChange, options, placeholder = "Toda
   const label = value.length === 0 ? placeholder : value.length === 1 ? value[0] : `${value.length} seleccionadas`;
 
   return (
-    <div className="relative" ref={ref}>
+    <>
       <button
+        ref={anchorRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
@@ -927,56 +1034,60 @@ export function MultiSelect({ value = [], onChange, options, placeholder = "Toda
         <span className={`truncate ${value.length ? "text-gray-800" : "text-gray-400"}`}>{label}</span>
         <ChevronDown size={15} className={`shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
       </button>
-      {open && (
-        <div role="listbox" aria-multiselectable="true" className={`absolute z-20 max-h-64 w-full min-w-max max-w-[min(22rem,90vw)] overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}>
-          {value.length > 0 && (
-            <button type="button" onClick={() => onChange([])} className="block min-h-9 w-full px-3 py-1.5 text-left text-xs font-medium text-gray-400 hover:bg-gray-50">
-              Limpiar selección
-            </button>
-          )}
-          {options.map((o) => {
-            const checked = value.includes(o);
-            return (
-              <button
-                key={o}
-                type="button"
-                role="option"
-                aria-selected={checked}
-                onClick={() => toggle(o)}
-                className="flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} role="listbox" aria-multiselectable="true" className="max-h-64 min-w-max overflow-y-auto py-1">
+        {value.length > 0 && (
+          <button type="button" onClick={() => onChange([])} className="block min-h-9 w-full px-3 py-1.5 text-left text-xs font-medium text-gray-400 hover:bg-gray-50">
+            Limpiar selección
+          </button>
+        )}
+        {options.map((o) => {
+          const checked = value.includes(o);
+          return (
+            <button
+              key={o}
+              type="button"
+              role="option"
+              aria-selected={checked}
+              onClick={() => toggle(o)}
+              className="flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
+            >
+              <span
+                className="flex h-4 w-4 shrink-0 items-center justify-center rounded border"
+                style={checked ? { backgroundColor: TEAL, borderColor: TEAL } : { borderColor: "#D1D5DB" }}
               >
-                <span
-                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded border"
-                  style={checked ? { backgroundColor: TEAL, borderColor: TEAL } : { borderColor: "#D1D5DB" }}
-                >
-                  {checked && <Check size={12} className="text-white" aria-hidden="true" />}
-                </span>
-                <span className="text-gray-700">{o}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
+                {checked && <Check size={12} className="text-white" aria-hidden="true" />}
+              </span>
+              <span className="text-gray-700">{o}</span>
+            </button>
+          );
+        })}
+      </FloatingPanel>
+    </>
   );
+}
+
+// Sin acentos ni mayúsculas — en un teclado móvil casi nadie teclea "Dólar"
+// con tilde, y sin esto una búsqueda tan natural como "dolar" no encontraba
+// nada (bug real encontrado probando el flujo completo en el selector de
+// moneda, no un caso hipotético).
+function normalizeSearch(s) {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 // Combobox con buscador — listas largas (Moneda: 144 opciones).
 // options: [{ value, label }]
 export function SearchSelect({ value, onChange, options, placeholder }) {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const [query, setQuery] = useState("");
-  const ref = useClickOutside(() => setOpen(false));
-  useEscapeClose(open, () => setOpen(false));
-  const openUp = useDropdownFlip(open, ref);
   const selected = options.find((o) => o.value === value);
   const filtered = query.trim()
-    ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
+    ? options.filter((o) => normalizeSearch(o.label).includes(normalizeSearch(query)))
     : options;
 
   return (
-    <div className="relative" ref={ref}>
+    <>
       <input
+        ref={anchorRef}
         value={open ? query : (selected ? selected.label : "")}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => { setQuery(""); setOpen(true); }}
@@ -986,25 +1097,34 @@ export function SearchSelect({ value, onChange, options, placeholder }) {
         aria-expanded={open}
         className={`${inputCls} min-h-11 w-full`}
       />
-      {open && (
-        <div role="listbox" className={`absolute z-20 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg ${openUp ? "bottom-full mb-1" : "mt-1"}`}>
-          {filtered.length === 0 && <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>}
-          {filtered.slice(0, 200).map((o) => (
-            <button
-              key={o.value}
-              type="button"
-              role="option"
-              aria-selected={value === o.value}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => { onChange(o.value); setOpen(false); setQuery(""); }}
-              className="block min-h-11 w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} role="listbox" className="max-h-60 overflow-y-auto py-1">
+        {filtered.length === 0 && <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>}
+        {filtered.slice(0, 200).map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            role="option"
+            aria-selected={value === o.value}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              onChange(o.value);
+              setOpen(false);
+              setQuery("");
+              // Sin este blur explícito, el campo se queda con el foco
+              // (el preventDefault de arriba existe para no perderlo
+              // A MITAD de la selección) y un toque posterior sobre un
+              // input ya enfocado no dispara onFocus — el buscador
+              // parecía "no volver a abrirse". Bug real encontrado
+              // probando el ciclo completo abrir→elegir→cerrar→reabrir.
+              anchorRef.current?.blur();
+            }}
+            className="block min-h-11 w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+          >
+            {o.label}
+          </button>
+        ))}
+      </FloatingPanel>
+    </>
   );
 }
 

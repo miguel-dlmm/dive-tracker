@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "mobile-check": "node scripts/mobile-check.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
@@ -31,6 +32,7 @@
     "eslint-plugin-react-refresh": "^0.5.4",
     "globals": "^17.11.0",
     "jsdom": "^30.0.1",
+    "playwright": "^1.62.1",
     "tailwindcss": "^4.3.3",
     "vite": "^8.2.2",
     "vitest": "^4.1.11"
