@@ -41,6 +41,46 @@ ahí — nunca commits directos sobre `develop`. No existen todavía `test`
 ni `main`; se crean solo cuando se cumpla alguno de los disparadores
 objetivos que describe el ADR, no por adelantado.
 
+## Bypass de login en desarrollo
+
+Herramienta permanente de desarrollo — **no evita autenticación, la
+automatiza**: en vez de una ruta alternativa que salte Supabase, hace
+login automáticamente con una cuenta demo real usando el mismo `signIn()`
+de `useSession.js` que usa cualquier usuario. Sigue siendo una sesión de
+Supabase real, con RLS real — sirve para no teclear el login a mano en
+cada recarga mientras se prueban cambios visuales/UX, no para eludir
+ningún control de seguridad.
+
+- **Cómo activarla:** en tu `.env.local` (nunca se comitea), pon:
+  ```
+  VITE_DEV_AUTH_BYPASS=true
+  VITE_DEV_DEMO_EMAIL=dev-bypass@oceanpulse.test
+  VITE_DEV_DEMO_PASSWORD=<la que le pusiste tú al activarla>
+  ```
+  Requiere que esa cuenta demo ya exista y tenga contraseña fijada — se
+  crea una vez con `node --env-file=.env.local scripts/create-demo-user.js
+  --email=... --nickname=...` y completando el enlace de primer acceso
+  que imprime, igual que cualquier alta real.
+- **Cómo desactivarla:** borra `VITE_DEV_AUTH_BYPASS` de `.env.local` o
+  ponla a `false` — vuelve a aparecer el login normal.
+- **Doble candado, no solo en teoría:** `import.meta.env.MODE ===
+  "development"` (constante que Vite resuelve en build time — en
+  `vite build`, mode "production", la rama se elimina del bundle por
+  completo, verificado con `grep` sobre `dist/`) + el opt-in explícito
+  `VITE_DEV_AUTH_BYPASS=true`. No está activo por defecto ni siquiera en
+  desarrollo. Se compara con `MODE`, no con el flag `DEV`, porque `DEV`
+  también es `true` bajo `vitest` (mode "test") — con `DEV` los tests que
+  cargan `.env.local` activarían el auto-login real y romperían los tests
+  de login.
+- **Limitaciones:** necesita que la cuenta demo exista con contraseña ya
+  fijada — no crea la cuenta ni la activa por sí solo. Los datos que
+  generes con ella (escuelas, tarifas, movimientos...) son reales y
+  persistentes en Supabase, no se limpian solos.
+- **Qué nunca debe hacerse:** no usarlo jamás con las credenciales de una
+  cuenta de un usuario real; no comitear `.env.local`; no configurar
+  `VITE_DEV_AUTH_BYPASS` ni `VITE_DEV_DEMO_*` en Vercel — es exclusivamente
+  para `npm run dev` en local.
+
 ## Convenciones — seguirlas es más importante que "queda bien"
 
 1. **Nada hardcodeado que sea configuración del negocio.** Escuelas,
