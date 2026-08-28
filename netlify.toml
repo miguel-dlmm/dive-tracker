@@ -20,3 +20,8 @@
   from = "/api/update-admin-status"
   to = "/.netlify/functions/update-admin-status"
   status = 200
+
+[[redirects]]
+  from = "/api/delete-user"
+  to = "/.netlify/functions/delete-user"
+  status = 200

@@ -282,7 +282,44 @@ async function main() {
   await page.waitForTimeout(300);
   await page.locator('button[aria-label="Configuración"]').tap();
   await page.waitForTimeout(300);
-  await shot(page, "configuracion");
+  await shot(page, "configuracion-menu");
+
+  console.log("→ Configuración: entrar en Escuelas, crear vía FAB+hoja, y volver al menú con '‹ Configuración'");
+  await page.locator("text=Escuelas").first().tap();
+  await page.waitForTimeout(200);
+  await shot(page, "configuracion-escuelas");
+  await page.getByRole("button", { name: "Nueva escuela", exact: true }).tap();
+  await page.waitForTimeout(200);
+  await shot(page, "configuracion-escuelas-nueva-hoja");
+  // Dos botones "Cerrar" en pantalla a la vez aquí: el "✕ Cerrar" de la
+  // cabecera exterior (sale de Configuración entera) y el de la propia
+  // hoja de alta (solo la cierra a ella) — se escoge el de <main>, que es
+  // el de la hoja, no el de <header>.
+  await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(200);
+  // "Configuración" también es el texto de la cabecera exterior (que
+  // cierra la pantalla entera) — el "‹ Configuración" de vuelta al menú
+  // vive dentro de <main>, hay que acotar a esa región para no pulsar la
+  // cabecera por error.
+  await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
+  await page.waitForTimeout(200);
+  const backAtMenu = await page.getByText("Cursos", { exact: true }).isVisible().catch(() => false);
+  if (!backAtMenu) {
+    consoleIssues.push("[configuracion] Tras pulsar '‹ Configuración' desde Escuelas, no se ve de vuelta el menú agrupado.");
+  }
+
+  const hasAdminGroup = await page.getByText("Administración", { exact: true }).isVisible().catch(() => false);
+  if (hasAdminGroup) {
+    console.log("→ Configuración: grupo Administración visible (cuenta con rol admin/superadmin) — entrar en Usuarios");
+    await page.locator("text=Usuarios").first().tap();
+    await page.waitForTimeout(300);
+    await shot(page, "configuracion-usuarios");
+    await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
+    await page.waitForTimeout(200);
+  } else {
+    console.log("  (grupo Administración no visible — cuenta sin rol admin/superadmin, esperado si no se usó dev-bypass con esos permisos)");
+  }
+
   await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
   await page.waitForTimeout(300);
 

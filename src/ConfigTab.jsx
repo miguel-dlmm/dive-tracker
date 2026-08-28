@@ -1,5 +1,9 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Plus, Star, Pencil, Search, Lock, UserPlus, X, Trash2 } from "lucide-react";
+import {
+  Plus, Star, Pencil, Search, Lock, UserPlus, X, Trash2,
+  ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
+  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users,
+} from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
 import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog, Select, useBodyScrollLock } from "./shared";
 import { supabase } from "./supabaseClient";
@@ -8,14 +12,22 @@ import RatesTab from "./RatesTab";
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
 
 /**
- * Tabla CRUD genérica reutilizada por las secciones de Configuración.
+ * Tabla CRUD genérica reutilizada por las secciones de Configuración. Crear
+ * usa el mismo patrón que el resto de la app (FAB + hoja inferior, ver
+ * CLAUDE.md convención #3 y RatesTab/MovementSheet) en vez de un formulario
+ * fijo siempre visible encima de la lista — antes era la única pantalla que
+ * no seguía ese patrón. createLabel: título de la hoja y aria-label del FAB
+ * (p.ej. "Nueva escuela") — el nombre de la sección en sí lo muestra ya la
+ * cabecera del menú de Configuración, no hace falta repetirlo aquí dentro.
  */
-function CrudTable({ title, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false }) {
+function CrudTable({ createLabel, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false }) {
   const emptyForm = Object.fromEntries(fields.map((f) => [
     f.key,
     f.type === "color" ? "#0E7C7B" : f.type === "boolean" ? (f.default ?? false) : "",
   ]));
   const [form, setForm] = useState(emptyForm);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  useBodyScrollLock(sheetOpen);
   const [editingPk, setEditingPk] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [query, setQuery] = useState("");
@@ -39,6 +51,7 @@ function CrudTable({ title, table, pkField = "id", fields, hasDefault = false, s
     try {
       await table.insertRow(form);
       setForm(emptyForm);
+      setSheetOpen(false);
       toast?.success("Añadido correctamente");
     } catch {
       toast?.error("No se pudo guardar. Inténtalo de nuevo.");
@@ -91,56 +104,36 @@ function CrudTable({ title, table, pkField = "id", fields, hasDefault = false, s
   );
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-        {searchable && (
-          <div className="relative">
-            <Search size={14} className="pointer-events-none absolute left-2.5 top-3.5 text-gray-400" />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar..." className={`${inputCls} w-36 pl-8`} />
-          </div>
-        )}
-      </div>
-
-      {pullDefaultOut && defaultRow && (
-        <div className="mb-3 flex items-center gap-2 rounded-md bg-amber-50 px-3 py-2">
-          <Star size={14} className="shrink-0 text-amber-500" fill="currentColor" aria-hidden="true" />
-          <span className="shrink-0 text-xs font-medium text-amber-700">Favorita</span>
-          {fields.map((f) => (
-            f.type === "color"
-              ? renderColorField(defaultRow, f)
-              : <span key={f.key} className="text-sm font-semibold" style={colorField ? { color: defaultRow[colorField.key] } : { color: "#334155" }}>{defaultRow[f.key]}</span>
-          ))}
+    <div className="space-y-3 pb-16">
+      {(searchable || (pullDefaultOut && defaultRow)) && (
+        <div className="space-y-3">
+          {searchable && (
+            <div className="relative">
+              <Search size={14} className="pointer-events-none absolute left-3 top-3.5 text-gray-400" aria-hidden="true" />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar..." aria-label="Buscar" className={`${inputCls} w-full pl-9`} />
+            </div>
+          )}
+          {pullDefaultOut && defaultRow && (
+            <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2.5">
+              <Star size={14} className="shrink-0 text-amber-500" fill="currentColor" aria-hidden="true" />
+              <span className="shrink-0 text-xs font-medium text-amber-700">Favorita</span>
+              {fields.map((f) => (
+                f.type === "color"
+                  ? renderColorField(defaultRow, f)
+                  : <span key={f.key} className="text-sm font-semibold" style={colorField ? { color: defaultRow[colorField.key] } : { color: "#334155" }}>{defaultRow[f.key]}</span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        {fields.map((f) => (
-          f.type === "color" ? (
-            <input key={f.key} type="color" value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-              className="h-11 w-12 cursor-pointer rounded-md border border-gray-200" />
-          ) : f.type === "boolean" ? (
-            <label key={f.key} className="flex min-h-11 items-center gap-1.5 text-sm text-gray-600">
-              <input type="checkbox" checked={!!form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.checked })}
-                className="h-4 w-4 cursor-pointer rounded border-gray-300" />
-              {f.label}
-            </label>
-          ) : (
-            <input key={f.key} value={form[f.key]} placeholder={f.placeholder || f.label}
-              onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-              className={`${inputCls} flex-1`} onKeyDown={(e) => e.key === "Enter" && addRow()} />
-          )
-        ))}
-        <button onClick={addRow} aria-label="Añadir" className="flex min-h-11 shrink-0 items-center justify-center rounded-md px-3 text-white" style={{ backgroundColor: TEAL }}><Plus size={16} /></button>
-      </div>
-
-      <ul className="max-h-96 space-y-1 overflow-y-auto">
+      <ul className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
         {filteredRows.map((row) => {
           const pk = row[pkField];
           const isEditing = editingPk === pk;
           if (isEditing) {
             return (
-              <li key={pk} className="space-y-2 rounded-md bg-gray-50 px-3 py-2">
+              <li key={pk} className="space-y-2 bg-gray-50 px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
                   {fields.map((f) => {
                     if (f.type === "color") return renderColorField(row, f);
@@ -156,7 +149,7 @@ function CrudTable({ title, table, pkField = "id", fields, hasDefault = false, s
             );
           }
           return (
-            <li key={pk} className="flex items-center gap-2 rounded-md bg-gray-50 px-3 py-1.5 text-sm">
+            <li key={pk} className="flex items-center gap-2 px-4 py-2.5 text-sm">
               {fields.map((f) => {
                 if (f.type === "color") return renderColorField(row, f);
                 if (f.type === "boolean") return renderBoolField(row, f);
@@ -195,8 +188,57 @@ function CrudTable({ title, table, pkField = "id", fields, hasDefault = false, s
             </li>
           );
         })}
-        {filteredRows.length === 0 && <li className="px-3 py-4 text-center text-sm text-gray-400">Sin resultados.</li>}
+        {filteredRows.length === 0 && <li className="px-4 py-8 text-center text-sm text-gray-400">Sin resultados.</li>}
       </ul>
+
+      <button
+        onClick={() => setSheetOpen(true)}
+        aria-label={createLabel}
+        className="fixed bottom-24 right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-90"
+        style={{ backgroundColor: TEAL, width: 52, height: 52 }}
+      >
+        <Plus size={24} aria-hidden="true" />
+      </button>
+
+      {sheetOpen && (
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={() => setSheetOpen(false)}>
+          <div
+            className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
+            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-800">{createLabel}</h3>
+              <button onClick={() => setSheetOpen(false)} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {fields.map((f) => (
+                f.type === "color" ? (
+                  <input key={f.key} type="color" value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                    className="h-11 w-12 cursor-pointer rounded-md border border-gray-200" />
+                ) : f.type === "boolean" ? (
+                  <label key={f.key} className="flex min-h-11 items-center gap-1.5 text-sm text-gray-600">
+                    <input type="checkbox" checked={!!form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.checked })}
+                      className="h-4 w-4 cursor-pointer rounded border-gray-300" />
+                    {f.label}
+                  </label>
+                ) : (
+                  <input key={f.key} value={form[f.key]} placeholder={f.placeholder || f.label}
+                    onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                    className={`${inputCls} flex-1`} onKeyDown={(e) => e.key === "Enter" && addRow()} />
+                )
+              ))}
+            </div>
+            <button
+              onClick={addRow}
+              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"
+              style={{ backgroundColor: TEAL }}
+            >
+              <Plus size={16} aria-hidden="true" /> Guardar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -213,7 +255,6 @@ function CrudTable({ title, table, pkField = "id", fields, hasDefault = false, s
 function SectionColors({ navSections }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <h3 className="mb-3 text-sm font-semibold text-gray-800">Colores de navegación</h3>
       <p className="mb-3 text-xs text-gray-400">Usados en la barra de navegación y en los botones de crear registro de cada área.</p>
       <ul className="space-y-1">
         {navSections.rows.map((s) => (
@@ -316,7 +357,13 @@ function RoleCheckbox({ checked, label, locked = false, onChange }) {
 // nunca de la propia fila — decide qué checkbox Admin queda editable.
 // onRequestToggle(row): se llama al pulsar un checkbox Admin editable; no
 // cambia nada por sí sola, solo abre la confirmación en UsersDirectory.
-function UsersTable({ rows, currentUserId, viewerIsSuperadmin, onRequestToggle }) {
+// onRequestDelete: solo la abre superadmin puede verla — eliminar es
+// irreversible (borra la cuenta de auth.users y, en cascada, su perfil y
+// todo lo que cuelga de él), así que la columna entera se omite para
+// admins normales en vez de mostrarse deshabilitada — no hay nada que
+// "casi puedan hacer" ahí. mismo `editable` que el checkbox de Admin: no
+// la propia cuenta, no otro superadmin.
+function UsersTable({ rows, currentUserId, viewerIsSuperadmin, onRequestToggle, onRequestDelete }) {
   if (rows.length === 0) {
     return <p className="px-3 py-6 text-center text-sm text-gray-400">Sin resultados.</p>;
   }
@@ -332,6 +379,7 @@ function UsersTable({ rows, currentUserId, viewerIsSuperadmin, onRequestToggle }
             <th className="px-3 py-2 font-medium">Admin</th>
             <th className="px-3 py-2 font-medium">Superadmin</th>
             <th className="px-3 py-2 font-medium">Alta</th>
+            {viewerIsSuperadmin && <th className="px-3 py-2 font-medium">Eliminar</th>}
           </tr>
         </thead>
         <tbody>
@@ -352,6 +400,21 @@ function UsersTable({ rows, currentUserId, viewerIsSuperadmin, onRequestToggle }
                 </td>
                 <td className="px-3 py-2"><RoleCheckbox checked={p.is_superadmin} label="Superadmin" locked /></td>
                 <td className="px-3 py-2 text-gray-500">{p.created_at ? new Date(p.created_at).toLocaleDateString("es-ES") : "—"}</td>
+                {viewerIsSuperadmin && (
+                  <td className="px-3 py-2">
+                    {editable ? (
+                      <button
+                        onClick={() => onRequestDelete(p)}
+                        aria-label={`Eliminar usuario ${p.nickname}`}
+                        className="-m-2 flex min-h-11 min-w-11 items-center justify-center rounded p-2 text-gray-300 hover:text-red-500"
+                      >
+                        <Trash2 size={14} aria-hidden="true" />
+                      </button>
+                    ) : (
+                      <span className="inline-block px-2 text-gray-200" aria-hidden="true">—</span>
+                    )}
+                  </td>
+                )}
               </tr>
             );
           })}
@@ -528,7 +591,7 @@ function CreateUserSheet({ onClose, onCreated }) {
         </div>
 
         <p className="mt-2 text-xs text-gray-400">
-          El dataset elegido carga automáticamente escuelas, actividades, tarifas, comisiones y catálogos de pago iniciales.
+          El dataset elegido carga automáticamente escuelas, cursos, tarifas, comisiones y catálogos de pago iniciales.
           La persona recibirá un email con un enlace de un solo uso para entrar y crear su propia contraseña.
         </p>
 
@@ -552,6 +615,7 @@ function UsersDirectory({ profile }) {
   const [query, setQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pendingToggle, setPendingToggle] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
 
@@ -630,32 +694,62 @@ function UsersDirectory({ profile }) {
     }
   };
 
+  // Irreversible a propósito (ver deleteUser.js): la confirmación reutiliza
+  // ConfirmDialog en modo "danger" (mismo componente que DeleteButton usa en
+  // el resto de la app), no un segundo patrón de diálogo distinto.
+  const requestDelete = (row) => setPendingDelete({ user_id: row.user_id, nickname: row.nickname });
+
+  const cancelDelete = () => {
+    if (submitting) return;
+    setPendingDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setSubmitting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const res = await fetch("/api/delete-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ target_user_id: pendingDelete.user_id }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || "No se pudo eliminar el usuario.");
+      toast?.success("Usuario eliminado");
+      setPendingDelete(null);
+      reload();
+    } catch (err) {
+      toast?.error(err.message || "No se pudo eliminar el usuario.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-gray-800">Usuarios</h3>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search size={14} className="pointer-events-none absolute left-2.5 top-3.5 text-gray-400" aria-hidden="true" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar..."
-              aria-label="Buscar usuarios"
-              className={`${inputCls} w-44 pl-8`}
-            />
-          </div>
-          {/* Solo superadmin: los admins normales solo tienen acceso de lectura al directorio. */}
-          {profile?.is_superadmin && (
-            <button
-              onClick={() => setSheetOpen(true)}
-              className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-white"
-              style={{ backgroundColor: TEAL }}
-            >
-              <UserPlus size={15} aria-hidden="true" /> Crear usuario
-            </button>
-          )}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="relative flex-1">
+          <Search size={14} className="pointer-events-none absolute left-2.5 top-3.5 text-gray-400" aria-hidden="true" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar..."
+            aria-label="Buscar usuarios"
+            className={`${inputCls} w-full min-w-[9rem] pl-8`}
+          />
         </div>
+        {/* Solo superadmin: los admins normales solo tienen acceso de lectura al directorio. */}
+        {profile?.is_superadmin && (
+          <button
+            onClick={() => setSheetOpen(true)}
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-white"
+            style={{ backgroundColor: TEAL }}
+          >
+            <UserPlus size={15} aria-hidden="true" /> Crear usuario
+          </button>
+        )}
       </div>
       {loadError && (
         <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">
@@ -670,6 +764,7 @@ function UsersDirectory({ profile }) {
           currentUserId={profile?.user_id}
           viewerIsSuperadmin={!!profile?.is_superadmin}
           onRequestToggle={requestAdminToggle}
+          onRequestDelete={requestDelete}
         />
       )}
 
@@ -696,6 +791,22 @@ function UsersDirectory({ profile }) {
         confirmLabel="Confirmar"
         danger={false}
       />
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="Eliminar usuario"
+        message={pendingDelete && (
+          <>
+            Se eliminará la cuenta de <strong>{pendingDelete.nickname}</strong> y todos sus datos
+            (escuelas, tarifas, movimientos...) de forma permanente. Esta acción no se puede deshacer.
+          </>
+        )}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        loading={submitting}
+        confirmLabel="Eliminar"
+        danger
+      />
     </div>
   );
 }
@@ -703,62 +814,122 @@ function UsersDirectory({ profile }) {
 // Pagos ya no vive aquí — es pantalla secundaria propia, alcanzable desde
 // la tarjeta "Pendiente de cobrar" de Home (ver
 // docs/ADR/0004-home-dashboard-operativo-instructor.md).
-const SECTIONS = ["Escuelas", "Actividades", "Tarifas"];
-const ADMIN_SECTIONS = ["Tipos de pago", "Estados de pago", "Monedas", "Navegación", "Ajustes", "Usuarios"];
+//
+// Menú agrupado en vez de pestañas horizontales (rediseño 2026-08-29, ver
+// docs/ADR/0008-rediseno-configuracion.md): con 9 secciones entre negocio y
+// administración, una barra de pestañas no cabía en móvil sin scroll
+// horizontal ni dejaba sitio para separar "para cualquiera" de "solo para
+// quien administra". Un menú de dos grupos con drill-down (patrón de
+// Ajustes de iOS/Android — un estándar de plataforma, no una invención
+// propia) resuelve ambas cosas y deja hueco natural para un futuro grupo de
+// personalización (widgets de Home/Resumen) sin rediseñar esta pantalla
+// otra vez: solo añadir una fila más. El "‹ Configuración" de dentro de una
+// sección y el "✕ Cerrar" de la cabecera exterior (ver App.jsx) son dos
+// niveles de navegación independientes — el primero vuelve al menú, el
+// segundo sale de Configuración entera desde cualquier nivel.
+//
+// "Actividades" se muestra aquí como "Cursos" (fase 1 del rename de
+// docs/BACKLOG.md: solo texto de UI, sin tocar props/variables internas
+// como `activities`/`activityColor` — esa es la fase 2, deliberadamente no
+// incluida en este cambio).
+const BUSINESS_SECTIONS = [
+  { key: "escuelas", label: "Escuelas", icon: Building2, description: "Dónde impartes, con su color" },
+  { key: "cursos", label: "Cursos", icon: GraduationCap, description: "Qué impartes, con su color" },
+  { key: "tarifas", label: "Tarifas", icon: Coins, description: "Cuánto cobras por escuela y curso" },
+];
+const ADMIN_SECTIONS = [
+  { key: "tipos-pago", label: "Tipos de pago", icon: CreditCard, description: "Por persona, por curso..." },
+  { key: "estados-pago", label: "Estados de pago", icon: Flag, description: "Pendiente, cobrado..." },
+  { key: "monedas", label: "Monedas", icon: DollarSign, description: "Catálogo disponible en toda la app" },
+  { key: "navegacion", label: "Colores de navegación", icon: Palette, description: "Identidad visual de cada área" },
+  { key: "ajustes", label: "Ajustes generales", icon: SlidersHorizontal, description: "Icono de carga de la app" },
+  { key: "usuarios", label: "Usuarios", icon: Users, description: "Cuentas con acceso a la app" },
+];
+
+function ConfigMenuGroup({ title, items, onSelect }) {
+  return (
+    <div>
+      {title && <h2 className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{title}</h2>}
+      <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
+        {items.map(({ key, label, icon: Icon, description }) => (
+          <button
+            key={key}
+            onClick={() => onSelect(key)}
+            className="flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: "#F0FDFA", color: TEAL }}>
+              <Icon size={18} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-medium text-gray-800">{label}</span>
+              <span className="block truncate text-xs text-gray-400">{description}</span>
+            </span>
+            <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
 // rates / commissionRates / worklog / comisiones: hooks que necesitan las secciones Tarifas y Pagos, embebidas aquí
 // profile: fila propia de profiles (useSession) — is_admin/is_superadmin deciden qué secciones se ven
 export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile }) {
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
-  const [section, setSection] = useState("Escuelas");
-  const sections = isAdmin ? [...SECTIONS, ...ADMIN_SECTIONS] : SECTIONS;
+  const [section, setSection] = useState(null);
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
+  const currentLabel = [...BUSINESS_SECTIONS, ...ADMIN_SECTIONS].find((s) => s.key === section)?.label;
+
+  if (section == null) {
+    return (
+      <div className="space-y-5">
+        <ConfigMenuGroup items={BUSINESS_SECTIONS} onSelect={setSection} />
+        {isAdmin && <ConfigMenuGroup title="Administración" items={ADMIN_SECTIONS} onSelect={setSection} />}
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
-        {sections.map((s) => (
-          <button
-            key={s}
-            onClick={() => setSection(s)}
-            className="min-h-11 rounded-md px-3 text-xs font-medium transition-colors"
-            style={section === s ? { backgroundColor: TEAL, color: "white" } : { color: "#6B7280" }}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
+    <div className="space-y-3">
+      <button
+        onClick={() => setSection(null)}
+        className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium"
+        style={{ color: TEAL }}
+      >
+        <ChevronLeft size={18} aria-hidden="true" /> Configuración
+      </button>
+      <h2 className="-mt-1 text-base font-semibold" style={{ color: NAVY }}>{currentLabel}</h2>
 
-      {section === "Escuelas" && (
-        <CrudTable title="Escuelas" table={schools} hasDefault
+      {section === "escuelas" && (
+        <CrudTable createLabel="Nueva escuela" table={schools} hasDefault
           fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
       )}
-      {section === "Actividades" && (
-        <CrudTable title="Actividades" table={activities} hasDefault searchable pullDefaultOut colorizeText
+      {section === "cursos" && (
+        <CrudTable createLabel="Nuevo curso" table={activities} hasDefault searchable pullDefaultOut colorizeText
           fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
       )}
-      {section === "Tarifas" && (
+      {section === "tarifas" && (
         <RatesTab
           schools={schools} activities={activities} paymentTypes={paymentTypes} currencies={currencies}
           rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
           accentColor={sectionColor("rates")}
         />
       )}
-      {isAdmin && section === "Tipos de pago" && (
-        <CrudTable title="Tipos de pago" table={paymentTypes} hasDefault fields={[{ key: "name", label: "Nombre" }]} />
+      {isAdmin && section === "tipos-pago" && (
+        <CrudTable createLabel="Nuevo tipo de pago" table={paymentTypes} hasDefault fields={[{ key: "name", label: "Nombre" }]} />
       )}
-      {isAdmin && section === "Estados de pago" && (
-        <CrudTable title="Estados de pago" table={paymentStatuses} hasDefault protectDefaultFromDelete
+      {isAdmin && section === "estados-pago" && (
+        <CrudTable createLabel="Nuevo estado de pago" table={paymentStatuses} hasDefault protectDefaultFromDelete
           fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
       )}
-      {isAdmin && section === "Monedas" && (
-        <CrudTable title="Monedas" table={currencies} pkField="code" hasDefault searchable pullDefaultOut
+      {isAdmin && section === "monedas" && (
+        <CrudTable createLabel="Nueva moneda" table={currencies} pkField="code" hasDefault searchable pullDefaultOut
           fields={[{ key: "code", label: "Código (ej. EUR)" }, { key: "name", label: "Nombre" }, { key: "symbol", label: "Símbolo" }]} />
       )}
-      {isAdmin && section === "Navegación" && <SectionColors navSections={navSections} />}
-      {isAdmin && section === "Ajustes" && <GeneralSettings appConfig={appConfig} />}
-      {isAdmin && section === "Usuarios" && <UsersDirectory profile={profile} />}
+      {isAdmin && section === "navegacion" && <SectionColors navSections={navSections} />}
+      {isAdmin && section === "ajustes" && <GeneralSettings appConfig={appConfig} />}
+      {isAdmin && section === "usuarios" && <UsersDirectory profile={profile} />}
     </div>
   );
 }

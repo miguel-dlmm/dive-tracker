@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Plus, Pencil, X, Search } from "lucide-react";
+import { Plus, Pencil, X, Search, SlidersHorizontal } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import { inputCls, Select, MultiSelect, Field, colorFor, DeleteButton, Money, CurrencySearchSelect, MoneyInput, EditActions, EntryTitle, useToast, useBodyScrollLock } from "./shared";
 
@@ -7,7 +7,7 @@ import { inputCls, Select, MultiSelect, Field, colorFor, DeleteButton, Money, Cu
 // rates / commissionRates: { rows, insertRow, updateRow, deleteRow }
 // worklog / comisiones: { rows: [...] } — para comprobar si una tarifa está en uso antes de dejar borrarla
 // accentColor: color de sección (nav_sections), para el botón flotante de crear
-export default function RatesTab({ schools, activities, paymentTypes, currencies, rates, commissionRates, worklog, comisiones, accentColor = TEAL, autoOpenSheet = false, onAutoOpened }) {
+export default function RatesTab({ schools, activities, paymentTypes, currencies, rates, commissionRates, worklog, comisiones, accentColor = TEAL }) {
   const [mode, setMode] = useState("instructor"); // "instructor" | "comision"
   const table = mode === "instructor" ? rates : commissionRates;
   const entriesForMode = mode === "instructor" ? worklog.rows : comisiones.rows;
@@ -29,17 +29,14 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
   const [sheetOpen, setSheetOpen] = useState(false);
   useBodyScrollLock(sheetOpen);
   const [query, setQuery] = useState("");
+  // Filtros colapsables detrás de un botón "Filtrar" (mismo patrón que Mi
+  // trabajo, ver filtersOpen/activeFilterCount en MiTrabajoTab.jsx) en vez
+  // de mostrarlos siempre — coherencia con la pantalla que más se parece a
+  // esta en el resto de la app.
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({ school: "", activity: [], payment_type: "" });
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
-
-  React.useEffect(() => {
-    if (autoOpenSheet) {
-      setSheetOpen(true);
-      onAutoOpened?.();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const schoolNames = schools.rows.map((s) => s.name);
   const activityNames = activities.rows.map((a) => a.name);
@@ -48,6 +45,7 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
 
   const presentValues = (key) => [...new Set(table.rows.map((r) => r[key]).filter(Boolean))].sort();
   const hasFilters = filters.school || (filters.activity && filters.activity.length > 0) || filters.payment_type;
+  const activeFilterCount = [Boolean(filters.school), filters.activity.length > 0, Boolean(filters.payment_type)].filter(Boolean).length;
 
   const filtered = useMemo(() => {
     let list = table.rows;
@@ -113,26 +111,39 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-          <h3 className="text-sm font-semibold" style={{ color: NAVY }}>{filtered.length} tarifas</h3>
-          <div className="relative w-32">
-            <Search size={13} className="pointer-events-none absolute left-2.5 top-3.5 text-gray-400" />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar" className={`${inputCls} w-full pl-7 text-xs`} />
-          </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setFiltersOpen((o) => !o)}
+          aria-expanded={filtersOpen}
+          className={`flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors ${filtersOpen ? "border-transparent text-white" : "border-gray-200 bg-white text-gray-600"}`}
+          style={filtersOpen ? { backgroundColor: TEAL } : {}}
+        >
+          <SlidersHorizontal size={15} aria-hidden="true" /> Filtrar{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
+        </button>
+        <div className="relative flex-1">
+          <Search size={14} className="pointer-events-none absolute left-3 top-3.5 text-gray-400" aria-hidden="true" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar" aria-label="Buscar tarifa" className={`${inputCls} w-full pl-9`} />
         </div>
+      </div>
 
-        <div className="border-b border-gray-100 bg-gray-50/60 px-4 py-3">
-          <div className="flex flex-wrap gap-2">
-            <div className="w-28"><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Escuela" /></div>
-            <div className="w-32"><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder="Actividad" /></div>
-            <div className="w-28"><Select value={filters.payment_type} onChange={(v) => setFilters({ ...filters, payment_type: v })} options={presentValues("payment_type")} placeholder="Pago" /></div>
+      {filtersOpen && (
+        <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50/60 p-3">
+          <div className="grid grid-cols-3 gap-2">
+            <Field label="Escuela"><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Todas" /></Field>
+            <Field label="Curso"><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder="Todos" /></Field>
+            <Field label="Pago"><Select value={filters.payment_type} onChange={(v) => setFilters({ ...filters, payment_type: v })} options={presentValues("payment_type")} placeholder="Todos" /></Field>
           </div>
           {hasFilters && (
-            <button onClick={() => setFilters({ school: "", activity: [], payment_type: "" })} className="mt-2 min-h-9 text-xs font-medium text-gray-400 hover:text-gray-600">
+            <button onClick={() => setFilters({ school: "", activity: [], payment_type: "" })} className="min-h-9 text-xs font-medium text-gray-400 hover:text-gray-600">
               Limpiar filtros
             </button>
           )}
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className="border-b border-gray-100 px-4 py-3">
+          <h3 className="text-sm font-semibold" style={{ color: NAVY }}>{filtered.length} tarifas</h3>
         </div>
 
         <div className="divide-y divide-gray-100">
@@ -189,14 +200,14 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
             </div>
             <p className="mb-3 text-xs text-gray-400">
               {mode === "instructor"
-                ? "Lo que cobras por impartir tú la actividad."
-                : "Lo que cobras por traer un cliente que hace esta actividad con otra persona."}
+                ? "Lo que cobras por impartir tú el curso."
+                : "Lo que cobras por traer un cliente que hace este curso con otra persona."}
             </p>
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
               <Field label="Escuela">
                 <Select value={form.school} onChange={(v) => setForm({ ...form, school: v })} options={schoolNames} />
               </Field>
-              <Field label="Actividad">
+              <Field label="Curso">
                 <Select value={form.activity} onChange={(v) => setForm({ ...form, activity: v })} options={activityNames} />
               </Field>
               <Field label="Moneda">
