@@ -97,14 +97,18 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     expect(screen.queryByText(money("10,00 €"))).not.toBeInTheDocument();
   });
 
-  it("Confirmar cobro actualiza la tabla correspondiente al tipo de la fila", async () => {
+  it("Confirmar cobro actualiza la tabla correspondiente al tipo de la fila, tras la animación de salida", async () => {
     const user = userEvent.setup();
     const { worklog, comisiones } = renderMiTrabajo(mixedDataset());
 
-    const [cursoBtn] = screen.getAllByRole("button", { name: /^Confirmar cobro$/ });
+    // Orden descendente (más reciente primero): comisión (c1, 08-11) antes
+    // que curso (w1, 08-10) — el botón de curso es el segundo, no el primero.
+    const [, cursoBtn] = screen.getAllByRole("button", { name: /^Confirmar cobro$/ });
     await user.click(cursoBtn);
 
-    expect(worklog.updateRow).toHaveBeenCalledWith("w1", { status: "Paid" });
+    // La mutación real se difiere hasta que la fila termina de animarse
+    // fuera de la lista activa (ver changeStatus) — no es inmediata al clic.
+    await waitFor(() => expect(worklog.updateRow).toHaveBeenCalledWith("w1", { status: "Paid" }));
     expect(comisiones.updateRow).not.toHaveBeenCalled();
   });
 
@@ -112,12 +116,16 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     const user = userEvent.setup();
     const { worklog } = renderMiTrabajo(mixedDataset());
 
-    const [cursoBtn] = screen.getAllByRole("button", { name: /^Confirmar cobro$/ });
+    const [, cursoBtn] = screen.getAllByRole("button", { name: /^Confirmar cobro$/ });
     await user.click(cursoBtn);
-    await user.click(screen.getByRole("button", { name: "Deshacer" }));
 
-    expect(worklog.updateRow).toHaveBeenNthCalledWith(1, "w1", { status: "Paid" });
-    expect(worklog.updateRow).toHaveBeenNthCalledWith(2, "w1", { status: "Pending" });
+    const undoBtn = await screen.findByRole("button", { name: "Deshacer" });
+    await user.click(undoBtn);
+
+    await waitFor(() => {
+      expect(worklog.updateRow).toHaveBeenNthCalledWith(1, "w1", { status: "Paid" });
+      expect(worklog.updateRow).toHaveBeenNthCalledWith(2, "w1", { status: "Pending" });
+    });
   });
 
   it("'Cobrar todos' pide confirmación explícita y se puede cancelar sin tocar ninguna tabla", async () => {
@@ -165,12 +173,48 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     expect(dialog).not.toHaveTextContent("liquidado");
   });
 
+  it("'Marcar todos como pendientes' solo aparece en Cobrados, pide confirmación y actualiza tras confirmar", async () => {
+    const user = userEvent.setup();
+    const { worklog, comisiones } = renderMiTrabajo({
+      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+      comisiones: [{ id: "c1", date: "2026-08-11", school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }],
+    });
+
+    expect(screen.queryByRole("button", { name: "Marcar todos como pendientes" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cobrados" }));
+    await user.click(screen.getByRole("button", { name: "Marcar todos como pendientes" }));
+
+    const dialog = screen.getByRole("alertdialog");
+    expect(dialog).toHaveTextContent("¿Marcar 2 movimientos cobrados como pendientes?");
+
+    await user.click(within(dialog).getByRole("button", { name: "Marcar pendientes" }));
+
+    expect(worklog.bulkUpdateWhere).toHaveBeenCalled();
+    expect(comisiones.bulkUpdateWhere).toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("'Marcar todos como pendientes' se puede cancelar sin tocar ninguna tabla", async () => {
+    const user = userEvent.setup();
+    const { worklog } = renderMiTrabajo({
+      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+    });
+
+    await user.click(screen.getByRole("button", { name: "Cobrados" }));
+    await user.click(screen.getByRole("button", { name: "Marcar todos como pendientes" }));
+    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Cancelar" }));
+
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(worklog.bulkUpdateWhere).not.toHaveBeenCalled();
+  });
+
   it("elimina la fila correcta desde el menú '⋯', tras la animación de salida", async () => {
-    // Pendientes se ordena de más antiguo a más reciente: curso, comisión, ajuste.
+    // Pendientes se ordena de más reciente a más antiguo: ajuste, comisión, curso.
     const user = userEvent.setup();
     const { colleaguePayments } = renderMiTrabajo(mixedDataset());
 
-    await user.click(screen.getAllByLabelText("Más acciones")[2]);
+    await user.click(screen.getAllByLabelText("Más acciones")[0]);
     await user.click(screen.getByRole("menuitem", { name: /Eliminar/ }));
     await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Eliminar" }));
 
@@ -184,7 +228,7 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     const user = userEvent.setup();
     const { worklog } = renderMiTrabajo(mixedDataset());
 
-    await user.click(screen.getAllByLabelText("Más acciones")[0]);
+    await user.click(screen.getAllByLabelText("Más acciones")[2]);
     await user.click(screen.getByRole("menuitem", { name: "Editar" }));
 
     expect(screen.getByRole("heading", { name: "Editar curso impartido" })).toBeInTheDocument();
