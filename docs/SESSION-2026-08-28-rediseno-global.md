@@ -205,8 +205,33 @@ No se ha tocado `develop` ni se ha creado ningún tag todavía. En cuanto
 des el OK, estos 8 pasos son mecánicos y no requieren volver a redecidir
 nada.
 
+## Commit 5 — Bug de tarifa inline (investigado, no reproducido; sin commit de código)
+
+Investigación a fondo con la misma técnica que resolvió el bug de
+animación de cobro (heartbeat de `requestAnimationFrame` para detectar
+bloqueo real del hilo principal), en dos escenarios (moneda por defecto,
+y usando activamente el selector de moneda — la sospecha explícita del
+usuario). **No se reprodujo en ningún caso** — sin huecos entre
+fotogramas significativos, hoja responsiva tras guardar. Se revisó
+también `useFloatingDropdown` (sin fugas de listeners) y
+`useSupabaseTable.insertRow` (sin bucles ni suscripciones). Detalle
+completo en `docs/BACKLOG.md`. Conclusión: probablemente específico de
+WebKit/Safari real o del teclado virtual de iOS — la misma clase de
+limitación ya documentada y confirmada en este proyecto para las
+herramientas disponibles aquí. No se ha tocado código (no había nada que
+arreglar sin causa confirmada, y el usuario pidió explícitamente no
+aplicar workarounds). Sin commit de código; solo la nota de BACKLOG
+(incluida en el commit de documentación de este bloque).
+
+También evaluado (a petición explícita, sin implementar nada): el campo
+de nombre de compañero en "Ajuste de curso" usa `<datalist>` nativo, sin
+relación de código con el bug de tarifa ni impacto de rendimiento — el
+"nunca funcionó bien" percibido encaja con el soporte pobre conocido de
+`<datalist>` en iOS Safari, no con un bug propio. Nota dejada en BACKLOG,
+sin roadmap de explotación de datos por compañero (confirmado fuera de
+alcance).
+
 ## Siguiente paso
 
-Commit 3 completado (investigación + simulación, sin push). Continuar
-con Commit 5 (bug de tarifa inline) si quedan recursos, según el orden
-acordado.
+Commits 1-3 y 5 completados. Continuar con Commit 6 (calendario de Home)
+si quedan recursos, según el orden acordado.
