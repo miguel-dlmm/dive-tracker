@@ -16,6 +16,8 @@ import ConfigTab from "./ConfigTab";
 import CompanerosTab from "./CompanerosTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
+import WhatsNew from "./WhatsNew";
+import { APP_VERSION } from "./version";
 import SummaryTab from "./SummaryTab";
 import HelpTab from "./HelpTab";
 import PaymentsTab from "./PaymentsTab";
@@ -84,6 +86,20 @@ function clearStoredNav() {
   try { sessionStorage.removeItem(NAV_STORAGE_KEY); } catch { /* no-op */ }
 }
 
+// "Qué hay de nuevo" — se muestra una vez por versión y por cuenta (no por
+// dispositivo/navegador): localStorage, no sessionStorage, para que
+// sobreviva a cerrar la pestaña, igual que la moneda favorita (ver
+// docs/ADR/0007-preferencias-personales-en-localstorage.md). Guarda la
+// versión vista, no un booleano — así una futura versión nueva vuelve a
+// mostrarlo automáticamente sin tener que "resetear" nada.
+const whatsNewSeenKey = (userId) => `oceanpulse:whatsNewSeen:${userId || "anon"}`;
+function hasSeenWhatsNew(userId) {
+  try { return localStorage.getItem(whatsNewSeenKey(userId)) === APP_VERSION; } catch { return true; }
+}
+function markWhatsNewSeen(userId) {
+  try { localStorage.setItem(whatsNewSeenKey(userId), APP_VERSION); } catch { /* no-op */ }
+}
+
 function AppShell({ onSignOut, profile, initialTab = "home" }) {
   const schools = useSupabaseTable("schools", "name");
   const activities = useSupabaseTable("activities", "name");
@@ -123,6 +139,16 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   // trabajo aunque no hubiera guardado nada.
   const [homeSheetRequest, setHomeSheetRequest] = useState(null);
   const startHomeCreate = (type, date) => setHomeSheetRequest({ type, editingEntry: null, date });
+
+  // "Qué hay de nuevo" — se decide en el primer render tras conocer al
+  // usuario (profile.user_id), no en un efecto con dependencia vacía: con
+  // el bypass de desarrollo, AppShell puede remontarse con un profile
+  // distinto sin recargar la página completa.
+  const [whatsNewOpen, setWhatsNewOpen] = useState(() => !hasSeenWhatsNew(profile?.user_id));
+  const closeWhatsNew = () => {
+    markWhatsNewSeen(profile?.user_id);
+    setWhatsNewOpen(false);
+  };
 
   const loaded = schools.loaded && activities.loaded && paymentTypes.loaded && paymentStatuses.loaded
     && currencies.loaded && rates.loaded && commissionRates.loaded && worklog.loaded
@@ -327,6 +353,8 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
         worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
         accentColor={sectionColor("trabajo")} userId={profile?.user_id}
       />
+
+      {whatsNewOpen && <WhatsNew onClose={closeWhatsNew} />}
     </div>
   );
 }

@@ -247,8 +247,49 @@ cierra el ítem correspondiente.
 — captura de Home revisada visualmente, calendario visible sin scroll
 tras la tarjeta de pendientes.
 
+## Commit 7 — "Qué hay de nuevo"
+
+Nuevo componente `WhatsNew.jsx`: píldora de 4 diapositivas (icono +
+título + una frase), navegable con "Siguiente"/"Atrás" y puntos de
+progreso, animada con un fade+slide horizontal entre diapositivas usando
+los mismos tokens `DURATION`/`EASE` de `src/motion.js` (no los variants
+de lista ya existentes, pensados para filas que entran/salen de una
+lista, no para pasar de una diapositiva a otra — pero sí la misma
+convención de duración/curva, no una animación inventada aparte). Se
+muestra una vez por cuenta al entrar en una versión nueva
+(`localStorage`, mismo patrón que la moneda favorita — ver ADR-0007),
+comparando contra `APP_VERSION` en el nuevo `src/version.js` (hoy
+`"0.2.0"`, a la espera de que se ejecute la release candidata de Commit
+3 — **si el número de versión final cambia al aprobarla, actualizar
+`src/version.js` a la vez que `CHANGELOG.md`/`package.json`, no por
+separado**).
+
+**Decisión — sin capturas de pantalla:** se evaluaron capturas reales
+generadas esta misma sesión (Home, Mi trabajo, Resumen) pero ninguna era
+presentable — mostraban el nombre de la cuenta de desarrollo
+("dev-bypass") y datos de prueba repetidos acumulados esta noche.
+Iconografía + color (ya coherente con el resto de la app) cumple igual
+"muy visual" sin ese riesgo. Documentado en el propio código de
+`WhatsNew.jsx` para que quede claro que fue una decisión, no un olvido.
+
+Contenido de las 4 diapositivas (fuente: la propia redacción de
+`CHANGELOG.md` de esta sesión): bienvenida/contexto del rediseño, un
+único botón para crear un movimiento, unificación Registro+Comisiones+
+Compañeros → Mi trabajo, y Resumen (vistazo rápido + profundidad bajo
+demanda). Nota: el encargo original decía "Movimientos" para el punto de
+unificación — se ha usado el nombre real y ya decidido de esa pantalla,
+"Mi trabajo" (`docs/ADR/0005-...md` rechazó explícitamente "Movimientos"
+como nombre de producto), para no contradecir esa decisión ya tomada.
+
+`mobile-check.mjs` actualizado para reconocer y cerrar esta píldora al
+principio del recorrido (antes bloqueaba toda interacción posterior).
+
+**Validado:** 210/210 tests (4 nuevos en `WhatsNew.test.jsx`: avanzar,
+retroceder, terminar con "Empezar", cerrar con "Cerrar"), build correcto,
+`mobile-check` sin errores — las 2 diapositivas capturadas (primera y
+última) revisadas visualmente.
+
 ## Siguiente paso
 
-Commits 1, 2, 3, 5 y 6 completados. Continuar con Commit 7 ("Qué hay de
-nuevo") según el orden acordado, ahora que el proceso de release
-(Commit 3) ya está definido.
+Commits 1, 2, 3, 5, 6 y 7 completados. Continuar con Commit 8 (rediseño
+de Ayuda) según el orden acordado — el último de la lista.

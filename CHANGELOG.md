@@ -36,6 +36,9 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   tarjetas plegables bajo demanda.
 - Bypass de login para desarrollo local (`VITE_DEV_AUTH_BYPASS`) — nunca
   activo en producción.
+- Píldora "Qué hay de nuevo": aparece una vez por cuenta al entrar en una
+  versión nueva, con un resumen visual y breve de las novedades de esta
+  release.
 
 ### Changed
 - "Actividad" pasa a mostrarse como "Curso" en toda la interfaz
