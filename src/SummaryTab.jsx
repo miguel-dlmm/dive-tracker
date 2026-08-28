@@ -1,16 +1,21 @@
 import React, { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Globe, Building2 } from "lucide-react";
-import { formatMoney, Money, colorFor, DatePicker, MoneyLine, MonthCalendar, Select } from "./shared";
+import { formatMoney, Money, colorFor, DatePicker, MoneyLine, MonthCalendar, Select, MOVEMENT_TYPE_META } from "./shared";
 import { computeRateTotal } from "./rateCalc";
-import { NAVY, TEAL, SUN, AQUA, CORAL, GREEN } from "./App";
+import { NAVY, CORAL, GREEN } from "./App";
 
 const NEUTRAL_GRAY = "#94A3B8";
-const SOURCES = [
-  ["total", "Total"],
-  ["ganado", "Ganado"],
-  ["comision", "Comisión"],
-  ["companeros", "Compañeros"],
-];
+// MOVEMENT_TYPE_META.companeros.color es un neutro claro pensado para texto
+// (cabeceras de categoría del calendario, sobre fondo blanco) — aquí hace
+// falta relleno sólido con texto blanco encima (botón activo del
+// segmentado, tarjeta de total), donde ese mismo tono no da contraste
+// suficiente. AJUSTE_FILL es un escalón más oscuro de la misma familia
+// neutra (slate), no un color inventado aparte.
+const AJUSTE_FILL = "#64748B";
+// SOURCES/SOURCE_META se derivan de MOVEMENT_TYPE_META dentro del propio
+// componente, no aquí arriba, para no depender del orden exacto de
+// inicialización de módulos — ver colors.js para el ciclo de imports real
+// (App.jsx ⇄ shared.jsx) que esto evitaba, ya corregido de raíz allí.
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const fmtInt = (n) => (n || 0).toLocaleString("es-ES");
@@ -107,11 +112,13 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   const [customTo, setCustomTo] = useState(now.toISOString().slice(0, 10));
   const [selectedSchool, setSelectedSchool] = useState(schools.rows.find((s) => s.is_default)?.name || schools.rows[0]?.name || "");
 
-  const SOURCE_META = {
-    ganado: { label: "Ganado", color: TEAL },
-    comision: { label: "Comisión", color: SUN },
-    companeros: { label: "Compañeros", color: AQUA },
-  };
+  const SOURCES = [
+    ["total", "Total"],
+    ["ganado", MOVEMENT_TYPE_META.ganado.label],
+    ["comision", MOVEMENT_TYPE_META.comision.label],
+    ["companeros", MOVEMENT_TYPE_META.companeros.label],
+  ];
+  const SOURCE_META = { ...MOVEMENT_TYPE_META, companeros: { ...MOVEMENT_TYPE_META.companeros, color: AJUSTE_FILL } };
 
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");

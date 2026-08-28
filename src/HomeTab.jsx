@@ -1,23 +1,22 @@
 import React, { useMemo } from "react";
-import { Handshake, ListChecks } from "lucide-react";
-import { TEAL, SUN, AQUA } from "./App";
-import { Money, MonthCalendar, colorFor, isPendingStatus } from "./shared";
+import { TrendingUp } from "lucide-react";
+import { NAVY, TEAL, SUN } from "./App";
+import { Money, MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
 import { computeRateTotal, buildIncomeEntries } from "./rateCalc";
 import PendingCollectionCard from "./PendingCollectionCard";
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
-// schools / currencies / navSections / paymentStatuses: hooks de useSupabaseTable
-// onQuickCreate: (tabId) => cambia de pestaña y abre su hoja de creación sola
+// schools / currencies / paymentStatuses: hooks de useSupabaseTable
+// onQuickCreate: (type, date?) => abre MovementSheet SIN cambiar de
+// pestaña (Home sigue visible mientras se rellena) — solo al guardar con
+// éxito se navega a Mi trabajo, ver App.jsx/startHomeCreate. date opcional
+// preselecciona esa fecha en vez de la de hoy (la usa el calendario de
+// abajo). type es directamente "ganado"/"comision"/"companeros" — ya no
+// hace falta el id de pestaña antiguo ("log"), ver docs/ADR/0005 addendum.
 // onOpenPayments: () => navega a la pantalla de Pagos (tarjeta "Pendiente de cobrar")
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, schools, currencies, navSections, paymentStatuses, onQuickCreate, onOpenPayments }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPayments }) {
   const now = new Date();
-  const SOURCE_META = {
-    ganado: { label: "Ganado", color: TEAL },
-    comision: { label: "Comisión", color: SUN },
-    companeros: { label: "Compañeros", color: AQUA },
-  };
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
-  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
 
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
   const rateTotal = (e, ratesTable) => {
@@ -36,6 +35,16 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
     const d = new Date(e.date);
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }), [ganadoEntries, comisionEntries, companerosEntries]);
+
+  // Dato secundario de "Generado este mes" — personas formadas, no comisión
+  // ni ajustes: son clientes que TÚ has impartido este mes, un dato humano y
+  // sin ambigüedad de alcance (no cuenta clientes referidos que forma otro
+  // instructor, ni ajustes económicos, que no representan formación). Da a
+  // la tarjeta un segundo dato con el mismo peso visual que "N pagos
+  // pendientes" en la tarjeta de al lado.
+  const peopleTrainedThisMonth = useMemo(() => ganadoEntries
+    .filter((e) => { const d = new Date(e.date); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); })
+    .reduce((sum, e) => sum + (e.people || 0), 0), [ganadoEntries]);
 
   // Base común de las dos métricas financieras del dashboard — ver
   // buildIncomeEntries en rateCalc.js y docs/ADR/0004-home-dashboard-operativo-instructor.md.
@@ -68,40 +77,43 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
 
   return (
     <div className="space-y-4">
-      {/* Accesos directos de creación */}
-      <div className="grid grid-cols-2 gap-3">
-        <button onClick={() => onQuickCreate("log")} className="flex items-center justify-between rounded-lg p-4 text-white transition-transform active:scale-[0.98]" style={{ backgroundColor: sectionColor("log") }}>
-          <div className="text-left">
-            <div className="text-xs opacity-80">Registro</div>
-            <div className="text-sm font-semibold">+ Nuevo</div>
-          </div>
-          <ListChecks size={20} />
-        </button>
-        <button onClick={() => onQuickCreate("comisiones")} className="flex items-center justify-between rounded-lg p-4 text-white transition-transform active:scale-[0.98]" style={{ backgroundColor: sectionColor("comisiones") }}>
-          <div className="text-left">
-            <div className="text-xs opacity-80">Comisiones</div>
-            <div className="text-sm font-semibold">+ Nueva</div>
-          </div>
-          <Handshake size={20} />
-        </button>
-      </div>
-
-      {/* Pendiente de cobrar — información financiera principal (ADR-0004). */}
+      {/* 1. Pendiente de cobrar — información financiera principal, la más
+          visible de la pantalla. Integra también el acceso rápido de
+          creación (botón "+" a la derecha, onQuickAdd): antes era una fila
+          aparte debajo de esta tarjeta, con el mismo ancho y casi el mismo
+          peso visual, compitiendo por atención con la propia cifra
+          pendiente. Vive aquí en vez de eso porque un único acceso
+          "Añadir movimiento" (no un botón por tipo — el propio formulario
+          resuelve el tipo con su selector, mismo criterio ya validado en
+          Mi trabajo, ADR-0005) no necesita una fila propia si cabe, claro
+          y con buen tamaño táctil, en el espacio libre de la tarjeta más
+          consultada de Home. onQuickAdd usa e.stopPropagation() dentro de
+          PendingCollectionCard para no interferir con onPress (Pagos). */}
       <PendingCollectionCard
         totals={pendingSummary.totals}
         count={pendingSummary.count}
         currencyRows={currencies.rows}
         color={SUN}
         onPress={onOpenPayments}
+        onQuickAdd={() => onQuickCreate("ganado")}
       />
 
-      {/* KPI del mes — información secundaria (ADR-0004). Se llama "Generado"
-          y no "Ganado" porque desde este entregable cuenta las 3 fuentes
-          (Registro + Comisiones + Compañeros que te pagan), no solo lo que
-          impartes tú — "Ganado" ya no describe con precisión ese total. */}
-      <div className="rounded-lg p-4 text-white" style={{ backgroundColor: TEAL }} data-testid="generated-this-month-card">
-        <div className="text-xs font-medium opacity-80">Generado este mes</div>
-        <div className="mt-1 text-2xl font-bold tabular-nums">
+      {/* 2. Generado este mes — información secundaria, "ya no la
+          protagonista": antes era un bloque de color sólido con el mismo
+          peso visual que "Pendiente de cobrar", compitiendo con ella en
+          vez de leerse por debajo. Ahora es una tarjeta clara con un
+          acento de color, no un segundo bloque igual de rotundo. Se llama
+          "Generado" y no "Ganado" porque cuenta las 3 fuentes (Registro +
+          Comisiones + Compañeros que te pagan), no solo lo que impartes tú
+          — "Ganado" ya no describe con precisión ese total. El dato de
+          abajo (personas formadas) da a la tarjeta el mismo equilibrio de
+          "cifra + conteo" que ya tiene "Pendiente de cobrar" al lado. */}
+      <div className="rounded-xl border border-gray-200 bg-white p-4" data-testid="generated-this-month-card">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+          <TrendingUp size={14} style={{ color: TEAL }} aria-hidden="true" />
+          Generado este mes
+        </div>
+        <div className="mt-1 text-2xl font-bold tabular-nums" style={{ color: NAVY }}>
           {Object.keys(monthTotals).length === 0 ? (
             "—"
           ) : (
@@ -110,8 +122,20 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             ))
           )}
         </div>
+        <div className="mt-0.5 text-xs text-gray-400">
+          {peopleTrainedThisMonth > 0
+            ? `${peopleTrainedThisMonth} ${peopleTrainedThisMonth === 1 ? "persona formada" : "personas formadas"} este mes`
+            : "Sin cursos este mes"}
+        </div>
       </div>
 
+      {/* 3. Calendario del mes. sourceMeta ahora viene de MOVEMENT_TYPE_META
+          (shared.jsx, única fuente para Home/Resumen/Mi trabajo — antes
+          decía "Ganado"/"Compañeros", vocabulario previo a la unificación
+          en Mi trabajo). onCreateForDay solo se pasa aquí, no en Resumen:
+          tocar un día vacío inicia un movimiento para esa fecha (antes los
+          días sin actividad eran inertes); un día con datos conserva su
+          desglose de siempre y gana un "+" para añadir otro. */}
       <MonthCalendar
         year={now.getFullYear()}
         month={now.getMonth()}
@@ -122,8 +146,12 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         autoSelectFirstDay
         detailed
         groupBySource
-        sourceMeta={SOURCE_META}
+        sourceMeta={MOVEMENT_TYPE_META}
+        onCreateForDay={(dateStr) => onQuickCreate("ganado", dateStr)}
       />
+      <p className="px-1 text-center text-[11px] text-gray-400">
+        Toca un día para ver el detalle, o uno vacío para añadir un movimiento.
+      </p>
     </div>
   );
 }

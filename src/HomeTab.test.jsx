@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import HomeTab from "./HomeTab";
 
 // Cubre "Generado este mes" y "Pendiente de cobrar" (ADR-0004) — las dos
@@ -138,5 +139,35 @@ describe("HomeTab — Generado este mes y Pendiente de cobrar", () => {
       rates: RATES,
     });
     expect(pending.getByText("2 pagos pendientes")).toBeInTheDocument();
+  });
+});
+
+// El acceso "Añadir movimiento" vive integrado en la tarjeta "Pendiente de
+// cobrar" (botón "+", ver PendingCollectionCard) en vez de como fila propia
+// debajo — cubre que Home sigue llamando a onQuickCreate("ganado") con el
+// mismo contrato de siempre (entra directo al caso dominante, sin id de
+// pestaña antiguo), solo que ahora a través de ese botón integrado.
+describe("HomeTab — acceso rápido integrado en Pendiente de cobrar", () => {
+  it("el botón «+» de la tarjeta llama a onQuickCreate(\"ganado\")", async () => {
+    const onQuickCreate = vi.fn();
+    render(
+      <HomeTab
+        worklog={rowsHook([])}
+        comisiones={rowsHook([])}
+        colleaguePayments={rowsHook([])}
+        rates={rowsHook([])}
+        commissionRates={rowsHook([])}
+        activities={rowsHook([{ name: "Open Water" }])}
+        schools={rowsHook([{ name: "PADI Cozumel" }])}
+        currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])}
+        navSections={rowsHook([])}
+        paymentStatuses={PAYMENT_STATUSES}
+        onQuickCreate={onQuickCreate}
+      />
+    );
+
+    await userEvent.click(screen.getByLabelText("Añadir movimiento"));
+
+    expect(onQuickCreate).toHaveBeenCalledWith("ganado");
   });
 });

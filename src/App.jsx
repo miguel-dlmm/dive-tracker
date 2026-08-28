@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Waves, Home as HomeIcon, Briefcase, BarChart3, ArrowLeft, Settings, HelpCircle, LogOut } from "lucide-react";
+import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { ToastProvider, AppLoading, useScrolled } from "./shared";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
+import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG } from "./colors";
 import LoginScreen from "./LoginScreen";
 import CreatePasswordScreen from "./CreatePasswordScreen";
 import AcceptLegalScreen from "./AcceptLegalScreen";
@@ -14,6 +15,7 @@ import ComisionesTab from "./ComisionesTab";
 import ConfigTab from "./ConfigTab";
 import CompanerosTab from "./CompanerosTab";
 import MiTrabajoTab from "./MiTrabajoTab";
+import MovementSheet from "./MovementSheet";
 import SummaryTab from "./SummaryTab";
 import HelpTab from "./HelpTab";
 import PaymentsTab from "./PaymentsTab";
@@ -23,14 +25,13 @@ import PaymentsTab from "./PaymentsTab";
 // casi blanco, tinta oscura para texto. Los colores de cada sección
 // (Registro, Comisiones, Compañeros, Pagos, Tarifas, Configuración,
 // Home) NO están aquí — vienen de la tabla nav_sections.
+//
+// Los valores en sí viven en colors.js (sin dependencias propias, para
+// evitar un ciclo de imports con shared.jsx — ver ese archivo, importado
+// arriba junto al resto). Se re-exportan aquí para que el resto de la app
+// siga importando "./App" como siempre, sin tocar ningún import existente.
 // ---------------------------------------------------------------
-export const NAVY = "#0F172A";
-export const TEAL = "#0F766E";
-export const AQUA = "#0D9488";
-export const CORAL = "#C2542F";
-export const GREEN = "#15803D";
-export const SUN = "#B45309";
-export const BG = "#F7F8F8";
+export { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG };
 
 export const DISPLAY_FONT = "'Inter', sans-serif";
 export const BODY_FONT = "'Inter', sans-serif";
@@ -57,6 +58,32 @@ const PRIMARY_TABS = [
 // función con "Cobrar todos" + filtro por escuela).
 const SECONDARY_TITLES = { config: "Configuración", help: "Ayuda", pagos: "Pagos" };
 
+// Recuerda la pestaña activa y a cuál "volver" desde una pantalla
+// secundaria — corrige de raíz dos problemas reales, no dos parches
+// sueltos: (1) recargar la página siempre volvía a Home aunque estuvieras
+// en Mi trabajo o Resumen; (2) "‹ Volver" desde Ayuda/Configuración
+// llevaba siempre a Home en vez de a la pestaña desde la que se entró.
+// sessionStorage, no localStorage: debe sobrevivir a una recarga dentro
+// de la misma pestaña del navegador, pero abrir la app en una sesión
+// nueva (nueva pestaña, navegador reabierto) debe partir de Home, el
+// punto de entrada natural — no tiene sentido "recordar" eso
+// indefinidamente. Se limpia al cerrar sesión (ver el botón de logout más
+// abajo) para que un usuario distinto en el mismo navegador no herede la
+// posición del anterior — relevante sobre todo probando con el bypass de
+// desarrollo y varias cuentas de prueba.
+const NAV_STORAGE_KEY = "oceanpulse:navState";
+function readStoredNav() {
+  try {
+    const raw = sessionStorage.getItem(NAV_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+function clearStoredNav() {
+  try { sessionStorage.removeItem(NAV_STORAGE_KEY); } catch { /* no-op */ }
+}
+
 function AppShell({ onSignOut, profile, initialTab = "home" }) {
   const schools = useSupabaseTable("schools", "name");
   const activities = useSupabaseTable("activities", "name");
@@ -71,17 +98,31 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   const navSections = useSupabaseTable("nav_sections", "key", "key");
   const appConfig = useSupabaseTable("app_config", "id", "id");
 
-  const [tab, setTab] = useState(initialTab);
-  // Al venir de un acceso rápido de Home, además de cambiar de pestaña,
-  // esa pestaña abre su hoja de creación sola. Se limpia en cuanto se usa
-  // (ver onAutoOpened), así no se vuelve a disparar si luego navegas
-  // manualmente a la misma pestaña.
-  const [pendingOpen, setPendingOpen] = useState(null);
-  // Home sigue ofreciendo accesos rápidos con los ids antiguos ("log",
-  // "comisiones") — se redirigen a "trabajo", que decide qué formulario
-  // abrir según ese mismo id (ver autoOpenType en MiTrabajoTab).
-  const OLD_TAB_REDIRECT = { log: "trabajo", comisiones: "trabajo", colegas: "trabajo" };
-  const navigateAndCreate = (tabId) => { setTab(OLD_TAB_REDIRECT[tabId] || tabId); setPendingOpen(tabId); };
+  // initialTab !== "home" es el caso "justActivated" (ver AuthGate) — una
+  // activación recién completada siempre debe abrir en Ayuda, prioridad
+  // sobre cualquier posición guardada de una sesión anterior.
+  const [tab, setTab] = useState(() => (initialTab !== "home" ? initialTab : (readStoredNav()?.tab || initialTab)));
+  // Pestaña primaria a la que vuelve "‹ Volver" desde Ayuda/Configuración
+  // — se actualiza sola (ver el efecto más abajo) cada vez que `tab` pasa
+  // a ser una pestaña primaria, así que no hace falta tocar cada sitio
+  // que navega para mantenerla al día.
+  const [returnTab, setReturnTab] = useState(() => readStoredNav()?.returnTab || "home");
+  useEffect(() => {
+    if (PRIMARY_TABS.some((t) => t.id === tab)) setReturnTab(tab);
+  }, [tab]);
+  useEffect(() => {
+    try { sessionStorage.setItem(NAV_STORAGE_KEY, JSON.stringify({ tab, returnTab })); } catch { /* no-op */ }
+  }, [tab, returnTab]);
+  // El acceso rápido de Home (botón "Añadir movimiento" o tocar un día del
+  // calendario) abre MovementSheet sin cambiar de pestaña — Home sigue
+  // visible mientras se rellena el formulario. Solo al guardar con éxito
+  // (ver onSaved más abajo) se navega a Mi trabajo; cancelar/cerrar deja
+  // al usuario donde estaba. Ver docs/ADR/0005, addendum — antes esto
+  // cambiaba de pestaña ANTES de guardar (pendingOpen/autoOpenType, ya
+  // retirado): con eso, cancelar la creación dejaba al usuario en Mi
+  // trabajo aunque no hubiera guardado nada.
+  const [homeSheetRequest, setHomeSheetRequest] = useState(null);
+  const startHomeCreate = (type, date) => setHomeSheetRequest({ type, editingEntry: null, date });
 
   const loaded = schools.loaded && activities.loaded && paymentTypes.loaded && paymentStatuses.loaded
     && currencies.loaded && rates.loaded && commissionRates.loaded && worklog.loaded
@@ -111,8 +152,19 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
 
   return (
     <div className="min-h-dvh" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+      {/* bg-white opaco, sin backdrop-blur: lo tenía antes (bg-white/95 +
+          backdrop-blur-md), pero un usuario reportó la cabecera tapada por
+          el contenido en Ayuda en su iPhone real, algo que no se pudo
+          reproducir en Chromium (mobile-check) probando cada escenario
+          razonable — indicio de un problema específico del compositor de
+          WebKit, no de la lógica de la app. backdrop-filter + un elemento
+          hermano con transform (la transición de pestañas, más abajo) es
+          una combinación con bugs de compositing documentados en Safari.
+          Quitar el blur elimina esa clase de riesgo por completo; se
+          pierde el efecto "cristal esmerilado", que además apenas se
+          notaba con solo un 5% de transparencia. */}
       <header
-        className="sticky top-0 z-30 border-b border-black/5 bg-white/95 backdrop-blur-md transition-shadow duration-200"
+        className="sticky top-0 z-30 border-b border-black/5 bg-white transition-shadow duration-200"
         style={{
           paddingTop: "env(safe-area-inset-top)",
           transform: "translateZ(0)",
@@ -121,8 +173,19 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
       >
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-2.5 px-5 py-4">
           {isSecondary ? (
-            <button onClick={() => setTab("home")} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Volver a Home">
-              <ArrowLeft size={20} style={{ color: NAVY }} aria-hidden="true" />
+            // X, no flecha "‹": Ayuda/Configuración no son un nivel más
+            // dentro de la jerarquía de la pestaña actual — se entra
+            // igual desde Home, Mi trabajo o Resumen, así que son más
+            // "una capa encima" (modal) que "un paso más adentro". Ayuda
+            // además ya usa su propia flecha "‹" para SU jerarquía interna
+            // (Categorías → Artículos → Artículo, ver HelpArticleList/
+            // HelpArticleView) — una segunda flecha aquí, con un
+            // significado distinto (salir de Ayuda entera, no retroceder
+            // un nivel dentro de ella), sería ambigua en el punto más
+            // profundo. X + "Cerrar" es además el mismo patrón que ya usan
+            // las hojas inferiores de la app.
+            <button onClick={() => setTab(returnTab)} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Cerrar">
+              <X size={20} style={{ color: NAVY }} aria-hidden="true" />
               <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{SECONDARY_TITLES[tab]}</h1>
             </button>
           ) : (
@@ -150,7 +213,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
                 {profile.nickname}
               </span>
             )}
-            <button onClick={onSignOut} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Cerrar sesión">
+            <button onClick={() => { clearStoredNav(); if (DEV_AUTH_BYPASS) disableDevBypass(); onSignOut(); }} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Cerrar sesión">
               <LogOut size={20} style={{ color: NAVY }} aria-hidden="true" />
             </button>
           </div>
@@ -168,29 +231,26 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
         {tab === "home" && (
           <HomeTab
             worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
-            activities={activities} schools={schools} currencies={currencies} navSections={navSections} paymentStatuses={paymentStatuses}
-            onQuickCreate={navigateAndCreate}
+            activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
+            onQuickCreate={startHomeCreate}
           />
         )}
         {tab === "log" && (
           <WorkLogTab
             schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} appConfig={appConfig}
             accentColor={sectionColor("log")}
-            autoOpenSheet={pendingOpen === "log"} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
         {tab === "comisiones" && (
           <ComisionesTab
             schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones} appConfig={appConfig}
             accentColor={sectionColor("comisiones")}
-            autoOpenSheet={pendingOpen === "comisiones"} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
         {tab === "colegas" && (
           <CompanerosTab
             schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} colleaguePayments={colleaguePayments}
             accentColor={sectionColor("colegas")}
-            autoOpenSheet={pendingOpen === "colegas"} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
         {tab === "trabajo" && (
@@ -198,7 +258,6 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
             accentColor={sectionColor("trabajo")} userId={profile?.user_id}
-            autoOpenType={pendingOpen} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
         {tab === "config" && (
@@ -250,6 +309,24 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
           })}
         </div>
       </nav>
+
+      {/* Montada aquí, fuera del contenido de la pestaña activa (no dentro
+          de <main>), para que el acceso rápido de Home pueda abrir esta
+          misma hoja sin cambiar de pestaña primero — ver startHomeCreate
+          más arriba y docs/ADR/0005 (addendum). Cuando tab === "trabajo",
+          MiTrabajoTab ya monta su propia instancia para el FAB/editar fila
+          (con su propio sheetRequest, independiente); esta de aquí solo
+          se activa cuando homeSheetRequest no es null, así que nunca hay
+          dos hojas abiertas a la vez. */}
+      <MovementSheet
+        request={homeSheetRequest}
+        onClose={() => setHomeSheetRequest(null)}
+        onSaved={() => { setHomeSheetRequest(null); setTab("trabajo"); }}
+        schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
+        currencies={currencies} rates={rates} commissionRates={commissionRates}
+        worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
+        accentColor={sectionColor("trabajo")} userId={profile?.user_id}
+      />
     </div>
   );
 }
@@ -290,6 +367,28 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
 // login a mano.
 const DEV_AUTH_BYPASS = import.meta.env.MODE === "development" && import.meta.env.VITE_DEV_AUTH_BYPASS === "true";
 
+// bypassAttempted (más abajo, useState de AuthGate) por sí solo NO basta
+// para que "cerrar sesión" se quede cerrada: Supabase persiste la sesión en
+// localStorage, así que cualquier recarga de página remonta AuthGate desde
+// cero — bypassAttempted vuelve a nacer en false, la sesión restaurada por
+// Supabase hace que el efecto ni se entere, y un logout MUCHO después de
+// esa recarga vuelve a cumplir "no hay sesión ni intento previo" y
+// dispara un auto-login nuevo, secuestrando la sesión otra vez. Bug real
+// encontrado probando exactamente el flujo que este mecanismo debía
+// permitir (logout -> login manual con otra cuenta) tras recargar por el
+// camino. localStorage, no sessionStorage ni un useState: tiene que
+// sobrevivir a la recarga que expone el problema, y no hay motivo para
+// que un "cerrca sesión" explícito deje de respetarse si además se cierra
+// la pestaña — el desarrollador que quiera el bypass de vuelta siempre
+// puede iniciar sesión a mano una vez con la cuenta demo.
+const DEV_BYPASS_DISABLED_KEY = "oceanpulse:devBypassDisabled";
+function isDevBypassDisabled() {
+  try { return localStorage.getItem(DEV_BYPASS_DISABLED_KEY) === "true"; } catch { return false; }
+}
+function disableDevBypass() {
+  try { localStorage.setItem(DEV_BYPASS_DISABLED_KEY, "true"); } catch { /* no-op */ }
+}
+
 function AuthGate() {
   const { session, profile, loading, signIn, signOut, activateAccount, pendingLegalConsents, acceptLegalConsents } = useSession();
   const [bypassAttempted, setBypassAttempted] = useState(false);
@@ -302,6 +401,18 @@ function AuthGate() {
   useEffect(() => {
     if (!DEV_AUTH_BYPASS || loading || session || bypassAttempted) return;
     setBypassAttempted(true);
+    // isDevBypassDisabled() se comprueba aquí dentro, no en la guarda de
+    // arriba: la guarda también controla si se llega a poner bypassPending
+    // a false (ver más abajo) — si "desactivado" hubiera cortado ahí,
+    // bypassPending se habría quedado en true para siempre en cualquier
+    // montaje donde la sesión ya viniera restaurada de localStorage (tras
+    // una recarga), y el gate de carga (bypassPending && !session) se
+    // habría quedado colgado en cuanto la sesión pasara a null — bug real
+    // encontrado al probar el fix anterior, no solo en teoría.
+    if (isDevBypassDisabled()) {
+      setBypassPending(false);
+      return;
+    }
     const email = import.meta.env.VITE_DEV_DEMO_EMAIL;
     const password = import.meta.env.VITE_DEV_DEMO_PASSWORD;
     if (!email || !password) {
@@ -309,10 +420,20 @@ function AuthGate() {
       setBypassPending(false);
       return;
     }
-    signIn(email, password).catch((err) => {
-      console.error("[dev-auth-bypass] No se pudo iniciar sesión automáticamente:", err.message);
-      setBypassPending(false);
-    });
+    // .finally(), no solo .catch(): antes bypassPending solo se ponía a
+    // false en el camino de error — tras un login automático CON ÉXITO se
+    // quedaba en true para siempre, así que un logout posterior volvía a
+    // cumplir bypassPending && !session y se quedaba en el loading para
+    // siempre (bypassAttempted ya en true impide que este efecto se repita
+    // y lo corrija). El bypass debe automatizar solo el primer acceso, no
+    // secuestrar la sesión — tras el intento (éxito o no), el gate de
+    // carga deja de depender de esta bandera y el logout cae de forma
+    // normal en LoginScreen, como con cualquier otra cuenta.
+    signIn(email, password)
+      .catch((err) => {
+        console.error("[dev-auth-bypass] No se pudo iniciar sesión automáticamente:", err.message);
+      })
+      .finally(() => setBypassPending(false));
   }, [loading, session, bypassAttempted, signIn]);
   // Justo tras completar la activación, AppShell debe abrir directamente en
   // Ayuda en vez de Home — se limpia solo (no persiste entre sesiones), ver

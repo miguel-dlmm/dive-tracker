@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import * as Icons from "lucide-react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2 } from "lucide-react";
-import { TEAL, CORAL, GREEN } from "./App";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus } from "lucide-react";
+// Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
+// de imports con App.jsx, real y ya provocaba un ReferenceError en
+// desarrollo, no solo una fragilidad teórica).
+import { TEAL, SUN, CORAL, GREEN } from "./colors";
 
 export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
 
@@ -564,6 +567,22 @@ const CAL_WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
 
 const CAL_NEUTRAL = "#94A3B8";
 
+// Vocabulario único de "tipo de movimiento" (Curso/Comisión/Ajuste),
+// consumido por Home, Resumen y Mi trabajo — antes cada pantalla tenía su
+// propia copia (Home y Resumen decían "Ganado"/"Compañeros", vocabulario
+// previo a la unificación en Mi trabajo, ADR-0005, que ya usa "Curso"/
+// "Ajuste"; encontrado como bug real de datos desincronizados, no solo de
+// estilo, al auditar Home). Curso/Comisión tienen color de marca fijo
+// (TEAL/SUN, igual que en MiTrabajoTab); Ajuste no tiene uno propio en
+// ningún sitio de la app — su color depende del signo del importe (ver
+// rowAccent en MiTrabajoTab) — así que aquí usa el neutro del propio
+// calendario en vez de inventarle una identidad de marca que no tiene.
+export const MOVEMENT_TYPE_META = {
+  ganado: { label: "Curso", color: TEAL },
+  comision: { label: "Comisión", color: SUN },
+  companeros: { label: "Ajuste", color: CAL_NEUTRAL },
+};
+
 // Mini calendario del mes — el día con actividad lleva un anillo de color;
 // al pulsarlo se abre el desglose de ese día. `dotColor` admite un color fijo
 // o, para calendarios con varias escuelas mezcladas, una función
@@ -573,7 +592,15 @@ const CAL_NEUTRAL = "#94A3B8";
 // con comentario — para el calendario ya filtrado a una escuela) o
 // `groupBySource` (agrupado por Ganado/Comisión/Compañeros y luego por
 // actividad — cuando el filtro superior está en "Total").
-export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false }) {
+// onCreateForDay(dateStr): opcional — cuando se pasa, un día SIN actividad
+// deja de estar inerte y se puede tocar para iniciar la creación de un
+// movimiento ese día (antes cualquier día vacío estaba deshabilitado sin
+// excepción); un día CON actividad conserva su comportamiento de siempre
+// (alternar el desglose) y además gana un botón "+" dentro del propio
+// desglose, para añadir un segundo movimiento ese día sin perder la vista
+// de lo que ya hay. Sin este prop (p. ej. en Resumen, un calendario de
+// solo análisis) el comportamiento es exactamente el de antes.
+export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false, onCreateForDay }) {
   const [selectedDay, setSelectedDayState] = useState(null);
   const userSelectedRef = useRef(false);
   const setSelectedDay = (day) => {
@@ -665,19 +692,28 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           const hasActivity = d && list.length > 0;
           const isSelected = d === selectedDay;
           const color = hasActivity ? colorForDay(list) : null;
+          const creatable = d && !hasActivity && !!onCreateForDay;
+          const dateStr = d ? `${year}-${pad2(month + 1)}-${pad2(d)}` : null;
+          const handleClick = () => {
+            if (hasActivity) setSelectedDay(isSelected ? null : d);
+            else if (creatable) onCreateForDay(dateStr);
+          };
           return (
             <button
               key={i}
               type="button"
-              disabled={!d || !hasActivity}
-              onClick={() => setSelectedDay(isSelected ? null : d)}
-              className="flex h-9 items-center justify-center"
+              disabled={!d || (!hasActivity && !creatable)}
+              onClick={handleClick}
+              aria-label={creatable ? `Añadir movimiento el ${d} de ${CAL_MONTHS[month]}` : undefined}
+              className="flex h-11 items-center justify-center"
             >
               {d && (
                 <span
-                  className="flex h-7 w-7 items-center justify-center rounded-full text-xs"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-xs"
                   style={hasActivity
                     ? { border: `2px solid ${color}`, color: isSelected ? "white" : "#374151", backgroundColor: isSelected ? color : "transparent", fontWeight: 600 }
+                    : creatable
+                    ? { border: "1.5px dashed #D1D5DB", color: "#9CA3AF" }
                     : { color: "#9CA3AF" }}
                 >
                   {d}
@@ -703,7 +739,18 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
         <div className="mt-3 rounded-md bg-gray-50 p-3">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-600">Día {selectedDay} de {CAL_MONTHS[month]}</span>
-            <button onClick={() => setSelectedDay(null)} className="text-gray-400 hover:text-gray-600" aria-label="Cerrar detalle del día"><X size={14} /></button>
+            <div className="flex items-center gap-1">
+              {onCreateForDay && (
+                <button
+                  onClick={() => onCreateForDay(`${year}-${pad2(month + 1)}-${pad2(selectedDay)}`)}
+                  className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
+                  aria-label={`Añadir movimiento el ${selectedDay} de ${CAL_MONTHS[month]}`}
+                >
+                  <Plus size={16} aria-hidden="true" />
+                </button>
+              )}
+              <button onClick={() => setSelectedDay(null)} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600" aria-label="Cerrar detalle del día"><X size={14} /></button>
+            </div>
           </div>
 
           {groupBySource && detailed ? (

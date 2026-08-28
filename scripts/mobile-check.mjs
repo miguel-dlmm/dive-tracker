@@ -71,10 +71,140 @@ async function main() {
   await page.waitForSelector("text=Mi trabajo", { timeout: 15000 });
   await shot(page, "home");
 
+  console.log("→ Home: 'Añadir movimiento' (integrado en la tarjeta Pendiente de cobrar) abre el formulario SIN salir de Home");
+  await page.getByRole("button", { name: "Añadir movimiento", exact: true }).tap();
+  await page.waitForTimeout(250);
+  await shot(page, "home-anadir-movimiento");
+  const activeTabWithSheetOpen = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabWithSheetOpen?.trim() !== "Home") {
+    consoleIssues.push(`[nav] Al abrir 'Añadir movimiento' desde Home, la pestaña activa pasó a ser "${activeTabWithSheetOpen?.trim()}" — debe seguir en Home mientras se rellena`);
+  }
+
+  console.log("→ Cerrar el formulario sin guardar: debe quedarse en Home, no navegar a Mi trabajo");
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(200);
+  const activeTabAfterCancel = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabAfterCancel?.trim() !== "Home") {
+    consoleIssues.push(`[nav] Tras cerrar 'Añadir movimiento' sin guardar, la pestaña activa es "${activeTabAfterCancel?.trim()}", no "Home"`);
+  }
+  await shot(page, "home-tras-cerrar-sin-guardar");
+
+  console.log("→ Guardar desde el acceso rápido de Home: debe navegar a Mi trabajo solo tras el guardado, y el movimiento debe verse allí");
+  await page.getByRole("button", { name: "Añadir movimiento", exact: true }).tap();
+  await page.waitForTimeout(200);
+  await page.getByRole("button", { name: "Guardar", exact: false }).tap();
+  await page.waitForTimeout(600);
+  const activeTabAfterSave = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabAfterSave?.trim() !== "Mi trabajo") {
+    consoleIssues.push(`[nav] Tras guardar desde el acceso rápido de Home, la pestaña activa es "${activeTabAfterSave?.trim()}", no "Mi trabajo"`);
+  }
+  await shot(page, "mi-trabajo-tras-guardar-desde-home");
+  const pendientesTabAfterHomeSave = page.getByRole("button", { name: "Pendientes", exact: false });
+  if (!(await pendientesTabAfterHomeSave.isVisible().catch(() => false))) {
+    consoleIssues.push("[home->mi-trabajo] Tras guardar desde Home, no se encuentra la pestaña 'Pendientes' en Mi trabajo para localizar el movimiento recién creado");
+  }
+
+  // Volver a Home antes del siguiente paso, que también parte de Home.
+  await page.locator("text=Home").first().tap();
+  await page.waitForTimeout(300);
+
+  console.log("→ Home: tocar un día vacío del calendario abre 'Nuevo curso impartido' con esa fecha, sin salir de Home");
+  const creatableDay = page.locator('button[aria-label^="Añadir movimiento el"]').first();
+  const dayLabel = await creatableDay.getAttribute("aria-label");
+  console.log(`  (día tocado: "${dayLabel}" — comprobar que la fecha del formulario coincide, no la de hoy)`);
+  await creatableDay.tap();
+  await page.waitForTimeout(250);
+  await shot(page, "home-dia-vacio-abre-formulario");
+  const activeTabWithDaySheetOpen = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabWithDaySheetOpen?.trim() !== "Home") {
+    consoleIssues.push(`[nav] Al abrir el formulario desde un día del calendario de Home, la pestaña activa pasó a ser "${activeTabWithDaySheetOpen?.trim()}" — debe seguir en Home mientras se rellena`);
+  }
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(200);
+  // El día tocado navega a Mi trabajo (mismo flujo que el FAB) — volver a
+  // Home antes de continuar, para que el resto del recorrido no dependa
+  // de en qué pestaña te deja este paso concreto.
+  await page.locator("text=Home").first().tap();
+  await page.waitForTimeout(300);
+
   console.log("→ Mi trabajo");
   await page.locator("text=Mi trabajo").first().tap();
   await page.waitForTimeout(400);
   await shot(page, "mi-trabajo-lista");
+
+  console.log("→ Recargar en Mi trabajo: debe seguir en Mi trabajo, no volver a Home");
+  await page.reload();
+  await page.waitForSelector("text=Mi trabajo", { timeout: 15000 });
+  await page.waitForTimeout(300);
+  const activeTabAfterReload = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabAfterReload?.trim() !== "Mi trabajo") {
+    consoleIssues.push(`[nav] Tras recargar en Mi trabajo, la pestaña activa es "${activeTabAfterReload?.trim()}", no "Mi trabajo"`);
+  }
+  await shot(page, "mi-trabajo-tras-recargar");
+
+  console.log("→ Mi trabajo -> Ayuda -> Cerrar: debe volver a Mi trabajo, no a Home");
+  await page.locator('button[aria-label="Ayuda"]').tap();
+  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(300);
+  const activeTabAfterAyuda = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabAfterAyuda?.trim() !== "Mi trabajo") {
+    consoleIssues.push(`[nav] Tras cerrar Ayuda (entrada desde Mi trabajo), la pestaña activa es "${activeTabAfterAyuda?.trim()}", no "Mi trabajo"`);
+  }
+  await shot(page, "mi-trabajo-tras-cerrar-ayuda");
+
+  console.log("→ Crear Curso -> nace Pendiente -> alternar Cobrado/Pendiente en ambos sentidos");
+  await page.locator('button[aria-label="Añadir"]').tap();
+  await page.waitForTimeout(200);
+  await page.getByRole("button", { name: "Guardar", exact: false }).tap();
+  // El toast de "Curso añadido" dura 3000ms (sin acción) — esperar a que
+  // desaparezca del todo antes de seguir, para no confundirlo con el toast
+  // del siguiente paso (con "Deshacer", dura 5000ms) al leer su texto.
+  await page.waitForTimeout(3300);
+  await shot(page, "curso-creado-en-pendientes");
+  const toggleBtn = page.locator('button:has-text("Confirmar cobro")').first();
+  const hasNewPending = await toggleBtn.count() > 0;
+  if (!hasNewPending) {
+    consoleIssues.push("[payment-status] El Curso recién creado no aparece en Pendientes con la acción \"Confirmar cobro\" — revisar payment_statuses.");
+  } else {
+    await toggleBtn.tap();
+    await page.waitForTimeout(200);
+    const toastAfterCobrar = await page.locator('[role="status"]').last().textContent().catch(() => "");
+    console.log(`  (toast al cobrar: "${toastAfterCobrar?.trim()}")`);
+    if (!/cobrado/i.test(toastAfterCobrar || "")) {
+      consoleIssues.push(`[payment-status] Al confirmar cobro, el toast dice "${toastAfterCobrar?.trim()}" — se esperaba que mencionara "cobrado".`);
+    }
+    await page.waitForTimeout(5200); // deja expirar el toast (con "Deshacer", 5000ms) antes de seguir
+    await page.getByRole("button", { name: "Cobrados", exact: true }).tap();
+    await page.waitForTimeout(300);
+    await shot(page, "curso-tras-cobrar");
+    const pendingAgainBtn = page.locator('button:has-text("Marcar pendiente")').first();
+    if (await pendingAgainBtn.count() > 0) {
+      await pendingAgainBtn.tap();
+      await page.waitForTimeout(200);
+      const toastAfterPendiente = await page.locator('[role="status"]').last().textContent().catch(() => "");
+      console.log(`  (toast al marcar pendiente: "${toastAfterPendiente?.trim()}")`);
+      if (!/pendiente/i.test(toastAfterPendiente || "")) {
+        consoleIssues.push(`[payment-status] Al marcar pendiente, el toast dice "${toastAfterPendiente?.trim()}" — se esperaba que mencionara "pendiente".`);
+      }
+      await page.waitForTimeout(5200);
+      await page.getByRole("button", { name: /^Pendientes/ }).tap();
+      await page.waitForTimeout(300);
+      await shot(page, "curso-tras-marcar-pendiente-de-nuevo");
+      // Limpieza: no dejar el movimiento de prueba en la cuenta.
+      const rowMenu = page.locator('button[aria-label="Más acciones"]').first();
+      if (await rowMenu.count() > 0) {
+        await rowMenu.tap();
+        await page.waitForTimeout(150);
+        await page.getByRole("menuitem", { name: /Eliminar/ }).tap();
+        await page.waitForTimeout(100);
+        await page.getByRole("alertdialog").getByRole("button", { name: "Eliminar" }).tap();
+        await page.waitForTimeout(500);
+      }
+    } else {
+      consoleIssues.push('[payment-status] Tras cobrar, no se encontró el botón "Marcar pendiente" en Cobrados.');
+    }
+  }
 
   console.log("→ Abrir creación (FAB)");
   await page.locator('button[aria-label="Añadir"]').tap();
@@ -132,7 +262,6 @@ async function main() {
   }
 
   console.log("→ Resumen: cabecera sticky con sombra al hacer scroll");
-  await page.locator("text=Volver a Home").first().tap().catch(() => {}); // por si quedó en Cobrados con la hoja cerrada
   await page.locator("text=Resumen").first().tap();
   await page.waitForTimeout(300);
   await shot(page, "resumen");
@@ -141,17 +270,31 @@ async function main() {
   await shot(page, "resumen-scroll-cabecera-sticky");
   await page.mouse.wheel(0, -600);
 
-  console.log("→ Ayuda/Configuración: acceso secundario con '‹ Volver' en cabecera");
+  console.log("→ Ayuda/Configuración: acceso secundario con 'X Cerrar' en cabecera (vuelve a la pestaña de origen, ver App.jsx returnTab)");
   await page.locator('button[aria-label="Ayuda"]').tap();
   await page.waitForTimeout(300);
   await shot(page, "ayuda");
-  await page.locator('button[aria-label="Volver a Home"]').tap();
+  await page.mouse.wheel(0, 500);
+  await page.waitForTimeout(250);
+  await shot(page, "ayuda-scroll-cabecera");
+  await page.mouse.wheel(0, -500);
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
   await page.waitForTimeout(300);
   await page.locator('button[aria-label="Configuración"]').tap();
   await page.waitForTimeout(300);
   await shot(page, "configuracion");
-  await page.locator('button[aria-label="Volver a Home"]').tap();
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
   await page.waitForTimeout(300);
+
+  console.log("→ Cerrar sesión (bypass, tras la recarga de antes): debe volver al login normal, no volver a autenticarse sola");
+  await page.locator('button[aria-label="Cerrar sesión"]').tap();
+  try {
+    await page.getByLabel("Email o nickname").waitFor({ timeout: 8000 });
+    console.log("  (pantalla de login normal visible tras cerrar sesión — correcto)");
+  } catch {
+    consoleIssues.push("[dev-bypass] Tras cerrar sesión, no apareció la pantalla de login normal en 8s (¿se quedó cargando?).");
+  }
+  await shot(page, "login-tras-logout");
 
   await browser.close();
 

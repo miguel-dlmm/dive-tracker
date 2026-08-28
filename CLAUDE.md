@@ -10,7 +10,12 @@ compañeros, Tarifas, Resumen). Producto de la marca personal "Ocean Flow".
 - Supabase (Postgres + JS client) como backend, sin auth todavía (single-user,
   políticas RLS "allow all")
 - lucide-react para iconos
-- Sin router — navegación por estado (`tab` en App.jsx), no hay URLs por pantalla
+- Sin router — navegación por estado (`tab` en App.jsx), no hay URLs por
+  pantalla. `tab` y `returnTab` (a qué pestaña primaria vuelve "‹"/"✕"
+  desde Ayuda/Configuración) se guardan en `sessionStorage` — sobreviven a
+  una recarga de página, pero no a cerrar la pestaña ni a cerrar sesión
+  (se limpian ahí a propósito, para que un usuario distinto no herede la
+  posición del anterior)
 
 ## Estructura
 
@@ -63,6 +68,12 @@ ningún control de seguridad.
   que imprime, igual que cualquier alta real.
 - **Cómo desactivarla:** borra `VITE_DEV_AUTH_BYPASS` de `.env.local` o
   ponla a `false` — vuelve a aparecer el login normal.
+- **Cerrar sesión respeta la decisión:** pulsar "Cerrar sesión" con el
+  bypass activo guarda `oceanpulse:devBypassDisabled=true` en
+  `localStorage` (por eso sobrevive a recargar la página, no solo a
+  `sessionStorage`) y dejas de auto-loguearte con la cuenta demo en ese
+  navegador hasta que inicies sesión a mano una vez — así se puede probar
+  con otra cuenta sin que el bypass "secuestre" la sesión de vuelta.
 - **Doble candado, no solo en teoría:** `import.meta.env.MODE ===
   "development"` (constante que Vite resuelve en build time — en
   `vite build`, mode "production", la rama se elimina del bundle por
@@ -129,14 +140,11 @@ ningún control de seguridad.
 
 ## Cosas que NO existen todavía (no asumir que están hechas)
 
-- Autenticación / multiusuario (estimado ~5-7h si se pide: Supabase Auth ya
-  soportaría 50k MAU gratis, falta pantalla de login y `user_id` + RLS real
-  en las 12 tablas)
-- Interacción real en los calendarios (hoy son de solo lectura con un
-  desglose al pulsar un día; no filtran el resto de la pantalla)
-- El KPI superior de Home ("Ganado este mes") solo cuenta Work Log — el
-  desglose al pulsar un día del calendario de Home sí junta Ganado +
-  Comisiones + Pagos de compañeros (agrupados por tipo, como en el Resumen)
+- Interacción real en el calendario de Resumen (sigue siendo de solo
+  lectura, con un desglose al pulsar un día; no filtra el resto de la
+  pantalla). El calendario de Home sí admite crear un movimiento al tocar
+  un día vacío o desde el propio desglose de un día con actividad — ver
+  `onCreateForDay` en `MonthCalendar`, `shared.jsx`.
 - Los iconos/imágenes que referencia `index.html` (`/icon.svg`,
   `/icon-192.png`, `/icon-512.png`, `/og-image.png`) son placeholders — hay
   que generarlos
