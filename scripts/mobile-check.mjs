@@ -131,6 +131,28 @@ async function main() {
     console.log("  (sin filas en Cobrados para probar el borrado — omitido)");
   }
 
+  console.log("→ Resumen: cabecera sticky con sombra al hacer scroll");
+  await page.locator("text=Volver a Home").first().tap().catch(() => {}); // por si quedó en Cobrados con la hoja cerrada
+  await page.locator("text=Resumen").first().tap();
+  await page.waitForTimeout(300);
+  await shot(page, "resumen");
+  await page.mouse.wheel(0, 600);
+  await page.waitForTimeout(250);
+  await shot(page, "resumen-scroll-cabecera-sticky");
+  await page.mouse.wheel(0, -600);
+
+  console.log("→ Ayuda/Configuración: acceso secundario con '‹ Volver' en cabecera");
+  await page.locator('button[aria-label="Ayuda"]').tap();
+  await page.waitForTimeout(300);
+  await shot(page, "ayuda");
+  await page.locator('button[aria-label="Volver a Home"]').tap();
+  await page.waitForTimeout(300);
+  await page.locator('button[aria-label="Configuración"]').tap();
+  await page.waitForTimeout(300);
+  await shot(page, "configuracion");
+  await page.locator('button[aria-label="Volver a Home"]').tap();
+  await page.waitForTimeout(300);
+
   await browser.close();
 
   console.log(`\n${shotCount} capturas en scripts/mobile-check-output/`);

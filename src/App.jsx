@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { Waves, Home as HomeIcon, Briefcase, BarChart3, ArrowLeft, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
-import { ToastProvider, AppLoading } from "./shared";
+import { ToastProvider, AppLoading, useScrolled } from "./shared";
+import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 import LoginScreen from "./LoginScreen";
 import CreatePasswordScreen from "./CreatePasswordScreen";
 import AcceptLegalScreen from "./AcceptLegalScreen";
@@ -89,6 +91,15 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   const bottomTabActive = PRIMARY_TABS.some((t) => t.id === tab) ? tab : null;
   const isSecondary = tab in SECONDARY_TITLES;
   const logoIcon = appConfig.rows[0]?.logo_icon || "Waves";
+  // La cabecera acompaña siempre al usuario (ver rediseño de navegación
+  // global) — antes se quedaba en flujo normal y desaparecía al hacer
+  // scroll en cualquier lista larga, dejando Ayuda/Configuración/Cerrar
+  // sesión (y "‹ Volver" en pantallas secundarias) inalcanzables sin
+  // volver arriba. scrolled añade una sombra sutil una vez el contenido
+  // pasa por debajo, para que se lea como "flotando" y no como un bloque
+  // más de la página.
+  const scrolled = useScrolled();
+  const reducedMotion = usePrefersReducedMotion();
 
   if (!loaded) {
     return (
@@ -100,7 +111,14 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
 
   return (
     <div className="min-h-dvh" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
-      <header className="border-b border-black/5 bg-white">
+      <header
+        className="sticky top-0 z-30 border-b border-black/5 bg-white/95 backdrop-blur-md transition-shadow duration-200"
+        style={{
+          paddingTop: "env(safe-area-inset-top)",
+          transform: "translateZ(0)",
+          boxShadow: scrolled ? "0 1px 3px rgba(15, 23, 42, 0.06)" : "none",
+        }}
+      >
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-2.5 px-5 py-4">
           {isSecondary ? (
             <button onClick={() => setTab("home")} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Volver a Home">
@@ -140,6 +158,13 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 pb-24 pt-5 sm:px-5">
+      <AnimatePresence mode="wait">
+      <motion.div
+        key={tab}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0, transition: { duration: reducedMotion ? 0.01 : DURATION.sm, ease: EASE.enter } }}
+        exit={{ opacity: 0, y: -4, transition: { duration: reducedMotion ? 0.01 : DURATION.xs, ease: EASE.exit } }}
+      >
         {tab === "home" && (
           <HomeTab
             worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
@@ -191,6 +216,8 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
           />
         )}
         {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
+      </motion.div>
+      </AnimatePresence>
       </main>
 
       {/* Barra inferior — 5 destinos de uso diario.
