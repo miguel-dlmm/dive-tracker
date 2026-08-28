@@ -3,7 +3,7 @@ import { Plus, X, Pencil, Check, RotateCcw, MoreVertical, SlidersHorizontal, Par
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   inputCls, formatMoney, Money, Field, Select, MultiSelect, CurrencySearchSelect, MoneyInput,
-  DatePicker, DeleteButton, AppLoading, colorFor, isPendingStatus, oppositeStatus, useToast,
+  DatePicker, DeleteButton, colorFor, isPendingStatus, oppositeStatus, useToast,
   useClickOutside, useEscapeClose,
 } from "./shared";
 import { computeRateTotal, buildActivityEntries, buildIncomeEntries } from "./rateCalc";
@@ -157,17 +157,33 @@ function emptyMessage(statusFilter, hasActiveFilters) {
 
 // schools / activities / paymentTypes / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates / commissionRates / worklog / comisiones / colleaguePayments: { rows: [...], insertRow, updateRow, deleteRow, bulkUpdateWhere }
-// appConfig: { rows: [...] } — icono de carga al dar de alta una tarifa al vuelo
 // accentColor: color de sección (nav_sections), para el FAB
 // autoOpenType: "log" | "comisiones" | null — llegado desde el acceso rápido de Home
+// userId: profile.user_id — clave de la moneda favorita en localStorage (ver más abajo)
 // Unifica Registro + Comisiones + Compañeros en una única experiencia — ver
 // docs/ADR/0005-mi-trabajo-unificacion-economica.md. Adaptador puro sobre el
 // modelo actual (sin migración de datos ni cambio de esquema): sigue
 // escribiendo sobre worklog/comisiones/colleague_payments de siempre.
+// Moneda favorita — preferencia personal del instructor, no dato de
+// negocio (no vive en Supabase a propósito): un instructor casi siempre
+// cobra Ajustes en la misma moneda, y hoy el valor por defecto es el
+// global de Configuración, no el suyo. localStorage evita una migración
+// de esquema para una preferencia de un solo campo, de un solo
+// dispositivo — si algún día hace falta sincronizarla entre dispositivos,
+// eso sí sería motivo para moverla a `profiles` (columna nueva, con su
+// propia migración).
+const favoriteCurrencyKey = (userId) => `oceanpulse:favoriteCurrency:${userId || "anon"}`;
+function getFavoriteCurrency(userId) {
+  try { return localStorage.getItem(favoriteCurrencyKey(userId)); } catch { return null; }
+}
+function setFavoriteCurrency(userId, code) {
+  try { localStorage.setItem(favoriteCurrencyKey(userId), code); } catch { /* localStorage no disponible — no es crítico, se ignora */ }
+}
+
 export default function MiTrabajoTab({
   schools, activities, paymentTypes, paymentStatuses, currencies,
   rates, commissionRates, worklog, comisiones, colleaguePayments,
-  appConfig, accentColor = TEAL, autoOpenType = null, onAutoOpened,
+  accentColor = TEAL, autoOpenType = null, onAutoOpened, userId = null,
 }) {
   const toast = useToast();
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
@@ -175,6 +191,12 @@ export default function MiTrabajoTab({
   const defaultSchool = schools.rows.find((s) => s.is_default)?.name || "";
   const defaultActivity = activities.rows.find((a) => a.is_default)?.name || "";
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
+  const [favoriteCurrency, setFavoriteCurrencyState] = useState(() => getFavoriteCurrency(userId));
+  const markFavoriteCurrency = (code) => {
+    setFavoriteCurrency(userId, code);
+    setFavoriteCurrencyState(code);
+    toast?.success(`${code} guardada como moneda favorita`);
+  };
   // WORKAROUND TEMPORAL (ver docs/BACKLOG.md y docs/ADR/0003): igual que en
   // WorkLogTab/ComisionesTab, una cuenta nueva nace con payment_types
   // vacío — sin este fallback, el alta de tarifa al vuelo queda bloqueada.
@@ -293,6 +315,10 @@ export default function MiTrabajoTab({
   const [creating, setCreating] = useState(null); // null | "ganado" | "comision" | "companeros"
   const [form, setForm] = useState(null);
   const [editingEntry, setEditingEntry] = useState(null); // null = creando; si no, la entrada que se está editando
+  // Solo se sugiere "usar como favorita" tras un cambio activo del usuario
+  // en esta sesión del formulario — no en el valor preseleccionado al
+  // abrir, aunque ese valor también sea distinto de la favorita guardada.
+  const [currencyTouched, setCurrencyTouched] = useState(false);
   const fabVisible = useHideFabOnScroll();
 
   const startEdit = (entry) => {
@@ -301,22 +327,28 @@ export default function MiTrabajoTab({
     setForm(entry._source === "companeros"
       ? { date: entry.date, school: entry.school, activity: entry.activity, colleague_name: entry.colleague_name, amount: entry.amount, currency: entry.currency, notes: entry.notes || "" }
       : { date: entry.date, school: entry.school, activity: entry.activity, people: entry.people, notes: entry.notes || "" });
+    setCurrencyTouched(false);
   };
-  const closeSheet = () => { setCreating(null); setForm(null); setEditingEntry(null); };
+  const closeSheet = () => { setCreating(null); setForm(null); setEditingEntry(null); setAddingRate(false); setRateForm(null); setCurrencyTouched(false); };
 
-  const [rateSheetOpen, setRateSheetOpen] = useState(false);
+  // Antes "añadir tarifa" abría una segunda hoja apilada encima de la de
+  // crear/editar — un modal encadenado. Ahora es un bloque que se expande
+  // dentro de la misma hoja (Escuela/Curso ya se conocen por contexto, solo
+  // hace falta Moneda + Tarifa) — un paso y una transición menos.
+  const [addingRate, setAddingRate] = useState(false);
   const [rateForm, setRateForm] = useState(null);
   const [savingRate, setSavingRate] = useState(false);
 
   const emptyFormFor = (type) => {
     const base = { date: new Date().toISOString().slice(0, 10), school: defaultSchool, notes: "" };
-    if (type === "companeros") return { ...base, activity: "", colleague_name: "", amount: "", currency: defaultCurrency };
+    if (type === "companeros") return { ...base, activity: "", colleague_name: "", amount: "", currency: favoriteCurrency || defaultCurrency };
     return { ...base, activity: defaultActivity, people: 1 };
   };
   const openCreate = (type) => {
     setCreating(type);
     setForm(emptyFormFor(type));
     setEditingEntry(null);
+    setCurrencyTouched(false);
     setPickerOpen(false);
   };
 
@@ -365,16 +397,17 @@ export default function MiTrabajoTab({
     }
   };
 
-  const openRateSheet = () => {
-    setRateForm({ school: form.school || defaultSchool, activity: form.activity || defaultActivity, payment_type: defaultPaymentType, currency: defaultCurrency, rate: "" });
-    setRateSheetOpen(true);
+  const openInlineRate = () => {
+    setRateForm({ school: form.school, activity: form.activity, payment_type: defaultPaymentType, currency: defaultCurrency, rate: "" });
+    setAddingRate(true);
   };
   const saveRate = async () => {
     if (!rateForm.school || !rateForm.activity || !rateForm.payment_type || !rateForm.rate) return;
     setSavingRate(true);
     try {
       await ratesTableFor(creating).insertRow({ ...rateForm, rate: Number(rateForm.rate) });
-      setRateSheetOpen(false);
+      setAddingRate(false);
+      setRateForm(null);
       toast?.success("Tarifa añadida");
     } catch {
       toast?.error("No se pudo guardar la tarifa. Inténtalo de nuevo.");
@@ -564,9 +597,23 @@ export default function MiTrabajoTab({
                       <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
                     </Field>
                     <Field label="Moneda">
-                      <CurrencySearchSelect value={form.currency} onChange={(v) => setForm({ ...form, currency: v })} currencyRows={currencies.rows} />
+                      <CurrencySearchSelect
+                        value={form.currency}
+                        onChange={(v) => { setForm({ ...form, currency: v }); setCurrencyTouched(true); }}
+                        currencyRows={currencies.rows}
+                      />
                     </Field>
                   </div>
+                  {currencyTouched && form.currency && form.currency !== favoriteCurrency && (
+                    <button
+                      type="button"
+                      onClick={() => markFavoriteCurrency(form.currency)}
+                      className="text-xs font-medium underline underline-offset-2"
+                      style={{ color: TEAL }}
+                    >
+                      Usar {form.currency} como moneda favorita
+                    </button>
+                  )}
                 </>
               ) : (
                 <div className="w-28">
@@ -583,10 +630,43 @@ export default function MiTrabajoTab({
                       Tarifa: <b>{formatMoney(preview.rate, preview.currency, currencies.rows)}</b> ({preview.paymentType}) →
                       {" "}Total: <b style={{ color: TEAL }}>{formatMoney(preview.total, preview.currency, currencies.rows)}</b>
                     </span>
+                  ) : addingRate ? (
+                    <div className="space-y-2">
+                      <p className="font-medium text-gray-700">
+                        Nueva tarifa{creating === "comision" ? " de comisión" : ""} — {form.school} · {form.activity}
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Field label="Moneda">
+                          <CurrencySearchSelect value={rateForm.currency} onChange={(v) => setRateForm({ ...rateForm, currency: v })} currencyRows={currencies.rows} />
+                        </Field>
+                        <Field label="Tarifa">
+                          <MoneyInput value={rateForm.rate} onChange={(v) => setRateForm({ ...rateForm, rate: v })} />
+                        </Field>
+                      </div>
+                      <div className="flex gap-2 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={saveRate}
+                          disabled={savingRate || !rateForm.rate}
+                          className="min-h-9 flex-1 rounded-md text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                          style={{ backgroundColor: accentColor }}
+                        >
+                          {savingRate ? "Guardando..." : "Guardar tarifa"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setAddingRate(false); setRateForm(null); }}
+                          disabled={savingRate}
+                          className="min-h-9 rounded-md border border-gray-200 px-3 text-xs font-medium text-gray-500"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
                   ) : form.school && form.activity ? (
                     <span className="text-amber-600">
                       Sin tarifa{creating === "comision" ? " de comisión" : ""} configurada —{" "}
-                      <button type="button" onClick={openRateSheet} className="font-semibold underline underline-offset-2">
+                      <button type="button" onClick={openInlineRate} className="font-semibold underline underline-offset-2">
                         añadir tarifa
                       </button>.
                     </span>
@@ -613,49 +693,6 @@ export default function MiTrabajoTab({
         </div>
       )}
 
-      {rateSheetOpen && rateForm && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/25" onClick={() => !savingRate && setRateSheetOpen(false)}>
-          <div
-            className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
-            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-800">Nueva tarifa{creating === "comision" ? " de comisión" : ""}</h3>
-              <button onClick={() => setRateSheetOpen(false)} disabled={savingRate} className="text-gray-400" aria-label="Cerrar"><X size={19} /></button>
-            </div>
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-              <Field label="Escuela">
-                <Select value={rateForm.school} onChange={(v) => setRateForm({ ...rateForm, school: v })} options={schoolNames} />
-              </Field>
-              <Field label="Curso">
-                <Select value={rateForm.activity} onChange={(v) => setRateForm({ ...rateForm, activity: v })} options={activityNames} />
-              </Field>
-              <Field label="Moneda">
-                <CurrencySearchSelect value={rateForm.currency} onChange={(v) => setRateForm({ ...rateForm, currency: v })} currencyRows={currencies.rows} />
-              </Field>
-              <Field label="Tarifa">
-                <MoneyInput value={rateForm.rate} onChange={(v) => setRateForm({ ...rateForm, rate: v })} />
-              </Field>
-            </div>
-
-            <button
-              onClick={saveRate}
-              disabled={savingRate || !rateForm.school || !rateForm.activity || !rateForm.payment_type || !rateForm.rate}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-              style={{ backgroundColor: accentColor }}
-            >
-              <Plus size={16} aria-hidden="true" /> Guardar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {savingRate && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white/80">
-          <AppLoading iconName={appConfig?.rows?.[0]?.logo_icon} color={accentColor} label="Guardando tarifa" />
-        </div>
-      )}
     </div>
   );
 }
