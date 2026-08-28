@@ -32,6 +32,10 @@ dist-ssr
 .netlify
 .vercel
 
+# Capturas de scripts/mobile-check.mjs — resultado de una ejecución local,
+# no artefactos versionables.
+scripts/mobile-check-output/
+
 # Enlaces de activación de cuentas demo generados por scripts/create-demo-user.js
 # — nunca al repo, son tokens de un solo uso válidos varias horas.
 usuarios de prueba.md

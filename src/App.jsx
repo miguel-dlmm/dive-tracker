@@ -172,6 +172,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
             accentColor={sectionColor("trabajo")} userId={profile?.user_id}
             autoOpenType={pendingOpen} onAutoOpened={() => setPendingOpen(null)}
+            onOpenPayments={() => setTab("pagos")}
           />
         )}
         {tab === "config" && (

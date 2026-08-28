@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Plus, X, Pencil, Check, RotateCcw, MoreVertical, SlidersHorizontal, PartyPopper, ListChecks, Handshake, Users, Star } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Minus, X, Pencil, Check, RotateCcw, MoreVertical, SlidersHorizontal, PartyPopper, GraduationCap, Handshake, Users, Star, Loader2, StickyNote } from "lucide-react";
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   inputCls, formatMoney, Money, Field, Select, MultiSelect, CurrencySearchSelect, MoneyInput,
-  DatePicker, DateRangePicker, DeleteButton, colorFor, lighten, isPendingStatus, oppositeStatus, useToast,
-  useClickOutside, useEscapeClose, todayStr, addDays,
+  DatePicker, DateRangePicker, DeleteButton, ConfirmDialog, colorFor, lighten, isPendingStatus, oppositeStatus, useToast,
+  useFloatingDropdown, FloatingPanel, todayStr, addDays,
 } from "./shared";
 import { computeRateTotal, buildActivityEntries, buildIncomeEntries } from "./rateCalc";
 import PendingCollectionCard from "./PendingCollectionCard";
@@ -18,9 +18,13 @@ const RECENT_PAID_LIMIT = 10;
 // docs/ADR/0005-mi-trabajo-unificacion-economica.md).
 const TYPE_OPTIONS = ["Curso", "Comisión", "Ajuste de curso"];
 const TYPE_KEY = { "Curso": "ganado", "Comisión": "comision", "Ajuste de curso": "companeros" };
-const SOURCE_LABEL = { comision: "Comisión", companeros: "Ajuste" };
+// Antes solo Comisión/Ajuste llevaban esta etiqueta de texto junto a la
+// fecha — Curso se quedaba sin ninguna, apoyándose solo en el color del
+// borde lateral. Para que el color no sea la ÚNICA señal del tipo (accesible
+// también sin distinguir colores) las tres etiquetas están completas.
+const SOURCE_LABEL = { ganado: "Curso", comision: "Comisión", companeros: "Ajuste" };
 const CREATE_TYPES = [
-  { key: "ganado", label: "Curso impartido", icon: ListChecks },
+  { key: "ganado", label: "Curso impartido", icon: GraduationCap }, // formación/certificación — más reconocible a tamaño pequeño que un icono náutico genérico
   { key: "comision", label: "Comisión", icon: Handshake },
   { key: "companeros", label: "Ajuste de curso", icon: Users },
 ];
@@ -56,12 +60,27 @@ function actionLabel(entry, isPending) {
 // con el cambio de estado; ahora quedan agrupados detrás de un único
 // control, sin perder alcance (siguen a un toque de distancia).
 function RowMenu({ onEdit, onDelete, itemLabel }) {
-  const [open, setOpen] = useState(false);
-  const ref = useClickOutside(() => setOpen(false));
-  useEscapeClose(open, () => setOpen(false));
+  // Antes se recortaba en la última fila de la lista (el contenedor tiene
+  // overflow-hidden para las esquinas redondeadas) — con FloatingPanel
+  // (portal a document.body) deja de depender de los ancestros.
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
+  // Cierra el menú "⋯" en el mismo instante en que se CONFIRMA el borrado
+  // dentro del diálogo — no al pulsar "Eliminar" en el menú, porque eso
+  // solo abre el diálogo (que vive dentro de DeleteButton, dentro de este
+  // mismo FloatingPanel): cerrar el menú en ese momento desmontaría el
+  // FloatingPanel y con él el propio diálogo antes de que llegara a
+  // mostrarse. En el momento de onConfirm, el diálogo ya se está cerrando
+  // por su cuenta (DeleteButton es optimistic), así que cerrar el menú a
+  // la vez no se nota — y sin esto, se veía el menú suelto un instante
+  // detrás una vez cerrado el diálogo.
+  const handleDeleteConfirmed = () => {
+    setOpen(false);
+    return onDelete();
+  };
   return (
-    <div className="relative" ref={ref}>
+    <>
       <button
+        ref={anchorRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label="Más acciones"
@@ -71,19 +90,20 @@ function RowMenu({ onEdit, onDelete, itemLabel }) {
       >
         <MoreVertical size={17} aria-hidden="true" />
       </button>
-      {open && (
-        <div role="menu" className="absolute right-0 z-20 mt-1 w-36 overflow-hidden rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-          <button
-            type="button" role="menuitem"
-            onClick={() => { setOpen(false); onEdit(); }}
-            className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-gray-700 hover:bg-gray-50"
-          >
-            <Pencil size={14} aria-hidden="true" /> Editar
-          </button>
-          <DeleteButton variant="menuItem" onConfirm={onDelete} itemLabel={itemLabel} />
-        </div>
-      )}
-    </div>
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align="right" role="menu" className="w-36 overflow-hidden py-1">
+        <button
+          type="button" role="menuitem"
+          onClick={() => { setOpen(false); onEdit(); }}
+          className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-gray-700 hover:bg-gray-50"
+        >
+          <Pencil size={14} aria-hidden="true" /> Editar
+        </button>
+        {/* optimistic: el diálogo cierra al instante en vez de esperar al
+            borrado real — así la animación de salida de la fila (ver
+            EntryRow) se ve en la lista, no oculta detrás del modal. */}
+        <DeleteButton variant="menuItem" onConfirm={handleDeleteConfirmed} itemLabel={itemLabel} optimistic />
+      </FloatingPanel>
+    </>
   );
 }
 
@@ -91,33 +111,137 @@ function RowMenu({ onEdit, onDelete, itemLabel }) {
 // mantiene ligera (texto+icono, sin relleno de color) para no competir con
 // el FAB, que es la única acción con fondo sólido de toda la pantalla (ver
 // misma nota de ADR-0005 sobre jerarquía de acciones).
+// Acento por tipo (borde izquierdo, discreto) — para escanear la lista
+// de un vistazo sin abrir cada fila. Curso/Comisión usan un color fijo de
+// marca por tipo (TEAL/SUN, igual criterio que NAVY/CORAL/GREEN de más
+// abajo — identidad de la app, no dato de negocio configurable). Ajuste
+// reutiliza el color que ya tenía el importe (CORAL/GREEN según signo):
+// esa distinción de "quién debe a quién" ya era más valiosa que un color
+// de tipo uniforme, no había que sustituirla.
+function rowAccent(entry, amountColor) {
+  if (entry._source === "ganado") return TEAL;
+  if (entry._source === "comision") return SUN;
+  return amountColor;
+}
+
+// Mismo cálculo que rowAccent, pero pensado para el formulario de
+// creación/edición (icono de la cabecera + pestaña activa): antes esos
+// dos sitios usaban siempre accentColor (el color genérico de la
+// sección "Mi trabajo"), sin relación con el tipo que se está creando —
+// un usuario que ya asocia "teal = curso" al escanear la lista no veía
+// ese mismo teal al crear un curso nuevo. Para Ajuste seguimos el signo
+// del importe en vivo, igual que en la lista una vez guardado — si
+// todavía no se ha escrito nada, GREEN es el valor por defecto neutro
+// (Number("") es 0, no negativo).
+function formAccentColor(creating, amount) {
+  if (creating === "ganado") return TEAL;
+  if (creating === "comision") return SUN;
+  return Number(amount) < 0 ? CORAL : GREEN;
+}
+
+// Salida al eliminar — tres capas de movimiento en vez de un fade plano:
+// el contenido se encoge/desliza/desvanece primero (CONTENT_MS, empieza
+// ya), y el hueco se cierra un instante después (HEIGHT_DELAY_MS, con su
+// propia duración) — ese pequeño desfase es lo que distingue una
+// animación con cierta "coreografía" de una simple desaparición
+// simultánea de todo a la vez. cubic-bezier(0.4,0,1,1) es la curva de
+// "acelerar" de Material Design, pensada específicamente para elementos
+// que abandonan la pantalla (empiezan normal y aceleran de salida) — lo
+// contrario de la curva de "decelerar" que usaría algo que ENTRA. Sigue
+// siendo rápida a propósito: no debe frenar el ritmo normal de la lista.
+const EXIT_EASING = "cubic-bezier(0.4, 0, 1, 1)";
+const CONTENT_MS = 200;
+const HEIGHT_DELAY_MS = 60;
+const HEIGHT_MS = 220;
+const EXIT_MS = HEIGHT_DELAY_MS + HEIGHT_MS + 30; // margen antes de disparar el borrado real
+
 function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onEdit, onDelete }) {
   const isAjuste = entry._source === "companeros";
   const negative = isAjuste && entry.total < 0;
   const amountColor = isAjuste ? (negative ? CORAL : GREEN) : NAVY;
+
+  // Animación de salida: colapsar altura+opacidad+desplazamiento ANTES de
+  // borrar de verdad, no al revés — deleteRow() actualiza el estado en
+  // cuanto Supabase responde, así que si se llamara primero la fila
+  // desaparecería de la lista de golpe sin dar tiempo a animar nada. Por
+  // eso el borrado real se dispara al final de handleDelete, no al
+  // principio: para entonces la fila ya está invisible/colapsada, y su
+  // desaparición real de `visibleList` no da ningún salto.
+  //
+  // max-height necesita un valor de partida en píxeles para poder animar
+  // hasta 0 (con "none" no hay desde dónde interpolar) — se fija con
+  // scrollHeight y, un frame después (requestAnimationFrame), se pasa a 0.
+  // Ese frame de por medio es necesario: si los dos setState fueran
+  // síncronos, React los agruparía en un único commit y saltaría directo
+  // al valor final sin pintar el intermedio, o sea sin transición visible.
+  const rowRef = useRef(null);
+  const [exiting, setExiting] = useState(false);
+  const [fixedHeight, setFixedHeight] = useState(null);
+
+  const handleDelete = () => new Promise((resolve, reject) => {
+    const el = rowRef.current;
+    if (el) setFixedHeight(el.scrollHeight);
+    requestAnimationFrame(() => {
+      setExiting(true);
+      setTimeout(async () => {
+        try {
+          await onDelete();
+          resolve();
+        } catch (e) {
+          // Revierte la animación si el borrado real falla — el toast de
+          // error lo muestra DeleteButton, aquí solo hay que devolver la
+          // fila a su estado normal en vez de dejarla colapsada a medias.
+          setExiting(false);
+          setFixedHeight(null);
+          reject(e);
+        }
+      }, EXIT_MS);
+    });
+  });
+
   return (
-    <div className="px-4 py-3 text-sm">
-      <div className="flex items-start justify-between gap-2">
-        <EntryRowTitle entry={entry} activityColor={activityColor} />
-        <span className="shrink-0 font-semibold tabular-nums" style={{ color: amountColor }}>
-          {isAjuste && (negative ? "− " : "+ ")}
-          <Money amount={Math.abs(entry.total)} code={entry.currency} currencyRows={currencyRows} style={{ color: amountColor }} />
-        </span>
-      </div>
-      <div className="mt-1.5 flex items-center justify-between gap-2">
-        <span className="truncate text-xs text-gray-400">
-          {entry.date}{SOURCE_LABEL[entry._source] ? ` · ${SOURCE_LABEL[entry._source]}` : ""}
-        </span>
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            onClick={onToggle}
-            className="flex min-h-9 items-center gap-1 rounded px-1.5 text-xs font-semibold transition-colors"
-            style={{ color: isPending ? TEAL : "#6B7280" }}
-          >
-            {isPending ? <Check size={14} aria-hidden="true" /> : <RotateCcw size={13} aria-hidden="true" />}
-            {actionLabel(entry, isPending)}
-          </button>
-          <RowMenu onEdit={onEdit} onDelete={onDelete} itemLabel={isAjuste ? `el ajuste con ${entry.colleague_name}` : `${entry.activity} en ${entry.school}`} />
+    <div
+      ref={rowRef}
+      className="overflow-hidden"
+      style={{
+        maxHeight: fixedHeight == null ? "none" : (exiting ? 0 : fixedHeight),
+        transition: `max-height ${HEIGHT_MS}ms ${EXIT_EASING} ${HEIGHT_DELAY_MS}ms`,
+      }}
+    >
+      <div
+        className="border-l-4 px-4 py-3.5 text-sm"
+        style={{
+          borderColor: rowAccent(entry, amountColor),
+          opacity: exiting ? 0 : 1,
+          transform: exiting ? "translateX(-16px) scale(0.97)" : "translateX(0) scale(1)",
+          transition: `opacity ${CONTENT_MS}ms ${EXIT_EASING}, transform ${CONTENT_MS}ms ${EXIT_EASING}`,
+        }}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <EntryRowTitle entry={entry} activityColor={activityColor} />
+          <span className="shrink-0 font-semibold tabular-nums" style={{ color: amountColor }}>
+            {isAjuste && (negative ? "− " : "+ ")}
+            <Money amount={Math.abs(entry.total)} code={entry.currency} currencyRows={currencyRows} style={{ color: amountColor }} />
+          </span>
+        </div>
+        {entry.notes && (
+          <p className="mt-1 truncate text-[11px] italic text-gray-400">"{entry.notes}"</p>
+        )}
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <span className="truncate text-xs text-gray-400">
+            {entry.date}{SOURCE_LABEL[entry._source] ? ` · ${SOURCE_LABEL[entry._source]}` : ""}
+          </span>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              onClick={onToggle}
+              className="flex min-h-9 items-center gap-1 rounded px-1.5 text-xs font-semibold transition-colors"
+              style={{ color: isPending ? TEAL : "#6B7280" }}
+            >
+              {isPending ? <Check size={14} aria-hidden="true" /> : <RotateCcw size={13} aria-hidden="true" />}
+              {actionLabel(entry, isPending)}
+            </button>
+            <RowMenu onEdit={onEdit} onDelete={handleDelete} itemLabel={isAjuste ? `el ajuste con ${entry.colleague_name}` : `${entry.activity} en ${entry.school}`} />
+          </div>
         </div>
       </div>
     </div>
@@ -161,6 +285,19 @@ function dateGroupLabel(dateStr) {
   return `${WEEKDAYS_SHORT_ES[weekday]}, ${d} ${MONTHS_SHORT_ES[m - 1]}`;
 }
 
+// Notas se expande sola con el contenido — sin WYSIWYG, pero más cómoda en
+// móvil que un input de una sola línea para un par de frases.
+function useAutoResizeTextarea(value) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return ref;
+}
+
 function emptyMessage(statusFilter, hasActiveFilters) {
   if (statusFilter === "pendientes") {
     return hasActiveFilters ? "Sin elementos pendientes con estos filtros." : "Estás al día — nada pendiente.";
@@ -196,7 +333,7 @@ function setFavoriteCurrency(userId, code) {
 export default function MiTrabajoTab({
   schools, activities, paymentTypes, paymentStatuses, currencies,
   rates, commissionRates, worklog, comisiones, colleaguePayments,
-  accentColor = TEAL, autoOpenType = null, onAutoOpened, userId = null,
+  accentColor = TEAL, autoOpenType = null, onAutoOpened, userId = null, onOpenPayments,
 }) {
   const toast = useToast();
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
@@ -278,39 +415,82 @@ export default function MiTrabajoTab({
   // "cargando". Un esqueleto breve evita ese vistazo equivocado.
   const dataLoaded = worklog.loaded && comisiones.loaded && colleaguePayments.loaded && rates.loaded && commissionRates.loaded;
 
+  // El toggle sigue siendo de un solo toque, tan rápido como antes — la
+  // capa de seguridad es el "Deshacer" del toast, no un diálogo previo
+  // que frenaría el caso normal (acertar) para proteger el caso raro
+  // (fallar el toque). previousStatus se captura ANTES del cambio
+  // optimista, en el cierre de esta llamada — no depende de que la fila
+  // siga en pantalla ni de volver a leer su estado más tarde.
   const toggleStatus = async (entry) => {
+    const previousStatus = entry.status;
     const target = oppositeStatus(entry.status, paymentStatuses.rows);
     try {
       await tableFor(entry._source).updateRow(entry.id, { status: target });
+      const undo = async () => {
+        try {
+          await tableFor(entry._source).updateRow(entry.id, { status: previousStatus });
+          toast?.success("Deshecho");
+        } catch {
+          toast?.error("No se pudo deshacer. Inténtalo de nuevo.");
+        }
+      };
+      const action = { label: "Deshacer", onClick: undo };
       if (isPendingStatus(target, paymentStatuses.rows)) {
-        toast?.success("Marcado como pendiente");
+        toast?.success("Marcado como pendiente", { action });
       } else if (statusFilter === "pendientes") {
-        toast?.success('Marcado como cobrado — cámbialo a "Cobrados" para verlo');
+        toast?.success('Marcado como cobrado — cámbialo a "Cobrados" para verlo', { action });
       } else {
-        toast?.success("Marcado como cobrado");
+        toast?.success("Marcado como cobrado", { action });
       }
     } catch {
       toast?.error("No se pudo actualizar. Inténtalo de nuevo.");
     }
   };
 
+  // "Cobrar" es el término correcto para el caso normal (Curso, Comisión,
+  // Ajuste a tu favor), pero un Ajuste con importe negativo es una deuda
+  // TUYA — ahí no "cobras", liquidas (mismo matiz que ya distingue
+  // actionLabel() fila a fila). hasNegativeAjuste detecta si ese caso
+  // convive con el resto en la lista de pendientes visible, para no decir
+  // "cobrar" cuando parte de lo que se marca es en realidad una deuda que
+  // pagas tú.
+  const hasNegativeAjuste = pendingAll.some((e) => e._source === "companeros" && e.total < 0);
+
+  // Acción masiva (afecta a todos los pendientes visibles a la vez, sin
+  // Deshacer por lote) — a diferencia del toggle de una fila, aquí sí hace
+  // falta una confirmación explícita antes de ejecutar (ver
+  // confirmingCollectAll más abajo). No traga el error aquí: lo relanza
+  // para que quien confirma decida si cierra el diálogo o lo deja abierto
+  // para reintentar, igual que DeleteButton.
   const collectAllPending = async () => {
     if (pendingAll.length === 0) return;
     const targetStatus = oppositeStatus(pendingAll[0].status, paymentStatuses.rows);
     const bySource = { ganado: [], comision: [], companeros: [] };
     pendingAll.forEach((e) => bySource[e._source].push(e.id));
+    let count = 0;
+    for (const [source, ids] of Object.entries(bySource)) {
+      if (ids.length === 0) continue;
+      count += await tableFor(source).bulkUpdateWhere((e) => ids.includes(e.id), { status: targetStatus });
+    }
+    const verb = hasNegativeAjuste ? "cobrado o liquidado" : "cobrado";
+    const verbPlural = hasNegativeAjuste ? "cobrados o liquidados" : "cobrados";
+    const msg = statusFilter === "pendientes"
+      ? `${count} ${count === 1 ? `movimiento marcado como ${verb}` : `movimientos marcados como ${verbPlural}`} — cambia a "Cobrados" para verlos`
+      : `${count} ${count === 1 ? `movimiento marcado como ${verb}` : `movimientos marcados como ${verbPlural}`}`;
+    toast?.success(msg);
+  };
+
+  const [confirmingCollectAll, setConfirmingCollectAll] = useState(false);
+  const [collectingAll, setCollectingAll] = useState(false);
+  const confirmCollectAll = async () => {
+    setCollectingAll(true);
     try {
-      let count = 0;
-      for (const [source, ids] of Object.entries(bySource)) {
-        if (ids.length === 0) continue;
-        count += await tableFor(source).bulkUpdateWhere((e) => ids.includes(e.id), { status: targetStatus });
-      }
-      const msg = statusFilter === "pendientes"
-        ? `${count} ${count === 1 ? "elemento confirmado" : "elementos confirmados"} — cambia a "Cobrados" para verlos`
-        : `${count} ${count === 1 ? "elemento confirmado" : "elementos confirmados"}`;
-      toast?.success(msg);
+      await collectAllPending();
+      setConfirmingCollectAll(false);
     } catch {
       toast?.error("No se pudo actualizar. Inténtalo de nuevo.");
+    } finally {
+      setCollectingAll(false);
     }
   };
 
@@ -320,6 +500,18 @@ export default function MiTrabajoTab({
   };
   const colleagueSuggestions = (school) =>
     [...new Set(colleaguePayments.rows.filter((p) => p.school === school).map((p) => p.colleague_name))];
+  // Smart default de Curso: la actividad que impartiste más recientemente
+  // en esa escuela, no un valor global fijo — es el único campo del
+  // formulario sin un buen valor por defecto hoy (Fecha=hoy, Escuela=la
+  // que marques como tuya en Configuración, Nº personas=1). Solo se usa al
+  // ABRIR el formulario (emptyFormFor) — cambiar de escuela a mitad de
+  // formulario nunca reescribe una elección ya hecha.
+  const lastActivityFor = (type, school) => {
+    const source = type === "ganado" ? "ganado" : "comision";
+    const matches = activityEntries.filter((e) => e._source === source && e.school === school);
+    if (matches.length === 0) return null;
+    return matches.reduce((latest, e) => (e.date > latest.date ? e : latest)).activity;
+  };
 
   // -----------------------------------------------------------------
   // Creación y edición comparten la misma hoja inferior — misma
@@ -332,7 +524,6 @@ export default function MiTrabajoTab({
   // apps profesionales (Linear, Stripe) y coincide con la convención ya
   // establecida de "crear = hoja inferior" (ver CLAUDE.md) — editar sigue
   // la misma convención en vez de tener un patrón de interacción propio.
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [creating, setCreating] = useState(null); // null | "ganado" | "comision" | "companeros"
   const [form, setForm] = useState(null);
   const [editingEntry, setEditingEntry] = useState(null); // null = creando; si no, la entrada que se está editando
@@ -340,6 +531,11 @@ export default function MiTrabajoTab({
   // en esta sesión del formulario — no en el valor preseleccionado al
   // abrir, aunque ese valor también sea distinto de la favorita guardada.
   const [currencyTouched, setCurrencyTouched] = useState(false);
+  // Notas es el campo de menor frecuencia de uso — colapsado por defecto
+  // tras "+ Añadir nota"; si la entrada que se edita ya tiene notas, se ve
+  // igualmente (el render comprueba form.notes, no solo este estado).
+  const [notesOpen, setNotesOpen] = useState(false);
+  const notesRef = useAutoResizeTextarea(form?.notes);
   const fabVisible = useHideFabOnScroll();
 
   const startEdit = (entry) => {
@@ -349,28 +545,48 @@ export default function MiTrabajoTab({
       ? { date: entry.date, school: entry.school, activity: entry.activity, colleague_name: entry.colleague_name, amount: entry.amount, currency: entry.currency, notes: entry.notes || "" }
       : { date: entry.date, school: entry.school, activity: entry.activity, people: entry.people, notes: entry.notes || "" });
     setCurrencyTouched(false);
+    setNotesOpen(false);
   };
-  const closeSheet = () => { setCreating(null); setForm(null); setEditingEntry(null); setAddingRate(false); setRateForm(null); setCurrencyTouched(false); };
+  const closeSheet = () => {
+    setCreating(null); setForm(null); setEditingEntry(null);
+    setAddingRate(false); setRateForm(null); setCurrencyTouched(false); setNotesOpen(false);
+  };
 
-  // Antes "añadir tarifa" abría una segunda hoja apilada encima de la de
-  // crear/editar — un modal encadenado. Ahora es un bloque que se expande
-  // dentro de la misma hoja (Escuela/Curso ya se conocen por contexto, solo
-  // hace falta Moneda + Tarifa) — un paso y una transición menos.
+  // La tarjeta de "añadir tarifa" tiene su propio estilo (tarjeta blanca
+  // con sombra), distinto de la caja de vista previa que la precede — no
+  // reutiliza su mismo fondo, para no sentirse "incrustada" dentro de un
+  // cuadro de texto informativo cuando en realidad es un mini-formulario
+  // con su propia acción de guardar.
   const [addingRate, setAddingRate] = useState(false);
   const [rateForm, setRateForm] = useState(null);
   const [savingRate, setSavingRate] = useState(false);
 
-  const emptyFormFor = (type) => {
-    const base = { date: new Date().toISOString().slice(0, 10), school: defaultSchool, notes: "" };
+  const emptyFormFor = (type, school = defaultSchool) => {
+    const base = { date: new Date().toISOString().slice(0, 10), school, notes: "" };
     if (type === "companeros") return { ...base, activity: "", colleague_name: "", amount: "", currency: favoriteCurrency || defaultCurrency };
-    return { ...base, activity: defaultActivity, people: 1 };
+    return { ...base, activity: lastActivityFor(type, school) || defaultActivity, people: 1 };
   };
   const openCreate = (type) => {
     setCreating(type);
     setForm(emptyFormFor(type));
     setEditingEntry(null);
     setCurrencyTouched(false);
-    setPickerOpen(false);
+    setNotesOpen(false);
+  };
+  // Cambiar de tipo dentro de la propia hoja (selector Curso/Comisión/
+  // Ajuste arriba) — sustituye a la hoja intermedia "¿Qué quieres
+  // añadir?": el FAB entra directo al caso más frecuente (Curso
+  // impartido, ver docs/ADR/0005) y este selector cubre el resto sin una
+  // transición de hoja aparte. Solo aplica al crear — el tipo de una
+  // entrada ya existente no se cambia desde aquí (movería la fila entre
+  // tablas distintas, fuera de alcance).
+  const switchType = (type) => {
+    setCreating(type);
+    setForm(emptyFormFor(type, form?.school));
+    setCurrencyTouched(false);
+    setAddingRate(false);
+    setRateForm(null);
+    setNotesOpen(false);
   };
 
   // Llegado desde el acceso directo de Home: abre directamente el
@@ -389,7 +605,7 @@ export default function MiTrabajoTab({
     if (!form || (creating !== "ganado" && creating !== "comision")) return null;
     const r = rateFor(creating, form.school, form.activity);
     if (!r) return null;
-    return { rate: r.rate, paymentType: r.payment_type, total: computeRateTotal(r, form.people), currency: r.currency };
+    return { rate: r.rate, total: computeRateTotal(r, form.people), currency: r.currency };
   }, [creating, form, rates.rows, commissionRates.rows]);
 
   const disableSaveCurso = creating !== "companeros" && (!form?.date || !form?.school || !form?.activity || !preview);
@@ -444,10 +660,11 @@ export default function MiTrabajoTab({
   // el paso 1 (elegir tipo) con el paso 2 (el formulario), y da a la hoja
   // la misma identidad visual que ya usa el resto de "Movimientos".
   const SheetIcon = CREATE_TYPES.find((t) => t.key === creating)?.icon;
+  const typeColor = formAccentColor(creating, form?.amount);
 
   return (
     <div className="relative space-y-4 pb-24">
-      <PendingCollectionCard totals={pendingTotals} count={pendingIncomeCount} currencyRows={currencies.rows} color={SUN} />
+      <PendingCollectionCard totals={pendingTotals} count={pendingIncomeCount} currencyRows={currencies.rows} color={SUN} onPress={onOpenPayments} />
 
       <div className="flex items-center gap-5 border-b border-gray-200">
         {[["pendientes", `Pendientes${pendingAll.length > 0 ? ` · ${pendingAll.length}` : ""}`], ["cobrados", "Cobrados"]].map(([key, label]) => (
@@ -473,11 +690,26 @@ export default function MiTrabajoTab({
           <SlidersHorizontal size={15} aria-hidden="true" /> Filtrar{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
         </button>
         {statusFilter === "pendientes" && pendingAll.length > 0 && (
-          <button onClick={collectAllPending} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
-            Confirmar todos
+          <button onClick={() => setConfirmingCollectAll(true)} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
+            Cobrar todos
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmingCollectAll}
+        title={`¿Cobrar ${pendingAll.length} ${pendingAll.length === 1 ? "movimiento pendiente" : "movimientos pendientes"}?`}
+        message={
+          hasNegativeAjuste
+            ? `Vas a marcar ${pendingAll.length === 1 ? "este movimiento" : `estos ${pendingAll.length} movimientos`} como cobrado(s) o liquidado(s) de golpe, según corresponda a cada uno. Puedes revertir cada uno por separado después, igual que al confirmarlo de uno en uno.`
+            : `Vas a marcar ${pendingAll.length === 1 ? "este movimiento" : `estos ${pendingAll.length} movimientos`} como cobrado${pendingAll.length === 1 ? "" : "s"} de golpe. Puedes revertir cada uno por separado después, igual que al confirmarlo de uno en uno.`
+        }
+        onConfirm={confirmCollectAll}
+        onCancel={() => setConfirmingCollectAll(false)}
+        loading={collectingAll}
+        confirmLabel="Cobrar"
+        danger={false}
+      />
 
       {filtersOpen && (
         <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50/60 p-3">
@@ -499,7 +731,7 @@ export default function MiTrabajoTab({
 
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
         {!dataLoaded ? (
-          <div className="divide-y divide-gray-100" aria-hidden="true">
+          <div aria-hidden="true">
             {[0, 1, 2].map((i) => (
               <div key={i} className="animate-pulse px-4 py-3">
                 <div className="flex items-center justify-between gap-2">
@@ -524,7 +756,7 @@ export default function MiTrabajoTab({
             )}
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div>
             {visibleList.map((e, i) => {
               const showGroupHeader = i === 0 || visibleList[i - 1].date !== e.date;
               return (
@@ -553,8 +785,15 @@ export default function MiTrabajoTab({
         )}
       </div>
 
+      {/* Antes el FAB abría una hoja intermedia "¿Qué quieres añadir?" y
+          esa hoja abría a su vez la del formulario — dos transiciones para
+          la acción más repetida de la app. Ahora entra directo al caso
+          dominante (Curso impartido, ver docs/ADR/0005) y el selector de
+          tipo vive arriba de la propia hoja (ver más abajo) — una
+          transición menos, sin perder la posibilidad de elegir Comisión o
+          Ajuste. */}
       <button
-        onClick={() => setPickerOpen(true)}
+        onClick={() => openCreate("ganado")}
         aria-label="Añadir"
         aria-hidden={!fabVisible}
         tabIndex={fabVisible ? 0 : -1}
@@ -569,33 +808,6 @@ export default function MiTrabajoTab({
         <Plus size={24} aria-hidden="true" />
       </button>
 
-      {pickerOpen && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={() => setPickerOpen(false)}>
-          <div
-            className="w-full max-w-3xl rounded-t-xl bg-white p-4 shadow-xl"
-            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-800">¿Qué quieres añadir?</h3>
-              <button onClick={() => setPickerOpen(false)} className="text-gray-400" aria-label="Cerrar"><X size={19} /></button>
-            </div>
-            <div className="space-y-2">
-              {CREATE_TYPES.map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => openCreate(key)}
-                  className="flex min-h-14 w-full items-center gap-3 rounded-lg border border-gray-200 px-4 text-left text-sm font-medium text-gray-800 hover:bg-gray-50"
-                >
-                  <Icon size={18} style={{ color: accentColor }} aria-hidden="true" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {creating && form && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={closeSheet}>
           <div
@@ -606,29 +818,62 @@ export default function MiTrabajoTab({
             <div className="mb-1 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {SheetIcon && (
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: lighten(accentColor) }}>
-                    <SheetIcon size={14} style={{ color: accentColor }} aria-hidden="true" />
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: lighten(typeColor) }}>
+                    <SheetIcon size={14} style={{ color: typeColor }} aria-hidden="true" />
                   </span>
                 )}
                 <h3 className="text-sm font-semibold text-gray-800">{sheetTitle}</h3>
               </div>
               <button onClick={closeSheet} className="text-gray-400" aria-label="Cerrar"><X size={19} /></button>
             </div>
+
+            {/* Selector de tipo integrado — sustituye a la hoja "¿Qué
+                quieres añadir?". Solo al crear: el tipo de una entrada ya
+                guardada no se cambia desde aquí (ver switchType). */}
+            {!editingEntry && (
+              <div className="mb-3 grid grid-cols-3 gap-1 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="Tipo de movimiento">
+                {CREATE_TYPES.map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={creating === key}
+                    onClick={() => switchType(key)}
+                    className="flex flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] font-medium transition-colors"
+                    style={creating === key ? { backgroundColor: "white", color: typeColor, boxShadow: "0 1px 2px rgba(0,0,0,0.08)" } : { color: "#6B7280" }}
+                  >
+                    <Icon size={14} aria-hidden="true" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {creating === "companeros" && (
               <p className="mb-3 text-xs text-gray-400">Importe positivo si te paga a ti; negativo si le pagas tú a él/ella.</p>
             )}
 
-            {/* Fecha+Escuela primero (contexto), Curso siempre en su propia
-                fila: depende de Escuela y sus nombres pueden ser largos —
-                emparejarlo con otro select ancho es lo que provocaba paneles
-                solapados (ver comentario de Select en shared.jsx). Campos
-                específicos del tipo debajo, Notas siempre al final por ser
-                el de menor frecuencia de uso. */}
+            {/* Curso primero: es el único campo sin buen valor por
+                defecto — Fecha ya es hoy, Escuela ya trae la tuya de
+                Configuración (o la última que usaste en esa escuela, ver
+                lastActivityFor), Nº personas ya es 1. Es literalmente la
+                única decisión que casi siempre hace falta tomar, así que
+                lidera el formulario en vez de ser un campo más. Curso en
+                su propia fila también evita el solape de paneles que daba
+                emparejarlo con otro select ancho (ver Select en
+                shared.jsx). Notas al final, colapsada, por ser el campo
+                de menor frecuencia de uso. */}
             <div className="space-y-2.5">
+              <Field label="Curso">
+                <Select
+                  value={form.activity}
+                  onChange={(v) => setForm({ ...form, activity: v })}
+                  options={creating === "companeros" ? activitiesForSchool(form.school) : activityNames}
+                  className="min-h-14 text-base"
+                />
+              </Field>
+
               <div className="grid grid-cols-2 gap-2.5">
-                <Field label="Fecha">
-                  <DatePicker value={form.date} onChange={(v) => setForm({ ...form, date: v })} />
-                </Field>
                 <Field label="Escuela">
                   <Select
                     value={form.school}
@@ -636,14 +881,11 @@ export default function MiTrabajoTab({
                     options={schoolNames}
                   />
                 </Field>
+                <Field label="Fecha">
+                  <DatePicker value={form.date} onChange={(v) => setForm({ ...form, date: v })} />
+                </Field>
               </div>
-              <Field label="Curso">
-                <Select value={form.activity} onChange={(v) => setForm({ ...form, activity: v })} options={creating === "companeros" ? activitiesForSchool(form.school) : activityNames} />
-              </Field>
 
-              {/* Separa visualmente "contexto" (cuándo/dónde) de "detalle"
-                  (qué importe, con quién) — mismo criterio de agrupación que
-                  el panel de filtros (Periodo aparte de Escuela/Curso/Tipo). */}
               <div className="space-y-2.5 border-t border-gray-100 pt-2.5">
                 {creating === "companeros" ? (
                   <>
@@ -683,76 +925,116 @@ export default function MiTrabajoTab({
                     )}
                   </>
                 ) : (
-                  <div className="w-28">
+                  // Nº personas y Total emparejados: el total es
+                  // consecuencia directa de las personas, así que vive
+                  // justo al lado del dato que lo modifica — antes era un
+                  // bloque propio a todo lo ancho, ocupaba más scroll del
+                  // que esta información necesita.
+                  <div className="grid grid-cols-2 gap-2.5">
                     <Field label="Nº personas">
-                      <input type="number" min={0} value={form.people} onChange={(e) => setForm({ ...form, people: e.target.value })} className={`${inputCls} w-full`} />
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, people: String(Math.max(0, Number(form.people || 0) - 1)) })}
+                          aria-label="Menos personas"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
+                        >
+                          <Minus size={14} aria-hidden="true" />
+                        </button>
+                        <input
+                          type="number" min={0} value={form.people}
+                          onChange={(e) => setForm({ ...form, people: e.target.value })}
+                          className={`${inputCls} w-full text-center`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, people: String(Number(form.people || 0) + 1) })}
+                          aria-label="Más personas"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
+                        >
+                          <Plus size={14} aria-hidden="true" />
+                        </button>
+                      </div>
+                    </Field>
+                    <Field label="Total">
+                      {preview ? (
+                        <div className="flex h-11 flex-col justify-center rounded-md px-2.5" style={{ backgroundColor: "#F0FDFA" }}>
+                          <span className="text-sm font-semibold tabular-nums" style={{ color: TEAL }}>
+                            {formatMoney(preview.total, preview.currency, currencies.rows)}
+                          </span>
+                          <span className="text-[10px] leading-tight text-gray-400">
+                            {formatMoney(preview.rate, preview.currency, currencies.rows)} / persona
+                          </span>
+                        </div>
+                      ) : form.school && form.activity ? (
+                        <button
+                          type="button" onClick={openInlineRate}
+                          aria-label="Añadir tarifa"
+                          className="flex h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 bg-amber-50 px-2 text-xs font-semibold text-amber-700"
+                        >
+                          Añadir tarifa
+                        </button>
+                      ) : (
+                        <div className="flex h-11 items-center rounded-md bg-gray-50 px-2.5 text-sm text-gray-300">—</div>
+                      )}
                     </Field>
                   </div>
                 )}
 
-                {creating !== "companeros" && (
-                  <div
-                    className="rounded-lg border px-3 py-2.5 text-xs"
-                    style={
-                      preview ? { borderColor: "#99F6E4", backgroundColor: "#F0FDFA", color: "#374151" }
-                      : { borderColor: "#E5E7EB", backgroundColor: "#F9FAFB", color: "#4B5563" }
-                    }
-                  >
-                    {preview ? (
-                      <span>
-                        Tarifa: <b>{formatMoney(preview.rate, preview.currency, currencies.rows)}</b> ({preview.paymentType}) →
-                        {" "}Total: <b style={{ color: TEAL }}>{formatMoney(preview.total, preview.currency, currencies.rows)}</b>
-                      </span>
-                    ) : addingRate ? (
-                      <div className="space-y-2">
-                        <p className="font-medium text-gray-700">
-                          Nueva tarifa{creating === "comision" ? " de comisión" : ""} — {form.school} · {form.activity}
-                        </p>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Field label="Moneda">
-                            <CurrencySearchSelect value={rateForm.currency} onChange={(v) => setRateForm({ ...rateForm, currency: v })} currencyRows={currencies.rows} />
-                          </Field>
-                          <Field label="Tarifa">
-                            <MoneyInput value={rateForm.rate} onChange={(v) => setRateForm({ ...rateForm, rate: v })} />
-                          </Field>
-                        </div>
-                        <div className="flex gap-2 pt-0.5">
-                          <button
-                            type="button"
-                            onClick={saveRate}
-                            disabled={savingRate || !rateForm.rate}
-                            className="min-h-9 flex-1 rounded-md text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                            style={{ backgroundColor: accentColor }}
-                          >
-                            {savingRate ? "Guardando..." : "Guardar tarifa"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setAddingRate(false); setRateForm(null); }}
-                            disabled={savingRate}
-                            className="min-h-9 rounded-md border border-gray-200 px-3 text-xs font-medium text-gray-500"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
+                {/* Edición de tarifa en línea, no una tarjeta aparte: un
+                    borde de acento a la izquierda en vez de caja con
+                    sombra — se siente como una expansión del propio
+                    formulario, no como "otro formulario dentro del
+                    formulario". Botón de guardar solo-icono, coherente con
+                    el resto de acciones rápidas (stepper, favorita). */}
+                {creating !== "companeros" && addingRate && (
+                  <div className="space-y-2 border-l-2 pl-3" style={{ borderColor: "#FCD34D" }}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">Tarifa — {form.school} · {form.activity}</span>
+                      <button type="button" onClick={() => { setAddingRate(false); setRateForm(null); }} disabled={savingRate} aria-label="Cancelar" className="text-gray-400">
+                        <X size={13} aria-hidden="true" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-32 shrink-0">
+                        <CurrencySearchSelect value={rateForm.currency} onChange={(v) => setRateForm({ ...rateForm, currency: v })} currencyRows={currencies.rows} />
                       </div>
-                    ) : form.school && form.activity ? (
-                      <span className="text-amber-600">
-                        Sin tarifa{creating === "comision" ? " de comisión" : ""} configurada —{" "}
-                        <button type="button" onClick={openInlineRate} className="font-semibold underline underline-offset-2">
-                          añadir tarifa
-                        </button>.
-                      </span>
-                    ) : (
-                      <span>Elige escuela y curso para ver el importe estimado.</span>
-                    )}
+                      <MoneyInput value={rateForm.rate} onChange={(v) => setRateForm({ ...rateForm, rate: v })} placeholder="Tarifa" aria-label="Tarifa" className="flex-1" />
+                      <button
+                        type="button"
+                        onClick={saveRate}
+                        disabled={savingRate || !rateForm.rate}
+                        aria-label={savingRate ? "Guardando tarifa" : "Guardar tarifa"}
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        style={{ backgroundColor: accentColor }}
+                      >
+                        {savingRate ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : <Check size={14} aria-hidden="true" />}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
 
-              <Field label="Notas">
-                <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={`${inputCls} w-full`} placeholder="Opcional" />
-              </Field>
+              {notesOpen || form.notes ? (
+                <Field label="Notas">
+                  <textarea
+                    ref={notesRef}
+                    value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                    rows={2} placeholder="Opcional" autoFocus={notesOpen && !form.notes}
+                    className="w-full resize-none overflow-hidden rounded-md border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1"
+                    style={{ minHeight: "4.5rem" }}
+                  />
+                </Field>
+              ) : (
+                <div className="flex justify-center">
+                  <button
+                    type="button" onClick={() => setNotesOpen(true)}
+                    className="flex min-h-11 items-center gap-1.5 px-3 text-xs font-medium text-gray-400 transition-colors hover:text-gray-600"
+                  >
+                    <StickyNote size={13} aria-hidden="true" /> Añadir nota
+                  </button>
+                </div>
+              )}
             </div>
 
             <button

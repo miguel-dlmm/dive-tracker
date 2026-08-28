@@ -143,6 +143,17 @@ ningún control de seguridad.
 - El icono del logo real de Ocean Flow — de momento el loading usa iconos de
   lucide-react (configurable en Configuración → Ajustes) a la espera del
   logo oficial
+- **Un Design System unificado de Ocean Flow.** El rediseño de Movimientos
+  (paneles flotantes, tarjetas, animaciones, identidad visual por tipo de
+  movimiento) es una referencia de calidad, no el sistema de diseño
+  definitivo de la app. Sus componentes, patrones, colores y decisiones
+  visuales podrán consolidarse, ajustarse o incluso reemplazarse durante
+  una futura fase de unificación visual global. El objetivo final es una
+  identidad visual coherente en toda la aplicación — no que una pantalla
+  concreta condicione innecesariamente el diseño del resto porque se hizo
+  primero. No tratar ninguna decisión visual de Movimientos como
+  inamovible fuera de esa pantalla sin que se acuerde explícitamente
+  extenderla al resto de la app.
 
 ## Esquema de base de datos
 
@@ -277,3 +288,63 @@ Proceso obligatorio:
 Evitar llenar el proyecto de documentación innecesaria — esta regla es
 para decisiones que cambiarían de verdad el comportamiento de una sesión
 futura, no para cada detalle de implementación.
+
+### 8. Verificación UX/UI (mobile-check)
+
+Ocean Pulse es mobile-first, pero verificar solo con Chrome de escritorio
+redimensionado deja fuera la clase de bugs más específica de móvil
+(paneles flotantes mal posicionados, objetivos táctiles pequeños,
+animaciones rotas, errores de consola) hasta que el usuario los prueba a
+mano en su iPhone. Para no depender de eso en cada ronda, existe
+`scripts/mobile-check.mjs` (`npm run mobile-check`).
+
+**Cuándo ejecutarlo.** Antes de dar por cerrado cualquier cambio de
+UX/UI relevante en el módulo verificado (hoy, Movimientos) — no solo
+cuando se pida explícitamente. Requiere `npm run dev` arrancado aparte,
+con `VITE_DEV_AUTH_BYPASS` activo (ver "Bypass de login en desarrollo"
+más arriba), y el motor Chromium de Playwright instalado una vez
+(`npx playwright install chromium`).
+
+**Qué verifica.** Recorre el flujo real de "Mi trabajo" (crear, cambiar
+tipo, seleccionar curso, buscar moneda, añadir nota, eliminar con
+animación) usando **Playwright con el motor Chromium** y emulación de
+`iPhone 14 Pro Max` (`devices["iPhone 14 Pro Max"]`): viewport, densidad
+de píxel (`deviceScaleFactor: 3`) y eventos táctiles reales (`tap()`, no
+clics de ratón) del dispositivo real de referencia del usuario. Vuelca
+capturas en `scripts/mobile-check-output/` (no versionado) para revisión
+visual humana, y falla (código de salida ≠ 0) si aparece cualquier error
+o aviso en la consola del navegador durante el recorrido.
+
+**Herramientas evaluadas y por qué esta.**
+- **BrowserStack / dispositivo remoto real**: la fidelidad más alta
+  posible, pero requiere cuenta de pago y credenciales del usuario — no
+  accionable sin que él configure el acceso.
+- **Simulador de iOS (Xcode)**: Xcode está instalado pero sin ningún
+  runtime de iOS descargado — instalarlo implica una descarga de varios
+  GB y posible login de Apple ID. No se ha intentado sin consultarlo
+  antes, por el coste y la incertidumbre (ver siguiente punto: WebKit ya
+  reveló restricciones reales de sandboxing en este entorno).
+- **Playwright + motor WebKit** (el motor real de Safari): la opción
+  teóricamente ideal. Instalada y probada a fondo — pero
+  `browser.newPage()` cuelga indefinidamente en este entorno concreto
+  (launch y contexto sí completan). Diagnosticado de forma aislada: el
+  mismo código con el motor Chromium de Playwright funciona
+  end-to-end sin problema, confirmando que el bloqueo es específico de la
+  arquitectura multiproceso de WebKit chocando con alguna capa de
+  sandboxing del entorno, no un fallo de configuración corregible desde
+  aquí.
+- **Playwright + motor Chromium con emulación de iPhone 14 Pro Max**
+  (elegida): no es el motor de Safari, pero da viewport/densidad/táctil
+  reales del dispositivo del usuario, funciona de forma fiable en este
+  entorno y no necesita cuentas externas ni descargas pesadas.
+
+**Limitaciones — cuándo sigue siendo imprescindible la prueba manual en
+el iPhone real del usuario.** `mobile-check` NO sustituye la prueba
+física para nada que dependa específicamente de: el motor de render/JS
+real de WebKit/Safari (soporte de CSS, particularidades del motor), el
+teclado virtual real de iOS y su efecto sobre `visualViewport`, o el
+tacto físico real (presión, gestos multitáctiles). Para todo lo demás
+(posición de paneles flotantes, tamaños de objetivo táctil, animaciones,
+flujos de interacción, errores de consola) sí sustituye la ausencia total
+de verificación móvil automática que había antes — se comprueba solo, en
+cada sesión, antes de pedirle nada al usuario.
