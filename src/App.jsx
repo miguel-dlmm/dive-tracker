@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Waves, Home as HomeIcon, ListChecks, BarChart3, Handshake, Users, ArrowLeft, Settings, HelpCircle, LogOut } from "lucide-react";
+import { Waves, Home as HomeIcon, Briefcase, BarChart3, ArrowLeft, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { ToastProvider, AppLoading } from "./shared";
@@ -11,6 +11,7 @@ import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
 import ConfigTab from "./ConfigTab";
 import CompanerosTab from "./CompanerosTab";
+import MiTrabajoTab from "./MiTrabajoTab";
 import SummaryTab from "./SummaryTab";
 import HelpTab from "./HelpTab";
 import PaymentsTab from "./PaymentsTab";
@@ -32,12 +33,15 @@ export const BG = "#F7F8F8";
 export const DISPLAY_FONT = "'Inter', sans-serif";
 export const BODY_FONT = "'Inter', sans-serif";
 
-// Barra inferior: los 5 destinos que se usan a diario.
+// Barra inferior: los destinos que se usan a diario. "Mi trabajo" sustituye
+// visualmente a Registro/Comisiones/Compañeros — ver
+// docs/ADR/0005-mi-trabajo-unificacion-economica.md (Fase 1). Esas 3
+// pantallas siguen existiendo en el código (rutas "log"/"comisiones"/
+// "colegas" más abajo) por si hiciera falta revertir, aunque ya no tienen
+// ningún punto de entrada en la UI.
 const PRIMARY_TABS = [
   { id: "home", label: "Home", icon: HomeIcon },
-  { id: "log", label: "Registro", icon: ListChecks },
-  { id: "comisiones", label: "Comisiones", icon: Handshake },
-  { id: "colegas", label: "Compañeros", icon: Users },
+  { id: "trabajo", label: "Mi trabajo", icon: Briefcase },
   { id: "summary", label: "Resumen", icon: BarChart3 },
 ];
 
@@ -68,7 +72,11 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   // (ver onAutoOpened), así no se vuelve a disparar si luego navegas
   // manualmente a la misma pestaña.
   const [pendingOpen, setPendingOpen] = useState(null);
-  const navigateAndCreate = (tabId) => { setTab(tabId); setPendingOpen(tabId); };
+  // Home sigue ofreciendo accesos rápidos con los ids antiguos ("log",
+  // "comisiones") — se redirigen a "trabajo", que decide qué formulario
+  // abrir según ese mismo id (ver autoOpenType en MiTrabajoTab).
+  const OLD_TAB_REDIRECT = { log: "trabajo", comisiones: "trabajo", colegas: "trabajo" };
+  const navigateAndCreate = (tabId) => { setTab(OLD_TAB_REDIRECT[tabId] || tabId); setPendingOpen(tabId); };
 
   const loaded = schools.loaded && activities.loaded && paymentTypes.loaded && paymentStatuses.loaded
     && currencies.loaded && rates.loaded && commissionRates.loaded && worklog.loaded
@@ -158,6 +166,14 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             autoOpenSheet={pendingOpen === "colegas"} onAutoOpened={() => setPendingOpen(null)}
           />
         )}
+        {tab === "trabajo" && (
+          <MiTrabajoTab
+            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies}
+            rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
+            appConfig={appConfig} accentColor={sectionColor("trabajo")}
+            autoOpenType={pendingOpen} onAutoOpened={() => setPendingOpen(null)}
+          />
+        )}
         {tab === "config" && (
           <ConfigTab
             schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
@@ -168,7 +184,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
         {tab === "help" && <HelpTab navSections={navSections} profile={profile} />}
         {tab === "pagos" && (
           <PaymentsTab
-            activities={activities} paymentStatuses={paymentStatuses} currencies={currencies}
+            activities={activities} schools={schools} paymentStatuses={paymentStatuses} currencies={currencies}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
           />
         )}
