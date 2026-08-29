@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Plus, Check, RotateCcw, SlidersHorizontal, PartyPopper } from "lucide-react";
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
@@ -151,31 +151,34 @@ function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onE
   const [toggleExiting, setToggleExiting] = useState(false);
   const [entering, setEntering] = useState(animPhase === "entering");
 
-  useEffect(() => {
+  // 2026-08-29: el doble rAF de la versión anterior NO garantizaba lo que
+  // decía garantizar — confirmado con muestreo real (Playwright, sampling
+  // cada pocos ms): maxHeight saltaba de "none" a "0px" en el primer
+  // fotograma capturable, sin ningún valor intermedio, exactamente el
+  // fallo que el doble rAF pretendía evitar. Causa real: `fixedHeight` se
+  // fijaba dentro de un `useEffect` normal (efecto "pasivo", se ejecuta
+  // DESPUÉS de que el navegador ya pueda haber pintado), así que no había
+  // garantía real de que ese valor llegara a pintarse antes de que el rAF
+  // disparase el colapso — a diferencia de handleDelete, donde
+  // `setFixedHeight` ocurre de forma síncrona dentro del propio manejador
+  // de clic (React lo confirma pintado antes de que corra cualquier rAF
+  // posterior). `useLayoutEffect` sí da esa garantía por contrato (corre
+  // de forma síncrona tras la mutación del DOM, antes de que el navegador
+  // pinte) — con eso, un único rAF vuelve a bastar, igual que en
+  // handleDelete: la primera pasada (fixedHeight aún null) mide y fija la
+  // altura real, sin pintar todavía el colapso; la segunda pasada
+  // (fixedHeight ya fijado) programa el único rAF que dispara el colapso,
+  // ahora sí después de un pintado real con un valor numérico de partida.
+  useLayoutEffect(() => {
     if (animPhase !== "exiting" || toggleExiting) return;
-    const el = rowRef.current;
-    if (el) setFixedHeight(el.scrollHeight);
-    // Doble rAF, no uno: a diferencia de handleDelete (donde fixedHeight se
-    // fija de forma síncrona dentro del propio manejador de clic, así que
-    // React ya pintó ese fotograma intermedio antes de que el rAF llegue a
-    // ejecutarse), aquí fixedHeight se fija dentro de un efecto que
-    // reacciona a un cambio de prop — un solo rAF puede ejecutarse ANTES
-    // de que el navegador llegue a pintar ese fotograma intermedio, y
-    // entonces "colapsar" se aplica en el mismo pintado que "medir": la
-    // transición de max-height no tiene fotograma de partida real desde el
-    // que animar y salta directa a 0 (confirmado con muestreo por rAF:
-    // maxHeight pasaba de "none" a "0px" en un único fotograma, sin
-    // ningún valor intermedio). El primer rAF solo garantiza que se
-    // ejecute antes del próximo repintado, no que ESE repintado ya haya
-    // ocurrido — el segundo rAF, anidado dentro del primero, sí lo
-    // garantiza. Mismo patrón estándar usado para animar layout mid-FLIP.
-    let raf2;
-    const raf = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => setToggleExiting(true));
-    });
-    return () => { cancelAnimationFrame(raf); if (raf2) cancelAnimationFrame(raf2); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animPhase]);
+    if (fixedHeight == null) {
+      const el = rowRef.current;
+      if (el) setFixedHeight(el.scrollHeight);
+      return;
+    }
+    const raf = requestAnimationFrame(() => setToggleExiting(true));
+    return () => cancelAnimationFrame(raf);
+  }, [animPhase, toggleExiting, fixedHeight]);
 
   useEffect(() => {
     if (!entering) return;

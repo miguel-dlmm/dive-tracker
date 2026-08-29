@@ -707,3 +707,96 @@ Trabajo pendiente del encargo de esta mañana: resto de Resumen
 queja explícita del usuario más allá de los filtros, ya resueltos), y
 una pasada de calidad visual transversal antes del resumen final de
 sesión.
+
+# Tercera tanda 2026-08-29 (tarde/noche) — rediseño profundo + release process
+
+Sesión larga, deliberadamente autónoma (el usuario deja el ordenador
+varias horas, sin poder responder preguntas). Instrucciones explícitas
+de continuidad ante interrupción: documentar tras cada bloque relevante,
+commit en cuanto un bloque quede cerrado, generar un
+"=== PROMPT PARA CONTINUAR ===" completo si el margen de créditos/contexto
+se vuelve limitado.
+
+## Punto de partida verificado (tercera tanda)
+
+- Rama: `feature/global-redesign` (working tree limpio salvo
+  `cloudflared.tgz`, no versionado, no es mío).
+- HEAD: `bdfd7f4` (fin de la segunda tanda de esta mañana).
+- `origin/develop` sin cambios respecto a la comprobación de la mañana.
+- Servidor del usuario (5173) y servidor de pruebas propio (5180) vivos.
+
+## Orden de trabajo (prioridad del propio encargo, con libertad de reordenar si hay motivo)
+
+1. Bug de animación al cobrar (acotado, si es seguro corregirlo ya).
+2. Configuración — rediseño completo (commit propio).
+3. Resumen — rediseño completo (commit propio).
+4. Línea visual transversal (continua, no un bloque aislado).
+5. Release + Deployment — investigación de estándares + proceso mínimo
+   viable + SIMULACIÓN únicamente (nada de push/merge real/tag remoto/
+   release publicada/deploy sin aprobación explícita).
+6. Bug de tarifa inline (si queda margen).
+7. Calendario de Home (si queda margen).
+8. Qué hay de nuevo (si queda margen).
+9. Ayuda (si queda margen).
+
+## Bloque 1 — Bug de animación al cobrar (causa raíz real, no el fix anterior)
+
+El commit `317fbc3` de la sesión anterior ya había diagnosticado
+correctamente el síntoma (maxHeight saltaba de "none" a "0px" en un
+único fotograma) y aplicó un "doble rAF" como fix, con el razonamiento
+de que un único rAF no garantiza que el navegador pinte el fotograma
+intermedio antes de colapsar. **Ese fix nunca se reverificó
+empíricamente tras aplicarlo** — solo se había muestreado el bug
+original, no el resultado del propio fix.
+
+Reproducido con un script Playwright desechable
+(`scripts/_diag-cobrar-anim.mjs`, eliminado tras el uso) que muestrea
+`maxHeight`/opacidad/transform del wrapper de la fila cada pocos ms tras
+pulsar "Confirmar cobro": **el doble rAF seguía sin funcionar** —
+`maxHeight` seguía saltando a `0px` casi instantáneamente, mientras el
+contenido (opacidad/transform) sí se desvanecía correctamente durante
+~200ms — pero quedaba invisible, recortado dentro de un contenedor ya
+colapsado a 0 de altura (`overflow-hidden`). Esto explica exactamente la
+asimetría que describió el usuario: "Deshacer" sí anima porque el estado
+inicial de una fila que "entra" arranca YA colapsado desde el primer
+render (`useState(animPhase === "entering")`), sin ninguna carrera de
+temporización — nunca pasa por "none". "Cobrar"/"Marcar pendiente" en
+cambio miden la altura dentro de un `useEffect` normal (efecto pasivo,
+corre después de que el navegador ya pueda haber pintado), así que ni un
+rAF ni dos garantizan que ese valor numérico llegue a pintarse antes de
+que se dispare el colapso.
+
+**Fix real:** sustituir el `useEffect` por `useLayoutEffect` (sí
+garantiza, por contrato de React, ejecutarse de forma síncrona tras la
+mutación del DOM y antes de que el navegador pinte) — con esa garantía,
+un único rAF vuelve a bastar, igual que ya hacía `handleDelete` (que
+nunca tuvo este problema porque mide la altura de forma síncrona dentro
+del propio manejador de clic). Reverificado con el mismo script de
+muestreo: ahora `maxHeight` se mantiene en el valor real (107px) mientras
+el contenido se desvanece, y solo después empieza a colapsar de forma
+visible y gradual (107 → 104.8 → 89.5 → 65 → 34 → 0), exactamente la
+coreografía que el código ya pretendía tener.
+
+Cobrar, marcar pendiente, deshacer y eliminar comparten ahora el mismo
+comportamiento visual coherente (deshacer y eliminar no se tocaron —
+nunca tuvieron el bug).
+
+**Validado:** 246/246 tests (sin test nuevo — un bug de temporización de
+`requestAnimationFrame`/pintado real del navegador no es verificable de
+forma fiable en jsdom, que no pinta layout real; ya le pasaba lo mismo al
+fix anterior. La verificación es el propio script de muestreo Playwright,
+ejecutado y confirmado en este bloque, más revisión visual), build
+correcto, `mobile-check` sin errores tras un hipo transitorio de JWT ya
+conocido (reintento inmediato, servidores 5173/5180 verificados vivos
+antes y después).
+
+**Lección para el futuro:** cuando un fix se basa en razonamiento sobre
+garantías de temporización de React/el navegador (no en un patrón ya
+usado y probado en el propio código), reverificar el resultado con la
+misma técnica de medición que diagnosticó el problema, no dar el
+razonamiento por bueno solo porque suena correcto.
+
+## Siguiente paso
+
+Bloque 1 cerrado. Continuando con el bloque 2 (rediseño de
+Configuración).
