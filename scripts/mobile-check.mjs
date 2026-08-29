@@ -117,6 +117,24 @@ async function main() {
 
   await shot(page, "home");
 
+  console.log("→ Home: widget 'Los más antiguos por cobrar' — 'Cobrar' actualiza sin salir de Home y el total pendiente baja");
+  const oldestWidget = page.getByTestId("oldest-pending-widget");
+  if (await oldestWidget.isVisible().catch(() => false)) {
+    const pendingCountBefore = await page.getByText(/pagos? pendientes?/).textContent();
+    await oldestWidget.getByRole("button", { name: "Cobrar" }).first().tap();
+    await page.getByText("Marcado como cobrado").waitFor({ timeout: 5000 }).catch(() =>
+      consoleIssues.push("[home] No apareció el toast 'Marcado como cobrado' al cobrar desde el widget de Home")
+    );
+    await page.waitForTimeout(300);
+    const pendingCountAfter = await page.getByText(/pagos? pendientes?/).textContent();
+    if (pendingCountAfter === pendingCountBefore) {
+      consoleIssues.push(`[home] El contador de pendientes no bajó al cobrar desde el widget ("${pendingCountBefore}" -> "${pendingCountAfter}")`);
+    }
+    await shot(page, "home-widget-tras-cobrar");
+  } else {
+    console.log("  (widget no visible — no había nada pendiente en la cuenta de prueba)");
+  }
+
   console.log("→ Home: 'Añadir movimiento' (integrado en la tarjeta Pendiente de cobrar) abre el formulario SIN salir de Home");
   await page.getByRole("button", { name: "Añadir movimiento", exact: true }).tap();
   await page.waitForTimeout(250);

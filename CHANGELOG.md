@@ -26,6 +26,10 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
 - **Home**: acceso "Añadir movimiento" integrado en la tarjeta
   "Pendiente de cobrar" y creación directa tocando un día del
   calendario — en ambos casos sin salir de Home hasta guardar con éxito.
+  Nuevo widget "Los más antiguos por cobrar": cobra directamente desde
+  Home las deudas más urgentes (las de fecha más antigua), sin pasar por
+  Mi trabajo. La propia tarjeta "Pendiente de cobrar" ahora navega a Mi
+  trabajo al tocarla.
 - **Configuración**: menú agrupado (negocio / administración) en vez de
   pestañas horizontales; Escuelas, Cursos, Tipos de pago, Estados de
   pago y Monedas crean ahora vía botón flotante + hoja inferior;
@@ -79,6 +83,10 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   contraseña (o de aceptar bases legales) incluso para una cuenta ya
   completamente activada, por una condición de carrera entre `session` y
   `profile` al actualizar el estado de sesión.
+- `PendingCollectionCard` anidaba un `<button>` (el "+" de añadir
+  movimiento) dentro de otro `<button>` (la tarjeta completa) en cuanto
+  ambos estaban activos a la vez — HTML inválido que solo se manifestaba
+  al activar la navegación de la tarjeta por primera vez en Home.
 
 ## [0.1.0] - 2026-08-26
 

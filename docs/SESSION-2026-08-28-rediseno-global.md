@@ -600,6 +600,59 @@ contenido/número de diapositivas, no necesitó cambios), build correcto,
 `mobile-check` sin errores — captura de la diapositiva 2 tras el swipe
 revisada visualmente, indicador de puntos avanza correctamente.
 
+## Bloque — Home "otra vuelta": widget "Los más antiguos por cobrar"
+
+Petición explícita: Home "todavía me parece demasiado sencilla... quiero
+que sea una Home que empuje el uso de la app, no solo una tarjeta
+bonita". Antes de este bloque, Home era puramente informativa/de
+creación (cifras + calendario + acceso de alta) — ninguna acción posible
+sobre lo que YA existía en la base de datos.
+
+**Decisión:** un nuevo widget, justo debajo de la tarjeta "Pendiente de
+cobrar", con las hasta 3 deudas pendientes de fecha más antigua (las que
+más vale la pena resolver primero, más fáciles de olvidar cuanto más
+lejos queda la fecha) y un botón "Cobrar" por fila que actualiza el
+estado sin salir de Home, con el mismo criterio de feedback por toast
+que el resto de la app (try/catch + `useToast`). Reutiliza
+`buildIncomeEntries` (ya usado por "Pendiente de cobrar"/"Generado este
+mes"), así que nunca puede divergir en qué cuenta como pendiente. Se
+mantiene deliberadamente MÁS SIMPLE que `EntryRow` de Mi trabajo (sin la
+coreografía de entrada/salida animada): al cobrar aquí, la fila deja de
+cumplir el filtro y desaparece del array en el siguiente render sin
+necesitar animar su propia salida — este widget es un acceso rápido, no
+la lista completa donde sí vale la pena esa inversión (criterio de
+"extraer/invertir solo cuando hay necesidad real").
+
+De paso, la propia tarjeta "Pendiente de cobrar" se vuelve accionable
+por primera vez: tocarla navega a Mi trabajo (que ya abre por defecto en
+su pestaña "Pendientes"). Antes recibía un prop `onOpenPayments` que
+nunca llegó a pasarse desde `App.jsx` — la tarjeta llevaba toda la vida
+renderizándose como informativa a propósito, a la espera de una pantalla
+de Pagos que ya no existe (Mi trabajo la sustituyó). Se renombra a
+`onOpenPending` para reflejar el destino real.
+
+**Bug real encontrado al activar esto por primera vez:** con `onPress` Y
+`onQuickAdd` presentes a la vez, `PendingCollectionCard` anidaba un
+`<button>` (el "+" de añadir movimiento) dentro de otro `<button>` (la
+tarjeta completa) — HTML inválido (error de consola "cannot be a
+descendant of", con aviso de hidratación). Nunca se había manifestado
+porque `onOpenPayments` siempre había sido `undefined` en las dos
+pantallas que usan este componente, así que `Wrapper` era siempre `<div>`
+— la primera vez que `onPress` se activa de verdad en la historia de
+este componente es este mismo cambio. Los tests con jsdom no lo habían
+detectado porque no validan anidamiento de HTML — solo mobile-check, en
+un navegador real, lo sacó a la luz. Corregido separando el bloque de
+información (ahora el único `<button>` cuando hay `onPress`) del botón
+"+" como hermano, no descendiente — ya no hace falta `stopPropagation`.
+
+**Validado:** 246/246 tests (+8 nuevos: 4 del widget en `HomeTab.test.jsx`
+cubriendo que no aparece sin pendientes, el orden por fecha, que "Cobrar"
+llama a `updateRow` con el estado opuesto, y el enlace "Ver todos"), build
+correcto, `mobile-check` sin errores tras el fix del anidamiento —
+captura de Home con el widget y captura tras pulsar "Cobrar" (toast
+"Marcado como cobrado", contador de pendientes y total bajan, el widget
+se refresca con la siguiente deuda más antigua) revisadas visualmente.
+
 ## Siguiente paso
 
 Bloques completados esta sesión (mañana): túnel/puerto de pruebas
@@ -608,14 +661,14 @@ aislado, causa raíz + fix de "no puedo eliminar usuarios" (rutas
 activación en login, investigación (no reproducida) del botón de crear
 en Home, Tarifas↔Mi trabajo (RowMenu compartido), Resumen (filtros
 fusionados), Qué hay de nuevo (swipe + contenido reestructurado +
-diapositiva de Configuración).
+diapositiva de Configuración), Home (widget "Los más antiguos por
+cobrar" + tarjeta "Pendiente de cobrar" navegable + fix de anidamiento
+de botones).
 
-Trabajo pendiente del encargo de esta mañana, por orden de prioridad
-del usuario: Home "otra vuelta" (posible widget nuevo — la app debe
-empujar el uso, no ser solo una tarjeta bonita), documentación/Ayuda
-(revisar contra los caminos de usuario pedidos ahora:
-configurar→crear cada tipo→cobrar uno→cobrar en bloque), resto de
-Resumen (jerarquía/look&feel, si hace falta más allá de lo ya hecho —
-sin nueva queja explícita del usuario más allá de los filtros, ya
-resueltos), y una pasada de calidad visual transversal antes del
+Trabajo pendiente del encargo de esta mañana, por orden de prioridad del
+usuario: documentación/Ayuda (revisar contra los caminos de usuario
+pedidos ahora: configurar→crear cada tipo→cobrar uno→cobrar en bloque),
+resto de Resumen (jerarquía/look&feel, si hace falta más allá de lo ya
+hecho — sin nueva queja explícita del usuario más allá de los filtros,
+ya resueltos), y una pasada de calidad visual transversal antes del
 resumen final de sesión.

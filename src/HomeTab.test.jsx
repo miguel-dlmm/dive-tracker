@@ -171,3 +171,78 @@ describe("HomeTab — acceso rápido integrado en Pendiente de cobrar", () => {
     expect(onQuickCreate).toHaveBeenCalledWith("ganado");
   });
 });
+
+// Widget "Los más antiguos por cobrar" (2026-08-29) — Home deja de ser solo
+// informativa: permite cobrar directamente las deudas más urgentes sin
+// salir de la pantalla ni pasar por Mi trabajo.
+describe("HomeTab — widget 'Los más antiguos por cobrar'", () => {
+  it("no aparece cuando no hay nada pendiente", () => {
+    renderHome({});
+    expect(screen.queryByText("Los más antiguos por cobrar")).not.toBeInTheDocument();
+  });
+
+  it("muestra las entradas pendientes ordenadas por fecha, la más antigua primero", () => {
+    renderHome({
+      worklog: [
+        { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" },
+        { id: "w2", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" },
+      ],
+      rates: RATES,
+    });
+
+    const widget = within(screen.getByTestId("oldest-pending-widget"));
+    const dates = widget.getAllByText(new RegExp(`${LAST_MONTH}|${TODAY}`)).map((el) => el.textContent);
+    // La primera fila del widget corresponde a la entrada más antigua (mes anterior), no a la de hoy.
+    expect(dates[0]).toContain(LAST_MONTH);
+  });
+
+  it("pulsar 'Cobrar' llama a updateRow con el estado opuesto", async () => {
+    const updateRow = vi.fn().mockResolvedValue({});
+    render(
+      <HomeTab
+        worklog={{ rows: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }], loaded: true, insertRow: vi.fn(), updateRow, deleteRow: vi.fn(), bulkUpdateWhere: vi.fn(), setDefault: vi.fn() }}
+        comisiones={rowsHook([])}
+        colleaguePayments={rowsHook([])}
+        rates={rowsHook(RATES)}
+        commissionRates={rowsHook([])}
+        activities={rowsHook([{ name: "Open Water" }])}
+        schools={rowsHook([{ name: "PADI Cozumel" }])}
+        currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])}
+        navSections={rowsHook([])}
+        paymentStatuses={PAYMENT_STATUSES}
+        onQuickCreate={vi.fn()}
+      />
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Cobrar" }));
+
+    expect(updateRow).toHaveBeenCalledWith("w1", { status: "Paid" });
+  });
+
+  it("muestra el enlace 'Ver todos' solo cuando hay más pendientes de los que caben, y navega a Mi trabajo", async () => {
+    const onOpenPending = vi.fn();
+    const worklogRows = Array.from({ length: 4 }, (_, i) => ({
+      id: `w${i}`, date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending",
+    }));
+    render(
+      <HomeTab
+        worklog={rowsHook(worklogRows)}
+        comisiones={rowsHook([])}
+        colleaguePayments={rowsHook([])}
+        rates={rowsHook(RATES)}
+        commissionRates={rowsHook([])}
+        activities={rowsHook([{ name: "Open Water" }])}
+        schools={rowsHook([{ name: "PADI Cozumel" }])}
+        currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])}
+        navSections={rowsHook([])}
+        paymentStatuses={PAYMENT_STATUSES}
+        onQuickCreate={vi.fn()}
+        onOpenPending={onOpenPending}
+      />
+    );
+
+    const link = screen.getByRole("button", { name: /Ver los 4 pendientes en Mi trabajo/ });
+    await userEvent.click(link);
+    expect(onOpenPending).toHaveBeenCalledTimes(1);
+  });
+});
