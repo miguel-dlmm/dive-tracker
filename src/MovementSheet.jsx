@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { Plus, Minus, X, Check, Star, Loader2, StickyNote, GraduationCap, Handshake, Users } from "lucide-react";
+import { Plus, Minus, X, Check, Loader2, StickyNote, GraduationCap, Handshake, Users } from "lucide-react";
 import { TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   inputCls, formatMoney, Field, Select, CurrencySearchSelect, MoneyInput,
@@ -33,13 +33,14 @@ function formAccentColor(creating, amount) {
 }
 
 // Moneda favorita — preferencia personal del instructor, no dato de
-// negocio (no vive en Supabase a propósito, ver docs/ADR/0007).
+// negocio (no vive en Supabase a propósito, ver docs/ADR/0007). Solo
+// lectura aquí desde 2026-08-30: escribirla (antes, el botón "Usar X como
+// favorita" en el propio formulario) queda para la futura pantalla
+// "Configuración → Moneda favorita" (ver docs/BACKLOG.md) — misma clave de
+// localStorage, mismo formato, nada que migrar cuando se construya.
 const favoriteCurrencyKey = (userId) => `oceanpulse:favoriteCurrency:${userId || "anon"}`;
 function getFavoriteCurrency(userId) {
   try { return localStorage.getItem(favoriteCurrencyKey(userId)); } catch { return null; }
-}
-function setFavoriteCurrencyStorage(userId, code) {
-  try { localStorage.setItem(favoriteCurrencyKey(userId), code); } catch { /* localStorage no disponible — no es crítico, se ignora */ }
 }
 
 // Notas se expande sola con el contenido — sin WYSIWYG, pero más cómoda en
@@ -80,12 +81,13 @@ export default function MovementSheet({
   // tarifa al vuelo queda bloqueada.
   const defaultPaymentType = paymentTypes.rows.find((t) => t.name === "Per Person")?.name || paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "Per Person";
 
-  const [favoriteCurrency, setFavoriteCurrencyState] = useState(() => getFavoriteCurrency(userId));
-  const markFavoriteCurrency = (code) => {
-    setFavoriteCurrencyStorage(userId, code);
-    setFavoriteCurrencyState(code);
-    toast?.success(`${code} guardada como moneda favorita`);
-  };
+  // 2026-08-30: la moneda deja de elegirse por movimiento — pasa a ser una
+  // configuración global (ver docs/BACKLOG.md, "Configuración → Moneda
+  // favorita"). Se sigue leyendo la misma preferencia de siempre
+  // (localStorage, ADR-0007), pero ya no hay ningún campo en este
+  // formulario desde el que cambiarla — esa gestión explícita queda para
+  // la futura pantalla de Configuración, todavía sin implementar.
+  const favoriteCurrency = getFavoriteCurrency(userId);
 
   const schoolNames = schools.rows.map((s) => s.name);
   const activityNames = activities.rows.map((a) => a.name);
@@ -117,9 +119,6 @@ export default function MovementSheet({
   const [creating, setCreating] = useState(null); // null | "ganado" | "comision" | "companeros"
   const [form, setForm] = useState(null);
   const [editingEntry, setEditingEntry] = useState(null);
-  // Solo se sugiere "usar como favorita" tras un cambio activo del usuario
-  // en esta sesión del formulario.
-  const [currencyTouched, setCurrencyTouched] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const notesRef = useAutoResizeTextarea(form?.notes);
   useBodyScrollLock(!!creating);
@@ -163,7 +162,6 @@ export default function MovementSheet({
       setCreating(request.type);
       setForm(emptyFormFor(request.type, defaultSchool, request.date));
     }
-    setCurrencyTouched(false);
     setNotesOpen(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request]);
@@ -178,7 +176,6 @@ export default function MovementSheet({
   const switchType = (type) => {
     setCreating(type);
     setForm(emptyFormFor(type, form?.school, form?.date));
-    setCurrencyTouched(false);
     setAddingRate(false);
     setRateForm(null);
     setNotesOpen(false);
@@ -186,7 +183,7 @@ export default function MovementSheet({
 
   const closeSheet = () => {
     setCreating(null); setForm(null); setEditingEntry(null);
-    setAddingRate(false); setRateForm(null); setCurrencyTouched(false); setNotesOpen(false);
+    setAddingRate(false); setRateForm(null); setNotesOpen(false);
     onClose?.();
   };
 
@@ -362,7 +359,17 @@ export default function MovementSheet({
 
                 <div className="space-y-2.5 border-t border-gray-100 pt-2.5">
                   {creating === "companeros" ? (
-                    <>
+                    // 2026-08-30: Moneda deja de ser un campo del formulario
+                    // (ver docs/BACKLOG.md, "Configuración → Moneda
+                    // favorita") — form.currency sigue existiendo (se sigue
+                    // guardando en el registro), pero ahora se resuelve solo
+                    // (favorita guardada, o la de la app por defecto) y se
+                    // muestra como referencia junto a "Importe", no como un
+                    // desplegable aparte. Al quitar esa columna, Instructor
+                    // relacionado e Importe pasan a compartir fila — ninguno
+                    // de los dos necesita el ancho completo, y así el
+                    // formulario ocupa una fila menos en móvil.
+                    <div className="grid grid-cols-2 gap-2.5">
                       <Field label="Instructor relacionado">
                         <input
                           list="movement-sheet-colleague-names"
@@ -375,39 +382,10 @@ export default function MovementSheet({
                           {colleagueSuggestions(form.school).map((n) => <option key={n} value={n} />)}
                         </datalist>
                       </Field>
-                      <div className="grid grid-cols-2 gap-2.5">
-                        <Field label="Importe (puede ser negativo)">
-                          <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
-                        </Field>
-                        <Field label="Moneda">
-                          {/* Botón de favorita integrado junto al propio campo
-                              (icono solo, mismo objetivo táctil 44×44 que el
-                              resto de la app) en vez de una píldora de texto
-                              suelta debajo. */}
-                          <div className="flex items-center gap-1.5">
-                            <div className="min-w-0 flex-1">
-                              <CurrencySearchSelect
-                                value={form.currency}
-                                onChange={(v) => { setForm({ ...form, currency: v }); setCurrencyTouched(true); }}
-                                currencyRows={currencies.rows}
-                              />
-                            </div>
-                            {currencyTouched && form.currency && form.currency !== favoriteCurrency && (
-                              <button
-                                type="button"
-                                onClick={() => markFavoriteCurrency(form.currency)}
-                                aria-label={`Usar ${form.currency} como favorita`}
-                                title={`Usar ${form.currency} como favorita`}
-                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border"
-                                style={{ borderColor: TEAL, color: TEAL }}
-                              >
-                                <Star size={16} aria-hidden="true" />
-                              </button>
-                            )}
-                          </div>
-                        </Field>
-                      </div>
-                    </>
+                      <Field label={`Importe · ${form.currency}`}>
+                        <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
+                      </Field>
+                    </div>
                   ) : (
                     // Nº personas y Total emparejados: el total es
                     // consecuencia directa de las personas, así que vive

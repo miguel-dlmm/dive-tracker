@@ -183,6 +183,70 @@ el "30" (hoy) es visible y distinto del "29" (con actividad, sin punto).
 
 **Commit:** `feat(calendario): marcar el día de hoy en el calendario de Home`.
 
+### Bloques 4+5 — Moneda global + densidad de Ajuste de curso
+
+Ejecutados juntos a propósito (dependencia técnica real, no solo
+conveniencia): quitar el campo de Moneda del formulario de Ajuste de
+curso deja huérfana la mitad de una fila (`grid-cols-2`, antes Importe+
+Moneda) — decidir qué hacer con ese hueco Y reorganizar el formulario
+son la misma decisión de diseño, hacerlas por separado habría significado
+escribir el layout dos veces.
+
+**Auditoría de "todos los formularios donde se selecciona":**
+`CurrencySearchSelect` aparece en 6 archivos. De ellos, **solo uno** era
+realmente "elegir moneda para un movimiento": el Ajuste de curso en
+`MovementSheet.jsx` (Curso/Comisión nunca han tenido ese campo — la
+moneda ya se deriva de la tarifa, ver CLAUDE.md convención 9). Los otros
+5 son la moneda de una TARIFA (`RatesTab.jsx`, y el alta de tarifa en
+línea dentro del propio `MovementSheet.jsx`) — ahí la moneda es el dato
+fundacional de la tarifa en sí, no una elección repetida por movimiento;
+tocarla habría sido una regla de negocio nueva, fuera de lo pedido.
+`WorkLogTab.jsx`/`ComisionesTab.jsx`/`CompanerosTab.jsx` también la
+tienen, pero son las 3 pantallas ya sustituidas por Mi trabajo, sin
+ningún punto de entrada en la UI (ver `App.jsx`) — código muerto que no
+afecta a ningún usuario real; no se ha tocado, sin valor tocar una
+pantalla inalcanzable.
+
+**Bloque 4 — qué cambia:** el campo "Moneda" (`CurrencySearchSelect` +
+botón "Usar X como favorita") desaparece del formulario de Ajuste de
+curso. `form.currency` se sigue resolviendo exactamente igual que antes
+(`favoriteCurrency || defaultCurrency`, mismo mecanismo de
+`localStorage` de ADR-0007) — lo que se retira es la posibilidad de
+CAMBIARLA desde aquí, no el dato en sí (se sigue guardando en el
+registro). El valor resuelto se muestra como referencia, en la propia
+etiqueta del importe ("Importe · THB"), no como un desplegable.
+
+**Backlog añadido:** "Configuración → Moneda favorita" — sin esa
+pantalla futura, no queda NINGÚN sitio desde el que cambiar la moneda
+favorita (antes existía el botón "Usar X como favorita" dentro del
+propio formulario). Es una limitación real y consciente durante el
+interín, tal como pedía el encargo ("no implementes todavía" esa
+pantalla). `setFavoriteCurrencyStorage` (el escritor de la preferencia)
+se retira por quedar sin ningún llamador — la futura pantalla lo
+reintroduce trivialmente, mismo formato de clave documentado en el
+comentario que queda en su lugar.
+
+**Bloque 5 — densidad:** con la columna de Moneda libre, "Instructor
+relacionado" e "Importe" pasan a compartir una fila (`grid-cols-2`) en
+vez de que Importe ocupara media fila vacía o una fila entera él solo —
+el formulario de Ajuste pasa de 4 filas de campos a 3. La explicación
+del signo ("Importe positivo si te paga a ti; negativo si le pagas tú a
+él/ella", ya existente) hace innecesario repetir "(puede ser negativo)"
+en la propia etiqueta del campo, así que esa etiqueta se acorta a
+"Importe · {moneda}".
+
+**Validado:** 317/317 tests (reescrita la prueba de "moneda global +
+favorita" en `MiTrabajoTab.test.jsx`, que asumía el campo/botón
+retirados; +1 test nuevo cubriendo que la favorita de `localStorage` se
+respeta), build correcto, `mobile-check` sin errores (paso "Cambiar tipo
+-> Ajuste de curso" actualizado: comprueba ausencia del campo Moneda y
+presencia de "Importe · <código>") — captura revisada visualmente:
+Instructor relacionado + Importe · THB en la misma fila, sin ningún
+rastro del campo de Moneda.
+
+**Commit:** `feat(ajuste): moneda global (sin campo por movimiento) +
+formulario más compacto`.
+
 **Commit:** `feat(tarifas): rediseño completo — lista combinada, acento
 por tipo y hoja con motion` (+ `Sheet` extraído en el mismo commit, es
 la base que lo hace posible).
