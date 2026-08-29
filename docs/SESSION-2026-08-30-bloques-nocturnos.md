@@ -504,3 +504,37 @@ una fila propia que competía visualmente con la cifra pendiente.
 
 **Decisión:** mantener la integración actual. Sin cambios de código,
 sin commit — evaluación documentada aquí.
+
+### Bloque 13 — Separadores de miles: auditado, ya es consistente
+
+Encargo: decidir una convención coherente para representar cantidades
+(ingresos, tarifas, movimientos, resumen, formularios, tarjetas,
+listas) en toda la app, y aplicarla si no lo está ya.
+
+**Auditoría:** todo importe de dinero en la app pasa por una de dos
+únicas funciones (`formatMoney`/`Money`, `shared.jsx`), y todo recuento
+agregado de personas que puede llegar a ser una cifra grande (las
+listas "Por escuela"/"Por curso" de Resumen) pasa por `fmtInt`
+(`SummaryTab.jsx`) — grep de todo `src/*.jsx` confirma que no hay
+ningún importe interpolado a mano (`${...total}`, `.toFixed(2)` sobre
+dinero, etc.) que se salte esas funciones. Las tres usan
+`Number.toLocaleString("es-ES", ...)`, la API estándar de
+internacionalización de JS, no una implementación propia.
+
+**Hallazgo clave (no es un bug):** `es-ES` agrupa con "." a partir de
+5 cifras (10.000+), pero NO añade separador en números de 4 cifras
+(1000-9999 se muestran "1234", no "1.234") — comportamiento real de
+[CLDR](https://cldr.unicode.org/) para español (regla de "agrupación
+mínima" que evita separar un año o una cifra de 4 dígitos, convención
+tipográfica española real, no un capricho del navegador). Verificado
+con Node/ICU directamente, no supuesto.
+
+**Decisión:** ninguna cifra en Ocean Flow necesita hoy más de 4 dígitos
+en el caso normal (importes de tarifas/movimientos individuales,
+totales mensuales de un instructor freelance) salvo agregados de
+periodos largos en Resumen, que ya agrupan correctamente al pasar de
+10.000. Mantener `toLocaleString("es-ES")` vía las 3 funciones
+existentes es exactamente "la solución correcta basada en
+locale" que este bloque prefiere sobre una implementación manual — ya
+está aplicada de forma coherente en toda la app. Sin cambios de código,
+sin commit.
