@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Pencil, Check, RotateCcw, MoreVertical, SlidersHorizontal, PartyPopper } from "lucide-react";
+import { Plus, Check, RotateCcw, SlidersHorizontal, PartyPopper } from "lucide-react";
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   Money, Field, Select, MultiSelect, DateRangePicker, DeleteButton, ConfirmDialog, colorFor,
-  isPendingStatus, oppositeStatus, useToast, useFloatingDropdown, FloatingPanel, todayStr, addDays, MOVEMENT_TYPE_META,
+  isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META,
 } from "./shared";
 import { buildActivityEntries, buildIncomeEntries } from "./rateCalc";
 import PendingCollectionCard from "./PendingCollectionCard";
@@ -58,59 +58,6 @@ function EntryRowTitle({ entry, activityColor }) {
 function actionLabel(entry, isPending) {
   if (!isPending) return "Marcar pendiente";
   return entry._source === "companeros" && entry.total < 0 ? "Marcar liquidado" : "Confirmar cobro";
-}
-
-// Menú "⋯" para Editar/Eliminar — la acción de menor frecuencia de la fila
-// (ver docs/ADR/0005-mi-trabajo-unificacion-economica.md, revisión de
-// jerarquía de acciones): antes eran 2 iconos siempre visibles compitiendo
-// con el cambio de estado; ahora quedan agrupados detrás de un único
-// control, sin perder alcance (siguen a un toque de distancia).
-function RowMenu({ onEdit, onDelete, itemLabel }) {
-  // Antes se recortaba en la última fila de la lista (el contenedor tiene
-  // overflow-hidden para las esquinas redondeadas) — con FloatingPanel
-  // (portal a document.body) deja de depender de los ancestros.
-  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
-  // Cierra el menú "⋯" en el mismo instante en que se CONFIRMA el borrado
-  // dentro del diálogo — no al pulsar "Eliminar" en el menú, porque eso
-  // solo abre el diálogo (que vive dentro de DeleteButton, dentro de este
-  // mismo FloatingPanel): cerrar el menú en ese momento desmontaría el
-  // FloatingPanel y con él el propio diálogo antes de que llegara a
-  // mostrarse. En el momento de onConfirm, el diálogo ya se está cerrando
-  // por su cuenta (DeleteButton es optimistic), así que cerrar el menú a
-  // la vez no se nota — y sin esto, se veía el menú suelto un instante
-  // detrás una vez cerrado el diálogo.
-  const handleDeleteConfirmed = () => {
-    setOpen(false);
-    return onDelete();
-  };
-  return (
-    <>
-      <button
-        ref={anchorRef}
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-label="Más acciones"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-gray-300 hover:text-gray-600"
-      >
-        <MoreVertical size={17} aria-hidden="true" />
-      </button>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align="right" role="menu" className="w-36 overflow-hidden py-1">
-        <button
-          type="button" role="menuitem"
-          onClick={() => { setOpen(false); onEdit(); }}
-          className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-gray-700 hover:bg-gray-50"
-        >
-          <Pencil size={14} aria-hidden="true" /> Editar
-        </button>
-        {/* optimistic: el diálogo cierra al instante en vez de esperar al
-            borrado real — así la animación de salida de la fila (ver
-            EntryRow) se ve en la lista, no oculta detrás del modal. */}
-        <DeleteButton variant="menuItem" onConfirm={handleDeleteConfirmed} itemLabel={itemLabel} optimistic />
-      </FloatingPanel>
-    </>
-  );
 }
 
 // El cambio de estado es la acción de más frecuencia de la fila — se

@@ -46,7 +46,8 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   (Configuración, Tarifas, Home, Resumen) — solo texto visible, el
   modelo de datos no cambia.
 - Tarifas: los filtros pasan a un panel colapsable "Filtrar", igual que
-  en Mi trabajo.
+  en Mi trabajo; cada fila usa ahora el mismo menú "⋯" (Editar/Eliminar)
+  que Mi trabajo, en vez de dos iconos sueltos.
 - Se oculta el acceso directo a "Pagos" de la navegación — Mi trabajo
   cubre su función ("Cobrar todos", filtro por escuela).
 - Home: el calendario del mes sube al segundo lugar (tras "Pendiente de
