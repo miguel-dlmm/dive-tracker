@@ -706,13 +706,19 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
 
   // Agregado por actividad (comportamiento por defecto); si showSchool
   // está activo, se agrupa por escuela+actividad para poder mostrar la
-  // escuela junto a cada línea.
+  // escuela junto a cada línea. `allColleague` marca si TODAS las entradas
+  // agrupadas bajo esa clave son Ajustes de curso (colleague_payments no
+  // tiene concepto de persona, siempre suma 0) — solo entonces se oculta
+  // el badge de personas al renderizar; un grupo mixto (curso + ajuste con
+  // la misma actividad) sigue mostrando el recuento real de personas del
+  // curso.
   const flatBreakdown = (list) => {
     const map = {};
     list.forEach((e) => {
       const key = showSchool ? `${e.school}||${e.activity}` : e.activity;
-      if (!map[key]) map[key] = { activity: e.activity, school: e.school, people: 0, totals: {} };
+      if (!map[key]) map[key] = { activity: e.activity, school: e.school, people: 0, totals: {}, allColleague: true };
       map[key].people += e.people || 0;
+      map[key].allColleague = map[key].allColleague && e._source === "companeros";
       map[key].totals[e.currency] = (map[key].totals[e.currency] || 0) + e.total;
     });
     return Object.values(map);
@@ -889,7 +895,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
                       <li key={a.activity} className="flex items-center justify-between pl-2 text-sm">
                         <span style={{ color: activityColor(a.activity) }} className="font-medium">{a.activity}</span>
                         <span className="flex items-center gap-2 tabular-nums text-gray-600">
-                          <span className="text-xs text-gray-400">{a.people}p</span>
+                          {group.key !== "companeros" && <span className="text-xs text-gray-400">{a.people}p</span>}
                           <MoneyLine totals={a.totals} currencyRows={currencyRows} />
                         </span>
                       </li>
@@ -930,7 +936,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
                     {showSchool && <span className="text-[11px] text-gray-400">{a.school}</span>}
                   </span>
                   <span className="flex items-center gap-2 tabular-nums text-gray-600">
-                    <span className="text-xs text-gray-400">{a.people}p</span>
+                    {!a.allColleague && <span className="text-xs text-gray-400">{a.people}p</span>}
                     <MoneyLine totals={a.totals} currencyRows={currencyRows} />
                   </span>
                 </li>

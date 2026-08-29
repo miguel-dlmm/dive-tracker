@@ -418,3 +418,51 @@ necesitar recargar ni cambiar de pestaña.
 
 **Commit:** `feat(por-escuela): ocultar funcionalidades multi-escuela
 cuando solo hay una configurada`.
+
+### Bloque 11 — Ajustes de curso: sin concepto de "persona"
+
+Problema de usuario: los Ajustes de curso (`colleague_payments`) no
+tienen ni han tenido nunca un campo de personas en el modelo de datos
+(confirmado en `schema.sql`) — MovementSheet ya no le pide ese dato
+desde el rediseño de Mi trabajo. Pero varias vistas agregadas construyen
+listas mezclando Curso/Comisión/Ajuste en una forma común, y esa forma
+común fuerza `people: 0` en cada Ajuste para que el resto del código
+(que sí espera ese campo) no rompa — el problema es que varias de esas
+vistas pintaban ese `0` como si fuera un dato real ("0p"), en vez de
+tratarlo como un artefacto interno de unificar la forma.
+
+**Auditoría realizada** (Home, Mi trabajo/MovementSheet, Resumen,
+Ayuda, calendario, filtros): Mi trabajo (`EntryRowTitle`/`EntryRow`) y
+la cifra "personas formadas" de Home ya excluían Ajustes correctamente
+— no llevaban el bug. Los 3 puntos reales, todos en el desglose
+agregado de Resumen (calendario y listas "Por escuela"/"Por curso",
+`shared.jsx` + `SummaryTab.jsx`):
+1. Calendario, vista "Total combinado" agrupada por fuente
+   (`sourceGroupedBreakdown` en `shared.jsx`): el grupo "Ajuste" del día
+   mostraba "0p" en cada línea.
+2. Calendario filtrado a un único tipo que no es "Total" (`flatBreakdown`,
+   la rama sin agrupar): con el filtro en "Ajuste", cada línea del día
+   mostraba "0p".
+3. "Por escuela"/"Por curso" (`RankedList`, vía `groupSum`): una escuela
+   o curso cuya única actividad del periodo fuera un Ajuste mostraba
+   "0p" junto al importe.
+
+**Solución:** en vez de ocultar el badge "por defecto" (lo que también
+lo escondería en un grupo mixto con un curso real, perdiendo un dato
+legítimo), cada agregador ahora rastrea si TODAS las entradas que
+componen esa clave son Ajustes (`allColleague` en `groupSum` y
+`flatBreakdown`, comprobación directa de `group.key` en
+`sourceGroupedBreakdown`) — el badge de personas solo se oculta cuando
+es 100% Ajustes; un grupo mixto (p. ej. un curso real + un ajuste con la
+misma escuela) sigue mostrando el recuento real de personas del curso.
+
+**Validación:**
+- 3 tests nuevos en `SummaryTab.test.jsx`: "Por escuela" con una
+  escuela 100% Ajuste, Calendario en "Total combinado" con un grupo
+  mixto Curso+Ajuste el mismo día, Calendario filtrado a "Ajuste".
+- Suite completa: **328/328** tests.
+- Build: limpio.
+- `mobile-check`: 41 capturas, sin errores de consola.
+
+**Commit:** `fix(ajustes-de-curso): ocultar el recuento de personas
+cuando el grupo es enteramente Ajustes de curso`.
