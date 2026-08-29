@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import * as Icons from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
 import { TEAL, SUN, CORAL, GREEN } from "./colors";
+import { panelVariants, usePrefersReducedMotion } from "./motion";
 
 export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
 
@@ -601,6 +603,7 @@ export const MOVEMENT_TYPE_META = {
 // de lo que ya hay. Sin este prop (p. ej. en Resumen, un calendario de
 // solo análisis) el comportamiento es exactamente el de antes.
 export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false, onCreateForDay }) {
+  const reducedMotion = usePrefersReducedMotion();
   const [selectedDay, setSelectedDayState] = useState(null);
   const userSelectedRef = useRef(false);
   const setSelectedDay = (day) => {
@@ -705,7 +708,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
               disabled={!d || (!hasActivity && !creatable)}
               onClick={handleClick}
               aria-label={creatable ? `Añadir movimiento el ${d} de ${CAL_MONTHS[month]}` : undefined}
-              className="flex h-11 items-center justify-center"
+              className="flex h-11 items-center justify-center transition-transform active:scale-90"
             >
               {d && (
                 <span
@@ -735,8 +738,16 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
         </div>
       )}
 
-      {selectedDay && (
-        <div className="mt-3 rounded-md bg-gray-50 p-3">
+      {/* Panel de detalle del día — animado con panelVariants (src/motion.js):
+          comunica la transición de vistazo (la cuadrícula) a detalle (el
+          desglose), en vez de aparecer/desaparecer de golpe. Sin key por
+          selectedDay a propósito: cambiar de un día a otro con el panel ya
+          abierto actualiza el contenido en el sitio, sin volver a animar
+          la entrada — solo abrir/cerrar el panel dispara la transición. */}
+      <AnimatePresence initial={false}>
+        {selectedDay && (
+        <motion.div {...panelVariants(reducedMotion)} className="mt-3 overflow-hidden rounded-md bg-gray-50">
+        <div className="p-3">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-600">Día {selectedDay} de {CAL_MONTHS[month]}</span>
             <div className="flex items-center gap-1">
@@ -850,7 +861,9 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
             </ul>
           )}
         </div>
-      )}
+        </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
