@@ -91,7 +91,10 @@ describe("ConfigTab — CrudTable crea vía FAB + hoja (ver Escuelas)", () => {
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(schools.insertRow).toHaveBeenCalledWith(expect.objectContaining({ name: "Ihasia" }));
-    expect(screen.queryByRole("heading", { name: "Nueva escuela" })).not.toBeInTheDocument();
+    // La hoja ahora anima la salida (Sheet, shared.jsx — ver bloque de
+    // gestos 2026-08-30): el heading deja de estar en el DOM al terminar
+    // la animación, no en el mismo tick que cerrarla.
+    await waitFor(() => expect(screen.queryByRole("heading", { name: "Nueva escuela" })).not.toBeInTheDocument());
   });
 
   it("'Editar' (menú '⋯') abre la misma hoja precargada, y Guardar llama a updateRow", async () => {

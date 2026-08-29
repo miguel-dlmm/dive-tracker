@@ -247,6 +247,40 @@ rastro del campo de Moneda.
 **Commit:** `feat(ajuste): moneda global (sin campo por movimiento) +
 formulario más compacto`.
 
+### Bloque 6 — Gestos: drag-to-dismiss en todas las hojas
+
+El componente `Sheet` (extraído en el Bloque 1) se aplica a los 5 sheets
+sin animar que quedaban en `ConfigTab.jsx`: `CrudTable` (Escuelas/Cursos/
+Tipos de pago/Estados de pago/Monedas), `UserDetailSheet`,
+`ActivationLinkPanel` (z-50, puede convivir con `UserDetailSheet` z-40
+detrás) y las 2 vistas de `CreateUserSheet` (formulario normal + el
+fallback "no se pudo enviar el email"). `useBodyScrollLock` manual se
+retira de los 3 sitios que lo llamaban aparte — `Sheet` ya lo hace
+internamente.
+
+**Límite real, no ocultado:** `CrudTable` tiene una animación de salida
+completa (gestiona su propio `sheetOpen` internamente, nunca se
+desmonta a sí misma) — igual que `RatesTab` ya validado en el Bloque 1.
+Las otras 3 (`UserDetailSheet`, `ActivationLinkPanel`, `CreateUserSheet`)
+las monta/desmonta el padre por completo (`{cond && <X/>}`) — con eso,
+la animación de ENTRADA y el gesto de arrastrar funcionan bien, pero al
+cerrar, React las desmonta antes de que Motion complete la transición de
+salida (desaparecen de golpe en vez de deslizarse). Arreglarlo del todo
+exige el mismo patrón de `MovementSheet.jsx` (siempre montado, `open`
+como prop) — cambio de más alcance en pantallas de administración de
+bajo uso, así que se documenta como pendiente en `docs/BACKLOG.md` en
+vez de forzarlo esta noche. Es una mejora real de todos modos: antes
+estas 3 hojas no tenían NINGUNA animación (ni entrada ni gesto).
+
+**Validado:** 317/317 tests (1 test de `ConfigTab.test.jsx` ajustado con
+`waitFor` — la hoja ahora anima la salida, el heading ya no desaparece
+en el mismo tick que cerrarla), build correcto, `mobile-check` sin
+errores — captura de "Nueva escuela" revisada visualmente: tirador de
+arrastre visible, mismo aspecto que `MovementSheet`/`RatesTab`.
+
+**Commit:** `feat(gestos): aplicar Sheet (motion + arrastrar para
+cerrar) a las hojas de Configuración`.
+
 **Commit:** `feat(tarifas): rediseño completo — lista combinada, acento
 por tipo y hoja con motion` (+ `Sheet` extraído en el mismo commit, es
 la base que lo hace posible).
