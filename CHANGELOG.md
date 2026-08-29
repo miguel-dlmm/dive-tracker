@@ -71,6 +71,10 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   fallaba en desarrollo local (`npm run dev`): las rutas `/api/*` solo
   existían bajo Vercel/Netlify, nunca bajo Vite puro. Añadido un tercer
   adaptador local en `vite.config.js`, solo para desarrollo.
+- El login normal podía mostrar durante un instante la pantalla de crear
+  contraseña (o de aceptar bases legales) incluso para una cuenta ya
+  completamente activada, por una condición de carrera entre `session` y
+  `profile` al actualizar el estado de sesión.
 
 ## [0.1.0] - 2026-08-26
 

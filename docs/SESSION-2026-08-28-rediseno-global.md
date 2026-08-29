@@ -440,3 +440,69 @@ a `is_admin: false` inmediatamente después.
 desactivar/eliminar con `supabase`/`fetch` mockeados), build correcto,
 `mobile-check` sin errores (contra el puerto 5180 propio, servidor del
 usuario en 5173 verificado vivo antes y después).
+
+## Bloque — "El botón de crear en Home se queda pillado" (investigado, no reproducido)
+
+Reproducido a fondo contra el servidor de pruebas (5180), con las
+mismas herramientas que ya sirvieron esta sesión: tanto el "+" de la
+tarjeta "Pendiente de cobrar" como tocar un día vacío del calendario
+abren correctamente `MovementSheet` sobre Home (sin cambiar de
+pestaña), con el formulario pre-rellenado y usable; guardar navega a Mi
+trabajo; cerrar sin guardar deja en Home sin ningún rastro de hoja
+"pillada". Confirmado además que el servidor en el puerto 5173 (mismo
+directorio de trabajo que este, mismo checkout) sirve exactamente este
+mismo código — no hay una versión distinta desplegada ahí que pudiera
+explicar la diferencia.
+
+No reproducido en Chromium con las herramientas disponibles aquí — el
+patrón se repite del bug de tarifa inline de la sesión anterior:
+coherente con ser específico de WebKit/Safari real en el iPhone del
+usuario (probado ahora también vía el túnel de Cloudflare que está
+montando), no de la lógica de la app. No se ha aplicado ningún cambio
+de código sobre este flujo — nada que arreglar sin causa confirmada.
+Pendiente de que el usuario lo vuelva a probar en su iPhone físico
+ahora que el fix de login (bloque de arriba) y el de `/api/*` en local
+ya están aplicados, por si alguno de los dos era la causa real
+percibida como "otro formulario".
+
+## Bloque — Login/bypass: pantallas de activación reabriéndose sin motivo
+
+### Causa raíz confirmada (no solo teórica)
+
+En `useSession.js`, tanto la carga inicial como `onAuthStateChange`
+hacían `setSession(...)`, luego `setProfile(await loadProfile(...))`,
+luego `setConsents(await loadConsents(...))` — tres `setState`
+separados por un `await` cada uno. El batching automático de React 18
+solo agrupa actualizaciones síncronas consecutivas; con un `await` de
+por medio, cada `setState` dispara su propio render. Entre el primero y
+el segundo, `session` ya era la nueva sesión pero `profile` seguía
+siendo el de ANTES de iniciar sesión (`null` en un login normal desde
+`LoginScreen`) — `AuthGate` interpretaba ese instante exacto como
+"sesión sin perfil activado" y mostraba `CreatePasswordScreen` (o
+`AcceptLegalScreen`, según el timing) un instante de más, **incluso
+para una cuenta ya completamente activada, sin consentimientos
+pendientes**. Coincide exactamente con la queja del usuario.
+
+### Fix
+
+`Promise.all([loadProfile(userId), loadConsents(userId)])` antes de
+llamar a ningún `setState` — los tres (`session`, `profile`,
+`consents`) cambian juntos, en el mismo render, tanto en la carga
+inicial como en `onAuthStateChange`. Aplica igual de bien al login
+manual que al auto-login del bypass de desarrollo (mismo código,
+ninguna rama especial).
+
+### Verificación real, no solo razonamiento
+
+Escrita una prueba de regresión en `useSession.test.js` con una promesa
+de `loadProfile` controlada a mano (no resuelta hasta que el test lo
+decide), para poder inspeccionar el estado exactamente en el instante
+intermedio. **Confirmado el proceso completo**: con el fix revertido a
+propósito (`git stash` temporal), la prueba nueva falla exactamente
+como se esperaba (`session` ya puesto, se esperaba `null`); con el fix
+restaurado, pasa. Es la misma disciplina de "verificar que el test
+detecta el bug de verdad" que ya se aplicó esta sesión con el bug de
+animación de cobro.
+
+**Validado:** 242/242 tests (1 nuevo, el de regresión descrito arriba),
+build correcto, `mobile-check` sin errores.
