@@ -354,6 +354,28 @@ async function main() {
     consoleIssues.push("[configuracion] Tras pulsar '‹ Configuración' desde Escuelas, no se ve de vuelta el menú agrupado.");
   }
 
+  console.log("→ Configuración: Tarifas — fila con RowMenu '⋯' (coherencia con Mi trabajo)");
+  await page.locator("text=Tarifas").first().tap();
+  await page.waitForTimeout(300);
+  await shot(page, "configuracion-tarifas");
+  const rateMenuBtn = page.getByRole("button", { name: "Más acciones" }).first();
+  if (await rateMenuBtn.isVisible().catch(() => false)) {
+    await rateMenuBtn.tap();
+    await page.waitForTimeout(200);
+    await shot(page, "configuracion-tarifas-menu-abierto");
+    const hasEditar = await page.getByRole("menuitem", { name: "Editar" }).isVisible().catch(() => false);
+    const hasEliminar = await page.getByRole("menuitem", { name: /Eliminar/ }).isVisible().catch(() => false);
+    if (!hasEditar || !hasEliminar) {
+      consoleIssues.push("[tarifas] El menú '⋯' de una tarifa no muestra Editar y Eliminar.");
+    }
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(150);
+  } else {
+    console.log("  (sin tarifas existentes para probar el RowMenu — omitido)");
+  }
+  await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
+  await page.waitForTimeout(200);
+
   const hasAdminGroup = await page.getByText("Administración", { exact: true }).isVisible().catch(() => false);
   if (hasAdminGroup) {
     console.log("→ Configuración: grupo Administración visible (cuenta con rol admin/superadmin) — entrar en Usuarios");

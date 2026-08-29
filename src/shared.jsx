@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import * as Icons from "lucide-react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
@@ -1079,6 +1079,60 @@ export function FloatingPanel({ open, pos, panelRef, matchWidth = true, align = 
       {children}
     </div>,
     document.body
+  );
+}
+
+// Menú "⋯" para Editar/Eliminar — extraído de MiTrabajoTab.jsx (2026-08-29)
+// para que Tarifas pueda usar exactamente el mismo patrón de acciones de
+// fila (ver docs/ADR/0012-tarifas-coherencia-mi-trabajo.md): "que aprender
+// una pantalla facilite usar las demás" aplica igual de bien aquí que al
+// menú agrupado de Configuración/Ayuda. Antes se recortaba en la última
+// fila de una lista con overflow-hidden (esquinas redondeadas) — con
+// FloatingPanel (portal a document.body) deja de depender de los
+// ancestros.
+export function RowMenu({ onEdit, onDelete, itemLabel }) {
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
+  // Cierra el menú "⋯" en el mismo instante en que se CONFIRMA el borrado
+  // dentro del diálogo — no al pulsar "Eliminar" en el menú, porque eso
+  // solo abre el diálogo (que vive dentro de DeleteButton, dentro de este
+  // mismo FloatingPanel): cerrar el menú en ese momento desmontaría el
+  // FloatingPanel y con él el propio diálogo antes de que llegara a
+  // mostrarse. En el momento de onConfirm, el diálogo ya se está cerrando
+  // por su cuenta (DeleteButton es optimistic), así que cerrar el menú a
+  // la vez no se nota — y sin esto, se veía el menú suelto un instante
+  // detrás una vez cerrado el diálogo.
+  const handleDeleteConfirmed = () => {
+    setOpen(false);
+    return onDelete();
+  };
+  return (
+    <>
+      <button
+        ref={anchorRef}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Más acciones"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-gray-300 hover:text-gray-600"
+      >
+        <MoreVertical size={17} aria-hidden="true" />
+      </button>
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align="right" role="menu" className="w-36 overflow-hidden py-1">
+        <button
+          type="button" role="menuitem"
+          onClick={() => { setOpen(false); onEdit(); }}
+          className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-gray-700 hover:bg-gray-50"
+        >
+          <Pencil size={14} aria-hidden="true" /> Editar
+        </button>
+        {/* optimistic: el diálogo cierra al instante en vez de esperar al
+            borrado real — así una animación de salida de la fila (si la
+            pantalla que llama la tiene) se ve en la lista, no oculta
+            detrás del modal. */}
+        <DeleteButton variant="menuItem" onConfirm={handleDeleteConfirmed} itemLabel={itemLabel} optimistic />
+      </FloatingPanel>
+    </>
   );
 }
 

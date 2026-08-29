@@ -506,3 +506,30 @@ animación de cobro.
 
 **Validado:** 242/242 tests (1 nuevo, el de regresión descrito arriba),
 build correcto, `mobile-check` sin errores.
+
+## Bloque — Tarifas: coherencia con Mi trabajo (RowMenu compartido)
+
+Petición explícita del usuario: "quiero que Tarifas se parezca todo lo
+posible a Movimientos... si puedes reutilizar patrones, mejor." Última
+pieza de la coherencia Tarifas↔Mi trabajo que aún faltaba tras
+`ADR-0008` (creación FAB+hoja y filtro colapsable, ya resueltos): las
+filas de Tarifas mostraban dos iconos sueltos (lápiz + papelera) donde
+Mi trabajo ya usaba un único menú "⋯" (`RowMenu`).
+
+`RowMenu` extraído de `MiTrabajoTab.jsx` a `shared.jsx` (pura
+extracción, mismo comportamiento) y reutilizado en `RatesTab.jsx`; la
+fila de tarifa se reestructura para calcar la forma exacta de
+`EntryRow` (título+importe arriba, metadato+acciones abajo). Ver
+`docs/ADR/0012-tarifas-coherencia-mi-trabajo.md` para el detalle,
+incluida una nota sobre un efecto de comportamiento aceptado (no un
+bug): el borrado pasa a ser optimista, igual que en Mi trabajo.
+
+`mobile-check.mjs` gana su primer recorrido de Tarifas (antes no tenía
+ninguno) — abre el menú "⋯" de una fila real (9 tarifas ya existentes
+en la cuenta demo) y confirma Editar/Eliminar.
+
+**Validado:** 242/242 tests (sin regresiones — los tests existentes de
+`MiTrabajoTab.test.jsx` siguen pasando igual tras la extracción, y
+`RatesTab.test.jsx` no ejercita el flujo de borrado), build correcto,
+`mobile-check` sin errores — captura del menú abierto revisada
+visualmente.

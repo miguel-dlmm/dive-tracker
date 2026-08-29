@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { Plus, Pencil, X, Search, SlidersHorizontal } from "lucide-react";
+import { Plus, X, Search, SlidersHorizontal } from "lucide-react";
 import { NAVY, TEAL } from "./App";
-import { inputCls, Select, MultiSelect, Field, colorFor, DeleteButton, Money, CurrencySearchSelect, MoneyInput, EditActions, EntryTitle, useToast, useBodyScrollLock } from "./shared";
+import { inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, CurrencySearchSelect, MoneyInput, EditActions, EntryTitle, useToast, useBodyScrollLock } from "./shared";
 
 // schools / activities / paymentTypes / currencies: { rows: [...] } — de useSupabaseTable
 // rates / commissionRates: { rows, insertRow, updateRow, deleteRow }
@@ -163,14 +163,21 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
                 </div>
               );
             }
+            // Misma estructura de fila que EntryRow en Mi trabajo (título +
+            // importe arriba, metadato + acciones abajo) y el mismo RowMenu
+            // "⋯" para Editar/Eliminar, en vez de dos iconos sueltos — ver
+            // docs/ADR/0012-tarifas-coherencia-mi-trabajo.md.
             return (
-              <div key={r.id} className="px-4 py-3 text-sm">
-                <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
-                <div className="mt-2 truncate pl-3.5 text-xs text-gray-400">{r.payment_type}</div>
-                <div className="mt-2 flex items-center justify-end gap-2.5">
-                  <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} className="font-semibold" style={{ color: NAVY }} />
-                  <button onClick={() => startEdit(r)} aria-label="Editar tarifa" className="text-gray-300 hover:text-gray-600"><Pencil size={15} /></button>
-                  <DeleteButton onConfirm={() => deleteRate(r)} itemLabel={`la tarifa de ${r.school} - ${r.activity}`} />
+              <div key={r.id} className="px-4 py-3.5 text-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
+                  <span className="shrink-0 font-semibold tabular-nums" style={{ color: NAVY }}>
+                    <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: NAVY }} />
+                  </span>
+                </div>
+                <div className="mt-1.5 flex items-center justify-between gap-2">
+                  <span className="truncate text-xs text-gray-400">{r.payment_type}</span>
+                  <RowMenu onEdit={() => startEdit(r)} onDelete={() => deleteRate(r)} itemLabel={`la tarifa de ${r.school} - ${r.activity}`} />
                 </div>
               </div>
             );
