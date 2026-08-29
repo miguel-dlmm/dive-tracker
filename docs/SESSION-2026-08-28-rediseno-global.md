@@ -1245,4 +1245,91 @@ pueda ni deba automatizar.
 no la implementa ni cambia su prioridad, es un campo distinto de
 `activated_at` (que sí se gestiona aquí).
 
+(Nota: el encabezado "## Bloque 8 — Rediseño de gestión de usuarios en
+Configuración" que sigue a continuación quedó duplicado y sin contenido
+propio al final del archivo, arrastrado de una edición anterior — el
+Bloque 8 real, con su contenido completo, está más arriba. Se deja tal
+cual, sin borrar nada preexistente, siguiendo la misma disciplina de
+solo-añadir que el resto de este documento.)
+
 ## Bloque 8 — Rediseño de gestión de usuarios en Configuración
+
+## Bloque 10 — Cuenta desactivada: sesión y login, causa raíz unificada
+
+Dos bugs reportados por el usuario tras probar en local el modelo de
+activación del Bloque 9: (1) una cuenta desactivada con sesión
+persistida, al recargar, podía acabar en la pantalla de crear
+contraseña en vez de en el login; (2) un login nuevo contra una cuenta
+desactivada mostraba el mismo mensaje genérico que unas credenciales
+incorrectas.
+
+**Causa raíz, confirmada en vivo contra el proyecto real (no asumida):**
+`supabase.auth.getSession()` es una lectura local — no consulta al
+servidor mientras el `access_token` no haya caducado, así que nunca por
+sí sola detecta un baneo posterior a la emisión del token. Confirmado
+con una cuenta de prueba desechable: el mismo token, sin caducar, sigue
+aceptándose en `getSession()` tras banear la cuenta, pero
+`supabase.auth.getUser()` (sí golpea el servidor) devuelve
+`error.code === "user_banned"` de inmediato — igual que
+`signInWithPassword`, `updateUser` y `verifyOtp`, confirmado uno por
+uno con scripts desechables (borrados tras usarlos, nunca comiteados).
+Además, el modelo de activación del Bloque 9 limpia
+`profiles.activated_at` también al desactivar, así que ese campo ya no
+basta para distinguir "desactivado" de "pendiente de primer acceso" —
+la app no tenía, hasta este bloque, ninguna otra señal de "está
+baneado".
+
+**Corrección — un único punto de detección, reutilizado en los 4 sitios
+que lo necesitan** (`src/useSession.js`): `isBannedError(error)`
+(`error.code === "user_banned"`) y `resolveSessionState(rawSession)`
+(llama a `getUser()`, cierra la sesión y marca `accountBanned` si está
+baneada, antes de tocar `profiles`). Se usa en:
+1. Carga inicial de sesión y `onAuthStateChange` — cubre recarga y
+   restauración de sesión.
+2. `signIn()` — cubre login nuevo; reinicia `accountBanned` al empezar
+   cada intento (único sitio que lo pone a `false`, para no perder el
+   aviso por un `SIGNED_OUT` disparado por el propio `signOut()` del
+   punto 1).
+3. `activateAccount()`, rama `verifyOtp` — cubre un enlace de
+   activación nuevo para una cuenta ya desactivada.
+4. `activateAccount()`, rama `completePasswordChange` — cubre
+   exactamente el caso "pantalla de activación ya abierta, la cuenta se
+   desactiva mientras tanto": Supabase ya rechaza el cambio de
+   contraseña con `user_banned` en cuanto se banea, este catch lo
+   traduce al mismo mensaje y cierra la sesión en vez de dejar
+   progresar la activación.
+
+Un único mensaje exportado, `ACCOUNT_DEACTIVATED_MESSAGE` — mismo texto
+en el aviso de `LoginScreen` y en el error que lanza `activateAccount`.
+`AuthGate` (`App.jsx`) comprueba `accountBanned` ANTES que cualquier
+otra condición (sesión, enlace de activación en la URL), para que
+prevalezca sobre una pantalla de activación que ya estuviera abierta,
+tal y como pidió el usuario explícitamente.
+
+**Límite conocido y aceptado, no resuelto en este bloque:** la detección
+en una sesión YA DENTRO de la app (más allá de `AuthGate`) sigue acotada
+por la caducidad natural del `access_token` (por defecto ~1h) — Supabase
+no empuja un evento de "te han baneado" en tiempo real, y cualquier
+consulta normal a una tabla vía PostgREST (`supabase.from(...)`) no
+comprueba el baneo en absoluto, solo lo hacen los endpoints de `auth.*`.
+Añadir una comprobación activa y periódica dentro de la app sería
+sobreingeniería para el riesgo real (ventana acotada a la caducidad del
+token, de un único usuario freelance) — se documenta aquí como
+limitación consciente, no como hueco pendiente de cerrar.
+
+**Verificación:** 307/307 tests (16 nuevos: `useSession.test.js` — login,
+recarga/restauración, y las dos ramas de `activateAccount`; nuevo
+`LoginScreen.test.jsx`; un nuevo caso en `App.test.jsx` para la
+prioridad de `accountBanned`); build correcto. Verificación visual
+específica (no cubierta por `mobile-check.mjs`, que asume el bypass de
+desarrollo y nunca llega a ver `LoginScreen`): script Playwright
+desechable, servidor de desarrollo propio en el puerto 5183 con el
+bypass desactivado solo para esa instancia, contra 2 cuentas de prueba
+desechables — confirmado visualmente que (a) un login contra una cuenta
+ya desactivada muestra el mensaje unificado, y (b) banear una cuenta con
+la sesión ya abierta en el navegador y recargar lleva a `LoginScreen`
+con el mismo aviso, nunca a `CreatePasswordScreen`. Script y capturas
+borrados tras usarlos. Además, `mobile-check.mjs` oficial ejecutado
+también contra un servidor propio (puerto 5183) para confirmar que el
+cambio en `AuthGate` no rompe nada del resto de la app — 45 capturas,
+sin errores de consola.

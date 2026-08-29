@@ -129,6 +129,17 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   confundía con una negación real de permiso. Ahora un fallo de
   verificación devuelve un mensaje distinto ("No se pudo comprobar tus
   permisos..."), nunca el de superadmin.
+- Una cuenta desactivada con sesión persistida podía recargar la página y
+  acabar en la pantalla de crear contraseña (o intentar completarla) en
+  vez de en el login — `profiles.activated_at` se limpia también al
+  desactivar, así que ya no basta para distinguir "desactivado" de
+  "pendiente de primer acceso". Un login nuevo contra una cuenta
+  desactivada mostraba además el mismo mensaje genérico que unas
+  credenciales incorrectas. Ambos casos comparten ahora un único punto de
+  detección (`error.code === "user_banned"`, que Supabase revisa en cada
+  llamada de `auth.*`, no solo al emitir el token) y un único mensaje:
+  "Tu cuenta ha sido desactivada...", con cierre de sesión forzado y
+  prioridad sobre cualquier pantalla de activación que estuviera abierta.
 
 ## [0.1.0] - 2026-08-26
 

@@ -2,10 +2,16 @@ import React, { useState } from "react";
 import { Waves, Loader2 } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
 import { inputCls, Field } from "./shared";
+import { ACCOUNT_DEACTIVATED_MESSAGE } from "./useSession";
 
 // signIn: (identifier, password) => Promise — de useSession. identifier
-// acepta email o nickname indistintamente. Lanza en error.
-export default function LoginScreen({ signIn }) {
+// acepta email o nickname indistintamente. Lanza en error — error.code
+// "user_banned" (cuenta desactivada) es la única excepción a "mensaje
+// genérico siempre": ese caso ya se muestra aparte vía la prop
+// accountBanned (ver AuthGate en App.jsx), así que aquí se ignora
+// explícitamente para no duplicar el aviso con un texto distinto ("email/
+// contraseña incorrectos" sería además incorrecto en ese caso).
+export default function LoginScreen({ signIn, accountBanned = false }) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,8 +24,10 @@ export default function LoginScreen({ signIn }) {
     setError("");
     try {
       await signIn(identifier, password);
-    } catch {
-      setError("Email/nickname o contraseña incorrectos.");
+    } catch (err) {
+      if (err?.code !== "user_banned") {
+        setError("Email/nickname o contraseña incorrectos.");
+      }
     } finally {
       setLoading(false);
     }
@@ -57,6 +65,7 @@ export default function LoginScreen({ signIn }) {
             />
           </Field>
 
+          {accountBanned && <p role="alert" className="text-sm text-red-600">{ACCOUNT_DEACTIVATED_MESSAGE}</p>}
           {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
           <button
