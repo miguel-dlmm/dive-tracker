@@ -25,3 +25,13 @@
   from = "/api/delete-user"
   to = "/.netlify/functions/delete-user"
   status = 200
+
+[[redirects]]
+  from = "/api/set-user-active"
+  to = "/.netlify/functions/set-user-active"
+  status = 200
+
+[[redirects]]
+  from = "/api/list-user-status"
+  to = "/.netlify/functions/list-user-status"
+  status = 200

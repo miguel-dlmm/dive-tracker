@@ -358,7 +358,14 @@ async function main() {
   if (hasAdminGroup) {
     console.log("→ Configuración: grupo Administración visible (cuenta con rol admin/superadmin) — entrar en Usuarios");
     await page.locator("text=Usuarios").first().tap();
-    await page.waitForTimeout(300);
+    // El directorio depende de una llamada real a Supabase (admin_list_profiles)
+    // más /api/list-user-status — un timeout fijo corto capturaba la
+    // captura en pleno "Cargando usuarios...". Se espera a que ese texto
+    // desaparezca en vez de adivinar cuánto tarda la red.
+    await page.getByText("Cargando usuarios…").waitFor({ state: "detached", timeout: 8000 }).catch(() => {
+      consoleIssues.push("[usuarios] El directorio siguió en 'Cargando usuarios…' más de 8s.");
+    });
+    await page.waitForTimeout(200);
     await shot(page, "configuracion-usuarios");
     await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
     await page.waitForTimeout(200);

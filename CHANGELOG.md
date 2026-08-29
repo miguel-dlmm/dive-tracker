@@ -29,7 +29,8 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
 - **Configuración**: menú agrupado (negocio / administración) en vez de
   pestañas horizontales; Escuelas, Cursos, Tipos de pago, Estados de
   pago y Monedas crean ahora vía botón flotante + hoja inferior;
-  eliminar usuario (superadmin, con confirmación).
+  eliminar usuario y desactivar/reactivar usuario (superadmin, con
+  confirmación) — desactivar revoca el acceso sin borrar ningún dato.
 - **Resumen**: tarjeta principal con comparación al periodo anterior, y
   el resto de la información (Por escuela con desglose por curso al
   tocar, Por curso, Calendario, Comisiones, Pagos de compañeros) como
@@ -66,6 +67,10 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
 - El scroll no se reiniciaba al cambiar de pestaña — la pantalla nueva
   heredaba la posición de scroll de la anterior en vez de abrir desde
   arriba.
+- "Eliminar usuario" (y el resto de acciones de gestión de usuarios)
+  fallaba en desarrollo local (`npm run dev`): las rutas `/api/*` solo
+  existían bajo Vercel/Netlify, nunca bajo Vite puro. Añadido un tercer
+  adaptador local en `vite.config.js`, solo para desarrollo.
 
 ## [0.1.0] - 2026-08-26
 

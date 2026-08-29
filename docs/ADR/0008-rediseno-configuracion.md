@@ -93,7 +93,7 @@ Home); "Por actividad" en Resumen queda pendiente para cuando se rediseñe
 esa pantalla (evita tocar el mismo archivo dos veces en una sesión por
 motivos distintos).
 
-### 4. Usuarios: eliminar cuenta (implementado); desactivar cuenta (pendiente de aprobación)
+### 4. Usuarios: eliminar cuenta (implementado); desactivar cuenta (implementado el 2026-08-29, ver addendum)
 
 **Eliminar** (`server/users/deleteUser.js` + `api/delete-user.js` +
 `netlify/functions/delete-user.js`, mismo patrón que `create-user`/
@@ -146,3 +146,49 @@ como propuesta concreta a aprobar, no se implementa a ciegas:
   sin implementar, con un plan de migración concreto a la espera de
   aprobación — no se ha simulado ni ocultado, se deja registrado aquí y
   en `docs/BACKLOG.md`.
+
+## Addendum (2026-08-29) — "Desactivar usuario" implementado sin el cambio de esquema previsto
+
+El usuario aprobó explícitamente implementar "Desactivar" en la sesión
+siguiente. Revisando el plan de tres pasos de arriba antes de ejecutarlo,
+se encontró una vía que **no necesita ningún cambio de esquema en
+absoluto** — mejor que la propuesta original, no solo una alternativa:
+
+`auth.admin.listUsers()` (el mismo Admin API de Supabase que ya usan
+`createUser.js`/`deleteUser.js`) devuelve `banned_until` directamente
+desde Supabase Auth, sin pasar por ninguna función SQL propia. No hacía
+falta extender `admin_list_profiles()` — bastaba con un endpoint de
+solo lectura nuevo (`server/users/listUserStatus.js`) que llama a
+`listUsers()` una vez y devuelve `{ [user_id]: activo }` para todo el
+directorio. Verificado además en vivo (baneo + desbaneo de una cuenta de
+prueba desechable, revertido de inmediato) que `ban_duration: "876000h"`
+/ `"none"` funciona exactamente como se esperaba, sin tocar ninguna
+tabla de datos.
+
+Implementado tal cual el resto del plan:
+- `server/users/setUserActive.js` (+ adaptadores Vercel/Netlify) —
+  superadmin, no sobre uno mismo ni sobre otro superadmin, mismo patrón
+  que `deleteUser.js`.
+- `UsersTable`: columna "Estado" con un badge Activa/Desactivada — botón
+  interactivo (con confirmación no-`danger`, reversible) para superadmin,
+  badge de solo lectura para el resto de admins. Visualmente distinto
+  del icono de papelera de "Eliminar", tal como pedía el plan original.
+
+Este addendum sustituye el punto 1 del plan original (extender
+`admin_list_profiles()`) — los puntos 2 y 3 se ejecutaron sin cambios.
+`docs/BACKLOG.md` cierra el ítem "Implementar Desactivar usuario".
+
+### Efecto colateral encontrado y corregido: `/api/*` no funcionaba bajo `vite dev`
+
+Validando este flujo se confirmó el reporte "no puedo eliminar
+usuarios: me da error" — causa raíz: bajo `vite dev` puro (sin runtime
+de Vercel/Netlify) cualquier `fetch("/api/...")` devuelve 404, así que
+`create-user`, `update-admin-status` y `delete-user` nunca funcionaron
+en local, solo en el sitio desplegado. Corregido con un tercer
+adaptador, `localApiRoutes()` en `vite.config.js` (activo solo bajo
+`configureServer`, nunca en `vite build`), que monta los mismos
+handlers de `server/users/*.js` para el propio servidor de desarrollo.
+No es un bug de ninguno de los endpoints — los cinco (`create-user`,
+`update-admin-status`, `delete-user`, `set-user-active`,
+`list-user-status`) ya estaban bien, les faltaba una vía de acceso
+local.

@@ -330,3 +330,113 @@ Los 7 commits del orden acordado están completos (1, 2, 3, 5, 6, 7, 8).
 Pendiente: informe final acumulativo para el usuario y propuesta de
 commit — no se ha hecho ningún push, y la release v0.2.0 sigue sin
 ejecutarse, a la espera de aprobación explícita (ver Commit 3).
+
+---
+
+# Segunda tanda 2026-08-29 (mañana) — nueva ronda de encargos
+
+Mismo modo autónomo. Nuevo bloque de 8 áreas de trabajo (Configuración,
+Resumen, login/bypass, Home, Qué hay de nuevo, Ayuda, calidad
+transversal) — ver el mensaje completo del usuario para el detalle
+exacto de cada punto, no repetido aquí.
+
+## Punto de partida verificado (segunda tanda)
+
+- Rama: `feature/global-redesign`, sin cambios respecto al cierre de la
+  tanda anterior — 11 commits por delante de `e385dc2`, working tree
+  limpio salvo dos elementos nuevos del propio usuario: `vite.config.js`
+  modificado (añade `server.host: true` y
+  `allowedHosts: ['.trycloudflare.com']`) y `cloudflared.tgz` sin
+  trackear — indican que el usuario está montando su propio túnel
+  Cloudflare hacia el `npm run dev` estable en el puerto 5173. Ninguno
+  de los dos se ha tocado ni commiteado por mí.
+- `origin/develop` sigue en `0cf625e`, sin cambios — confirma que no ha
+  habido push desde la tanda anterior.
+
+## Infraestructura de pruebas — servidor propio en puerto 5180
+
+Petición explícita: no interferir con el `npm run dev` estable del
+usuario (puerto 5173, confirmado vivo con `lsof` al iniciar, PID
+`83940`). Se ha levantado una instancia de Vite propia y aislada en el
+puerto 5180 (`npm run dev -- --port 5180 --strictPort`, en segundo
+plano) para todo el trabajo de esta tanda. `mobile-check.mjs` ya
+soportaba `MOBILE_CHECK_URL` como variable de entorno — se usa
+`MOBILE_CHECK_URL=http://localhost:5180 npm run mobile-check` en vez de
+tocar el valor por defecto del script. Verificado: ambos puertos
+responden 200 simultáneamente antes y después de una ejecución completa
+de `mobile-check`. No se ha tocado `cloudflared.tgz` ni ningún proceso
+del túnel del usuario.
+
+**Nota para retomar**: si esta sesión termina y se retoma más tarde,
+comprobar con `lsof -nP -iTCP -sTCP:LISTEN | grep 518` si el servidor de
+pruebas en 5180 sigue vivo antes de asumir que hay que levantarlo de
+nuevo — y comprobar 5173 con `curl` antes de cualquier acción, nunca
+asumir que se puede reiniciar.
+
+**Nota:** `cloudflared.tgz` (21MB, en la raíz del repo) es del propio
+usuario, no se ha tocado ni se debe commitear — sigue sin trackear a
+propósito, excluido de todo `git add` de esta sesión.
+
+## Bloque — "No puedo eliminar usuarios" (causa raíz) + Desactivar usuario (implementado)
+
+### Investigación: por qué fallaba "Eliminar usuario"
+
+Reproducido con `curl` directo contra el servidor de pruebas: `POST
+/api/delete-user` devolvía **404** bajo `npm run dev` puro. Causa raíz:
+`/api/*.js` (Vercel) y `netlify/functions/*.js` (Netlify) son rutas de
+un runtime de funciones serverless que **no existe** bajo Vite solo —
+`create-user`, `update-admin-status` y `delete-user` nunca funcionaron
+en local, solo en el sitio ya desplegado. No era un bug de
+`deleteUser.js` (que ya tenía 13 tests unitarios pasando).
+
+**Fix**: `localApiRoutes()`, un plugin de Vite nuevo en `vite.config.js`
+(activo solo bajo `configureServer`, nunca en `vite build`) que monta
+los mismos handlers de `server/users/*.js` para el propio servidor de
+desarrollo — un tercer adaptador, sin lógica nueva que mantener.
+Encontrado y corregido en el camino: `supabaseAdmin.js` lee
+`SUPABASE_SERVICE_ROLE_KEY` en una constante de módulo evaluada al
+importar — un `import` estático se resuelve antes que cualquier código
+del archivo (hoisting), así que se resolvía con `process.env` aún sin
+rellenar. Solucionado con `import()` dinámico dentro de
+`configureServer`, después de `Object.assign(process.env,
+loadEnv(...))`. Verificado con `curl` tras cada paso hasta confirmar
+progresión completa (404 → "config incompleta" → "falta token" — la
+respuesta correcta para una petición sin autenticar).
+
+### Desactivar usuario — implementado (ver addendum de ADR-0008)
+
+Aprobado explícitamente por el usuario. Al revisar el plan de 3 pasos ya
+escrito en ADR-0008 antes de ejecutarlo, se encontró que
+`auth.admin.listUsers()` ya expone `banned_until` directamente — **no
+hacía falta el cambio de esquema previsto** (extender
+`admin_list_profiles()`). Implementado en su lugar:
+- `server/users/setUserActive.js` (+ tests, + adaptadores Vercel/Netlify) —
+  desactivar/reactivar, superadmin-only, mismas protecciones que
+  `deleteUser.js` (no uno mismo, no otro superadmin).
+- `server/users/listUserStatus.js` (+ tests) — lectura de estado para
+  todo el directorio en una sola llamada a `listUsers()`, disponible
+  para cualquier admin (no solo superadmin), igual que
+  `admin_list_profiles()`.
+- `isAdmin(userId)` añadido a `server/supabaseAdmin.js` (+ tests) — el
+  helper que su propio comentario ya anticipaba.
+- `UsersTable`: columna "Estado" con badge Activa/Desactivada — botón
+  interactivo con confirmación (no-`danger`, reversible) para
+  superadmin, solo lectura para el resto de admins.
+
+**Verificado en vivo, no solo con tests**: baneo + desbaneo real de una
+cuenta de prueba desechable (nickname "c", de un solo carácter, sin
+relación con las cuentas reales) vía `auth.admin.updateUserById`,
+confirmando `banned_until` se fija/limpia como se esperaba — revertido
+de inmediato, cuenta intacta. Verificación visual del directorio
+completo: se elevó temporalmente `is_admin` (nunca `is_superadmin` —
+bloqueado por trigger de base de datos, ver `protect_profile_roles()`)
+de la cuenta `dev-bypass` para ver el grupo "Administración" y la
+columna "Estado" renderizar correctamente en modo solo lectura: revertido
+a `is_admin: false` inmediatamente después.
+
+**Validado:** 241/241 tests (16 nuevos: `isAdmin` en
+`supabaseAdmin.test.js`, `setUserActive.test.js`,
+`listUserStatus.test.js`, y 3 nuevos en `ConfigTab.test.jsx` cubriendo
+desactivar/eliminar con `supabase`/`fetch` mockeados), build correcto,
+`mobile-check` sin errores (contra el puerto 5180 propio, servidor del
+usuario en 5173 verificado vivo antes y después).

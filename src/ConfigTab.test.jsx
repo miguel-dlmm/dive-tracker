@@ -1,6 +1,14 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConfigTab from "./ConfigTab";
+
+vi.mock("./supabaseClient", () => ({
+  supabase: {
+    rpc: vi.fn(),
+    auth: { getSession: vi.fn() },
+  },
+}));
+import { supabase } from "./supabaseClient";
 
 // Rediseño 2026-08-29 (ver docs/ADR/0008-rediseno-configuracion.md): menú
 // agrupado con drill-down en vez de pestañas horizontales, y creación en
@@ -83,5 +91,80 @@ describe("ConfigTab — CrudTable crea vía FAB + hoja (ver Escuelas)", () => {
 
     expect(schools.insertRow).toHaveBeenCalledWith(expect.objectContaining({ name: "Ihasia" }));
     expect(screen.queryByRole("heading", { name: "Nueva escuela" })).not.toBeInTheDocument();
+  });
+});
+
+// Usuarios: "Desactivar" (revoca el acceso, conserva los datos) y
+// "Eliminar" (irreversible) — ver docs/ADR/0008-rediseno-configuracion.md.
+// UsersDirectory llama a supabase.rpc/auth.getSession y a fetch("/api/...")
+// directamente, así que aquí sí hace falta mockear ambos (a diferencia del
+// resto de ConfigTab, que solo depende de los hooks de useSupabaseTable ya
+// pasados por props).
+describe("ConfigTab — Usuarios: desactivar y eliminar", () => {
+  const SUPERADMIN_PROFILE = { user_id: "admin-1", is_admin: true, is_superadmin: true };
+  const TARGET_PROFILE_ROW = {
+    user_id: "target-1", first_name: "Ana", last_name: "López", nickname: "ana",
+    email: "ana@example.com", is_admin: false, is_superadmin: false, created_at: "2026-08-01T00:00:00Z",
+  };
+
+  beforeEach(() => {
+    supabase.rpc.mockResolvedValue({ data: [TARGET_PROFILE_ROW], error: null });
+    supabase.auth.getSession.mockResolvedValue({ data: { session: { access_token: "tok" } } });
+  });
+
+  async function openUsuarios(user) {
+    render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
+    await user.click(screen.getByText("Usuarios"));
+    await waitFor(() => expect(screen.getByText("ana")).toBeInTheDocument());
+  }
+
+  it("muestra 'Activa' para una cuenta sin banned_until, leído de /api/list-user-status", async () => {
+    const user = userEvent.setup();
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true } }) });
+
+    await openUsuarios(user);
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Desactivar usuario" })).toBeInTheDocument());
+    expect(within(screen.getByRole("button", { name: "Desactivar usuario" })).getByText("Activa")).toBeInTheDocument();
+  });
+
+  it("desactivar pide confirmación y llama a /api/set-user-active con active:false", async () => {
+    const user = userEvent.setup();
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true } }) }) // list-user-status inicial
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", active: false }) }) // set-user-active
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": false } }) }); // list-user-status tras reload
+
+    await openUsuarios(user);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Desactivar usuario" })).toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "Desactivar usuario" }));
+    expect(screen.getByText("Desactivar usuario", { selector: "h3" })).toBeInTheDocument();
+    expect(screen.getByText(/dejará de poder iniciar sesión/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Desactivar", exact: true }));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/set-user-active", expect.objectContaining({
+      body: JSON.stringify({ target_user_id: "target-1", active: false }),
+    })));
+  });
+
+  it("eliminar pide confirmación danger y llama a /api/delete-user", async () => {
+    const user = userEvent.setup();
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) });
+
+    await openUsuarios(user);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Eliminar usuario ana" })).toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "Eliminar usuario ana" }));
+    expect(screen.getByText(/Si solo quieres revocarle el acceso/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Eliminar", exact: true }));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/delete-user", expect.objectContaining({
+      body: JSON.stringify({ target_user_id: "target-1" }),
+    })));
   });
 });
