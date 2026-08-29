@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from "react";
 import {
-  Plus, Check, Star, Search, Lock, UserPlus, X, Trash2,
+  Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
   CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users,
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
-import { useToast, AppLoading, Field, ConfirmDialog, Select, RowMenu, useBodyScrollLock } from "./shared";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, useBodyScrollLock } from "./shared";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
 
@@ -329,34 +329,64 @@ function RoleCheckbox({ checked, label, locked = false, onChange }) {
   );
 }
 
-// Tabla presentacional pura — separada de UsersDirectory para poder añadir
-// acciones de edición por fila más adelante sin tocar la lógica de búsqueda.
-// currentUserId / viewerIsSuperadmin: de profile (el que mira la pantalla),
-// nunca de la propia fila — decide qué checkbox Admin queda editable.
-// onRequestToggle(row): se llama al pulsar un checkbox Admin editable; no
-// cambia nada por sí sola, solo abre la confirmación en UsersDirectory.
-// Badge de estado (Activa/Desactivada) — deliberadamente distinto del
-// icono de papelera de "Eliminar" (ver ADR-0008): eliminar es irreversible
-// y borra datos, desactivar revoca el acceso conservándolo todo. Un mismo
-// icono para las dos habría invitado a confundirlas. Botón cuando es
-// editable (toggle con confirmación en UsersDirectory), badge de solo
-// lectura en caso contrario — cualquier admin puede VER el estado, solo un
-// superadmin puede cambiarlo.
-function StatusBadge({ active, editable, onToggle }) {
-  const label = active ? "Activa" : "Desactivada";
-  const cls = active
-    ? "bg-emerald-50 text-emerald-700"
-    : "bg-gray-100 text-gray-500";
-  if (!editable) {
-    return <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>{label}</span>;
-  }
+// Estado real de una cuenta — tres valores, no dos (2026-08-29, ver
+// docs/ADR "modelo de activación"). Antes "Activa/Desactivada" miraba
+// solo si la cuenta estaba baneada, así que una cuenta recién creada
+// (nunca baneada, pero que todavía no ha fijado contraseña) se mostraba
+// "Activa" — incorrecto, nadie ha completado el proceso todavía.
+// `activatedAt` (profiles.activated_at) es lo que de verdad distingue
+// "nunca activada"/"desactivada y pendiente de un enlace nuevo" de
+// "activa de verdad".
+function userStatus(active, activatedAt) {
+  if (!active) return "desactivado";
+  if (!activatedAt) return "pendiente";
+  return "activo";
+}
+
+const STATUS_META = {
+  activo: { label: "Activo", cls: "bg-emerald-50 text-emerald-700" },
+  pendiente: { label: "Pendiente", cls: "bg-amber-50 text-amber-700" },
+  desactivado: { label: "Desactivado", cls: "bg-gray-100 text-gray-500" },
+};
+
+// Badge de solo lectura — cualquier admin puede VERLO, cambiarlo es cosa
+// del switch de más abajo (BooleanToggle), no de este componente. Separar
+// "mostrar estado" de "cambiar estado" es justo lo que permite que la
+// lista (donde nunca hay acción) y el detalle (donde sí la hay, junto al
+// switch) reutilicen la misma pieza sin condicionales de por medio.
+function StatusBadge({ status }) {
+  const meta = STATUS_META[status] || STATUS_META.desactivado;
+  return <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.cls}`}>{meta.label}</span>;
+}
+
+// Switch Activar/Desactivar — sustituye el botón-pastilla anterior (2026-08-29,
+// pedido explícito: "no quiero un botón tosco"). `checked` representa
+// literalmente "no está baneado" (cubre tanto "activo" como "pendiente" —
+// ver userStatus), así que pasar de apagado a encendido dispara el flujo
+// de activar (genera un enlace, no concede acceso al instante) y el
+// switch queda encendido de verdad aunque el estado siga mostrando
+// "Pendiente" justo al lado — no hay contradicción, un usuario no baneado
+// pendiente de activación sigue sin poder entrar hasta completar el
+// enlace, el switch solo refleja el baneo, la pastilla de al lado matiza
+// el resto.
+function BooleanToggle({ checked, onChange, disabled, ariaLabel, color = TEAL }) {
   return (
     <button
-      onClick={onToggle}
-      aria-label={active ? "Desactivar usuario" : "Reactivar usuario"}
-      className={`-m-1 flex min-h-9 items-center gap-1 rounded-full p-1 px-2.5 text-xs font-medium ${cls}`}
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={onChange}
+      className="relative -m-2 flex shrink-0 items-center justify-center p-2 disabled:cursor-not-allowed disabled:opacity-40"
+      style={{ minHeight: 44, minWidth: 44 }}
     >
-      {label}
+      <span className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors" style={{ backgroundColor: checked ? color : "#D1D5DB" }}>
+        <span
+          className="inline-block h-5 w-5 rounded-full bg-white shadow transition-transform"
+          style={{ transform: checked ? "translateX(20px)" : "translateX(2px)" }}
+        />
+      </span>
     </button>
   );
 }
@@ -367,25 +397,32 @@ function shortDate(iso) {
   return iso ? new Date(iso).toLocaleDateString("es-ES") : "—";
 }
 
+// Fecha + hora, para "último login real" — una fecha sola no basta para
+// distinguir "hace 5 minutos" de "hace 20 horas" el mismo día.
+function shortDateTime(iso) {
+  return iso ? new Date(iso).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" }) : "Nunca";
+}
+
 // Rediseño 2026-08-29: la tabla con scroll lateral (9 columnas) se
 // sustituye por lista + detalle, el mismo patrón que ya usan Escuelas/
 // Cursos/Tarifas/Mi trabajo — "aprender una parte de la app facilita usar
 // las demás", encargo explícito del usuario. La fila solo muestra lo
 // mínimo para localizar y reconocer a alguien de un vistazo (identificador,
-// estado, fecha de alta); el resto de la gestión (roles, activar/
-// desactivar, eliminar) vive en UserDetailSheet, al tocar la fila —
-// ninguna acción vive ya en la fila misma, coherente con "acciones en el
-// lugar correcto" del encargo.
+// estado, fecha de alta, fecha de desactivación si aplica); el resto de la
+// gestión (roles, activar/desactivar, editar, regenerar, eliminar) vive en
+// UserDetailSheet, al tocar la fila.
 //
-// "Fecha de baja" (pedida explícitamente): no existe hoy ninguna columna
-// que registre CUÁNDO se desactivó una cuenta — `banned_until` (Supabase
-// Auth) guarda cuándo TERMINARÍA el baneo, no cuándo empezó, así que no
-// sirve para derivarla. Añadirla requeriría una columna nueva
-// (`profiles.deactivated_at`, escrita en setUserActive.js) — un cambio de
-// esquema real, que las reglas del proyecto piden proponer aparte antes de
-// implementar, no meterlo de paso en un rediseño de UI. Ver nota en
-// UsersDirectory y el resumen de sesión.
-function UserListRow({ user, active, onOpen }) {
+// "Fecha de desactivación" (pedida explícitamente, "fecha de baja" en la
+// petición original): no existe hoy ninguna columna que registre CUÁNDO se
+// desactivó una cuenta — `banned_until` (Supabase Auth) guarda cuándo
+// TERMINARÍA el baneo, no cuándo empezó, así que no sirve para derivarla.
+// Añadirla requeriría una columna nueva (`profiles.deactivated_at`) — un
+// cambio de esquema real que las reglas del proyecto piden proponer aparte
+// antes de implementar (ver ADR de esta sesión). Mientras tanto, para una
+// cuenta desactivada se muestra explícitamente "fecha no registrada
+// todavía" en vez de omitir el dato en silencio — dejar claro que es un
+// hueco real, no un olvido.
+function UserListRow({ user, status, onOpen }) {
   return (
     <button
       onClick={() => onOpen(user.user_id)}
@@ -394,13 +431,16 @@ function UserListRow({ user, active, onOpen }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="truncate text-sm font-semibold text-gray-800">{user.nickname}</span>
-          <StatusBadge active={active} editable={false} />
+          <StatusBadge status={status} />
         </div>
         <p className="mt-0.5 truncate text-xs text-gray-400">
           {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.email || "—"}
         </p>
       </div>
-      <span className="shrink-0 text-xs text-gray-400">{shortDate(user.created_at)}</span>
+      <div className="shrink-0 text-right text-xs text-gray-400">
+        <div>Alta: {shortDate(user.created_at)}</div>
+        {status === "desactivado" && <div className="mt-0.5 italic">Baja: fecha no registrada aún</div>}
+      </div>
       <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />
     </button>
   );
@@ -411,10 +451,36 @@ function UserListRow({ user, active, onOpen }) {
 // tres cosas a la vez (Admin, Estado, Eliminar): ni la propia cuenta de
 // quien mira, ni otro superadmin, y solo si quien mira es superadmin —
 // mismo criterio que ya tenía la tabla anterior, ahora centralizado aquí.
-function UserDetailSheet({ user, active, currentUserId, viewerIsSuperadmin, onClose, onRequestToggleAdmin, onRequestToggleActive, onRequestDelete }) {
+// Edición de nombre/apellidos/nickname — en línea, dentro de la propia
+// hoja de detalle (convención #4 de CLAUDE.md: "editar en línea =
+// EditActions", nunca iconos sueltos de check/x). No se reutiliza el
+// patrón "editar en la misma hoja que crear" de Escuelas/Cursos/Tarifas
+// (ADR-0013) porque aquí no existe una hoja de creación equivalente que
+// editar reabra — CreateUserSheet da de alta una cuenta nueva de auth,
+// algo completamente distinto a corregir el nombre de una ya existente.
+// Editar en línea, dentro del propio detalle ya abierto, es la pieza de
+// "crear/editar con mucha similitud" que sí encaja aquí: mismo lenguaje
+// de interacción (EditActions, Field, feedback por toast) sin forzar una
+// estructura de pantalla que no pinta nada en este caso.
+function UserDetailSheet({
+  user, status, lastSignInAt, currentUserId, viewerIsSuperadmin, actionBusy,
+  onClose, onRequestToggleAdmin, onRequestToggleActive, onRequestRegenerateLink,
+  onRequestRegeneratePassword, onRequestDelete, onSaveProfile,
+}) {
   useBodyScrollLock(true);
   const editable = viewerIsSuperadmin && user.user_id !== currentUserId && !user.is_superadmin;
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "—";
+
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ first_name: user.first_name || "", last_name: user.last_name || "", nickname: user.nickname || "" });
+  const startEditProfile = () => {
+    setProfileForm({ first_name: user.first_name || "", last_name: user.last_name || "", nickname: user.nickname || "" });
+    setEditingProfile(true);
+  };
+  const saveProfile = async () => {
+    const ok = await onSaveProfile(user, profileForm);
+    if (ok) setEditingProfile(false);
+  };
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={onClose}>
@@ -428,26 +494,76 @@ function UserDetailSheet({ user, active, currentUserId, viewerIsSuperadmin, onCl
           <button onClick={onClose} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
         </div>
 
-        <div className="space-y-2.5 rounded-lg border border-gray-200 bg-gray-50/60 p-3 text-sm">
-          <div className="flex items-center justify-between gap-3">
-            <span className="shrink-0 text-xs text-gray-400">Nombre</span>
-            <span className="truncate text-right text-gray-700">{fullName}</span>
+        {editingProfile ? (
+          <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50/60 p-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Nombre">
+                <input value={profileForm.first_name} onChange={(e) => setProfileForm({ ...profileForm, first_name: e.target.value })} className={`${inputCls} w-full`} />
+              </Field>
+              <Field label="Apellidos">
+                <input value={profileForm.last_name} onChange={(e) => setProfileForm({ ...profileForm, last_name: e.target.value })} className={`${inputCls} w-full`} />
+              </Field>
+              <div className="col-span-2">
+                <Field label="Nickname">
+                  <input value={profileForm.nickname} onChange={(e) => setProfileForm({ ...profileForm, nickname: e.target.value })} className={`${inputCls} w-full`} />
+                </Field>
+              </div>
+            </div>
+            <EditActions onSave={saveProfile} onCancel={() => setEditingProfile(false)} />
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <span className="shrink-0 text-xs text-gray-400">Email</span>
-            <span className="truncate text-right text-gray-700">{user.email || "—"}</span>
+        ) : (
+          <div className="space-y-2.5 rounded-lg border border-gray-200 bg-gray-50/60 p-3 text-sm">
+            <div className="flex items-start justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">Nombre</span>
+              <span className="truncate text-right text-gray-700">{fullName}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">Email</span>
+              <span className="truncate text-right text-gray-700">{user.email || "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">Alta</span>
+              <span className="text-gray-700">{shortDate(user.created_at)}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">Último acceso</span>
+              <span className="text-gray-700">{shortDateTime(lastSignInAt)}</span>
+            </div>
+            {status === "desactivado" && (
+              <div className="flex items-center justify-between gap-3">
+                <span className="shrink-0 text-xs text-gray-400">Baja</span>
+                <span className="italic text-gray-400">fecha no registrada aún</span>
+              </div>
+            )}
+            {editable && (
+              <button onClick={startEditProfile} className="flex min-h-9 items-center gap-1 text-xs font-semibold" style={{ color: TEAL }}>
+                <Pencil size={13} aria-hidden="true" /> Editar datos
+              </button>
+            )}
           </div>
-          <div className="flex items-center justify-between gap-3">
-            <span className="shrink-0 text-xs text-gray-400">Alta</span>
-            <span className="text-gray-700">{shortDate(user.created_at)}</span>
-          </div>
-        </div>
+        )}
 
         <div className="mt-3 space-y-3 rounded-lg border border-gray-200 p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Estado</span>
-            <StatusBadge active={active} editable={editable} onToggle={() => onRequestToggleActive(user, active)} />
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-500">Estado</span>
+              <StatusBadge status={status} />
+            </div>
+            <BooleanToggle
+              checked={status !== "desactivado"}
+              disabled={!editable || actionBusy}
+              ariaLabel={status === "desactivado" ? "Activar usuario" : "Desactivar usuario"}
+              onChange={() => (status === "desactivado" ? onRequestRegenerateLink(user) : onRequestToggleActive(user))}
+            />
           </div>
+          {status === "pendiente" && editable && (
+            <p className="text-xs text-gray-400">
+              Pendiente de que la persona abra el enlace y cree su contraseña.{" "}
+              <button onClick={() => onRequestRegenerateLink(user)} disabled={actionBusy} className="font-semibold underline disabled:opacity-40" style={{ color: TEAL }}>
+                Regenerar enlace
+              </button>
+            </p>
+          )}
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-gray-500">Admin</span>
             <RoleCheckbox checked={user.is_admin} label="Admin" onChange={editable ? () => onRequestToggleAdmin(user) : undefined} />
@@ -460,12 +576,67 @@ function UserDetailSheet({ user, active, currentUserId, viewerIsSuperadmin, onCl
 
         {editable && (
           <button
+            onClick={() => onRequestRegeneratePassword(user)}
+            disabled={actionBusy}
+            className="mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 text-sm font-medium text-gray-600 disabled:opacity-40"
+          >
+            <KeyRound size={15} aria-hidden="true" /> Regenerar contraseña
+          </button>
+        )}
+
+        {editable && (
+          <button
             onClick={() => onRequestDelete(user)}
-            className="mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-red-200 text-sm font-medium text-red-600"
+            className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-red-200 text-sm font-medium text-red-600"
           >
             <Trash2 size={15} aria-hidden="true" /> Eliminar usuario
           </button>
         )}
+      </div>
+    </div>
+  );
+}
+
+// Panel que muestra un enlace de activación recién generado (alta, activar,
+// regenerar link, regenerar contraseña — las 4 rutas convergen en un
+// enlace de un solo uso que copiar/compartir). Mismo patrón visual que el
+// fallback de email de CreateUserSheet (justo abajo), extraído aquí porque
+// ahora lo usan varias acciones, no solo el alta.
+function ActivationLinkPanel({ title, description, link, onClose }) {
+  const toast = useToast();
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast?.success("Enlace copiado");
+    } catch {
+      toast?.error("No se pudo copiar. Selecciónalo a mano.");
+    }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/25" onClick={onClose}>
+      <div
+        className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
+        style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+          <button onClick={onClose} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+        </div>
+        <p className="mb-2 text-xs text-gray-500">{description}</p>
+        <p className="mb-3 break-all rounded-md bg-gray-50 px-3 py-2 font-mono text-xs text-gray-700">{link}</p>
+        <div className="flex gap-2">
+          <button
+            onClick={copyLink}
+            className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white"
+            style={{ backgroundColor: TEAL }}
+          >
+            <Copy size={15} aria-hidden="true" /> Copiar enlace
+          </button>
+          <button onClick={onClose} className="flex min-h-11 flex-1 items-center justify-center rounded-md border border-gray-200 text-sm font-medium text-gray-600">
+            Cerrar
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -658,6 +829,8 @@ function CreateUserSheet({ onClose, onCreated }) {
 function UsersDirectory({ profile }) {
   const [rows, setRows] = useState([]);
   const [activeByUser, setActiveByUser] = useState({});
+  const [lastSignInByUser, setLastSignInByUser] = useState({});
+  const [activatedAtByUser, setActivatedAtByUser] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [query, setQuery] = useState("");
@@ -669,7 +842,10 @@ function UsersDirectory({ profile }) {
   const [openUserId, setOpenUserId] = useState(null);
   const [pendingToggle, setPendingToggle] = useState(null);
   const [pendingToggleActive, setPendingToggleActive] = useState(null);
+  const [pendingRegenerateLink, setPendingRegenerateLink] = useState(null);
+  const [pendingRegeneratePassword, setPendingRegeneratePassword] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [linkPanel, setLinkPanel] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
 
@@ -703,9 +879,29 @@ function UsersDirectory({ profile }) {
         body: "{}",
       });
       const payload = await res.json().catch(() => ({}));
-      if (res.ok) setActiveByUser(payload.active || {});
+      if (res.ok) {
+        setActiveByUser(payload.active || {});
+        setLastSignInByUser(payload.lastSignInAt || {});
+      }
     } catch {
       // silencioso a propósito — ver comentario de arriba
+    }
+  };
+
+  // activated_at no está en admin_list_profiles() — se consulta aparte
+  // (RLS de profiles ya permite a un admin leer cualquier fila, ver ADR de
+  // esta sesión) y se cruza por user_id en el cliente, para no tocar
+  // schema.sql por este requisito. Igual de silencioso que loadActiveStatus:
+  // un fallo aquí no debe tumbar el resto del directorio.
+  const loadActivatedAt = async () => {
+    try {
+      const { data, error } = await supabase.from("profiles").select("user_id, activated_at");
+      if (error) throw error;
+      const map = {};
+      (data || []).forEach((r) => { map[r.user_id] = r.activated_at; });
+      setActivatedAtByUser(map);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -713,6 +909,7 @@ function UsersDirectory({ profile }) {
     let active = true;
     supabase.rpc("admin_list_profiles").then((result) => { if (active) applyResult(result); });
     loadActiveStatus();
+    loadActivatedAt();
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -724,6 +921,7 @@ function UsersDirectory({ profile }) {
     setLoading(true);
     supabase.rpc("admin_list_profiles").then(applyResult);
     loadActiveStatus();
+    loadActivatedAt();
   };
 
   const filteredRows = useMemo(() => {
@@ -807,12 +1005,11 @@ function UsersDirectory({ profile }) {
     }
   };
 
-  // Reversible a propósito, a diferencia de eliminar: confirmación en modo
-  // no-danger (mismo tono que el cambio de rol de admin, ver
-  // confirmAdminToggle) — desactivar no borra nada y se puede deshacer
-  // reactivando desde la misma fila.
-  const requestToggleActive = (row, currentActive) =>
-    setPendingToggleActive({ user_id: row.user_id, nickname: row.nickname, currentActive, nextActive: !currentActive });
+  // Reversible a propósito, a diferencia de eliminar: los datos nunca se
+  // tocan. Ya no admite dirección "reactivar" — reactivar siempre pasa por
+  // un enlace de activación nuevo (ver requestRegenerateLink), nunca por un
+  // simple des-baneo, así que esta acción es exclusivamente "desactivar".
+  const requestToggleActive = (row) => setPendingToggleActive({ user_id: row.user_id, nickname: row.nickname });
 
   const cancelToggleActive = () => {
     if (submitting) return;
@@ -828,17 +1025,121 @@ function UsersDirectory({ profile }) {
       const res = await fetch("/api/set-user-active", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ target_user_id: pendingToggleActive.user_id, active: pendingToggleActive.nextActive }),
+        body: JSON.stringify({ target_user_id: pendingToggleActive.user_id, active: false }),
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede activar o desactivar usuarios.", fallback: "No se pudo actualizar el estado." }));
-      toast?.success(pendingToggleActive.nextActive ? "Usuario reactivado" : "Usuario desactivado");
+      toast?.success("Usuario desactivado");
       setPendingToggleActive(null);
       loadActiveStatus();
+      loadActivatedAt();
     } catch (err) {
       toast?.error(err.message || "No se pudo actualizar el estado.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Activar una cuenta desactivada / regenerar el enlace de una pendiente:
+  // misma acción de servidor en los dos casos (quita el baneo si lo hay y
+  // genera un enlace nuevo) — nunca concede acceso al instante, por eso el
+  // resultado se muestra en ActivationLinkPanel en vez de cerrarse solo.
+  const requestRegenerateLink = (row) => setPendingRegenerateLink({ user_id: row.user_id, nickname: row.nickname });
+
+  const cancelRegenerateLink = () => {
+    if (submitting) return;
+    setPendingRegenerateLink(null);
+  };
+
+  const confirmRegenerateLink = async () => {
+    if (!pendingRegenerateLink) return;
+    setSubmitting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const res = await fetch("/api/regenerate-activation-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ target_user_id: pendingRegenerateLink.user_id }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede activar cuentas o regenerar su enlace de acceso.", fallback: "No se pudo generar el enlace." }));
+      setLinkPanel({
+        title: "Enlace de activación generado",
+        description: `Comparte este enlace con ${pendingRegenerateLink.nickname}. Seguirá apareciendo como "Pendiente" hasta que lo use para crear su contraseña.`,
+        link: payload.action_link,
+      });
+      setPendingRegenerateLink(null);
+      loadActiveStatus();
+      loadActivatedAt();
+    } catch (err) {
+      toast?.error(err.message || "No se pudo generar el enlace.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Invalida la contraseña actual (se sobrescribe por una aleatoria que
+  // nunca se muestra ni se guarda) y fuerza el mismo flujo de activación
+  // que una cuenta nueva — nunca reutiliza la aceptación legal ya dada
+  // (legal_consents es una tabla independiente de activated_at).
+  const requestRegeneratePassword = (row) => setPendingRegeneratePassword({ user_id: row.user_id, nickname: row.nickname });
+
+  const cancelRegeneratePassword = () => {
+    if (submitting) return;
+    setPendingRegeneratePassword(null);
+  };
+
+  const confirmRegeneratePassword = async () => {
+    if (!pendingRegeneratePassword) return;
+    setSubmitting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const res = await fetch("/api/regenerate-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ target_user_id: pendingRegeneratePassword.user_id }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede regenerar la contraseña de otra cuenta.", fallback: "No se pudo regenerar la contraseña." }));
+      setLinkPanel({
+        title: "Contraseña regenerada",
+        description: `La contraseña anterior de ${pendingRegeneratePassword.nickname} ya no es válida. Comparte este enlace para que cree una nueva — la cuenta vuelve a "Pendiente" hasta entonces.`,
+        link: payload.action_link,
+      });
+      setPendingRegeneratePassword(null);
+      loadActiveStatus();
+      loadActivatedAt();
+    } catch (err) {
+      toast?.error(err.message || "No se pudo regenerar la contraseña.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // RLS de profiles ya permite a un admin actualizar cualquier fila salvo
+  // is_admin/is_superadmin (protegidos aparte por trigger) — no hace falta
+  // ningún endpoint de servidor nuevo para nombre/apellidos/nickname.
+  const saveProfile = async (user, form) => {
+    const nickname = form.nickname.trim();
+    if (!nickname) {
+      toast?.error("El nickname no puede quedar vacío.");
+      return false;
+    }
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ first_name: form.first_name.trim() || null, last_name: form.last_name.trim() || null, nickname })
+        .eq("user_id", user.user_id);
+      if (error) throw error;
+      toast?.success("Datos actualizados");
+      reload();
+      return true;
+    } catch (err) {
+      console.error(err);
+      toast?.error("No se pudieron guardar los cambios.");
+      return false;
     }
   };
 
@@ -878,7 +1179,12 @@ function UsersDirectory({ profile }) {
       ) : (
         <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
           {filteredRows.map((p) => (
-            <UserListRow key={p.user_id} user={p} active={activeByUser[p.user_id] ?? true} onOpen={setOpenUserId} />
+            <UserListRow
+              key={p.user_id}
+              user={p}
+              status={userStatus(activeByUser[p.user_id] ?? true, activatedAtByUser[p.user_id])}
+              onOpen={setOpenUserId}
+            />
           ))}
         </div>
       )}
@@ -893,13 +1199,27 @@ function UsersDirectory({ profile }) {
       {openUser && (
         <UserDetailSheet
           user={openUser}
-          active={activeByUser[openUser.user_id] ?? true}
+          status={userStatus(activeByUser[openUser.user_id] ?? true, activatedAtByUser[openUser.user_id])}
+          lastSignInAt={lastSignInByUser[openUser.user_id] ?? null}
           currentUserId={profile?.user_id}
           viewerIsSuperadmin={!!profile?.is_superadmin}
+          actionBusy={submitting}
           onClose={() => setOpenUserId(null)}
           onRequestToggleAdmin={requestAdminToggle}
           onRequestToggleActive={requestToggleActive}
+          onRequestRegenerateLink={requestRegenerateLink}
+          onRequestRegeneratePassword={requestRegeneratePassword}
           onRequestDelete={requestDelete}
+          onSaveProfile={saveProfile}
+        />
+      )}
+
+      {linkPanel && (
+        <ActivationLinkPanel
+          title={linkPanel.title}
+          description={linkPanel.description}
+          link={linkPanel.link}
+          onClose={() => setLinkPanel(null)}
         />
       )}
 
@@ -940,24 +1260,50 @@ function UsersDirectory({ profile }) {
 
       <ConfirmDialog
         open={!!pendingToggleActive}
-        title={pendingToggleActive?.nextActive ? "Reactivar usuario" : "Desactivar usuario"}
+        title="Desactivar usuario"
         message={pendingToggleActive && (
-          pendingToggleActive.nextActive ? (
-            <>
-              <strong>{pendingToggleActive.nickname}</strong> podrá volver a iniciar sesión. Sus datos nunca se
-              tocaron mientras estaba desactivado.
-            </>
-          ) : (
-            <>
-              <strong>{pendingToggleActive.nickname}</strong> dejará de poder iniciar sesión. Todos sus datos
-              (escuelas, tarifas, movimientos...) se conservan intactos — puedes reactivarlo cuando quieras.
-            </>
-          )
+          <>
+            <strong>{pendingToggleActive.nickname}</strong> dejará de poder iniciar sesión. Todos sus datos
+            (escuelas, tarifas, movimientos...) se conservan intactos — puedes reactivarlo cuando quieras
+            generándole un enlace de activación nuevo.
+          </>
         )}
         onConfirm={confirmToggleActive}
         onCancel={cancelToggleActive}
         loading={submitting}
-        confirmLabel={pendingToggleActive?.nextActive ? "Reactivar" : "Desactivar"}
+        confirmLabel="Desactivar"
+        danger={false}
+      />
+
+      <ConfirmDialog
+        open={!!pendingRegenerateLink}
+        title="Generar enlace de activación"
+        message={pendingRegenerateLink && (
+          <>
+            Se generará un enlace nuevo de un solo uso para <strong>{pendingRegenerateLink.nickname}</strong>.
+            Cualquier enlace anterior deja de servir. La cuenta no gana acceso hasta que lo complete.
+          </>
+        )}
+        onConfirm={confirmRegenerateLink}
+        onCancel={cancelRegenerateLink}
+        loading={submitting}
+        confirmLabel="Generar enlace"
+        danger={false}
+      />
+
+      <ConfirmDialog
+        open={!!pendingRegeneratePassword}
+        title="Regenerar contraseña"
+        message={pendingRegeneratePassword && (
+          <>
+            La contraseña actual de <strong>{pendingRegeneratePassword.nickname}</strong> dejará de funcionar de
+            inmediato. Deberá crear una nueva desde un enlace de activación nuevo — sus datos no se ven afectados.
+          </>
+        )}
+        onConfirm={confirmRegeneratePassword}
+        onCancel={cancelRegeneratePassword}
+        loading={submitting}
+        confirmLabel="Regenerar"
         danger={false}
       />
     </div>

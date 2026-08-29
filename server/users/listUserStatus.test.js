@@ -88,33 +88,58 @@ it("devuelve 500 si falla la consulta a Supabase", async () => {
 
 it("marca como activo (true) a quien no tiene banned_until", async () => {
   getServiceRoleClient.mockReturnValue(makeClient({
-    data: { users: [{ id: "u1", banned_until: null }] },
+    data: { users: [{ id: "u1", banned_until: null, last_sign_in_at: null }] },
     error: null,
   }));
 
   const result = await handleListUserStatus(request());
 
-  expect(result).toEqual({ status: 200, payload: { active: { u1: true } } });
+  expect(result).toEqual({ status: 200, payload: { active: { u1: true }, lastSignInAt: { u1: null } } });
 });
 
 it("marca como inactivo (false) a quien tiene banned_until en el futuro", async () => {
   getServiceRoleClient.mockReturnValue(makeClient({
-    data: { users: [{ id: "u1", banned_until: "2126-08-05T00:00:00.000Z" }] },
+    data: { users: [{ id: "u1", banned_until: "2126-08-05T00:00:00.000Z", last_sign_in_at: null }] },
     error: null,
   }));
 
   const result = await handleListUserStatus(request());
 
-  expect(result).toEqual({ status: 200, payload: { active: { u1: false } } });
+  expect(result).toEqual({ status: 200, payload: { active: { u1: false }, lastSignInAt: { u1: null } } });
 });
 
 it("marca como activo (true) a quien tiene banned_until ya expirado en el pasado", async () => {
   getServiceRoleClient.mockReturnValue(makeClient({
-    data: { users: [{ id: "u1", banned_until: "2000-01-01T00:00:00.000Z" }] },
+    data: { users: [{ id: "u1", banned_until: "2000-01-01T00:00:00.000Z", last_sign_in_at: null }] },
     error: null,
   }));
 
   const result = await handleListUserStatus(request());
 
-  expect(result).toEqual({ status: 200, payload: { active: { u1: true } } });
+  expect(result).toEqual({ status: 200, payload: { active: { u1: true }, lastSignInAt: { u1: null } } });
+});
+
+// last_sign_in_at es la fuente correcta de "último login real" (auth.users,
+// ya presente en la misma respuesta de listUsers() — sin columna ni
+// consulta extra). Ver docs — nunca se deriva de otra actividad de la app.
+it("expone last_sign_in_at de auth.users tal cual, sin transformarlo", async () => {
+  getServiceRoleClient.mockReturnValue(makeClient({
+    data: { users: [{ id: "u1", banned_until: null, last_sign_in_at: "2026-08-20T10:15:00.000Z" }] },
+    error: null,
+  }));
+
+  const result = await handleListUserStatus(request());
+
+  expect(result.payload.lastSignInAt).toEqual({ u1: "2026-08-20T10:15:00.000Z" });
+});
+
+it("devuelve null en lastSignInAt para quien nunca ha iniciado sesión", async () => {
+  getServiceRoleClient.mockReturnValue(makeClient({
+    data: { users: [{ id: "u1", banned_until: null, last_sign_in_at: undefined }] },
+    error: null,
+  }));
+
+  const result = await handleListUserStatus(request());
+
+  expect(result.payload.lastSignInAt).toEqual({ u1: null });
 });

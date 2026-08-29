@@ -76,8 +76,16 @@ export async function handleListUserStatus({ method, headers, body }) {
     return { status: 500, payload: { error: "No se pudo consultar el estado de las cuentas." } };
   }
 
+  // lastSignInAt junto a active: mismo listUsers() ya en curso, sin ninguna
+  // llamada ni columna extra — auth.users.last_sign_in_at es la fuente
+  // correcta de "último login real" (a diferencia de derivarlo de
+  // cualquier otra actividad en la app, que respondería a otra pregunta).
   const active = {};
-  data.users.forEach((u) => { active[u.id] = !isBanned(u); });
+  const lastSignInAt = {};
+  data.users.forEach((u) => {
+    active[u.id] = !isBanned(u);
+    lastSignInAt[u.id] = u.last_sign_in_at || null;
+  });
 
-  return { status: 200, payload: { active } };
+  return { status: 200, payload: { active, lastSignInAt } };
 }

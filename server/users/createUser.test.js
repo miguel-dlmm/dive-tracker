@@ -236,7 +236,7 @@ describe("con permisos válidos", () => {
 
     expect(result).toEqual({
       status: 200,
-      payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de acceso." },
+      payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de activación." },
     });
     expect(sendWelcomeEmail).not.toHaveBeenCalled();
   });
@@ -249,7 +249,7 @@ describe("con permisos válidos", () => {
 
     expect(result).toEqual({
       status: 200,
-      payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de acceso." },
+      payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de activación." },
     });
     expect(sendWelcomeEmail).not.toHaveBeenCalled();
   });
@@ -262,7 +262,7 @@ describe("con permisos válidos", () => {
 
     expect(result).toEqual({
       status: 200,
-      payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de acceso." },
+      payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de activación." },
     });
     expect(sendWelcomeEmail).not.toHaveBeenCalled();
   });

@@ -33,8 +33,18 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
 - **Configuración**: menú agrupado (negocio / administración) en vez de
   pestañas horizontales; Escuelas, Cursos, Tipos de pago, Estados de
   pago y Monedas crean ahora vía botón flotante + hoja inferior;
-  eliminar usuario y desactivar/reactivar usuario (superadmin, con
-  confirmación) — desactivar revoca el acceso sin borrar ningún dato.
+  eliminar usuario y desactivar usuario (superadmin, con confirmación)
+  — desactivar revoca el acceso sin borrar ningún dato.
+- **Usuarios — estado tri-estado y reactivación sin acceso instantáneo**
+  (superadmin, ver `docs/ADR/0015-modelo-activacion-usuarios.md`): cada
+  cuenta se muestra ahora como Activo/Pendiente/Desactivado en vez del
+  binario anterior — una cuenta recién creada o desactivada ya no
+  aparece como "Activa" sin haber completado la activación. Nuevas
+  acciones "Regenerar enlace de activación" y "Regenerar contraseña"
+  (ninguna concede acceso al instante — siempre generan un enlace nuevo
+  de un solo uso para compartir); último acceso real (fecha y hora, o
+  "Nunca") visible en el detalle; nombre/apellidos/nickname editables
+  en línea desde la propia hoja de detalle.
 - **Resumen**: tarjeta principal con comparación al periodo anterior, y
   el resto de la información (Por escuela con desglose por curso al
   tocar, Por curso, Calendario, Comisiones, Pagos de compañeros) como
@@ -62,10 +72,18 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   Mi trabajo/Tarifas, y "Editar" abre la misma hoja que la creación
   (precargada), en vez de una edición en línea con iconos sueltos.
 - Configuración — Usuarios: la tabla con scroll lateral se sustituye por
-  una lista (nickname, estado, fecha de alta) con una hoja de detalle al
-  tocar cada fila, donde vive toda la gestión (roles, activar/
-  desactivar, eliminar) — mismo patrón de lista + detalle que Escuelas/
-  Cursos/Tarifas.
+  una lista (nickname, estado tri-estado, fecha de alta) con una hoja de
+  detalle al tocar cada fila, donde vive toda la gestión (roles,
+  activar/desactivar con switch, regenerar enlace/contraseña, editar
+  datos, eliminar) — mismo patrón de lista + detalle que Escuelas/
+  Cursos/Tarifas. El botón-pastilla de Activar/Desactivar se sustituye
+  por un switch: apagarlo desactiva al instante, encenderlo desde una
+  cuenta desactivada abre el flujo de regenerar enlace en vez de dar
+  acceso directo.
+- `/api/set-user-active` deja de aceptar `active: true` — reactivar una
+  cuenta pasa siempre por `/api/regenerate-activation-link`, nunca por
+  un simple des-baneo (cierra la vía de acceso instantáneo a una cuenta
+  desactivada).
 - Se oculta el acceso directo a "Pagos" de la navegación — Mi trabajo
   cubre su función ("Cobrar todos", filtro por escuela).
 - Home: el calendario del mes sube al segundo lugar (tras "Pendiente de

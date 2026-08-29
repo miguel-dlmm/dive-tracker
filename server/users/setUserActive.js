@@ -1,22 +1,25 @@
 import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 
-// Desactiva/reactiva una cuenta — exclusivo de superadmin. A diferencia de
-// eliminar, esto NO borra nada: usa el "ban" ya incorporado en Supabase Auth
+// Desactiva una cuenta — exclusivo de superadmin. A diferencia de eliminar,
+// esto NO borra nada: usa el "ban" ya incorporado en Supabase Auth
 // (auth.admin.updateUserById con ban_duration), que bloquea el login sin
 // tocar profiles ni ninguna tabla de datos (worklog, comisiones, tarifas...
-// siguen intactas). No requiere ningún cambio de esquema — a diferencia de
-// la primera propuesta (ver docs/ADR/0008-rediseno-configuracion.md, que
-// planteaba extender admin_list_profiles() para exponer este estado), el
-// propio Admin API ya expone banned_until sin tocar ninguna función SQL —
-// ver listUserStatus.js, que lee ese mismo campo para mostrar el estado en
-// el directorio.
+// siguen intactas). No requiere ningún cambio de esquema — el propio Admin
+// API ya expone banned_until sin tocar ninguna función SQL — ver
+// listUserStatus.js, que lee ese mismo campo para mostrar el estado.
 //
-// "876000h" (~100 años) como ban_duration para desactivar: es el valor que
-// la propia documentación de Supabase usa como "indefinido" — no existe un
-// literal "forever", así que un plazo absurdamente largo cumple la misma
-// función. "none" desactiva el baneo (reactiva la cuenta).
+// SOLO desactiva — `active: true` ya NO es una operación válida aquí (ver
+// docs/ADR "modelo de activación", 2026-08-29). Antes, reactivar por esta
+// vía concedía acceso instantáneo con la contraseña que ya tuviera la
+// cuenta; el nuevo modelo exige pasar siempre por un enlace de activación
+// nuevo (ver regenerateActivationLink.js/regeneratePassword.js) — nunca un
+// simple "quitar el baneo". Mantener `active: true` viable aquí habría sido
+// una puerta trasera al comportamiento que se quiere abandonar.
+//
+// "876000h" (~100 años) como ban_duration: es el valor que la propia
+// documentación de Supabase usa como "indefinido" — no existe un literal
+// "forever", así que un plazo absurdamente largo cumple la misma función.
 const BAN_FOREVER = "876000h";
-const BAN_NONE = "none";
 
 function parseBody(body) {
   if (body == null) return {};
@@ -59,6 +62,9 @@ export async function handleSetUserActive({ method, headers, body }) {
   if (!targetUserId || typeof active !== "boolean") {
     return { status: 400, payload: { error: "Faltan target_user_id o active (booleano)." } };
   }
+  if (active) {
+    return { status: 400, payload: { error: "Reactivar una cuenta requiere generar un enlace de activación nuevo — usa /api/regenerate-activation-link." } };
+  }
 
   const caller = await verifyCaller(token);
   if (!caller) {
@@ -90,13 +96,24 @@ export async function handleSetUserActive({ method, headers, body }) {
     return { status: 400, payload: { error: "No se puede desactivar una cuenta superadmin." } };
   }
 
-  const { error: updateError } = await client.auth.admin.updateUserById(targetUserId, {
-    ban_duration: active ? BAN_NONE : BAN_FOREVER,
-  });
+  const { error: updateError } = await client.auth.admin.updateUserById(targetUserId, { ban_duration: BAN_FOREVER });
   if (updateError) {
     console.error(updateError);
     return { status: 400, payload: { error: updateError.message } };
   }
 
-  return { status: 200, payload: { user_id: targetUserId, active } };
+  // activated_at a null: si algún día se reactiva, queda "pendiente" hasta
+  // completar un enlace nuevo — nunca vuelve a "activo" solo por quitar el
+  // baneo (ver regenerateActivationLink.js/regeneratePassword.js). No se
+  // corta la respuesta si esto falla: el baneo (lo importante para
+  // seguridad) ya se aplicó; el estado se corregirá en el próximo reload().
+  const { error: profileError } = await client
+    .from("profiles")
+    .update({ activated_at: null })
+    .eq("user_id", targetUserId);
+  if (profileError) {
+    console.error("set-user-active: no se pudo limpiar activated_at", profileError);
+  }
+
+  return { status: 200, payload: { user_id: targetUserId, active: false } };
 }

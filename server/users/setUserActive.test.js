@@ -20,13 +20,15 @@ function request(overrides = {}) {
   };
 }
 
-function makeClient({ lookupResult, updateResult = { error: null } }) {
+function makeClient({ lookupResult, updateResult = { error: null }, profileUpdateResult = { error: null } }) {
   const maybeSingle = vi.fn().mockResolvedValue(lookupResult);
   const eqForSelect = vi.fn().mockReturnValue({ maybeSingle });
   const select = vi.fn().mockReturnValue({ eq: eqForSelect });
-  const from = vi.fn().mockReturnValue({ select });
+  const eqForUpdate = vi.fn().mockResolvedValue(profileUpdateResult);
+  const update = vi.fn().mockReturnValue({ eq: eqForUpdate });
+  const from = vi.fn().mockReturnValue({ select, update });
   const updateUserById = vi.fn().mockResolvedValue(updateResult);
-  return { from, select, eqForSelect, auth: { admin: { updateUserById } } };
+  return { from, select, update, eqForSelect, eqForUpdate, auth: { admin: { updateUserById } } };
 }
 
 beforeEach(() => {
@@ -67,6 +69,14 @@ it("devuelve 400 si falta target_user_id o active no es booleano", async () => {
   const result = await handleSetUserActive(request({ body: JSON.stringify({ target_user_id: TARGET_ID }) }));
 
   expect(result).toEqual({ status: 400, payload: { error: "Faltan target_user_id o active (booleano)." } });
+  expect(verifyCaller).not.toHaveBeenCalled();
+});
+
+it("rechaza active:true — reactivar ya no es una operación válida aquí (usar /api/regenerate-activation-link)", async () => {
+  const result = await handleSetUserActive(request({ body: JSON.stringify({ target_user_id: TARGET_ID, active: true }) }));
+
+  expect(result.status).toBe(400);
+  expect(result.payload.error).toMatch(/regenerate-activation-link/);
   expect(verifyCaller).not.toHaveBeenCalled();
 });
 
@@ -133,7 +143,7 @@ it("rechaza desactivar una cuenta superadmin", async () => {
   expect(client.auth.admin.updateUserById).not.toHaveBeenCalled();
 });
 
-it("desactiva con ban_duration de larga duración y devuelve { user_id, active: false }", async () => {
+it("desactiva con ban_duration de larga duración, limpia activated_at y devuelve { user_id, active: false }", async () => {
   const client = makeClient({ lookupResult: { data: { is_superadmin: false }, error: null } });
   getServiceRoleClient.mockReturnValue(client);
 
@@ -141,16 +151,20 @@ it("desactiva con ban_duration de larga duración y devuelve { user_id, active: 
 
   expect(result).toEqual({ status: 200, payload: { user_id: TARGET_ID, active: false } });
   expect(client.auth.admin.updateUserById).toHaveBeenCalledWith(TARGET_ID, { ban_duration: "876000h" });
+  expect(client.update).toHaveBeenCalledWith({ activated_at: null });
+  expect(client.eqForUpdate).toHaveBeenCalledWith("user_id", TARGET_ID);
 });
 
-it("reactiva con ban_duration 'none' y devuelve { user_id, active: true }", async () => {
-  const client = makeClient({ lookupResult: { data: { is_superadmin: false }, error: null } });
+it("no corta la respuesta si falla limpiar activated_at — el baneo ya se aplicó", async () => {
+  const client = makeClient({
+    lookupResult: { data: { is_superadmin: false }, error: null },
+    profileUpdateResult: { error: { message: "boom" } },
+  });
   getServiceRoleClient.mockReturnValue(client);
 
-  const result = await handleSetUserActive(request({ body: JSON.stringify({ target_user_id: TARGET_ID, active: true }) }));
+  const result = await handleSetUserActive(request());
 
-  expect(result).toEqual({ status: 200, payload: { user_id: TARGET_ID, active: true } });
-  expect(client.auth.admin.updateUserById).toHaveBeenCalledWith(TARGET_ID, { ban_duration: "none" });
+  expect(result).toEqual({ status: 200, payload: { user_id: TARGET_ID, active: false } });
 });
 
 it("propaga el error de Supabase si falla la actualización", async () => {
