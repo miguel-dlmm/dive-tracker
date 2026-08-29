@@ -1,4 +1,4 @@
-import { getServiceRoleClient, verifyCaller, isSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
+import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 
 // Cambia el is_admin de OTRA cuenta — exclusivo de superadmin. is_superadmin
 // nunca se acepta aquí ni se toca: protect_profile_roles() en la base de
@@ -62,9 +62,8 @@ export async function handleUpdateAdminStatus({ method, headers, body }) {
     return { status: 401, payload: { error: "Sesión inválida o caducada." } };
   }
 
-  if (!(await isSuperadmin(caller.id))) {
-    return { status: 403, payload: { error: "Solo un superadmin puede cambiar el rol de admin de otra cuenta." } };
-  }
+  const denied = await requireSuperadmin(caller.id, "Solo un superadmin puede cambiar el rol de admin de otra cuenta.");
+  if (denied) return denied;
 
   if (targetUserId === caller.id) {
     return { status: 400, payload: { error: "No puedes cambiar tu propio rol de admin desde aquí." } };

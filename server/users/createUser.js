@@ -1,4 +1,4 @@
-import { getServiceRoleClient, verifyCaller, isSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
+import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 import { sendWelcomeEmail } from "../email/sendWelcomeEmail.js";
 
 // Alta de usuarios (MVP) — el acceso depende exclusivamente del enlace de
@@ -103,9 +103,8 @@ export async function handleCreateUser({ method, headers, body }) {
 
   // Crear usuarios es exclusivo de superadmin — los admins normales solo
   // tienen acceso de lectura al directorio (ver ConfigTab → UsersDirectory).
-  if (!(await isSuperadmin(caller.id))) {
-    return { status: 403, payload: { error: "Solo un superadmin puede crear usuarios." } };
-  }
+  const denied = await requireSuperadmin(caller.id, "Solo un superadmin puede crear usuarios.");
+  if (denied) return denied;
 
   // is_admin / is_superadmin NUNCA se pasan aquí a propósito: handle_new_user()
   // no los toca al crear la fila de profiles, así que nace siempre con
