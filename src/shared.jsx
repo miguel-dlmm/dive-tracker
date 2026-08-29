@@ -6,7 +6,7 @@ import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, Chev
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
-import { TEAL, SUN, CORAL, GREEN } from "./colors";
+import { NAVY, TEAL, SUN, CORAL, GREEN } from "./colors";
 import { DURATION, panelVariants, sheetVariants, usePrefersReducedMotion } from "./motion";
 
 export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
@@ -759,6 +759,14 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           const color = hasActivity ? colorForDay(list) : null;
           const creatable = d && !hasActivity && !!onCreateForDay;
           const dateStr = d ? `${year}-${pad2(month + 1)}-${pad2(d)}` : null;
+          // Día de hoy — marcado con un punto bajo el número (mismo lenguaje
+          // que el punto de "periodo actual" en TrendBars, SummaryTab.jsx):
+          // sin él, un día con actividad se veía exactamente igual sea o no
+          // el de hoy, así que "hoy" se perdía entre el resto del mes en
+          // cuanto tenía algún movimiento. Se calcula con el mismo
+          // dateStr/todayStr que usa el resto de la app, no una comparación
+          // de Date() propia — cero riesgo de desajuste de huso horario.
+          const isToday = d && dateStr === todayStr();
           const handleClick = () => {
             if (hasActivity) setSelectedDay(isSelected ? null : d);
             else if (creatable) onCreateForDay(dateStr);
@@ -769,8 +777,12 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
               type="button"
               disabled={!d || (!hasActivity && !creatable)}
               onClick={handleClick}
-              aria-label={creatable ? `Añadir movimiento el ${d} de ${CAL_MONTHS[month]}` : undefined}
-              className="flex h-11 items-center justify-center transition-transform active:scale-90"
+              aria-label={
+                creatable ? `Añadir movimiento el ${d} de ${CAL_MONTHS[month]}${isToday ? " (hoy)" : ""}`
+                : isToday ? `${d} de ${CAL_MONTHS[month]} (hoy)`
+                : undefined
+              }
+              className="flex h-11 flex-col items-center justify-center gap-0.5 transition-transform active:scale-90"
             >
               {d && (
                 <span
@@ -783,6 +795,9 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
                 >
                   {d}
                 </span>
+              )}
+              {d && (
+                <span className="h-1 w-1 rounded-full" style={{ backgroundColor: NAVY, opacity: isToday ? 1 : 0 }} aria-hidden="true" />
               )}
             </button>
           );

@@ -222,3 +222,25 @@ describe("HomeTab — 'Generado este mes' como puente hacia Resumen", () => {
     expect(generated.queryByText(/vs mes anterior/)).not.toBeInTheDocument();
   });
 });
+
+// Calendario — día de hoy marcado visualmente (2026-08-30): antes un día
+// con actividad se veía exactamente igual sea o no el de hoy. El marcador
+// (punto bajo el número) es solo visual — se comprueba aquí a través del
+// aria-label que lo acompaña, para que la información también llegue a
+// quien usa un lector de pantalla.
+describe("HomeTab — calendario: el día de hoy queda marcado", () => {
+  it("el botón del día de hoy anuncia '(hoy)' cuando tiene actividad", () => {
+    renderHome({
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+      rates: RATES,
+    });
+    expect(screen.getByLabelText(/\(hoy\)$/)).toBeInTheDocument();
+  });
+
+  it("si hoy no tiene actividad, su botón de 'Añadir movimiento' es el único que lleva '(hoy)'", () => {
+    renderHome({}); // sin worklog: hoy queda vacío/creable, como cualquier otro día del mes
+    const emptyDayLabels = screen.getAllByLabelText(/^Añadir movimiento el /).map((el) => el.getAttribute("aria-label"));
+    const withHoy = emptyDayLabels.filter((l) => l.endsWith("(hoy)"));
+    expect(withHoy).toHaveLength(1);
+  });
+});

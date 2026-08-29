@@ -149,6 +149,40 @@ legal, con la marca ya coherente).
 **Commit:** `feat(marca): renombrar el producto a "Ocean Flow" en toda la
 interfaz visible`.
 
+### Bloque 3 — Calendario de Home: marcar el día actual
+
+Antes, un día con actividad se veía exactamente igual sea o no el de
+hoy (mismo anillo/relleno TEAL) — "hoy" se perdía en cuanto tenía algún
+movimiento, que es justo el caso que pedía el encargo.
+
+**Solución:** un punto discreto bajo el número del día de hoy —
+reutiliza el mismo lenguaje visual ya introducido esta sesión para
+"periodo actual" en `TrendBars` (SummaryTab.jsx), no una convención
+nueva. Se calcula comparando el `dateStr` que la propia celda ya
+construye contra `todayStr()` (mismo helper que usa el resto de la
+app) — cero lógica de fecha nueva, cero riesgo de desajuste de huso
+horario. El `aria-label` de la celda también anuncia "(hoy)" — antes un
+día CON actividad no llevaba ningún `aria-label` (su nombre accesible
+salía del número visible); ahora lo lleva cuando es hoy, para que la
+marca llegue también a un lector de pantalla, no solo visualmente.
+
+**Ámbito:** cambio en `MonthCalendar` (`shared.jsx`, compartido por Home
+y Resumen), pero el marcador solo tiene sentido donde el mes mostrado
+puede SER el actual — no se ha tocado nada de Resumen a propósito (el
+encargo pedía específicamente "Calendario de Home"); si algún día
+interesa lo mismo en Resumen, es una línea de trabajo aparte, no un
+efecto colateral de este cambio. Ninguna capacidad existente se pierde:
+ver el desglose del día y crear un movimiento siguen exactamente igual.
+
+**Validado:** 316/316 tests (+2 nuevos: el día de hoy anuncia "(hoy)"
+cuando tiene actividad; si hoy está vacío, es el único día "Añadir
+movimiento" con esa marca), build correcto, `mobile-check` sin errores
+(un primer intento tuvo el hipo transitorio ya conocido de esta sesión,
+reintento limpio) — captura de Home revisada visualmente: el punto bajo
+el "30" (hoy) es visible y distinto del "29" (con actividad, sin punto).
+
+**Commit:** `feat(calendario): marcar el día de hoy en el calendario de Home`.
+
 **Commit:** `feat(tarifas): rediseño completo — lista combinada, acento
 por tipo y hoja con motion` (+ `Sheet` extraído en el mismo commit, es
 la base que lo hace posible).
