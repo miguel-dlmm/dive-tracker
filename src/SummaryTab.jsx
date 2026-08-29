@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft, ChevronRight, ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META } from "./shared";
 import { listItemVariants, usePrefersReducedMotion } from "./motion";
-import { computeRateTotal } from "./rateCalc";
+import { computeRateTotal, comparePeriods } from "./rateCalc";
 import { NAVY, CORAL, GREEN } from "./App";
 
 // Rediseño 2026-08-29 (ver docs/ADR/0009-rediseno-resumen.md): Resumen deja
@@ -119,15 +119,6 @@ function magnitude(totals) {
   return Object.values(totals).reduce((s, v) => s + v, 0);
 }
 
-// Único punto de comparación numérica exacta (no aproximada): solo tiene
-// sentido si ambos periodos están en la misma moneda única — con varias
-// monedas mezcladas, un delta agregado sería engañoso, así que se omite en
-// vez de mostrar un número que parezca preciso sin serlo.
-function singleCurrencyAmount(totals) {
-  const keys = Object.keys(totals || {});
-  return keys.length === 1 ? { code: keys[0], amount: totals[keys[0]] } : null;
-}
-
 // Cabecera plegable reutilizada por todas las tarjetas de profundidad de
 // Resumen (Por escuela, Por curso, Calendario, Comisiones, Pagos de
 // compañeros) — mismo componente para las 5, no una implementación por
@@ -212,22 +203,18 @@ function RankedList({ rows, currencyRows, textColor, emptyLabel = "Sin datos.", 
 // moneda (ver singleCurrencyAmount) — antes callar que mostrar un delta
 // que parezca preciso sin serlo.
 function HeroTotal({ label, period, color, total, previousTotal, canCompare, currencyRows }) {
-  const cur = singleCurrencyAmount(total);
-  const prev = singleCurrencyAmount(previousTotal);
-  const comparable = canCompare && cur && prev && cur.code === prev.code;
-  const delta = comparable ? cur.amount - prev.amount : null;
-  const pct = comparable && prev.amount !== 0 ? (delta / Math.abs(prev.amount)) * 100 : null;
+  const cmp = canCompare ? comparePeriods(total, previousTotal) : null;
 
   return (
     <div className="rounded-lg p-4 text-white shadow-sm" style={{ backgroundColor: color }}>
       <div className="text-xs font-medium opacity-80">{label} — {period}</div>
       <div className="mt-1 text-3xl font-bold tabular-nums"><MoneyLine totals={total} currencyRows={currencyRows} /></div>
-      {comparable && (
+      {cmp && (
         <div className="mt-1.5 flex items-center gap-1 text-xs font-medium opacity-90">
-          {delta > 0 ? <TrendingUp size={13} aria-hidden="true" /> : delta < 0 ? <TrendingDown size={13} aria-hidden="true" /> : <Minus size={13} aria-hidden="true" />}
-          {pct !== null
-            ? `${delta >= 0 ? "+" : ""}${pct.toFixed(0)}% vs periodo anterior`
-            : `${delta >= 0 ? "+" : ""}${formatMoney(delta, cur.code, currencyRows)} vs periodo anterior`}
+          {cmp.delta > 0 ? <TrendingUp size={13} aria-hidden="true" /> : cmp.delta < 0 ? <TrendingDown size={13} aria-hidden="true" /> : <Minus size={13} aria-hidden="true" />}
+          {cmp.pct !== null
+            ? `${cmp.delta >= 0 ? "+" : ""}${cmp.pct.toFixed(0)}% vs periodo anterior`
+            : `${cmp.delta >= 0 ? "+" : ""}${formatMoney(cmp.delta, cmp.code, currencyRows)} vs periodo anterior`}
         </div>
       )}
     </div>

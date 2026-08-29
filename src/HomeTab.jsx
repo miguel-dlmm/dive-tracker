@@ -1,48 +1,9 @@
-import React, { useMemo, useState } from "react";
-import { TrendingUp, Clock } from "lucide-react";
-import { NAVY, TEAL, SUN } from "./App";
-import { Money, MonthCalendar, colorFor, isPendingStatus, oppositeStatus, useToast, MOVEMENT_TYPE_META } from "./shared";
-import { computeRateTotal, buildIncomeEntries } from "./rateCalc";
+import React, { useMemo } from "react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
+import { Money, formatMoney, MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
+import { computeRateTotal, buildIncomeEntries, comparePeriods } from "./rateCalc";
 import PendingCollectionCard from "./PendingCollectionCard";
-
-// Cuántas filas caben en el widget de Home sin que empiece a competir en
-// tamaño con la propia tarjeta "Pendiente de cobrar" — un vistazo de las
-// más urgentes, no un segundo listado completo (eso ya es Mi trabajo).
-const OLDEST_PENDING_LIMIT = 3;
-
-// Fila compacta del widget "Los más antiguos por cobrar" — deliberadamente
-// más simple que EntryRow de Mi trabajo (sin la coreografía de
-// entrada/salida animada): al cobrar aquí, la fila deja de cumplir el
-// filtro de `incomeEntries` y desaparece del array en el siguiente
-// render, sin necesitar animar su propia salida — este widget es un
-// resumen de acceso rápido, no la lista completa donde sí vale la pena
-// esa inversión.
-function OldestPendingRow({ entry, activityColor, currencyRows, onCollect, busy }) {
-  const isAjuste = entry._source === "companeros";
-  const label = isAjuste ? (entry.colleague_name || "Compañero/a") : (entry.activity || "—");
-  return (
-    <div className="flex items-center justify-between gap-2 border-t border-gray-100 py-2.5 first:border-t-0 first:pt-0">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold" style={{ color: isAjuste ? NAVY : activityColor(entry.activity) }}>{label}</p>
-        <p className="mt-0.5 truncate text-[11px] text-gray-400">{entry.school} · {entry.date}</p>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <span className="text-sm font-semibold tabular-nums" style={{ color: NAVY }}>
-          <Money amount={entry.total} code={entry.currency} currencyRows={currencyRows} />
-        </span>
-        <button
-          type="button"
-          onClick={onCollect}
-          disabled={busy}
-          className="min-h-9 rounded-md px-2 text-xs font-semibold disabled:opacity-50"
-          style={{ color: TEAL }}
-        >
-          Cobrar
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
 // schools / currencies / paymentStatuses: hooks de useSupabaseTable
@@ -52,30 +13,17 @@ function OldestPendingRow({ entry, activityColor, currencyRows, onCollect, busy 
 // preselecciona esa fecha en vez de la de hoy (la usa el calendario de
 // abajo). type es directamente "ganado"/"comision"/"companeros" — ya no
 // hace falta el id de pestaña antiguo ("log"), ver docs/ADR/0005 addendum.
-// onOpenPending: () => navega a Mi trabajo (tarjeta "Pendiente de cobrar" y
-// enlace "Ver todos" del widget de más antiguos) — Mi trabajo abre ya en
-// su pestaña "Pendientes" por defecto, así que no hace falta pasarle
-// ningún filtro explícito.
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending }) {
+// onOpenPending: () => navega a Mi trabajo (tarjeta "Pendiente de cobrar")
+// — Mi trabajo abre ya en su pestaña "Pendientes" por defecto, así que no
+// hace falta pasarle ningún filtro explícito.
+// onOpenSummary: () => navega a Resumen — puente táctil desde "Generado
+// este mes" (ver comentario junto a esa tarjeta más abajo). Resumen se
+// monta de cero al entrar (no queda en el DOM mientras se ve otra pestaña,
+// ver App.jsx), así que ya abre por defecto en "Mes"/mes actual sin
+// necesidad de pasarle ningún estado de periodo.
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary }) {
   const now = new Date();
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
-  const toast = useToast();
-  const [collectingKey, setCollectingKey] = useState(null);
-
-  const tableForSource = (source) => (source === "ganado" ? worklog : source === "comision" ? comisiones : colleaguePayments);
-  const quickCollect = async (entry) => {
-    const key = `${entry._source}:${entry.id}`;
-    setCollectingKey(key);
-    try {
-      const target = oppositeStatus(entry.status, paymentStatuses.rows);
-      await tableForSource(entry._source).updateRow(entry.id, { status: target });
-      toast?.success("Marcado como cobrado");
-    } catch {
-      toast?.error("No se pudo actualizar. Inténtalo de nuevo.");
-    } finally {
-      setCollectingKey(null);
-    }
-  };
 
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
   const rateTotal = (e, ratesTable) => {
@@ -134,16 +82,20 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
     return { totals, count: pendingEntries.length };
   }, [incomeEntries, paymentStatuses.rows]);
 
-  // Widget "Los más antiguos por cobrar" — las deudas que llevan más
-  // tiempo esperando son las que más vale la pena resolver primero (más
-  // fáciles de olvidar cuanto más lejos queda la fecha). incomeEntries ya
-  // excluye los ajustes negativos hacia un compañero (buildIncomeEntries),
-  // así que aquí "Cobrar" siempre tiene sentido, sin el matiz de
-  // "Liquidar" que sí necesita Mi trabajo.
-  const oldestPending = useMemo(() => incomeEntries
-    .filter((e) => isPendingStatus(e.status, paymentStatuses.rows))
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(0, OLDEST_PENDING_LIMIT), [incomeEntries, paymentStatuses.rows]);
+  // Indicio de tendencia de "Generado este mes" — mismo total del mes
+  // anterior, mismo filtro (fecha, sin estado). comparePeriods (rateCalc.js)
+  // es la misma regla de comparación que ya usa HeroTotal en Resumen: se
+  // omite (null) si cualquiera de los dos meses mezcla más de una moneda,
+  // en vez de mostrar un delta agregado que parecería preciso sin serlo.
+  const previousMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const previousMonthTotals = useMemo(() => {
+    const map = {};
+    incomeEntries
+      .filter((e) => { const d = new Date(e.date); return d.getFullYear() === previousMonthDate.getFullYear() && d.getMonth() === previousMonthDate.getMonth(); })
+      .forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
+    return map;
+  }, [incomeEntries]);
+  const monthTrend = useMemo(() => comparePeriods(monthTotals, previousMonthTotals), [monthTotals, previousMonthTotals]);
 
   return (
     <div className="space-y-4">
@@ -183,13 +135,12 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           se pasa aquí, no en Resumen: tocar un día vacío inicia un
           movimiento para esa fecha; uno con datos conserva su desglose y
           gana un "+" para añadir otro.
-          Segunda revisión (misma fecha, más tarde): el widget "Los más
-          antiguos por cobrar" (punto 3 más abajo) se añadió primero entre
-          la tarjeta principal y el calendario, empujándolo sin querer al
-          tercer lugar otra vez. El calendario responde "¿qué pasó este
-          mes?" — la pregunta más frecuente al entrar en Home — y merece
-          seguir en segundo lugar; el widget de cobro (una acción, no una
-          vista general) pasa a vivir DESPUÉS del calendario. */}
+          Segunda revisión (misma fecha, más tarde): un widget "Los más
+          antiguos por cobrar" (ya retirado, ver comentario junto a
+          "Generado este mes" más abajo) se probó brevemente entre la
+          tarjeta principal y el calendario — este último conserva el
+          segundo lugar por el mismo motivo de siempre: responde "¿qué
+          pasó este mes?", la pregunta más frecuente al entrar en Home. */}
       <div>
         <MonthCalendar
           year={now.getFullYear()}
@@ -209,54 +160,35 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         </p>
       </div>
 
-      {/* 3. Los más antiguos por cobrar — 2026-08-29: Home era solo
-          informativa/de creación, sin ninguna acción real sobre lo ya
-          existente ("empujar el uso de la app, no solo una tarjeta
-          bonita"). Este widget deja cobrar directamente las deudas más
-          urgentes (las más antiguas) sin salir de Home ni pasar por Mi
-          trabajo, con el mismo criterio de feedback por toast que el resto
-          de la app. Solo se muestra si hay algo pendiente — una tarjeta
-          vacía de "nada por cobrar" no aporta nada que "Nada pendiente" ya
-          no diga en la tarjeta de arriba. */}
-      {oldestPending.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white p-4" data-testid="oldest-pending-widget">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-            <Clock size={14} style={{ color: SUN }} aria-hidden="true" />
-            Los más antiguos por cobrar
-          </div>
-          <div>
-            {oldestPending.map((entry) => (
-              <OldestPendingRow
-                key={`${entry._source}:${entry.id}`}
-                entry={entry}
-                activityColor={activityColor}
-                currencyRows={currencies.rows}
-                busy={collectingKey === `${entry._source}:${entry.id}`}
-                onCollect={() => quickCollect(entry)}
-              />
-            ))}
-          </div>
-          {pendingSummary.count > oldestPending.length && (
-            <button
-              type="button"
-              onClick={onOpenPending}
-              className="mt-2 min-h-9 w-full rounded-md text-center text-xs font-semibold"
-              style={{ color: TEAL }}
-            >
-              Ver los {pendingSummary.count} pendientes en Mi trabajo
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* 4. Generado este mes — información secundaria de cierre, no la
+      {/* 3. Generado este mes — información secundaria de cierre, no la
           protagonista: una cifra que solo se consulta, complementaria al
           propio calendario de arriba (que ya muestra qué días tuvieron
           actividad). "Generado" y no "Ganado" porque cuenta las 3 fuentes
           (Registro + Comisiones + Compañeros que te pagan). El dato de
           abajo (personas formadas) le da el mismo equilibrio de "cifra +
-          conteo" que "Pendiente de cobrar". */}
-      <div className="rounded-xl border border-gray-200 bg-white p-4" data-testid="generated-this-month-card">
+          conteo" que "Pendiente de cobrar".
+
+          2026-08-29 (rediseño Home/Resumen): antes esta tarjeta era un
+          callejón sin salida — la única de Home que no llevaba a ningún
+          sitio al tocarla. Se le añaden dos piezas, reutilizando cálculo
+          ya existente (comparePeriods, la misma regla que HeroTotal en
+          Resumen — nunca una segunda implementación del mismo criterio):
+          (1) un indicio de tendencia de una línea (↑/↓ vs mes anterior),
+          la versión "de un vistazo" de lo que Resumen ya hace en
+          profundidad con TrendBars; (2) la tarjeta entera se vuelve
+          táctil y navega a Resumen (onOpenSummary), que ya abre en "Mes"/
+          mes actual por defecto — el puente que le faltaba al "¿por qué,
+          de dónde viene esta cifra?". Sustituye al widget "Los más
+          antiguos por cobrar" (retirado en el mismo cambio): duplicaba
+          una acción que "Pendiente de cobrar" → Mi trabajo ya resuelve
+          mejor (animación, deshacer, filtros, sin límite de 3 filas), sin
+          responder a una pregunta nueva — ver docs/PROPUESTA-home-resumen.md. */}
+      <button
+        type="button"
+        onClick={onOpenSummary}
+        data-testid="generated-this-month-card"
+        className="w-full rounded-xl border border-gray-200 bg-white p-4 text-left transition-transform active:scale-[0.98]"
+      >
         <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
           <TrendingUp size={14} style={{ color: TEAL }} aria-hidden="true" />
           Generado este mes
@@ -275,7 +207,15 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             ? `${peopleTrainedThisMonth} ${peopleTrainedThisMonth === 1 ? "persona formada" : "personas formadas"} este mes`
             : "Sin cursos este mes"}
         </div>
-      </div>
+        {monthTrend && (
+          <div className="mt-1.5 flex items-center gap-1 text-xs font-medium" style={{ color: monthTrend.delta > 0 ? GREEN : monthTrend.delta < 0 ? CORAL : "#9CA3AF" }}>
+            {monthTrend.delta > 0 ? <TrendingUp size={12} aria-hidden="true" /> : monthTrend.delta < 0 ? <TrendingDown size={12} aria-hidden="true" /> : <Minus size={12} aria-hidden="true" />}
+            {monthTrend.pct !== null
+              ? `${monthTrend.delta >= 0 ? "+" : ""}${monthTrend.pct.toFixed(0)}% vs mes anterior`
+              : `${monthTrend.delta >= 0 ? "+" : ""}${formatMoney(monthTrend.delta, monthTrend.code, currencies.rows)} vs mes anterior`}
+          </div>
+        )}
+      </button>
     </div>
   );
 }
