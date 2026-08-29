@@ -323,12 +323,17 @@ async function main() {
   await page.waitForTimeout(300);
   await shot(page, "resumen-vistazo-rapido");
 
-  console.log("→ Resumen: franja de tendencia — tocar la barra más antigua navega a ese periodo");
+  console.log("→ Resumen: franja de tendencia — nace centrada en el periodo actual; tocar una barra la recentra");
   // Acotado a <main>: la cabecera global también tiene un botón "Ir a
   // Home" que coincidiría con un patrón /^Ir a /  sin acotar.
   const trendBars = page.getByRole("main").getByRole("button", { name: /^Ir a / });
   const trendBarCount = await trendBars.count();
-  if (trendBarCount === 6) {
+  if (trendBarCount === 7) {
+    // El periodo actual nace elegido -> su barra (la central, índice 3) no es pulsable.
+    const centerDisabled = await trendBars.nth(3).isDisabled();
+    if (!centerDisabled) {
+      consoleIssues.push("[resumen] La franja de tendencia no nace con el periodo actual centrado y elegido.");
+    }
     const periodLabelLocator = page.locator("main span.font-semibold.tabular-nums");
     const labelBefore = await periodLabelLocator.first().textContent().catch(() => null);
     await trendBars.first().tap();
@@ -344,7 +349,7 @@ async function main() {
     await page.getByRole("option", { name: "Mes", exact: true }).tap();
     await page.waitForTimeout(200);
   } else {
-    consoleIssues.push(`[resumen] La franja de tendencia debería mostrar 6 barras, muestra ${trendBarCount}.`);
+    consoleIssues.push(`[resumen] La franja de tendencia debería mostrar 7 barras, muestra ${trendBarCount}.`);
   }
 
   console.log("→ Resumen: granularidad+periodo fusionados en un único control — cambiar a 'Rango'");
@@ -370,6 +375,14 @@ async function main() {
   await page.getByRole("button", { name: "Comisiones", exact: false }).tap();
   await page.waitForTimeout(350);
   await shot(page, "resumen-comisiones-expandida");
+
+  console.log("→ Resumen: 'Por escuela' — evolución vs. el periodo anterior junto al nombre (sin toggle)");
+  // Comprobación blanda: solo aparece si la cuenta de prueba tiene alguna
+  // escuela con datos comparables en el mes anterior — igual de opcional
+  // que otros pasos que dependen de los datos reales de la cuenta demo.
+  const porEscuelaSection = page.getByRole("button", { name: "Por escuela", exact: false }).locator("xpath=..");
+  const growthBadgeVisible = await porEscuelaSection.getByText(/^[+-]\d+%$/).first().isVisible().catch(() => false);
+  console.log(growthBadgeVisible ? "  (indicio de evolución visible junto a una escuela)" : "  (sin escuela con dato comparable en la cuenta de prueba — omitido)");
 
   console.log("→ Resumen: tocar una escuela en 'Por escuela' expande su desglose por curso en el sitio");
   const porEscuelaCard = page.getByRole("button", { name: "Por escuela", exact: false }).locator("xpath=..");

@@ -86,16 +86,22 @@ function currentUnitFor(granularity, now) {
   return 0;
 }
 
-// Unidad anterior a (year, unitIndex) en la misma granularidad — usada para
-// la comparación de la tarjeta principal ("¿cómo voy respecto al periodo
-// anterior?"). "personalizado" no tiene un "periodo anterior" natural (el
-// usuario ha elegido un rango arbitrario), así que no se le llama con esa
-// granularidad — ver canCompare en Hero.
-function previousUnit(granularity, year, unitIndex) {
+// Desplaza (year, unitIndex) `delta` unidades en la misma granularidad —
+// negativo hacia atrás, positivo hacia delante, sin límite en ninguna
+// dirección (igual que goPrev/goNext ya permiten navegar libremente hacia
+// el futuro). Único punto de aritmética de periodos: lo usa tanto el
+// delta de la tarjeta principal (shiftPeriod(..., -1), "el periodo
+// anterior") como la franja de tendencia centrada en el periodo elegido
+// (shiftPeriod(..., ±N)) — antes cada uno tenía su propia función. Basado
+// en índice absoluto (year*unidadesPorAño + unitIndex) para que cruzar
+// varios años de una vez (delta grande) sea aritmética simple, no un
+// bucle. "personalizado" no tiene una unidad natural (el usuario ha
+// elegido un rango arbitrario), así que nunca se llama con esa
+// granularidad — ver canCompare en Hero y el guard de trendPeriods.
+function shiftPeriod(granularity, year, unitIndex, delta) {
   const unitsPerYear = UNITS_PER_YEAR[granularity] || 12;
-  if (granularity === "anual") return { year: year - 1, unitIndex: 0 };
-  if (unitIndex === 0) return { year: year - 1, unitIndex: unitsPerYear - 1 };
-  return { year, unitIndex: unitIndex - 1 };
+  const absolute = year * unitsPerYear + unitIndex + delta;
+  return { year: Math.floor(absolute / unitsPerYear), unitIndex: ((absolute % unitsPerYear) + unitsPerYear) % unitsPerYear };
 }
 
 function groupSum(entries, keyFn, opts = {}) {
@@ -154,8 +160,16 @@ function ExpandableCard({ title, icon: Icon, iconColor = NAVY, defaultOpen = fal
 // expandedKey+renderExpanded son opcionales: solo Por escuela los usa hoy,
 // para expandir el desglose por curso de una escuela al tocarla — la misma
 // exploración progresiva que el resto de la tarjeta, sin una segunda
-// pantalla ni un selector aparte.
-function RankedList({ rows, currencyRows, textColor, emptyLabel = "Sin datos.", expandedKey, onToggle, renderExpanded }) {
+// pantalla ni un selector aparte. badge es opcional: "Por escuela" lo usa
+// para mostrar la evolución vs. el periodo anterior junto al nombre (ver
+// SchoolGrowthBadge) sin que RankedList sepa nada de "qué es crecimiento"
+// — solo pinta lo que le devuelva badge(key), si lo hay. El orden es
+// siempre por importe: mostrarlo todo junto de un vistazo (importe +
+// evolución) es más fácil de entender que un modo de ordenación aparte
+// que hay que activar y descifrar (ver docs/PROPUESTA-home-resumen.md,
+// revisión 2026-08-30 tras feedback explícito de que el toggle anterior
+// no se entendía sin explicación).
+function RankedList({ rows, currencyRows, textColor, emptyLabel = "Sin datos.", expandedKey, onToggle, renderExpanded, badge }) {
   const reduced = usePrefersReducedMotion();
   const sorted = useMemo(() => [...rows].sort((a, b) => magnitude(b.totals) - magnitude(a.totals)), [rows]);
   if (sorted.length === 0) return <p className="px-1 py-1 text-sm text-gray-400">{emptyLabel}</p>;
@@ -171,6 +185,7 @@ function RankedList({ rows, currencyRows, textColor, emptyLabel = "Sin datos.", 
           >
             <span className="flex min-w-0 items-center gap-1.5 truncate font-medium" style={{ color: textColor ? textColor(r.key) : "#334155" }}>
               <span className="truncate">{r.key}</span>
+              {badge && badge(r.key)}
               {onToggle && (
                 <ChevronDown size={13} aria-hidden="true" className="shrink-0 text-gray-300 transition-transform" style={{ transform: expandedKey === r.key ? "rotate(180deg)" : "none" }} />
               )}
@@ -221,51 +236,96 @@ function HeroTotal({ label, period, color, total, previousTotal, canCompare, cur
   );
 }
 
-// Cuántos periodos hacia atrás muestra la tendencia — un vistazo, no un
-// histórico completo (ver TrendBars). 6 cabe cómodo en el ancho de un
-// iPhone con etiquetas legibles debajo de cada barra.
-const TREND_LOOKBACK = 6;
+// Cuántos periodos se muestran a cada lado del elegido — un vistazo, no
+// un histórico completo. 3+elegido+3 = 7 barras, cabe cómodo en el ancho
+// de un iPhone con etiquetas legibles debajo de cada una.
+const TREND_RADIUS = 3;
 
 // Franja de tendencia — 2026-08-29: la tarjeta principal (HeroTotal) ya
 // respondía "¿cómo voy?" comparado con UN periodo anterior, pero nada en
 // la pantalla daba una sensación de trayectoria a más largo plazo (¿llevo
 // varios meses subiendo, bajando, estable?) — la pregunta que de verdad le
 // importa al perfil "obsesionado con los números" antes incluso de
-// profundizar por escuela o curso. Cada barra es además un atajo de
-// navegación (tocarla salta a ese periodo), no solo decoración — mismo
-// criterio que el widget de Home de esta sesión: valor real, no un
-// gráfico por el gusto de tener un gráfico. Las barras usan magnitude()
-// (suma sin convertir divisas) solo para la ALTURA relativa — una
-// aproximación visual ya aceptada en esta misma pantalla (ver
-// topSchoolColorForDay), no una cifra que se muestre como exacta.
-function TrendBars({ periods, color, currentIndex, onSelect }) {
+// profundizar por escuela o curso.
+//
+// Rediseño 2026-08-30 (feedback explícito del usuario): la primera
+// versión mostraba siempre los últimos 6 periodos terminando en el
+// elegido (el elegido, pegado al borde derecho) — funcionaba como
+// atajo de navegación, pero no comunicaba "estoy viendo este periodo y
+// puedo moverme a los lados". Ahora la franja se recalcula CENTRADA en
+// el periodo elegido (TREND_RADIUS a cada lado) cada vez que cambia: al
+// entrar, el periodo actual nace elegido, así que nace centrado; tocar
+// cualquier barra (izquierda = atrás, derecha = adelante, sin límite en
+// ninguna dirección — mismo criterio que goPrev/goNext) la convierte en
+// la nueva elegida y la franja entera se recentra en ella. Sin control
+// adicional (flechas propias): el propio gesto de tocar una barra ya es
+// la navegación, y la posición central de la barra resaltada es la
+// indicación visual de "estoy aquí". La barra que corresponde al periodo
+// real de HOY lleva además un punto bajo su etiqueta cuando no es la
+// elegida, para no perder de vista "dónde estoy ahora" al navegar lejos.
+// Cada barra sigue usando magnitude() (suma sin convertir divisas) solo
+// para la ALTURA relativa — aproximación visual ya aceptada en esta
+// pantalla (ver topSchoolColorForDay), nunca una cifra mostrada como
+// exacta.
+function TrendBars({ periods, color, onSelect }) {
   const max = Math.max(1, ...periods.map((p) => magnitude(p.totals)));
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3">
-      <div className="mb-2 text-xs font-medium text-gray-400">Tendencia — últimos {periods.length} periodos</div>
+      <div className="mb-2 text-xs font-medium text-gray-400">Tendencia — toca un periodo para navegar</div>
       <div className="flex items-end gap-1.5" style={{ height: 56 }}>
-        {periods.map((p, i) => {
-          const h = Math.round(Math.max(4, (magnitude(p.totals) / max) * 44));
-          const isCurrent = i === currentIndex;
-          return (
-            <button
-              key={`${p.year}-${p.unitIndex}`}
-              type="button"
-              onClick={() => onSelect(p)}
-              disabled={isCurrent}
-              aria-label={`Ir a ${p.label}`}
-              aria-current={isCurrent ? "true" : undefined}
-              className="flex min-h-11 flex-1 flex-col items-center justify-end gap-1"
-            >
-              <div className="w-full rounded-sm" style={{ height: h, backgroundColor: isCurrent ? color : `${color}4D` }} />
-              <span className="truncate text-[10px] font-medium" style={{ color: isCurrent ? color : "#9CA3AF" }}>
-                {shortPeriodLabel(p.granularity, p.year, p.unitIndex)}
-              </span>
-            </button>
-          );
-        })}
+        {periods.map((p) => (
+          <button
+            key={`${p.year}-${p.unitIndex}`}
+            type="button"
+            onClick={() => onSelect(p)}
+            disabled={p.isSelected}
+            aria-label={`Ir a ${p.label}${p.isCurrent ? " (periodo actual)" : ""}`}
+            aria-current={p.isSelected ? "true" : undefined}
+            className="flex min-h-11 flex-1 flex-col items-center justify-end gap-1"
+          >
+            <div
+              className="w-full rounded-sm"
+              style={{ height: Math.round(Math.max(4, (magnitude(p.totals) / max) * 44)), backgroundColor: p.isSelected ? color : `${color}4D` }}
+            />
+            <span className="truncate text-[10px] font-medium" style={{ color: p.isSelected ? color : "#9CA3AF" }}>
+              {shortPeriodLabel(p.granularity, p.year, p.unitIndex)}
+            </span>
+            <span className="h-1 w-1 rounded-full" style={{ backgroundColor: color, opacity: p.isCurrent && !p.isSelected ? 1 : 0 }} aria-hidden="true" />
+          </button>
+        ))}
       </div>
     </div>
+  );
+}
+
+// Evolución de cada escuela vs. el mismo periodo anterior — comparativa de
+// ingresos que ya existe a nivel de TOTAL (HeroTotal/TrendBars), ahora
+// también por escuela. Rediseño 2026-08-30 tras feedback explícito: la
+// primera versión era un toggle "Importe/Crecimiento" que reordenaba toda
+// la lista y necesitaba explicarse para entenderse (qué significa cada
+// modo, por qué una fila decía "Sin datos anteriores"...). Sustituido por
+// esto, mucho más simple: SIEMPRE se ve junto al nombre, en la MISMA lista
+// de siempre (ordenada por importe, la pregunta más obvia — "quién me
+// genera más"), reutilizando el mismo icono+porcentaje que ya usa
+// HeroTotal arriba en la misma pantalla — quien ya entendió esa tarjeta
+// entiende esto sin que nadie se lo explique.
+//
+// Sin base real con la que comparar (sin ningún dato de esa escuela el
+// periodo anterior, o mezcla de monedas): silencio, no una etiqueta que
+// justificar. Se descartó explícitamente un "Nuevo" para ese caso (una
+// versión anterior de este mismo cambio lo tenía): "sin datos el periodo
+// anterior" no distingue de forma fiable una escuela realmente nueva de
+// una ya establecida que simplemente no tuvo actividad justo el periodo
+// anterior — afirmar "Nuevo" ahí sería a veces sencillamente falso. Sin
+// una evolución real que mostrar, no hay nada honesto que decir.
+function SchoolGrowthBadge({ growth }) {
+  if (!growth || growth.pct === null) return null;
+  const Icon = growth.pct > 0 ? TrendingUp : growth.pct < 0 ? TrendingDown : Minus;
+  const color = growth.pct > 0 ? GREEN : growth.pct < 0 ? CORAL : "#9CA3AF";
+  return (
+    <span className="inline-flex shrink-0 items-center gap-0.5 text-[10px] font-semibold" style={{ color }}>
+      <Icon size={10} aria-hidden="true" />{growth.pct >= 0 ? "+" : ""}{growth.pct.toFixed(0)}%
+    </span>
   );
 }
 
@@ -341,7 +401,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
 
   // Periodo anterior equivalente, solo para el delta de la tarjeta
   // principal — no alimenta ningún otro desglose de la pantalla.
-  const { year: prevYear, unitIndex: prevUnitIndex } = previousUnit(granularity, year, unitIndex);
+  const { year: prevYear, unitIndex: prevUnitIndex } = shiftPeriod(granularity, year, unitIndex, -1);
   const [prevStart, prevEnd] = periodRange(granularity, prevYear, prevUnitIndex);
   const previousPeriodEntries = useMemo(() => {
     if (granularity === "personalizado") return [];
@@ -370,6 +430,17 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   const globalBySchool = groupSum(periodEntries, (e) => e.school, { withPeople: true });
   const globalByActivity = groupSum(periodEntries, (e) => e.activity, { withPeople: true });
 
+  // "Rango" no tiene periodo anterior natural (mismo motivo por el que
+  // HeroTotal/TrendBars tampoco comparan ahí) — sin indicio de evolución
+  // en "Por escuela" mientras dure, la lista se ve exactamente igual que
+  // siempre (solo importe).
+  const canCompareGrowth = granularity !== "personalizado";
+  const previousBySchool = useMemo(() => groupSum(previousPeriodEntries, (e) => e.school, { withPeople: true }), [previousPeriodEntries]);
+  const schoolGrowthByKey = useMemo(() => {
+    const prevMap = Object.fromEntries(previousBySchool.map((r) => [r.key, r.totals]));
+    return Object.fromEntries(globalBySchool.map((r) => [r.key, comparePeriods(r.totals, prevMap[r.key])]));
+  }, [globalBySchool, previousBySchool]);
+
   // En modo Total, el combinado por escuela/curso no distingue de dónde
   // viene el dinero — se añade aparte el desglose solo de Comisiones para
   // no perder esa cifra dentro del total.
@@ -388,19 +459,27 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
     ? (customFrom && customTo ? `${customFrom} → ${customTo}` : "Elige un rango")
     : periodLabel(granularity, year, unitIndex);
 
-  // Últimos TREND_LOOKBACK periodos (más antiguo primero) de la misma
-  // granularidad, para TrendBars — sin sentido en "Rango" (sin secuencia
-  // natural de "periodo anterior"), igual que el delta de HeroTotal.
+  // Ventana de TREND_RADIUS periodos a cada lado del elegido (más antiguo
+  // primero), para TrendBars — sin límite hacia el futuro, igual que
+  // goNext. Sin sentido en "Rango" (sin secuencia natural de periodos),
+  // igual que el delta de HeroTotal.
   const trendPeriods = useMemo(() => {
     if (granularity === "personalizado") return [];
+    const nowUnit = currentUnitFor(granularity, now);
     const periods = [];
-    let y = year, u = unitIndex;
-    for (let i = 0; i < TREND_LOOKBACK; i++) {
+    for (let offset = -TREND_RADIUS; offset <= TREND_RADIUS; offset++) {
+      const { year: y, unitIndex: u } = shiftPeriod(granularity, year, unitIndex, offset);
       const [start, end] = periodRange(granularity, y, u);
       const entries = withTotals.filter((e) => { const d = new Date(e.date); return d >= start && d <= end; });
-      periods.unshift({ year: y, unitIndex: u, granularity, label: periodLabel(granularity, y, u), totals: groupSum(entries, () => "Total")[0]?.totals || {} });
-      const prev = previousUnit(granularity, y, u);
-      y = prev.year; u = prev.unitIndex;
+      periods.push({
+        year: y,
+        unitIndex: u,
+        granularity,
+        label: periodLabel(granularity, y, u),
+        totals: groupSum(entries, () => "Total")[0]?.totals || {},
+        isSelected: offset === 0,
+        isCurrent: y === now.getFullYear() && u === nowUnit,
+      });
     }
     return periods;
   }, [granularity, year, unitIndex, withTotals]);
@@ -476,7 +555,6 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         <TrendBars
           periods={trendPeriods}
           color={sourceColor}
-          currentIndex={trendPeriods.length - 1}
           onSelect={(p) => { setYear(p.year); setUnitIndex(p.unitIndex); }}
         />
       )}
@@ -491,6 +569,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
           expandedKey={expandedSchool}
           onToggle={(key) => setExpandedSchool((cur) => (cur === key ? null : key))}
           renderExpanded={renderSchoolActivities}
+          badge={canCompareGrowth ? (key) => <SchoolGrowthBadge growth={schoolGrowthByKey[key]} /> : undefined}
         />
       </ExpandableCard>
 

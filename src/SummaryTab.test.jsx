@@ -17,13 +17,13 @@ const LAST_MONTH = new Date(NOW.getFullYear(), NOW.getMonth() - 1, 10).toISOStri
 const CURRENCIES = rowsHook([{ code: "EUR", symbol: "€", is_default: true }]);
 const RATES = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 50, currency: "EUR" }];
 
-function renderSummary({ worklog = [], comisiones = [], colleaguePayments = [] } = {}) {
+function renderSummary({ worklog = [], comisiones = [], colleaguePayments = [], rates = RATES } = {}) {
   render(
     <SummaryTab
       worklog={rowsHook(worklog)}
       comisiones={rowsHook(comisiones)}
       commissionRates={rowsHook(RATES)}
-      rates={rowsHook(RATES)}
+      rates={rowsHook(rates)}
       activities={rowsHook([{ name: "Open Water" }])}
       schools={rowsHook([{ name: "PADI Cozumel" }, { name: "Ihasia" }])}
       currencies={CURRENCIES}
@@ -57,42 +57,77 @@ describe("SummaryTab — tarjeta principal", () => {
   });
 });
 
-// Franja de tendencia (2026-08-29): últimos 6 periodos, cada barra navega
-// al tocarla — cubre el conteo, la navegación real y que se oculta para
-// "Rango" (sin secuencia natural de "periodo anterior").
+// Franja de tendencia — rediseño 2026-08-30 (feedback explícito): antes el
+// periodo elegido era siempre la última barra (a la derecha); ahora nace
+// centrada en el periodo actual y se recentra en cualquier periodo que se
+// elija, hacia atrás o hacia delante, sin límite. 7 barras = 3 a cada lado
+// del elegido + el elegido.
 const MONTHS_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-function monthsAgoLabel(base, n) {
-  const d = new Date(base.getFullYear(), base.getMonth() - n, 1);
+function monthsAwayLabel(base, n) {
+  const d = new Date(base.getFullYear(), base.getMonth() + n, 1);
   return `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
+}
+// Cada barra solo muestra su etiqueta CORTA como texto visible ("Ago"); el
+// nombre completo del periodo ("Agosto 2026") vive en su aria-label — de
+// ahí que estas pruebas naveguen/comprueben por aria-label (getByRole),
+// no por getByText, para no depender de un texto que ni siquiera está en
+// el DOM como nodo de texto propio.
+function trendBar(label) {
+  return screen.getByRole("button", { name: new RegExp(`^Ir a ${label}`) });
 }
 
 describe("SummaryTab — franja de tendencia", () => {
-  it("muestra 6 periodos y tocar la barra más antigua navega hasta ahí", async () => {
-    const user = userEvent.setup();
+  it("nace centrada en el periodo actual (3 barras a cada lado)", () => {
     renderSummary({
       worklog: [{ id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
     });
 
     const bars = screen.getAllByRole("button", { name: /^Ir a / });
-    expect(bars).toHaveLength(6);
+    expect(bars).toHaveLength(7);
 
-    const currentLabel = `${MONTHS_ES[NOW.getMonth()]} ${NOW.getFullYear()}`;
-    expect(screen.getByText(currentLabel)).toBeInTheDocument();
-
-    await user.click(bars[0]);
-
-    expect(screen.getByText(monthsAgoLabel(NOW, 5))).toBeInTheDocument();
-    expect(screen.queryByText(currentLabel)).not.toBeInTheDocument();
+    // El periodo actual es el elegido de entrada: su barra no es pulsable.
+    expect(trendBar(monthsAwayLabel(NOW, 0))).toBeDisabled();
+    // 3 meses antes y 3 meses después también son visibles.
+    expect(trendBar(monthsAwayLabel(NOW, -3))).toBeInTheDocument();
+    expect(trendBar(monthsAwayLabel(NOW, 3))).toBeInTheDocument();
   });
 
-  it("no aparece con granularidad 'Rango' (sin periodo anterior natural)", async () => {
+  it("tocar una barra la centra y permite seguir navegando hacia atrás o hacia delante desde ahí", async () => {
+    const user = userEvent.setup();
+    renderSummary({
+      worklog: [{ id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+    });
+
+    // Tocar la barra más antigua visible (3 meses atrás) la convierte en la elegida.
+    await user.click(trendBar(monthsAwayLabel(NOW, -3)));
+
+    expect(trendBar(monthsAwayLabel(NOW, -3))).toBeDisabled();
+    // La franja se recentra: ahora se ve hasta 3 meses más atrás desde el nuevo centro...
+    expect(trendBar(monthsAwayLabel(NOW, -6))).toBeInTheDocument();
+    // ...y también hacia delante, incluyendo de vuelta el mes que era el actual.
+    expect(trendBar(monthsAwayLabel(NOW, 0))).toBeInTheDocument();
+  });
+
+  it("marca el periodo real de hoy aunque se navegue a otro distinto", async () => {
+    const user = userEvent.setup();
+    renderSummary({
+      worklog: [{ id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+    });
+
+    await user.click(screen.getByRole("button", { name: new RegExp(`^Ir a ${monthsAwayLabel(NOW, -1)}`) }));
+
+    // La barra del mes real de hoy sigue anunciando que es "el periodo actual", aunque ya no sea la elegida.
+    expect(screen.getByRole("button", { name: new RegExp(`^Ir a ${monthsAwayLabel(NOW, 0)} \\(periodo actual\\)$`) })).toBeInTheDocument();
+  });
+
+  it("no aparece con granularidad 'Rango' (sin secuencia natural de periodos)", async () => {
     const user = userEvent.setup();
     renderSummary({});
 
     await user.click(screen.getByRole("button", { name: "Granularidad del periodo" }));
     await user.click(screen.getByRole("option", { name: "Rango" }));
 
-    expect(screen.queryByText(/Tendencia — últimos/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Tendencia — toca un periodo/)).not.toBeInTheDocument();
   });
 });
 
@@ -139,5 +174,69 @@ describe("SummaryTab — tarjetas plegables", () => {
 
     expect(comisionesBtn).toHaveAttribute("aria-expanded", "true");
     expect(within(comisionesBtn.closest("div").parentElement).getAllByText("PADI Cozumel").length).toBeGreaterThan(0);
+  });
+});
+
+// "Por escuela" — evolución vs. el periodo anterior. Rediseño 2026-08-30
+// (feedback explícito: el toggle "Importe/Crecimiento" anterior no se
+// entendía sin explicación). Ahora es solo información añadida junto al
+// nombre, en la misma lista de siempre, ordenada siempre por importe.
+const SCHOOL_RATES = [
+  { school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 50, currency: "EUR" },
+  { school: "Ihasia", activity: "Open Water", payment_type: "Per Person", rate: 50, currency: "EUR" },
+];
+
+describe("SummaryTab — 'Por escuela': evolución vs. el periodo anterior", () => {
+  it("muestra el % de evolución junto al nombre sin necesitar ningún toggle, y el orden sigue siendo por importe", () => {
+    renderSummary({
+      rates: SCHOOL_RATES,
+      worklog: [
+        // Ihasia: 150€ este mes, sin ningún dato el mes anterior -> mayor importe, sin evolución que mostrar.
+        { id: "w1", date: THIS_MONTH, school: "Ihasia", activity: "Open Water", people: 3, status: "Paid" },
+        // PADI Cozumel: 100€ este mes (menor importe) vs. 50€ el mes anterior -> +100%.
+        { id: "w2", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" },
+        { id: "w3", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" },
+      ],
+    });
+
+    // Sin toggle: no hay ningún control de ordenación que aprender.
+    expect(screen.queryByRole("button", { name: "Importe" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Crecimiento" })).not.toBeInTheDocument();
+
+    // Orden por importe de siempre: Ihasia (150€) antes que PADI Cozumel (100€).
+    const rows = screen.getAllByText(/^(Ihasia|PADI Cozumel)$/);
+    expect(rows.map((el) => el.textContent)).toEqual(["Ihasia", "PADI Cozumel"]);
+
+    // La evolución se ve siempre, sin tocar nada: +100% junto a PADI Cozumel.
+    expect(screen.getByText("+100%")).toBeInTheDocument();
+    // Ihasia no tiene mes anterior con el que comparar -> silencio, no una etiqueta que explicar.
+    expect(screen.queryByText(/sin datos/i)).not.toBeInTheDocument();
+  });
+
+  it("una escuela sin ningún dato el periodo anterior no muestra ninguna evolución (silencio, no una suposición)", () => {
+    renderSummary({
+      rates: SCHOOL_RATES,
+      worklog: [{ id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+    });
+
+    expect(screen.getByText("PADI Cozumel")).toBeInTheDocument();
+    expect(screen.queryByText(/%/)).not.toBeInTheDocument();
+  });
+
+  it("no muestra ninguna evolución con granularidad 'Rango' (sin periodo anterior natural)", async () => {
+    const user = userEvent.setup();
+    renderSummary({
+      rates: SCHOOL_RATES,
+      worklog: [
+        { id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" },
+        { id: "w2", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" },
+      ],
+    });
+    expect(screen.getByText("+100%")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Granularidad del periodo" }));
+    await user.click(screen.getByRole("option", { name: "Rango" }));
+
+    expect(screen.queryByText("+100%")).not.toBeInTheDocument();
   });
 });
