@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RatesTab from "./RatesTab";
+import { TEAL, SUN } from "./colors";
 
 // Regresión del incidente: una cuenta recién creada nace con payment_types
 // vacío (clone_setup_dataset no lo siembra — ver docs/ADR/0003) y hasta el
@@ -14,20 +15,20 @@ const rowsHook = (rows) => ({
 });
 const emptyHook = rowsHook([]);
 
-function renderRatesTab({ rates = rowsHook([]) } = {}) {
+function renderRatesTab({ rates = rowsHook([]), commissionRates = emptyHook, activities } = {}) {
   render(
     <RatesTab
       schools={rowsHook([{ name: "PADI Cozumel" }])}
-      activities={rowsHook([{ name: "Open Water" }])}
+      activities={activities || rowsHook([{ name: "Open Water" }])}
       paymentTypes={emptyHook}
       currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])}
       rates={rates}
-      commissionRates={emptyHook}
+      commissionRates={commissionRates}
       worklog={emptyHook}
       comisiones={emptyHook}
     />
   );
-  return { rates };
+  return { rates, commissionRates };
 }
 
 describe("RatesTab — alta de tarifa con catálogo de tipos de pago vacío (cuenta nueva)", () => {
@@ -75,5 +76,63 @@ describe("RatesTab — editar abre la hoja de creación, precargada", () => {
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(rates.updateRow).toHaveBeenCalledWith("r1", expect.objectContaining({ rate: 30 }));
+  });
+});
+
+// Rediseño 2026-08-30: rates y commission_rates (dos tablas reales, sin
+// cambios de modelo) se combinan en UNA sola lista de presentación, con el
+// mismo lenguaje visual que Mi trabajo (acento de color por tipo a la
+// izquierda) en vez de dos pestañas de página separadas.
+describe("RatesTab — lista combinada de Curso y Comisión", () => {
+  it("muestra tarifas de ambos tipos a la vez, con acento de color distinto por tipo", () => {
+    renderRatesTab({
+      activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20 }]),
+      commissionRates: rowsHook([{ id: "c1", school: "PADI Cozumel", activity: "Advanced", payment_type: "Per Person", currency: "EUR", rate: 15 }]),
+    });
+
+    expect(screen.getByText("Open Water")).toBeInTheDocument();
+    expect(screen.getByText("Advanced")).toBeInTheDocument();
+
+    const cursoRow = screen.getByText("Open Water").closest("div.border-l-4");
+    const comisionRow = screen.getByText("Advanced").closest("div.border-l-4");
+    expect(cursoRow).toHaveStyle({ borderColor: TEAL });
+    expect(comisionRow).toHaveStyle({ borderColor: SUN });
+  });
+
+  it("el filtro 'Tipo' (dentro de Filtrar) acota la lista combinada a un solo tipo", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({
+      activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20 }]),
+      commissionRates: rowsHook([{ id: "c1", school: "PADI Cozumel", activity: "Advanced", payment_type: "Per Person", currency: "EUR", rate: 15 }]),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Filtrar" }));
+    await user.click(screen.getByRole("button", { name: "Tipo" }));
+    await user.click(screen.getByRole("option", { name: "Comisión" }));
+
+    expect(screen.queryByText("Open Water")).not.toBeInTheDocument();
+    expect(screen.getByText("Advanced")).toBeInTheDocument();
+  });
+
+  it("cambiar de tipo en la propia hoja de creación guarda en la tabla correcta (Comisión -> commissionRates)", async () => {
+    const user = userEvent.setup();
+    const { commissionRates } = renderRatesTab({
+      activities: rowsHook([{ name: "Open Water" }]),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getByRole("tab", { name: /Comisión/ }));
+    await user.click(screen.getByRole("button", { name: "Escuela" }));
+    await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
+    await user.click(screen.getByRole("button", { name: "Curso" }));
+    await user.click(screen.getByRole("option", { name: "Open Water" }));
+    await user.type(screen.getByRole("textbox", { name: "Tarifa" }), "10");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+
+    expect(commissionRates.insertRow).toHaveBeenCalledWith(
+      expect.objectContaining({ school: "PADI Cozumel", activity: "Open Water", rate: 10 })
+    );
   });
 });

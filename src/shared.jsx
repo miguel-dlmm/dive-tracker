@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
 import { createPortal } from "react-dom";
 import * as Icons from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
 import { TEAL, SUN, CORAL, GREEN } from "./colors";
-import { panelVariants, usePrefersReducedMotion } from "./motion";
+import { DURATION, panelVariants, sheetVariants, usePrefersReducedMotion } from "./motion";
 
 export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
 
@@ -94,6 +94,68 @@ export function AppLoading({ iconName = "Waves", color = TEAL, size = 40, label 
         </div>
       </div>
     </div>
+  );
+}
+
+// =================================================================
+// Hoja inferior con motion — extraída de MovementSheet.jsx (2026-08-30):
+// esa hoja fue la primera en tener animación real (deslizar desde abajo)
+// y arrastrar hacia abajo para cerrar, pero cada pantalla con su propia
+// hoja de creación/edición (Tarifas, los 5 catálogos de Configuración)
+// había quedado con un `<div>` fijo sin animar — la misma estructura
+// visual, sin la interacción. Este componente es exactamente esa
+// estructura, reutilizable: fondo + panel con `sheetVariants` (mismos
+// tokens de motion de toda la app) + tirador que inicia el arrastre
+// (dragListener={false} en el panel para no competir con el scroll o la
+// selección de texto dentro del formulario). El contenido (cabecera,
+// campos, botón de guardar) sigue siendo responsabilidad de quien la usa
+// — este componente no impone estructura interna, solo el contenedor.
+// className, opcional: para casos que necesitan un z-index más alto
+// (p. ej. una hoja que puede abrirse sobre otra pantalla ya con overlays).
+export function Sheet({ open, onClose, children, className = "", zIndexClass = "z-40" }) {
+  const reducedMotion = usePrefersReducedMotion();
+  const dragControls = useDragControls();
+  // Bloquea el scroll del fondo mientras la hoja está abierta — vive aquí,
+  // no en cada pantalla que la usa, para que nadie pueda olvidarlo (antes
+  // cada `<div className="fixed inset-0">` suelto dependía de que su
+  // pantalla llamara aparte a useBodyScrollLock).
+  useBodyScrollLock(open);
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className={`fixed inset-0 ${zIndexClass} flex items-end justify-center bg-black/25`}
+          onClick={onClose}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, transition: { duration: reducedMotion ? 0.01 : DURATION.sm } }}
+          exit={{ opacity: 0, transition: { duration: reducedMotion ? 0.01 : DURATION.sm } }}
+        >
+          <motion.div
+            className={`flex max-h-[85dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-xl bg-white shadow-xl ${className}`}
+            variants={sheetVariants(reducedMotion)}
+            initial="initial" animate="animate" exit="exit"
+            drag="y"
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.6 }}
+            onDragEnd={(_, info) => { if (info.offset.y > 100 || info.velocity.y > 500) onClose?.(); }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              onPointerDown={(e) => dragControls.start(e)}
+              className="flex shrink-0 touch-none cursor-grab justify-center py-2.5 active:cursor-grabbing"
+              aria-hidden="true"
+            >
+              <span className="h-1.5 w-10 rounded-full bg-gray-300" />
+            </div>
+            <div className="overflow-y-auto px-4 pt-1" style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}>
+              {children}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

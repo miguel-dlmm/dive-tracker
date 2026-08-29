@@ -495,6 +495,27 @@ async function main() {
   } else {
     console.log("  (sin tarifas existentes para probar el RowMenu — omitido)");
   }
+
+  console.log("→ Configuración: Tarifas — 'Nueva tarifa' con selector de tipo integrado (rediseño 2026-08-30)");
+  await page.getByRole("button", { name: "Nueva tarifa" }).tap();
+  await page.waitForTimeout(250);
+  await shot(page, "configuracion-tarifas-nueva-hoja");
+  const cursoTabVisible = await page.getByRole("tab", { name: "Curso" }).isVisible().catch(() => false);
+  const comisionTab = page.getByRole("tab", { name: "Comisión" });
+  if (!cursoTabVisible || !(await comisionTab.isVisible().catch(() => false))) {
+    consoleIssues.push("[tarifas] La hoja de 'Nueva tarifa' no muestra el selector de tipo (Curso/Comisión) integrado.");
+  } else {
+    await comisionTab.tap();
+    await page.waitForTimeout(200);
+    const comisionTitleVisible = await page.getByText("Nueva tarifa de Comisión").isVisible().catch(() => false);
+    if (!comisionTitleVisible) {
+      consoleIssues.push("[tarifas] Cambiar a la pestaña 'Comisión' en 'Nueva tarifa' no actualizó el título de la hoja.");
+    }
+    await shot(page, "configuracion-tarifas-nueva-hoja-comision");
+  }
+  await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(150);
+
   await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
   await page.waitForTimeout(200);
 
