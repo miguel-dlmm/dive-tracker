@@ -1027,18 +1027,56 @@ test dependía del orden entre calendario y widget), build correcto,
 `mobile-check` sin errores — captura de Home revisada visualmente,
 confirma el calendario de vuelta en 2º lugar.
 
+## Bloque 8 — Rediseño de gestión de usuarios en Configuración
+
+Encargo explícito tras el diagnóstico del bug de permisos: la tabla de
+Usuarios (9 columnas, scroll lateral en móvil) se sustituye por lista +
+hoja de detalle — el mismo patrón que Escuelas/Cursos/Tarifas.
+
+**Lista** (`UserListRow`): solo nickname (identificador), `StatusBadge`
+de solo lectura, nombre/email como subtítulo y fecha de alta. Tocar la
+fila abre el detalle — ninguna acción vive ya en la fila.
+
+**Detalle** (`UserDetailSheet`): la misma hoja inferior que el resto de
+la app, abierta al tocar la fila. Muestra info completa (nombre, email,
+alta) y la gestión completa (Estado con toggle, Admin editable,
+Superadmin de solo lectura, "Eliminar usuario"). `openUserId` (no un
+snapshot) se resuelve contra `rows` en cada render — el detalle nunca
+muestra datos obsoletos tras un `reload()`; eliminar cierra la hoja
+sola (la cuenta ya no existe).
+
+**"Fecha de baja" pedida explícitamente — NO implementada:** no existe
+ninguna columna que la registre (`banned_until` guarda cuándo terminaría
+el baneo, no cuándo empezó). Requiere una migración real
+(`profiles.deactivated_at`) — documentada como propuesta en
+`docs/ADR/0014-usuarios-lista-y-detalle.md` y añadida a
+`docs/BACKLOG.md`, no implementada de paso dentro de un rediseño de UI,
+siguiendo la regla del proyecto de proponer el plan de migración antes
+de tocar el esquema.
+
+**Validado:** 262/262 tests (+2 nuevos/reescritos: el flujo completo
+desactivar/eliminar ahora pasa por abrir la fila primero, más un test de
+que la hoja se cierra sola tras eliminar), build correcto, `mobile-check`
+sin errores — validado visualmente elevando temporalmente `is_admin`
+(nunca `is_superadmin`) de la cuenta dev-bypass para poder ver el grupo
+Administración, revertido inmediatamente después: lista sin scroll
+lateral y hoja de detalle con info + roles de solo lectura (cuenta admin,
+no superadmin) confirmadas visualmente, revertido el `is_admin` a `false`
+al terminar.
+
 ## Siguiente paso
 
-Bloques 1, 2, 3, 5 y 7 cerrados (release preparada, pendiente de
-aprobación). Trabajo restante del encargo, por prioridad: bug de
-tarifa inline (ya investigado a fondo y no reproducido en la segunda
-tanda de esta sesión — revisar solo si surge algo nuevo que probar, sin
-workaround especulativo), Qué hay de nuevo (ya tiene swipe + contenido
-sin solapar de la segunda tanda; el encargo de esta tercera tanda pide
-lo mismo casi palabra por palabra — ya satisfecho, capturas reales
-siguen descartadas por el mismo motivo ya documentado en
-`WhatsNew.jsx`: cuenta dev-bypass y datos de prueba visibles), Ayuda
-(ya reordenada esta mañana con el mismo encargo — ya satisfecho).
+Bloques 1, 2, 3, 5, 7 y 8 cerrados (release preparada, pendiente de
+aprobación). Trabajo restante del encargo original de esta tanda, por
+prioridad: bug de tarifa inline (ya investigado a fondo y no
+reproducido en la segunda tanda de esta sesión — revisar solo si surge
+algo nuevo que probar, sin workaround especulativo), Qué hay de nuevo
+(ya tiene swipe + contenido sin solapar de la segunda tanda — ya
+satisfecho), Ayuda (ya reordenada esta mañana — ya satisfecho).
+
+Pendiente de decisión del usuario (no técnica): aprobar o no la
+migración de `profiles.deactivated_at` para la "fecha de baja" de
+Usuarios (ver `docs/ADR/0014` y `docs/BACKLOG.md`).
 
 ## Interrupción — bug de usuarios reportado de nuevo, esta vez resuelto de verdad
 

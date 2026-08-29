@@ -505,6 +505,22 @@ async function main() {
     });
     await page.waitForTimeout(200);
     await shot(page, "configuracion-usuarios");
+
+    console.log("→ Configuración: Usuarios — tocar una fila abre la hoja de detalle (lista + detalle, sin tabla de scroll lateral)");
+    const usersListVisible = await page.getByRole("main").locator(".divide-y.divide-gray-100.overflow-hidden.rounded-lg").first().isVisible().catch(() => false);
+    if (usersListVisible) {
+      const firstRow = page.getByRole("main").locator(".divide-y.divide-gray-100.overflow-hidden.rounded-lg").first().getByRole("button").first();
+      if (await firstRow.isVisible().catch(() => false)) {
+        await firstRow.tap();
+        await page.waitForTimeout(200);
+        await shot(page, "configuracion-usuarios-detalle");
+        await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+        await page.waitForTimeout(150);
+      } else {
+        console.log("  (sin usuarios en la lista para abrir el detalle — omitido)");
+      }
+    }
+
     await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
     await page.waitForTimeout(200);
   } else {

@@ -149,17 +149,16 @@ describe("ConfigTab — Usuarios: desactivar y eliminar", () => {
     await waitFor(() => expect(screen.getByText("ana")).toBeInTheDocument());
   }
 
-  it("muestra 'Activa' para una cuenta sin banned_until, leído de /api/list-user-status", async () => {
+  it("muestra 'Activa' en la fila para una cuenta sin banned_until, leído de /api/list-user-status", async () => {
     const user = userEvent.setup();
     global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true } }) });
 
     await openUsuarios(user);
 
-    await waitFor(() => expect(screen.getByRole("button", { name: "Desactivar usuario" })).toBeInTheDocument());
-    expect(within(screen.getByRole("button", { name: "Desactivar usuario" })).getByText("Activa")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Activa")).toBeInTheDocument());
   });
 
-  it("desactivar pide confirmación y llama a /api/set-user-active con active:false", async () => {
+  it("desactivar (desde la hoja de detalle) pide confirmación y llama a /api/set-user-active con active:false", async () => {
     const user = userEvent.setup();
     global.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true } }) }) // list-user-status inicial
@@ -167,8 +166,10 @@ describe("ConfigTab — Usuarios: desactivar y eliminar", () => {
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": false } }) }); // list-user-status tras reload
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByRole("button", { name: "Desactivar usuario" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Activa")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: /^ana/ })); // abre la hoja de detalle
 
+    await waitFor(() => expect(screen.getByRole("button", { name: "Desactivar usuario" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: "Desactivar usuario" }));
     expect(screen.getByText("Desactivar usuario", { selector: "h3" })).toBeInTheDocument();
     expect(screen.getByText(/dejará de poder iniciar sesión/)).toBeInTheDocument();
@@ -180,16 +181,18 @@ describe("ConfigTab — Usuarios: desactivar y eliminar", () => {
     })));
   });
 
-  it("eliminar pide confirmación danger y llama a /api/delete-user", async () => {
+  it("eliminar (desde la hoja de detalle) pide confirmación danger y llama a /api/delete-user", async () => {
     const user = userEvent.setup();
     global.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true } }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) });
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByRole("button", { name: "Eliminar usuario ana" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Activa")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: /^ana/ })); // abre la hoja de detalle
 
-    await user.click(screen.getByRole("button", { name: "Eliminar usuario ana" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Eliminar usuario" })).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Eliminar usuario" }));
     expect(screen.getByText(/Si solo quieres revocarle el acceso/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Eliminar", exact: true }));
@@ -197,5 +200,26 @@ describe("ConfigTab — Usuarios: desactivar y eliminar", () => {
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/delete-user", expect.objectContaining({
       body: JSON.stringify({ target_user_id: "target-1" }),
     })));
+  });
+
+  it("la hoja de detalle se cierra sola tras eliminar correctamente (la cuenta ya no existe)", async () => {
+    const user = userEvent.setup();
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true } }) }) // list-user-status inicial
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }) // delete-user
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: {} }) }); // list-user-status tras reload
+    // admin_list_profiles(): la carga inicial trae a "ana"; tras eliminarla,
+    // el reload ya no la incluye — orden explícito, no depende del
+    // mockResolvedValue persistente de beforeEach.
+    supabase.rpc
+      .mockResolvedValueOnce({ data: [TARGET_PROFILE_ROW], error: null })
+      .mockResolvedValueOnce({ data: [], error: null });
+
+    await openUsuarios(user);
+    await user.click(screen.getByRole("button", { name: /^ana/ }));
+    await user.click(screen.getByRole("button", { name: "Eliminar usuario" }));
+    await user.click(screen.getByRole("button", { name: "Eliminar", exact: true }));
+
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Eliminar usuario" })).not.toBeInTheDocument());
   });
 });
