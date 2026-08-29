@@ -40,13 +40,13 @@ export const HELP_CATEGORIES = [
     id: "bienvenida",
     icon: "Sparkles",
     label: "Primeros pasos",
-    description: "Qué es Ocean Pulse y cómo se organiza",
+    description: "Qué es Ocean Flow y cómo se organiza",
     articles: [
       {
         id: "primeros-pasos",
-        title: "Empezar a usar Ocean Pulse",
+        title: "Empezar a usar Ocean Flow",
         summary: "Una vuelta rápida por las tres pantallas principales antes de registrar tu primer movimiento.",
-        whatYouCanDo: "Ocean Pulse te ayuda a llevar el control de tus ingresos como instructor freelance: las clases que impartes, las comisiones que generas por clientes referidos y los ajustes económicos con otros instructores — todo bajo un mismo concepto, \"movimiento\".",
+        whatYouCanDo: "Ocean Flow te ayuda a llevar el control de tus ingresos como instructor freelance: las clases que impartes, las comisiones que generas por clientes referidos y los ajustes económicos con otros instructores — todo bajo un mismo concepto, \"movimiento\".",
         whenToUseIt: "La primera vez que abres la app, o cuando quieras recordar para qué sirve cada pantalla.",
         steps: [
           "Home: cuánto tienes pendiente de cobrar, un widget con tus deudas más antiguas, el calendario del mes y un acceso directo para crear un movimiento.",

@@ -38,10 +38,7 @@ export default function LoginScreen({ signIn, accountBanned = false }) {
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-2">
           <Waves size={28} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
-          <div className="text-center leading-tight">
-            <h1 className="text-lg font-bold tracking-tight" style={{ color: NAVY }}>Ocean Pulse</h1>
-            <p className="text-[11px] font-medium text-gray-400">by Ocean Flow</p>
-          </div>
+          <h1 className="text-lg font-bold tracking-tight" style={{ color: NAVY }}>Ocean Flow</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">

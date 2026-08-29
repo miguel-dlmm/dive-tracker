@@ -99,8 +99,7 @@ export default function CreatePasswordScreen({ onSubmit }) {
           </div>
           <div className="text-center leading-tight">
             <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>Primer acceso</p>
-            <h1 className="mt-1 text-lg font-bold tracking-tight" style={{ color: NAVY }}>¡Bienvenido a Ocean Pulse!</h1>
-            <p className="mt-0.5 text-[11px] font-medium text-gray-400">by Ocean Flow</p>
+            <h1 className="mt-1 text-lg font-bold tracking-tight" style={{ color: NAVY }}>¡Bienvenido a Ocean Flow!</h1>
           </div>
         </div>
 
@@ -148,7 +147,7 @@ export default function CreatePasswordScreen({ onSubmit }) {
           </button>
 
           <p className="text-center text-[11px] text-gray-400">
-            Al guardar, entrarás directamente en Ocean Pulse.
+            Al guardar, entrarás directamente en Ocean Flow.
           </p>
         </form>
       </div>

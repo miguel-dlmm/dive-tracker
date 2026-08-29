@@ -68,7 +68,23 @@ async function main() {
   console.log(`\nChromium (emulación iPhone 14 Pro Max) · ${BASE_URL}\n`);
 
   await page.goto(BASE_URL);
-  await page.waitForSelector("text=Mi trabajo", { timeout: 15000 });
+  await Promise.race([
+    page.waitForSelector("text=Mi trabajo", { timeout: 15000 }),
+    page.waitForSelector("text=Privacidad y condiciones de uso", { timeout: 15000 }),
+  ]);
+
+  // Reaceptación legal (AcceptLegalScreen) — aparece si alguna versión de
+  // Términos/Privacidad cambió desde la última vez que esta cuenta de
+  // prueba aceptó (ver docs/legal, VERSION). No es un estado "normal" del
+  // recorrido, pero sí uno real y esperable tras cualquier cambio de
+  // contenido legal — se resuelve aquí para no bloquear el resto.
+  if (await page.getByText("Privacidad y condiciones de uso").isVisible().catch(() => false)) {
+    console.log("→ Reaceptación legal pendiente (nueva versión de Términos/Privacidad) — aceptar y continuar");
+    await shot(page, "reaceptacion-legal");
+    await page.getByRole("checkbox").tap();
+    await page.getByRole("button", { name: "Continuar" }).tap();
+    await page.waitForSelector("text=Mi trabajo", { timeout: 15000 });
+  }
 
   console.log("→ 'Qué hay de nuevo': recorrer las diapositivas y cerrar con 'Empezar'");
   if (await page.getByRole("dialog").isVisible().catch(() => false)) {

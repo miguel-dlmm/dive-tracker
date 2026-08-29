@@ -1,15 +1,19 @@
-# Ocean Pulse — Visión de producto
+# Ocean Flow — Visión de producto
 
 > Documento vivo. Se actualiza cuando cambia una decisión de producto, no
 > solo cuando alguien se acuerda. Si algo aquí ya no es cierto, es un bug
 > de documentación tan real como uno de código.
 
-## Qué es Ocean Pulse hoy
+## Qué es Ocean Flow hoy
 
 Una herramienta profesional para que **un instructor de buceo freelance**
 lleve el control de su actividad económica: qué ha impartido, qué le deben,
 qué ha ganado, cómo se compara entre escuelas/actividades, y cuáles son sus
-tarifas. Producto de la marca personal "Ocean Flow".
+tarifas.
+
+> Nombre: hasta el 2026-08-30 el producto se llamaba "Ocean Pulse", "de la
+> marca personal Ocean Flow". Se renombró a un único nombre, "Ocean Flow",
+> en toda la interfaz visible al usuario — ver CHANGELOG.md.
 
 No es (todavía) una herramienta para que un centro de buceo gestione a
 varios instructores. Existe infraestructura de autenticación, roles y
@@ -20,12 +24,12 @@ equipos o permisos entre usuarios de una misma cuenta.
 
 ## Qué problemas resuelve
 
-Antes de Ocean Pulse, un instructor freelance lleva esto a mano (notas,
+Antes de Ocean Flow, un instructor freelance lleva esto a mano (notas,
 Excel, la cabeza): calcular tarifas por escuela/actividad cada vez,
 saber cuánto le debe cada escuela y si ya se lo han pagado, saber cuánto
 ha ganado en un periodo, y llevar la cuenta de quién le debe o a quién
 le debe él a un compañero por cubrirse turnos o referirse clientes.
-Ocean Pulse resuelve estos cuatro problemas con captura rápida (registrar
+Ocean Flow resuelve estos cuatro problemas con captura rápida (registrar
 en segundos, sin repetir cálculos) y una fuente única para "cuánto" y
 "quién debe qué".
 

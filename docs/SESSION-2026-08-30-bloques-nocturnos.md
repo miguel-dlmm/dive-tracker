@@ -93,6 +93,62 @@ correcta), build correcto, `mobile-check` sin errores (+3 pasos nuevos:
 hoja de creación con selector de tipo, cambio a Comisión, título
 actualizado) — capturas revisadas visualmente.
 
+### Bloque 2 — Marca "Ocean Flow"
+
+Auditoría completa (`grep` de "Ocean Pulse"/"by Ocean Flow" en todo el
+árbol, no solo `src/`) — encontró 12 archivos con el nombre visible al
+usuario: cabecera global, login, primer acceso, aceptación legal, Ayuda
+("Primeros pasos"), Términos de Uso, Política de Privacidad, metadata de
+`index.html` (title/description/OG/Twitter/JSON-LD), `manifest.json`,
+`robots.txt` y **el email de bienvenida real** (`server/email/
+welcomeEmailTemplate.js` — el más fácil de pasar por alto por no vivir en
+`src/`).
+
+**Decisión de fusión, no solo sustitución de texto:** antes el patrón era
+"Ocean Pulse" (producto) + "by Ocean Flow" (marca personal, subtítulo
+pequeño) en 4 pantallas distintas (cabecera, login, primer acceso, email
+de bienvenida) y en la de aceptación legal. Con un único nombre, esa
+segunda línea sería literalmente el mismo texto repetido dos veces — se
+retira en las 5, no se sustituye por "Ocean Flow"/"Ocean Flow" apilado.
+
+**Legal, no solo texto de marketing:** Términos de Uso y Política de
+Privacidad mencionaban "Ocean Pulse" como el producto y "Ocean Flow" como
+la entidad que lo opera/posee. "El diseño, código y marca de Ocean Pulse
+pertenecen a Ocean Flow" se reescribe (no un simple find-replace, habría
+quedado circular: "...de Ocean Flow pertenecen a Ocean Flow") a "...de
+Ocean Flow son propiedad de su operador". `VERSION` de ambos documentos
+sube de `v1` a `v2` — cambio de contenido real, dispara la reaceptación
+ya existente (`pendingLegalConsents`, `useSession.js`) para cualquier
+cuenta que ya hubiera aceptado la v1, incluida la cuenta de pruebas.
+
+**Efecto colateral encontrado y corregido en el camino:**
+`mobile-check.mjs` asumía que tras el login se entra directo a la app —
+con la reaceptación legal disparada por el bump de versión, se quedaba
+esperando "Mi trabajo" indefinidamente. Añadido un paso que detecta la
+pantalla de reaceptación (si aparece) y la resuelve antes de continuar —
+comportamiento real que cualquier usuario con datos previos va a ver, no
+un problema del script.
+
+**Qué NO se tocó, deliberadamente:** claves de `localStorage`/
+`sessionStorage` (`oceanpulse:*` — son recurso técnico interno, cambiarlas
+huérfanaría preferencias ya guardadas de usuarios reales, ver CLAUDE.md
+"no renombres... recurso técnico salvo que sea necesario"), `package.json`
+(nombre de paquete npm), historial de `CHANGELOG.md` anterior a esta
+sesión y ADRs/sesiones previas (documentan lo que era cierto en su
+momento). `CLAUDE.md`/`docs/PRODUCT.md`/`docs/BACKLOG.md` sí se actualizan
+(describen el estado ACTUAL del producto, no historial) con una nota
+explícita de cuándo y por qué cambió el nombre.
+
+**Validado:** 314/314 tests (+1 assertion actualizada en `App.test.jsx`),
+build correcto (verificado además con `grep` sobre `dist/`: cero
+apariciones de "Ocean Pulse", "Ocean Flow" presente donde se espera),
+`mobile-check` sin errores tras el fix del paso de reaceptación legal —
+capturas revisadas visualmente (cabecera, login, pantalla de reaceptación
+legal, con la marca ya coherente).
+
+**Commit:** `feat(marca): renombrar el producto a "Ocean Flow" en toda la
+interfaz visible`.
+
 **Commit:** `feat(tarifas): rediseño completo — lista combinada, acento
 por tipo y hoja con motion` (+ `Sheet` extraído en el mismo commit, es
 la base que lo hace posible).

@@ -251,12 +251,14 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
               <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{SECONDARY_TITLES[tab]}</h1>
             </button>
           ) : (
+            // 2026-08-30: la marca se unifica en "Ocean Flow" — antes
+            // "Ocean Pulse" (el producto) + "by Ocean Flow" (la marca
+            // personal) como subtítulo aparte; con un único nombre, esa
+            // segunda línea sería literalmente repetir el mismo texto dos
+            // veces, así que desaparece en vez de quedar redundante.
             <button onClick={() => changeTab("home")} className="-m-2 flex min-h-11 items-center gap-2.5 p-2" aria-label="Ir a Home">
               <Waves size={20} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
-              <div className="leading-tight text-left">
-                <h1 className="text-[15px] font-bold tracking-tight" style={{ color: NAVY }}>Ocean Pulse</h1>
-                <p className="text-[10.5px] font-medium text-gray-400">by Ocean Flow</p>
-              </div>
+              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: NAVY }}>Ocean Flow</h1>
             </button>
           )}
           <div className="flex items-center gap-1">

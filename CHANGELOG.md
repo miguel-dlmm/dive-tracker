@@ -1,6 +1,6 @@
 # Changelog
 
-Registro de cambios relevantes de Ocean Pulse.
+Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
@@ -60,6 +60,12 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   lateralmente (swipe).
 
 ### Changed
+- **Marca**: el producto se renombra de "Ocean Pulse" a "Ocean Flow" en
+  toda la interfaz visible (navegación, login, onboarding, ayuda,
+  metadata) — antes "Ocean Pulse" era el producto y "Ocean Flow" la
+  marca personal que lo firmaba ("by Ocean Flow"); ahora es un único
+  nombre. Términos de Uso y Política de Privacidad actualizados con el
+  nuevo nombre (VERSION v1 → v2 en ambos, fuerza la reaceptación).
 - "Actividad" pasa a mostrarse como "Curso" en toda la interfaz
   (Configuración, Tarifas, Home, Resumen) — solo texto visible, el
   modelo de datos no cambia.
