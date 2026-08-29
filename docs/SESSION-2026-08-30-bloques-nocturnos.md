@@ -729,3 +729,75 @@ específicos de SEO — se retoman sobre `feature/global-redesign` al
 terminar el bloque 18, no sobre `feature/seo`.
 
 **Commit:** ninguno (creación de rama, sin cambios de archivos).
+
+### Bloque 18 — MVP SEO (rama `feature/seo`)
+
+Encargo: revisión práctica de SEO moderno (Google, otros buscadores,
+sistemas de IA, redes sociales, metadata, estructura, accesibilidad,
+indexabilidad, rendimiento, Open Graph, Twitter/X, canonical, robots,
+sitemap, datos estructurados, títulos, descripciones, encabezados,
+URLs, imágenes, favicon/manifest), contrastada contra documentación
+oficial, MVP sólido sin proyecto gigante, saltar lo que no tenga
+impacto real.
+
+**Primer hallazgo, decisivo para todo lo demás:** `index.html` ya
+declara `<meta name="robots" content="noindex, nofollow">` y existía
+(a nivel raíz del repo, ver bug abajo) un `robots.txt` con
+`Disallow: /` — ambos con un comentario explícito ya en el código:
+Ocean Flow es una herramienta personal/privada con datos de
+facturación, no contenido pensado para aparecer en buscadores (alta
+por invitación/enlace de activación, sin registro público — ver
+`docs/PRODUCT.md`, `docs/ADR/0015-modelo-activacion-usuarios.md`).
+**Esto cambia el objetivo de todo el bloque**: no se trata de optimizar
+para que Google encuentre y posicione la app (eso contradiría una
+decisión de producto ya tomada y correcta), sino de que lo que SÍ tiene
+valor con independencia de la indexación — vista previa al compartir un
+enlace, instalabilidad como PWA, higiene técnica — funcione de verdad.
+Añadir un `sitemap.xml` o pasar a `index, follow` habría sido ir contra
+esa decisión sin que nadie lo haya pedido — ni la guía de Google Search
+Central recomienda enviar por sitemap URLs marcadas `noindex` (señal
+contradictoria).
+
+**Bug real encontrado y corregido:** `robots.txt` y `manifest.json`
+vivían en la RAÍZ del repo, no en `public/` — Vite solo copia a `dist/`
+lo que está dentro de `publicDir` (`public/` por defecto), así que
+ambos archivos daban 404 en producción a pesar de estar "ya
+configurados". Confirmado inspeccionando `dist/` antes y después:
+antes, ninguno de los dos aparecía junto a `index.html`; después de
+`git mv` a `public/`, ambos aparecen. Esto rompía en silencio dos
+cosas: el candado de `robots.txt` (el `noindex` del `<meta>` seguía
+funcionando porque va inline en el HTML, pero perdía su segunda capa) y
+la instalabilidad como PWA (`manifest.json` es lo que un navegador
+necesita para ofrecer "Añadir a pantalla de inicio").
+
+**Encontrado y NO tocado, documentado en `docs/BACKLOG.md`:**
+`public/favicon.svg`/`public/icons.svg` no los referencia nada del
+código — un icono morado genérico y un sprite de iconos de redes
+sociales/documentación que no coinciden con la marca de Ocean Flow.
+Todo apunta a sobras de la plantilla original del proyecto. No se han
+conectado a `index.html` (que sigue señalando a `/icon.svg`,
+`/icon-192.png`, `/icon-512.png`, `/og-image.png` — placeholders ya
+documentados en `CLAUDE.md`, a la espera del logo oficial): conectar un
+icono no verificado como el real de la marca sería peor que dejarlo
+pendiente.
+
+**Revisado y sin cambios, por no aportar nada real hoy:**
+- Datos estructurados (`SoftwareApplication`, JSON-LD): ya presentes y
+  correctos.
+- `<html lang="es">`, Open Graph, Twitter/X card: textos ya correctos —
+  las imágenes (`og-image.png`) comparten el mismo pendiente que los
+  iconos.
+- Canonical: sin URLs alternativas ni parámetros que desambiguar (SPA
+  de una sola vista lógica, sin router) — no aporta nada.
+- Accesibilidad semántica: ya cubierta de forma transversal por las
+  convenciones existentes del proyecto (`aria-label`, roles, objetivo
+  táctil — regla 7 de `CLAUDE.md`), no es un hallazgo nuevo de este
+  bloque.
+
+**Validación:** suite completa **328/328**. Build: `dist/robots.txt` y
+`dist/manifest.json` confirmados presentes tras el fix (antes,
+ausentes). Sin cambios de UI — `mobile-check` no aporta nada aquí, no
+ejecutado para este bloque.
+
+**Commit (en `feature/seo`):** `fix(seo): mover robots.txt y
+manifest.json a public/ para que se publiquen de verdad en build`.

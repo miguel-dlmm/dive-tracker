@@ -31,6 +31,19 @@ ADR en `docs/ADR/` antes de implementarse, esté en "Ahora" o en "Después".
 - **Conclusión de la investigación:** no se ha encontrado ninguna causa en Chromium con datos realistas (11 tarifas, 5 registros de trabajo en la cuenta demo) ni interactuando con el selector de moneda. Esto no descarta el bug — lo acota: es coherente con ser específico del motor WebKit/Safari real o de la interacción con el teclado virtual de iOS (`visualViewport`), la misma clase de limitación que este proyecto ya tiene documentada y confirmada como ciega para las herramientas disponibles aquí (ver CLAUDE.md, "8. Verificación UX/UI" — WebKit cuelga en este entorno concreto, motivo por el que `mobile-check` usa Chromium). No se ha aplicado ningún workaround ni timeout — por instrucción explícita del usuario, y porque hacerlo sin causa confirmada arriesgaría enmascarar el problema real.
 - **Siguiente paso real:** reproducir en un iPhone físico (Safari real), idealmente con las DevTools remotas de Safari conectadas para capturar un perfil de rendimiento en el momento exacto del bloqueo — es la única vía de diagnóstico que falta por agotar.
 
+**Nota — assets huérfanos de una plantilla anterior, sin usar** (encontrada
+el 2026-08-30, auditoría SEO/MVP — bloque 18): `public/favicon.svg` y
+`public/icons.svg` no los referencia nada en `index.html` ni en `src/`
+(confirmado por grep) — son un icono morado genérico y un sprite de
+iconos de redes sociales/documentación (`github-icon`, `bluesky-icon`,
+`discord-icon`...) que no coinciden con la paleta de marca de Ocean Flow
+(`NAVY`/`TEAL`/`CORAL`/`GREEN`/`SUN`) ni con nada de este producto —
+todo apunta a que son sobras de la plantilla/scaffold original del
+proyecto. No se han tocado (podrían servir de referencia o no, no hay
+certeza suficiente para borrar sin confirmar) — dejar aquí registrado
+para que una sesión futura no los confunda con el icono real de Ocean
+Flow ni los conecte a `index.html` por error.
+
 **Nota — "Ajuste de curso" y el campo de nombre de compañero** (evaluado el 2026-08-29, a petición del usuario, sin implementar nada nuevo): el campo `colleague_name` usa un `<input>` con `<datalist>` nativo del navegador (sugerencias de nombres ya usados en esa escuela, `colleagueSuggestions` en `MovementSheet.jsx`) — no el componente `SearchSelect`/panel flotante que usa el resto de la app. Revisado: no influye en el rendimiento (recomputa un array pequeño, sin listeners propios, mecanismo nativo del navegador) y es un flujo completamente distinto del de la tarifa inline (no comparten código). El "nunca funcionó bien" percibido es coherente con una limitación conocida y real de `<datalist>` en iOS Safari (soporte históricamente pobre/inconsistente de las sugerencias en móvil), no con un bug de esta app. No se propone ninguna funcionalidad nueva de explotación de datos por compañero (fuera de alcance, confirmado por el usuario) — si algún día se quiere una búsqueda con mejor comportamiento en iOS, sustituir el `<datalist>` por el `SearchSelect` ya existente sería la vía consistente con el resto de la app, pero no hay evidencia de que merezca prioridad hoy.
 
 ## Después
