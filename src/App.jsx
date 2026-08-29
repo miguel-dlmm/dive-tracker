@@ -118,6 +118,27 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   // activación recién completada siempre debe abrir en Ayuda, prioridad
   // sobre cualquier posición guardada de una sesión anterior.
   const [tab, setTab] = useState(() => (initialTab !== "home" ? initialTab : (readStoredNav()?.tab || initialTab)));
+  // Único punto de cambio de pestaña disparado por un toque del usuario
+  // (todo el resto de este archivo llama a changeTab, nunca a setTab
+  // directamente, salvo el propio useState de arriba). Corrige un bug real
+  // reportado en iPhone: navegar desde un elemento profundo dentro de una
+  // pestaña larga y ya desplazada (p. ej. "Generado este mes", al fondo de
+  // Home) hacía desaparecer la barra de navegación inferior al entrar en
+  // la pestaña siguiente — no reproducible en Chromium (herramientas de
+  // este entorno, ver CLAUDE.md "8. Verificación UX/UI"), pero confirmado
+  // aquí que SOLO ese camino requiere scroll profundo antes de tocar
+  // (1260px en la comprobación) frente al resto de accesos de navegación
+  // (cabecera y barra inferior son fixed y siempre están a la vista sin
+  // desplazar, "Pendiente de cobrar" es la primera tarjeta) — encaja con
+  // el bug ya documentado de WebKit en el que un elemento fixed puede
+  // quedar mal posicionado si el elemento con el toque/foco activo
+  // desaparece del DOM mientras la página estaba desplazada. blur()
+  // suelta el foco/toque ANTES de que React desmonte ese elemento, en vez
+  // de dejar que WebKit lo gestione a mitad del propio desmontaje.
+  const changeTab = (next) => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    setTab(next);
+  };
   // Pestaña primaria a la que vuelve "‹ Volver" desde Ayuda/Configuración
   // — se actualiza sola (ver el efecto más abajo) cada vez que `tab` pasa
   // a ser una pestaña primaria, así que no hace falta tocar cada sitio
@@ -136,8 +157,13 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   // pasos" quedaban fuera de vista tras haber hecho scroll en Resumen).
   // No es un problema de un rediseño concreto — es la navegación entre
   // pestañas en general, por eso vive aquí y no en una pantalla suelta.
+  // requestAnimationFrame, no una llamada síncrona: le da a WebKit un
+  // fotograma para terminar de asentar el layout tras un desmontaje/montaje
+  // grande de contenido antes de saltar el scroll a 0 — mismo bug de la
+  // nota de changeTab de arriba, la otra mitad de la misma mitigación.
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const raf = requestAnimationFrame(() => window.scrollTo(0, 0));
+    return () => cancelAnimationFrame(raf);
   }, [tab]);
   // El acceso rápido de Home (botón "Añadir movimiento" o tocar un día del
   // calendario) abre MovementSheet sin cambiar de pestaña — Home sigue
@@ -220,12 +246,12 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             // un nivel dentro de ella), sería ambigua en el punto más
             // profundo. X + "Cerrar" es además el mismo patrón que ya usan
             // las hojas inferiores de la app.
-            <button onClick={() => setTab(returnTab)} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Cerrar">
+            <button onClick={() => changeTab(returnTab)} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Cerrar">
               <X size={20} style={{ color: NAVY }} aria-hidden="true" />
               <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{SECONDARY_TITLES[tab]}</h1>
             </button>
           ) : (
-            <button onClick={() => setTab("home")} className="-m-2 flex min-h-11 items-center gap-2.5 p-2" aria-label="Ir a Home">
+            <button onClick={() => changeTab("home")} className="-m-2 flex min-h-11 items-center gap-2.5 p-2" aria-label="Ir a Home">
               <Waves size={20} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
               <div className="leading-tight text-left">
                 <h1 className="text-[15px] font-bold tracking-tight" style={{ color: NAVY }}>Ocean Pulse</h1>
@@ -235,12 +261,12 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
           )}
           <div className="flex items-center gap-1">
             {tab !== "help" && (
-              <button onClick={() => setTab("help")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Ayuda">
+              <button onClick={() => changeTab("help")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Ayuda">
                 <HelpCircle size={20} style={{ color: NAVY }} aria-hidden="true" />
               </button>
             )}
             {tab !== "config" && (
-              <button onClick={() => setTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Configuración">
+              <button onClick={() => changeTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Configuración">
                 <Settings size={20} style={{ color: NAVY }} aria-hidden="true" />
               </button>
             )}
@@ -269,8 +295,8 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
             activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
             onQuickCreate={startHomeCreate}
-            onOpenPending={() => setTab("trabajo")}
-            onOpenSummary={() => setTab("summary")}
+            onOpenPending={() => changeTab("trabajo")}
+            onOpenSummary={() => changeTab("summary")}
           />
         )}
         {tab === "log" && (
@@ -335,7 +361,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             return (
               <button
                 key={t.id}
-                onClick={() => setTab(t.id)}
+                onClick={() => changeTab(t.id)}
                 aria-current={active ? "page" : undefined}
                 className="flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-2 transition-colors"
                 style={{ color: active ? c : "#9CA3AF" }}
@@ -359,7 +385,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
       <MovementSheet
         request={homeSheetRequest}
         onClose={() => setHomeSheetRequest(null)}
-        onSaved={() => { setHomeSheetRequest(null); setTab("trabajo"); }}
+        onSaved={() => { setHomeSheetRequest(null); changeTab("trabajo"); }}
         schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
         currencies={currencies} rates={rates} commissionRates={commissionRates}
         worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
