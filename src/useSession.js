@@ -62,18 +62,34 @@ export function useSession() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // setSession/setProfile/setConsents se llaman siempre juntos, DESPUÉS de
+    // esperar los dos fetches con Promise.all — nunca uno tras otro con un
+    // await de por medio. Con un await entre cada setState, cada uno
+    // dispara su propio render por separado (el batching automático de
+    // React 18 solo agrupa llamadas síncronas consecutivas, no las
+    // separadas por un await): había un instante real, no solo teórico, en
+    // el que `session` ya era la nueva sesión pero `profile` seguía siendo
+    // el de ANTES de iniciar sesión (null en un login fresco desde
+    // LoginScreen) — AuthGate leía ese instante como "sesión sin perfil
+    // activado" y mostraba CreatePasswordScreen/AcceptLegalScreen un
+    // instante de más en cualquier login normal, incluso para una cuenta ya
+    // completamente activada. Con Promise.all + un único bloque de
+    // setState, los tres cambian en el mismo render — nunca un estado a
+    // medias visible.
     supabase.auth.getSession().then(async ({ data }) => {
       const userId = data.session?.user?.id;
+      const [profileData, consentsData] = await Promise.all([loadProfile(userId), loadConsents(userId)]);
       setSession(data.session);
-      setProfile(await loadProfile(userId));
-      setConsents(await loadConsents(userId));
+      setProfile(profileData);
+      setConsents(consentsData);
       setLoading(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       const userId = newSession?.user?.id;
+      const [profileData, consentsData] = await Promise.all([loadProfile(userId), loadConsents(userId)]);
       setSession(newSession);
-      setProfile(await loadProfile(userId));
-      setConsents(await loadConsents(userId));
+      setProfile(profileData);
+      setConsents(consentsData);
     });
     return () => listener.subscription.unsubscribe();
   }, []);

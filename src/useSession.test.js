@@ -346,3 +346,71 @@ describe("activateAccount", () => {
     replaceStateSpy.mockRestore();
   });
 });
+
+// Regresión real (no solo teórica, ver comentario en useSession.js): un
+// login normal disparaba onAuthStateChange, que antes hacía
+// setSession → await → setProfile → await → setConsents, tres renders
+// separados en vez de uno. En el primero, `session` ya era la nueva
+// sesión pero `profile` seguía siendo el de antes (null en un login
+// fresco) — AuthGate leía ese instante como "sin activar" y mostraba
+// CreatePasswordScreen un instante de más, incluso para una cuenta ya
+// completamente activada. Estas pruebas fijan el contrato correcto:
+// session/profile/consents cambian juntos, en el mismo render.
+describe("onAuthStateChange — session/profile/consents cambian en un único render", () => {
+  it("no actualiza session hasta que profile y consents también están listos", async () => {
+    supabase.auth.getSession.mockResolvedValue({ data: { session: null } });
+    let authCallback;
+    supabase.auth.onAuthStateChange.mockImplementation((cb) => {
+      authCallback = cb;
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+
+    const { result } = renderHook(() => useSession());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.session).toBeNull();
+
+    // loadProfile queda pendiente a propósito (promesa controlada a mano)
+    // para poder inspeccionar el estado MIENTRAS sigue sin resolver — con
+    // el código antiguo, setSession se ejecutaba de forma síncrona antes
+    // de este punto (antes del primer await), así que session ya habría
+    // cambiado aquí aunque el perfil siguiera sin llegar. Con el fix
+    // (Promise.all antes de cualquier setState), session debe seguir
+    // siendo null hasta que este fetch también resuelva.
+    let resolveProfileFetch;
+    const profileFetch = new Promise((resolve) => { resolveProfileFetch = resolve; });
+    const single = vi.fn().mockReturnValue(profileFetch);
+    const selectEq = vi.fn().mockReturnValue({ single });
+    const select = vi.fn().mockReturnValue({ eq: selectEq });
+    const consentsSelectEq = vi.fn().mockResolvedValue({
+      data: [
+        { document_type: PRIVACY_TYPE, document_version: PRIVACY_VERSION },
+        { document_type: TERMS_TYPE, document_version: TERMS_VERSION },
+      ],
+      error: null,
+    });
+    const consentsSelect = vi.fn().mockReturnValue({ eq: consentsSelectEq });
+    supabase.from.mockImplementation((table) => (
+      table === "legal_consents" ? { select: consentsSelect } : { select }
+    ));
+
+    act(() => {
+      authCallback("SIGNED_IN", FAKE_SESSION); // sin await: se deja "en vuelo" a propósito
+    });
+
+    // Mientras loadProfile sigue pendiente, session NO debe haber cambiado
+    // todavía — es exactamente el instante que AuthGate leía mal antes del
+    // fix (session ya puesta, profile del usuario anterior).
+    expect(result.current.session).toBeNull();
+
+    await act(async () => {
+      resolveProfileFetch({ data: { user_id: "u1", activated_at: "2026-08-01T00:00:00Z" }, error: null });
+      await profileFetch;
+      await Promise.resolve(); // deja que el Promise.all y los setState encadenados se asienten
+    });
+
+    // Ahora sí: session y profile llegan juntos, en el mismo instante.
+    expect(result.current.session).toEqual(FAKE_SESSION);
+    expect(result.current.profile).toEqual(expect.objectContaining({ activated_at: "2026-08-01T00:00:00Z" }));
+    expect(result.current.pendingLegalConsents).toEqual([]);
+  });
+});
