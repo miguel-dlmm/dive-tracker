@@ -52,3 +52,28 @@ describe("RatesTab — alta de tarifa con catálogo de tipos de pago vacío (cue
     );
   });
 });
+
+// "Editar" (menú "⋯") abre la MISMA hoja que "Nueva tarifa", ya
+// precargada — coherencia con Mi trabajo (MovementSheet), no un
+// formulario en línea aparte. Ver docs/ADR/0012, addendum 2026-08-29.
+describe("RatesTab — editar abre la hoja de creación, precargada", () => {
+  it("pulsar Editar abre la hoja con los valores de la tarifa, y Guardar llama a updateRow", async () => {
+    const user = userEvent.setup();
+    const { rates } = renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20 }]),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(screen.getByRole("menuitem", { name: "Editar" }));
+
+    expect(screen.getByText("Editar tarifa de PADI Cozumel - Open Water")).toBeInTheDocument();
+    const rateInput = screen.getByRole("textbox", { name: "Tarifa" });
+    expect(rateInput).toHaveValue("20,00");
+
+    await user.clear(rateInput);
+    await user.type(rateInput, "30");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+
+    expect(rates.updateRow).toHaveBeenCalledWith("r1", expect.objectContaining({ rate: 30 }));
+  });
+});

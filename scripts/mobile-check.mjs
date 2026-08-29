@@ -397,6 +397,23 @@ async function main() {
   await page.locator("text=Escuelas").first().tap();
   await page.waitForTimeout(200);
   await shot(page, "configuracion-escuelas");
+
+  console.log("→ Configuración: Escuelas — 'Editar' (RowMenu) abre la misma hoja, precargada");
+  const schoolMenuBtn = page.getByRole("button", { name: "Más acciones" }).first();
+  if (await schoolMenuBtn.isVisible().catch(() => false)) {
+    await schoolMenuBtn.tap();
+    await page.waitForTimeout(150);
+    await page.getByRole("menuitem", { name: "Editar" }).tap();
+    await page.waitForTimeout(200);
+    const editHeadingVisible = await page.getByRole("heading", { name: "Editar escuela" }).isVisible().catch(() => false);
+    if (!editHeadingVisible) {
+      consoleIssues.push("[configuracion] 'Editar' en Escuelas no abrió la hoja esperada ('Editar escuela').");
+    }
+    await shot(page, "configuracion-escuelas-editar-hoja");
+    await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+    await page.waitForTimeout(200);
+  }
+
   await page.getByRole("button", { name: "Nueva escuela", exact: true }).tap();
   await page.waitForTimeout(200);
   await shot(page, "configuracion-escuelas-nueva-hoja");
@@ -431,8 +448,20 @@ async function main() {
     if (!hasEditar || !hasEliminar) {
       consoleIssues.push("[tarifas] El menú '⋯' de una tarifa no muestra Editar y Eliminar.");
     }
-    await page.keyboard.press("Escape");
-    await page.waitForTimeout(150);
+    if (hasEditar) {
+      await page.getByRole("menuitem", { name: "Editar" }).tap();
+      await page.waitForTimeout(200);
+      const editRateHeadingVisible = await page.getByText(/^Editar tarifa de /).isVisible().catch(() => false);
+      if (!editRateHeadingVisible) {
+        consoleIssues.push("[tarifas] 'Editar' no abrió la hoja de edición esperada ('Editar tarifa de ...').");
+      }
+      await shot(page, "configuracion-tarifas-editar-hoja");
+      await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+      await page.waitForTimeout(150);
+    } else {
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(150);
+    }
   } else {
     console.log("  (sin tarifas existentes para probar el RowMenu — omitido)");
   }

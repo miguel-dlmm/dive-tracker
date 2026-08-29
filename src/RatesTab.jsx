@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { Plus, X, Search, SlidersHorizontal } from "lucide-react";
+import { Plus, Check, X, Search, SlidersHorizontal } from "lucide-react";
 import { NAVY, TEAL } from "./App";
-import { inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, CurrencySearchSelect, MoneyInput, EditActions, EntryTitle, useToast, useBodyScrollLock } from "./shared";
+import { inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, CurrencySearchSelect, MoneyInput, EntryTitle, useToast, useBodyScrollLock } from "./shared";
 
 // schools / activities / paymentTypes / currencies: { rows: [...] } — de useSupabaseTable
 // rates / commissionRates: { rows, insertRow, updateRow, deleteRow }
@@ -35,8 +35,12 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
   // esta en el resto de la app.
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({ school: "", activity: [], payment_type: "" });
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({});
+  // editingEntry (null = alta): crear y editar comparten la misma hoja y el
+  // mismo `form`, igual que MovementSheet en Mi trabajo (ver
+  // docs/ADR/0013-tarifas-editar-en-hoja.md) — antes editar abría un
+  // formulario en línea distinto del de alta, la única pantalla de
+  // Configuración que aún no seguía ese patrón.
+  const [editingEntry, setEditingEntry] = useState(null);
 
   const schoolNames = schools.rows.map((s) => s.name);
   const activityNames = activities.rows.map((a) => a.name);
@@ -59,27 +63,31 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
     return list;
   }, [table.rows, query, filters]);
 
-  const addRate = async () => {
-    if (!form.school || !form.activity || !form.payment_type || !form.rate) return;
-    try {
-      await table.insertRow({ ...form, rate: Number(form.rate) });
-      setForm({ ...emptyForm, currency: form.currency });
-      setSheetOpen(false);
-      toast?.success("Tarifa añadida");
-    } catch {
-      toast?.error("No se pudo guardar. Inténtalo de nuevo.");
-    }
+  const closeSheet = () => { setSheetOpen(false); setEditingEntry(null); };
+
+  const openCreateSheet = () => {
+    setForm({ ...emptyForm, currency: form.currency });
+    setEditingEntry(null);
+    setSheetOpen(true);
   };
 
   const startEdit = (r) => {
-    setEditingId(r.id);
-    setEditForm({ school: r.school, activity: r.activity, payment_type: r.payment_type, currency: r.currency, rate: r.rate });
+    setForm({ school: r.school, activity: r.activity, payment_type: r.payment_type, currency: r.currency, rate: r.rate });
+    setEditingEntry(r);
+    setSheetOpen(true);
   };
-  const saveEdit = async () => {
+
+  const submitSheet = async () => {
+    if (!form.school || !form.activity || !form.payment_type || !form.rate) return;
     try {
-      await table.updateRow(editingId, { ...editForm, rate: Number(editForm.rate) });
-      setEditingId(null);
-      toast?.success("Cambios guardados");
+      if (editingEntry) {
+        await table.updateRow(editingEntry.id, { ...form, rate: Number(form.rate) });
+        toast?.success("Cambios guardados");
+      } else {
+        await table.insertRow({ ...form, rate: Number(form.rate) });
+        toast?.success("Tarifa añadida");
+      }
+      closeSheet();
     } catch {
       toast?.error("No se pudo guardar. Inténtalo de nuevo.");
     }
@@ -102,7 +110,7 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
         {[["instructor", "Instructor"], ["comision", "Comisión"]].map(([key, label]) => (
           <button
             key={key}
-            onClick={() => { setMode(key); setFilters({ school: "", activity: [], payment_type: "" }); setEditingId(null); }}
+            onClick={() => { setMode(key); setFilters({ school: "", activity: [], payment_type: "" }); }}
             className="min-h-11 rounded-md px-3.5 text-sm font-medium transition-colors"
             style={mode === key ? { backgroundColor: TEAL, color: "white" } : { color: "#6B7280" }}
           >
@@ -148,45 +156,30 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
 
         <div className="divide-y divide-gray-100">
           {filtered.length === 0 && <p className="px-4 py-6 text-center text-sm text-gray-400">Sin resultados.</p>}
-          {filtered.map((r) => {
-            const isEditing = editingId === r.id;
-            if (isEditing) {
-              return (
-                <div key={r.id} className="space-y-2 px-4 py-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Select value={editForm.school} onChange={(v) => setEditForm({ ...editForm, school: v })} options={schoolNames} />
-                    <Select value={editForm.activity} onChange={(v) => setEditForm({ ...editForm, activity: v })} options={activityNames} />
-                    <CurrencySearchSelect value={editForm.currency} onChange={(v) => setEditForm({ ...editForm, currency: v })} currencyRows={currencies.rows} />
-                    <MoneyInput value={editForm.rate} onChange={(v) => setEditForm({ ...editForm, rate: v })} />
-                  </div>
-                  <EditActions onSave={saveEdit} onCancel={() => setEditingId(null)} />
-                </div>
-              );
-            }
+          {filtered.map((r) => (
             // Misma estructura de fila que EntryRow en Mi trabajo (título +
             // importe arriba, metadato + acciones abajo) y el mismo RowMenu
-            // "⋯" para Editar/Eliminar, en vez de dos iconos sueltos — ver
-            // docs/ADR/0012-tarifas-coherencia-mi-trabajo.md.
-            return (
-              <div key={r.id} className="px-4 py-3.5 text-sm">
-                <div className="flex items-start justify-between gap-2">
-                  <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
-                  <span className="shrink-0 font-semibold tabular-nums" style={{ color: NAVY }}>
-                    <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: NAVY }} />
-                  </span>
-                </div>
-                <div className="mt-1.5 flex items-center justify-between gap-2">
-                  <span className="truncate text-xs text-gray-400">{r.payment_type}</span>
-                  <RowMenu onEdit={() => startEdit(r)} onDelete={() => deleteRate(r)} itemLabel={`la tarifa de ${r.school} - ${r.activity}`} />
-                </div>
+            // "⋯" para Editar/Eliminar, en vez de dos iconos sueltos —
+            // "Editar" abre la misma hoja que "Nueva tarifa" en vez de un
+            // formulario en línea aparte, ver docs/ADR/0012 y su addendum.
+            <div key={r.id} className="px-4 py-3.5 text-sm">
+              <div className="flex items-start justify-between gap-2">
+                <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
+                <span className="shrink-0 font-semibold tabular-nums" style={{ color: NAVY }}>
+                  <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: NAVY }} />
+                </span>
               </div>
-            );
-          })}
+              <div className="mt-1.5 flex items-center justify-between gap-2">
+                <span className="truncate text-xs text-gray-400">{r.payment_type}</span>
+                <RowMenu onEdit={() => startEdit(r)} onDelete={() => deleteRate(r)} itemLabel={`la tarifa de ${r.school} - ${r.activity}`} />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
       <button
-        onClick={() => setSheetOpen(true)}
+        onClick={openCreateSheet}
         aria-label="Nueva tarifa"
         className="fixed bottom-24 right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-90"
         style={{ backgroundColor: accentColor, width: 52, height: 52 }}
@@ -195,15 +188,17 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
       </button>
 
       {sheetOpen && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={() => setSheetOpen(false)}>
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={closeSheet}>
           <div
             className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
             style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-1 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-800">Nueva tarifa de {mode === "instructor" ? "Instructor" : "Comisión"}</h3>
-              <button onClick={() => setSheetOpen(false)} className="text-gray-400" aria-label="Cerrar"><X size={19} /></button>
+              <h3 className="text-sm font-semibold text-gray-800">
+                {editingEntry ? `Editar tarifa de ${editingEntry.school} - ${editingEntry.activity}` : `Nueva tarifa de ${mode === "instructor" ? "Instructor" : "Comisión"}`}
+              </h3>
+              <button onClick={closeSheet} className="text-gray-400" aria-label="Cerrar"><X size={19} /></button>
             </div>
             <p className="mb-3 text-xs text-gray-400">
               {mode === "instructor"
@@ -226,11 +221,11 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
             </div>
 
             <button
-              onClick={addRate}
+              onClick={submitSheet}
               className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"
               style={{ backgroundColor: accentColor }}
             >
-              <Plus size={16} /> Guardar
+              {editingEntry ? <Check size={16} /> : <Plus size={16} />} Guardar
             </button>
           </div>
         </div>

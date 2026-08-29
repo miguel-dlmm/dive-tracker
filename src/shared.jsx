@@ -1090,7 +1090,14 @@ export function FloatingPanel({ open, pos, panelRef, matchWidth = true, align = 
 // fila de una lista con overflow-hidden (esquinas redondeadas) — con
 // FloatingPanel (portal a document.body) deja de depender de los
 // ancestros.
-export function RowMenu({ onEdit, onDelete, itemLabel }) {
+// deleteDisabled/deleteDisabledReason (opcional): para el caso raro de una
+// fila que nunca debe poder eliminarse desde aquí (p.ej. el estado de pago
+// predeterminado, que decide qué cuenta como "pendiente" en toda la app —
+// ver protectDefaultFromDelete en ConfigTab.jsx). En vez de un segundo
+// componente o de omitir el menú entero, "Eliminar" se muestra desactivado
+// con el motivo en el título — sigue siendo obvio que la opción existe,
+// solo que no está disponible para esta fila en concreto.
+export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, deleteDisabledReason }) {
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   // Cierra el menú "⋯" en el mismo instante en que se CONFIRMA el borrado
   // dentro del diálogo — no al pulsar "Eliminar" en el menú, porque eso
@@ -1130,7 +1137,18 @@ export function RowMenu({ onEdit, onDelete, itemLabel }) {
             borrado real — así una animación de salida de la fila (si la
             pantalla que llama la tiene) se ve en la lista, no oculta
             detrás del modal. */}
-        <DeleteButton variant="menuItem" onConfirm={handleDeleteConfirmed} itemLabel={itemLabel} optimistic />
+        {deleteDisabled ? (
+          <div
+            role="menuitem"
+            aria-disabled="true"
+            title={deleteDisabledReason}
+            className="flex min-h-11 w-full cursor-not-allowed items-center gap-2 px-3 text-left text-sm text-gray-300"
+          >
+            <Trash2 size={14} aria-hidden="true" /> Eliminar
+          </div>
+        ) : (
+          <DeleteButton variant="menuItem" onConfirm={handleDeleteConfirmed} itemLabel={itemLabel} optimistic />
+        )}
       </FloatingPanel>
     </>
   );

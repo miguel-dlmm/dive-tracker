@@ -796,7 +796,65 @@ usado y probado en el propio código), reverificar el resultado con la
 misma técnica de medición que diagnosticó el problema, no dar el
 razonamiento por bueno solo porque suena correcto.
 
+## Bloque 2 — Configuración: coherencia real con Movimientos (editar en hoja + RowMenu en todas partes)
+
+Antes de tocar nada, se hizo inventario del estado real de Configuración
+(el encargo repetía varias cosas que YA estaban hechas en sesiones
+anteriores: menú agrupado, FAB+hoja para crear, RowMenu compartido con
+Tarifas, eliminar/desactivar usuario — evitado repetir ese trabajo, ver
+`docs/ADR/0008` y `0012`). El inventario encontró el gap real: **editar**
+seguía sin ser coherente. Tanto `RatesTab.jsx` como `CrudTable`
+(Escuelas/Cursos/Tipos de pago/Estados de pago/Monedas) abrían un
+formulario EN LÍNEA dentro de la propia fila al pulsar "Editar", un
+patrón distinto al de Mi trabajo (`MovementSheet`, la misma hoja que
+"Añadir movimiento", precargada). `CrudTable` además seguía con iconos
+sueltos (lápiz + papelera) en vez de `RowMenu`.
+
+**Cambios:**
+- `RatesTab.jsx`: "Editar" abre ahora la misma hoja que "Nueva tarifa",
+  precargada (`editingEntry` en vez de `editingId`/`editForm` separados).
+- `ConfigTab.jsx` (`CrudTable`, usado por los 5 catálogos): mismo cambio
+  — `editingRow` unificado con el `form` de creación; `RowMenu`
+  reemplaza los iconos sueltos de lápiz/papelera en las 5 pantallas de
+  golpe (un único componente compartido, un único cambio).
+- `RowMenu` (`shared.jsx`) gana `deleteDisabled`/`deleteDisabledReason`
+  — necesario para el estado de pago predeterminado, que nunca debe
+  poder eliminarse (antes tenía su propio icono de papelera deshabilitado
+  como sustituto completo del botón; ahora es un "Eliminar" visible pero
+  desactivado dentro del mismo menú, con el motivo en el `title`).
+- Botón "Guardar" de ambas hojas intercambia icono `Plus`→`Check` en modo
+  edición, igual que ya hacía `MovementSheet` — detectado por inspección
+  directa del código de Mi trabajo, no inventado.
+- Eliminado código muerto: `renderBoolField` en `CrudTable` (ningún
+  catálogo pasaba nunca `type: "boolean"`).
+- Documentado en `docs/ADR/0013-editar-en-hoja-catalogos-y-tarifas.md`.
+
+**Qué NO se tocó (revisado y descartado explícitamente):**
+- Resto de secciones superadmin (Colores de navegación, Ajustes
+  generales, Usuarios) — ya cumplen bien su función, "libertad de
+  diseño" no significa rediseñar algo que no está roto.
+- Estructura de preparación para futuros widgets de Home/Resumen — el
+  comentario que ya documentaba esto en `ConfigTab.jsx` ("deja hueco
+  natural para un futuro grupo de personalización... sin rediseñar esta
+  pantalla otra vez") sigue siendo válido tal cual, no hacía falta nada
+  adicional.
+- Reglas de negocio de Tarifas (representación Curso/Comisión) — sin
+  problema real detectado que justificara tocarlas; cambiar esto sin una
+  necesidad concreta habría sido el tipo de cambio estructural que las
+  instrucciones de esta sesión piden evitar salvo que sea imprescindible.
+
+`mobile-check.mjs` gana dos pasos nuevos: Editar en Escuelas (RowMenu →
+hoja precargada → cerrar sin guardar) y Editar en Tarifas (mismo
+patrón).
+
+**Validado:** 249/249 tests (+4 nuevos: edición precargada y protección
+de borrado en `ConfigTab.test.jsx`, edición precargada en
+`RatesTab.test.jsx`), build correcto, `mobile-check` sin errores —
+capturas de "Editar escuela" y "Editar tarifa de Ihasia - Basic Diver"
+revisadas visualmente, confirmando precarga correcta y el icono `Check`
+en el botón Guardar.
+
 ## Siguiente paso
 
-Bloque 1 cerrado. Continuando con el bloque 2 (rediseño de
-Configuración).
+Bloques 1 y 2 cerrados. Continuando con el bloque 3 (rediseño de
+Resumen).

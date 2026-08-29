@@ -54,7 +54,12 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   modelo de datos no cambia.
 - Tarifas: los filtros pasan a un panel colapsable "Filtrar", igual que
   en Mi trabajo; cada fila usa ahora el mismo menú "⋯" (Editar/Eliminar)
-  que Mi trabajo, en vez de dos iconos sueltos.
+  que Mi trabajo, en vez de dos iconos sueltos, y "Editar" abre la misma
+  hoja que "Nueva tarifa" (precargada) en vez de un formulario en línea.
+- Configuración — Escuelas, Cursos, Tipos de pago, Estados de pago y
+  Monedas: cada fila usa ahora el mismo menú "⋯" (Editar/Eliminar) que
+  Mi trabajo/Tarifas, y "Editar" abre la misma hoja que la creación
+  (precargada), en vez de una edición en línea con iconos sueltos.
 - Se oculta el acceso directo a "Pagos" de la navegación — Mi trabajo
   cubre su función ("Cobrar todos", filtro por escuela).
 - Home: el calendario del mes sube al segundo lugar (tras "Pendiente de

@@ -86,11 +86,42 @@ describe("ConfigTab — CrudTable crea vía FAB + hoja (ver Escuelas)", () => {
     await user.click(screen.getByRole("button", { name: "Nueva escuela" }));
     expect(screen.getByRole("heading", { name: "Nueva escuela" })).toBeInTheDocument();
 
-    await user.type(screen.getByPlaceholderText("Nombre"), "Ihasia");
+    await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ihasia");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(schools.insertRow).toHaveBeenCalledWith(expect.objectContaining({ name: "Ihasia" }));
     expect(screen.queryByRole("heading", { name: "Nueva escuela" })).not.toBeInTheDocument();
+  });
+
+  it("'Editar' (menú '⋯') abre la misma hoja precargada, y Guardar llama a updateRow", async () => {
+    const user = userEvent.setup();
+    const schools = rowsHook([{ id: "s1", name: "PADI Cozumel", color: "#0E7C7B" }]);
+    render(<ConfigTab {...baseProps({ schools })} />);
+    await user.click(screen.getByText("Escuelas"));
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(screen.getByRole("menuitem", { name: "Editar" }));
+
+    expect(screen.getByRole("heading", { name: "Editar escuela" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Nombre" })).toHaveValue("PADI Cozumel");
+
+    await user.clear(screen.getByRole("textbox", { name: "Nombre" }));
+    await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ihasia Dive");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+
+    expect(schools.updateRow).toHaveBeenCalledWith("s1", expect.objectContaining({ name: "Ihasia Dive" }));
+  });
+
+  it("el estado de pago predeterminado no se puede eliminar (protectDefaultFromDelete)", async () => {
+    const user = userEvent.setup();
+    const paymentStatuses = rowsHook([{ id: "ps1", name: "Pendiente", color: "#0E7C7B", is_default: true }]);
+    render(<ConfigTab {...baseProps({ paymentStatuses, profile: { user_id: "u1", is_admin: true, is_superadmin: false } })} />);
+    await user.click(screen.getByText("Estados de pago"));
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    const deleteItem = screen.getByText("Eliminar").closest('[role="menuitem"]');
+    expect(deleteItem).toHaveAttribute("aria-disabled", "true");
+    expect(deleteItem).toHaveAttribute("title", expect.stringContaining("predeterminado"));
   });
 });
 
