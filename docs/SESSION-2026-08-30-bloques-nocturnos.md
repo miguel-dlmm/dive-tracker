@@ -466,3 +466,41 @@ misma escuela) sigue mostrando el recuento real de personas del curso.
 
 **Commit:** `fix(ajustes-de-curso): ocultar el recuento de personas
 cuando el grupo es enteramente Ajustes de curso`.
+
+### Bloque 12 — Añadir movimiento en Home: evaluado, sin cambios
+
+Encargo: valorar si integrar "+" dentro de la tarjeta "Pendiente de
+cobrar" sigue siendo la mejor solución para crear un movimiento desde
+Home, o si conviene reutilizar visualmente el FAB flotante de Mi
+trabajo; implementar solo si hay una mejora clara.
+
+**Estado actual (ya eran 3 vías de creación en Home, sin tocar nada
+hoy):** el "+" integrado en "Pendiente de cobrar" (`onQuickAdd`),
+tocar un día vacío del calendario, y el propio desglose de un día con
+actividad (`onCreateForDay`, ver `MonthCalendar`). Esta integración
+(en vez de una fila de botón aparte o un FAB flotante) fue una decisión
+ya tomada y documentada en el propio código
+(`HomeTab.jsx`, comentario junto a `PendingCollectionCard`) durante el
+rediseño de Home/Resumen de esta misma sesión, 2026-08-29: antes era
+una fila propia que competía visualmente con la cifra pendiente.
+
+**Análisis (por qué no se cambia a un FAB tipo Mi trabajo):**
+- Mi trabajo es una pantalla de lista CRUD pura — el patrón "FAB +
+  hoja inferior" (convención #3 de `CLAUDE.md`) está pensado
+  exactamente para eso: una lista de registros del mismo tipo de
+  contenido, sin nada más compitiendo por atención en pantalla.
+- Home es explícitamente lo contrario por diseño de producto: un
+  "vistazo rápido" con varias piezas de información distintas en la
+  misma pantalla (cifra pendiente, calendario, generado este mes). Un
+  FAB flotante fijo (`fixed bottom-24 right-4`) añadiría una CUARTA vía
+  de creación, sin sustituir ninguna de las tres existentes, compitiendo
+  visualmente con la propia cifra y con el calendario en el mismo
+  viewport donde ya caben cómodas dos vías directas (tocar un día,
+  desglose de un día).
+- Ninguna de las tres vías actuales tiene fricción real detectada ni
+  ha recibido ninguna crítica de usuario — el criterio explícito del
+  bloque ("no añadir por uniformidad si la solución actual es mejor
+  para Home") aplica aquí en sentido literal.
+
+**Decisión:** mantener la integración actual. Sin cambios de código,
+sin commit — evaluación documentada aquí.
