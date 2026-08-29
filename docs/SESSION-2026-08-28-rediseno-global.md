@@ -927,8 +927,85 @@ enviado para confirmar a qué `user_id` resuelve realmente — eso
 distinguiría de forma concluyente entre "token de otra sesión" y
 cualquier otra causa aún no identificada.
 
+## Bloque 5 — Release/Deployment: simulación actualizada de v0.2.0
+
+El proceso general ya estaba investigado y decidido a fondo en
+`docs/ADR/0010-proceso-de-release.md` (Keep a Changelog, SemVer, GitHub
+Releases — fuentes primarias) y la primera simulación ya se había hecho
+en el "Commit 3" de esta misma sesión, con 22 commits acumulados. Nada
+de eso se ha vuelto a decidir — solo se ha **repetido la simulación con
+el estado real de ahora**, que ha cambido mucho desde entonces (bloques
+1-4 de esta tercera tanda).
+
+### Ramas reales reconfirmadas (`git fetch` + `git log`/`git merge-base`)
+
+- `develop` local === `origin/develop` === `0cf625e` — sin cambios
+  externos desde el inicio de esta sesión.
+- `merge-base(develop, feature/global-redesign) == develop` exactamente
+  — sigue siendo un fast-forward puro, cero conflictos previstos.
+- Entre `v0.1.0` y `feature/global-redesign` hay ahora **37 commits**
+  sin publicar (5 ya en `develop`, 32 solo en esta rama) — eran 22 en la
+  simulación anterior de esta misma sesión.
+- `feature/mi-trabajo` y `feature/design-lab-preview`: sin cambios
+  respecto a la comprobación anterior (la primera ya integrada en esta
+  rama, la segunda un sandbox sin intención de merge).
+
+### Changelog
+
+`CHANGELOG.md` → `## Unreleased` actualizado de forma incremental en
+cada commit de esta sesión (no como tarea aparte, tal y como manda
+ADR-0010) — revisado ahora de una vez de cabo a rabo para consolidar
+dos entradas de `Fixed` que describían el mismo bug (un primer intento
+de fix y su corrección real): un changelog es "para humanos", el
+lector final no necesita la arqueología de qué intento falló antes,
+solo el comportamiento final (commit `5f2e77a`).
+
+### Versión: sigue siendo `v0.2.0`
+
+Sin cambios respecto a la decisión anterior — mayoría de contenido
+nuevo/rediseño, proyecto en fase `0.y.z`, un único incremento `MINOR`
+independientemente de cuántos commits contenga.
+
+### Validaciones de release ejecutadas ahora mismo
+
+- `npm run test` → 251/251 (eran 242 en la simulación anterior).
+- `npm run build` → correcto.
+- `mobile-check` → validado en cada bloque individual de esta sesión;
+  no hace falta repetirlo aparte aquí, ya cubre el HEAD actual.
+- Working tree limpio (`git status` — solo `cloudflared.tgz`, no
+  versionado, no es mío).
+- `git tag -l v0.2.0` → vacío, la etiqueta no existe todavía.
+
+### Pasos pendientes de aprobación (ninguno ejecutado, igual que antes)
+
+1. Revisar y fusionar `feature/global-redesign` → `develop` (fast-forward
+   limpio, `develop` es ancestro directo).
+2. Sobre `develop` ya actualizada: `npm run test && npm run build`
+   (validación de release sobre el commit real que quedará etiquetado,
+   no redundante aunque ya se validó aquí).
+3. Renombrar `## Unreleased` a `## [0.2.0] - <fecha del día que se
+   ejecute>` en `CHANGELOG.md`.
+4. Commit `chore: preparar release v0.2.0`.
+5. `git tag -a v0.2.0 -m "v0.2.0"` sobre ese commit.
+6. `git push origin develop --tags`.
+7. `gh release create v0.2.0 --notes-file <extracto del CHANGELOG>`
+   (opcional, espejo en GitHub).
+8. Ningún paso de despliegue manual — Vercel despliega automáticamente
+   el push a `develop`.
+
+HEAD actual de `feature/global-redesign` en el momento de esta
+simulación: `5f2e77a`. Sin push, sin merge real, sin tag — en cuanto
+llegue el OK, estos 8 pasos son mecánicos.
+
 ## Siguiente paso
 
-Bloques 1, 2 y 3 cerrados. Continuando con el bloque 5 (release/
-deployment — investigación de estándares + proceso mínimo viable +
-simulación, sin push/merge/tag/deploy real).
+Bloques 1, 2, 3 y 5 cerrados (release preparada, pendiente de
+aprobación). Trabajo restante del encargo, por prioridad: bug de
+tarifa inline (investigar, sin workaround especulativo si no se
+reproduce — nota: ya investigado a fondo y no reproducido en la
+segunda tanda de esta sesión, ver ese bloque; revisar solo si hay
+margen y algo nuevo que probar), calendario de Home (revisión Head
+Designer), Qué hay de nuevo (ya tiene swipe + contenido sin solapar de
+la segunda tanda — revisar si falta algo del encargo de esta tercera
+tanda: capturas reales), Ayuda (ya reordenada esta mañana — revisar si
+falta algo nuevo del encargo de esta tanda).
