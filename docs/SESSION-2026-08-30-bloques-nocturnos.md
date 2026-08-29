@@ -281,6 +281,62 @@ arrastre visible, mismo aspecto que `MovementSheet`/`RatesTab`.
 **Commit:** `feat(gestos): aplicar Sheet (motion + arrastrar para
 cerrar) a las hojas de Configuración`.
 
+### Bloques 7+8 — Resumen: tendencia como navegación central + secciones
+
+Ejecutados juntos: ambos tocan el mismo archivo y la misma franja
+superior de la pantalla.
+
+**Bloque 7 — causa raíz real de los dos bugs reportados, no un ajuste
+cosmético:**
+- *"Se solapa con su título"*: cada barra apilaba barra+etiqueta+punto
+  de "hoy" (hasta ~70px de contenido real) dentro de un contenedor con
+  altura FIJA de 56px. Cuando la barra más alta se acercaba a su
+  máximo, el contenido desbordaba ese contenedor hacia ARRIBA
+  (`items-end` ancla por abajo), invadiendo el título de encima.
+- *"Cambia de altura al tocar barras"*: sin `overflow-hidden`, el
+  navegador dejaba que el contenido más alto de cada momento
+  determinara el alto real de la fila — como qué periodo es el más
+  alto cambia al navegar, el alto visible de toda la franja cambiaba
+  con cada toque.
+- **Arreglo:** la barra vive dentro de su propio "carril" de altura
+  fija (`h-11`, con la barra alineada abajo DENTRO de él, no del bloque
+  entero) — el carril nunca cambia de tamaño, solo el color/alto de la
+  barra que hay dentro. El alto total de cada botón (carril + etiqueta
+  + punto) pasa a ser constante para los 7 periodos siempre.
+
+**Fusión conceptual (cabecera de periodo + tendencia, "misma
+experiencia"):** ambas viven ahora en una única tarjeta (una cabecera
+con el selector de granularidad + periodo, un separador, y la franja de
+tendencia debajo) en vez de dos bloques sueltos. Las flechas ‹ › de
+navegación de un periodo en uno se RETIRAN — la franja ya cubre
+exactamente ese caso (sus dos barras vecinas) y además "más lejos" en
+un único toque; mantener ambas habría sido duplicar el mismo control
+con menos capacidad en uno de los dos, lo contrario de "no añadas
+controles por añadir". `goPrev`/`goNext` (ya redundantes con
+`shiftPeriod`, introducido en la revisión anterior de esta misma
+franja) se eliminan del todo, no se dejan como código muerto.
+
+**Bloque 8 — vocabulario y jerarquía:** "Pagos de compañeros" pasa a
+"Ajustes de curso" — Resumen era la última pantalla que aún usaba el
+nombre antiguo (Mi trabajo/MovementSheet ya dicen "Ajuste de curso").
+Jerarquía revisada: Por escuela → Por curso → Comisiones → Ajustes de
+curso → Calendario (antes: Escuela → Curso → Calendario → Comisiones →
+Pagos de compañeros). Motivo: las primeras cuatro responden la misma
+pregunta ("¿de dónde sale el total?", cada una con su propio corte) y
+van juntas; Calendario responde una pregunta distinta ("¿cuándo?", la
+más exploratoria de las cinco) y cierra la lista en vez de partirla
+en dos mitades.
+
+**Validado:** 319/319 tests (+2 nuevos: sin flechas ‹ ›; Comisiones y
+Ajustes de curso preceden a Calendario en el documento — más el ajuste
+de nombres en tests existentes), build correcto, `mobile-check` sin
+errores — capturas revisadas visualmente: la barra más alta (mes
+actual) ya no invade el título "Tendencia...", y el alto de la tarjeta
+se mantiene idéntico antes/después de navegar a otro periodo.
+
+**Commit:** `feat(resumen): fusionar cabecera de periodo y tendencia,
+arreglar solape/inestabilidad, y renombrar/reordenar secciones`.
+
 **Commit:** `feat(tarifas): rediseño completo — lista combinada, acento
 por tipo y hoja con motion` (+ `Sheet` extraído en el mismo commit, es
 la base que lo hace posible).
