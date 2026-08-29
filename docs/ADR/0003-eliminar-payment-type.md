@@ -82,6 +82,54 @@ Cada paso se despliega y valida por separado — nada de este plan se hace
 en un único cambio, siguiendo la regla de migraciones incrementales del
 proyecto.
 
+## Addendum (2026-08-30) — confirmado en datos reales, no solo en teoría
+
+Investigado un caso concreto reportado por el usuario: una tarifa creada
+en línea para "Reef Divers – Adventure Dive" a 150, usada en un
+movimiento de 3 personas, mostraba un total de 150 (no 450). Consultada
+la base real (solo lectura, sin modificar nada): la cuenta de esa tarifa
+tiene un catálogo `payment_types` propio con **"Instructor"** (marcado
+`is_default`) y **"Comisión"** — sin ninguna fila llamada "Per Person".
+El fallback ya documentado en esta ADR (`defaultPaymentType`: usa "Per
+Person" si existe, si no el `is_default` de la cuenta, si no el primero)
+asignó la tarifa nueva a `payment_type: "Instructor"` — y
+`computeRateTotal` (`rateCalc.js`) solo multiplica por personas cuando
+`payment_type === "Per Person"` exactamente; cualquier otro valor cae al
+importe fijo. Resultado: **150 fijo, no 150 × 3**.
+
+**Diagnóstico — no es un bug de aritmética, es la ambigüedad que esta ADR
+ya identificaba.** `computeRateTotal` hace exactamente lo que su código
+dice que hace. El problema real es más profundo: `payment_type` es, por
+diseño de la app, un catálogo editable por el usuario (`payment_types`,
+igual que escuelas o cursos — ver CLAUDE.md, convención 1, "nada
+hardcodeado que sea configuración del negocio"), pero la lógica de
+cálculo compara contra el **literal `"Per Person"`** como si fuera una
+constante interna, no un dato de catálogo. Cualquier cuenta cuyo
+catálogo no incluya exactamente esa fila (por no haberla creado, por
+haberla renombrado, o — como aquí — por tener un catálogo propio con
+otros nombres) obtiene tarifas fijas de forma silenciosa, sin ningún
+aviso ni error, indistinguible en la UI de una tarifa fija elegida a
+propósito.
+
+**No se ha aplicado ningún parche puntual esta noche.** Un arreglo
+aislado (p. ej., forzar `defaultPaymentType` a ignorar el catálogo de la
+cuenta y usar siempre el literal "Per Person") sería exactamente el tipo
+de solución a medias que esta ADR ya advierte no introducir por
+separado — el plan de esta ADR (`importe = tarifa × número de personas`,
+sin excepciones, sin `payment_type`) ya resuelve esto de raíz para
+cualquier cuenta, sea cual sea su catálogo. Este hallazgo es evidencia
+real (no hipotética) de que el paso 4 del plan de migración de abajo
+("verificar que no hay valores fuera de 'Per Person' antes de nada
+destructivo") encontrará al menos un caso real que requiere decidir su
+tratamiento (¿tarifa fija de verdad, o "Per Person" mal etiquetado?)
+antes del `DROP`.
+
+**Efecto colateral aparte, ya explicado por el modelo de datos:** la
+tarifa de comisión para esa misma escuela+curso no existe
+(`commission_rates` vacío para "Reef Divers") — es la causa, ya conocida
+y correcta, de que Comisión no tenga total ahí; no relacionado con este
+bug.
+
 ## Consecuencias
 
 - El bootstrap de una cuenta nueva deja de depender de `payment_types` en
