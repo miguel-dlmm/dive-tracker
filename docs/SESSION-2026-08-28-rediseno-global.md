@@ -1150,3 +1150,99 @@ un token real no-superadmin: los 3 endpoints devuelven el mensaje 403
 exacto esperado.
 
 ## Bloque 8 — Rediseño de gestión de usuarios en Configuración
+
+(Encabezado duplicado ya presente al final del archivo antes de este
+añadido, sin contenido debajo — se deja tal cual, sin tocarlo, siguiendo
+la instrucción de no reescribir contenido existente; el Bloque 8 real,
+completo, es el que aparece más arriba en este mismo documento.)
+
+## Bloque 9 — Modelo de activación de usuarios (Agente A, worktree aislado, en paralelo con Home/Resumen)
+
+Continuación del Bloque 8, ejecutada por un agente dedicado ("Agente A")
+en un worktree git aparte
+(`.claude/worktrees/agent-a3ce292db591bc000`), en paralelo con otro
+agente trabajando solo en Home/Resumen en un worktree distinto — sin
+compartir archivos ni comunicación entre ambos. Alcance estrictamente
+limitado a `server/users/*.js`, `server/supabaseAdmin.js`, `api/*.js` y
+`netlify/functions/*.js` (solo endpoints de gestión de usuarios),
+`src/ConfigTab.jsx`/`.test.jsx` y documentación — nunca `HomeTab.jsx`,
+`SummaryTab.jsx`, `shared.jsx`, `App.jsx` ni navegación global.
+
+**Encargo:** el Bloque 8 dejó el modelo de estado como binario
+(Activa/Desactivada, según `banned_until`) — una cuenta recién creada o
+recién desactivada podía mostrarse como "Activa" sin que nadie hubiera
+completado nunca la activación. Se pidió un tercer estado
+("Pendiente"), sustituir el botón-pastilla de Activar/Desactivar por un
+switch, y dos acciones nuevas: regenerar el enlace de activación y
+regenerar la contraseña de una cuenta — ninguna de las dos debe conceder
+acceso instantáneo. Decisión completa, alternativas descartadas y
+consecuencias en `docs/ADR/0015-modelo-activacion-usuarios.md`.
+
+**Resumen de lo implementado** (detalle completo en la ADR):
+- Estado tri-estado derivado de dos señales ya existentes
+  (`banned_until` de Auth + `profiles.activated_at`, hasta ahora sin
+  consumidor) — cero columnas nuevas.
+- `/api/set-user-active` se estrecha a "solo desactivar" — pedir
+  `active: true` devuelve 400 señalando el endpoint correcto. Nuevos
+  `/api/regenerate-activation-link` (quita el baneo si lo hay + genera
+  un enlace nuevo, sin tocar `activated_at`) y `/api/regenerate-password`
+  (sobrescribe la contraseña con una cadena aleatoria nunca mostrada,
+  quita el baneo, limpia `activated_at` y genera un enlace nuevo) —
+  ambos comparten `generateActivationLink()`, extraído de `createUser.js`
+  a `server/users/activationLink.js` (3 consumidores reales).
+- `BooleanToggle` (nuevo, local a `ConfigTab.jsx`, no extraído a
+  `shared.jsx` — un único consumidor real hoy): `checked` representa
+  "no baneado", no "activo del todo" — encenderlo desde "Desactivado"
+  abre el flujo de regenerar enlace en vez de dar acceso al instante.
+- `last_sign_in_at` (ya presente en la misma llamada de
+  `listUserStatus.js`) expuesto como "último acceso" en el detalle, sin
+  coste de esquema.
+- Nombre/apellidos/nickname editables en línea en el detalle
+  (`EditActions`), vía `supabase.from("profiles").update(...)` directo
+  — la policy de RLS ya lo permitía, sin endpoint nuevo.
+
+**Validado:** `server/` 137/137 tests (incluye 14 nuevos de
+`regenerateActivationLink.test.js`, 12 de `regeneratePassword.test.js`,
+más los ajustes de `createUser`/`setUserActive`/`listUserStatus`);
+`src/ConfigTab.test.jsx` 13/13 (tri-estado en lista/detalle, desactivar,
+regenerar enlace, regenerar contraseña, eliminar); suite completa
+294/294; build correcto. `mobile-check` ejecutado contra un servidor de
+desarrollo propio y aislado (puerto 5181, nunca 5173 ni 5180) como
+comprobación de regresión sobre Home/Mi trabajo/Resumen/Ayuda/
+Configuración — sin errores de consola; no cubre la pantalla de
+Usuarios en sí (el script de `mobile-check` solo recorre "Mi trabajo",
+y la cuenta `dev-bypass` no tiene rol admin/superadmin, confirmado en
+ese mismo recorrido — correcto, nunca se le concede `is_superadmin`).
+
+**E2E en vivo de los endpoints nuevos — intentado, no completado, y por
+qué.** Se intentó crear una cuenta superadmin desechable (creada y
+destruida por el propio agente, nunca sobre una cuenta real) para
+probar los 2 endpoints nuevos por HTTP contra Supabase real, tal y como
+permitían las instrucciones de la tarea como alternativa a los tests
+unitarios. Bloqueado por diseño, no por error: `protect_profile_roles()`
+(`schema.sql`) rechaza CUALQUIER cambio de `is_superadmin` — incluido
+desde el cliente de service role, ya que el trigger se ejecuta sobre
+cualquier `UPDATE` normal de Postgres, no solo desde RLS — con
+`is_superadmin cannot be changed through the app`, exactamente la
+garantía documentada en el propio trigger ("la única forma de crear o
+quitar un superadmin es una migración directa contra la base de datos").
+Intentar sortearlo (deshabilitar el trigger, aunque fuera
+temporalmente) habría sido tocar una protección de seguridad real de la
+base de datos compartida sin aprobación explícita — se descartó sin
+más intentos. La cuenta de prueba (auth.users, con cascada a su
+`profiles`) se eliminó igualmente al fallar, sin dejar rastro. La
+cobertura de los 2 endpoints nuevos descansa por tanto en los 26 tests
+unitarios dedicados (mocks fieles al contrato real de
+`auth.admin.updateUserById`/`generateLink`/`getUserById`) — si se
+quiere una verificación en vivo de verdad, requiere que el usuario cree
+la cuenta superadmin desechable a mano desde el SQL editor de Supabase
+(único camino que el propio esquema permite), no algo que este agente
+pueda ni deba automatizar.
+
+**Pendiente, no implementado en este bloque:** `profiles.deactivated_at`
+("fecha de baja" real) sigue siendo solo una propuesta en
+`docs/BACKLOG.md` (ya existía desde el Bloque 8/ADR-0014) — este bloque
+no la implementa ni cambia su prioridad, es un campo distinto de
+`activated_at` (que sí se gestiona aquí).
+
+## Bloque 8 — Rediseño de gestión de usuarios en Configuración

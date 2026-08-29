@@ -35,3 +35,13 @@
   from = "/api/list-user-status"
   to = "/.netlify/functions/list-user-status"
   status = 200
+
+[[redirects]]
+  from = "/api/regenerate-activation-link"
+  to = "/.netlify/functions/regenerate-activation-link"
+  status = 200
+
+[[redirects]]
+  from = "/api/regenerate-password"
+  to = "/.netlify/functions/regenerate-password"
+  status = 200

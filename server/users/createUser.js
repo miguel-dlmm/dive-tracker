@@ -1,5 +1,6 @@
 import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 import { sendWelcomeEmail } from "../email/sendWelcomeEmail.js";
+import { generateActivationLink } from "./activationLink.js";
 
 // Alta de usuarios (MVP) — el acceso depende exclusivamente del enlace de
 // primer acceso: justo debajo se genera un enlace de recovery de un solo
@@ -48,27 +49,6 @@ function getHeader(headers, name) {
   return key ? headers[key] : undefined;
 }
 
-// Se reutiliza tanto al pedir el enlace a Supabase como al construir la URL
-// de activación de abajo, para que ambos usos no puedan desincronizarse.
-const ACTIVATION_LINK_TYPE = "recovery";
-
-// URL de activación propia de la app — NUNCA se envía el action_link de
-// Supabase directamente (ver el uso más abajo). Ese enlace apunta al
-// endpoint público de verificación de Supabase, que consume el token con un
-// simple GET: un escáner de email/link-preview que lo precargue lo
-// invalidaría antes de que el usuario llegue a pulsarlo. Con esta URL
-// propia, cargar la página no consume nada — solo lo hace activateAccount()
-// al enviar el formulario (ver useSession.js). email va en la URL a
-// propósito: AuthGate lo necesitará para poder detectar una sesión ajena
-// más adelante (ver App.jsx), y no añade exposición nueva — es el mismo
-// email al que ya se envía este correo.
-function buildActivationUrl(baseUrl, { tokenHash, email }) {
-  const url = new URL(baseUrl);
-  url.searchParams.set("token_hash", tokenHash);
-  url.searchParams.set("type", ACTIVATION_LINK_TYPE);
-  url.searchParams.set("email", email);
-  return url.toString();
-}
 
 export async function handleCreateUser({ method, headers, body }) {
   if (method !== "POST") {
@@ -142,27 +122,17 @@ export async function handleCreateUser({ method, headers, body }) {
   // Enlace de primer acceso + email de bienvenida — best-effort: la cuenta
   // ya está creada, así que un fallo aquí no debe impedir la respuesta de
   // éxito. Si falla, el admin puede seguir compartiendo la contraseña
-  // inicial a mano (ver comentario de arriba).
+  // inicial a mano (ver comentario de arriba). generateActivationLink()
+  // (activationLink.js) es el mismo helper que usan ahora también
+  // regenerar-link y regenerar-contraseña — un único sitio que genera este
+  // tipo de enlace.
   let emailSent = false;
   let emailError = null;
-  let activationLink;
-  const { data: linkData, error: linkError } = await getServiceRoleClient().auth.admin.generateLink({
-    type: ACTIVATION_LINK_TYPE,
-    email,
-    options: { redirectTo: process.env.APP_URL },
-  });
+  const { activationLink, error: linkErrorMessage } = await generateActivationLink(email);
 
-  if (linkError) {
-    console.error("create-user: no se pudo generar el enlace de primer acceso", linkError);
-    emailError = "No se pudo generar el enlace de acceso.";
-  } else if (!process.env.APP_URL || !linkData?.properties?.hashed_token) {
-    // Ya no hay Site URL de Supabase de respaldo como antes: el
-    // action_link de Supabase no se usa (ver buildActivationUrl), así que
-    // sin APP_URL no hay base para construir ningún enlace de activación.
-    console.error("create-user: no se pudo construir el enlace de activación — falta APP_URL o hashed_token en la respuesta de generateLink");
-    emailError = "No se pudo generar el enlace de acceso.";
+  if (linkErrorMessage) {
+    emailError = linkErrorMessage;
   } else {
-    activationLink = buildActivationUrl(process.env.APP_URL, { tokenHash: linkData.properties.hashed_token, email });
     // try/catch defensivo: sendWelcomeEmail está documentado como "nunca
     // lanza", pero no dependemos solo de esa convención — si algún día deja
     // de cumplirse, esto sigue garantizando email_sent:false + el fallback

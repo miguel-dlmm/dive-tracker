@@ -37,12 +37,16 @@ function localApiRoutes() {
             import('./server/users/deleteUser.js'),
             import('./server/users/setUserActive.js'),
             import('./server/users/listUserStatus.js'),
-          ]).then(([createUser, updateAdminStatus, deleteUser, setUserActive, listUserStatus]) => ({
+            import('./server/users/regenerateActivationLink.js'),
+            import('./server/users/regeneratePassword.js'),
+          ]).then(([createUser, updateAdminStatus, deleteUser, setUserActive, listUserStatus, regenerateActivationLink, regeneratePassword]) => ({
             '/api/create-user': createUser.handleCreateUser,
             '/api/update-admin-status': updateAdminStatus.handleUpdateAdminStatus,
             '/api/delete-user': deleteUser.handleDeleteUser,
             '/api/set-user-active': setUserActive.handleSetUserActive,
             '/api/list-user-status': listUserStatus.handleListUserStatus,
+            '/api/regenerate-activation-link': regenerateActivationLink.handleRegenerateActivationLink,
+            '/api/regenerate-password': regeneratePassword.handleRegeneratePassword,
           }))
         }
         return routesPromise
