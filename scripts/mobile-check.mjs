@@ -330,6 +330,30 @@ async function main() {
   await page.waitForTimeout(300);
   await shot(page, "resumen-vistazo-rapido");
 
+  console.log("→ Resumen: franja de tendencia — tocar la barra más antigua navega a ese periodo");
+  // Acotado a <main>: la cabecera global también tiene un botón "Ir a
+  // Home" que coincidiría con un patrón /^Ir a /  sin acotar.
+  const trendBars = page.getByRole("main").getByRole("button", { name: /^Ir a / });
+  const trendBarCount = await trendBars.count();
+  if (trendBarCount === 6) {
+    const periodLabelLocator = page.locator("main span.font-semibold.tabular-nums");
+    const labelBefore = await periodLabelLocator.first().textContent().catch(() => null);
+    await trendBars.first().tap();
+    await page.waitForTimeout(200);
+    const labelAfter = await periodLabelLocator.first().textContent().catch(() => null);
+    if (!labelAfter || labelAfter === labelBefore) {
+      consoleIssues.push("[resumen] Tocar la barra más antigua de la tendencia no cambió el periodo mostrado.");
+    }
+    await shot(page, "resumen-tendencia-navegada");
+    // Vuelve al periodo actual con "Mes" para el resto del recorrido.
+    await page.getByRole("button", { name: "Granularidad del periodo" }).tap();
+    await page.waitForTimeout(150);
+    await page.getByRole("option", { name: "Mes", exact: true }).tap();
+    await page.waitForTimeout(200);
+  } else {
+    consoleIssues.push(`[resumen] La franja de tendencia debería mostrar 6 barras, muestra ${trendBarCount}.`);
+  }
+
   console.log("→ Resumen: granularidad+periodo fusionados en un único control — cambiar a 'Rango'");
   await page.getByRole("button", { name: "Granularidad del periodo" }).tap();
   await page.waitForTimeout(150);
