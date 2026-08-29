@@ -1,9 +1,48 @@
-import React, { useMemo } from "react";
-import { TrendingUp } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { TrendingUp, Clock } from "lucide-react";
 import { NAVY, TEAL, SUN } from "./App";
-import { Money, MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
+import { Money, MonthCalendar, colorFor, isPendingStatus, oppositeStatus, useToast, MOVEMENT_TYPE_META } from "./shared";
 import { computeRateTotal, buildIncomeEntries } from "./rateCalc";
 import PendingCollectionCard from "./PendingCollectionCard";
+
+// Cuántas filas caben en el widget de Home sin que empiece a competir en
+// tamaño con la propia tarjeta "Pendiente de cobrar" — un vistazo de las
+// más urgentes, no un segundo listado completo (eso ya es Mi trabajo).
+const OLDEST_PENDING_LIMIT = 3;
+
+// Fila compacta del widget "Los más antiguos por cobrar" — deliberadamente
+// más simple que EntryRow de Mi trabajo (sin la coreografía de
+// entrada/salida animada): al cobrar aquí, la fila deja de cumplir el
+// filtro de `incomeEntries` y desaparece del array en el siguiente
+// render, sin necesitar animar su propia salida — este widget es un
+// resumen de acceso rápido, no la lista completa donde sí vale la pena
+// esa inversión.
+function OldestPendingRow({ entry, activityColor, currencyRows, onCollect, busy }) {
+  const isAjuste = entry._source === "companeros";
+  const label = isAjuste ? (entry.colleague_name || "Compañero/a") : (entry.activity || "—");
+  return (
+    <div className="flex items-center justify-between gap-2 border-t border-gray-100 py-2.5 first:border-t-0 first:pt-0">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold" style={{ color: isAjuste ? NAVY : activityColor(entry.activity) }}>{label}</p>
+        <p className="mt-0.5 truncate text-[11px] text-gray-400">{entry.school} · {entry.date}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <span className="text-sm font-semibold tabular-nums" style={{ color: NAVY }}>
+          <Money amount={entry.total} code={entry.currency} currencyRows={currencyRows} />
+        </span>
+        <button
+          type="button"
+          onClick={onCollect}
+          disabled={busy}
+          className="min-h-9 rounded-md px-2 text-xs font-semibold disabled:opacity-50"
+          style={{ color: TEAL }}
+        >
+          Cobrar
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
 // schools / currencies / paymentStatuses: hooks de useSupabaseTable
@@ -13,10 +52,30 @@ import PendingCollectionCard from "./PendingCollectionCard";
 // preselecciona esa fecha en vez de la de hoy (la usa el calendario de
 // abajo). type es directamente "ganado"/"comision"/"companeros" — ya no
 // hace falta el id de pestaña antiguo ("log"), ver docs/ADR/0005 addendum.
-// onOpenPayments: () => navega a la pantalla de Pagos (tarjeta "Pendiente de cobrar")
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPayments }) {
+// onOpenPending: () => navega a Mi trabajo (tarjeta "Pendiente de cobrar" y
+// enlace "Ver todos" del widget de más antiguos) — Mi trabajo abre ya en
+// su pestaña "Pendientes" por defecto, así que no hace falta pasarle
+// ningún filtro explícito.
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending }) {
   const now = new Date();
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
+  const toast = useToast();
+  const [collectingKey, setCollectingKey] = useState(null);
+
+  const tableForSource = (source) => (source === "ganado" ? worklog : source === "comision" ? comisiones : colleaguePayments);
+  const quickCollect = async (entry) => {
+    const key = `${entry._source}:${entry.id}`;
+    setCollectingKey(key);
+    try {
+      const target = oppositeStatus(entry.status, paymentStatuses.rows);
+      await tableForSource(entry._source).updateRow(entry.id, { status: target });
+      toast?.success("Marcado como cobrado");
+    } catch {
+      toast?.error("No se pudo actualizar. Inténtalo de nuevo.");
+    } finally {
+      setCollectingKey(null);
+    }
+  };
 
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
   const rateTotal = (e, ratesTable) => {
@@ -75,6 +134,17 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
     return { totals, count: pendingEntries.length };
   }, [incomeEntries, paymentStatuses.rows]);
 
+  // Widget "Los más antiguos por cobrar" — las deudas que llevan más
+  // tiempo esperando son las que más vale la pena resolver primero (más
+  // fáciles de olvidar cuanto más lejos queda la fecha). incomeEntries ya
+  // excluye los ajustes negativos hacia un compañero (buildIncomeEntries),
+  // así que aquí "Cobrar" siempre tiene sentido, sin el matiz de
+  // "Liquidar" que sí necesita Mi trabajo.
+  const oldestPending = useMemo(() => incomeEntries
+    .filter((e) => isPendingStatus(e.status, paymentStatuses.rows))
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, OLDEST_PENDING_LIMIT), [incomeEntries, paymentStatuses.rows]);
+
   return (
     <div className="space-y-4">
       {/* 1. Pendiente de cobrar — información financiera principal, la más
@@ -88,15 +158,56 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           Mi trabajo, ADR-0005) no necesita una fila propia si cabe, claro
           y con buen tamaño táctil, en el espacio libre de la tarjeta más
           consultada de Home. onQuickAdd usa e.stopPropagation() dentro de
-          PendingCollectionCard para no interferir con onPress (Pagos). */}
+          PendingCollectionCard para no interferir con onPress (ahora
+          navega a Mi trabajo, ver comentario de onOpenPending arriba). */}
       <PendingCollectionCard
         totals={pendingSummary.totals}
         count={pendingSummary.count}
         currencyRows={currencies.rows}
         color={SUN}
-        onPress={onOpenPayments}
+        onPress={onOpenPending}
         onQuickAdd={() => onQuickCreate("ganado")}
       />
+
+      {/* 1b. Los más antiguos por cobrar — 2026-08-29: Home era solo
+          informativa/de creación, sin ninguna acción real sobre lo ya
+          existente ("empujar el uso de la app, no solo una tarjeta
+          bonita"). Este widget deja cobrar directamente las deudas más
+          urgentes (las más antiguas) sin salir de Home ni pasar por Mi
+          trabajo, con el mismo criterio de feedback por toast que el resto
+          de la app. Solo se muestra si hay algo pendiente — una tarjeta
+          vacía de "nada por cobrar" no aporta nada que "Nada pendiente" ya
+          no diga en la tarjeta de arriba. */}
+      {oldestPending.length > 0 && (
+        <div className="rounded-xl border border-gray-200 bg-white p-4" data-testid="oldest-pending-widget">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+            <Clock size={14} style={{ color: SUN }} aria-hidden="true" />
+            Los más antiguos por cobrar
+          </div>
+          <div>
+            {oldestPending.map((entry) => (
+              <OldestPendingRow
+                key={`${entry._source}:${entry.id}`}
+                entry={entry}
+                activityColor={activityColor}
+                currencyRows={currencies.rows}
+                busy={collectingKey === `${entry._source}:${entry.id}`}
+                onCollect={() => quickCollect(entry)}
+              />
+            ))}
+          </div>
+          {pendingSummary.count > oldestPending.length && (
+            <button
+              type="button"
+              onClick={onOpenPending}
+              className="mt-2 min-h-9 w-full rounded-md text-center text-xs font-semibold"
+              style={{ color: TEAL }}
+            >
+              Ver los {pendingSummary.count} pendientes en Mi trabajo
+            </button>
+          )}
+        </div>
+      )}
 
       {/* 2. Calendario del mes — revisión de jerarquía 2026-08-29 (ver
           docs/ADR/0004, addendum): antes iba en tercer y último lugar,

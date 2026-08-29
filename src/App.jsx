@@ -269,6 +269,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
             activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
             onQuickCreate={startHomeCreate}
+            onOpenPending={() => setTab("trabajo")}
           />
         )}
         {tab === "log" && (
