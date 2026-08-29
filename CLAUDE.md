@@ -140,7 +140,12 @@ ningún control de seguridad.
    no se elige en el formulario de Work Log/Comisiones — se deriva
    automáticamente de la tarifa que coincide con escuela+actividad. Si no hay
    tarifa, usar `currencies` con `is_default = true` como respaldo, nunca
-   dejar el símbolo en blanco.
+   dejar el símbolo en blanco. Ajuste de curso (sin tarifa asociada) tampoco
+   la elige por movimiento desde 2026-08-30: se resuelve sola (moneda
+   favorita en `localStorage`, ADR-0007, o `is_default` de `currencies` como
+   respaldo) y se muestra como referencia junto al importe, nunca como un
+   campo interactivo — ver `docs/BACKLOG.md`, "Configuración → Moneda
+   favorita", para la futura pantalla que la gestione explícitamente.
 10. **Tipografía única (Inter)**, jerarquía por peso/tamaño, no mezclar
     fuentes. Cifras de dinero: `tabular-nums` + símbolo de moneda más
     apagado que la cifra (componente `Money`).

@@ -292,16 +292,18 @@ async function main() {
   await page.waitForTimeout(150);
   await shot(page, "select-curso-cerrado");
 
-  console.log("→ Cambiar tipo -> Ajuste de curso (Moneda)");
+  console.log("→ Cambiar tipo -> Ajuste de curso (sin campo de Moneda, es global desde 2026-08-30)");
   await page.getByRole("tab", { name: /Ajuste de curso/ }).tap();
   await page.waitForTimeout(150);
-  await page.getByLabel(/Buscar moneda/).tap();
-  await page.waitForTimeout(150);
-  await shot(page, "moneda-abierta");
-  await page.getByLabel(/Buscar moneda/).fill("dolar");
-  await page.waitForTimeout(150);
-  await shot(page, "moneda-busqueda-sin-tilde");
-  await page.keyboard.press("Escape");
+  const hasMonedaField = await page.getByLabel(/Buscar moneda/).isVisible().catch(() => false);
+  if (hasMonedaField) {
+    consoleIssues.push("[ajuste] El formulario de Ajuste de curso todavía muestra un campo de Moneda — debería resolverse solo (moneda global).");
+  }
+  const importeLabelVisible = await page.getByText(/^Importe · /).isVisible().catch(() => false);
+  if (!importeLabelVisible) {
+    consoleIssues.push("[ajuste] No se ve la referencia de moneda junto a 'Importe' (etiqueta 'Importe · <código>').");
+  }
+  await shot(page, "ajuste-sin-campo-moneda");
 
   console.log("→ Añadir nota (textarea autoexpandible)");
   await page.getByRole("button", { name: /Añadir nota/ }).tap();

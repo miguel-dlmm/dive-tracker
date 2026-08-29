@@ -260,25 +260,29 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     }));
   });
 
-  it("Ajuste usa la moneda global por defecto, y ofrece guardar la elegida como favorita para la próxima vez", async () => {
+  it("Ajuste usa la moneda global por defecto, sin ningún campo para elegirla en el formulario", async () => {
     const user = userEvent.setup();
     renderMiTrabajo({});
 
     await user.click(screen.getByRole("button", { name: "Añadir" }));
     await user.click(screen.getByRole("tab", { name: /Ajuste de curso/ }));
 
-    expect(screen.getByLabelText("Moneda")).toHaveValue("EUR — Euro (€)");
-    expect(screen.queryByText(/como moneda favorita/)).not.toBeInTheDocument();
+    // Sin campo "Moneda": la moneda (EUR, la de la app por defecto — no hay
+    // favorita guardada en este test) se muestra como referencia dentro de
+    // la propia etiqueta de "Importe", no como un desplegable aparte.
+    expect(screen.queryByLabelText("Moneda")).not.toBeInTheDocument();
+    expect(screen.getByText("Importe · EUR")).toBeInTheDocument();
+  });
 
-    await user.click(screen.getByLabelText("Moneda"));
-    await user.click(screen.getByRole("option", { name: /USD/ }));
-    await user.click(screen.getByRole("button", { name: "Usar USD como favorita" }));
+  it("Ajuste usa la moneda favorita guardada (localStorage, ADR-0007) cuando existe", async () => {
+    const user = userEvent.setup();
+    localStorage.setItem("oceanpulse:favoriteCurrency:anon", "USD");
+    renderMiTrabajo({});
 
-    await user.click(screen.getByRole("button", { name: "Cerrar" }));
     await user.click(screen.getByRole("button", { name: "Añadir" }));
     await user.click(screen.getByRole("tab", { name: /Ajuste de curso/ }));
 
-    expect(screen.getByLabelText("Moneda")).toHaveValue("USD — Dólar estadounidense ($)");
+    expect(screen.getByText("Importe · USD")).toBeInTheDocument();
   });
 
   it("añadir tarifa se expande dentro de la misma hoja (no abre un segundo modal) y guarda la tarifa nueva", async () => {
