@@ -854,7 +854,81 @@ capturas de "Editar escuela" y "Editar tarifa de Ihasia - Basic Diver"
 revisadas visualmente, confirmando precarga correcta y el icono `Check`
 en el botón Guardar.
 
+## Bloque 3 — Resumen: franja de tendencia (6 periodos, navegable)
+
+Revisado el estado real de Resumen contra el marco de los dos perfiles
+(vistazo rápido / obsesionado con números) antes de tocar nada: la
+tarjeta principal y las tarjetas plegables ya cubrían bien ambos casos
+(ver ADR-0009). El hueco real: nada daba una sensación de trayectoria
+más allá de UN periodo anterior. Añadido `TrendBars` — últimos 6
+periodos, cada barra navega a ese periodo al tocarla (valor funcional,
+no decorativo, mismo criterio que el widget de Home de esta sesión). Sin
+sentido para "Rango" (sin secuencia natural de periodo anterior).
+
+Evaluado y descartado para esta pasada (documentado en el addendum de
+ADR-0009 como candidato futuro): calendario para granularidades no
+mensuales (requeriría rediseñar `MonthCalendar`, no es un ajuste de
+Resumen), gráfico de líneas en vez de barras (más código/dependencia
+para un beneficio marginal sobre 6 puntos).
+
+**Validado:** 251/251 tests (+2 nuevos: conteo de 6 barras + navegación
+real al tocar la más antigua, y que no aparece con "Rango"), build
+correcto, `mobile-check` sin errores tras corregir un selector propio
+del script (el patrón `/^Ir a /` coincidía también con el botón "Ir a
+Home" de la cabecera global, sin acotar a `<main>`) — capturas de la
+franja con datos reales y tras navegar 5 meses atrás revisadas
+visualmente, confirmando que el total, "Por escuela" y las propias
+barras se recalculan correctamente para el nuevo periodo.
+
+## Interrupción — bug reportado en vivo por el usuario: "solo superadmin puede..." con cuenta real superadmin
+
+El usuario, probando en su `localhost:5173` con su cuenta real
+(`migueldlmm@gmail.com`, nickname `admin`), reporta no poder crear,
+eliminar ni activar/desactivar usuarios — la app responde "solo un
+superadmin puede hacer esto" pese a que la tabla de usuarios muestra su
+cuenta como superadmin.
+
+**Investigado (diagnóstico de solo lectura, sin tocar nada):**
+- Confirmado con un script desechable (`_diag-superadmin-check.mjs`,
+  eliminado tras el uso) que consulta Supabase directamente con la MISMA
+  `SUPABASE_SERVICE_ROLE_KEY` de `.env.local`: el `auth.users.id` de
+  `migueldlmm@gmail.com` coincide exactamente con `profiles.user_id`, y
+  `profiles.is_superadmin = true`. La base de datos está bien.
+- Confirmado que `SUPABASE_SERVICE_ROLE_KEY` está presente, es distinta
+  de `VITE_SUPABASE_ANON_KEY`, y funciona (la consulta anterior tuvo
+  éxito) — descarta una service role key mal configurada.
+- Confirmado (con el usuario) que la cabecera de la app muestra "admin"
+  (su nickname real), no "dev-bypass" — descarta que el auto-login de
+  desarrollo (`VITE_DEV_AUTH_BYPASS=true`, activo en su `.env.local`)
+  esté secuestrando la sesión silenciosamente.
+- Revisado el orden de carga de variables de entorno en
+  `vite.config.js` (la causa raíz del bug de esta mañana) — correcto,
+  ya validado entonces.
+- Revisado `getHeader()` (case-insensitive) — no es un problema de
+  mayúsculas en el header Authorization.
+
+**No resuelto — bloqueo real, no un fix especulativo:** con la base de
+datos, la service role key y la identidad visible en la UI descartadas
+como causa, la explicación más probable que queda es un token de sesión
+de Supabase obsoleto en esa pestaña del navegador (sesión larga,
+posible caso límite de refresco de token) — algo que no puedo
+reproducir ni confirmar sin acceso a la sesión en vivo del navegador.
+Se ha pedido al usuario probar un cierre de sesión + login limpio como
+primer paso, y compartir la petición de red exacta (pestaña Network) si
+persiste. Deliberadamente NO se ha tocado `useSession.js` ni el
+mecanismo de dev-bypass sin evidencia de un bug real ahí — encaja en
+"si aparece un bloqueo real que pueda poner en riesgo... seguridad...
+detente y documenta", no en "decide e implementa".
+
+**Siguiente paso si el usuario confirma que persiste tras relogin:**
+pedir la respuesta exacta de la petición fallida (Network tab) y, si
+hace falta, decodificar (sin exponer el secreto) el `sub` del JWT
+enviado para confirmar a qué `user_id` resuelve realmente — eso
+distinguiría de forma concluyente entre "token de otra sesión" y
+cualquier otra causa aún no identificada.
+
 ## Siguiente paso
 
-Bloques 1 y 2 cerrados. Continuando con el bloque 3 (rediseño de
-Resumen).
+Bloques 1, 2 y 3 cerrados. Continuando con el bloque 5 (release/
+deployment — investigación de estándares + proceso mínimo viable +
+simulación, sin push/merge/tag/deploy real).

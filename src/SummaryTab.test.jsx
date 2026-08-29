@@ -57,6 +57,45 @@ describe("SummaryTab — tarjeta principal", () => {
   });
 });
 
+// Franja de tendencia (2026-08-29): últimos 6 periodos, cada barra navega
+// al tocarla — cubre el conteo, la navegación real y que se oculta para
+// "Rango" (sin secuencia natural de "periodo anterior").
+const MONTHS_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+function monthsAgoLabel(base, n) {
+  const d = new Date(base.getFullYear(), base.getMonth() - n, 1);
+  return `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+describe("SummaryTab — franja de tendencia", () => {
+  it("muestra 6 periodos y tocar la barra más antigua navega hasta ahí", async () => {
+    const user = userEvent.setup();
+    renderSummary({
+      worklog: [{ id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+    });
+
+    const bars = screen.getAllByRole("button", { name: /^Ir a / });
+    expect(bars).toHaveLength(6);
+
+    const currentLabel = `${MONTHS_ES[NOW.getMonth()]} ${NOW.getFullYear()}`;
+    expect(screen.getByText(currentLabel)).toBeInTheDocument();
+
+    await user.click(bars[0]);
+
+    expect(screen.getByText(monthsAgoLabel(NOW, 5))).toBeInTheDocument();
+    expect(screen.queryByText(currentLabel)).not.toBeInTheDocument();
+  });
+
+  it("no aparece con granularidad 'Rango' (sin periodo anterior natural)", async () => {
+    const user = userEvent.setup();
+    renderSummary({});
+
+    await user.click(screen.getByRole("button", { name: "Granularidad del periodo" }));
+    await user.click(screen.getByRole("option", { name: "Rango" }));
+
+    expect(screen.queryByText(/Tendencia — últimos/)).not.toBeInTheDocument();
+  });
+});
+
 describe("SummaryTab — tarjetas plegables", () => {
   it("Por escuela empieza abierta; Comisiones/Calendario/Pagos de compañeros empiezan cerradas", () => {
     renderSummary({

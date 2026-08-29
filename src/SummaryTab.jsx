@@ -27,7 +27,15 @@ const NEUTRAL_GRAY = "#94A3B8";
 const AJUSTE_FILL = "#64748B";
 
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const MONTHS_SHORT = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 const fmtInt = (n) => (n || 0).toLocaleString("es-ES");
+
+function shortPeriodLabel(granularity, year, unitIndex) {
+  if (granularity === "mensual") return MONTHS_SHORT[unitIndex];
+  if (granularity === "trimestral") return `T${unitIndex + 1}`;
+  if (granularity === "semestral") return `S${unitIndex + 1}`;
+  return `${year}`;
+}
 
 const UNITS_PER_YEAR = { mensual: 12, trimestral: 4, semestral: 2, anual: 1 };
 
@@ -226,6 +234,54 @@ function HeroTotal({ label, period, color, total, previousTotal, canCompare, cur
   );
 }
 
+// Cuántos periodos hacia atrás muestra la tendencia — un vistazo, no un
+// histórico completo (ver TrendBars). 6 cabe cómodo en el ancho de un
+// iPhone con etiquetas legibles debajo de cada barra.
+const TREND_LOOKBACK = 6;
+
+// Franja de tendencia — 2026-08-29: la tarjeta principal (HeroTotal) ya
+// respondía "¿cómo voy?" comparado con UN periodo anterior, pero nada en
+// la pantalla daba una sensación de trayectoria a más largo plazo (¿llevo
+// varios meses subiendo, bajando, estable?) — la pregunta que de verdad le
+// importa al perfil "obsesionado con los números" antes incluso de
+// profundizar por escuela o curso. Cada barra es además un atajo de
+// navegación (tocarla salta a ese periodo), no solo decoración — mismo
+// criterio que el widget de Home de esta sesión: valor real, no un
+// gráfico por el gusto de tener un gráfico. Las barras usan magnitude()
+// (suma sin convertir divisas) solo para la ALTURA relativa — una
+// aproximación visual ya aceptada en esta misma pantalla (ver
+// topSchoolColorForDay), no una cifra que se muestre como exacta.
+function TrendBars({ periods, color, currentIndex, onSelect }) {
+  const max = Math.max(1, ...periods.map((p) => magnitude(p.totals)));
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3">
+      <div className="mb-2 text-xs font-medium text-gray-400">Tendencia — últimos {periods.length} periodos</div>
+      <div className="flex items-end gap-1.5" style={{ height: 56 }}>
+        {periods.map((p, i) => {
+          const h = Math.round(Math.max(4, (magnitude(p.totals) / max) * 44));
+          const isCurrent = i === currentIndex;
+          return (
+            <button
+              key={`${p.year}-${p.unitIndex}`}
+              type="button"
+              onClick={() => onSelect(p)}
+              disabled={isCurrent}
+              aria-label={`Ir a ${p.label}`}
+              aria-current={isCurrent ? "true" : undefined}
+              className="flex min-h-11 flex-1 flex-col items-center justify-end gap-1"
+            >
+              <div className="w-full rounded-sm" style={{ height: h, backgroundColor: isCurrent ? color : `${color}4D` }} />
+              <span className="truncate text-[10px] font-medium" style={{ color: isCurrent ? color : "#9CA3AF" }}>
+                {shortPeriodLabel(p.granularity, p.year, p.unitIndex)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // worklog / rates / comisiones / commissionRates / activities / schools / currencies / colleaguePayments: hooks de useSupabaseTable
 export default function SummaryTab({ worklog, rates, comisiones, commissionRates, activities, schools, currencies, colleaguePayments }) {
   const now = new Date();
@@ -345,6 +401,23 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
     ? (customFrom && customTo ? `${customFrom} → ${customTo}` : "Elige un rango")
     : periodLabel(granularity, year, unitIndex);
 
+  // Últimos TREND_LOOKBACK periodos (más antiguo primero) de la misma
+  // granularidad, para TrendBars — sin sentido en "Rango" (sin secuencia
+  // natural de "periodo anterior"), igual que el delta de HeroTotal.
+  const trendPeriods = useMemo(() => {
+    if (granularity === "personalizado") return [];
+    const periods = [];
+    let y = year, u = unitIndex;
+    for (let i = 0; i < TREND_LOOKBACK; i++) {
+      const [start, end] = periodRange(granularity, y, u);
+      const entries = withTotals.filter((e) => { const d = new Date(e.date); return d >= start && d <= end; });
+      periods.unshift({ year: y, unitIndex: u, granularity, label: periodLabel(granularity, y, u), totals: groupSum(entries, () => "Total")[0]?.totals || {} });
+      const prev = previousUnit(granularity, y, u);
+      y = prev.year; u = prev.unitIndex;
+    }
+    return periods;
+  }, [granularity, year, unitIndex, withTotals]);
+
   const renderSchoolActivities = (schoolName) => {
     const rows = groupSum(periodEntries.filter((e) => e.school === schoolName), (e) => e.activity, { withPeople: true });
     return <RankedList rows={rows} currencyRows={currencies.rows} textColor={activityColor} emptyLabel="Sin cursos en este periodo." />;
@@ -411,6 +484,15 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         canCompare={granularity !== "personalizado"}
         currencyRows={currencies.rows}
       />
+
+      {trendPeriods.length > 0 && (
+        <TrendBars
+          periods={trendPeriods}
+          color={sourceColor}
+          currentIndex={trendPeriods.length - 1}
+          onSelect={(p) => { setYear(p.year); setUnitIndex(p.unitIndex); }}
+        />
+      )}
 
       {/* Todo lo demás es profundidad bajo demanda — nada de esto ocupa
           espacio hasta que se pide, ver ADR-0009. */}

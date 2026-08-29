@@ -40,7 +40,8 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   tocar, Por curso, Calendario, Comisiones, Pagos de compañeros) como
   tarjetas plegables bajo demanda. Granularidad y navegación de periodo
   fusionadas en un único control compacto, en vez de dos filas
-  separadas.
+  separadas. Franja de tendencia con los últimos 6 periodos — cada barra
+  navega a ese periodo al tocarla.
 - Bypass de login para desarrollo local (`VITE_DEV_AUTH_BYPASS`) — nunca
   activo en producción.
 - Píldora "Qué hay de nuevo": aparece una vez por cuenta al entrar en una

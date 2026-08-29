@@ -149,3 +149,50 @@ Sin cambios de lógica de cálculo ni de datos — es una reestructuración
 puramente de presentación de dos controles ya existentes. El segmentado
 Total/Curso/Comisión/Ajuste no se ha tocado: ya cabía en una sola fila
 y no formaba parte de la queja.
+
+## Addendum (2026-08-29) — franja de tendencia: la pregunta que faltaba
+
+Encargo explícito de rediseño profundo de Resumen, con el marco de los
+dos perfiles (vistazo rápido / obsesionado con los números) ya usado en
+el ADR original. Revisado el estado real de la pantalla contra ese
+marco antes de tocar nada (para no repetir trabajo ya hecho): la
+tarjeta principal (HeroTotal) ya respondía "¿cómo voy?" con la
+comparación a UN periodo anterior, y las tarjetas plegables ya cubrían
+la exploración por escuela/curso/calendario/comisiones bajo demanda.
+Lo que no existía en ningún sitio: una sensación de **trayectoria** a
+más largo plazo — si llevas varios periodos subiendo, bajando o
+estable, la pregunta que de verdad importa al perfil "obsesionado con
+los números" antes incluso de profundizar por escuela.
+
+**Decisión:** `TrendBars` — una franja de barras con los últimos 6
+periodos (misma granularidad que el resto de la pantalla), justo debajo
+de la tarjeta principal. Cada barra es además un atajo de navegación
+real (tocarla salta a ese periodo) — mismo criterio que el widget de
+Home de esta sesión: valor funcional, no un gráfico por el gusto de
+tener un gráfico. Las alturas usan `magnitude()` (suma sin convertir
+divisas) — una aproximación visual ya aceptada en esta pantalla (ver
+`topSchoolColorForDay`), nunca mostrada como cifra exacta.
+
+Sin sentido para "Rango" (personalizado): un rango arbitrario no tiene
+una secuencia natural de "6 periodos anteriores", el mismo motivo por
+el que HeroTotal tampoco calcula un delta ahí.
+
+**Qué se evaluó y se descartó para esta pasada, documentado como
+candidato futuro, no implementado ahora:**
+- **Calendario para granularidades no mensuales** — `MonthCalendar` es
+  por diseño una vista de un único mes; extenderlo a trimestre/semestre/
+  año sería un rediseño de ese componente, no un ajuste de Resumen.
+  Sigue sin calendario fuera de "Mes", igual que antes de este addendum.
+- **Gráfico de líneas/área en vez de barras** — más expresivo para ver
+  tendencia exacta, pero añade una dependencia de gráficos o bastante
+  código propio de trazado (curvas, ejes) para un beneficio marginal
+  sobre barras en un vistazo de 6 puntos. Barras ya resuelven "¿subo o
+  bajo?" de un vistazo, que es la pregunta real.
+- **Widgets configurables (mostrar/ocultar cada tarjeta)** — sigue fuera
+  de alcance explícito de esta fase; `TrendBars` se suma como una
+  tarjeta más de la misma familia que `ExpandableCard`, apoyándose en la
+  misma base que un futuro sistema de widgets podría usar.
+
+Sin cambios de lógica de cálculo del resto de la pantalla — es una
+adición nueva, no una modificación de HeroTotal ni de las tarjetas
+plegables existentes.
