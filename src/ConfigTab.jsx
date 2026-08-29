@@ -5,7 +5,7 @@ import {
   CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users,
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet } from "./shared";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab } from "./shared";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
 
@@ -167,17 +167,10 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
             </li>
           );
         })}
-        {filteredRows.length === 0 && <li className="px-4 py-8 text-center text-sm text-gray-400">Sin resultados.</li>}
+        {filteredRows.length === 0 && <li className="px-4 py-6 text-center text-sm text-gray-400">Sin resultados.</li>}
       </ul>
 
-      <button
-        onClick={openCreateSheet}
-        aria-label={createLabel}
-        className="fixed bottom-24 right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-90"
-        style={{ backgroundColor: TEAL, width: 52, height: 52 }}
-      >
-        <Plus size={24} aria-hidden="true" />
-      </button>
+      <Fab onClick={openCreateSheet} label={createLabel} color={TEAL} />
 
       <Sheet open={sheetOpen} onClose={closeSheet}>
         <div className="mb-1 flex items-center justify-between">

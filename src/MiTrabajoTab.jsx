@@ -1,9 +1,9 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Plus, Check, RotateCcw, SlidersHorizontal, PartyPopper } from "lucide-react";
+import { Check, RotateCcw, SlidersHorizontal, PartyPopper } from "lucide-react";
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   Money, Field, Select, MultiSelect, DateRangePicker, DeleteButton, ConfirmDialog, colorFor,
-  isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META,
+  isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab,
 } from "./shared";
 import { buildActivityEntries, buildIncomeEntries } from "./rateCalc";
 import PendingCollectionCard from "./PendingCollectionCard";
@@ -711,21 +711,12 @@ export default function MiTrabajoTab({
           tipo vive arriba de la propia hoja (ver MovementSheet) — una
           transición menos, sin perder la posibilidad de elegir Comisión o
           Ajuste. */}
-      <button
+      <Fab
         onClick={() => setSheetRequest({ type: "ganado", editingEntry: null })}
-        aria-label="Añadir"
-        aria-hidden={!fabVisible}
-        tabIndex={fabVisible ? 0 : -1}
-        className="fixed bottom-24 right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 active:scale-90"
-        style={{
-          backgroundColor: accentColor, width: 52, height: 52,
-          opacity: fabVisible ? 1 : 0,
-          transform: fabVisible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.7)",
-          pointerEvents: fabVisible ? "auto" : "none",
-        }}
-      >
-        <Plus size={24} aria-hidden="true" />
-      </button>
+        label="Añadir"
+        color={accentColor}
+        visible={fabVisible}
+      />
 
       <MovementSheet
         request={sheetRequest}

@@ -538,3 +538,53 @@ existentes es exactamente "la solución correcta basada en
 locale" que este bloque prefiere sobre una implementación manual — ya
 está aplicada de forma coherente en toda la app. Sin cambios de código,
 sin commit.
+
+### Bloque 14 — Componentes duplicados: FAB consolidado + libro de estilo
+
+Encargo: auditar duplicación real (formularios, botones, tarjetas,
+menús, confirmaciones, listas, hojas, filtros, acciones, estados
+vacíos), crear un pequeño libro de estilo práctico, consolidar solo
+donde la responsabilidad/interacción/patrón es realmente la misma — sin
+refactor masivo.
+
+**Auditoría:** `RowMenu`, `DeleteButton`/`ConfirmDialog`, `EditActions`,
+`Sheet`, `StatusPill`/`StatusSwitch`, `colorFor`, `Money`/`formatMoney`
+ya eran únicos y compartidos (`shared.jsx`) — sin duplicación real ahí.
+Encontrados 2 casos concretos:
+1. **El botón flotante de creación** (FAB): el mismo bloque de clases
+   Tailwind (`fixed bottom-24 right-4 z-20 flex items-center
+   justify-center rounded-full text-white shadow-lg…`, 52×52) copiado
+   íntegro en `RatesTab.jsx`, `ConfigTab.jsx` y `MiTrabajoTab.jsx` (más 3
+   pantallas heredadas sin ruta de navegación real — ver hallazgo del
+   bloque 11 —, no tocadas). Mismo componente, misma responsabilidad,
+   sin ninguna variación real salvo que Mi trabajo además oculta el FAB
+   en scroll.
+2. **Inconsistencia menor de padding** en el estado vacío "Sin
+   resultados." de Configuración (`py-8` en vez de `py-6`, el valor que
+   ya usaban Tarifas y el resto de listas).
+
+**Solución:** nuevo componente `Fab` en `shared.jsx` (botón + prop
+`visible` opcional para el caso de Mi trabajo, `true` por defecto para
+las demás) — sustituye las 3 copias en pantallas activas. Corregido el
+`py-8` suelto a `py-6`. Nada más se ha tocado: el resto de "parecidos"
+auditados (estado vacío neutro vs. "estás al día" de Mi trabajo,
+`RankedList` de Resumen vs. `CrudTable` de Configuración) tienen
+responsabilidades distintas de verdad — forzarlos a un componente común
+sería la sobreingeniería que `CLAUDE.md` pide evitar, así que se dejan
+documentados como intencionalmente separados.
+
+**Entregable:** `docs/ESTILO.md` — inventario práctico de qué
+componente/patrón usar para cada necesidad (creación, menús, borrado,
+edición inline, cifras, formularios, estados, feedback), más la sección
+"qué no se ha consolidado y por qué" para que una sesión futura no
+vuelva a intentar fusionar lo que ya se evaluó y se descartó a
+propósito.
+
+**Validación:** suite completa **328/328** (sin tests nuevos — cambio
+de refactor puro, sin comportamiento nuevo que probar). Build limpio.
+`mobile-check`: 41 capturas, sin errores de consola; capturas de
+Tarifas/Configuración/Mi trabajo confirman visualmente el FAB idéntico
+al de antes de la extracción.
+
+**Commit:** `refactor(fab): extraer botón flotante de creación
+compartido + libro de estilo Ocean Flow`.

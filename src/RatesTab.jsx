@@ -3,7 +3,7 @@ import { Plus, Check, X, Search, SlidersHorizontal, GraduationCap, Handshake } f
 import { NAVY, TEAL } from "./App";
 import {
   inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, CurrencySearchSelect, MoneyInput,
-  EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten,
+  EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab,
 } from "./shared";
 
 // Rediseño 2026-08-30 — Tarifas pasa a hablar el mismo idioma visual que Mi
@@ -232,14 +232,7 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
         </div>
       </div>
 
-      <button
-        onClick={openCreateSheet}
-        aria-label="Nueva tarifa"
-        className="fixed bottom-24 right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-90"
-        style={{ backgroundColor: accentColor, width: 52, height: 52 }}
-      >
-        <Plus size={24} />
-      </button>
+      <Fab onClick={openCreateSheet} label="Nueva tarifa" color={accentColor} />
 
       <Sheet open={sheetOpen} onClose={closeSheet}>
         <div className="mb-1 flex items-center justify-between">
