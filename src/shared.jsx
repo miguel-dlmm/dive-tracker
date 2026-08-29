@@ -1193,6 +1193,36 @@ export function FloatingPanel({ open, pos, panelRef, matchWidth = true, align = 
 // componente o de omitir el menú entero, "Eliminar" se muestra desactivado
 // con el motivo en el título — sigue siendo obvio que la opción existe,
 // solo que no está disponible para esta fila en concreto.
+// Botón flotante de creación — convención #3 (CLAUDE.md): mismo lenguaje
+// visual (fixed bottom-24 right-4, 52×52, color de acento de la sección)
+// en toda pantalla de lista con FAB+hoja (Mi trabajo, Tarifas,
+// Configuración). Extraído 2026-08-30 tras encontrar el mismo bloque de
+// clases/estilo copiado en cada una de ellas. `visible` es opcional
+// (por defecto siempre visible/interactivo): Mi trabajo lo usa para
+// ocultar el FAB mientras el usuario baja por la lista, pero ninguna
+// otra pantalla necesita ese comportamiento hoy — con `visible` sin
+// pasar, el componente se comporta exactamente igual que un botón fijo
+// normal.
+export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      aria-hidden={!visible}
+      tabIndex={visible ? 0 : -1}
+      className="fixed bottom-24 right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 active:scale-90"
+      style={{
+        backgroundColor: color, width: 52, height: 52,
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.7)",
+        pointerEvents: visible ? "auto" : "none",
+      }}
+    >
+      <Icon size={24} aria-hidden="true" />
+    </button>
+  );
+}
+
 export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, deleteDisabledReason }) {
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   // Cierra el menú "⋯" en el mismo instante en que se CONFIRMA el borrado
