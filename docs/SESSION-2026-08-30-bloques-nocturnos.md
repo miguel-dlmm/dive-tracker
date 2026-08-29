@@ -369,6 +369,52 @@ introducir por separado — el plan de migración ya aprobado ahí
 raíz para cualquier cuenta. Sin commit de código en este bloque, solo
 documentación (dos archivos: la ADR y el BACKLOG).
 
-**Commit:** `feat(tarifas): rediseño completo — lista combinada, acento
-por tipo y hoja con motion` (+ `Sheet` extraído en el mismo commit, es
-la base que lo hace posible).
+**Commit:** `docs(tarifas): confirmar con datos reales la causa raíz del
+bug de payment_type`.
+
+### Bloque 10 — Por escuela: ocultar lo multi-escuela cuando solo hay una
+
+Problema de usuario: con una sola escuela configurada (el caso normal
+para un instructor freelance que trabaja para un único centro), varios
+controles/secciones solo tienen sentido para comparar entre escuelas —
+y con una sola, no comparan nada, solo añaden ruido: el filtro
+"Escuela" en Tarifas y Mi trabajo (una única opción posible), la
+tarjeta "Por escuela" de Resumen (agruparía todo en un solo grupo
+idéntico al total), el desglose "Por escuela" dentro de Comisiones, y
+la leyenda de colores por escuela del Calendario de Resumen (un único
+color no necesita leyenda).
+
+**Solución:** en los tres archivos, una misma condición derivada
+(`schools.rows.length > 1`) oculta cada pieza multi-escuela sin tocar
+ningún dato ni regla de negocio — reaparece sola en cuanto existe una
+segunda escuela, sin flag ni configuración manual:
+- `RatesTab.jsx` / `MiTrabajoTab.jsx`: el filtro "Escuela" (dentro de
+  "Filtrar") desaparece con una sola escuela.
+- `SummaryTab.jsx`: la tarjeta "Por escuela" se oculta; "Por curso"
+  hereda su `defaultOpen` (para que Resumen no empiece con las tres
+  tarjetas superiores cerradas); el desglose "Por escuela" dentro de
+  "Comisiones" se oculta (el desglose "Por curso" de Comisiones se
+  mantiene siempre); la leyenda de colores del Calendario se omite.
+
+Ninguna capacidad existente se pierde: en cuanto el usuario da de alta
+una segunda escuela, todo reaparece exactamente igual que antes, sin
+necesitar recargar ni cambiar de pestaña.
+
+**Validación:**
+- Tests nuevos (mismo patrón en los 3 archivos: helper `render*` acepta
+  un override `schools`, un test confirma ausencia con 1 escuela, otro
+  confirma reaparición con 2): `RatesTab.test.jsx` (+2),
+  `MiTrabajoTab.test.jsx` (+2), `SummaryTab.test.jsx` (+2, incluyendo
+  el caso de "Por curso" heredando `defaultOpen`).
+- Suite completa: **325/325** tests (`npm run test -- --run`).
+- Build: limpio (`npm run build`, sin warnings nuevos — el aviso de
+  tamaño de chunk es preexistente).
+- `mobile-check`: 41 capturas, **sin errores ni avisos de consola**. La
+  cuenta demo usada por `mobile-check` tiene varias escuelas reales, así
+  que este pase valida el camino "no se rompe nada con multi-escuela";
+  el camino de una sola escuela queda cubierto por los tests unitarios
+  con datos controlados (no observable end-to-end sin una cuenta demo
+  de una sola escuela, que no existe hoy).
+
+**Commit:** `feat(por-escuela): ocultar funcionalidades multi-escuela
+cuando solo hay una configurada`.

@@ -19,7 +19,7 @@ const LAST_MONTH = new Date(NOW.getFullYear(), NOW.getMonth() - 1, 10).toISOStri
 const CURRENCIES = rowsHook([{ code: "EUR", symbol: "€", is_default: true }]);
 const RATES = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 50, currency: "EUR" }];
 
-function renderSummary({ worklog = [], comisiones = [], colleaguePayments = [], rates = RATES } = {}) {
+function renderSummary({ worklog = [], comisiones = [], colleaguePayments = [], rates = RATES, schools } = {}) {
   render(
     <SummaryTab
       worklog={rowsHook(worklog)}
@@ -27,7 +27,7 @@ function renderSummary({ worklog = [], comisiones = [], colleaguePayments = [], 
       commissionRates={rowsHook(RATES)}
       rates={rowsHook(rates)}
       activities={rowsHook([{ name: "Open Water" }])}
-      schools={rowsHook([{ name: "PADI Cozumel" }, { name: "Ihasia" }])}
+      schools={schools || rowsHook([{ name: "PADI Cozumel" }, { name: "Ihasia" }])}
       currencies={CURRENCIES}
       colleaguePayments={rowsHook(colleaguePayments)}
     />
@@ -259,5 +259,40 @@ describe("SummaryTab — 'Por escuela': evolución vs. el periodo anterior", () 
     await user.click(screen.getByRole("option", { name: "Rango" }));
 
     expect(screen.queryByText("+100%")).not.toBeInTheDocument();
+  });
+});
+
+// Reducción de complejidad (2026-08-30): con una sola escuela configurada,
+// "Por escuela" no aporta nada (agruparía todo en un único grupo) — se
+// oculta hasta que exista una segunda escuela, igual que en Mi trabajo y
+// Tarifas. "Por curso" hereda el defaultOpen que perdería "Por escuela".
+describe("SummaryTab — 'Por escuela' solo con más de una escuela", () => {
+  it("con una sola escuela: oculta la tarjeta 'Por escuela', el desglose 'Por escuela' de Comisiones y la leyenda del calendario; 'Por curso' empieza abierta", async () => {
+    const user = userEvent.setup();
+    renderSummary({
+      worklog: [{ id: "w1", school: "PADI Cozumel", activity: "Open Water", date: "2026-08-05", rate: 20, people: 1 }],
+      comisiones: [{ id: "c1", school: "PADI Cozumel", activity: "Advanced", date: "2026-08-06", amount: 15 }],
+      schools: rowsHook([{ name: "PADI Cozumel" }]),
+    });
+
+    expect(screen.queryByRole("button", { name: "Por escuela" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Por curso" })).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(screen.getByRole("button", { name: "Comisiones" }));
+    expect(screen.queryByText("Por escuela")).not.toBeInTheDocument();
+    // "Por curso" también es el título de la tarjeta de arriba: dentro de
+    // Comisiones debe haber ahora un único "Por curso" (el subtítulo del
+    // desglose), no dos.
+    expect(screen.getAllByText("Por curso")).toHaveLength(2);
+  });
+
+  it("con una segunda escuela: 'Por escuela' reaparece y 'Por curso' vuelve a empezar cerrada", () => {
+    renderSummary({
+      worklog: [{ id: "w1", school: "PADI Cozumel", activity: "Open Water", date: "2026-08-05", rate: 20, people: 1 }],
+      schools: rowsHook([{ name: "PADI Cozumel" }, { name: "Ihasia" }]),
+    });
+
+    expect(screen.getByRole("button", { name: "Por escuela" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "Por curso" })).toHaveAttribute("aria-expanded", "false");
   });
 });
