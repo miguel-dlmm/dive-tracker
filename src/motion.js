@@ -40,6 +40,20 @@ export function listItemVariants(reduced = false) {
   };
 }
 
+// Panel de detalle que aparece bajo un elemento ya visible (p. ej. el
+// desglose del día seleccionado en MonthCalendar) — a diferencia de
+// listItemVariants (pensado para filas dentro de una lista, con
+// desplazamiento horizontal propio), aquí no hay lista ni dirección
+// lateral: solo aparece/desaparece y cambia de alto, con el mismo par de
+// duraciones/easings que el resto de la app, no un tercer vocabulario.
+export function panelVariants(reduced = false) {
+  return {
+    initial: { opacity: 0, height: 0 },
+    animate: { opacity: 1, height: "auto", transition: { duration: d(reduced, DURATION.md), ease: EASE.enter } },
+    exit: { opacity: 0, height: 0, transition: { duration: d(reduced, DURATION.sm), ease: EASE.exit } },
+  };
+}
+
 // Hoja inferior: entra deslizando desde abajo (decelera), sale acelerando.
 export function sheetVariants(reduced = false) {
   return {
