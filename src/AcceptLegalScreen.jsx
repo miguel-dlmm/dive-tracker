@@ -40,12 +40,11 @@ export default function AcceptLegalScreen({ onSubmit }) {
           <div className="text-center leading-tight">
             <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>Antes de continuar</p>
             <h1 className="mt-1 text-lg font-bold tracking-tight" style={{ color: NAVY }}>Privacidad y condiciones de uso</h1>
-            <p className="mt-0.5 text-[11px] font-medium text-gray-400">by Ocean Flow</p>
           </div>
         </div>
 
         <p className="mb-6 text-center text-sm text-gray-500">
-          Revisa y acepta estos documentos para poder usar Ocean Pulse.
+          Revisa y acepta estos documentos para poder usar Ocean Flow.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">

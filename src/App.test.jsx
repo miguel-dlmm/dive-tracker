@@ -80,7 +80,7 @@ describe("AuthGate", () => {
 
     render(<App />);
 
-    expect(await screen.findByText("Ocean Pulse")).toBeInTheDocument();
+    expect(await screen.findByText("Ocean Flow")).toBeInTheDocument();
     expect(screen.queryByLabelText("Nueva contraseña")).not.toBeInTheDocument();
     expect(screen.getByText("ada")).toBeInTheDocument();
   });

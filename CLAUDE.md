@@ -1,8 +1,15 @@
-# Ocean Pulse — contexto del proyecto
+# Ocean Flow — contexto del proyecto
 
 App de control de ingresos para instructor de buceo freelance (Registro/Work
 Log de clases impartidas, Comisiones por clientes referidos, Pagos de
-compañeros, Tarifas, Resumen). Producto de la marca personal "Ocean Flow".
+compañeros, Tarifas, Resumen).
+
+> Nombre del producto: hasta el 2026-08-30 se llamaba "Ocean Pulse" (un
+> producto "de la marca personal Ocean Flow"). Se renombró a un único
+> nombre, "Ocean Flow", en toda la interfaz visible — ver CHANGELOG.md y
+> `docs/SESSION-2026-08-30-bloques-nocturnos.md`. Los ADR y sesiones
+> anteriores a esa fecha siguen diciendo "Ocean Pulse" a propósito: son
+> historial, no se reescriben.
 
 ## Stack
 
@@ -299,7 +306,7 @@ futura, no para cada detalle de implementación.
 
 ### 8. Verificación UX/UI (mobile-check)
 
-Ocean Pulse es mobile-first, pero verificar solo con Chrome de escritorio
+Ocean Flow es mobile-first, pero verificar solo con Chrome de escritorio
 redimensionado deja fuera la clase de bugs más específica de móvil
 (paneles flotantes mal posicionados, objetivos táctiles pequeños,
 animaciones rotas, errores de consola) hasta que el usuario los prueba a

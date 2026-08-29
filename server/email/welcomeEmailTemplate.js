@@ -3,15 +3,15 @@
 // Tono cercano-profesional, coherente con el resto de la app. No es texto
 // definitivo — iterar aquí libremente.
 export const WELCOME_EMAIL_COPY = {
-  subject: "Tu acceso a Ocean Pulse ya está listo",
+  subject: "Tu acceso a Ocean Flow ya está listo",
   preheader: "Entra y crea tu contraseña para empezar.",
-  title: "Bienvenido/a a Ocean Pulse",
+  title: "Bienvenido/a a Ocean Flow",
   greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
-  intro: "Se te ha dado de alta en Ocean Pulse, la herramienta que usamos para llevar el control de clases, comisiones y pagos.",
-  ctaLabel: "Entrar en Ocean Pulse",
+  intro: "Se te ha dado de alta en Ocean Flow, la herramienta que usamos para llevar el control de clases, comisiones y pagos.",
+  ctaLabel: "Entrar en Ocean Flow",
   securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu propia contraseña.",
   expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
-  footer: "Ocean Pulse — by Ocean Flow",
+  footer: "Ocean Flow",
 };
 
 function escapeHtml(value) {
@@ -38,8 +38,7 @@ export function renderWelcomeEmailHtml({ firstName, actionLink, copy = WELCOME_E
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background-color:#ffffff;border-radius:12px;overflow:hidden;">
             <tr>
               <td style="padding:32px 28px 8px 28px;text-align:center;">
-                <div style="font-size:15px;font-weight:700;color:#0F172A;">Ocean Pulse</div>
-                <div style="font-size:11px;color:#9CA3AF;margin-top:2px;">by Ocean Flow</div>
+                <div style="font-size:15px;font-weight:700;color:#0F172A;">Ocean Flow</div>
               </td>
             </tr>
             <tr>
