@@ -283,6 +283,22 @@ async function main() {
   await page.waitForTimeout(300);
   await shot(page, "resumen-vistazo-rapido");
 
+  console.log("→ Resumen: granularidad+periodo fusionados en un único control — cambiar a 'Rango'");
+  await page.getByRole("button", { name: "Granularidad del periodo" }).tap();
+  await page.waitForTimeout(150);
+  await page.getByRole("option", { name: "Rango" }).tap();
+  await page.waitForTimeout(200);
+  const hasDesdeHasta = await page.getByText("Desde", { exact: true }).isVisible().catch(() => false);
+  if (!hasDesdeHasta) {
+    consoleIssues.push("[resumen] Al elegir granularidad 'Rango', no aparecen los selectores Desde/Hasta.");
+  }
+  await shot(page, "resumen-granularidad-rango");
+  // Vuelve a Mes para el resto del recorrido (Calendario solo se muestra en granularidad mensual).
+  await page.getByRole("button", { name: "Granularidad del periodo" }).tap();
+  await page.waitForTimeout(150);
+  await page.getByRole("option", { name: "Mes", exact: true }).tap();
+  await page.waitForTimeout(200);
+
   console.log("→ Resumen: expandir Calendario y Comisiones (tarjetas plegables)");
   await page.getByRole("button", { name: "Calendario", exact: false }).tap();
   await page.waitForTimeout(350);

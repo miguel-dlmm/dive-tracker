@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft, ChevronRight, ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { formatMoney, colorFor, DatePicker, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META } from "./shared";
+import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META } from "./shared";
 import { listItemVariants, usePrefersReducedMotion } from "./motion";
 import { computeRateTotal } from "./rateCalc";
 import { NAVY, CORAL, GREEN } from "./App";
@@ -30,6 +30,20 @@ const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto
 const fmtInt = (n) => (n || 0).toLocaleString("es-ES");
 
 const UNITS_PER_YEAR = { mensual: 12, trimestral: 4, semestral: 2, anual: 1 };
+
+// Selector de granularidad + navegación de periodo, rediseñado 2026-08-29
+// (ver docs/ADR/0009-rediseno-resumen.md, addendum): antes eran 2 controles
+// separados, cada uno en su propia caja — 5 pastillas de granularidad
+// ("Mensual"/"Trimestral"/...) que ya envolvían a 2 líneas en móvil, más una
+// fila aparte con "‹ Agosto 2026 ›". Se fusionan en un único control (un
+// desplegable compacto + la navegación de periodo en la misma fila) porque
+// son la misma decisión en la práctica — "qué periodo estoy mirando", no
+// dos preguntas distintas. "Personalizado" es la única granularidad sin
+// navegación ‹ › con sentido (un rango arbitrario no tiene "periodo
+// siguiente"), así que ahí la fila muestra el rango en vez de flechas.
+const GRANULARITY_LABELS = { mensual: "Mes", trimestral: "Trimestre", semestral: "Semestre", anual: "Año", personalizado: "Rango" };
+const GRANULARITY_LABEL_LIST = Object.values(GRANULARITY_LABELS);
+const GRANULARITY_KEY_BY_LABEL = Object.fromEntries(Object.entries(GRANULARITY_LABELS).map(([k, l]) => [l, k]));
 
 function periodRange(granularity, year, unitIndex, customFrom, customTo) {
   if (granularity === "personalizado") return [customFrom || null, customTo || null];
@@ -338,22 +352,29 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
 
   return (
     <div className="space-y-4">
-      {/* Mensual / Trimestral / Semestral / Anual / Personalizado */}
-      <div className="flex flex-wrap gap-0.5 rounded-lg border border-gray-200 bg-white p-0.5">
-        {[["mensual", "Mensual"], ["trimestral", "Trimestral"], ["semestral", "Semestral"], ["anual", "Anual"], ["personalizado", "Personalizado"]].map(([key, l]) => (
-          <button
-            key={key}
-            onClick={() => changeGranularity(key)}
-            className="min-h-9 rounded-md px-3 text-xs font-medium transition-colors"
-            style={granularity === key ? { backgroundColor: NAVY, color: "white" } : { color: "#6B7280" }}
-          >
-            {l}
-          </button>
-        ))}
+      {/* Granularidad + navegación de periodo, fusionados en un único
+          control (ver comentario de GRANULARITY_LABELS más arriba). */}
+      <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white p-2">
+        <div className="w-[6.5rem] shrink-0">
+          <Select
+            value={GRANULARITY_LABELS[granularity]}
+            onChange={(l) => changeGranularity(GRANULARITY_KEY_BY_LABEL[l])}
+            options={GRANULARITY_LABEL_LIST}
+            label="Granularidad del periodo"
+          />
+        </div>
+        {granularity === "personalizado" ? (
+          <span className="flex-1 truncate text-center text-sm font-semibold" style={{ color: NAVY }}>{label}</span>
+        ) : (
+          <div className="flex flex-1 items-center justify-between">
+            <button onClick={goPrev} aria-label="Periodo anterior" className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={18} aria-hidden="true" /></button>
+            <span className="text-sm font-semibold tabular-nums" style={{ color: NAVY }}>{label}</span>
+            <button onClick={goNext} aria-label="Periodo siguiente" className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={18} aria-hidden="true" /></button>
+          </div>
+        )}
       </div>
 
-      {/* Navegación de periodo */}
-      {granularity === "personalizado" ? (
+      {granularity === "personalizado" && (
         <div className="grid grid-cols-2 gap-2 rounded-lg border border-gray-200 bg-white p-3">
           <div>
             <span className="mb-1 block text-xs font-medium text-gray-500">Desde</span>
@@ -363,12 +384,6 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
             <span className="mb-1 block text-xs font-medium text-gray-500">Hasta</span>
             <DatePicker value={customTo} onChange={setCustomTo} />
           </div>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2">
-          <button onClick={goPrev} aria-label="Periodo anterior" className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={18} aria-hidden="true" /></button>
-          <span className="text-sm font-semibold tabular-nums" style={{ color: NAVY }}>{label}</span>
-          <button onClick={goNext} aria-label="Periodo siguiente" className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={18} aria-hidden="true" /></button>
         </div>
       )}
 

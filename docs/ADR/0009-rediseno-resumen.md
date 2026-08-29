@@ -119,3 +119,33 @@ Home (ver `docs/ADR/0008-rediseno-configuracion.md`) — Resumen era la
   usuario) y matizada la nota de "Reutilizar componente entre Home y
   Resumen" (la duplicación interna de Resumen ya no existe; la
   compartida con Home sigue abierta).
+
+## Addendum (2026-08-29) — granularidad y navegación de periodo, fusionadas en un único control
+
+Feedback explícito del usuario: "los filtros superiores actuales son
+poco usables". Antes del rediseño de este addendum, elegir un periodo
+necesitaba 2 cajas separadas: 5 pastillas de granularidad (Mensual/
+Trimestral/Semestral/Anual/Personalizado — que ya envolvían a una
+segunda línea en el ancho de un iPhone) más, debajo, una fila aparte con
+"‹ Agosto 2026 ›".
+
+**Decisión:** un único control — un desplegable compacto (`Select` ya
+existente en `shared.jsx`, con las etiquetas cortas "Mes"/"Trimestre"/
+"Semestre"/"Año"/"Rango") a la izquierda, con la navegación `‹ periodo
+›` en la misma fila a la derecha. "Rango" es la única granularidad sin
+`‹ ›` con sentido (un rango arbitrario no tiene "periodo siguiente"), así
+que en ese caso la fila muestra el rango elegido en texto en vez de
+flechas, y el par de `DatePicker` Desde/Hasta sigue apareciendo debajo,
+sin cambios.
+
+**Por qué fusionarlos y no solo achicar las pastillas:** granularidad y
+periodo no son dos preguntas independientes — elegir "Trimestral" sin
+inmediatamente decidir qué trimestre no tiene un estado intermedio útil
+en esta pantalla (`changeGranularity` ya salta al periodo actual de la
+nueva granularidad). Tratarlos como una sola decisión, en una sola fila,
+refleja mejor cómo se usa en la práctica.
+
+Sin cambios de lógica de cálculo ni de datos — es una reestructuración
+puramente de presentación de dos controles ya existentes. El segmentado
+Total/Curso/Comisión/Ajuste no se ha tocado: ya cabía en una sola fila
+y no formaba parte de la queja.
