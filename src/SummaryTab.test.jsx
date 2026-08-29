@@ -296,3 +296,58 @@ describe("SummaryTab — 'Por escuela' solo con más de una escuela", () => {
     expect(screen.getByRole("button", { name: "Por curso" })).toHaveAttribute("aria-expanded", "false");
   });
 });
+
+// Los Ajustes de curso (colleague_payments) no tienen concepto de persona
+// — el modelo no lo representa, así que mostrar "0p"/"0 personas" para
+// ellos no es un dato real, es un artefacto de mezclar su forma con la de
+// Curso/Comisión (que sí llevan personas) en las mismas listas agregadas.
+// Un grupo mixto (curso + ajuste en la misma escuela/actividad/día) sigue
+// mostrando el recuento real de personas del curso — solo se oculta
+// cuando el grupo es 100% Ajustes de curso.
+describe("SummaryTab — Ajustes de curso no muestran un recuento de personas (revisión 2026-08-30)", () => {
+  it("'Por escuela': la escuela cuya única actividad del periodo es un Ajuste de curso no muestra 'Xp'", () => {
+    renderSummary({
+      worklog: [{ id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }],
+      colleaguePayments: [{ id: "p1", date: THIS_MONTH, school: "Ihasia", activity: "Advanced", colleague_name: "Ana", amount: 30, currency: "EUR", status: "Paid" }],
+    });
+
+    const padiRow = screen.getByText("PADI Cozumel").closest("button");
+    expect(within(padiRow).getByText("2p")).toBeInTheDocument();
+
+    const ihasiaRow = screen.getByText("Ihasia").closest("button");
+    expect(within(ihasiaRow).queryByText(/^\d+p$/)).not.toBeInTheDocument();
+  });
+
+  it("Calendario, vista 'Total combinado': el grupo 'Ajuste' del día no muestra personas, el grupo 'Curso' sigue mostrando las suyas", async () => {
+    const user = userEvent.setup();
+    renderSummary({
+      worklog: [{ id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }],
+      colleaguePayments: [{ id: "p1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", colleague_name: "Ana", amount: 30, currency: "EUR", status: "Paid" }],
+    });
+
+    await user.click(screen.getByRole("button", { name: "Calendario" }));
+    const calendarCard = screen.getByRole("button", { name: "Calendario" }).closest("div.overflow-hidden");
+    const day = Number(THIS_MONTH.slice(-2));
+    await user.click(within(calendarCard).getByText(String(day)).closest("button"));
+
+    expect(within(calendarCard).getByText("Curso")).toBeInTheDocument();
+    expect(within(calendarCard).getByText("Ajuste")).toBeInTheDocument();
+    expect(within(calendarCard).getByText("2p")).toBeInTheDocument();
+    expect(within(calendarCard).queryByText("0p")).not.toBeInTheDocument();
+  });
+
+  it("Calendario filtrado a 'Ajuste': el desglose del día no muestra 'Xp' para el ajuste", async () => {
+    const user = userEvent.setup();
+    renderSummary({
+      colleaguePayments: [{ id: "p1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", colleague_name: "Ana", amount: 30, currency: "EUR", status: "Paid" }],
+    });
+
+    await user.click(screen.getByRole("button", { name: "Ajuste" }));
+    await user.click(screen.getByRole("button", { name: "Calendario" }));
+    const calendarCard = screen.getByRole("button", { name: "Calendario" }).closest("div.overflow-hidden");
+    const day = Number(THIS_MONTH.slice(-2));
+    await user.click(within(calendarCard).getByText(String(day)).closest("button"));
+
+    expect(within(calendarCard).queryByText(/^\d+p$/)).not.toBeInTheDocument();
+  });
+});

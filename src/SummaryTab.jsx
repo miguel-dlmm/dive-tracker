@@ -104,16 +104,22 @@ function shiftPeriod(granularity, year, unitIndex, delta) {
   return { year: Math.floor(absolute / unitsPerYear), unitIndex: ((absolute % unitsPerYear) + unitsPerYear) % unitsPerYear };
 }
 
+// allColleague: cierto solo si TODAS las entradas de esa clave son Ajustes
+// de curso — colleague_payments no tiene concepto de persona (siempre
+// aporta 0), así que un grupo compuesto solo por ajustes no debe mostrar
+// "0 personas" como si fuera un dato real; un grupo mixto (curso + ajuste
+// con la misma escuela/actividad) sigue mostrando el recuento real.
 function groupSum(entries, keyFn, opts = {}) {
   const { amountKey = "total", currencyKey = "currency", withPeople = false } = opts;
   const map = {};
   entries.forEach((e) => {
     const key = keyFn(e);
-    if (!map[key]) map[key] = { totals: {}, people: 0 };
+    if (!map[key]) map[key] = { totals: {}, people: 0, allColleague: true };
     map[key].totals[e[currencyKey]] = (map[key].totals[e[currencyKey]] || 0) + e[amountKey];
     if (withPeople) map[key].people += (e.people || 0);
+    map[key].allColleague = map[key].allColleague && e._source === "companeros";
   });
-  return Object.entries(map).map(([key, v]) => ({ key, totals: v.totals, people: v.people }));
+  return Object.entries(map).map(([key, v]) => ({ key, totals: v.totals, people: v.people, allColleague: v.allColleague }));
 }
 
 // Suma todas las monedas de un total sin convertir — aproximación ya usada
@@ -191,7 +197,7 @@ function RankedList({ rows, currencyRows, textColor, emptyLabel = "Sin datos.", 
               )}
             </span>
             <span className="flex shrink-0 items-center gap-2 tabular-nums">
-              <span className="text-xs text-gray-400">{fmtInt(r.people)}p</span>
+              {!r.allColleague && <span className="text-xs text-gray-400">{fmtInt(r.people)}p</span>}
               <span className="font-semibold" style={{ color: NAVY }}><MoneyLine totals={r.totals} currencyRows={currencyRows} /></span>
             </span>
           </button>
