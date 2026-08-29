@@ -55,3 +55,17 @@ export async function isSuperadmin(userId) {
     .single();
   return !error && !!data?.is_superadmin;
 }
+
+// Permiso de nivel admin (admin normal O superadmin) — el helper anticipado
+// en el comentario de arriba. Lo usa listUserStatus.js: ver quién está
+// activo/desactivado es lectura de directorio (mismo nivel que
+// admin_list_profiles() en la base de datos), no una acción de superadmin
+// como desactivar o eliminar.
+export async function isAdmin(userId) {
+  const { data, error } = await getServiceRoleClient()
+    .from("profiles")
+    .select("is_admin, is_superadmin")
+    .eq("user_id", userId)
+    .single();
+  return !error && !!(data?.is_admin || data?.is_superadmin);
+}

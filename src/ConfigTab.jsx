@@ -357,19 +357,50 @@ function RoleCheckbox({ checked, label, locked = false, onChange }) {
 // nunca de la propia fila — decide qué checkbox Admin queda editable.
 // onRequestToggle(row): se llama al pulsar un checkbox Admin editable; no
 // cambia nada por sí sola, solo abre la confirmación en UsersDirectory.
+// Badge de estado (Activa/Desactivada) — deliberadamente distinto del
+// icono de papelera de "Eliminar" (ver ADR-0008): eliminar es irreversible
+// y borra datos, desactivar revoca el acceso conservándolo todo. Un mismo
+// icono para las dos habría invitado a confundirlas. Botón cuando es
+// editable (toggle con confirmación en UsersDirectory), badge de solo
+// lectura en caso contrario — cualquier admin puede VER el estado, solo un
+// superadmin puede cambiarlo.
+function StatusBadge({ active, editable, onToggle }) {
+  const label = active ? "Activa" : "Desactivada";
+  const cls = active
+    ? "bg-emerald-50 text-emerald-700"
+    : "bg-gray-100 text-gray-500";
+  if (!editable) {
+    return <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${cls}`}>{label}</span>;
+  }
+  return (
+    <button
+      onClick={onToggle}
+      aria-label={active ? "Desactivar usuario" : "Reactivar usuario"}
+      className={`-m-1 flex min-h-9 items-center gap-1 rounded-full p-1 px-2.5 text-xs font-medium ${cls}`}
+    >
+      {label}
+    </button>
+  );
+}
+
 // onRequestDelete: solo la abre superadmin puede verla — eliminar es
 // irreversible (borra la cuenta de auth.users y, en cascada, su perfil y
 // todo lo que cuelga de él), así que la columna entera se omite para
 // admins normales en vez de mostrarse deshabilitada — no hay nada que
 // "casi puedan hacer" ahí. mismo `editable` que el checkbox de Admin: no
 // la propia cuenta, no otro superadmin.
-function UsersTable({ rows, currentUserId, viewerIsSuperadmin, onRequestToggle, onRequestDelete }) {
+// activeByUser: { [user_id]: boolean } — ver listUserStatus.js. Mientras no
+// ha llegado la respuesta (o para un id sin entrada), se asume activo: es
+// el estado de la inmensa mayoría de las cuentas, y fallar hacia "no
+// mostrar un desactivado que en realidad no lo está" es preferible a
+// bloquear toda la tabla hasta que responda una llamada aparte.
+function UsersTable({ rows, currentUserId, viewerIsSuperadmin, activeByUser, onRequestToggle, onRequestToggleActive, onRequestDelete }) {
   if (rows.length === 0) {
     return <p className="px-3 py-6 text-center text-sm text-gray-400">Sin resultados.</p>;
   }
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[680px] text-left text-sm">
+      <table className="w-full min-w-[760px] text-left text-sm">
         <thead>
           <tr className="border-b border-gray-100 text-[11px] uppercase tracking-wide text-gray-400">
             <th className="px-3 py-2 font-medium">Nombre</th>
@@ -378,6 +409,7 @@ function UsersTable({ rows, currentUserId, viewerIsSuperadmin, onRequestToggle, 
             <th className="px-3 py-2 font-medium">Email</th>
             <th className="px-3 py-2 font-medium">Admin</th>
             <th className="px-3 py-2 font-medium">Superadmin</th>
+            <th className="px-3 py-2 font-medium">Estado</th>
             <th className="px-3 py-2 font-medium">Alta</th>
             {viewerIsSuperadmin && <th className="px-3 py-2 font-medium">Eliminar</th>}
           </tr>
@@ -385,6 +417,7 @@ function UsersTable({ rows, currentUserId, viewerIsSuperadmin, onRequestToggle, 
         <tbody>
           {rows.map((p) => {
             const editable = viewerIsSuperadmin && p.user_id !== currentUserId && !p.is_superadmin;
+            const active = activeByUser[p.user_id] ?? true;
             return (
               <tr key={p.user_id} className="border-b border-gray-50 last:border-0">
                 <td className="px-3 py-2 text-gray-700">{p.first_name || "—"}</td>
@@ -399,6 +432,9 @@ function UsersTable({ rows, currentUserId, viewerIsSuperadmin, onRequestToggle, 
                   />
                 </td>
                 <td className="px-3 py-2"><RoleCheckbox checked={p.is_superadmin} label="Superadmin" locked /></td>
+                <td className="px-3 py-2">
+                  <StatusBadge active={active} editable={editable} onToggle={() => onRequestToggleActive(p, active)} />
+                </td>
                 <td className="px-3 py-2 text-gray-500">{p.created_at ? new Date(p.created_at).toLocaleDateString("es-ES") : "—"}</td>
                 {viewerIsSuperadmin && (
                   <td className="px-3 py-2">
@@ -610,11 +646,13 @@ function CreateUserSheet({ onClose, onCreated }) {
 
 function UsersDirectory({ profile }) {
   const [rows, setRows] = useState([]);
+  const [activeByUser, setActiveByUser] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [query, setQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pendingToggle, setPendingToggle] = useState(null);
+  const [pendingToggleActive, setPendingToggleActive] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
@@ -634,9 +672,31 @@ function UsersDirectory({ profile }) {
     setLoading(false);
   };
 
+  // Estado activo/desactivado — endpoint aparte (ver listUserStatus.js), no
+  // parte de admin_list_profiles(): lee auth.admin.listUsers() directamente,
+  // sin necesitar ningún cambio de esquema. Falla en silencio (deja
+  // activeByUser vacío, StatusBadge asume "activo" por fila) — un fallo
+  // aquí no debe impedir ver el resto del directorio.
+  const loadActiveStatus = async () => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const res = await fetch("/api/list-user-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: "{}",
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (res.ok) setActiveByUser(payload.active || {});
+    } catch {
+      // silencioso a propósito — ver comentario de arriba
+    }
+  };
+
   useEffect(() => {
     let active = true;
     supabase.rpc("admin_list_profiles").then((result) => { if (active) applyResult(result); });
+    loadActiveStatus();
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -647,6 +707,7 @@ function UsersDirectory({ profile }) {
   const reload = () => {
     setLoading(true);
     supabase.rpc("admin_list_profiles").then(applyResult);
+    loadActiveStatus();
   };
 
   const filteredRows = useMemo(() => {
@@ -727,6 +788,41 @@ function UsersDirectory({ profile }) {
     }
   };
 
+  // Reversible a propósito, a diferencia de eliminar: confirmación en modo
+  // no-danger (mismo tono que el cambio de rol de admin, ver
+  // confirmAdminToggle) — desactivar no borra nada y se puede deshacer
+  // reactivando desde la misma fila.
+  const requestToggleActive = (row, currentActive) =>
+    setPendingToggleActive({ user_id: row.user_id, nickname: row.nickname, currentActive, nextActive: !currentActive });
+
+  const cancelToggleActive = () => {
+    if (submitting) return;
+    setPendingToggleActive(null);
+  };
+
+  const confirmToggleActive = async () => {
+    if (!pendingToggleActive) return;
+    setSubmitting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const res = await fetch("/api/set-user-active", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ target_user_id: pendingToggleActive.user_id, active: pendingToggleActive.nextActive }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || "No se pudo actualizar el estado.");
+      toast?.success(pendingToggleActive.nextActive ? "Usuario reactivado" : "Usuario desactivado");
+      setPendingToggleActive(null);
+      loadActiveStatus();
+    } catch (err) {
+      toast?.error(err.message || "No se pudo actualizar el estado.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -763,7 +859,9 @@ function UsersDirectory({ profile }) {
           rows={filteredRows}
           currentUserId={profile?.user_id}
           viewerIsSuperadmin={!!profile?.is_superadmin}
+          activeByUser={activeByUser}
           onRequestToggle={requestAdminToggle}
+          onRequestToggleActive={requestToggleActive}
           onRequestDelete={requestDelete}
         />
       )}
@@ -799,6 +897,8 @@ function UsersDirectory({ profile }) {
           <>
             Se eliminará la cuenta de <strong>{pendingDelete.nickname}</strong> y todos sus datos
             (escuelas, tarifas, movimientos...) de forma permanente. Esta acción no se puede deshacer.
+            <br />
+            Si solo quieres revocarle el acceso conservando sus datos, usa "Desactivar" en su lugar.
           </>
         )}
         onConfirm={confirmDelete}
@@ -806,6 +906,29 @@ function UsersDirectory({ profile }) {
         loading={submitting}
         confirmLabel="Eliminar"
         danger
+      />
+
+      <ConfirmDialog
+        open={!!pendingToggleActive}
+        title={pendingToggleActive?.nextActive ? "Reactivar usuario" : "Desactivar usuario"}
+        message={pendingToggleActive && (
+          pendingToggleActive.nextActive ? (
+            <>
+              <strong>{pendingToggleActive.nickname}</strong> podrá volver a iniciar sesión. Sus datos nunca se
+              tocaron mientras estaba desactivado.
+            </>
+          ) : (
+            <>
+              <strong>{pendingToggleActive.nickname}</strong> dejará de poder iniciar sesión. Todos sus datos
+              (escuelas, tarifas, movimientos...) se conservan intactos — puedes reactivarlo cuando quieras.
+            </>
+          )
+        )}
+        onConfirm={confirmToggleActive}
+        onCancel={cancelToggleActive}
+        loading={submitting}
+        confirmLabel={pendingToggleActive?.nextActive ? "Reactivar" : "Desactivar"}
+        danger={false}
       />
     </div>
   );
