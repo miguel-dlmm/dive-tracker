@@ -704,3 +704,28 @@ historial.
 
 **Commit de este bloque:** `docs(release): actualizar CHANGELOG y
 preparar release v0.2.0, sin ejecutar`.
+
+### Bloque 17 — Rama separada para SEO
+
+Encargo: crear una rama SEO separada de `feature/global-redesign` una
+vez el rediseño esté estable, trabajar ahí en exclusiva, dejar ambas
+ramas identificadas y `feature/global-redesign` libre para que el
+usuario la pruebe.
+
+**Estado verificado antes de crear nada:** `feature/global-redesign` en
+`92a4a0a` (commit del bloque 16), working tree limpio, los 16 bloques
+anteriores validados y comiteados uno a uno — punto estable para
+ramificar.
+
+**Acción:** `git branch feature/seo` desde `92a4a0a` (rama local,
+todavía sin remoto — igual que `feature/global-redesign`, nada de esta
+sesión se ha publicado). `git checkout feature/seo` para trabajar el
+bloque 18 (MVP SEO) exclusivamente ahí. `feature/global-redesign` queda
+intacta en `92a4a0a`, disponible para que el usuario la pruebe en
+cualquier momento sin que el trabajo de SEO la toque.
+
+Los bloques 19-21 (backups, analítica, documentación/literatura) no son
+específicos de SEO — se retoman sobre `feature/global-redesign` al
+terminar el bloque 18, no sobre `feature/seo`.
+
+**Commit:** ninguno (creación de rama, sin cambios de archivos).
