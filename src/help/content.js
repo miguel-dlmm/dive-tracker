@@ -139,7 +139,7 @@ export const HELP_CATEGORIES = [
         whenToUseIt: "En cuanto una escuela o un compañero te paga (uno a uno), o de golpe cuando revisas periódicamente y ya te han pagado varios pendientes a la vez.",
         steps: [
           "Para cobrar uno: entra en Mi trabajo (la pestaña \"Pendientes\" se abre por defecto) y pulsa \"Confirmar cobro\" en su fila (o \"Marcar liquidado\" si es un ajuste en tu contra).",
-          "También puedes cobrar el más urgente sin salir de Home: el widget \"Los más antiguos por cobrar\" deja marcarlo como cobrado con un toque.",
+          "La tarjeta \"Pendiente de cobrar\" de Home te lleva directa a esa misma pestaña — un toque desde la pantalla principal.",
           "Para cobrar varios a la vez: en Mi trabajo, usa \"Cobrar todos\" arriba de la lista — afecta a todo lo que esté visible en ese momento.",
           "Antes de \"Cobrar todos\", usa \"Filtrar\" (por fecha, escuela, curso o tipo) para acotar la lista a justo lo que quieres cobrar de golpe.",
         ],
@@ -163,10 +163,10 @@ export const HELP_CATEGORIES = [
         id: "consultar-generado",
         title: "Consultar cuánto has generado",
         summary: "Un vistazo rápido en Home, o el detalle completo por el periodo que elijas en Resumen.",
-        whatYouCanDo: "\"Generado este mes\" en Home te da la cifra del mes en curso sin salir de la pantalla principal. Resumen va más allá: cualquier periodo, comparado con el anterior, y con la posibilidad de profundizar por escuela o por curso.",
+        whatYouCanDo: "\"Generado este mes\" en Home te da la cifra del mes en curso, con un indicio de si vas mejor o peor que el mes anterior, sin salir de la pantalla principal. Tocarla te lleva directo a Resumen, que va más allá: cualquier periodo, comparado con el anterior, y con la posibilidad de profundizar por escuela o por curso.",
         whenToUseIt: "Home, para un vistazo rápido al entrar en la app. Resumen, cuando quieras un periodo distinto al mes actual o entender de dónde viene el dinero.",
         steps: [
-          "En Home, la tarjeta \"Generado este mes\" ya está siempre visible, sin tocar nada.",
+          "En Home, la tarjeta \"Generado este mes\" ya está siempre visible, sin tocar nada — y tocarla te lleva a Resumen para profundizar.",
           "En Resumen, elige la granularidad y el periodo en el control de arriba (mensual, trimestral, semestral, anual o un rango personalizado) y, si quieres, el tipo (Curso, Comisión o Ajuste).",
           "La tarjeta principal muestra el total del periodo y cuánto ha cambiado respecto al periodo anterior.",
           "Toca \"Por escuela\", \"Por curso\", \"Calendario\", \"Comisiones\" o \"Pagos de compañeros\" para profundizar — cada uno se despliega solo si lo pides.",

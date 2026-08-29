@@ -32,3 +32,26 @@ export function buildActivityEntries({ worklog, rates, comisiones, commissionRat
 export function buildIncomeEntries(args) {
   return buildActivityEntries(args).filter((e) => e._source !== "companeros" || e.total > 0);
 }
+
+// Único punto de comparación entre dos totales por moneda (mapa moneda ->
+// importe, ver groupSum en SummaryTab.jsx / monthTotals en HomeTab.jsx).
+// Solo tiene sentido si CADA total está en una única moneda — con varias
+// monedas mezcladas en cualquiera de los dos lados, un delta agregado sería
+// engañoso, así que se devuelve null en vez de un número que parezca
+// preciso sin serlo. Usado por HeroTotal (Resumen, comparación al periodo
+// anterior) y por el indicio de tendencia de "Generado este mes" (Home,
+// comparación al mes anterior) — misma regla, un único sitio, para que las
+// dos pantallas nunca puedan divergir en qué cuenta como "comparable".
+export function singleCurrencyAmount(totals) {
+  const keys = Object.keys(totals || {});
+  return keys.length === 1 ? { code: keys[0], amount: totals[keys[0]] } : null;
+}
+
+export function comparePeriods(currentTotals, previousTotals) {
+  const cur = singleCurrencyAmount(currentTotals);
+  const prev = singleCurrencyAmount(previousTotals);
+  if (!cur || !prev || cur.code !== prev.code) return null;
+  const delta = cur.amount - prev.amount;
+  const pct = prev.amount !== 0 ? (delta / Math.abs(prev.amount)) * 100 : null;
+  return { code: cur.code, delta, pct };
+}
