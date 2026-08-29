@@ -533,3 +533,40 @@ en la cuenta demo) y confirma Editar/Eliminar.
 `RatesTab.test.jsx` no ejercita el flujo de borrado), build correcto,
 `mobile-check` sin errores — captura del menú abierto revisada
 visualmente.
+
+## Bloque — Resumen: filtros superiores fusionados (petición explícita: "poco usables")
+
+Granularidad (5 pastillas, ya envolvían a 2 líneas en móvil) + navegación
+de periodo (fila aparte "‹ Agosto 2026 ›") se fusionan en un único
+control: un `Select` compacto ("Mes"/"Trimestre"/"Semestre"/"Año"/
+"Rango") a la izquierda, navegación `‹ periodo ›` a la derecha, misma
+fila. "Rango" muestra el rango en texto en vez de flechas sin sentido
+(no hay "periodo siguiente" para un rango arbitrario); los `DatePicker`
+Desde/Hasta siguen debajo sin cambios. De 3 filas de controles antes del
+contenido a 2. Ver `docs/ADR/0009-rediseno-resumen.md` (addendum). El
+segmentado Total/Curso/Comisión/Ajuste no se tocó — ya cabía bien en una
+fila.
+
+`mobile-check.mjs` gana un paso que cambia a "Rango" y confirma que
+aparecen Desde/Hasta, luego vuelve a "Mes" para el resto del recorrido.
+
+**Validado:** 242/242 tests, build correcto, `mobile-check` sin errores
+(incluida una comprobación puntual, fuera de la suite, de que "Rango"
+muestra el par de fechas por defecto correctamente) — capturas de
+"Mes" y "Rango" revisadas visualmente.
+
+## Siguiente paso
+
+Bloques completados esta mañana: túnel/puerto de pruebas aislado,
+causa raíz + fix de "no puedo eliminar usuarios" (rutas `/api/*` en
+local), Desactivar usuario, causa raíz + fix del flash de activación en
+login, investigación (no reproducida) del botón de crear en Home,
+Tarifas↔Mi trabajo (RowMenu compartido), Resumen (filtros fusionados).
+Trabajo pendiente del encargo de esta mañana, por orden de prioridad
+del usuario: resto de Resumen (jerarquía/look&feel, si hace falta más
+allá de lo ya hecho), Home "otra vuelta" (posible widget nuevo), Qué hay
+de nuevo (swipe lateral, evitar solapamiento de contenido entre
+diapositivas 2-3, añadir diapositiva de Configuración), documentación/
+Ayuda (revisar contra los caminos de usuario pedidos ahora:
+configurar→crear cada tipo→cobrar uno→cobrar en bloque), y una pasada
+de calidad visual transversal.

@@ -34,7 +34,9 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
 - **Resumen**: tarjeta principal con comparación al periodo anterior, y
   el resto de la información (Por escuela con desglose por curso al
   tocar, Por curso, Calendario, Comisiones, Pagos de compañeros) como
-  tarjetas plegables bajo demanda.
+  tarjetas plegables bajo demanda. Granularidad y navegación de periodo
+  fusionadas en un único control compacto, en vez de dos filas
+  separadas.
 - Bypass de login para desarrollo local (`VITE_DEV_AUTH_BYPASS`) — nunca
   activo en producción.
 - Píldora "Qué hay de nuevo": aparece una vez por cuenta al entrar en una
