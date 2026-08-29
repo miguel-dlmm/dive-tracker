@@ -169,7 +169,47 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         onQuickAdd={() => onQuickCreate("ganado")}
       />
 
-      {/* 1b. Los más antiguos por cobrar — 2026-08-29: Home era solo
+      {/* 2. Calendario del mes — revisión de jerarquía 2026-08-29 (ver
+          docs/ADR/0004, addendum): antes iba en tercer y último lugar,
+          después de "Generado este mes", cuando en la práctica un día
+          normal no acumula demasiados movimientos distintos (el propio
+          desglose del día lo confirma: casi siempre 1-2 líneas) — no
+          hacía falta "reservarle" el fondo de la pantalla. El calendario
+          es también la vía más directa para crear (tocar un día vacío) y
+          para entender el mes de un vistazo (qué días hubo actividad, de
+          qué tipo), así que sube justo debajo de la cifra financiera
+          principal. sourceMeta viene de MOVEMENT_TYPE_META (shared.jsx,
+          única fuente para Home/Resumen/Mi trabajo). onCreateForDay solo
+          se pasa aquí, no en Resumen: tocar un día vacío inicia un
+          movimiento para esa fecha; uno con datos conserva su desglose y
+          gana un "+" para añadir otro.
+          Segunda revisión (misma fecha, más tarde): el widget "Los más
+          antiguos por cobrar" (punto 3 más abajo) se añadió primero entre
+          la tarjeta principal y el calendario, empujándolo sin querer al
+          tercer lugar otra vez. El calendario responde "¿qué pasó este
+          mes?" — la pregunta más frecuente al entrar en Home — y merece
+          seguir en segundo lugar; el widget de cobro (una acción, no una
+          vista general) pasa a vivir DESPUÉS del calendario. */}
+      <div>
+        <MonthCalendar
+          year={now.getFullYear()}
+          month={now.getMonth()}
+          entries={monthAllEntries}
+          dotColor={TEAL}
+          currencyRows={currencies.rows}
+          activityColor={activityColor}
+          autoSelectFirstDay
+          detailed
+          groupBySource
+          sourceMeta={MOVEMENT_TYPE_META}
+          onCreateForDay={(dateStr) => onQuickCreate("ganado", dateStr)}
+        />
+        <p className="mt-2 px-1 text-center text-[11px] text-gray-400">
+          Toca un día para ver el detalle, o uno vacío para añadir un movimiento.
+        </p>
+      </div>
+
+      {/* 3. Los más antiguos por cobrar — 2026-08-29: Home era solo
           informativa/de creación, sin ninguna acción real sobre lo ya
           existente ("empujar el uso de la app, no solo una tarjeta
           bonita"). Este widget deja cobrar directamente las deudas más
@@ -209,40 +249,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         </div>
       )}
 
-      {/* 2. Calendario del mes — revisión de jerarquía 2026-08-29 (ver
-          docs/ADR/0004, addendum): antes iba en tercer y último lugar,
-          después de "Generado este mes", cuando en la práctica un día
-          normal no acumula demasiados movimientos distintos (el propio
-          desglose del día lo confirma: casi siempre 1-2 líneas) — no
-          hacía falta "reservarle" el fondo de la pantalla. El calendario
-          es también la vía más directa para crear (tocar un día vacío) y
-          para entender el mes de un vistazo (qué días hubo actividad, de
-          qué tipo), así que sube justo debajo de la cifra financiera
-          principal. sourceMeta viene de MOVEMENT_TYPE_META (shared.jsx,
-          única fuente para Home/Resumen/Mi trabajo). onCreateForDay solo
-          se pasa aquí, no en Resumen: tocar un día vacío inicia un
-          movimiento para esa fecha; uno con datos conserva su desglose y
-          gana un "+" para añadir otro. */}
-      <div>
-        <MonthCalendar
-          year={now.getFullYear()}
-          month={now.getMonth()}
-          entries={monthAllEntries}
-          dotColor={TEAL}
-          currencyRows={currencies.rows}
-          activityColor={activityColor}
-          autoSelectFirstDay
-          detailed
-          groupBySource
-          sourceMeta={MOVEMENT_TYPE_META}
-          onCreateForDay={(dateStr) => onQuickCreate("ganado", dateStr)}
-        />
-        <p className="mt-2 px-1 text-center text-[11px] text-gray-400">
-          Toca un día para ver el detalle, o uno vacío para añadir un movimiento.
-        </p>
-      </div>
-
-      {/* 3. Generado este mes — información secundaria de cierre, no la
+      {/* 4. Generado este mes — información secundaria de cierre, no la
           protagonista: una cifra que solo se consulta, complementaria al
           propio calendario de arriba (que ya muestra qué días tuvieron
           actividad). "Generado" y no "Ganado" porque cuenta las 3 fuentes

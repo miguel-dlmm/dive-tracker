@@ -997,15 +997,45 @@ HEAD actual de `feature/global-redesign` en el momento de esta
 simulación: `5f2e77a`. Sin push, sin merge real, sin tag — en cuanto
 llegue el OK, estos 8 pasos son mecánicos.
 
+## Bloque 7 — Calendario de Home: corregir la jerarquía que yo mismo rompí
+
+El encargo pedía revisar "como Head Designer" la información alrededor
+del calendario de Home, con una intuición explícita del usuario: "el
+calendario quizá deba aparecer antes y la información asociada no
+quede escondida demasiado abajo". Al revisar el HEAD actual se detectó
+que esa intuición señalaba, sin saberlo el usuario, una regresión real
+introducida por mí en el bloque de Home de esta misma sesión (más
+arriba, "widget de cobro rápido"): el nuevo widget "Los más antiguos
+por cobrar" se insertó ENTRE la tarjeta principal y el calendario,
+empujando el calendario de 2º a 3er lugar — justo lo que ya documentaba
+`docs/ADR/0004` (addendum) como corregido una vez.
+
+**Fix:** el calendario vuelve a la 2ª posición (justo debajo de
+"Pendiente de cobrar"); el widget de cobro pasa a la 3ª, entre el
+calendario y "Generado este mes". El calendario responde "¿qué pasó
+este mes?" — la pregunta más frecuente al entrar en Home — y el widget
+es una ACCIÓN puntual (cobrar), no una vista general, así que tiene
+más sentido después de la vista general que antes. Sin cambios de
+contenido ni de comportamiento en ninguno de los dos, solo de orden.
+
+No se ha creado un ADR nuevo para esto — es la corrección de un error
+propio de esta misma sesión, no una decisión de producto/arquitectura
+nueva; el comentario en `HomeTab.jsx` documenta el porqué in situ.
+
+**Validado:** 251/251 tests (sin cambios de test necesarios — ningún
+test dependía del orden entre calendario y widget), build correcto,
+`mobile-check` sin errores — captura de Home revisada visualmente,
+confirma el calendario de vuelta en 2º lugar.
+
 ## Siguiente paso
 
-Bloques 1, 2, 3 y 5 cerrados (release preparada, pendiente de
+Bloques 1, 2, 3, 5 y 7 cerrados (release preparada, pendiente de
 aprobación). Trabajo restante del encargo, por prioridad: bug de
-tarifa inline (investigar, sin workaround especulativo si no se
-reproduce — nota: ya investigado a fondo y no reproducido en la
-segunda tanda de esta sesión, ver ese bloque; revisar solo si hay
-margen y algo nuevo que probar), calendario de Home (revisión Head
-Designer), Qué hay de nuevo (ya tiene swipe + contenido sin solapar de
-la segunda tanda — revisar si falta algo del encargo de esta tercera
-tanda: capturas reales), Ayuda (ya reordenada esta mañana — revisar si
-falta algo nuevo del encargo de esta tanda).
+tarifa inline (ya investigado a fondo y no reproducido en la segunda
+tanda de esta sesión — revisar solo si surge algo nuevo que probar, sin
+workaround especulativo), Qué hay de nuevo (ya tiene swipe + contenido
+sin solapar de la segunda tanda; el encargo de esta tercera tanda pide
+lo mismo casi palabra por palabra — ya satisfecho, capturas reales
+siguen descartadas por el mismo motivo ya documentado en
+`WhatsNew.jsx`: cuenta dev-bypass y datos de prueba visibles), Ayuda
+(ya reordenada esta mañana con el mismo encargo — ya satisfecho).
