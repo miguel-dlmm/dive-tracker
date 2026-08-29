@@ -588,3 +588,33 @@ al de antes de la extracción.
 
 **Commit:** `refactor(fab): extraer botón flotante de creación
 compartido + libro de estilo Ocean Flow`.
+
+### Bloque 15 — Tarifas y depreciación histórica: solo análisis
+
+Encargo explícito: analizar si introducir un modelo de tarifa
+activa/retirada/histórica dado que editar una tarifa puede alterar la
+comprensión histórica; producir análisis + recomendación, sin
+implementar nada.
+
+**Hallazgo (real, no hipotético):** `worklog`/`comisiones` no guardan
+nunca el importe ni la tarifa aplicada — `computeRateTotal` recalcula en
+cada render buscando en vivo la tarifa actual que coincida con
+escuela+curso. Editar o borrar una tarifa ya existente (Tarifas ya
+soporta "Editar") cambia retroactivamente el importe mostrado de
+cualquier movimiento pasado que la usara. `colleague_payments` no tiene
+este problema (guarda `amount` directamente).
+
+**Análisis:** documentado en `docs/ADR/0016-tarifas-depreciacion-historica-analisis.md`,
+3 opciones comparadas (snapshot del importe en el movimiento vs. tarifas
+versionadas con vigencia temporal vs. no tocar nada). Recomendación:
+snapshot (patrón estándar de cualquier sistema de facturación — un
+movimiento pasado no debe cambiar de valor), no versionado completo
+(desproporcionado para un instructor freelance individual sin necesidad
+de negocio real hoy de reconstruir histórico de precios). Sin
+implementar — pendiente de decisión del usuario.
+
+**Documentación:** `docs/ADR/0016-...md` (nuevo) + fila añadida en
+`docs/BACKLOG.md` ("Después").
+
+**Commit:** `docs(tarifas): analizar depreciación histórica de tarifas,
+sin implementar`.
