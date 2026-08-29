@@ -1,35 +1,35 @@
 import React, { useState, useMemo, useEffect } from "react";
 import {
-  Plus, Star, Pencil, Search, Lock, UserPlus, X, Trash2,
+  Plus, Check, Star, Search, Lock, UserPlus, X, Trash2,
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
   CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users,
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
-import { DeleteButton, EditActions, useToast, AppLoading, Field, ConfirmDialog, Select, useBodyScrollLock } from "./shared";
+import { useToast, AppLoading, Field, ConfirmDialog, Select, RowMenu, useBodyScrollLock } from "./shared";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
 
 /**
- * Tabla CRUD genérica reutilizada por las secciones de Configuración. Crear
- * usa el mismo patrón que el resto de la app (FAB + hoja inferior, ver
- * CLAUDE.md convención #3 y RatesTab/MovementSheet) en vez de un formulario
- * fijo siempre visible encima de la lista — antes era la única pantalla que
- * no seguía ese patrón. createLabel: título de la hoja y aria-label del FAB
- * (p.ej. "Nueva escuela") — el nombre de la sección en sí lo muestra ya la
- * cabecera del menú de Configuración, no hace falta repetirlo aquí dentro.
+ * Tabla CRUD genérica reutilizada por las secciones de Configuración
+ * (Escuelas, Cursos, Tipos de pago, Estados de pago, Monedas). Crear y
+ * editar comparten la misma hoja inferior (FAB + hoja, ver CLAUDE.md
+ * convención #3 y RatesTab/MovementSheet) en vez de un formulario fijo o
+ * una edición en línea — hasta el addendum de 2026-08-29 (ver
+ * docs/ADR/0008) esta era la última pieza de Configuración que aún no
+ * seguía ese patrón. Cada fila usa el mismo menú "⋯" (RowMenu) que Mi
+ * trabajo/Tarifas para Editar/Eliminar, en vez de iconos sueltos.
+ * createLabel/editLabel: títulos de la hoja en cada modo — el nombre de
+ * la sección en sí lo muestra ya la cabecera del menú de Configuración,
+ * no hace falta repetirlo aquí dentro.
  */
-function CrudTable({ createLabel, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false }) {
-  const emptyForm = Object.fromEntries(fields.map((f) => [
-    f.key,
-    f.type === "color" ? "#0E7C7B" : f.type === "boolean" ? (f.default ?? false) : "",
-  ]));
+function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false }) {
+  const emptyForm = Object.fromEntries(fields.map((f) => [f.key, f.type === "color" ? "#0E7C7B" : ""]));
   const [form, setForm] = useState(emptyForm);
   const [sheetOpen, setSheetOpen] = useState(false);
   useBodyScrollLock(sheetOpen);
-  const [editingPk, setEditingPk] = useState(null);
-  const [editForm, setEditForm] = useState({});
+  const [editingRow, setEditingRow] = useState(null); // null = alta
   const [query, setQuery] = useState("");
   const toast = useToast();
 
@@ -46,32 +46,34 @@ function CrudTable({ createLabel, table, pkField = "id", fields, hasDefault = fa
     return list;
   }, [table.rows, query, searchable, pullDefaultOut, fields]);
 
-  const addRow = async () => {
+  const closeSheet = () => { setSheetOpen(false); setEditingRow(null); };
+  const openCreateSheet = () => { setForm(emptyForm); setEditingRow(null); setSheetOpen(true); };
+  const openEditSheet = (row) => {
+    setForm(Object.fromEntries(fields.map((f) => [f.key, row[f.key]])));
+    setEditingRow(row);
+    setSheetOpen(true);
+  };
+
+  const submitSheet = async () => {
     if (fields.some((f) => f.required !== false && !form[f.key])) return;
     try {
-      await table.insertRow(form);
-      setForm(emptyForm);
-      setSheetOpen(false);
-      toast?.success("Añadido correctamente");
+      if (editingRow) {
+        await table.updateRow(editingRow[pkField], form);
+        toast?.success("Cambios guardados");
+      } else {
+        await table.insertRow(form);
+        toast?.success("Añadido correctamente");
+      }
+      closeSheet();
     } catch {
       toast?.error("No se pudo guardar. Inténtalo de nuevo.");
     }
   };
 
-  const startEdit = (row) => {
-    setEditingPk(row[pkField]);
-    setEditForm(Object.fromEntries(fields.map((f) => [f.key, row[f.key]])));
-  };
-  const saveEdit = async () => {
-    try {
-      await table.updateRow(editingPk, editForm);
-      setEditingPk(null);
-      toast?.success("Cambios guardados");
-    } catch {
-      toast?.error("No se pudo guardar. Inténtalo de nuevo.");
-    }
-  };
-
+  // Color y "favorito" se editan en el sitio, sin pasar por la hoja — son
+  // toques rápidos de un solo campo, no una edición completa de la fila
+  // (mismo criterio que el switch de estado en otras pantallas: una
+  // acción tan ligera no necesita el peso de abrir/cerrar una hoja).
   const updateLive = async (pk, patch) => {
     try {
       await table.updateRow(pk, patch);
@@ -89,18 +91,6 @@ function CrudTable({ createLabel, table, pkField = "id", fields, hasDefault = fa
       title="Cambiar color"
       className="h-9 w-11 shrink-0 cursor-pointer rounded border border-gray-200"
     />
-  );
-
-  const renderBoolField = (row, f) => (
-    <label key={f.key} className="flex min-h-11 shrink-0 items-center gap-1.5 text-xs text-gray-500" title={f.label}>
-      <input
-        type="checkbox"
-        checked={!!row[f.key]}
-        onChange={(e) => updateLive(row[pkField], { [f.key]: e.target.checked })}
-        className="h-4 w-4 cursor-pointer rounded border-gray-300"
-      />
-      {f.label}
-    </label>
   );
 
   return (
@@ -130,29 +120,11 @@ function CrudTable({ createLabel, table, pkField = "id", fields, hasDefault = fa
       <ul className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
         {filteredRows.map((row) => {
           const pk = row[pkField];
-          const isEditing = editingPk === pk;
-          if (isEditing) {
-            return (
-              <li key={pk} className="space-y-2 bg-gray-50 px-4 py-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  {fields.map((f) => {
-                    if (f.type === "color") return renderColorField(row, f);
-                    if (f.type === "boolean") return renderBoolField(row, f);
-                    return (
-                      <input key={f.key} value={editForm[f.key]} onChange={(e) => setEditForm({ ...editForm, [f.key]: e.target.value })}
-                        className={`${inputCls} flex-1`} />
-                    );
-                  })}
-                </div>
-                <EditActions onSave={saveEdit} onCancel={() => setEditingPk(null)} />
-              </li>
-            );
-          }
+          const isProtected = protectDefaultFromDelete && row.is_default;
           return (
             <li key={pk} className="flex items-center gap-2 px-4 py-2.5 text-sm">
               {fields.map((f) => {
                 if (f.type === "color") return renderColorField(row, f);
-                if (f.type === "boolean") return renderBoolField(row, f);
                 return (
                   <span key={f.key} className="flex-1 truncate" style={colorField ? { color: row[colorField.key] } : undefined}>
                     {row[f.key]}
@@ -165,26 +137,20 @@ function CrudTable({ createLabel, table, pkField = "id", fields, hasDefault = fa
                   <Star size={15} fill={row.is_default ? "currentColor" : "none"} aria-hidden="true" />
                 </button>
               )}
-              <button onClick={() => startEdit(row)} aria-label="Editar" className="-m-2 flex min-h-11 min-w-11 items-center justify-center rounded p-2 text-gray-300 hover:text-gray-600"><Pencil size={14} aria-hidden="true" /></button>
-              {protectDefaultFromDelete && row.is_default ? (
-                // Sin esto, borrar el estado predeterminado deja el
-                // catálogo sin ningún is_default=true — para Estados de
-                // pago eso no es un detalle de UX menor: is_default es el
-                // único campo con el que la app decide qué cuenta como
-                // "pendiente" (ver isPendingStatus, shared.jsx), así que
-                // perderlo rompe el bucket de pendientes/cobrados de toda
-                // la app, no solo el valor por defecto de un formulario.
-                <button
-                  type="button" disabled
-                  title={'Es el estado predeterminado (representa "pendiente") — marca otro como predeterminado antes de eliminar este'}
-                  aria-label="No se puede eliminar: es el estado predeterminado"
-                  className="-m-2 flex min-h-11 min-w-11 shrink-0 cursor-not-allowed items-center justify-center rounded p-2 text-gray-200"
-                >
-                  <Trash2 size={14} aria-hidden="true" />
-                </button>
-              ) : (
-                <DeleteButton onConfirm={() => table.deleteRow(pk)} size={14} itemLabel={row.name ? `"${row.name}"` : "este elemento"} />
-              )}
+              <RowMenu
+                onEdit={() => openEditSheet(row)}
+                onDelete={() => table.deleteRow(pk)}
+                itemLabel={row.name ? `"${row.name}"` : "este elemento"}
+                deleteDisabled={isProtected}
+                // Sin esto, borrar el estado predeterminado deja el catálogo
+                // sin ningún is_default=true — para Estados de pago eso no es
+                // un detalle de UX menor: is_default es el único campo con el
+                // que la app decide qué cuenta como "pendiente" (ver
+                // isPendingStatus, shared.jsx), así que perderlo rompe el
+                // bucket de pendientes/cobrados de toda la app, no solo el
+                // valor por defecto de un formulario.
+                deleteDisabledReason={isProtected ? 'Es el estado predeterminado (representa "pendiente") — marca otro como predeterminado antes de eliminar este' : undefined}
+              />
             </li>
           );
         })}
@@ -192,7 +158,7 @@ function CrudTable({ createLabel, table, pkField = "id", fields, hasDefault = fa
       </ul>
 
       <button
-        onClick={() => setSheetOpen(true)}
+        onClick={openCreateSheet}
         aria-label={createLabel}
         className="fixed bottom-24 right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-transform active:scale-90"
         style={{ backgroundColor: TEAL, width: 52, height: 52 }}
@@ -201,40 +167,38 @@ function CrudTable({ createLabel, table, pkField = "id", fields, hasDefault = fa
       </button>
 
       {sheetOpen && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={() => setSheetOpen(false)}>
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={closeSheet}>
           <div
             className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
             style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-800">{createLabel}</h3>
-              <button onClick={() => setSheetOpen(false)} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+              <h3 className="text-sm font-semibold text-gray-800">{editingRow ? (editLabel || createLabel) : createLabel}</h3>
+              <button onClick={closeSheet} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-end gap-2.5">
               {fields.map((f) => (
                 f.type === "color" ? (
-                  <input key={f.key} type="color" value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                    className="h-11 w-12 cursor-pointer rounded-md border border-gray-200" />
-                ) : f.type === "boolean" ? (
-                  <label key={f.key} className="flex min-h-11 items-center gap-1.5 text-sm text-gray-600">
-                    <input type="checkbox" checked={!!form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.checked })}
-                      className="h-4 w-4 cursor-pointer rounded border-gray-300" />
-                    {f.label}
-                  </label>
+                  <Field key={f.key} label={f.label}>
+                    <input type="color" value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                      className="h-11 w-12 cursor-pointer rounded-md border border-gray-200" />
+                  </Field>
                 ) : (
-                  <input key={f.key} value={form[f.key]} placeholder={f.placeholder || f.label}
-                    onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                    className={`${inputCls} flex-1`} onKeyDown={(e) => e.key === "Enter" && addRow()} />
+                  <Field key={f.key} label={f.label}>
+                    <input value={form[f.key]} placeholder={f.placeholder}
+                      onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                      className={`${inputCls} w-full min-w-[8rem]`} onKeyDown={(e) => e.key === "Enter" && submitSheet()} />
+                  </Field>
                 )
               ))}
             </div>
             <button
-              onClick={addRow}
+              onClick={submitSheet}
               className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"
               style={{ backgroundColor: TEAL }}
             >
-              <Plus size={16} aria-hidden="true" /> Guardar
+              {editingRow ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />} Guardar
             </button>
           </div>
         </div>
@@ -1025,11 +989,11 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
       <h2 className="-mt-1 text-base font-semibold" style={{ color: NAVY }}>{currentLabel}</h2>
 
       {section === "escuelas" && (
-        <CrudTable createLabel="Nueva escuela" table={schools} hasDefault
+        <CrudTable createLabel="Nueva escuela" editLabel="Editar escuela" table={schools} hasDefault
           fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
       )}
       {section === "cursos" && (
-        <CrudTable createLabel="Nuevo curso" table={activities} hasDefault searchable pullDefaultOut colorizeText
+        <CrudTable createLabel="Nuevo curso" editLabel="Editar curso" table={activities} hasDefault searchable pullDefaultOut colorizeText
           fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
       )}
       {section === "tarifas" && (
@@ -1040,14 +1004,14 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
         />
       )}
       {isAdmin && section === "tipos-pago" && (
-        <CrudTable createLabel="Nuevo tipo de pago" table={paymentTypes} hasDefault fields={[{ key: "name", label: "Nombre" }]} />
+        <CrudTable createLabel="Nuevo tipo de pago" editLabel="Editar tipo de pago" table={paymentTypes} hasDefault fields={[{ key: "name", label: "Nombre" }]} />
       )}
       {isAdmin && section === "estados-pago" && (
-        <CrudTable createLabel="Nuevo estado de pago" table={paymentStatuses} hasDefault protectDefaultFromDelete
+        <CrudTable createLabel="Nuevo estado de pago" editLabel="Editar estado de pago" table={paymentStatuses} hasDefault protectDefaultFromDelete
           fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
       )}
       {isAdmin && section === "monedas" && (
-        <CrudTable createLabel="Nueva moneda" table={currencies} pkField="code" hasDefault searchable pullDefaultOut
+        <CrudTable createLabel="Nueva moneda" editLabel="Editar moneda" table={currencies} pkField="code" hasDefault searchable pullDefaultOut
           fields={[{ key: "code", label: "Código (ej. EUR)" }, { key: "name", label: "Nombre" }, { key: "symbol", label: "Símbolo" }]} />
       )}
       {isAdmin && section === "navegacion" && <SectionColors navSections={navSections} />}
