@@ -81,3 +81,47 @@ queda protegido por el mismo efecto.
   navegación, no solo a Ayuda — un efecto colateral positivo de validar
   visualmente con `mobile-check` en vez de dar el contenido por bueno
   solo con el build pasando.
+
+## Addendum (2026-08-29) — orden por flujo real y cobertura de los 3 tipos de movimiento
+
+Encargo explícito: revisar Ayuda contra caminos de usuario concretos
+(configurar primero → crear un movimiento de cada tipo → cobrar uno →
+cobrar en bloque → entender el flujo general), no solo contra la lista
+de pantallas actuales.
+
+**Reorden de "Quiero...":** las cuatro categorías vivían en el orden en
+que se rediseñaron las pantallas (crear, cobrar, consultar, configurar),
+no en el orden en que un usuario nuevo las necesita. Pasan a: Configurar
+tu aplicación → Registrar un movimiento → Cobrar movimientos pendientes
+→ Consultar cuánto has generado — el mismo orden que ya sugería, sin
+decirlo explícitamente, el propio artículo de "Crear un movimiento"
+("revisa que tus tarifas estén dadas de alta").
+
+**Contenido nuevo en "Crear un movimiento":** el artículo trataba los 3
+tipos (Curso, Comisión, Ajuste) como una única mecánica ("el mismo
+formulario, elige el tipo"), correcto a nivel de interfaz pero
+insuficiente para "quiero crear un movimiento de cada tipo" — no
+explicaba qué es distinto de cada uno. Se añade un paso por tipo: Curso
+(depende de una tarifa de curso), Comisión (mismo mecanismo, tarifa de
+comisión, para un cliente referido), Ajuste (sin tarifa, importe y
+compañero manuales, puede ser negativo).
+
+**Contenido reforzado en "Cobrar movimientos pendientes":** ya cubría
+"cobrar uno" y "cobrar en bloque", pero como una mención breve dentro de
+la misma lista de pasos, sin distinguir cuándo usar cada uno. Se separan
+en dos flujos explícitos dentro del mismo artículo (uno a uno vs. "Cobrar
+todos" con filtro previo) y se añade el widget de Home ("Los más
+antiguos por cobrar", ver el bloque de esta misma sesión en
+`docs/SESSION-2026-08-28-rediseno-global.md`) como una tercera vía para
+cobrar uno sin salir de Home.
+
+**"Entender el flujo general":** no existía como pregunta explícita en
+ningún artículo — "Primeros pasos" describía las 3 pantallas pero no el
+orden de uso. Se añade una guía explícita de 3 pasos (configurar →
+crear → cobrar) en sus tips, remitiendo a las categorías "Quiero..."
+correspondientes.
+
+Sin cambios de código de producto, solo de contenido (`src/help/content.js`)
+y de orden de categorías — verificado que ningún test depende del orden
+del array (`HelpCategoryList` preserva el orden de `HELP_CATEGORIES`,
+solo filtra por `group`).

@@ -49,19 +49,50 @@ export const HELP_CATEGORIES = [
         whatYouCanDo: "Ocean Pulse te ayuda a llevar el control de tus ingresos como instructor freelance: las clases que impartes, las comisiones que generas por clientes referidos y los ajustes económicos con otros instructores — todo bajo un mismo concepto, \"movimiento\".",
         whenToUseIt: "La primera vez que abres la app, o cuando quieras recordar para qué sirve cada pantalla.",
         steps: [
-          "Home: cuánto tienes pendiente de cobrar, el calendario del mes y un acceso directo para crear un movimiento.",
+          "Home: cuánto tienes pendiente de cobrar, un widget con tus deudas más antiguas, el calendario del mes y un acceso directo para crear un movimiento.",
           "Mi trabajo: la lista completa de tus movimientos (cursos, comisiones y ajustes), para crearlos, editarlos, cobrarlos o eliminarlos.",
           "Resumen: tu balance por el periodo que elijas, con la posibilidad de profundizar por escuela, por curso o por comisiones.",
         ],
         tips: [
-          "Antes de registrar tu primer movimiento, revisa en Configuración que tus escuelas, cursos y tarifas estén dados de alta — así los importes se calculan solos.",
+          "El orden natural para una cuenta nueva es: 1) Configurar tu aplicación (escuelas, cursos, tarifas), 2) Registrar un movimiento de cada tipo que uses, 3) Cobrar — uno cuando te paguen, todos de golpe si revisas periódicamente. Cada uno de esos tres pasos tiene su propia guía en \"Quiero...\" más abajo.",
         ],
-        expectedResult: "Sabes qué pantalla usar para cada situación y estás listo para registrar tu primer movimiento.",
+        expectedResult: "Sabes qué pantalla usar para cada situación y en qué orden seguir para dejar la app lista para tu día a día.",
       },
     ],
   },
 
   // ---------------- Quiero... (historias de uso) ----------------
+  // Orden 2026-08-29: sigue el flujo real de un usuario nuevo (configurar
+  // → crear → cobrar → consultar), no el orden alfabético ni el orden en
+  // que se rediseñaron las pantallas — ver docs/ADR/0011, addendum.
+  {
+    id: "quiero-configurar",
+    group: "quiero",
+    sectionKey: "config",
+    icon: "Settings",
+    label: "Configurar tu aplicación",
+    description: "Escuelas, cursos, tarifas y catálogos",
+    articles: [
+      {
+        id: "configurar-app",
+        title: "Configurar tu aplicación",
+        summary: "Nada está fijado en la app: escuelas, cursos, tarifas y catálogos de pago se editan desde Configuración.",
+        whatYouCanDo: "Configuración se organiza en dos bloques: lo que cualquier usuario mantiene (Escuelas, Cursos, Tarifas) y, si tienes rol de administrador, un bloque de \"Administración\" con catálogos de toda la app (tipos y estados de pago, monedas, colores, usuarios).",
+        whenToUseIt: "Antes de registrar tu primer movimiento, y después cada vez que empieces a trabajar con una escuela o curso nuevo, o cambies un precio.",
+        steps: [
+          "Entra en Configuración (icono de engranaje, arriba a la derecha) y toca la sección que necesites.",
+          "Da de alta tus Escuelas y Cursos primero — una Tarifa siempre relaciona una escuela con un curso, así que hace falta que existan los dos antes.",
+          "Dentro de una sección, pulsa el botón \"+\" flotante para crear; \"‹ Configuración\" te devuelve al menú.",
+          "Toca el color de una fila para personalizarlo, y la estrella para marcarla como favorita.",
+        ],
+        tips: [
+          "Una escuela, curso o moneda marcada como favorita aparece preseleccionada en los formularios de creación.",
+          "Cerrar Configuración (la \"✕\" de la cabecera) te devuelve siempre a la pestaña desde la que entraste.",
+        ],
+        expectedResult: "La nueva escuela, curso o tarifa está disponible al momento al crear un movimiento — con esto ya puedes seguir con \"Registrar un movimiento\".",
+      },
+    ],
+  },
   {
     id: "quiero-crear-movimiento",
     group: "quiero",
@@ -73,20 +104,22 @@ export const HELP_CATEGORIES = [
       {
         id: "crear-movimiento",
         title: "Crear un movimiento",
-        summary: "El mismo formulario sirve para un curso impartido, una comisión o un ajuste con un compañero.",
+        summary: "El mismo formulario sirve para un curso impartido, una comisión o un ajuste con un compañero — cada tipo tiene sus propios campos.",
         whatYouCanDo: "\"Añadir movimiento\" es el único acceso de creación de toda la app — el propio formulario te deja elegir el tipo, no hace falta acertar un botón distinto para cada caso.",
         whenToUseIt: "Justo después de dar una clase, al cerrar una comisión, o cuando acuerdes un ajuste con otro instructor.",
         steps: [
           "Pulsa \"Añadir movimiento\": el botón \"+\" de la tarjeta \"Pendiente de cobrar\" en Home, el mismo botón tocando un día del calendario de Home, o el \"+\" flotante de Mi trabajo.",
           "Arriba del formulario, elige el tipo: Curso impartido, Comisión o Ajuste de curso.",
-          "Rellena escuela, curso y fecha — si ya existe una tarifa para esa combinación, el importe se calcula solo.",
+          "Curso impartido: escuela, curso, fecha y nº de personas — la tarifa por curso calcula el importe sola.",
+          "Comisión: igual que un curso, pero para un cliente que has referido y que forma otro instructor — usa su propia tarifa de comisión, no la de curso.",
+          "Ajuste de curso: no depende de ninguna tarifa — indica tú mismo el importe (positivo si te deben, negativo si tú debes) y con qué compañero es el ajuste.",
           "Guarda. Si abriste el formulario desde Home, verás el movimiento en Mi trabajo justo después de guardar.",
         ],
         tips: [
-          "Si no existe todavía una tarifa para esa escuela + curso, el formulario te deja crearla al vuelo sin salir de la pantalla (\"Añadir tarifa\").",
+          "Si no existe todavía una tarifa para esa escuela + curso, el formulario te deja crearla al vuelo sin salir de la pantalla (\"Añadir tarifa\") — solo aplica a Curso y Comisión, un Ajuste nunca necesita tarifa.",
           "Cancelar o cerrar el formulario sin guardar no crea nada — puedes abrirlo y cerrarlo sin miedo a dejar movimientos a medias.",
         ],
-        expectedResult: "El movimiento aparece en Mi trabajo, dentro de \"Pendientes\", y se suma a \"Generado este mes\" en Home.",
+        expectedResult: "El movimiento aparece en Mi trabajo, dentro de \"Pendientes\", y se suma a \"Generado este mes\" en Home (salvo un Ajuste en tu contra, que no cuenta como generado).",
       },
     ],
   },
@@ -101,19 +134,20 @@ export const HELP_CATEGORIES = [
       {
         id: "cobrar-movimientos",
         title: "Marcar movimientos como cobrados",
-        summary: "Controla qué tienes pendiente de cobrar y actualiza el estado en cuanto te paguen.",
-        whatYouCanDo: "Cada movimiento tiene un estado (pendiente o cobrado). Cambiarlo es inmediato, de un solo toque, con la opción de deshacer si te equivocas.",
-        whenToUseIt: "En cuanto una escuela o un compañero te paga, o periódicamente para revisar qué sigue pendiente.",
+        summary: "Controla qué tienes pendiente de cobrar y actualiza el estado en cuanto te paguen — uno a uno, o todos a la vez.",
+        whatYouCanDo: "Cada movimiento tiene un estado (pendiente o cobrado). Cambiarlo es inmediato, de un solo toque, con la opción de deshacer si te equivocas. Puedes hacerlo movimiento a movimiento, o de golpe sobre toda la lista visible.",
+        whenToUseIt: "En cuanto una escuela o un compañero te paga (uno a uno), o de golpe cuando revisas periódicamente y ya te han pagado varios pendientes a la vez.",
         steps: [
-          "Entra en Mi trabajo — la pestaña \"Pendientes\" se abre por defecto, con el total pendiente arriba.",
-          "Pulsa \"Confirmar cobro\" en la fila del movimiento (o \"Marcar liquidado\" si es un ajuste en tu contra).",
-          "Para cobrar varios a la vez, usa \"Cobrar todos\" arriba de la lista.",
+          "Para cobrar uno: entra en Mi trabajo (la pestaña \"Pendientes\" se abre por defecto) y pulsa \"Confirmar cobro\" en su fila (o \"Marcar liquidado\" si es un ajuste en tu contra).",
+          "También puedes cobrar el más urgente sin salir de Home: el widget \"Los más antiguos por cobrar\" deja marcarlo como cobrado con un toque.",
+          "Para cobrar varios a la vez: en Mi trabajo, usa \"Cobrar todos\" arriba de la lista — afecta a todo lo que esté visible en ese momento.",
+          "Antes de \"Cobrar todos\", usa \"Filtrar\" (por fecha, escuela, curso o tipo) para acotar la lista a justo lo que quieres cobrar de golpe.",
         ],
         tips: [
           "Un toast con \"Deshacer\" aparece tras cada cambio — tienes unos segundos para revertirlo sin volver a buscar el movimiento.",
-          "\"Filtrar\" (por fecha, escuela, curso o tipo) acota la lista antes de usar \"Cobrar todos\", para no cobrar de golpe más de lo que querías.",
+          "\"Cobrar todos\" pide confirmación antes de aplicarse — no hay \"Deshacer\" para el lote completo, a diferencia de cobrar uno a uno.",
         ],
-        expectedResult: "El movimiento pasa a la pestaña \"Cobrados\" y su importe deja de contar en \"Pendiente de cobrar\" de Home.",
+        expectedResult: "El movimiento (o todos los filtrados) pasa a la pestaña \"Cobrados\" y su importe deja de contar en \"Pendiente de cobrar\" de Home.",
       },
     ],
   },
@@ -133,7 +167,7 @@ export const HELP_CATEGORIES = [
         whenToUseIt: "Home, para un vistazo rápido al entrar en la app. Resumen, cuando quieras un periodo distinto al mes actual o entender de dónde viene el dinero.",
         steps: [
           "En Home, la tarjeta \"Generado este mes\" ya está siempre visible, sin tocar nada.",
-          "En Resumen, elige la granularidad (mensual, trimestral, semestral, anual o un rango personalizado) y, si quieres, el tipo (Curso, Comisión o Ajuste).",
+          "En Resumen, elige la granularidad y el periodo en el control de arriba (mensual, trimestral, semestral, anual o un rango personalizado) y, si quieres, el tipo (Curso, Comisión o Ajuste).",
           "La tarjeta principal muestra el total del periodo y cuánto ha cambiado respecto al periodo anterior.",
           "Toca \"Por escuela\", \"Por curso\", \"Calendario\", \"Comisiones\" o \"Pagos de compañeros\" para profundizar — cada uno se despliega solo si lo pides.",
         ],
@@ -142,33 +176,6 @@ export const HELP_CATEGORIES = [
           "La comparación con el periodo anterior no aparece si mezclas más de una moneda en el mismo periodo — evita mostrar un cálculo que no sería exacto.",
         ],
         expectedResult: "Tienes una cifra de balance del periodo elegido, con el detalle de dónde viene cada ingreso si lo necesitas.",
-      },
-    ],
-  },
-  {
-    id: "quiero-configurar",
-    group: "quiero",
-    sectionKey: "config",
-    icon: "Settings",
-    label: "Configurar tu aplicación",
-    description: "Escuelas, cursos, tarifas y catálogos",
-    articles: [
-      {
-        id: "configurar-app",
-        title: "Configurar tu aplicación",
-        summary: "Nada está fijado en la app: escuelas, cursos, tarifas y catálogos de pago se editan desde Configuración.",
-        whatYouCanDo: "Configuración se organiza en dos bloques: lo que cualquier usuario mantiene (Escuelas, Cursos, Tarifas) y, si tienes rol de administrador, un bloque de \"Administración\" con catálogos de toda la app (tipos y estados de pago, monedas, colores, usuarios).",
-        whenToUseIt: "Cuando empiezas a trabajar con una escuela o curso nuevo, o cuando cambies un precio.",
-        steps: [
-          "Entra en Configuración (icono de engranaje, arriba a la derecha) y toca la sección que necesites.",
-          "Dentro de una sección, pulsa el botón \"+\" flotante para crear (escuela, curso, tarifa...); \"‹ Configuración\" te devuelve al menú.",
-          "Toca el color de una fila para personalizarlo, y la estrella para marcarla como favorita.",
-        ],
-        tips: [
-          "Una escuela, curso o moneda marcada como favorita aparece preseleccionada en los formularios de creación.",
-          "Cerrar Configuración (la \"✕\" de la cabecera) te devuelve siempre a la pestaña desde la que entraste.",
-        ],
-        expectedResult: "La nueva escuela, curso o tarifa está disponible al momento al crear un movimiento.",
       },
     ],
   },
