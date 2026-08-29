@@ -185,7 +185,12 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
                 filtros compartiendo el mismo placeholder genérico, quedarían
                 indistinguibles para un lector de pantalla. */}
             <Field label="Tipo"><Select value={filters.type} onChange={(v) => setFilters({ ...filters, type: v })} options={TYPE_OPTIONS} placeholder="Todos" label="Tipo" /></Field>
-            <Field label="Escuela"><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Todas" label="Escuela" /></Field>
+            {/* Con una sola escuela configurada, filtrar por escuela no
+                filtra nada — se oculta hasta que exista una segunda
+                (2026-08-30, reducción de complejidad). */}
+            {schools.rows.length > 1 && (
+              <Field label="Escuela"><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Todas" label="Escuela" /></Field>
+            )}
             <Field label="Curso"><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder="Todos" /></Field>
             <Field label="Pago"><Select value={filters.payment_type} onChange={(v) => setFilters({ ...filters, payment_type: v })} options={presentValues("payment_type")} placeholder="Todos" label="Pago" /></Field>
           </div>

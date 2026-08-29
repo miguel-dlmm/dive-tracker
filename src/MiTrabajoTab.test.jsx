@@ -34,7 +34,7 @@ function money(expected) {
   };
 }
 
-function renderMiTrabajo({ worklog = [], comisiones = [], colleaguePayments = [] } = {}) {
+function renderMiTrabajo({ worklog = [], comisiones = [], colleaguePayments = [], schools = SCHOOLS } = {}) {
   const hooks = {
     worklog: rowsHook(worklog),
     comisiones: rowsHook(comisiones),
@@ -45,7 +45,7 @@ function renderMiTrabajo({ worklog = [], comisiones = [], colleaguePayments = []
   render(
     <ToastProvider>
       <MiTrabajoTab
-        schools={SCHOOLS} activities={ACTIVITIES} paymentTypes={PAYMENT_TYPES} paymentStatuses={PAYMENT_STATUSES} currencies={CURRENCIES}
+        schools={schools} activities={ACTIVITIES} paymentTypes={PAYMENT_TYPES} paymentStatuses={PAYMENT_STATUSES} currencies={CURRENCIES}
         rates={hooks.rates} commissionRates={hooks.commissionRates}
         worklog={hooks.worklog} comisiones={hooks.comisiones} colleaguePayments={hooks.colleaguePayments}
       />
@@ -53,6 +53,25 @@ function renderMiTrabajo({ worklog = [], comisiones = [], colleaguePayments = []
   );
   return hooks;
 }
+
+// Reducción de complejidad (2026-08-30): filtrar por escuela cuando solo
+// existe una no filtra nada — el control desaparece hasta que exista una
+// segunda escuela configurada.
+describe("MiTrabajoTab — filtro de Escuela, solo con más de una escuela", () => {
+  it("no muestra el filtro 'Escuela' con una sola escuela configurada", async () => {
+    const user = userEvent.setup();
+    renderMiTrabajo({});
+    await user.click(screen.getByRole("button", { name: "Filtrar" }));
+    expect(screen.queryByText("Escuela")).not.toBeInTheDocument();
+  });
+
+  it("muestra el filtro 'Escuela' en cuanto hay una segunda escuela", async () => {
+    const user = userEvent.setup();
+    renderMiTrabajo({ schools: rowsHook([{ name: "PADI Cozumel" }, { name: "Ihasia" }]) });
+    await user.click(screen.getByRole("button", { name: "Filtrar" }));
+    expect(screen.getByText("Escuela")).toBeInTheDocument();
+  });
+});
 
 // Un elemento de cada tipo — el ajuste es negativo (le pagas tú a Ana) y
 // pendiente, para comprobar que cuenta en la lista pero no en la cabecera.

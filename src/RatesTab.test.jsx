@@ -15,10 +15,10 @@ const rowsHook = (rows) => ({
 });
 const emptyHook = rowsHook([]);
 
-function renderRatesTab({ rates = rowsHook([]), commissionRates = emptyHook, activities } = {}) {
+function renderRatesTab({ rates = rowsHook([]), commissionRates = emptyHook, activities, schools } = {}) {
   render(
     <RatesTab
-      schools={rowsHook([{ name: "PADI Cozumel" }])}
+      schools={schools || rowsHook([{ name: "PADI Cozumel" }])}
       activities={activities || rowsHook([{ name: "Open Water" }])}
       paymentTypes={emptyHook}
       currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])}
@@ -134,5 +134,24 @@ describe("RatesTab — lista combinada de Curso y Comisión", () => {
     expect(commissionRates.insertRow).toHaveBeenCalledWith(
       expect.objectContaining({ school: "PADI Cozumel", activity: "Open Water", rate: 10 })
     );
+  });
+});
+
+// Reducción de complejidad (2026-08-30): filtrar por escuela cuando solo
+// existe una no filtra nada — el control desaparece hasta que exista una
+// segunda escuela configurada.
+describe("RatesTab — filtro de Escuela, solo con más de una escuela", () => {
+  it("no muestra el filtro 'Escuela' con una sola escuela configurada", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({});
+    await user.click(screen.getByRole("button", { name: "Filtrar" }));
+    expect(screen.queryByText("Escuela")).not.toBeInTheDocument();
+  });
+
+  it("muestra el filtro 'Escuela' en cuanto hay una segunda escuela", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({ schools: rowsHook([{ name: "PADI Cozumel" }, { name: "Ihasia" }]) });
+    await user.click(screen.getByRole("button", { name: "Filtrar" }));
+    expect(screen.getByText("Escuela")).toBeInTheDocument();
   });
 });

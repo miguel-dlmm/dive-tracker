@@ -623,8 +623,14 @@ export default function MiTrabajoTab({
           <Field label="Periodo">
             <DateRangePicker from={filters.from} to={filters.to} onChange={(r) => setFilters({ ...filters, ...r })} />
           </Field>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            <Field label="Escuela"><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Todas" /></Field>
+          {/* Filtro de Escuela oculto con una sola escuela configurada
+              (2026-08-30, reducción de complejidad): filtrar por algo que
+              solo puede tener un valor no es un filtro, es ruido — vuelve a
+              aparecer en cuanto exista una segunda escuela. */}
+          <div className={`grid grid-cols-2 gap-2 ${schools.rows.length > 1 ? "sm:grid-cols-3" : ""}`}>
+            {schools.rows.length > 1 && (
+              <Field label="Escuela"><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Todas" /></Field>
+            )}
             <Field label="Curso"><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder="Todos" /></Field>
             <Field label="Tipo"><Select value={filters.type} onChange={(v) => setFilters({ ...filters, type: v })} options={TYPE_OPTIONS} placeholder="Todos" /></Field>
           </div>

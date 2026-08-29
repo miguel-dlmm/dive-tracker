@@ -364,6 +364,11 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
   const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
+  // Con una sola escuela, cualquier desglose "por escuela" es idéntico al
+  // total — reducción de complejidad (2026-08-30): desaparece hasta que
+  // exista una segunda escuela, en vez de mostrar una comparación de un
+  // único elemento consigo mismo.
+  const hasMultipleSchools = schools.rows.length > 1;
   const sourceColor = source === "total" ? NAVY : SOURCE_META[source].color;
   const sourceLabel = source === "total" ? "Total combinado" : `Total ${SOURCE_META[source].label}`;
 
@@ -572,20 +577,29 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
       />
 
       {/* Todo lo demás es profundidad bajo demanda — nada de esto ocupa
-          espacio hasta que se pide, ver ADR-0009. */}
-      <ExpandableCard title="Por escuela" icon={Building2} iconColor={NAVY} defaultOpen>
-        <RankedList
-          rows={globalBySchool}
-          currencyRows={currencies.rows}
-          textColor={schoolColor}
-          expandedKey={expandedSchool}
-          onToggle={(key) => setExpandedSchool((cur) => (cur === key ? null : key))}
-          renderExpanded={renderSchoolActivities}
-          badge={canCompareGrowth ? (key) => <SchoolGrowthBadge growth={schoolGrowthByKey[key]} /> : undefined}
-        />
-      </ExpandableCard>
+          espacio hasta que se pide, ver ADR-0009. "Por escuela" (y el
+          desglose "Por escuela" dentro de Comisiones, y la leyenda de
+          colores del calendario) solo tienen sentido con más de una
+          escuela configurada — con una sola, "por escuela" es idéntico
+          al total y no aporta nada, así que desaparecen hasta que exista
+          una segunda (2026-08-30, reducción de complejidad). "Por curso"
+          hereda el defaultOpen cuando "Por escuela" no está, para que
+          la pantalla no se quede con todo colapsado de entrada. */}
+      {hasMultipleSchools && (
+        <ExpandableCard title="Por escuela" icon={Building2} iconColor={NAVY} defaultOpen>
+          <RankedList
+            rows={globalBySchool}
+            currencyRows={currencies.rows}
+            textColor={schoolColor}
+            expandedKey={expandedSchool}
+            onToggle={(key) => setExpandedSchool((cur) => (cur === key ? null : key))}
+            renderExpanded={renderSchoolActivities}
+            badge={canCompareGrowth ? (key) => <SchoolGrowthBadge growth={schoolGrowthByKey[key]} /> : undefined}
+          />
+        </ExpandableCard>
+      )}
 
-      <ExpandableCard title="Por curso" icon={GraduationCap} iconColor={MOVEMENT_TYPE_META.ganado.color}>
+      <ExpandableCard title="Por curso" icon={GraduationCap} iconColor={MOVEMENT_TYPE_META.ganado.color} defaultOpen={!hasMultipleSchools}>
         <RankedList rows={globalByActivity} currencyRows={currencies.rows} textColor={activityColor} />
       </ExpandableCard>
 
@@ -604,10 +618,12 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
       {source === "total" && (
         <ExpandableCard title="Comisiones" icon={Handshake} iconColor={SOURCE_META.comision.color}>
           <div className="space-y-3">
-            <div>
-              <h4 className="mb-1.5 text-xs font-semibold text-gray-500">Por escuela</h4>
-              <RankedList rows={comisionBySchool} currencyRows={currencies.rows} textColor={schoolColor} />
-            </div>
+            {hasMultipleSchools && (
+              <div>
+                <h4 className="mb-1.5 text-xs font-semibold text-gray-500">Por escuela</h4>
+                <RankedList rows={comisionBySchool} currencyRows={currencies.rows} textColor={schoolColor} />
+              </div>
+            )}
             <div>
               <h4 className="mb-1.5 text-xs font-semibold text-gray-500">Por curso</h4>
               <RankedList rows={comisionByActivity} currencyRows={currencies.rows} textColor={activityColor} />
@@ -645,7 +661,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
             month={unitIndex}
             entries={periodEntries}
             dotColor={topSchoolColorForDay}
-            legend={globalLegend}
+            legend={hasMultipleSchools ? globalLegend : undefined}
             currencyRows={currencies.rows}
             activityColor={activityColor}
             groupBySource={source === "total"}
