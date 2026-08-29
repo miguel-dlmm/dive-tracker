@@ -337,6 +337,38 @@ se mantiene idéntico antes/después de navegar a otro periodo.
 **Commit:** `feat(resumen): fusionar cabecera de periodo y tendencia,
 arreglar solape/inestabilidad, y renombrar/reordenar secciones`.
 
+### Bloque 9 — Bug de datos de tarifa/movimiento: investigado, causa raíz confirmada, sin parche esta noche
+
+Caso reportado: tarifa creada en línea "Reef Divers – Adventure Dive" a
+150, usada en un movimiento de 3 personas → total mostrado 150 (no 450).
+
+**Investigación empírica (no supuesta):** consulta de solo lectura
+contra Supabase real (script desechable, borrado tras usarlo, sin
+modificar ningún dato) confirmó que la cuenta de esa tarifa tiene un
+catálogo `payment_types` propio — "Instructor" (`is_default`) y
+"Comisión" — sin ninguna fila "Per Person". El fallback ya documentado
+en `docs/ADR/0003-eliminar-payment-type.md` (usa "Per Person" si existe,
+si no el `is_default` de la cuenta) asignó la tarifa nueva a
+`payment_type: "Instructor"`; `computeRateTotal` solo multiplica por
+personas cuando el valor es exactamente "Per Person" — cualquier otro
+valor cae al importe fijo. 150 fijo, confirmado, no un cálculo erróneo.
+
+**Veredicto:** ni bug de aritmética ni ambigüedad de negocio sin
+resolver — es exactamente la ambigüedad arquitectónica que
+`docs/ADR/0003` ya había identificado el 27/08 (`payment_type` es un
+catálogo editable por el usuario, pero el cálculo compara contra el
+literal `"Per Person"` como si fuera una constante interna). Esta noche
+se confirma con un caso real, no solo en teoría. Añadido como addendum
+a esa ADR y elevada la evidencia en `docs/BACKLOG.md`.
+
+**Por qué no se ha parcheado esta noche:** un arreglo aislado (forzar
+"Per Person" ignorando el catálogo real de la cuenta) sería la misma
+clase de parche a medias que la propia ADR-0003 ya advierte no
+introducir por separado — el plan de migración ya aprobado ahí
+(`importe = tarifa × personas`, sin `payment_type`) resuelve esto de
+raíz para cualquier cuenta. Sin commit de código en este bloque, solo
+documentación (dos archivos: la ADR y el BACKLOG).
+
 **Commit:** `feat(tarifas): rediseño completo — lista combinada, acento
 por tipo y hoja con motion` (+ `Sheet` extraído en el mismo commit, es
 la base que lo hace posible).
