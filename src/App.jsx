@@ -370,9 +370,12 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   );
 }
 
-// Puerta de sesión: sin sesión activa, pantalla de login (o, si la URL trae
-// enlace de activación, pantalla de crear contraseña — ver más abajo); con
-// sesión pero activated_at aún sin fijar, pantalla de crear contraseña vía
+// Puerta de sesión: si useSession detecta que la cuenta está desactivada
+// (accountBanned, comprobado antes que cualquier otra cosa — ver más abajo),
+// login con el aviso correspondiente, sin excepción. Si no, sin sesión
+// activa, pantalla de login (o, si la URL trae enlace de activación,
+// pantalla de crear contraseña — ver más abajo); con sesión pero
+// activated_at aún sin fijar, pantalla de crear contraseña vía
 // activateAccount() (ver useSession.js) — que ya incluye aceptar los
 // documentos legales, ver CreatePasswordScreen; con activated_at fijado pero
 // consentimiento legal pendiente (republicación de una versión nueva de un
@@ -429,7 +432,7 @@ function disableDevBypass() {
 }
 
 function AuthGate() {
-  const { session, profile, loading, signIn, signOut, activateAccount, pendingLegalConsents, acceptLegalConsents } = useSession();
+  const { session, profile, loading, accountBanned, signIn, signOut, activateAccount, pendingLegalConsents, acceptLegalConsents } = useSession();
   const [bypassAttempted, setBypassAttempted] = useState(false);
   // Mientras esté en true, se muestra el mismo loading que "loading" en vez
   // de dejar parpadear LoginScreen durante el auto-signIn. Si falla o
@@ -508,6 +511,17 @@ function AuthGate() {
         <AppLoading color={TEAL} />
       </div>
     );
+  }
+
+  // accountBanned se comprueba ANTES que la sesión o el enlace de la URL a
+  // propósito: debe prevalecer sobre cualquier otra cosa que esté pasando
+  // (una sesión persistida que useSession ya cerró, o un enlace de
+  // activación todavía en la URL) — nunca debe dejar entrar a crear
+  // contraseña, activar una cuenta ni ningún flujo de recuperación mientras
+  // la cuenta esté realmente desactivada. Ver ACCOUNT_DEACTIVATED_MESSAGE y
+  // resolveSessionState en useSession.js.
+  if (accountBanned) {
+    return <LoginScreen signIn={signIn} accountBanned />;
   }
 
   if (!session && !activating) {
