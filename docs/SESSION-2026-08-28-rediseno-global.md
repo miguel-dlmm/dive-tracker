@@ -653,6 +653,42 @@ captura de Home con el widget y captura tras pulsar "Cobrar" (toast
 "Marcado como cobrado", contador de pendientes y total bajan, el widget
 se refresca con la siguiente deuda más antigua) revisadas visualmente.
 
+## Bloque — Ayuda: orden por flujo real + cobertura de los 3 tipos de movimiento
+
+Encargo explícito: revisar Ayuda contra caminos de usuario concretos, no
+contra la lista de pantallas — configurar primero (escuelas/cursos/
+tarifas) → crear un movimiento de cada tipo → cobrar uno → cobrar en
+bloque → entender el flujo general de uso.
+
+Cambios en `src/help/content.js` (solo contenido, sin tocar código de
+producto):
+- Reorden de "Quiero...": Configurar tu aplicación pasa a ser la primera
+  categoría del grupo (antes era la última) — sigue el orden real en que
+  un usuario nuevo necesita las cosas, no el orden en que se rediseñaron
+  las pantallas.
+- "Crear un movimiento" gana un paso explícito por cada uno de los 3
+  tipos (Curso depende de tarifa de curso, Comisión de tarifa de
+  comisión para un cliente referido, Ajuste no depende de ninguna
+  tarifa y puede ser negativo) — antes los trataba como una única
+  mecánica, sin explicar qué distingue a cada uno.
+- "Cobrar movimientos pendientes" separa explícitamente "cobrar uno" de
+  "cobrar en bloque" (antes una mención breve dentro de la misma lista
+  de pasos) y añade el widget de Home de este mismo bloque de sesión
+  como tercera vía para cobrar uno.
+- "Primeros pasos" gana una guía explícita de 3 pasos (configurar →
+  crear → cobrar) en sus tips, remitiendo a las categorías "Quiero..."
+  correspondientes — antes no existía ningún sitio que narrara el
+  "flujo general de uso" como secuencia.
+
+Ver `docs/ADR/0011-rediseno-ayuda.md` (addendum) para el detalle
+completo.
+
+**Validado:** 246/246 tests (sin cambios de test necesarios — ningún
+test depende del contenido exacto ni del orden del array), build
+correcto, `mobile-check` sin errores — captura del menú de Ayuda
+revisada visualmente, confirma que "Configurar tu aplicación" encabeza
+ahora el grupo "Quiero...".
+
 ## Siguiente paso
 
 Bloques completados esta sesión (mañana): túnel/puerto de pruebas
@@ -663,12 +699,11 @@ en Home, Tarifas↔Mi trabajo (RowMenu compartido), Resumen (filtros
 fusionados), Qué hay de nuevo (swipe + contenido reestructurado +
 diapositiva de Configuración), Home (widget "Los más antiguos por
 cobrar" + tarjeta "Pendiente de cobrar" navegable + fix de anidamiento
-de botones).
+de botones), Ayuda (orden por flujo real + cobertura de los 3 tipos de
+movimiento).
 
-Trabajo pendiente del encargo de esta mañana, por orden de prioridad del
-usuario: documentación/Ayuda (revisar contra los caminos de usuario
-pedidos ahora: configurar→crear cada tipo→cobrar uno→cobrar en bloque),
-resto de Resumen (jerarquía/look&feel, si hace falta más allá de lo ya
-hecho — sin nueva queja explícita del usuario más allá de los filtros,
-ya resueltos), y una pasada de calidad visual transversal antes del
-resumen final de sesión.
+Trabajo pendiente del encargo de esta mañana: resto de Resumen
+(jerarquía/look&feel, si hace falta más allá de lo ya hecho — sin nueva
+queja explícita del usuario más allá de los filtros, ya resueltos), y
+una pasada de calidad visual transversal antes del resumen final de
+sesión.

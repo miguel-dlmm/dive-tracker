@@ -65,7 +65,10 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   Resumen y Configuración actuales (antes describía Registro/Comisiones/
   Compañeros/Pagos como pantallas separadas). Menú agrupado en
   "Quiero..." (historias de uso) y "Funcionalidades" (referencia por
-  pantalla), mismo patrón visual que el menú de Configuración.
+  pantalla), mismo patrón visual que el menú de Configuración. Las
+  categorías de "Quiero..." pasan a ordenarse según el flujo real de una
+  cuenta nueva (configurar → crear → cobrar → consultar), y "Crear un
+  movimiento" explica ahora qué distingue a Curso, Comisión y Ajuste.
 
 ### Fixed
 - Alta de tarifas bloqueada en cuentas nuevas sin `payment_types`
