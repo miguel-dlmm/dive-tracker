@@ -42,30 +42,75 @@ export async function verifyCaller(token) {
   return data.user;
 }
 
+// Error específico para "no se pudo comprobar el permiso" (fallo de
+// infraestructura: p.ej. SUPABASE_SERVICE_ROLE_KEY inválida — sí, esto
+// pasó de verdad: una variable de entorno exportada a mano en una terminal
+// concreta, que Vite respeta por encima de `.env.local` en esa misma
+// terminal, hizo que la consulta fallara con "Invalid API key" — distinto
+// de "se comprobó y el resultado es que no tiene permiso". Antes
+// isSuperadmin()/isAdmin() colapsaban ambos casos en `false`, así que un
+// problema de configuración del servidor se veía IDÉNTICO a "esta persona
+// de verdad no es superadmin" — la ambigüedad exacta que no queremos. Cada
+// handler distingue los dos casos con requireSuperadmin/requireAdmin más
+// abajo: 403 solo para un "no" confirmado, 500 para "no se pudo saber".
+export class PermissionCheckError extends Error {}
+
 // Permiso específico: ¿es esta persona superadmin? No se reutiliza el
 // is_admin(uid) de la base de datos porque ese devuelve true también para
-// admins normales — mezclaría dos niveles de permiso distintos. Un futuro
-// isAdmin(userId) para acciones de nivel admin (no superadmin) se añadiría
-// aquí al lado, como un helper igual de específico, no fusionado con este.
+// admins normales — mezclaría dos niveles de permiso distintos.
 export async function isSuperadmin(userId) {
   const { data, error } = await getServiceRoleClient()
     .from("profiles")
     .select("is_superadmin")
     .eq("user_id", userId)
     .single();
-  return !error && !!data?.is_superadmin;
+  if (error) throw new PermissionCheckError(error.message);
+  return !!data?.is_superadmin;
 }
 
-// Permiso de nivel admin (admin normal O superadmin) — el helper anticipado
-// en el comentario de arriba. Lo usa listUserStatus.js: ver quién está
-// activo/desactivado es lectura de directorio (mismo nivel que
-// admin_list_profiles() en la base de datos), no una acción de superadmin
-// como desactivar o eliminar.
+// Permiso de nivel admin (admin normal O superadmin). Lo usa
+// listUserStatus.js: ver quién está activo/desactivado es lectura de
+// directorio (mismo nivel que admin_list_profiles() en la base de datos),
+// no una acción de superadmin como desactivar o eliminar.
 export async function isAdmin(userId) {
   const { data, error } = await getServiceRoleClient()
     .from("profiles")
     .select("is_admin, is_superadmin")
     .eq("user_id", userId)
     .single();
-  return !error && !!(data?.is_admin || data?.is_superadmin);
+  if (error) throw new PermissionCheckError(error.message);
+  return !!(data?.is_admin || data?.is_superadmin);
+}
+
+// Wrapper común para las 4 acciones que exigen superadmin (crear/eliminar/
+// desactivar/cambiar rol de usuario) — antes cada handler repetía
+// `if (!(await isSuperadmin(...))) return 403 ...` sin distinguir un fallo
+// real de verificación de un "no, de verdad no tienes permiso". Devuelve
+// `null` si puede continuar, o el `{status, payload}` a devolver tal cual
+// si debe cortar aquí:
+//   const denied = await requireSuperadmin(caller.id, "mensaje exacto");
+//   if (denied) return denied;
+export async function requireSuperadmin(userId, deniedMessage) {
+  let allowed;
+  try {
+    allowed = await isSuperadmin(userId);
+  } catch (e) {
+    console.error("requireSuperadmin: no se pudo verificar el permiso", e);
+    return { status: 500, payload: { error: "No se pudo comprobar tus permisos. Inténtalo de nuevo en unos segundos." } };
+  }
+  if (!allowed) return { status: 403, payload: { error: deniedMessage } };
+  return null;
+}
+
+// Mismo wrapper, para el nivel admin (ver isAdmin más arriba).
+export async function requireAdmin(userId, deniedMessage) {
+  let allowed;
+  try {
+    allowed = await isAdmin(userId);
+  } catch (e) {
+    console.error("requireAdmin: no se pudo verificar el permiso", e);
+    return { status: 500, payload: { error: "No se pudo comprobar tus permisos. Inténtalo de nuevo en unos segundos." } };
+  }
+  if (!allowed) return { status: 403, payload: { error: deniedMessage } };
+  return null;
 }

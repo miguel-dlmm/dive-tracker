@@ -1,4 +1,4 @@
-import { getServiceRoleClient, verifyCaller, isSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
+import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 
 // Elimina una cuenta por completo — exclusivo de superadmin. Llama al Admin
 // API de Supabase Auth (auth.admin.deleteUser), que borra la fila de
@@ -64,9 +64,8 @@ export async function handleDeleteUser({ method, headers, body }) {
     return { status: 401, payload: { error: "Sesión inválida o caducada." } };
   }
 
-  if (!(await isSuperadmin(caller.id))) {
-    return { status: 403, payload: { error: "Solo un superadmin puede eliminar usuarios." } };
-  }
+  const denied = await requireSuperadmin(caller.id, "Solo un superadmin puede eliminar usuarios.");
+  if (denied) return denied;
 
   if (targetUserId === caller.id) {
     return { status: 400, payload: { error: "No puedes eliminar tu propia cuenta desde aquí." } };

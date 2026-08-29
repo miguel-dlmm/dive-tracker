@@ -1,12 +1,12 @@
 vi.mock("../supabaseAdmin.js", () => ({
   hasServerConfig: vi.fn(),
   verifyCaller: vi.fn(),
-  isSuperadmin: vi.fn(),
+  requireSuperadmin: vi.fn(),
   getServiceRoleClient: vi.fn(),
 }));
 
 import { handleDeleteUser } from "./deleteUser.js";
-import { getServiceRoleClient, verifyCaller, isSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
+import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 
 const CALLER_ID = "caller-1";
 const TARGET_ID = "target-1";
@@ -32,7 +32,7 @@ function makeClient({ lookupResult, deleteResult = { error: null } }) {
 beforeEach(() => {
   hasServerConfig.mockReturnValue(true);
   verifyCaller.mockResolvedValue({ id: CALLER_ID });
-  isSuperadmin.mockResolvedValue(true);
+  requireSuperadmin.mockResolvedValue(null);
   getServiceRoleClient.mockReset();
 });
 
@@ -79,11 +79,20 @@ it("devuelve 401 si el token no corresponde a una sesión válida", async () => 
 });
 
 it("devuelve 403 si quien llama no es superadmin, sin consultar la cuenta objetivo", async () => {
-  isSuperadmin.mockResolvedValue(false);
+  requireSuperadmin.mockResolvedValue({ status: 403, payload: { error: "Solo un superadmin puede eliminar usuarios." } });
 
   const result = await handleDeleteUser(request());
 
   expect(result).toEqual({ status: 403, payload: { error: "Solo un superadmin puede eliminar usuarios." } });
+  expect(getServiceRoleClient).not.toHaveBeenCalled();
+});
+
+it("propaga tal cual el resultado de requireSuperadmin si no puede verificarse el permiso (500, no 403)", async () => {
+  requireSuperadmin.mockResolvedValue({ status: 500, payload: { error: "No se pudo comprobar tus permisos. Inténtalo de nuevo en unos segundos." } });
+
+  const result = await handleDeleteUser(request());
+
+  expect(result).toEqual({ status: 500, payload: { error: "No se pudo comprobar tus permisos. Inténtalo de nuevo en unos segundos." } });
   expect(getServiceRoleClient).not.toHaveBeenCalled();
 });
 

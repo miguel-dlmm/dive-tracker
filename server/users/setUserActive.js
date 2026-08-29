@@ -1,4 +1,4 @@
-import { getServiceRoleClient, verifyCaller, isSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
+import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 
 // Desactiva/reactiva una cuenta — exclusivo de superadmin. A diferencia de
 // eliminar, esto NO borra nada: usa el "ban" ya incorporado en Supabase Auth
@@ -65,9 +65,8 @@ export async function handleSetUserActive({ method, headers, body }) {
     return { status: 401, payload: { error: "Sesión inválida o caducada." } };
   }
 
-  if (!(await isSuperadmin(caller.id))) {
-    return { status: 403, payload: { error: "Solo un superadmin puede activar o desactivar usuarios." } };
-  }
+  const denied = await requireSuperadmin(caller.id, "Solo un superadmin puede activar o desactivar usuarios.");
+  if (denied) return denied;
 
   if (targetUserId === caller.id) {
     return { status: 400, payload: { error: "No puedes desactivar tu propia cuenta desde aquí." } };

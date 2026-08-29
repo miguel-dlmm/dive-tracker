@@ -1,12 +1,12 @@
 vi.mock("../supabaseAdmin.js", () => ({
   hasServerConfig: vi.fn(),
   verifyCaller: vi.fn(),
-  isAdmin: vi.fn(),
+  requireAdmin: vi.fn(),
   getServiceRoleClient: vi.fn(),
 }));
 
 import { handleListUserStatus } from "./listUserStatus.js";
-import { getServiceRoleClient, verifyCaller, isAdmin, hasServerConfig } from "../supabaseAdmin.js";
+import { getServiceRoleClient, verifyCaller, requireAdmin, hasServerConfig } from "../supabaseAdmin.js";
 
 const CALLER_ID = "caller-1";
 
@@ -27,7 +27,7 @@ function makeClient(listUsersResult) {
 beforeEach(() => {
   hasServerConfig.mockReturnValue(true);
   verifyCaller.mockResolvedValue({ id: CALLER_ID });
-  isAdmin.mockResolvedValue(true);
+  requireAdmin.mockResolvedValue(null);
   getServiceRoleClient.mockReset();
 });
 
@@ -61,11 +61,20 @@ it("devuelve 401 si el token no corresponde a una sesión válida", async () => 
 });
 
 it("devuelve 403 si quien llama no es admin ni superadmin", async () => {
-  isAdmin.mockResolvedValue(false);
+  requireAdmin.mockResolvedValue({ status: 403, payload: { error: "Solo un admin puede consultar el estado de las cuentas." } });
 
   const result = await handleListUserStatus(request());
 
   expect(result).toEqual({ status: 403, payload: { error: "Solo un admin puede consultar el estado de las cuentas." } });
+  expect(getServiceRoleClient).not.toHaveBeenCalled();
+});
+
+it("propaga tal cual el resultado de requireAdmin si no puede verificarse el permiso (500, no 403)", async () => {
+  requireAdmin.mockResolvedValue({ status: 500, payload: { error: "No se pudo comprobar tus permisos. Inténtalo de nuevo en unos segundos." } });
+
+  const result = await handleListUserStatus(request());
+
+  expect(result).toEqual({ status: 500, payload: { error: "No se pudo comprobar tus permisos. Inténtalo de nuevo en unos segundos." } });
   expect(getServiceRoleClient).not.toHaveBeenCalled();
 });
 

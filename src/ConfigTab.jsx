@@ -11,6 +11,20 @@ import RatesTab from "./RatesTab";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
 
+// Mensaje determinista para las 4 acciones de gestión de usuarios: cada
+// handler (server/users/*.js) usa 403 EXCLUSIVAMENTE para "quien llama no
+// es superadmin" (verificado leyendo los 4 archivos — cualquier otro
+// rechazo usa 400/401/404/500) — así que basta con el código HTTP para
+// decidir el mensaje sin depender de que el cuerpo de la respuesta llegue
+// bien formado. Antes se confiaba en `payload.error`, y un fallo de red o
+// de parseo de JSON (poco probable pero posible) habría mostrado el
+// mensaje genérico de "no se pudo..." en vez de este, exactamente la
+// inconsistencia que no se quiere.
+function actionErrorMessage(res, payload, { forbidden, fallback }) {
+  if (res.status === 403) return forbidden;
+  return payload.error || fallback;
+}
+
 /**
  * Tabla CRUD genérica reutilizada por las secciones de Configuración
  * (Escuelas, Cursos, Tipos de pago, Estados de pago, Monedas). Crear y
@@ -490,7 +504,7 @@ function CreateUserSheet({ onClose, onCreated }) {
         body: JSON.stringify({ ...form, dataset_key: dataset.key }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(payload.error || "No se pudo crear el usuario.");
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede crear usuarios.", fallback: "No se pudo crear el usuario." }));
       if (payload.action_link) {
         toast?.success("Usuario creado (el email no se pudo enviar)");
         setEmailFailure(payload);
@@ -708,7 +722,7 @@ function UsersDirectory({ profile }) {
         body: JSON.stringify({ target_user_id: pendingToggle.user_id, is_admin: pendingToggle.nextValue }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(payload.error || "No se pudo actualizar el rol.");
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede cambiar el rol de admin de otra cuenta.", fallback: "No se pudo actualizar el rol." }));
       toast?.success("Rol actualizado correctamente");
       setPendingToggle(null);
       reload();
@@ -741,7 +755,7 @@ function UsersDirectory({ profile }) {
         body: JSON.stringify({ target_user_id: pendingDelete.user_id }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(payload.error || "No se pudo eliminar el usuario.");
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede eliminar usuarios.", fallback: "No se pudo eliminar el usuario." }));
       toast?.success("Usuario eliminado");
       setPendingDelete(null);
       reload();
@@ -776,7 +790,7 @@ function UsersDirectory({ profile }) {
         body: JSON.stringify({ target_user_id: pendingToggleActive.user_id, active: pendingToggleActive.nextActive }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(payload.error || "No se pudo actualizar el estado.");
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede activar o desactivar usuarios.", fallback: "No se pudo actualizar el estado." }));
       toast?.success(pendingToggleActive.nextActive ? "Usuario reactivado" : "Usuario desactivado");
       setPendingToggleActive(null);
       loadActiveStatus();

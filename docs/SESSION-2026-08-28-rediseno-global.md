@@ -1039,3 +1039,76 @@ lo mismo casi palabra por palabra — ya satisfecho, capturas reales
 siguen descartadas por el mismo motivo ya documentado en
 `WhatsNew.jsx`: cuenta dev-bypass y datos de prueba visibles), Ayuda
 (ya reordenada esta mañana con el mismo encargo — ya satisfecho).
+
+## Interrupción — bug de usuarios reportado de nuevo, esta vez resuelto de verdad
+
+El usuario reportó otra vez el bloqueo de crear/eliminar/desactivar
+usuarios pese a ser superadmin real, con dos requisitos explícitos: (1)
+el mensaje de "solo un superadmin puede eliminar usuarios" debe ser
+siempre exacto y determinista, sin variar según el contexto; (2)
+rediseñar por completo la pantalla de gestión de usuarios.
+
+**Diagnóstico en vivo (interactivo con el usuario), root cause real
+encontrado:**
+1. Confirmado que el problema reproduce también en `localhost` en el PC
+   (no es cosa del móvil/túnel) y tras un login completamente nuevo (no
+   es una sesión obsoleta en el navegador).
+2. Reinicios de `npm run dev` en la MISMA terminal no lo arreglaban.
+3. Se añadió un log de diagnóstico TEMPORAL en `isSuperadmin()`
+   (server/supabaseAdmin.js) — reveló `error: 'Invalid API key'` al
+   consultar `profiles` con el cliente de service role, con el
+   `userId` correcto (`8c8f2402-...`, el mismo que confirmó ser
+   superadmin en la consulta directa de la sesión anterior).
+4. Comparado el mismo valor de `SUPABASE_SERVICE_ROLE_KEY` vía
+   `loadEnv()` de Vite (la misma función que usa `vite.config.js`) y
+   funcionaba perfectamente en mi propio servidor de pruebas (puerto
+   5180) con el token de la cuenta demo — mismo repositorio, mismo
+   `.env.local`, mismo código, sin error.
+5. Pedido al usuario abrir una terminal COMPLETAMENTE NUEVA (no la que
+   llevaba horas abierta) y arrancar `npm run dev` ahí — funcionó al
+   instante.
+
+**Causa raíz confirmada:** esa terminal concreta tenía
+`SUPABASE_SERVICE_ROLE_KEY` exportada manualmente en algún momento
+(una clave antigua o incorrecta), y `loadEnv()` de Vite respeta una
+variable de entorno YA PRESENTE en el proceso por encima del valor de
+`.env.local` — comportamiento documentado e intencional de Vite, no un
+bug de esta app. Sobrevivía a `Ctrl+C` + reinicio porque eso solo
+reinicia el proceso hijo de Node, no la sesión de shell que lo lanza.
+
+**Bug real encontrado y corregido a raíz de esto (no especulativo, con
+tests):** `isSuperadmin()`/`isAdmin()` (`server/supabaseAdmin.js`)
+colapsaban "no se pudo verificar el permiso" (error de Supabase — este
+incidente) y "se verificó y el resultado es que no tiene permiso" en un
+único `false` — un problema de infraestructura y una negación real de
+permiso eran indistinguibles para quien lo sufre, exactamente la
+ambigüedad que el usuario no quería. Ahora:
+- `isSuperadmin`/`isAdmin` LANZAN (`PermissionCheckError`) si la
+  consulta falla, en vez de devolver `false`.
+- Nuevos `requireSuperadmin(userId, mensaje)`/`requireAdmin(userId,
+  mensaje)` en `supabaseAdmin.js`: devuelven `null` (permitido), un 403
+  con el mensaje EXACTO pasado por el handler (negación real), o un 500
+  genérico ("No se pudo comprobar tus permisos...") si la verificación
+  falla — nunca el mensaje de superadmin para un problema de
+  configuración del servidor.
+- Los 4 handlers (`createUser`, `deleteUser`, `setUserActive`,
+  `updateAdminStatus`) y `listUserStatus` (nivel admin) migrados a estos
+  wrappers — una sola línea cada uno, mensaje exacto conservado tal
+  cual para la negación real.
+- Cliente (`ConfigTab.jsx`): nuevo `actionErrorMessage(res, payload,
+  {forbidden, fallback})` — si `res.status === 403` (el único código que
+  cualquiera de los 4 handlers usa para "no tienes permiso", verificado
+  leyendo los 4 archivos), se usa SIEMPRE el mensaje exacto pasado por
+  el propio código cliente, nunca lo que traiga el cuerpo de la
+  respuesta — cero ambigüedad ni siquiera ante un fallo de parseo de
+  JSON.
+- Log de diagnóstico temporal eliminado tras confirmar la causa.
+
+**Validado:** 261/261 tests (+16 nuevos: `requireSuperadmin`/
+`requireAdmin` en `supabaseAdmin.test.js`, un caso de "500 en vez de
+403" por handler), build correcto, verificado además en vivo por HTTP
+contra mi propio servidor (puerto 5180, nunca el 5173 del usuario) con
+un token real no-superadmin: los 3 endpoints devuelven el mensaje 403
+exacto esperado.
+
+## Bloque 8 — Rediseño de gestión de usuarios en Configuración

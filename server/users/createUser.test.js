@@ -1,7 +1,7 @@
 vi.mock("../supabaseAdmin.js", () => ({
   hasServerConfig: vi.fn(),
   verifyCaller: vi.fn(),
-  isSuperadmin: vi.fn(),
+  requireSuperadmin: vi.fn(),
   getServiceRoleClient: vi.fn(),
 }));
 
@@ -10,7 +10,7 @@ vi.mock("../email/sendWelcomeEmail.js", () => ({
 }));
 
 import { handleCreateUser } from "./createUser.js";
-import { getServiceRoleClient, verifyCaller, isSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
+import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 import { sendWelcomeEmail } from "../email/sendWelcomeEmail.js";
 
 const VALID_BODY = {
@@ -35,7 +35,7 @@ const APP_URL = "https://app.oceanpulse.example";
 beforeEach(() => {
   hasServerConfig.mockReturnValue(true);
   verifyCaller.mockResolvedValue({ id: "caller-1" });
-  isSuperadmin.mockResolvedValue(true);
+  requireSuperadmin.mockResolvedValue(null);
   getServiceRoleClient.mockReset();
   process.env.APP_URL = APP_URL;
 });
@@ -94,7 +94,7 @@ it("devuelve 401 si el token no corresponde a una sesión válida", async () => 
 });
 
 it("devuelve 403 si quien llama no es superadmin, sin tocar Supabase Admin API", async () => {
-  isSuperadmin.mockResolvedValue(false);
+  requireSuperadmin.mockResolvedValue({ status: 403, payload: { error: "Solo un superadmin puede crear usuarios." } });
 
   const result = await handleCreateUser(request());
 
@@ -102,6 +102,15 @@ it("devuelve 403 si quien llama no es superadmin, sin tocar Supabase Admin API",
     status: 403,
     payload: { error: "Solo un superadmin puede crear usuarios." },
   });
+  expect(getServiceRoleClient).not.toHaveBeenCalled();
+});
+
+it("propaga tal cual el resultado de requireSuperadmin si no puede verificarse el permiso (500, no 403)", async () => {
+  requireSuperadmin.mockResolvedValue({ status: 500, payload: { error: "No se pudo comprobar tus permisos. Inténtalo de nuevo en unos segundos." } });
+
+  const result = await handleCreateUser(request());
+
+  expect(result).toEqual({ status: 500, payload: { error: "No se pudo comprobar tus permisos. Inténtalo de nuevo en unos segundos." } });
   expect(getServiceRoleClient).not.toHaveBeenCalled();
 });
 

@@ -1,4 +1,4 @@
-import { getServiceRoleClient, verifyCaller, isAdmin, hasServerConfig } from "../supabaseAdmin.js";
+import { getServiceRoleClient, verifyCaller, requireAdmin, hasServerConfig } from "../supabaseAdmin.js";
 
 // Devuelve qué cuentas están desactivadas (baneadas) — para pintar el
 // estado en el directorio de Usuarios (ConfigTab → UsersDirectory). Lectura
@@ -67,9 +67,8 @@ export async function handleListUserStatus({ method, headers, body }) {
     return { status: 401, payload: { error: "Sesión inválida o caducada." } };
   }
 
-  if (!(await isAdmin(caller.id))) {
-    return { status: 403, payload: { error: "Solo un admin puede consultar el estado de las cuentas." } };
-  }
+  const denied = await requireAdmin(caller.id, "Solo un admin puede consultar el estado de las cuentas.");
+  if (denied) return denied;
 
   const { data, error } = await getServiceRoleClient().auth.admin.listUsers({ page: 1, perPage: LIST_USERS_PER_PAGE });
   if (error) {

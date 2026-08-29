@@ -99,6 +99,13 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   (deshacer y eliminar ya animaban bien). Ahora los cuatro — cobrar,
   marcar pendiente, deshacer y eliminar — se comportan de forma
   coherente.
+- Crear/eliminar/desactivar usuarios podía rechazarse con "solo un
+  superadmin puede..." aunque quien llamara sí lo fuera, si la
+  comprobación de permiso fallaba por un problema de configuración del
+  servidor (p. ej. una clave de servicio inválida) — ese caso se
+  confundía con una negación real de permiso. Ahora un fallo de
+  verificación devuelve un mensaje distinto ("No se pudo comprobar tus
+  permisos..."), nunca el de superadmin.
 
 ## [0.1.0] - 2026-08-26
 
