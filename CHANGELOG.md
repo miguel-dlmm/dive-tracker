@@ -47,17 +47,27 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   en línea desde la propia hoja de detalle.
 - **Resumen**: tarjeta principal con comparación al periodo anterior, y
   el resto de la información (Por escuela con desglose por curso al
-  tocar, Por curso, Calendario, Comisiones, Pagos de compañeros) como
-  tarjetas plegables bajo demanda. Granularidad y navegación de periodo
-  fusionadas en un único control compacto, en vez de dos filas
-  separadas. Franja de tendencia con los últimos 6 periodos — cada barra
-  navega a ese periodo al tocarla.
+  tocar, Por curso, Comisiones, Ajustes de curso, Calendario) como
+  tarjetas plegables bajo demanda. Granularidad, periodo y franja de
+  tendencia fusionados en una única tarjeta de navegación temporal —
+  siempre 7 periodos (el actual, centrado, y 3 a cada lado); tocar una
+  barra recentra la franja en ese periodo, sin flechas ‹ › aparte.
 - Bypass de login para desarrollo local (`VITE_DEV_AUTH_BYPASS`) — nunca
   activo en producción.
 - Píldora "Qué hay de nuevo": aparece una vez por cuenta al entrar en una
   versión nueva, con un resumen visual y breve de las novedades de esta
   release, navegable con "Siguiente"/"Atrás", puntos o deslizando
   lateralmente (swipe).
+- **Tarifas**: rediseño completo — una única lista con Curso y Comisión
+  combinados (antes dos pestañas de página separadas), acento de color
+  por tipo, selector de tipo integrado en la propia hoja de creación, y
+  el mismo lenguaje visual (hoja con gesto de arrastrar, menú "⋯") que
+  Mi trabajo.
+- Gesto de arrastrar para cerrar en todas las hojas de creación/edición
+  de la app (antes solo en Mi trabajo) — Tarifas y cada sub-lista de
+  Configuración lo incorporan igual.
+- Calendario de Home: el día de hoy queda marcado visualmente (con o
+  sin actividad ese día).
 
 ### Changed
 - **Marca**: el producto se renombra de "Ocean Pulse" a "Ocean Flow" en
@@ -96,6 +106,18 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   cobrar"), por delante de "Generado este mes".
 - Estabilidad general en iPhone: zoom involuntario, barra de navegación
   inferior y toasts.
+- Ajuste de curso deja de pedir moneda por movimiento — se resuelve sola
+  (moneda favorita del instructor, o la moneda por defecto de la app si
+  no hay ninguna guardada). El formulario reorganiza Instructor
+  relacionado + Importe en una sola fila al perder el campo.
+- Con una única escuela configurada, se ocultan automáticamente el
+  filtro "Escuela" (Tarifas, Mi trabajo) y las secciones/leyenda que
+  solo tienen sentido comparando entre varias escuelas (Resumen:
+  tarjeta "Por escuela", su desglose dentro de Comisiones, leyenda del
+  Calendario) — reaparecen solas en cuanto se da de alta una segunda.
+- El botón flotante de creación (FAB) usa ahora un único componente
+  compartido en toda la app — mismo aspecto y comportamiento en Mi
+  trabajo, Tarifas y cada sub-lista de Configuración.
 - Ayuda: contenido reescrito por completo para reflejar Mi trabajo, Home,
   Resumen y Configuración actuales (antes describía Registro/Comisiones/
   Compañeros/Pagos como pantallas separadas). Menú agrupado en
@@ -108,6 +130,16 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
 ### Fixed
 - Alta de tarifas bloqueada en cuentas nuevas sin `payment_types`
   configurado.
+- La barra de navegación inferior podía desaparecer al navegar desde una
+  pantalla con scroll (p. ej. Home → Resumen tocando "Generado este
+  mes") en Safari/WebKit.
+- La franja de tendencia de Resumen podía solaparse con su propio título
+  y cambiar de altura al navegar entre periodos.
+- Los Ajustes de curso mostraban un recuento de "0 personas" en los
+  desgloses agregados de Resumen (calendario, Por escuela, Por curso) —
+  ese tipo de movimiento no tiene ni ha tenido nunca concepto de
+  persona; un desglose mixto con un curso real sigue mostrando su
+  recuento real.
 - El scroll no se reiniciaba al cambiar de pestaña — la pantalla nueva
   heredaba la posición de scroll de la anterior en vez de abrir desde
   arriba.
