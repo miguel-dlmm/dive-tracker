@@ -79,8 +79,6 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
 ### Fixed
 - Alta de tarifas bloqueada en cuentas nuevas sin `payment_types`
   configurado.
-- Animación de colapso rota al marcar un movimiento como cobrado o
-  pendiente (la fila saltaba en vez de animarse).
 - El scroll no se reiniciaba al cambiar de pestaña — la pantalla nueva
   heredaba la posición de scroll de la anterior en vez de abrir desde
   arriba.
@@ -96,14 +94,11 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   movimiento) dentro de otro `<button>` (la tarjeta completa) en cuanto
   ambos estaban activos a la vez — HTML inválido que solo se manifestaba
   al activar la navegación de la tarjeta por primera vez en Home.
-- Animación de salida al marcar un movimiento como cobrado (o pendiente)
-  seguía sin animarse pese a un intento de fix previo (`317fbc3`): la
-  altura de la fila colapsaba a 0 casi instantáneamente en vez de
-  animarse, aunque el contenido sí se desvanecía correctamente por
-  debajo — quedaba invisible, recortado dentro del contenedor ya
-  colapsado. Causa real: se medía la altura dentro de un `useEffect`
-  normal, sin garantía de pintado antes de colapsar; corregido con
-  `useLayoutEffect`.
+- Animación de salida rota al marcar un movimiento como cobrado o
+  pendiente: la fila colapsaba de golpe en vez de animarse suavemente
+  (deshacer y eliminar ya animaban bien). Ahora los cuatro — cobrar,
+  marcar pendiente, deshacer y eliminar — se comportan de forma
+  coherente.
 
 ## [0.1.0] - 2026-08-26
 
