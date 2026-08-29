@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronLeft, ChevronRight, ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META } from "./shared";
 import { listItemVariants, usePrefersReducedMotion } from "./motion";
 import { computeRateTotal, comparePeriods } from "./rateCalc";
@@ -267,33 +267,46 @@ const TREND_RADIUS = 3;
 // para la ALTURA relativa — aproximación visual ya aceptada en esta
 // pantalla (ver topSchoolColorForDay), nunca una cifra mostrada como
 // exacta.
+// Rediseño 2026-08-30 (segunda vuelta, feedback explícito): la franja se
+// solapaba con su propio título y "cambiaba de altura" al tocar barras.
+// Causa raíz real, no aparente: cada botón apilaba barra+etiqueta+punto de
+// "hoy" (hasta ~70px de contenido) dentro de un contenedor con una altura
+// FIJA de 56px — cuando la barra más alta se acercaba a su máximo, el
+// contenido entero desbordaba ese contenedor hacia ARRIBA (items-end
+// ancla por abajo), invadiendo visualmente el título de encima; y como el
+// desborde dependía de qué periodo era el más alto en cada momento, el
+// alto total del bloque cambiaba con cada navegación. Arreglo: la barra
+// vive dentro de su propio "carril" de altura fija (h-11, con la barra
+// alineada abajo dentro de ÉL, no del bloque entero) — el carril nunca
+// cambia de tamaño, solo el color/alto de la barra DENTRO de él, así que
+// el alto total del botón (carril + etiqueta + punto) es constante para
+// los 7 periodos siempre, sin desbordar nada.
 function TrendBars({ periods, color, onSelect }) {
   const max = Math.max(1, ...periods.map((p) => magnitude(p.totals)));
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3">
-      <div className="mb-2 text-xs font-medium text-gray-400">Tendencia — toca un periodo para navegar</div>
-      <div className="flex items-end gap-1.5" style={{ height: 56 }}>
-        {periods.map((p) => (
-          <button
-            key={`${p.year}-${p.unitIndex}`}
-            type="button"
-            onClick={() => onSelect(p)}
-            disabled={p.isSelected}
-            aria-label={`Ir a ${p.label}${p.isCurrent ? " (periodo actual)" : ""}`}
-            aria-current={p.isSelected ? "true" : undefined}
-            className="flex min-h-11 flex-1 flex-col items-center justify-end gap-1"
-          >
+    <div className="flex gap-1.5">
+      {periods.map((p) => (
+        <button
+          key={`${p.year}-${p.unitIndex}`}
+          type="button"
+          onClick={() => onSelect(p)}
+          disabled={p.isSelected}
+          aria-label={`Ir a ${p.label}${p.isCurrent ? " (periodo actual)" : ""}`}
+          aria-current={p.isSelected ? "true" : undefined}
+          className="flex flex-1 flex-col items-center gap-1"
+        >
+          <div className="flex h-11 w-full items-end">
             <div
               className="w-full rounded-sm"
               style={{ height: Math.round(Math.max(4, (magnitude(p.totals) / max) * 44)), backgroundColor: p.isSelected ? color : `${color}4D` }}
             />
-            <span className="truncate text-[10px] font-medium" style={{ color: p.isSelected ? color : "#9CA3AF" }}>
-              {shortPeriodLabel(p.granularity, p.year, p.unitIndex)}
-            </span>
-            <span className="h-1 w-1 rounded-full" style={{ backgroundColor: color, opacity: p.isCurrent && !p.isSelected ? 1 : 0 }} aria-hidden="true" />
-          </button>
-        ))}
-      </div>
+          </div>
+          <span className="truncate text-[10px] font-medium" style={{ color: p.isSelected ? color : "#9CA3AF" }}>
+            {shortPeriodLabel(p.granularity, p.year, p.unitIndex)}
+          </span>
+          <span className="h-1 w-1 rounded-full" style={{ backgroundColor: color, opacity: p.isCurrent && !p.isSelected ? 1 : 0 }} aria-hidden="true" />
+        </button>
+      ))}
     </div>
   );
 }
@@ -373,22 +386,16 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   // ---- navegación de periodo — cambiar de granularidad siempre salta al
   // periodo actual de esa granularidad (nunca se queda "colgado" en un
   // índice que no corresponde a hoy). ----
-  const unitsPerYear = UNITS_PER_YEAR[granularity] || 12;
   const changeGranularity = (g) => {
     setGranularity(g);
     setYear(now.getFullYear());
     setUnitIndex(currentUnitFor(g, now));
   };
-  const goPrev = () => {
-    if (granularity === "anual") { setYear((y) => y - 1); return; }
-    if (unitIndex === 0) { setUnitIndex(unitsPerYear - 1); setYear((y) => y - 1); }
-    else setUnitIndex((u) => u - 1);
-  };
-  const goNext = () => {
-    if (granularity === "anual") { setYear((y) => y + 1); return; }
-    if (unitIndex === unitsPerYear - 1) { setUnitIndex(0); setYear((y) => y + 1); }
-    else setUnitIndex((u) => u + 1);
-  };
+  // Navegar de uno en uno (antes goPrev/goNext, botones ‹ › en la cabecera)
+  // se retiró como control propio 2026-08-30 — la franja de tendencia ya
+  // cubre exactamente ese caso (sus dos barras vecinas) con el mismo
+  // shiftPeriod, y además "más lejos" en un solo toque. Un único mecanismo
+  // de navegación de periodo, no dos.
 
   const [rangeStart, rangeEnd] = periodRange(granularity, year, unitIndex, customFrom ? new Date(customFrom) : null, customTo ? new Date(customTo) : null);
   const withinRange = (list, dateKey = "date") => list.filter((e) => {
@@ -491,24 +498,37 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
 
   return (
     <div className="space-y-4">
-      {/* Granularidad + navegación de periodo, fusionados en un único
-          control (ver comentario de GRANULARITY_LABELS más arriba). */}
-      <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white p-2">
-        <div className="w-[6.5rem] shrink-0">
-          <Select
-            value={GRANULARITY_LABELS[granularity]}
-            onChange={(l) => changeGranularity(GRANULARITY_KEY_BY_LABEL[l])}
-            options={GRANULARITY_LABEL_LIST}
-            label="Granularidad del periodo"
-          />
+      {/* Cabecera de periodo + tendencia, fusionadas en una misma tarjeta
+          (feedback explícito 2026-08-30): antes eran dos bloques
+          separados que hacían casi lo mismo — este de aquí cambiaba de
+          periodo de uno en uno con flechas, y la franja de tendencia
+          (más abajo en el render anterior) también navegaba, con más
+          alcance (7 periodos, cualquier distancia). Mantener las dos
+          era duplicar el mismo control con menos capacidad en uno de
+          ellos, así que las flechas ‹ › desaparecen: la propia franja
+          ya cubre "un periodo antes/después" (sus dos barras vecinas) y
+          además "más lejos" en un solo toque — sin añadir ningún
+          control nuevo, con uno menos que antes. */}
+      <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="flex items-center gap-2 p-2">
+          <div className="w-[6.5rem] shrink-0">
+            <Select
+              value={GRANULARITY_LABELS[granularity]}
+              onChange={(l) => changeGranularity(GRANULARITY_KEY_BY_LABEL[l])}
+              options={GRANULARITY_LABEL_LIST}
+              label="Granularidad del periodo"
+            />
+          </div>
+          <span className="flex-1 truncate text-center text-sm font-semibold tabular-nums" style={{ color: NAVY }}>{label}</span>
         </div>
-        {granularity === "personalizado" ? (
-          <span className="flex-1 truncate text-center text-sm font-semibold" style={{ color: NAVY }}>{label}</span>
-        ) : (
-          <div className="flex flex-1 items-center justify-between">
-            <button onClick={goPrev} aria-label="Periodo anterior" className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={18} aria-hidden="true" /></button>
-            <span className="text-sm font-semibold tabular-nums" style={{ color: NAVY }}>{label}</span>
-            <button onClick={goNext} aria-label="Periodo siguiente" className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={18} aria-hidden="true" /></button>
+        {trendPeriods.length > 0 && (
+          <div className="border-t border-gray-100 p-3">
+            <div className="mb-2 text-xs font-medium text-gray-400">Tendencia — toca un periodo para navegar</div>
+            <TrendBars
+              periods={trendPeriods}
+              color={sourceColor}
+              onSelect={(p) => { setYear(p.year); setUnitIndex(p.unitIndex); }}
+            />
           </div>
         )}
       </div>
@@ -551,14 +571,6 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         currencyRows={currencies.rows}
       />
 
-      {trendPeriods.length > 0 && (
-        <TrendBars
-          periods={trendPeriods}
-          color={sourceColor}
-          onSelect={(p) => { setYear(p.year); setUnitIndex(p.unitIndex); }}
-        />
-      )}
-
       {/* Todo lo demás es profundidad bajo demanda — nada de esto ocupa
           espacio hasta que se pide, ver ADR-0009. */}
       <ExpandableCard title="Por escuela" icon={Building2} iconColor={NAVY} defaultOpen>
@@ -577,22 +589,18 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         <RankedList rows={globalByActivity} currencyRows={currencies.rows} textColor={activityColor} />
       </ExpandableCard>
 
-      {granularity === "mensual" && (
-        <ExpandableCard title="Calendario" icon={Calendar} iconColor={NAVY}>
-          <MonthCalendar
-            year={year}
-            month={unitIndex}
-            entries={periodEntries}
-            dotColor={topSchoolColorForDay}
-            legend={globalLegend}
-            currencyRows={currencies.rows}
-            activityColor={activityColor}
-            groupBySource={source === "total"}
-            sourceMeta={SOURCE_META}
-          />
-        </ExpandableCard>
-      )}
-
+      {/* Jerarquía revisada 2026-08-30 (Head Designer, sin orden cerrado de
+          antemano): Por escuela/Por curso/Comisiones/Ajustes de curso
+          responden todas la misma pregunta — "¿de dónde sale el total?",
+          cada una con su propio corte — así que van juntas. Calendario
+          responde una pregunta distinta ("¿cuándo?", no "¿de dónde?") y
+          es la más exploratoria de las cinco, así que cierra la lista en
+          vez de partirla en dos mitades. Vocabulario también revisado:
+          "Pagos de compañeros" pasa a "Ajustes de curso" — en el resto de
+          la app (Mi trabajo, MovementSheet) ya no existe "pago de
+          compañero" como concepto propio, es el mismo tipo de movimiento
+          que "Ajuste de curso"; Resumen era la última pantalla que
+          todavía usaba el nombre antiguo. */}
       {source === "total" && (
         <ExpandableCard title="Comisiones" icon={Handshake} iconColor={SOURCE_META.comision.color}>
           <div className="space-y-3">
@@ -609,9 +617,9 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
       )}
 
       {(source === "total" || source === "companeros") && (
-        <ExpandableCard title="Pagos de compañeros" icon={Users} iconColor={SOURCE_META.companeros.color}>
+        <ExpandableCard title="Ajustes de curso" icon={Users} iconColor={SOURCE_META.companeros.color}>
           {colleagueByName.length === 0 ? (
-            <p className="text-sm text-gray-400">Sin pagos de compañeros en este periodo.</p>
+            <p className="text-sm text-gray-400">Sin ajustes de curso en este periodo.</p>
           ) : (
             <ul className="divide-y divide-gray-100">
               {colleagueByName.map((r) => {
@@ -627,6 +635,22 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
               })}
             </ul>
           )}
+        </ExpandableCard>
+      )}
+
+      {granularity === "mensual" && (
+        <ExpandableCard title="Calendario" icon={Calendar} iconColor={NAVY}>
+          <MonthCalendar
+            year={year}
+            month={unitIndex}
+            entries={periodEntries}
+            dotColor={topSchoolColorForDay}
+            legend={globalLegend}
+            currencyRows={currencies.rows}
+            activityColor={activityColor}
+            groupBySource={source === "total"}
+            sourceMeta={SOURCE_META}
+          />
         </ExpandableCard>
       )}
     </div>

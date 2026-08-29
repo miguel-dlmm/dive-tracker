@@ -5,9 +5,11 @@ import SummaryTab from "./SummaryTab";
 // Rediseño 2026-08-29 (ver docs/ADR/0009-rediseno-resumen.md): la tarjeta
 // principal (HeroTotal, con comparación al periodo anterior) y las
 // tarjetas plegables (Por escuela con drill-down inline, Por curso,
-// Calendario, Comisiones, Pagos de compañeros) son el contrato nuevo de
+// Comisiones, Ajustes de curso, Calendario) son el contrato nuevo de
 // esta pantalla — estas pruebas cubren ese contrato de comportamiento, no
-// cada combinación de granularidad/fuente.
+// cada combinación de granularidad/fuente. "Ajustes de curso" (antes
+// "Pagos de compañeros") renombrado 2026-08-30 para hablar el mismo
+// vocabulario que el resto de la app (Mi trabajo, MovementSheet).
 const rowsHook = (rows) => ({ rows, loaded: true, insertRow: vi.fn(), updateRow: vi.fn(), deleteRow: vi.fn(), bulkUpdateWhere: vi.fn(), setDefault: vi.fn() });
 
 const NOW = new Date();
@@ -129,10 +131,29 @@ describe("SummaryTab — franja de tendencia", () => {
 
     expect(screen.queryByText(/Tendencia — toca un periodo/)).not.toBeInTheDocument();
   });
+
+  it("sin flechas ‹ › de periodo — la franja de tendencia es el único mecanismo de navegación (feedback 2026-08-30)", () => {
+    renderSummary({});
+    expect(screen.queryByRole("button", { name: "Periodo anterior" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Periodo siguiente" })).not.toBeInTheDocument();
+  });
+});
+
+describe("SummaryTab — jerarquía de secciones (revisión 2026-08-30)", () => {
+  it("Comisiones y Ajustes de curso preceden a Calendario en el documento", () => {
+    renderSummary({
+      worklog: [{ id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+    });
+    const [comisiones, ajustes, calendario] = ["Comisiones", "Ajustes de curso", "Calendario"].map((name) =>
+      screen.getByRole("button", { name: new RegExp(name) })
+    );
+    expect(comisiones.compareDocumentPosition(ajustes) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(ajustes.compareDocumentPosition(calendario) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });
 
 describe("SummaryTab — tarjetas plegables", () => {
-  it("Por escuela empieza abierta; Comisiones/Calendario/Pagos de compañeros empiezan cerradas", () => {
+  it("Por escuela empieza abierta; Comisiones/Ajustes de curso/Calendario empiezan cerradas", () => {
     renderSummary({
       worklog: [{ id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
     });
@@ -143,7 +164,7 @@ describe("SummaryTab — tarjetas plegables", () => {
     // El resto empieza colapsado: su botón de cabecera existe (aria-expanded=false).
     expect(screen.getByRole("button", { name: /Comisiones/ })).toHaveAttribute("aria-expanded", "false");
     expect(screen.getByRole("button", { name: /Calendario/ })).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByRole("button", { name: /Pagos de compañeros/ })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: /Ajustes de curso/ })).toHaveAttribute("aria-expanded", "false");
   });
 
   it("tocar una escuela en 'Por escuela' expande su desglose por curso en el sitio", async () => {
