@@ -61,6 +61,11 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   Monedas: cada fila usa ahora el mismo menú "⋯" (Editar/Eliminar) que
   Mi trabajo/Tarifas, y "Editar" abre la misma hoja que la creación
   (precargada), en vez de una edición en línea con iconos sueltos.
+- Configuración — Usuarios: la tabla con scroll lateral se sustituye por
+  una lista (nickname, estado, fecha de alta) con una hoja de detalle al
+  tocar cada fila, donde vive toda la gestión (roles, activar/
+  desactivar, eliminar) — mismo patrón de lista + detalle que Escuelas/
+  Cursos/Tarifas.
 - Se oculta el acceso directo a "Pagos" de la navegación — Mi trabajo
   cubre su función ("Cobrar todos", filtro por escuela).
 - Home: el calendario del mes sube al segundo lugar (tras "Pendiente de

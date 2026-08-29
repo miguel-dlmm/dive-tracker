@@ -361,79 +361,112 @@ function StatusBadge({ active, editable, onToggle }) {
   );
 }
 
-// onRequestDelete: solo la abre superadmin puede verla — eliminar es
-// irreversible (borra la cuenta de auth.users y, en cascada, su perfil y
-// todo lo que cuelga de él), así que la columna entera se omite para
-// admins normales en vez de mostrarse deshabilitada — no hay nada que
-// "casi puedan hacer" ahí. mismo `editable` que el checkbox de Admin: no
-// la propia cuenta, no otro superadmin.
-// activeByUser: { [user_id]: boolean } — ver listUserStatus.js. Mientras no
-// ha llegado la respuesta (o para un id sin entrada), se asume activo: es
-// el estado de la inmensa mayoría de las cuentas, y fallar hacia "no
-// mostrar un desactivado que en realidad no lo está" es preferible a
-// bloquear toda la tabla hasta que responda una llamada aparte.
-function UsersTable({ rows, currentUserId, viewerIsSuperadmin, activeByUser, onRequestToggle, onRequestToggleActive, onRequestDelete }) {
-  if (rows.length === 0) {
-    return <p className="px-3 py-6 text-center text-sm text-gray-400">Sin resultados.</p>;
-  }
+// Fecha corta ES, o "—" si no hay valor — usado tanto en la fila como en
+// la hoja de detalle.
+function shortDate(iso) {
+  return iso ? new Date(iso).toLocaleDateString("es-ES") : "—";
+}
+
+// Rediseño 2026-08-29: la tabla con scroll lateral (9 columnas) se
+// sustituye por lista + detalle, el mismo patrón que ya usan Escuelas/
+// Cursos/Tarifas/Mi trabajo — "aprender una parte de la app facilita usar
+// las demás", encargo explícito del usuario. La fila solo muestra lo
+// mínimo para localizar y reconocer a alguien de un vistazo (identificador,
+// estado, fecha de alta); el resto de la gestión (roles, activar/
+// desactivar, eliminar) vive en UserDetailSheet, al tocar la fila —
+// ninguna acción vive ya en la fila misma, coherente con "acciones en el
+// lugar correcto" del encargo.
+//
+// "Fecha de baja" (pedida explícitamente): no existe hoy ninguna columna
+// que registre CUÁNDO se desactivó una cuenta — `banned_until` (Supabase
+// Auth) guarda cuándo TERMINARÍA el baneo, no cuándo empezó, así que no
+// sirve para derivarla. Añadirla requeriría una columna nueva
+// (`profiles.deactivated_at`, escrita en setUserActive.js) — un cambio de
+// esquema real, que las reglas del proyecto piden proponer aparte antes de
+// implementar, no meterlo de paso en un rediseño de UI. Ver nota en
+// UsersDirectory y el resumen de sesión.
+function UserListRow({ user, active, onOpen }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[760px] text-left text-sm">
-        <thead>
-          <tr className="border-b border-gray-100 text-[11px] uppercase tracking-wide text-gray-400">
-            <th className="px-3 py-2 font-medium">Nombre</th>
-            <th className="px-3 py-2 font-medium">Apellidos</th>
-            <th className="px-3 py-2 font-medium">Nickname</th>
-            <th className="px-3 py-2 font-medium">Email</th>
-            <th className="px-3 py-2 font-medium">Admin</th>
-            <th className="px-3 py-2 font-medium">Superadmin</th>
-            <th className="px-3 py-2 font-medium">Estado</th>
-            <th className="px-3 py-2 font-medium">Alta</th>
-            {viewerIsSuperadmin && <th className="px-3 py-2 font-medium">Eliminar</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((p) => {
-            const editable = viewerIsSuperadmin && p.user_id !== currentUserId && !p.is_superadmin;
-            const active = activeByUser[p.user_id] ?? true;
-            return (
-              <tr key={p.user_id} className="border-b border-gray-50 last:border-0">
-                <td className="px-3 py-2 text-gray-700">{p.first_name || "—"}</td>
-                <td className="px-3 py-2 text-gray-700">{p.last_name || "—"}</td>
-                <td className="px-3 py-2 font-medium text-gray-800">{p.nickname}</td>
-                <td className="px-3 py-2 text-gray-500">{p.email || "—"}</td>
-                <td className="px-3 py-2">
-                  <RoleCheckbox
-                    checked={p.is_admin}
-                    label="Admin"
-                    onChange={editable ? () => onRequestToggle(p) : undefined}
-                  />
-                </td>
-                <td className="px-3 py-2"><RoleCheckbox checked={p.is_superadmin} label="Superadmin" locked /></td>
-                <td className="px-3 py-2">
-                  <StatusBadge active={active} editable={editable} onToggle={() => onRequestToggleActive(p, active)} />
-                </td>
-                <td className="px-3 py-2 text-gray-500">{p.created_at ? new Date(p.created_at).toLocaleDateString("es-ES") : "—"}</td>
-                {viewerIsSuperadmin && (
-                  <td className="px-3 py-2">
-                    {editable ? (
-                      <button
-                        onClick={() => onRequestDelete(p)}
-                        aria-label={`Eliminar usuario ${p.nickname}`}
-                        className="-m-2 flex min-h-11 min-w-11 items-center justify-center rounded p-2 text-gray-300 hover:text-red-500"
-                      >
-                        <Trash2 size={14} aria-hidden="true" />
-                      </button>
-                    ) : (
-                      <span className="inline-block px-2 text-gray-200" aria-hidden="true">—</span>
-                    )}
-                  </td>
-                )}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <button
+      onClick={() => onOpen(user.user_id)}
+      className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-sm font-semibold text-gray-800">{user.nickname}</span>
+          <StatusBadge active={active} editable={false} />
+        </div>
+        <p className="mt-0.5 truncate text-xs text-gray-400">
+          {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.email || "—"}
+        </p>
+      </div>
+      <span className="shrink-0 text-xs text-gray-400">{shortDate(user.created_at)}</span>
+      <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />
+    </button>
+  );
+}
+
+// Hoja de detalle — gestión completa de un usuario, en el mismo patrón de
+// hoja inferior que crear/editar en el resto de la app. `editable` decide
+// tres cosas a la vez (Admin, Estado, Eliminar): ni la propia cuenta de
+// quien mira, ni otro superadmin, y solo si quien mira es superadmin —
+// mismo criterio que ya tenía la tabla anterior, ahora centralizado aquí.
+function UserDetailSheet({ user, active, currentUserId, viewerIsSuperadmin, onClose, onRequestToggleAdmin, onRequestToggleActive, onRequestDelete }) {
+  useBodyScrollLock(true);
+  const editable = viewerIsSuperadmin && user.user_id !== currentUserId && !user.is_superadmin;
+  const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "—";
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={onClose}>
+      <div
+        className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
+        style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-800">{user.nickname}</h3>
+          <button onClick={onClose} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+        </div>
+
+        <div className="space-y-2.5 rounded-lg border border-gray-200 bg-gray-50/60 p-3 text-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="shrink-0 text-xs text-gray-400">Nombre</span>
+            <span className="truncate text-right text-gray-700">{fullName}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="shrink-0 text-xs text-gray-400">Email</span>
+            <span className="truncate text-right text-gray-700">{user.email || "—"}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="shrink-0 text-xs text-gray-400">Alta</span>
+            <span className="text-gray-700">{shortDate(user.created_at)}</span>
+          </div>
+        </div>
+
+        <div className="mt-3 space-y-3 rounded-lg border border-gray-200 p-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-500">Estado</span>
+            <StatusBadge active={active} editable={editable} onToggle={() => onRequestToggleActive(user, active)} />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-500">Admin</span>
+            <RoleCheckbox checked={user.is_admin} label="Admin" onChange={editable ? () => onRequestToggleAdmin(user) : undefined} />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-500">Superadmin</span>
+            <RoleCheckbox checked={user.is_superadmin} label="Superadmin" locked />
+          </div>
+        </div>
+
+        {editable && (
+          <button
+            onClick={() => onRequestDelete(user)}
+            className="mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-red-200 text-sm font-medium text-red-600"
+          >
+            <Trash2 size={15} aria-hidden="true" /> Eliminar usuario
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -629,6 +662,11 @@ function UsersDirectory({ profile }) {
   const [loadError, setLoadError] = useState(null);
   const [query, setQuery] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
+  // openUserId (no un snapshot del objeto): se deriva de `rows` en cada
+  // render, así la hoja de detalle siempre muestra datos frescos tras un
+  // reload() (cambiar de rol, activar/desactivar) sin tener que sincronizar
+  // manualmente un segundo estado.
+  const [openUserId, setOpenUserId] = useState(null);
   const [pendingToggle, setPendingToggle] = useState(null);
   const [pendingToggleActive, setPendingToggleActive] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
@@ -696,6 +734,8 @@ function UsersDirectory({ profile }) {
     );
   }, [rows, query]);
 
+  const openUser = rows.find((p) => p.user_id === openUserId) || null;
+
   // No cambia nada por sí solo — solo abre la confirmación. El checkbox
   // sigue mostrando el valor real hasta que la mutación se confirma.
   const requestAdminToggle = (row) => {
@@ -758,6 +798,7 @@ function UsersDirectory({ profile }) {
       if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede eliminar usuarios.", fallback: "No se pudo eliminar el usuario." }));
       toast?.success("Usuario eliminado");
       setPendingDelete(null);
+      setOpenUserId(null); // la cuenta ya no existe — no queda nada que mostrar en la hoja de detalle
       reload();
     } catch (err) {
       toast?.error(err.message || "No se pudo eliminar el usuario.");
@@ -832,22 +873,33 @@ function UsersDirectory({ profile }) {
       )}
       {loading ? (
         <p className="px-3 py-6 text-center text-sm text-gray-400">Cargando usuarios…</p>
+      ) : filteredRows.length === 0 ? (
+        <p className="px-3 py-6 text-center text-sm text-gray-400">Sin resultados.</p>
       ) : (
-        <UsersTable
-          rows={filteredRows}
-          currentUserId={profile?.user_id}
-          viewerIsSuperadmin={!!profile?.is_superadmin}
-          activeByUser={activeByUser}
-          onRequestToggle={requestAdminToggle}
-          onRequestToggleActive={requestToggleActive}
-          onRequestDelete={requestDelete}
-        />
+        <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
+          {filteredRows.map((p) => (
+            <UserListRow key={p.user_id} user={p} active={activeByUser[p.user_id] ?? true} onOpen={setOpenUserId} />
+          ))}
+        </div>
       )}
 
       {sheetOpen && (
         <CreateUserSheet
           onClose={() => setSheetOpen(false)}
           onCreated={() => { setSheetOpen(false); reload(); }}
+        />
+      )}
+
+      {openUser && (
+        <UserDetailSheet
+          user={openUser}
+          active={activeByUser[openUser.user_id] ?? true}
+          currentUserId={profile?.user_id}
+          viewerIsSuperadmin={!!profile?.is_superadmin}
+          onClose={() => setOpenUserId(null)}
+          onRequestToggleAdmin={requestAdminToggle}
+          onRequestToggleActive={requestToggleActive}
+          onRequestDelete={requestDelete}
         />
       )}
 
