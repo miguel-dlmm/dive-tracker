@@ -5,7 +5,7 @@ import {
   CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users,
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN } from "./App";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, useBodyScrollLock } from "./shared";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet } from "./shared";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
 
@@ -42,7 +42,6 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
   const emptyForm = Object.fromEntries(fields.map((f) => [f.key, f.type === "color" ? "#0E7C7B" : ""]));
   const [form, setForm] = useState(emptyForm);
   const [sheetOpen, setSheetOpen] = useState(false);
-  useBodyScrollLock(sheetOpen);
   const [editingRow, setEditingRow] = useState(null); // null = alta
   const [query, setQuery] = useState("");
   const toast = useToast();
@@ -180,43 +179,35 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
         <Plus size={24} aria-hidden="true" />
       </button>
 
-      {sheetOpen && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={closeSheet}>
-          <div
-            className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
-            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-gray-800">{editingRow ? (editLabel || createLabel) : createLabel}</h3>
-              <button onClick={closeSheet} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
-            </div>
-            <div className="flex flex-wrap items-end gap-2.5">
-              {fields.map((f) => (
-                f.type === "color" ? (
-                  <Field key={f.key} label={f.label}>
-                    <input type="color" value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                      className="h-11 w-12 cursor-pointer rounded-md border border-gray-200" />
-                  </Field>
-                ) : (
-                  <Field key={f.key} label={f.label}>
-                    <input value={form[f.key]} placeholder={f.placeholder}
-                      onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                      className={`${inputCls} w-full min-w-[8rem]`} onKeyDown={(e) => e.key === "Enter" && submitSheet()} />
-                  </Field>
-                )
-              ))}
-            </div>
-            <button
-              onClick={submitSheet}
-              className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"
-              style={{ backgroundColor: TEAL }}
-            >
-              {editingRow ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />} Guardar
-            </button>
-          </div>
+      <Sheet open={sheetOpen} onClose={closeSheet}>
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-800">{editingRow ? (editLabel || createLabel) : createLabel}</h3>
+          <button onClick={closeSheet} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
         </div>
-      )}
+        <div className="mt-2 flex flex-wrap items-end gap-2.5">
+          {fields.map((f) => (
+            f.type === "color" ? (
+              <Field key={f.key} label={f.label}>
+                <input type="color" value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                  className="h-11 w-12 cursor-pointer rounded-md border border-gray-200" />
+              </Field>
+            ) : (
+              <Field key={f.key} label={f.label}>
+                <input value={form[f.key]} placeholder={f.placeholder}
+                  onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                  className={`${inputCls} w-full min-w-[8rem]`} onKeyDown={(e) => e.key === "Enter" && submitSheet()} />
+              </Field>
+            )
+          ))}
+        </div>
+        <button
+          onClick={submitSheet}
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"
+          style={{ backgroundColor: TEAL }}
+        >
+          {editingRow ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />} Guardar
+        </button>
+      </Sheet>
     </div>
   );
 }
@@ -467,7 +458,6 @@ function UserDetailSheet({
   onClose, onRequestToggleAdmin, onRequestToggleActive, onRequestRegenerateLink,
   onRequestRegeneratePassword, onRequestDelete, onSaveProfile,
 }) {
-  useBodyScrollLock(true);
   const editable = viewerIsSuperadmin && user.user_id !== currentUserId && !user.is_superadmin;
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "—";
 
@@ -483,18 +473,13 @@ function UserDetailSheet({
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={onClose}>
-      <div
-        className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
-        style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-800">{user.nickname}</h3>
-          <button onClick={onClose} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
-        </div>
+    <Sheet open onClose={onClose}>
+      <div className="mb-1 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-gray-800">{user.nickname}</h3>
+        <button onClick={onClose} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+      </div>
 
-        {editingProfile ? (
+      {editingProfile ? (
           <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50/60 p-3">
             <div className="grid grid-cols-2 gap-2">
               <Field label="Nombre">
@@ -592,8 +577,7 @@ function UserDetailSheet({
             <Trash2 size={15} aria-hidden="true" /> Eliminar usuario
           </button>
         )}
-      </div>
-    </div>
+    </Sheet>
   );
 }
 
@@ -613,32 +597,29 @@ function ActivationLinkPanel({ title, description, link, onClose }) {
     }
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/25" onClick={onClose}>
-      <div
-        className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
-        style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-          <button onClick={onClose} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
-        </div>
-        <p className="mb-2 text-xs text-gray-500">{description}</p>
-        <p className="mb-3 break-all rounded-md bg-gray-50 px-3 py-2 font-mono text-xs text-gray-700">{link}</p>
-        <div className="flex gap-2">
-          <button
-            onClick={copyLink}
-            className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white"
-            style={{ backgroundColor: TEAL }}
-          >
-            <Copy size={15} aria-hidden="true" /> Copiar enlace
-          </button>
-          <button onClick={onClose} className="flex min-h-11 flex-1 items-center justify-center rounded-md border border-gray-200 text-sm font-medium text-gray-600">
-            Cerrar
-          </button>
-        </div>
+    // z-50: puede convivir con UserDetailSheet (z-40) todavía abierta detrás
+    // (p. ej. tras "Regenerar enlace" desde el propio detalle) — debe
+    // quedar por encima, no reemplazarla.
+    <Sheet open onClose={onClose} zIndexClass="z-50">
+      <div className="mb-1 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+        <button onClick={onClose} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
       </div>
-    </div>
+      <p className="mb-2 text-xs text-gray-500">{description}</p>
+      <p className="mb-3 break-all rounded-md bg-gray-50 px-3 py-2 font-mono text-xs text-gray-700">{link}</p>
+      <div className="flex gap-2">
+        <button
+          onClick={copyLink}
+          className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white"
+          style={{ backgroundColor: TEAL }}
+        >
+          <Copy size={15} aria-hidden="true" /> Copiar enlace
+        </button>
+        <button onClick={onClose} className="flex min-h-11 flex-1 items-center justify-center rounded-md border border-gray-200 text-sm font-medium text-gray-600">
+          Cerrar
+        </button>
+      </div>
+    </Sheet>
   );
 }
 
@@ -653,9 +634,6 @@ const emptyUserForm = { email: "", first_name: "", last_name: "", nickname: "" }
 // UsersDirectory). Llama a la función Netlify create-user, que es la única
 // pieza con permiso para invocar el Admin API de Supabase Auth.
 function CreateUserSheet({ onClose, onCreated }) {
-  // Solo existe montada mientras la hoja está abierta — no hace falta un
-  // booleano de estado, basta con bloquear el scroll de fondo siempre.
-  useBodyScrollLock(true);
   const [form, setForm] = useState(emptyUserForm);
   const [datasetLabel, setDatasetLabel] = useState("");
   const [datasets, setDatasets] = useState([]);
@@ -736,93 +714,81 @@ function CreateUserSheet({ onClose, onCreated }) {
   // proveedor de email falla. Revisar/eliminar antes de producción pública.
   if (emailFailure) {
     return (
-      <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={onCreated}>
-        <div
-          className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
-          style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-amber-700">No se pudo enviar el email</h3>
-            <button onClick={onCreated} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
-          </div>
-          <p className="mb-2 text-xs text-gray-500">
-            No se pudo enviar el email de activación. Puedes compartir este enlace manualmente.
-          </p>
-          <p className="mb-3 break-all rounded-md bg-gray-50 px-3 py-2 font-mono text-xs text-gray-700">{emailFailure.action_link}</p>
-          <div className="flex gap-2">
-            <button
-              onClick={copyLink}
-              className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-medium text-white"
-              style={{ backgroundColor: TEAL }}
-            >
-              Copiar enlace
-            </button>
-            <button
-              onClick={onCreated}
-              className="flex min-h-11 flex-1 items-center justify-center rounded-md border border-gray-200 text-sm font-medium text-gray-600"
-            >
-              Cerrar
-            </button>
-          </div>
+      <Sheet open onClose={onCreated}>
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-amber-700">No se pudo enviar el email</h3>
+          <button onClick={onCreated} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
         </div>
-      </div>
+        <p className="mb-2 text-xs text-gray-500">
+          No se pudo enviar el email de activación. Puedes compartir este enlace manualmente.
+        </p>
+        <p className="mb-3 break-all rounded-md bg-gray-50 px-3 py-2 font-mono text-xs text-gray-700">{emailFailure.action_link}</p>
+        <div className="flex gap-2">
+          <button
+            onClick={copyLink}
+            className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-medium text-white"
+            style={{ backgroundColor: TEAL }}
+          >
+            Copiar enlace
+          </button>
+          <button
+            onClick={onCreated}
+            className="flex min-h-11 flex-1 items-center justify-center rounded-md border border-gray-200 text-sm font-medium text-gray-600"
+          >
+            Cerrar
+          </button>
+        </div>
+      </Sheet>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/25" onClick={() => !submitting && onClose()}>
-      <div
-        className="max-h-[85dvh] w-full max-w-3xl overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl"
-        style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-800">Crear usuario</h3>
-          <button onClick={() => !submitting && onClose()} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="col-span-2">
-            <Field label="Email">
-              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={`${inputCls} w-full`} />
-            </Field>
-          </div>
-          <Field label="Nombre">
-            <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} className={`${inputCls} w-full`} />
-          </Field>
-          <Field label="Apellidos">
-            <input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className={`${inputCls} w-full`} />
-          </Field>
-          <Field label="Nickname">
-            <input value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} className={`${inputCls} w-full`} />
-          </Field>
-          <div className="col-span-2">
-            <Field label="Dataset inicial">
-              <Select
-                value={datasetLabel}
-                onChange={setDatasetLabel}
-                options={datasets.map((d) => d.label)}
-                placeholder={datasetsLoading ? "Cargando…" : datasets.length ? "Selecciona un dataset" : "No hay datasets disponibles"}
-              />
-            </Field>
-          </div>
-        </div>
-
-        <p className="mt-2 text-xs text-gray-400">
-          El dataset elegido carga automáticamente escuelas, cursos, tarifas, comisiones y catálogos de pago iniciales.
-          La persona recibirá un email con un enlace de un solo uso para entrar y crear su propia contraseña.
-        </p>
-
-        <button
-          onClick={submit}
-          disabled={submitting}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ backgroundColor: TEAL }}
-        >
-          <UserPlus size={16} /> {submitting ? "Creando…" : "Crear usuario"}
-        </button>
+    <Sheet open onClose={() => !submitting && onClose()}>
+      <div className="mb-1 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-gray-800">Crear usuario</h3>
+        <button onClick={() => !submitting && onClose()} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
       </div>
-    </div>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <div className="col-span-2">
+          <Field label="Email">
+            <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={`${inputCls} w-full`} />
+          </Field>
+        </div>
+        <Field label="Nombre">
+          <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} className={`${inputCls} w-full`} />
+        </Field>
+        <Field label="Apellidos">
+          <input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className={`${inputCls} w-full`} />
+        </Field>
+        <Field label="Nickname">
+          <input value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} className={`${inputCls} w-full`} />
+        </Field>
+        <div className="col-span-2">
+          <Field label="Dataset inicial">
+            <Select
+              value={datasetLabel}
+              onChange={setDatasetLabel}
+              options={datasets.map((d) => d.label)}
+              placeholder={datasetsLoading ? "Cargando…" : datasets.length ? "Selecciona un dataset" : "No hay datasets disponibles"}
+            />
+          </Field>
+        </div>
+      </div>
+
+      <p className="mt-2 text-xs text-gray-400">
+        El dataset elegido carga automáticamente escuelas, cursos, tarifas, comisiones y catálogos de pago iniciales.
+        La persona recibirá un email con un enlace de un solo uso para entrar y crear su propia contraseña.
+      </p>
+
+      <button
+        onClick={submit}
+        disabled={submitting}
+        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+        style={{ backgroundColor: TEAL }}
+      >
+        <UserPlus size={16} /> {submitting ? "Creando…" : "Crear usuario"}
+      </button>
+    </Sheet>
   );
 }
 
