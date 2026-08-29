@@ -1,33 +1,35 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Sparkles, GraduationCap, Layers, BarChart3 } from "lucide-react";
-import { NAVY, TEAL, SUN } from "./App";
+import { X, Plus, Layers, ClipboardList, Settings, BarChart3 } from "lucide-react";
+import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 
 // Píldora de novedades — no un manual: pocas frases por diapositiva,
-// navegable con "Siguiente"/"Atrás" y puntos, sin texto de más. Ver
-// docs/ADR/0010-proceso-de-release.md: redactar este contenido pasa a
-// formar parte de preparar cada release, con la misma fuente de verdad que
-// CHANGELOG.md (no una tarea aparte inventada después).
+// navegable con "Siguiente"/"Atrás", puntos, o deslizando lateralmente
+// (swipe), sin texto de más. Ver docs/ADR/0010-proceso-de-release.md:
+// redactar este contenido pasa a formar parte de preparar cada release,
+// con la misma fuente de verdad que CHANGELOG.md (no una tarea aparte
+// inventada después).
+//
+// Cada diapositiva cubre un concepto distinto, sin solaparse con las
+// demás: creación (el flujo, no una pantalla concreta), la unificación
+// conceptual Registro/Comisiones/Compañeros → Mi trabajo (el "antes/
+// ahora" del nombre), qué se puede HACER dentro de Mi trabajo (acciones
+// concretas — antes esto se mezclaba con la diapositiva de unificación,
+// haciendo que ambas dijeran casi lo mismo), Configuración, y Resumen.
 //
 // Sin capturas de pantalla a propósito: se evaluaron capturas reales de
 // esta misma sesión (Home, Mi trabajo, Resumen) y ninguna quedaba
 // presentable para mostrarle a un usuario real — mostraban el nombre de la
 // cuenta de desarrollo ("dev-bypass") y datos de prueba repetidos de esta
 // sesión. Iconografía + color, ya coherente con el resto de la app
-// (mismos iconos que MOVEMENT_TYPE_META/CREATE_TYPES), cumple igual el
-// objetivo ("muy visual") sin ese riesgo — capturas reales quedan para una
-// futura release si en su momento se generan limpias a propósito.
+// (mismos iconos que MOVEMENT_TYPE_META/CREATE_TYPES/navegación), cumple
+// igual el objetivo ("muy visual") sin ese riesgo — capturas reales quedan
+// para una futura release si en su momento se generan limpias a propósito.
 const SLIDES = [
   {
-    icon: Sparkles,
-    color: TEAL,
-    title: "Ocean Pulse tiene un nuevo aire",
-    body: "Hemos renovado Mi trabajo, Resumen y Configuración para que llevar tu actividad como instructor sea más rápido y más claro.",
-  },
-  {
-    icon: GraduationCap,
+    icon: Plus,
     color: TEAL,
     title: "Un único botón para crear",
     body: "Desde Home o desde Mi trabajo, un solo \"Añadir movimiento\" — el propio formulario te deja elegir Curso, Comisión o Ajuste, sin acertar antes el botón correcto.",
@@ -36,7 +38,19 @@ const SLIDES = [
     icon: Layers,
     color: SUN,
     title: "Registro, Comisiones y Compañeros ahora es Mi trabajo",
-    body: "Antes vivían separados. Ahora crear, editar, cobrar y marcar pendiente ocurre todo en un único sitio.",
+    body: "Antes vivían en tres pantallas separadas, cada una con su propia forma de crear y editar. Ahora es una sola pantalla, con una sola forma de hacer las cosas.",
+  },
+  {
+    icon: ClipboardList,
+    color: GREEN,
+    title: "Mi trabajo: todo sin salir de la lista",
+    body: "Crear, editar, marcar cobrado o pendiente y eliminar un movimiento ocurre en el sitio, sin cambiar de pantalla. La moneda se recuerda de la última vez, y puedes dar de alta una tarifa nueva sin abandonar el formulario.",
+  },
+  {
+    icon: Settings,
+    color: CORAL,
+    title: "Configuración, con menos vueltas",
+    body: "Escuelas, Cursos, Tarifas y el resto de catálogos se crean ahora con el mismo botón flotante que ya conoces de Mi trabajo. Y en Usuarios puedes desactivar una cuenta sin perder ningún dato, o eliminarla del todo si hace falta.",
   },
   {
     icon: BarChart3,
@@ -45,6 +59,8 @@ const SLIDES = [
     body: "Arriba, un único total con la comparación al periodo anterior. Debajo, cada desglose — por escuela, por curso, calendario, comisiones — se despliega solo cuando lo tocas.",
   },
 ];
+
+const SWIPE_THRESHOLD = 60;
 
 export default function WhatsNew({ onClose }) {
   const [step, setStep] = useState(0);
@@ -71,10 +87,17 @@ export default function WhatsNew({ onClose }) {
           </button>
         </div>
 
-        <div className="min-h-[220px] px-6 pb-2 text-center">
+        <div className="min-h-[220px] touch-pan-y overflow-hidden px-6 pb-2 text-center">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={step}
+              drag={reduced ? false : "x"}
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.7}
+              onDragEnd={(_e, info) => {
+                if (info.offset.x < -SWIPE_THRESHOLD && !isLast) setStep((s) => s + 1);
+                else if (info.offset.x > SWIPE_THRESHOLD && step > 0) setStep((s) => s - 1);
+              }}
               initial={{ opacity: 0, x: reduced ? 0 : 16 }}
               animate={{ opacity: 1, x: 0, transition: { duration: reduced ? 0.01 : DURATION.sm, ease: EASE.enter } }}
               exit={{ opacity: 0, x: reduced ? 0 : -16, transition: { duration: reduced ? 0.01 : DURATION.xs, ease: EASE.exit } }}
