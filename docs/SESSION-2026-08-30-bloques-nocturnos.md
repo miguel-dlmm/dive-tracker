@@ -618,3 +618,89 @@ implementar — pendiente de decisión del usuario.
 
 **Commit:** `docs(tarifas): analizar depreciación histórica de tarifas,
 sin implementar`.
+
+### Bloque 16 — Release: preparada, no ejecutada
+
+Encargo: retomar el proceso de release preparado en la tanda anterior,
+confirmar estado real de ramas/commits/changelog/versión candidata
+antes de tocar nada, dejarlo todo listo para ejecutar cuando el usuario
+lo apruebe. **Nada de lo de este bloque se ha ejecutado** (sin merge,
+sin tag, sin push, sin deploy, sin GitHub Release).
+
+**Estado real verificado (no supuesto):**
+- Rama actual: `feature/global-redesign`, **57 commits** por delante de
+  `develop` (`0cf625e`, sin cambios desde entonces).
+- `feature/global-redesign` no tiene rama remota (`no upstream
+  configured`) — nada de este trabajo se ha publicado todavía, ni
+  siquiera como rama de respaldo.
+- `git status`: limpio salvo `cloudflared.tgz` (sin trackear, ajeno a
+  esta sesión — el túnel de Cloudflare del entorno del usuario, no se
+  toca).
+- `package.json`: `"version": "0.1.0"` — sin cambios todavía, correcto:
+  el proceso de `docs/ADR/0010-proceso-de-release.md` solo lo actualiza
+  al ejecutar la release, no antes.
+- Proceso de release ya decidido y documentado en `docs/ADR/0010-...md`
+  (Keep a Changelog + SemVer + GitHub Releases, sin rama `release/*` ni
+  CI nuevo) — no se reabre esa decisión, se aplica.
+
+**Versión candidata: sigue siendo `v0.2.0`.** Confirmado con la propia
+tabla de `ADR-0010`: todo lo acumulado desde `v0.1.0` (la tanda anterior
++ los 16 bloques de esta noche) es funcionalidad nueva o rediseño de
+pantallas ya existentes, ninguna declara una superficie/API estable —
+sigue siendo un incremento `MINOR` en fase `0.y.z`. `git tag -l v0.2.0`
+vacío, la etiqueta no existe todavía.
+
+**`CHANGELOG.md` puesto al día:** la sección `Unreleased` reflejaba solo
+la tanda del 28-29/08 (el rediseño de Marca del bloque 2 de esta noche
+sí se había registrado en su propio commit, siguiendo ya la disciplina
+de `ADR-0010`; el resto de bloques de esta noche — Tarifas, gestos,
+Resumen, per-escuela, Ajustes de curso — no se habían reflejado
+todavía). Añadidas/corregidas las entradas que faltaban en
+`Added`/`Changed`/`Fixed` (incluida una corrección: la franja de
+tendencia pasó de "6 periodos con flechas" a "7 periodos centrados sin
+flechas" a media sesión, y el changelog aún describía la versión
+antigua). No se renombra `Unreleased` a `[0.2.0]` todavía — ese paso es
+parte de EJECUTAR la release (paso 3 de `ADR-0010`), no de prepararla.
+
+**Validaciones mínimas de `ADR-0010` — repetidas ahora sobre el HEAD
+actual:**
+- `npm run test -- --run` → **328/328**.
+- `npm run build` → limpio.
+- `npm run mobile-check` → sin errores/avisos de consola (última
+  ejecución, bloque 14).
+- Working tree limpio salvo el `cloudflared.tgz` ajeno.
+- `git tag -l v0.2.0` → vacío.
+
+**Plan de ejecución preparado (pendiente de aprobación explícita,
+ningún comando lanzado):**
+1. `git checkout develop && git merge feature/global-redesign` (fast-forward
+   o merge commit según corresponda — 57 commits, revisar si conviene
+   `--no-ff` para conservar el límite de esta sesión en el historial).
+2. `npm run test -- --run && npm run build && npm run mobile-check`
+   sobre `develop` ya fusionada (validación de release, no repetir la
+   de la rama de trabajo).
+3. `CHANGELOG.md`: renombrar `## Unreleased` a `## [0.2.0] -
+   <fecha>`, abrir un `## Unreleased` nuevo vacío encima; `package.json`
+   `"version": "0.2.0"`.
+4. `git commit -m "chore: preparar release v0.2.0"`.
+5. `git tag -a v0.2.0 -m "v0.2.0"`.
+6. `git push origin develop --tags`.
+7. `gh release create v0.2.0 --notes-file <extracto del CHANGELOG>`.
+8. Despliegue: automático (Vercel, Production Branch = `develop`) — sin
+   acción manual.
+
+**Rollback mínimo** (ya documentado en `ADR-0010`, sin cambios): Vercel
+"Instant Rollback" al deployment anterior como primera opción; si hace
+falta a nivel de Git, `git revert` (nunca `reset --hard`) + push, y
+etiquetar la reversión como `v0.2.1` con su propia entrada de
+changelog.
+
+**Pendiente de decisión del usuario antes de ejecutar cualquier paso:**
+si fusionar con `--no-ff` (conserva "esta noche" como un único merge
+commit legible en el historial de `develop`) o fast-forward simple (57
+commits individuales visibles en línea, sin merge commit) — no hay una
+respuesta técnica correcta única, es preferencia de legibilidad del
+historial.
+
+**Commit de este bloque:** `docs(release): actualizar CHANGELOG y
+preparar release v0.2.0, sin ejecutar`.
