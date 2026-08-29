@@ -555,18 +555,67 @@ aparecen Desde/Hasta, luego vuelve a "Mes" para el resto del recorrido.
 muestra el par de fechas por defecto correctamente) — capturas de
 "Mes" y "Rango" revisadas visualmente.
 
+## Bloque — "Qué hay de nuevo": swipe lateral + contenido de las diapositivas 2-3 sin solapar + nueva diapositiva de Configuración
+
+Petición explícita: poder moverse entre diapositivas deslizando
+lateralmente (no solo con "Siguiente"/"Atrás"); la diapositiva 2
+("Registro/Comisiones/Compañeros ahora es Mi trabajo") y la 3 repetían
+casi la misma idea; faltaba una diapositiva sobre Configuración y el
+cambio de diseño.
+
+**Contenido, 5 diapositivas ahora, cada una cubriendo un concepto
+distinto sin solaparse:**
+1. Crear un movimiento (un único botón, sin acertar antes el correcto).
+2. La unificación conceptual: Registro/Comisiones/Compañeros → Mi
+   trabajo — el "antes tres pantallas, ahora una", sin entrar en qué se
+   puede hacer dentro.
+3. **Nueva** — qué se puede HACER dentro de Mi trabajo: crear, editar,
+   cobrar/marcar pendiente y eliminar sin salir de la lista, moneda
+   recordada, alta de tarifa sin salir del formulario. Antes esto vivía
+   mezclado con la diapositiva 2, haciendo que ambas dijeran casi lo
+   mismo — separarlas en "qué cambió de nombre" vs. "qué puedes hacer
+   ahora" es lo que resuelve el solapamiento, no solo acortar texto.
+4. **Nueva** — Configuración: mismo patrón de creación (botón flotante)
+   que Mi trabajo, y desactivar/eliminar usuario.
+5. Resumen (sin cambios de contenido respecto a antes).
+
+**Swipe lateral:** el contenedor de cada diapositiva (`motion.div` ya
+usado para la transición de entrada/salida) gana `drag="x"` con
+`dragConstraints={{left:0, right:0}}` y `dragElastic` — un tirón elástico
+al arrastrar, y en `onDragEnd`, si el desplazamiento supera un umbral
+(60px), se cambia de paso igual que al pulsar "Siguiente"/"Atrás". Se
+desactiva (`drag={false}`) con `prefers-reduced-motion`, igual que el
+resto de animaciones de esta pantalla — coherente con la regla
+transversal de motion (accesibilidad no negociable). Es un uso
+justificado y explícitamente pedido de gestos de arrastre (no
+drag-to-dismiss, que sigue evaluándose caso a caso): aquí el gesto ES la
+funcionalidad pedida, no una animación añadida por decisión propia.
+
+`mobile-check.mjs` gana un paso que arrastra con el ratón (emulando
+touch) sobre la diapositiva, comprueba que el título cambia al deslizar
+a la izquierda y vuelve a cambiar al deslizar a la derecha.
+
+**Validado:** 242/242 tests (el test existente ya era agnóstico al
+contenido/número de diapositivas, no necesitó cambios), build correcto,
+`mobile-check` sin errores — captura de la diapositiva 2 tras el swipe
+revisada visualmente, indicador de puntos avanza correctamente.
+
 ## Siguiente paso
 
-Bloques completados esta mañana: túnel/puerto de pruebas aislado,
-causa raíz + fix de "no puedo eliminar usuarios" (rutas `/api/*` en
-local), Desactivar usuario, causa raíz + fix del flash de activación en
-login, investigación (no reproducida) del botón de crear en Home,
-Tarifas↔Mi trabajo (RowMenu compartido), Resumen (filtros fusionados).
+Bloques completados esta sesión (mañana): túnel/puerto de pruebas
+aislado, causa raíz + fix de "no puedo eliminar usuarios" (rutas
+`/api/*` en local), Desactivar usuario, causa raíz + fix del flash de
+activación en login, investigación (no reproducida) del botón de crear
+en Home, Tarifas↔Mi trabajo (RowMenu compartido), Resumen (filtros
+fusionados), Qué hay de nuevo (swipe + contenido reestructurado +
+diapositiva de Configuración).
+
 Trabajo pendiente del encargo de esta mañana, por orden de prioridad
-del usuario: resto de Resumen (jerarquía/look&feel, si hace falta más
-allá de lo ya hecho), Home "otra vuelta" (posible widget nuevo), Qué hay
-de nuevo (swipe lateral, evitar solapamiento de contenido entre
-diapositivas 2-3, añadir diapositiva de Configuración), documentación/
-Ayuda (revisar contra los caminos de usuario pedidos ahora:
-configurar→crear cada tipo→cobrar uno→cobrar en bloque), y una pasada
-de calidad visual transversal.
+del usuario: Home "otra vuelta" (posible widget nuevo — la app debe
+empujar el uso, no ser solo una tarjeta bonita), documentación/Ayuda
+(revisar contra los caminos de usuario pedidos ahora:
+configurar→crear cada tipo→cobrar uno→cobrar en bloque), resto de
+Resumen (jerarquía/look&feel, si hace falta más allá de lo ya hecho —
+sin nueva queja explícita del usuario más allá de los filtros, ya
+resueltos), y una pasada de calidad visual transversal antes del
+resumen final de sesión.

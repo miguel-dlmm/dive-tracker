@@ -73,6 +73,35 @@ async function main() {
   console.log("→ 'Qué hay de nuevo': recorrer las diapositivas y cerrar con 'Empezar'");
   if (await page.getByRole("dialog").isVisible().catch(() => false)) {
     await shot(page, "whats-new-primera-diapositiva");
+
+    console.log("  → swipe lateral entre diapositivas");
+    const dialog = page.getByRole("dialog");
+    const firstSlideTitle = await dialog.getByRole("heading").textContent();
+    const dialogBox = await dialog.boundingBox();
+    const midY = dialogBox.y + dialogBox.height / 2;
+    const midX = dialogBox.x + dialogBox.width / 2;
+    // Swipe a la izquierda → avanza a la siguiente diapositiva.
+    await page.mouse.move(midX + 60, midY);
+    await page.mouse.down();
+    await page.mouse.move(midX - 100, midY, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+    const afterSwipeLeftTitle = await dialog.getByRole("heading").textContent();
+    if (afterSwipeLeftTitle === firstSlideTitle) {
+      consoleIssues.push("[whats-new] El swipe hacia la izquierda no avanzó de diapositiva");
+    }
+    await shot(page, "whats-new-tras-swipe-izquierda");
+    // Swipe a la derecha → vuelve a la diapositiva anterior.
+    await page.mouse.move(midX - 60, midY);
+    await page.mouse.down();
+    await page.mouse.move(midX + 100, midY, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+    const afterSwipeRightTitle = await dialog.getByRole("heading").textContent();
+    if (afterSwipeRightTitle !== firstSlideTitle) {
+      consoleIssues.push("[whats-new] El swipe hacia la derecha no volvió a la diapositiva anterior");
+    }
+
     let guard = 0;
     while (await page.getByRole("button", { name: "Siguiente" }).isVisible().catch(() => false) && guard < 10) {
       await page.getByRole("button", { name: "Siguiente" }).tap();

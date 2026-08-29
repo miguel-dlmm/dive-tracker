@@ -41,7 +41,8 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   activo en producción.
 - Píldora "Qué hay de nuevo": aparece una vez por cuenta al entrar en una
   versión nueva, con un resumen visual y breve de las novedades de esta
-  release.
+  release, navegable con "Siguiente"/"Atrás", puntos o deslizando
+  lateralmente (swipe).
 
 ### Changed
 - "Actividad" pasa a mostrarse como "Curso" en toda la interfaz
