@@ -841,3 +841,127 @@ escuelas.
 
 **Commit:** `docs(ayuda): actualizar literales de Resumen y Tarifas a
 la nomenclatura y el comportamiento actuales`.
+
+## Bloque 24 — Informe final
+
+Bloques 1-21 completados (22-24 no son bloques aparte, son la disciplina
+transversal ya aplicada en cada uno: validación tras cada cambio,
+commits pequeños de una sola intención, sin push ni merge a `develop`).
+
+### Hecho
+
+**`feature/global-redesign`** (17 commits esta noche, `7710687`..`1ec6e7f`,
+61 por delante de `develop`, sin remoto):
+- Tarifas: rediseño completo (lista combinada, acento por tipo, hoja
+  con motion) — `Sheet` extraído como base reutilizable.
+- Marca: renombrado completo a "Ocean Flow" (12 archivos, incluido el
+  email de bienvenida real y los documentos legales, con reaceptación).
+- Calendario de Home: día de hoy marcado visualmente.
+- Ajuste de curso: moneda global (sin campo por movimiento) + formulario
+  más compacto.
+- Gestos: arrastrar para cerrar en todas las hojas de Configuración
+  (antes solo Mi trabajo).
+- Resumen: cabecera de periodo + franja de tendencia fusionadas,
+  arreglado solape/inestabilidad, secciones renombradas ("Ajustes de
+  curso") y reordenadas.
+- Bug de payment_type: causa raíz confirmada con datos reales,
+  documentado en `ADR-0003` (sin parche aislado, a propósito).
+- Por escuela: funcionalidades multi-escuela ocultas con una sola
+  escuela configurada (Tarifas, Mi trabajo, Resumen).
+- Ajustes de curso: eliminado el "0 personas" en los desgloses
+  agregados de Resumen.
+- Home "Añadir movimiento": evaluado, mantenido tal cual (ya era la
+  mejor solución).
+- Separadores de miles: auditados, ya coherentes en toda la app
+  (`Intl`/`es-ES`, sin implementación propia).
+- FAB de creación consolidado en un componente compartido + libro de
+  estilo práctico (`docs/ESTILO.md`).
+- Tarifas y depreciación histórica: analizado (`ADR-0016`), snapshot
+  del importe recomendado, sin implementar.
+- Release `v0.2.0`: `CHANGELOG.md` puesto al día, plan de ejecución
+  documentado paso a paso, nada ejecutado.
+- Backups: política MVP para el plan Free de Supabase
+  (`scripts/backup-db.mjs`, `ADR-0017`).
+- Analítica de uso: analizada, diferida con criterio explícito de
+  reactivación.
+- Ayuda: literales de Resumen/Tarifas actualizados a la nomenclatura y
+  comportamiento actuales.
+
+**`feature/seo`** (2 commits, creada desde `92a4a0a` de
+`feature/global-redesign`, sin remoto):
+- Confirmado que `noindex,nofollow` + `robots.txt` (`Disallow: /`) son
+  una decisión de producto correcta y deliberada (app privada por
+  invitación) — no se ha optimizado para posicionamiento, sería ir
+  contra esa decisión.
+- Bug real corregido: `robots.txt`/`manifest.json` vivían fuera de
+  `public/` y nunca llegaban a `dist/` — confirmado y arreglado.
+- Encontrados y documentados (sin tocar) `favicon.svg`/`icons.svg`,
+  sobras sin usar de una plantilla anterior.
+
+### Pendiente (ver `docs/BACKLOG.md` para el detalle completo)
+
+- Eliminar `payment_type` del todo (`ADR-0003`) — ahora con evidencia
+  real, no solo teórica.
+- Snapshot de tarifa en movimientos (`ADR-0016`) — recomendado, sin
+  implementar.
+- Configuración → Moneda favorita (pantalla nueva, hoy sin forma de
+  cambiarla desde la UI).
+- Animación de salida completa en `UserDetailSheet`/`CreateUserSheet`/
+  `ActivationLinkPanel` (entrada+gesto ya funcionan, la salida es
+  abrupta).
+- Subir a Supabase Pro (backups automáticos) — decisión de coste del
+  usuario, no técnica.
+- Analítica de uso — diferida hasta que crezca la base de usuarios.
+- Assets huérfanos (`favicon.svg`/`icons.svg`) — sin certeza suficiente
+  para borrar, documentados para no confundirlos con la marca real.
+- Icono/imagen OG reales de Ocean Flow — placeholders a la espera del
+  logo oficial (ya documentado antes de esta sesión).
+- Bug no reproducido: "añadir tarifa inline bloquea el formulario" —
+  necesita prueba en iPhone físico real.
+- "Actividades" → "Cursos" fase 2 (renombrado interno de variables) —
+  baja prioridad, invisible para el usuario.
+
+### Release
+
+- Rama: `feature/global-redesign`, **61 commits** por delante de
+  `develop`, sin publicar (sin remoto).
+- Rama separada: `feature/seo`, 2 commits desde el mismo punto, sin
+  publicar.
+- Versión candidata: **`v0.2.0`** (confirmada, sigue siendo correcta —
+  `git tag -l v0.2.0` vacío).
+- `CHANGELOG.md` → `Unreleased` puesto al día con todo lo de esta
+  sesión y la anterior.
+- Validación repetida tras casi cada bloque: **328/328 tests**, build
+  limpio, `mobile-check` sin errores de consola (41 capturas en la
+  última pasada).
+- **Nada ejecutado**: sin merge a `develop`, sin tag, sin push, sin
+  GitHub Release, sin deploy. Plan de 8 pasos documentado en el bloque
+  16 de esta sesión, a la espera de tu aprobación explícita.
+- Pendiente de decidir: si incorporar `feature/seo` a
+  `feature/global-redesign` antes de la release, o mantenerla aparte
+  hasta más adelante — no se ha tomado esa decisión por ti.
+
+### Pruebas que debo hacer yo (el usuario)
+
+- **Tarifas** (rediseño completo, bloque 1): crear/editar Curso y
+  Comisión, cambiar de tipo en la propia hoja, arrastrar para cerrar —
+  en un iPhone real.
+- **Gestos** (bloque 6): arrastrar para cerrar en las hojas de
+  Configuración (Escuelas, Cursos, Tarifas, Usuarios) — motor real de
+  Safari/WebKit, no verificable desde aquí.
+- **Resumen** (bloques 7, 8, 10): navegar la franja de tendencia
+  tocando barras, comprobar que "Por escuela" desaparece de verdad si
+  alguna vez usas una cuenta con una sola escuela.
+- **Home**: el punto de "hoy" en el calendario, crear un movimiento
+  desde un día vacío y desde el desglose de un día con actividad.
+- **Usuarios** (Configuración): no se ha tocado nada esta noche, pero
+  conviene una pasada antes de una release — activación, roles,
+  desactivar/reactivar.
+- **Bug ya conocido, sin reproducir aquí:** "añadir tarifa inline
+  bloquea el formulario" — solo se puede confirmar en un iPhone físico
+  con Safari real (ver nota en `docs/BACKLOG.md`).
+- **Login/bypass**: sin cambios esta noche, pero forma parte de
+  cualquier checklist de release.
+- Si en algún momento se despliega `feature/seo`: comprobar
+  `/robots.txt` y `/manifest.json` responden 200 en la URL real (aquí
+  solo se ha verificado en `dist/` local).
