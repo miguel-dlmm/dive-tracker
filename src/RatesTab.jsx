@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Plus, Check, X, Search, SlidersHorizontal, GraduationCap, Handshake } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import {
-  inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, CurrencySearchSelect, MoneyInput,
+  inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, MoneyInput,
   EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate,
 } from "./shared";
 
@@ -112,8 +112,21 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
 
   const closeSheet = () => { setSheetOpen(false); setEditingEntry(null); };
 
+  // Moneda: smart default por escuela, no un desplegable que haya que
+  // tocar cada vez (feedback explícito 2026-08-30 — "quitar la edición de
+  // moneda, pero que siga viéndose"). Mismo criterio que lastActivityFor
+  // en MovementSheet.jsx: la moneda de la tarifa más reciente ya guardada
+  // para esa escuela, no un valor global fijo — una escuela en THB sigue
+  // proponiendo THB para su siguiente tarifa. Sin ninguna tarifa previa
+  // para esa escuela, cae al default de la app (emptyForm.currency).
+  const lastCurrencyFor = (school) => {
+    const matches = allRows.filter((r) => r.school === school);
+    if (matches.length === 0) return defaultCurrency;
+    return [...matches].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0].currency;
+  };
+
   const openCreateSheet = () => {
-    setForm({ ...emptyForm, currency: form.currency });
+    setForm(emptyForm);
     setCreating("ganado");
     setEditingEntry(null);
     setSheetOpen(true);
@@ -229,12 +242,18 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
             // hoja que "Nueva tarifa", precargada.
             <div key={r.id} className="border-l-4 px-4 py-3.5 text-sm" style={{ borderColor: TYPE_META[r._source].color }}>
               <div className="flex items-start justify-between gap-2">
-                {/* El tipo (Curso/Comisión) ya no se repite en texto visible
-                    aquí — lo comunica el color del borde izquierdo, igual
-                    que el resto de la fila. sr-only para que no se pierda
-                    para quien usa un lector de pantalla (feedback
-                    2026-08-30: "eliminar la línea inferior de la card"). */}
-                <span className="sr-only">{TYPE_LABEL[r._source]} — </span>
+                {/* Icono de tipo visible (feedback explícito 2026-08-30:
+                    "ahora no sale y quiero que se entienda de un vistazo")
+                    — antes solo el color del borde izquierdo lo indicaba,
+                    insuficiente por sí solo. Mismo icono que el selector de
+                    tipo de la propia hoja (CREATE_TYPES), mismo color que
+                    el borde — dos señales coherentes entre sí, no una
+                    tercera forma nueva de decir lo mismo. */}
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
+                  {r._source === "ganado"
+                    ? <GraduationCap size={15} style={{ color: TYPE_META[r._source].color }} role="img" aria-label={TYPE_LABEL[r._source]} />
+                    : <Handshake size={15} style={{ color: TYPE_META[r._source].color }} role="img" aria-label={TYPE_LABEL[r._source]} />}
+                </span>
                 <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
                 <span className="shrink-0 font-semibold tabular-nums" style={{ color: NAVY }}>
                   <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: NAVY }} />
@@ -298,15 +317,18 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
         </p>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           <Field label="Escuela">
-            <Select value={form.school} onChange={(v) => setForm({ ...form, school: v })} options={schoolNames} />
+            <Select value={form.school} onChange={(v) => setForm({ ...form, school: v, currency: lastCurrencyFor(v) })} options={schoolNames} />
           </Field>
           <Field label="Curso">
             <Select value={form.activity} onChange={(v) => setForm({ ...form, activity: v })} options={activityNames} />
           </Field>
-          <Field label="Moneda">
-            <CurrencySearchSelect value={form.currency} onChange={(v) => setForm({ ...form, currency: v })} currencyRows={currencies.rows} />
-          </Field>
-          <Field label="Tarifa">
+          {/* Moneda: visible, no editable (feedback 2026-08-30) — viaja como
+              sufijo de la etiqueta de "Tarifa", mismo patrón ya usado en
+              Ajuste de curso ("Importe · EUR", MovementSheet.jsx). Se
+              deriva sola de la escuela (lastCurrencyFor), nunca se pierde
+              el contexto de en qué moneda está esta tarifa, pero no hay
+              ningún desplegable que tocar cada vez. */}
+          <Field label={`Tarifa · ${form.currency}`}>
             <MoneyInput value={form.rate} onChange={(v) => setForm({ ...form, rate: v })} />
           </Field>
         </div>
