@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback, createContext
 import { createPortal } from "react-dom";
 import * as Icons from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
@@ -245,10 +245,33 @@ export function Money({ amount, code, currencyRows, className = "", muted = fals
   );
 }
 
-export function Field({ label, children }) {
+// `hint` es opcional: una aclaración corta que no merece ocupar espacio
+// fijo en pantalla (p. ej. "importe positivo/negativo según quién paga a
+// quién" en Ajuste de curso) — un icono "?" junto a la etiqueta la
+// muestra/oculta al tocarlo, en vez de un párrafo siempre visible debajo
+// del campo. type="button" + preventDefault: el icono vive dentro del
+// mismo <label> que el campo (para que el campo siga teniendo nombre
+// accesible por asociación); sin esto, el clic en el icono también
+// activaría/enfocaría el campo por delegación del <label>.
+export function Field({ label, hint, children }) {
+  const [showHint, setShowHint] = useState(false);
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-xs font-medium text-gray-500">{label}</span>
+      <span className="flex items-center gap-0.5 text-xs font-medium text-gray-500">
+        {label}
+        {hint && (
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); setShowHint((v) => !v); }}
+            aria-expanded={showHint}
+            aria-label={showHint ? "Ocultar ayuda" : "Ayuda"}
+            className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-gray-400"
+          >
+            <HelpCircle size={13} aria-hidden="true" />
+          </button>
+        )}
+      </span>
+      {hint && showHint && <span className="-mt-0.5 text-[11px] italic text-gray-400">{hint}</span>}
       {children}
     </label>
   );
