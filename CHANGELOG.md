@@ -128,6 +128,14 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   movimiento" explica ahora qué distingue a Curso, Comisión y Ajuste.
 
 ### Fixed
+- **Movimientos del primer o último día de un periodo podían desaparecer
+  de sus totales** (Resumen, Home, calendario) en cualquier huso horario
+  distinto de UTC+0 — incluidos husos reales de instructores/escuelas de
+  este proyecto (América, con offset negativo; Tailandia, con offset
+  positivo). Causa: se comparaban fechas parseadas como medianoche UTC
+  contra límites de periodo construidos en hora local del navegador.
+  Confirmado y corregido comparando fechas como texto ("YYYY-MM-DD"),
+  nunca como objetos `Date`.
 - Alta de tarifas bloqueada en cuentas nuevas sin `payment_types`
   configurado.
 - La barra de navegación inferior podía desaparecer al navegar desde una
