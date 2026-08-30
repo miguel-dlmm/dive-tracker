@@ -351,3 +351,51 @@ describe("SummaryTab — Ajustes de curso no muestran un recuento de personas (r
     expect(within(calendarCard).queryByText(/^\d+p$/)).not.toBeInTheDocument();
   });
 });
+
+// Feedback explícito 2026-08-30: "Por curso" gana el mismo drill-down
+// progresivo que ya tenía "Por escuela" — al tocar un curso, se despliega
+// su desglose por tipo de movimiento (Curso/Comisión/Ajuste), sin salir de
+// la tarjeta ni abrir una pantalla nueva.
+describe("SummaryTab — 'Por curso': desglose por tipo de movimiento al tocar un curso", () => {
+  it("tocar 'Open Water' despliega su desglose por Curso/Comisión en el sitio", async () => {
+    const user = userEvent.setup();
+    renderSummary({
+      worklog: [{ id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+      comisiones: [{ id: "c1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+    });
+
+    await user.click(screen.getByRole("button", { name: "Por curso" }));
+    const card = screen.getByRole("button", { name: "Por curso" }).closest("div.overflow-hidden");
+    await user.click(within(card).getByRole("button", { name: /Open Water/ }));
+
+    expect(within(card).getByText("Curso")).toBeInTheDocument();
+    expect(within(card).getByText("Comisión")).toBeInTheDocument();
+  });
+});
+
+// Bug real de límites de periodo, corregido 2026-08-30 (ver nota extensa
+// junto a withinRange en SummaryTab.jsx): comparar new Date("YYYY-MM-DD")
+// (medianoche UTC) contra new Date(year, month, day) (medianoche LOCAL)
+// hacía que un movimiento del primer o último día de un periodo pudiera
+// desaparecer de la suma según el huso horario. Esta prueba usa el
+// ÚLTIMO día del mes actual con los componentes de fecha LOCALES del
+// propio entorno de test (nunca toISOString, que ya arrastraba el mismo
+// bug) — en un huso con offset positivo (este entorno corre en
+// Asia/Bangkok, UTC+7) el bug afectaba exactamente a esta fecha límite.
+describe("SummaryTab — suma correcta en los límites del periodo (bug real de zona horaria)", () => {
+  it("un movimiento fechado el último día del mes actual cuenta en el total del mes", () => {
+    const now = new Date();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const lastDayStr = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, "0")}-${String(lastDay.getDate()).padStart(2, "0")}`;
+
+    renderSummary({
+      worklog: [{ id: "w1", date: lastDayStr, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+    });
+
+    // HeroTotal (y "Por curso", si está abierta) muestran el total del
+    // periodo — 50€ (1 persona × tarifa 50). Si el bug estuviera presente,
+    // el movimiento quedaría fuera del periodo y "50,00" no aparecería en
+    // ningún sitio de la pantalla.
+    expect(screen.getAllByText("50,00", { exact: false }).length).toBeGreaterThan(0);
+  });
+});

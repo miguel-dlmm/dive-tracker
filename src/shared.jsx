@@ -704,12 +704,21 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
 
+  // Comparación por string ("YYYY-MM"/día), nunca parseando e.date con
+  // `new Date(...)` — bug real corregido 2026-08-30 (mismo que
+  // SummaryTab.jsx, ver la nota junto a withinRange ahí): un string de
+  // fecha sin hora se interpreta como medianoche UTC, y
+  // getFullYear()/getMonth()/getDate() la leen de vuelta en la zona
+  // horaria LOCAL del navegador — en cualquier huso negativo (América,
+  // incluida cualquier escuela en México/Caribe), un movimiento del día 1
+  // de un mes podía desaparecer del calendario entero (agrupado bajo el
+  // mes/día anterior, que ni siquiera se pinta en esta cuadrícula).
   const byDay = useMemo(() => {
     const map = {};
+    const monthPrefix = `${year}-${pad2(month + 1)}`;
     entries.forEach((e) => {
-      const d = new Date(e.date);
-      if (d.getFullYear() !== year || d.getMonth() !== month) return;
-      const day = d.getDate();
+      if (e.date.slice(0, 7) !== monthPrefix) return;
+      const day = Number(e.date.slice(8, 10));
       if (!map[day]) map[day] = [];
       map[day].push(e);
     });

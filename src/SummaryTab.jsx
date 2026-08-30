@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META } from "./shared";
+import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr } from "./shared";
 import { listItemVariants, usePrefersReducedMotion } from "./motion";
 import { computeRateTotal, comparePeriods } from "./rateCalc";
 import { NAVY, CORAL, GREEN } from "./App";
@@ -53,22 +53,30 @@ const GRANULARITY_LABELS = { mensual: "Mes", trimestral: "Trimestre", semestral:
 const GRANULARITY_LABEL_LIST = Object.values(GRANULARITY_LABELS);
 const GRANULARITY_KEY_BY_LABEL = Object.fromEntries(Object.entries(GRANULARITY_LABELS).map(([k, l]) => [l, k]));
 
+const pad2 = (n) => String(n).padStart(2, "0");
+// Formatea un Date construido con componentes locales (new Date(y,m,d),
+// nunca parseado de un string) de vuelta a "YYYY-MM-DD" leyendo sus PROPIOS
+// getFullYear/getMonth/getDate — nunca toISOString(), que convierte a UTC y
+// desplazaría el día en cualquier huso horario que no sea UTC+0.
+const dstr = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+// Devuelve el rango como strings "YYYY-MM-DD", nunca objetos Date — ver
+// nota extensa junto a withinRange sobre por qué (bug real de límites de
+// periodo corregido 2026-08-30).
 function periodRange(granularity, year, unitIndex, customFrom, customTo) {
   if (granularity === "personalizado") return [customFrom || null, customTo || null];
   if (granularity === "mensual") {
-    const start = new Date(year, unitIndex, 1);
-    const end = new Date(year, unitIndex + 1, 0);
-    return [start, end];
+    return [dstr(new Date(year, unitIndex, 1)), dstr(new Date(year, unitIndex + 1, 0))];
   }
   if (granularity === "trimestral") {
     const m0 = unitIndex * 3;
-    return [new Date(year, m0, 1), new Date(year, m0 + 3, 0)];
+    return [dstr(new Date(year, m0, 1)), dstr(new Date(year, m0 + 3, 0))];
   }
   if (granularity === "semestral") {
     const m0 = unitIndex * 6;
-    return [new Date(year, m0, 1), new Date(year, m0 + 6, 0)];
+    return [dstr(new Date(year, m0, 1)), dstr(new Date(year, m0 + 6, 0))];
   }
-  return [new Date(year, 0, 1), new Date(year, 11, 31)]; // anual
+  return [dstr(new Date(year, 0, 1)), dstr(new Date(year, 11, 31))]; // anual
 }
 
 function periodLabel(granularity, year, unitIndex) {
@@ -163,10 +171,12 @@ function ExpandableCard({ title, icon: Icon, iconColor = NAVY, defaultOpen = fal
 
 // Lista rankeada (mayor importe primero, ver magnitude()) reutilizada por
 // Por escuela / Por curso / los desgloses de Comisiones. onToggle+
-// expandedKey+renderExpanded son opcionales: solo Por escuela los usa hoy,
-// para expandir el desglose por curso de una escuela al tocarla — la misma
-// exploración progresiva que el resto de la tarjeta, sin una segunda
-// pantalla ni un selector aparte. badge es opcional: "Por escuela" lo usa
+// expandedKey+renderExpanded son opcionales: "Por escuela" los usa para
+// expandir el desglose por curso de una escuela al tocarla, y "Por curso"
+// (2026-08-30, feedback explícito) para expandir el desglose por TIPO de
+// movimiento (Curso/Comisión/Ajuste) de un curso concreto al tocarlo —
+// la misma exploración progresiva que el resto de la tarjeta, sin una
+// segunda pantalla ni un selector aparte. badge es opcional: "Por escuela" lo usa
 // para mostrar la evolución vs. el periodo anterior junto al nombre (ver
 // SchoolGrowthBadge) sin que RankedList sepa nada de "qué es crecimiento"
 // — solo pinta lo que le devuelva badge(key), si lo hay. El orden es
@@ -355,9 +365,13 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   const [source, setSource] = useState("total"); // "total" | "ganado" | "comision" | "companeros"
   const [year, setYear] = useState(now.getFullYear());
   const [unitIndex, setUnitIndex] = useState(now.getMonth());
-  const [customFrom, setCustomFrom] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10));
-  const [customTo, setCustomTo] = useState(now.toISOString().slice(0, 10));
+  // dstr()/todayStr(), nunca toISOString() (fecha UTC, desplaza un día en
+  // cualquier huso horario negativo) — mismo bug de fondo que el resto de
+  // este archivo, ver nota junto a withinRange más abajo.
+  const [customFrom, setCustomFrom] = useState(dstr(new Date(now.getFullYear(), now.getMonth(), 1)));
+  const [customTo, setCustomTo] = useState(todayStr());
   const [expandedSchool, setExpandedSchool] = useState(null);
+  const [expandedActivity, setExpandedActivity] = useState(null);
 
   const SOURCES = [
     ["total", "Total"],
@@ -366,6 +380,10 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
     ["companeros", MOVEMENT_TYPE_META.companeros.label],
   ];
   const SOURCE_META = { ...MOVEMENT_TYPE_META, companeros: { ...MOVEMENT_TYPE_META.companeros, color: AJUSTE_FILL } };
+  // label -> color, para pintar el desglose por tipo dentro de "Por curso"
+  // (renderActivityTypes) con el mismo criterio de color que el resto de
+  // la pantalla, sin repetir SOURCE_META con las claves ya traducidas.
+  const SOURCE_TYPE_COLOR = Object.fromEntries(Object.values(SOURCE_META).map((m) => [m.label, m.color]));
 
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
@@ -408,10 +426,27 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   // shiftPeriod, y además "más lejos" en un solo toque. Un único mecanismo
   // de navegación de periodo, no dos.
 
-  const [rangeStart, rangeEnd] = periodRange(granularity, year, unitIndex, customFrom ? new Date(customFrom) : null, customTo ? new Date(customTo) : null);
+  // Comparación por STRING "YYYY-MM-DD", nunca por objeto Date — bug real
+  // corregido 2026-08-30: e.date es un string de fecha sin hora
+  // ("2026-08-01"), y `new Date("2026-08-01")` lo interpreta como
+  // medianoche UTC (regla del propio estándar ECMA-262 para strings de
+  // fecha sin hora), mientras que `rangeStart`/`rangeEnd` se construían
+  // con `new Date(year, month, day)` — medianoche en la ZONA HORARIA
+  // LOCAL del navegador. En cualquier huso horario que no sea UTC+0, esas
+  // dos medianoches NO coinciden: en husos negativos (América completa),
+  // un movimiento fechado el día 1 de un periodo podía comparar como
+  // ANTERIOR al inicio del propio periodo y desaparecer de su total; en
+  // husos positivos (p. ej. Tailandia, UTC+7), el mismo problema afectaba
+  // al último día del periodo. En ambos casos el movimiento podía quedar
+  // fuera del periodo actual Y del anterior a la vez — ausente de
+  // cualquier suma sin ningún aviso. Comparar los strings ISO
+  // "YYYY-MM-DD" directamente (ordenan igual que las fechas que
+  // representan) elimina el problema de raíz: ninguna de las dos partes
+  // pasa nunca por un huso horario.
+  const [rangeStart, rangeEnd] = periodRange(granularity, year, unitIndex, customFrom || null, customTo || null);
   const withinRange = (list, dateKey = "date") => list.filter((e) => {
     if (!rangeStart || !rangeEnd) return false;
-    const d = new Date(e[dateKey]);
+    const d = e[dateKey];
     return d >= rangeStart && d <= rangeEnd;
   });
 
@@ -423,7 +458,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   const [prevStart, prevEnd] = periodRange(granularity, prevYear, prevUnitIndex);
   const previousPeriodEntries = useMemo(() => {
     if (granularity === "personalizado") return [];
-    return withTotals.filter((e) => { const d = new Date(e.date); return d >= prevStart && d <= prevEnd; });
+    return withTotals.filter((e) => { const d = e.date; return d >= prevStart && d <= prevEnd; });
   }, [withTotals, granularity, prevStart, prevEnd]);
 
   // Color del círculo de cada día en el calendario: el de la escuela que
@@ -488,7 +523,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
     for (let offset = -TREND_RADIUS; offset <= TREND_RADIUS; offset++) {
       const { year: y, unitIndex: u } = shiftPeriod(granularity, year, unitIndex, offset);
       const [start, end] = periodRange(granularity, y, u);
-      const entries = withTotals.filter((e) => { const d = new Date(e.date); return d >= start && d <= end; });
+      const entries = withTotals.filter((e) => e.date >= start && e.date <= end); // strings, ver nota de withinRange
       periods.push({
         year: y,
         unitIndex: u,
@@ -505,6 +540,17 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   const renderSchoolActivities = (schoolName) => {
     const rows = groupSum(periodEntries.filter((e) => e.school === schoolName), (e) => e.activity, { withPeople: true });
     return <RankedList rows={rows} currencyRows={currencies.rows} textColor={activityColor} emptyLabel="Sin cursos en este periodo." />;
+  };
+
+  // Desglose por TIPO de movimiento (Curso/Comisión/Ajuste) de un curso
+  // concreto — feedback explícito 2026-08-30. Mismo patrón que "Por
+  // escuela" (expandir en el sitio, sin pantalla ni selector aparte): un
+  // curso puede generar ingreso por varias vías (lo impartes tú, lo trae
+  // un compañero, hay un ajuste de por medio) y hasta ahora "Por curso"
+  // solo daba el total combinado, sin decir de dónde venía.
+  const renderActivityTypes = (activityName) => {
+    const rows = groupSum(periodEntries.filter((e) => e.activity === activityName), (e) => SOURCE_META[e._source]?.label || e._source, { withPeople: true });
+    return <RankedList rows={rows} currencyRows={currencies.rows} textColor={(label) => SOURCE_TYPE_COLOR[label] || NAVY} emptyLabel="Sin movimientos en este periodo." />;
   };
 
   return (
@@ -606,7 +652,14 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
       )}
 
       <ExpandableCard title="Por curso" icon={GraduationCap} iconColor={MOVEMENT_TYPE_META.ganado.color} defaultOpen={!hasMultipleSchools}>
-        <RankedList rows={globalByActivity} currencyRows={currencies.rows} textColor={activityColor} />
+        <RankedList
+          rows={globalByActivity}
+          currencyRows={currencies.rows}
+          textColor={activityColor}
+          expandedKey={expandedActivity}
+          onToggle={(key) => setExpandedActivity((cur) => (cur === key ? null : key))}
+          renderExpanded={renderActivityTypes}
+        />
       </ExpandableCard>
 
       {/* Jerarquía revisada 2026-08-30 (Head Designer, sin orden cerrado de
