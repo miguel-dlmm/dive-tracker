@@ -1,9 +1,8 @@
 import React from "react";
 
 // Un paso numerado de la sección "Pasos" de un artículo.
-// image: { src, alt } opcional — ningún artículo lo usa todavía (no hay
-// capturas generadas aún), pero el renderer ya está listo para cuando
-// content.js empiece a incluirlas (ver Fase 2 en CLAUDE.md).
+// image: { src, alt } opcional — capturas reales generadas con
+// scripts/capture-help-screenshots.mjs (ver content.js).
 export default function HelpStep({ index, text, image }) {
   return (
     <li className="flex gap-3">
