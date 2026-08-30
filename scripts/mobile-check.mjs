@@ -424,17 +424,27 @@ async function main() {
   await page.waitForTimeout(300);
   await shot(page, "ayuda-menu-agrupado");
 
-  console.log("→ Ayuda: entrar en una categoría de 'Quiero...', abrir un artículo y volver");
-  await page.locator("text=Registrar un movimiento").first().tap();
-  await page.waitForTimeout(200);
-  await shot(page, "ayuda-lista-articulos");
-  await page.locator("text=Crear un movimiento").first().tap();
-  await page.waitForTimeout(200);
-  await shot(page, "ayuda-articulo");
+  console.log("→ Ayuda: tocar una categoría de 'Quiero...' despliega su artículo en el sitio (2026-08-30, 'de índice a guía viva')");
+  const registrarCategoryBtn = page.getByRole("button", { name: /Registrar un movimiento/ });
+  await registrarCategoryBtn.tap();
+  await page.waitForTimeout(300);
+  const expanded = await registrarCategoryBtn.getAttribute("aria-expanded");
+  if (expanded !== "true") {
+    consoleIssues.push("[ayuda] Tocar una categoría no la desplegó (aria-expanded !== 'true').");
+  }
+  await shot(page, "ayuda-categoria-desplegada");
+  const pasosVisible = await page.getByText("Pasos", { exact: true }).isVisible().catch(() => false);
+  if (!pasosVisible) {
+    consoleIssues.push("[ayuda] Al desplegar una categoría no se ve el contenido del artículo ('Pasos').");
+  }
   await page.mouse.wheel(0, 500);
   await page.waitForTimeout(250);
   await shot(page, "ayuda-scroll-cabecera");
   await page.mouse.wheel(0, -500);
+  // Plegarla de nuevo antes de salir — mismo gesto que cualquier
+  // ExpandableCard de Resumen, sin "volver" que pulsar.
+  await registrarCategoryBtn.tap();
+  await page.waitForTimeout(200);
   await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
   await page.waitForTimeout(300);
   await page.locator('button[aria-label="Configuración"]').tap();

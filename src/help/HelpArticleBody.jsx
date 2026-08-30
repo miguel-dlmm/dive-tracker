@@ -1,28 +1,23 @@
 import React from "react";
-import { ArrowLeft, Lightbulb, CheckCircle2 } from "lucide-react";
-import { NAVY, TEAL } from "../App";
+import { Lightbulb, CheckCircle2 } from "lucide-react";
+import { TEAL } from "../App";
 import HelpStep from "./HelpStep";
 
 const sectionLabelCls = "mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400";
 
-// article: { title, summary, whatYouCanDo, whenToUseIt, steps, tips, expectedResult }
-// categoryLabel: para el enlace de "volver"
+// Contenido de un artículo, sin cabecera ni "volver" — vive dentro de la
+// propia ExpandableCard de su categoría (ver HelpTab.jsx), que ya pone el
+// título y permite cerrarla. Antes era HelpArticleView.jsx, una PANTALLA
+// aparte con su propio título+resumen+botón de volver; al pasar Ayuda de
+// navegación por pantallas a tarjetas plegables en el sitio (2026-08-30,
+// "de índice a guía viva"), ese título/volver quedaban duplicados con los
+// que ya pone la tarjeta — se retira aquí, se queda solo el contenido.
+// article: { summary, whatYouCanDo, whenToUseIt, steps, tips, expectedResult }
 // accentColor: color heredado de la sección (nav_sections)
-export default function HelpArticleView({ article, categoryLabel, accentColor, onBack }) {
+export default function HelpArticleBody({ article, accentColor }) {
   return (
-    <div className="space-y-4">
-      <button
-        onClick={onBack}
-        className="-ml-2 flex min-h-11 items-center gap-1.5 p-2 text-sm font-medium text-gray-500"
-        aria-label={`Volver a ${categoryLabel}`}
-      >
-        <ArrowLeft size={16} aria-hidden="true" /> {categoryLabel}
-      </button>
-
-      <div>
-        <h2 className="text-lg font-bold" style={{ color: NAVY }}>{article.title}</h2>
-        <p className="mt-1 text-sm text-gray-500">{article.summary}</p>
-      </div>
+    <div className="space-y-3">
+      <p className="text-sm text-gray-500">{article.summary}</p>
 
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <h3 className={sectionLabelCls}>Qué puedes hacer</h3>

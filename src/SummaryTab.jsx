@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr } from "./shared";
+import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr, ExpandableCard } from "./shared";
 import { listItemVariants, usePrefersReducedMotion } from "./motion";
 import { computeRateTotal, comparePeriods } from "./rateCalc";
 import { NAVY, CORAL, GREEN } from "./App";
@@ -137,36 +137,6 @@ function groupSum(entries, keyFn, opts = {}) {
 // día dominante en el calendario.
 function magnitude(totals) {
   return Object.values(totals).reduce((s, v) => s + v, 0);
-}
-
-// Cabecera plegable reutilizada por todas las tarjetas de profundidad de
-// Resumen (Por escuela, Por curso, Calendario, Comisiones, Pagos de
-// compañeros) — mismo componente para las 5, no una implementación por
-// tarjeta. Anima con listItemVariants (ver src/motion.js), la misma
-// convención de motion de toda la app, no una animación propia de Resumen.
-function ExpandableCard({ title, icon: Icon, iconColor = NAVY, defaultOpen = false, children }) {
-  const [open, setOpen] = useState(defaultOpen);
-  const reduced = usePrefersReducedMotion();
-  return (
-    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="flex min-h-[52px] w-full items-center gap-2 px-4 py-3 text-left"
-      >
-        {Icon && <Icon size={16} style={{ color: iconColor }} aria-hidden="true" className="shrink-0" />}
-        <span className="flex-1 text-sm font-semibold text-gray-800">{title}</span>
-        <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-gray-400 transition-transform" style={{ transform: open ? "rotate(180deg)" : "none" }} />
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div {...listItemVariants(reduced)} className="border-t border-gray-100 px-4 py-3">
-            {children}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
 }
 
 // Lista rankeada (mayor importe primero, ver magnitude()) reutilizada por
