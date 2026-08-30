@@ -1432,7 +1432,10 @@ function ConfigMenuGroup({ title, items, onSelect }) {
 // schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
 // rates / commissionRates / worklog / comisiones: hooks que necesitan las secciones Tarifas y Pagos, embebidas aquí
 // profile: fila propia de profiles (useSession) — is_admin/is_superadmin deciden qué secciones se ven
-export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile }) {
+// onClose (opcional): cierra Configuración entera (mismo handler que la "X"
+// de la cabecera, ver App.jsx) — lo dispara el gesto de "atrás" cuando ya
+// estamos en el menú principal, sin ninguna sección abierta (ver backProps).
+export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose }) {
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
   const allowedSectionKeys = [...BUSINESS_SECTIONS, ...(isAdmin ? ADMIN_SECTIONS : [])].map((s) => s.key);
   const [section, setSectionState] = useState(() => {
@@ -1446,11 +1449,15 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
   };
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const currentLabel = [...BUSINESS_SECTIONS, ...ADMIN_SECTIONS].find((s) => s.key === section)?.label;
-  const backProps = useSwipeBack(() => setSection(null), { enabled: section != null });
+  // Deslizar hacia la derecha = "atrás", recursivo (feedback explícito
+  // 2026-08-30: "no como una excepción, no como un truco, no como una
+  // interacción aislada"): dentro de una sección, vuelve al menú; ya en el
+  // menú, cierra Configuración entera — el mismo gesto en cualquier nivel.
+  const backProps = useSwipeBack(section == null ? onClose : () => setSection(null));
 
   if (section == null) {
     return (
-      <div className="space-y-5">
+      <div className="space-y-5" {...backProps}>
         <ConfigMenuGroup items={BUSINESS_SECTIONS} onSelect={setSection} />
         {isAdmin && <ConfigMenuGroup title="Administración" items={ADMIN_SECTIONS} onSelect={setSection} />}
       </div>
@@ -1458,7 +1465,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
   }
 
   return (
-    <motion.div className="space-y-3" {...backProps}>
+    <div className="space-y-3" {...backProps}>
       <button
         onClick={() => setSection(null)}
         className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium"
@@ -1497,6 +1504,6 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
       {isAdmin && section === "navegacion" && <SectionColors navSections={navSections} />}
       {isAdmin && section === "ajustes" && <GeneralSettings appConfig={appConfig} />}
       {isAdmin && section === "usuarios" && <UsersDirectory profile={profile} />}
-    </motion.div>
+    </div>
   );
 }

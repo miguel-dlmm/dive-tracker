@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import HelpTab from "./HelpTab";
 
@@ -11,6 +11,15 @@ import HelpTab from "./HelpTab";
 // ejercite — el manual quedó orientado solo a usuario final tras revisar
 // el contenido.
 const navSections = { rows: [] };
+
+// Ayuda persiste la categoría desplegada en sessionStorage
+// (oceanpulse:helpOpen, feedback 2026-08-30, segunda vuelta) — sin
+// limpiarlo entre pruebas, un test que despliega una categoría deja el
+// siguiente `render()` arrancando ya con ella abierta (jsdom comparte un
+// único sessionStorage para todo el archivo), igual que en ConfigTab.test.jsx.
+beforeEach(() => {
+  sessionStorage.clear();
+});
 
 describe("HelpTab", () => {
   it("agrupa las categorías en 'Quiero...' y 'Funcionalidades', todas plegadas de entrada", () => {
@@ -49,14 +58,69 @@ describe("HelpTab", () => {
     await waitFor(() => expect(screen.queryByText("Pasos")).not.toBeInTheDocument());
   });
 
-  it("cada categoría se pliega/despliega de forma independiente", async () => {
+  // Acordeón, no independientes (2026-08-30, segunda vuelta): con varias
+  // categorías abiertas a la vez no habría una única "pantalla actual" que
+  // persistir en sessionStorage ni un gesto de "atrás" con significado
+  // claro (¿cuál de las abiertas colapsaría?) — como mucho una a la vez,
+  // igual que el menú con drill-down de Configuración.
+  it("desplegar una categoría pliega la que estuviera abierta antes (acordeón)", async () => {
     const user = userEvent.setup();
     render(<HelpTab navSections={navSections} profile={null} />);
 
     await user.click(screen.getByRole("button", { name: /Mi trabajo/ }));
     await user.click(screen.getByRole("button", { name: /^Resumen/ }));
 
-    expect(screen.getByRole("button", { name: /Mi trabajo/ })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: /Mi trabajo/ })).toHaveAttribute("aria-expanded", "false");
     expect(screen.getByRole("button", { name: /^Resumen/ })).toHaveAttribute("aria-expanded", "true");
+  });
+});
+
+// Feedback explícito 2026-08-30, segunda vuelta: "recargar → mantener la
+// pantalla actual; cerrar con X y reabrir → volver al inicio" — mismo
+// criterio que ya tiene Configuración (oceanpulse:configSection). La
+// limpieza al cerrar vive en App.jsx (closeSecondary), no aquí — HelpTab
+// solo expone `onClose` para que quien lo use decida cuándo llamarlo (el
+// botón "X" de la cabecera, y el propio gesto de swipe de más abajo).
+describe("HelpTab — la categoría desplegada sobrevive a una recarga", () => {
+  it("recargar (unmount+render) mantiene la categoría desplegada", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<HelpTab navSections={navSections} profile={null} />);
+    await user.click(screen.getByRole("button", { name: /Mi trabajo/ }));
+    unmount();
+
+    render(<HelpTab navSections={navSections} profile={null} />);
+
+    expect(screen.getByRole("button", { name: /Mi trabajo/ })).toHaveAttribute("aria-expanded", "true");
+  });
+});
+
+// Gesto de "atrás" recursivo (mismo criterio que ConfigTab.test.jsx): con
+// una categoría desplegada, la colapsa (un nivel atrás, sin cerrar Ayuda);
+// sin ninguna desplegada, el mismo gesto cierra Ayuda entera (onClose).
+describe("HelpTab — gesto de deslizar hacia la derecha = atrás, recursivo", () => {
+  function swipeRight(el) {
+    fireEvent.touchStart(el, { touches: [{ clientX: 10, clientY: 100 }] });
+    fireEvent.touchEnd(el, { changedTouches: [{ clientX: 120, clientY: 104 }] });
+  }
+
+  it("deslizar sin ninguna categoría abierta llama a onClose", () => {
+    const onClose = vi.fn();
+    const { container } = render(<HelpTab navSections={navSections} profile={null} onClose={onClose} />);
+
+    swipeRight(container.firstChild);
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("deslizar con una categoría abierta la colapsa, sin llamar a onClose", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const { container } = render(<HelpTab navSections={navSections} profile={null} onClose={onClose} />);
+    await user.click(screen.getByRole("button", { name: /Mi trabajo/ }));
+
+    swipeRight(container.firstChild);
+
+    expect(screen.getByRole("button", { name: /Mi trabajo/ })).toHaveAttribute("aria-expanded", "false");
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

@@ -1273,13 +1273,22 @@ export function FloatingPanel({ open, pos, panelRef, matchWidth = true, align = 
 // pantalla nueva — ver docs/ADR/0011, addendum "de índice a guía viva").
 // `subtitle` es opcional (Resumen no lo usa; Ayuda sí, para la descripción
 // corta de la categoría, visible antes de desplegar).
-export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = NAVY, defaultOpen = false, children }) {
-  const [open, setOpen] = useState(defaultOpen);
+// `open`/`onToggle` (opcionales, controlado): sin pasarlos, la tarjeta
+// gestiona su propio estado (Resumen, sin necesidad de coordinar varias
+// tarjetas entre sí). Ayuda SÍ los pasa — necesita saber en todo momento
+// cuál está abierta para persistirlo en sessionStorage (ver HelpTab.jsx,
+// "recargar mantiene la pantalla actual") y para que el gesto de "atrás"
+// sepa qué colapsar.
+export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = NAVY, defaultOpen = false, open: controlledOpen, onToggle, children }) {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const toggle = () => (isControlled ? onToggle?.(!open) : setInternalOpen((o) => !o));
   const reduced = usePrefersReducedMotion();
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         aria-expanded={open}
         className="flex min-h-[52px] w-full items-center gap-2 px-4 py-3 text-left"
       >

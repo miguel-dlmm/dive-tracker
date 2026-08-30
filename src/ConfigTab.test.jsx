@@ -1,4 +1,4 @@
-import { render, screen, within, waitFor } from "@testing-library/react";
+import { render, screen, within, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConfigTab from "./ConfigTab";
 
@@ -121,6 +121,48 @@ describe("ConfigTab — la sub-sección abierta sobrevive a una recarga", () => 
 
     expect(screen.getByText("Escuelas")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Usuarios" })).not.toBeInTheDocument();
+  });
+});
+
+// Feedback explícito 2026-08-30, segunda vuelta: cerrar Configuración con
+// la "X" y reabrirla debe volver siempre al menú (a diferencia de recargar
+// dentro de una sección, que sí la conserva — ver el describe de arriba).
+// La limpieza de oceanpulse:configSection vive en App.jsx (closeSecondary),
+// no aquí — ConfigTab en sí no sabe nada de "X"/returnTab, solo expone
+// `onClose` para que quien lo use decida cuándo llamarlo (el botón "X" de
+// la cabecera, y el propio gesto de swipe de más abajo).
+//
+// Gesto de "atrás" recursivo (feedback explícito: "no como una excepción,
+// no como un truco, no como una interacción aislada"): deslizar hacia la
+// derecha dentro de una sección vuelve al menú (igual que el botón
+// "‹ Configuración"); ya en el menú, el mismo gesto cierra Configuración
+// entera (onClose) — un único vocabulario de gesto en cualquier nivel.
+describe("ConfigTab — gesto de deslizar hacia la derecha = atrás, recursivo", () => {
+  function swipeRight(el) {
+    fireEvent.touchStart(el, { touches: [{ clientX: 10, clientY: 100 }] });
+    fireEvent.touchEnd(el, { changedTouches: [{ clientX: 120, clientY: 104 }] });
+  }
+
+  it("deslizar en el menú principal llama a onClose", () => {
+    const onClose = vi.fn();
+    const { container } = render(<ConfigTab {...baseProps()} onClose={onClose} />);
+
+    swipeRight(container.firstChild);
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("deslizar dentro de una sección vuelve al menú, sin llamar a onClose", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    const { container } = render(<ConfigTab {...baseProps()} onClose={onClose} />);
+    await user.click(screen.getByText("Escuelas"));
+    expect(screen.getByRole("heading", { name: "Escuelas" })).toBeInTheDocument();
+
+    swipeRight(container.firstChild);
+
+    expect(screen.getByText("Cursos")).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
 
