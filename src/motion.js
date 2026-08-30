@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // =================================================================
 // Convención de motion de Ocean Flow — un único vocabulario de
@@ -82,22 +82,51 @@ export function usePrefersReducedMotion() {
 
 // Deslizar hacia la derecha = "atrás" — feedback explícito 2026-08-30,
 // pensado para Configuración y Ayuda ("debe sentirse como navegación real,
-// no como un truco aislado"). Un único hook, no una implementación por
-// pantalla: spread del resultado sobre un <motion.div> — drag="x" con
-// dragConstraints en 0 a ambos lados (elástico, siempre vuelve al sitio;
-// nunca desplaza contenido de verdad) y el propio callback se dispara solo
-// si el arrastre supera el umbral al soltar. drag={false} (no solo omitir
-// el prop) cuando está desactivado — así el <motion.div> sigue siendo
-// válido siempre, sin que quien lo usa tenga que decidir entre <div> y
-// <motion.div> según el caso. Respeta prefers-reduced-motion (el gesto se
-// desactiva del todo; el camino sin gestos — un botón "‹" — sigue ahí).
+// no como un truco aislado").
+//
+// 2026-08-30, segunda vuelta: la primera versión envolvía TODO el
+// contenido de la pantalla en un <motion.div drag="x"> — un elemento con
+// transform gestionado por Motion, hermano de la cabecera `sticky`, justo
+// el patrón que un comentario ya existente en App.jsx identifica como
+// causa de un bug de compositing de WebKit ya reportado una vez en Ayuda
+// ("backdrop-filter + un hermano con transform" — aquí no hay
+// backdrop-filter, pero el hermano-con-transform es el mismo ingrediente
+// de riesgo). Reportado de nuevo justo tras añadir este drag-wrapper a
+// Configuración: la cabecera quedaba cubierta por el contenido en un
+// iPhone real, no reproducible en Chromium.
+//
+// Reescrito sin Motion: solo listeners de touch nativos (onTouchStart/
+// onTouchEnd), sin transform, sin capa de composición propia, sin
+// arrastre visual — se detecta el gesto (desplazamiento predominantemente
+// horizontal hacia la derecha, por encima de un umbral) y se dispara
+// onBack() directamente, sin que el contenido se mueva del sitio mientras
+// se arrastra. Se pierde el feedback elástico de la versión anterior; se
+// gana quitar de en medio al sospechoso más concreto de un bug que el
+// propio proyecto ya documentó como grave (cubre la cabecera — "es la
+// identidad de la app"). Sigue respetando prefers-reduced-motion (el
+// gesto se desactiva del todo; el botón "‹" de siempre sigue ahí).
 export function useSwipeBack(onBack, { enabled = true } = {}) {
   const reduced = usePrefersReducedMotion();
   const active = enabled && !reduced && typeof onBack === "function";
+  const startRef = useRef(null);
+
+  if (!active) return {};
+
   return {
-    drag: active ? "x" : false,
-    dragConstraints: { left: 0, right: 0 },
-    dragElastic: 0.15,
-    onDragEnd: active ? (_, info) => { if (info.offset.x > 70) onBack(); } : undefined,
+    onTouchStart: (e) => {
+      const t = e.touches[0];
+      startRef.current = { x: t.clientX, y: t.clientY };
+    },
+    onTouchEnd: (e) => {
+      const start = startRef.current;
+      startRef.current = null;
+      if (!start) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - start.x;
+      const dy = t.clientY - start.y;
+      // Predominantemente horizontal (evita interpretar un scroll
+      // vertical como "atrás") y por encima de un umbral deliberado.
+      if (dx > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) onBack();
+    },
   };
 }

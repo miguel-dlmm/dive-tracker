@@ -19,7 +19,7 @@ import MovementSheet from "./MovementSheet";
 import WhatsNew from "./WhatsNew";
 import { APP_VERSION } from "./version";
 import SummaryTab from "./SummaryTab";
-import HelpTab from "./HelpTab";
+import HelpTab, { clearStoredHelpOpen } from "./HelpTab";
 import PaymentsTab from "./PaymentsTab";
 
 // ---------------------------------------------------------------
@@ -85,6 +85,7 @@ function readStoredNav() {
 function clearStoredNav() {
   try { sessionStorage.removeItem(NAV_STORAGE_KEY); } catch { /* no-op */ }
   clearStoredSection(); // sub-navegación de Configuración — misma vida que el resto
+  clearStoredHelpOpen(); // categoría desplegada en Ayuda — misma vida que el resto
 }
 
 // "Qué hay de nuevo" — se muestra una vez por versión y por cuenta (no por
@@ -206,6 +207,20 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const bottomTabActive = PRIMARY_TABS.some((t) => t.id === tab) ? tab : null;
   const isSecondary = tab in SECONDARY_TITLES;
+  // Cerrar Configuración/Ayuda (la "X" de la cabecera, y el gesto de
+  // "atrás" de cada una en su nivel más externo — ver ConfigTab.jsx/
+  // HelpTab.jsx) siempre vuelve al INICIO de esa pantalla la próxima vez
+  // que se abra, nunca a la última subsección/categoría vista — distinto
+  // de recargar la página, que sí la conserva (feedback explícito
+  // 2026-08-30: "si cierro con la X y reabro, quiero el inicio; si
+  // recargo dentro, quiero seguir donde estaba"). Limpiar aquí, no dentro
+  // de cada pantalla, porque es la MISMA acción ("salir de esta pantalla
+  // por completo") sin importar en qué subnivel se estuviera al cerrar.
+  const closeSecondary = () => {
+    if (tab === "config") clearStoredSection();
+    if (tab === "help") clearStoredHelpOpen();
+    changeTab(returnTab);
+  };
   const logoIcon = appConfig.rows[0]?.logo_icon || "Waves";
   // La cabecera acompaña siempre al usuario (ver rediseño de navegación
   // global) — antes se quedaba en flujo normal y desaparecía al hacer
@@ -262,7 +277,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             // HelpTab.jsx, "de índice a guía viva" — pero el razonamiento
             // de fondo, "capa encima" vs. "un paso más adentro", se
             // mantiene igual para las dos.)
-            <button onClick={() => changeTab(returnTab)} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Cerrar">
+            <button onClick={closeSecondary} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Cerrar">
               <X size={20} style={{ color: NAVY }} aria-hidden="true" />
               <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{SECONDARY_TITLES[tab]}</h1>
             </button>
@@ -346,10 +361,10 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
           <ConfigTab
             schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
-            navSections={navSections} appConfig={appConfig} profile={profile}
+            navSections={navSections} appConfig={appConfig} profile={profile} onClose={closeSecondary}
           />
         )}
-        {tab === "help" && <HelpTab navSections={navSections} profile={profile} />}
+        {tab === "help" && <HelpTab navSections={navSections} profile={profile} onClose={closeSecondary} />}
         {tab === "pagos" && (
           <PaymentsTab
             activities={activities} schools={schools} paymentStatuses={paymentStatuses} currencies={currencies}

@@ -187,3 +187,37 @@ necesidad real delante), no algo que este cambio deba prever de
 antemano — construir esa flexibilidad hoy, sin ningún caso real que la
 use, sería exactamente la sobreingeniería que este proyecto evita a
 propósito.
+
+## Addendum (2026-08-30, segunda vuelta) — acordeón (no independientes) + misma regla de persistencia que Configuración
+
+**Vuelve el gesto de "atrás", ahora recursivo — y con él, una categoría a
+la vez:** el addendum anterior retiró `useSwipeBack` de Ayuda razonando
+que "sin niveles de navegación, no hay 'atrás' al que volver". Eso dejó
+de ser cierto en cuanto Configuración adoptó "recargar conserva el
+contexto, cerrar con 'X' reinicia" (ver ADR-0008, mismo addendum) y se
+pidió aplicar el mismo criterio a Ayuda: para que "recargar mantenga la
+pantalla actual" tenga sentido aquí, tiene que existir una única
+"pantalla actual" que persistir — con varias `ExpandableCard`
+independientes abiertas a la vez (el comportamiento hasta ahora), no hay
+una respuesta clara a "¿cuál es la actual?" ni a "¿qué colapsa el gesto
+de atrás?".
+
+Se resuelve convirtiendo las categorías en un **acordeón** (como mucho
+una desplegada a la vez, mismo criterio que el menú con drill-down de
+Configuración) en vez de plegables independientes. `ExpandableCard`
+(`shared.jsx`) gana un modo controlado opcional (`open`/`onToggle`) para
+esto — sin pasarlos, sigue funcionando exactamente igual que antes
+(Resumen, sin necesidad de coordinar varias tarjetas entre sí).
+
+**Misma regla que Configuración, mismo mecanismo:** la categoría abierta
+se persiste en `sessionStorage` (`oceanpulse:helpOpen`) y sobrevive a una
+recarga; cerrar Ayuda con la "✕" la limpia (vía `closeSecondary` en
+`App.jsx`, igual que `oceanpulse:configSection`) para que la próxima
+apertura vuelva al índice plegado. El gesto de deslizar hacia la derecha
+es recursivo: con una categoría abierta, la colapsa; sin ninguna abierta,
+cierra Ayuda entera (llama al mismo `onClose` que la "✕") — el mismo
+vocabulario de gesto que Configuración, en el mismo nivel de recursión.
+
+`HelpTab` recibe ahora un prop `onClose` con el mismo contrato que
+`ConfigTab` (ver ADR-0008): opcional, sin él el swipe en el índice
+simplemente no hace nada.

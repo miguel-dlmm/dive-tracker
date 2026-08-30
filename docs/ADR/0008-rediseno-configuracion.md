@@ -192,3 +192,38 @@ No es un bug de ninguno de los endpoints — los cinco (`create-user`,
 `update-admin-status`, `delete-user`, `set-user-active`,
 `list-user-status`) ya estaban bien, les faltaba una vía de acceso
 local.
+
+## Addendum (2026-08-30, segunda vuelta) — Recargar conserva el contexto, cerrar con "X" reinicia, swipe = atrás recursivo
+
+Feedback explícito tras probar la sub-navegación persistida (sección
+`section` de más arriba): recargar la página dentro de una sección (p.
+ej. Tarifas) la conservaba correctamente, pero cerrar Configuración con
+la "✕" de la cabecera y volver a abrirla también reabría en esa misma
+sección — dos acciones con intención claramente distinta (`refrescar la
+página` vs. `salir de la pantalla`) que hasta ahora compartían el mismo
+resultado por accidente, porque nada distinguía una de la otra.
+
+**Regla adoptada, aplicada igual en Configuración (esta pantalla) y en
+Ayuda (ver ADR-0011, mismo addendum):**
+
+- **Recargar la página** (F5, o simplemente seguir con la sesión abierta)
+  conserva la subsección/categoría en la que se estaba — sigue viviendo
+  en `sessionStorage`, sin tocar nada aquí.
+- **Cerrar con la "✕"** de la cabecera reinicia esa pantalla a su punto de
+  entrada (el menú principal) para la próxima vez que se abra — se limpia
+  la clave de `sessionStorage` correspondiente en el mismo sitio donde ya
+  vivía el cierre (`closeSecondary`, `App.jsx`), no dentro de `ConfigTab`
+  ni de `HelpTab` — es la misma acción ("salir de esta pantalla por
+  completo") sin importar en qué subnivel se estuviera al cerrar.
+- **Deslizar hacia la derecha ("atrás") es recursivo**, no una excepción
+  de un único nivel: dentro de una sección, vuelve al menú (comportamiento
+  ya existente); en el menú principal, el mismo gesto ahora cierra
+  Configuración entera (llama a la misma función que la "✕"). Un único
+  vocabulario de gesto en cualquier profundidad, en vez de que "atrás"
+  deje de funcionar justo en el nivel más externo.
+
+`ConfigTab` recibe ahora un prop `onClose` (la función que cierra la
+pantalla entera) para que el gesto de swipe en el menú principal pueda
+dispararla — sin este prop, el swipe en el menú simplemente no hace nada
+(no revienta), así que ningún consumidor existente se rompe por no
+pasarlo.
