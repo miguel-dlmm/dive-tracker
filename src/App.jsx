@@ -12,7 +12,7 @@ import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
-import ConfigTab from "./ConfigTab";
+import ConfigTab, { clearStoredSection } from "./ConfigTab";
 import CompanerosTab from "./CompanerosTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
@@ -84,6 +84,7 @@ function readStoredNav() {
 }
 function clearStoredNav() {
   try { sessionStorage.removeItem(NAV_STORAGE_KEY); } catch { /* no-op */ }
+  clearStoredSection(); // sub-navegación de Configuración — misma vida que el resto
 }
 
 // "Qué hay de nuevo" — se muestra una vez por versión y por cuenta (no por

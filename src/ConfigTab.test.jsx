@@ -24,6 +24,15 @@ const rowsHook = (rows) => ({
 });
 const emptyHook = rowsHook([]);
 
+// ConfigTab persiste la sub-sección abierta en sessionStorage
+// (oceanpulse:configSection, feedback 2026-08-30) — sin limpiarlo entre
+// pruebas, un test que entra en una sección deja el siguiente `render()`
+// arrancando ya dentro de ella en vez del menú principal (jsdom comparte
+// un único sessionStorage para todo el archivo).
+beforeEach(() => {
+  sessionStorage.clear();
+});
+
 function baseProps(overrides = {}) {
   return {
     schools: rowsHook([{ id: "s1", name: "PADI Cozumel" }]),
@@ -72,6 +81,46 @@ describe("ConfigTab — menú agrupado", () => {
     await user.click(screen.getByText("Configuración"));
     expect(screen.getByText("Cursos")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Escuelas" })).not.toBeInTheDocument();
+  });
+});
+
+// Feedback explícito 2026-08-30: recargar la página dentro de una sección
+// de Configuración (p. ej. Tarifas) devolvía al menú principal, perdiendo
+// el contexto — sessionStorage (oceanpulse:configSection), misma vida que
+// el resto de la navegación (tab/returnTab en App.jsx). Un unmount+render
+// nuevo simula la recarga: ConfigTab arranca de cero, como en un refresh
+// real de página.
+describe("ConfigTab — la sub-sección abierta sobrevive a una recarga", () => {
+  it("recargar dentro de Tarifas reabre directamente en Tarifas, no en el menú", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<ConfigTab {...baseProps()} />);
+    await user.click(screen.getByText("Tarifas"));
+    expect(screen.getByRole("heading", { name: "Tarifas" })).toBeInTheDocument();
+
+    unmount();
+    render(<ConfigTab {...baseProps()} />);
+
+    expect(screen.getByRole("heading", { name: "Tarifas" })).toBeInTheDocument();
+    expect(screen.queryByText("Escuelas")).not.toBeInTheDocument();
+  });
+
+  it("una sección de administración persistida no se restaura para un usuario que ya no es admin", async () => {
+    const user = userEvent.setup();
+    supabase.rpc.mockResolvedValue({ data: [], error: null });
+    supabase.auth.getSession.mockResolvedValue({ data: { session: { access_token: "tok" } } });
+    supabase.from.mockReturnValue({ select: vi.fn().mockResolvedValue({ data: [], error: null }) });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+
+    const adminProfile = { user_id: "u1", is_admin: true, is_superadmin: false };
+    const { unmount } = render(<ConfigTab {...baseProps({ profile: adminProfile })} />);
+    await user.click(screen.getByText("Usuarios"));
+    expect(screen.getByRole("heading", { name: "Usuarios" })).toBeInTheDocument();
+
+    unmount();
+    render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: false, is_superadmin: false } })} />);
+
+    expect(screen.getByText("Escuelas")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Usuarios" })).not.toBeInTheDocument();
   });
 });
 

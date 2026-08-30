@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { motion } from "motion/react";
 import { TEAL } from "./App";
 import { HELP_CATEGORIES } from "./help/content";
 import HelpCategoryList from "./help/HelpCategoryList";
 import HelpArticleList from "./help/HelpArticleList";
 import HelpArticleView from "./help/HelpArticleView";
+import { useSwipeBack } from "./motion";
 
 // navSections: { rows } — la Ayuda hereda el color de cada sección en vez
 // de tener su propia paleta (ver CLAUDE.md, convención 2)
@@ -28,8 +30,16 @@ export default function HelpTab({ navSections, profile }) {
   const openCategory = (id) => { setCategoryId(id); setArticleId(null); };
   const backToCategories = () => { setCategoryId(null); setArticleId(null); };
 
+  // Deslizar hacia la derecha = atrás (feedback explícito 2026-08-30) — un
+  // nivel menos de la propia jerarquía de Ayuda (artículo -> lista de
+  // artículos -> categorías), igual gesto que Configuración (useSwipeBack,
+  // motion.js). En "categories" no hay adonde volver: enabled=false, sin
+  // efecto.
+  const onBack = view === "article" ? () => setArticleId(null) : view === "articles" ? backToCategories : null;
+  const backProps = useSwipeBack(onBack, { enabled: onBack != null });
+
   return (
-    <div key={view} className="animate-help-fade-in">
+    <motion.div key={view} className="animate-help-fade-in" {...backProps}>
       {view === "categories" && (
         <HelpCategoryList categories={categories} sectionColor={sectionColor} onSelect={openCategory} />
       )}
@@ -49,6 +59,6 @@ export default function HelpTab({ navSections, profile }) {
           onBack={() => setArticleId(null)}
         />
       )}
-    </div>
+    </motion.div>
   );
 }

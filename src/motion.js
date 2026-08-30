@@ -79,3 +79,25 @@ export function usePrefersReducedMotion() {
   }, []);
   return reduced;
 }
+
+// Deslizar hacia la derecha = "atrás" — feedback explícito 2026-08-30,
+// pensado para Configuración y Ayuda ("debe sentirse como navegación real,
+// no como un truco aislado"). Un único hook, no una implementación por
+// pantalla: spread del resultado sobre un <motion.div> — drag="x" con
+// dragConstraints en 0 a ambos lados (elástico, siempre vuelve al sitio;
+// nunca desplaza contenido de verdad) y el propio callback se dispara solo
+// si el arrastre supera el umbral al soltar. drag={false} (no solo omitir
+// el prop) cuando está desactivado — así el <motion.div> sigue siendo
+// válido siempre, sin que quien lo usa tenga que decidir entre <div> y
+// <motion.div> según el caso. Respeta prefers-reduced-motion (el gesto se
+// desactiva del todo; el camino sin gestos — un botón "‹" — sigue ahí).
+export function useSwipeBack(onBack, { enabled = true } = {}) {
+  const reduced = usePrefersReducedMotion();
+  const active = enabled && !reduced && typeof onBack === "function";
+  return {
+    drag: active ? "x" : false,
+    dragConstraints: { left: 0, right: 0 },
+    dragElastic: 0.15,
+    onDragEnd: active ? (_, info) => { if (info.offset.x > 70) onBack(); } : undefined,
+  };
+}

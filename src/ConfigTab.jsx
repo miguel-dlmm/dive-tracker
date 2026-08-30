@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
 import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate } from "./shared";
-import { usePrefersReducedMotion } from "./motion";
+import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
 
@@ -1388,6 +1388,21 @@ const ADMIN_SECTIONS = [
   { key: "usuarios", label: "Usuarios", icon: Users, description: "Cuentas con acceso a la app" },
 ];
 
+// Sub-navegación de Configuración persistida (feedback explícito
+// 2026-08-30: recargar la página dentro de, p. ej., Tarifas devolvía al
+// menú principal de Configuración, perdiendo el contexto). Misma vida que
+// el resto de la navegación (oceanpulse:navState, App.jsx): sessionStorage,
+// sobrevive a una recarga, no a cerrar la pestaña ni a cerrar sesión.
+// Clave propia en vez de meterlo en oceanpulse:navState — ConfigTab no
+// necesita saber nada de cómo App.jsx guarda tab/returnTab, ni viceversa.
+const CONFIG_SECTION_KEY = "oceanpulse:configSection";
+function readStoredSection() {
+  try { return sessionStorage.getItem(CONFIG_SECTION_KEY) || null; } catch { return null; }
+}
+export function clearStoredSection() {
+  try { sessionStorage.removeItem(CONFIG_SECTION_KEY); } catch { /* no-op */ }
+}
+
 function ConfigMenuGroup({ title, items, onSelect }) {
   return (
     <div>
@@ -1419,9 +1434,19 @@ function ConfigMenuGroup({ title, items, onSelect }) {
 // profile: fila propia de profiles (useSession) — is_admin/is_superadmin deciden qué secciones se ven
 export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile }) {
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
-  const [section, setSection] = useState(null);
+  const allowedSectionKeys = [...BUSINESS_SECTIONS, ...(isAdmin ? ADMIN_SECTIONS : [])].map((s) => s.key);
+  const [section, setSectionState] = useState(() => {
+    const stored = readStoredSection();
+    return allowedSectionKeys.includes(stored) ? stored : null;
+  });
+  const setSection = (next) => {
+    setSectionState(next);
+    if (next) { try { sessionStorage.setItem(CONFIG_SECTION_KEY, next); } catch { /* no-op */ } }
+    else clearStoredSection();
+  };
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const currentLabel = [...BUSINESS_SECTIONS, ...ADMIN_SECTIONS].find((s) => s.key === section)?.label;
+  const backProps = useSwipeBack(() => setSection(null), { enabled: section != null });
 
   if (section == null) {
     return (
@@ -1433,7 +1458,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
   }
 
   return (
-    <div className="space-y-3">
+    <motion.div className="space-y-3" {...backProps}>
       <button
         onClick={() => setSection(null)}
         className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium"
@@ -1472,6 +1497,6 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
       {isAdmin && section === "navegacion" && <SectionColors navSections={navSections} />}
       {isAdmin && section === "ajustes" && <GeneralSettings appConfig={appConfig} />}
       {isAdmin && section === "usuarios" && <UsersDirectory profile={profile} />}
-    </div>
+    </motion.div>
   );
 }
