@@ -45,7 +45,7 @@ describe("RatesTab — alta de tarifa con catálogo de tipos de pago vacío (cue
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
     await user.click(screen.getByRole("button", { name: "Curso" }));
     await user.click(screen.getByRole("option", { name: "Open Water" }));
-    await user.type(screen.getByRole("textbox", { name: "Tarifa" }), "25");
+    await user.type(screen.getByRole("textbox", { name: "Tarifa · EUR" }), "25");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(rates.insertRow).toHaveBeenCalledWith(
@@ -68,7 +68,7 @@ describe("RatesTab — editar abre la hoja de creación, precargada", () => {
     await user.click(screen.getByRole("menuitem", { name: "Editar" }));
 
     expect(screen.getByText("Editar tarifa de PADI Cozumel - Open Water")).toBeInTheDocument();
-    const rateInput = screen.getByRole("textbox", { name: "Tarifa" });
+    const rateInput = screen.getByRole("textbox", { name: "Tarifa · EUR" });
     expect(rateInput).toHaveValue("20,00");
 
     await user.clear(rateInput);
@@ -128,7 +128,7 @@ describe("RatesTab — lista combinada de Curso y Comisión", () => {
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
     await user.click(screen.getByRole("button", { name: "Curso" }));
     await user.click(screen.getByRole("option", { name: "Open Water" }));
-    await user.type(screen.getByRole("textbox", { name: "Tarifa" }), "10");
+    await user.type(screen.getByRole("textbox", { name: "Tarifa · EUR" }), "10");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(commissionRates.insertRow).toHaveBeenCalledWith(
@@ -190,5 +190,49 @@ describe("RatesTab — fecha de alta, orden por más reciente, y sin 'per person
     renderRatesTab({});
     await user.click(screen.getByRole("button", { name: "Filtrar" }));
     expect(screen.queryByText("Pago")).not.toBeInTheDocument();
+  });
+});
+
+// Feedback explícito 2026-08-30: el tipo (Curso/Comisión) vuelve a verse
+// de un vistazo en la card (antes solo el color del borde, insuficiente),
+// y la moneda deja de ser un desplegable en el formulario — visible como
+// sufijo de "Tarifa", derivada sola de la escuela, nunca editable ahí.
+describe("RatesTab — tipo visible en la card y moneda visible-no-editable", () => {
+  it("cada tarifa lleva un icono de tipo con aria-label ('Curso'/'Comisión')", () => {
+    renderRatesTab({
+      activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20 }]),
+      commissionRates: rowsHook([{ id: "c1", school: "PADI Cozumel", activity: "Advanced", payment_type: "Per Person", currency: "EUR", rate: 15 }]),
+    });
+
+    expect(screen.getByLabelText("Curso")).toBeInTheDocument();
+    expect(screen.getByLabelText("Comisión")).toBeInTheDocument();
+  });
+
+  it("no existe ningún campo 'Moneda' en la hoja de creación", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({});
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    expect(screen.queryByText("Moneda")).not.toBeInTheDocument();
+  });
+
+  it("sin tarifas previas para la escuela, 'Tarifa' muestra la moneda por defecto de la app", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({});
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getByRole("button", { name: "Escuela" }));
+    await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
+    expect(screen.getByRole("textbox", { name: "Tarifa · EUR" })).toBeInTheDocument();
+  });
+
+  it("con una tarifa previa de la escuela en otra moneda, 'Tarifa' adopta esa moneda sola", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "THB", rate: 1500 }]),
+    });
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getByRole("button", { name: "Escuela" }));
+    await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
+    expect(screen.getByRole("textbox", { name: "Tarifa · THB" })).toBeInTheDocument();
   });
 });

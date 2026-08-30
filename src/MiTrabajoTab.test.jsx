@@ -339,7 +339,7 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     // segundo modal apilado encima.
     expect(screen.getAllByRole("heading", { name: /curso impartido/i })).toHaveLength(1);
 
-    await user.type(screen.getByLabelText("Tarifa"), "30");
+    await user.type(screen.getByLabelText("Tarifa · EUR"), "30");
     await user.click(screen.getByRole("button", { name: "Guardar tarifa" }));
 
     expect(rates.insertRow).toHaveBeenCalledWith(expect.objectContaining({
