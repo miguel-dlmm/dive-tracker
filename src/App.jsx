@@ -4,6 +4,7 @@ import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle,
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { ToastProvider, AppLoading, useScrolled } from "./shared";
+import EnvironmentIndicator from "./EnvironmentIndicator";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG } from "./colors";
 import LoginScreen from "./LoginScreen";
@@ -602,8 +603,11 @@ function AuthGate() {
 
 export default function App() {
   return (
-    <ToastProvider>
-      <AuthGate />
-    </ToastProvider>
+    <>
+      <EnvironmentIndicator />
+      <ToastProvider>
+        <AuthGate />
+      </ToastProvider>
+    </>
   );
 }
