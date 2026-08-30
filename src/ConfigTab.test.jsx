@@ -292,7 +292,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
     await openUsuarios(user);
     await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
-    await user.click(screen.getByRole("button", { name: /^ana/ })); // abre la hoja de detalle
+    await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("switch", { name: "Desactivar usuario" })).toBeInTheDocument());
     await user.click(screen.getByRole("switch", { name: "Desactivar usuario" }));
@@ -316,7 +316,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
     await openUsuarios(user);
     await waitFor(() => expect(screen.getByText("Pendiente")).toBeInTheDocument());
-    await user.click(screen.getByRole("button", { name: /^ana/ })); // abre la hoja de detalle
+    await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar enlace" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: "Regenerar enlace" }));
@@ -337,7 +337,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
     await openUsuarios(user);
     await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
-    await user.click(screen.getByRole("button", { name: /^ana/ })); // abre la hoja de detalle
+    await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar contraseña" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: "Regenerar contraseña" }));
@@ -357,7 +357,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
     await openUsuarios(user);
     await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
-    await user.click(screen.getByRole("button", { name: /^ana/ })); // abre la hoja de detalle
+    await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Eliminar usuario" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: "Eliminar usuario" }));
@@ -377,7 +377,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }); // delete-user
 
     await openUsuarios(user);
-    await user.click(screen.getByRole("button", { name: /^ana/ }));
+    await user.click(screen.getByRole("button", { name: /ana/ }));
     await user.click(screen.getByRole("button", { name: "Eliminar usuario" }));
     await user.click(screen.getByRole("button", { name: "Eliminar", exact: true }));
 
@@ -419,7 +419,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await openUsuarios(user);
     const rpcCallsBefore = supabase.rpc.mock.calls.length;
 
-    await user.click(screen.getByRole("button", { name: /^ana/ }));
+    await user.click(screen.getByRole("button", { name: /ana/ }));
     await user.click(screen.getByRole("button", { name: "Eliminar usuario" }));
     await user.click(screen.getByRole("button", { name: "Eliminar", exact: true }));
 
@@ -475,6 +475,21 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   // Feedback explícito 2026-08-30: estado con punto de color (no solo
   // texto) y rol visible junto al nickname, ambos "de un vistazo".
   describe("estado con punto de color y rol junto al nickname", () => {
+    // Feedback explícito 2026-08-30, tercera vuelta: "quiero que el
+    // usuario vea primero si está activo/pendiente/... antes que el
+    // nombre" — el estado va delante del nickname en el orden de lectura
+    // de la fila, no al final.
+    it("el estado aparece antes que el nickname en la fila", async () => {
+      const user = userEvent.setup();
+      await openUsuarios(user);
+
+      const row = screen.getByText("ana").closest("button");
+      const statusIndex = row.textContent.indexOf("Activo");
+      const nameIndex = row.textContent.indexOf("ana");
+      expect(statusIndex).toBeGreaterThanOrEqual(0);
+      expect(statusIndex).toBeLessThan(nameIndex);
+    });
+
     it("un usuario normal activo no lleva icono de rol", async () => {
       const user = userEvent.setup();
       global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });

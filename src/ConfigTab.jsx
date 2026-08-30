@@ -476,10 +476,15 @@ function UserListRow({ user, status, onOpen }) {
       className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left"
     >
       <div className="min-w-0 flex-1">
+        {/* Estado antes que el nickname (feedback explícito 2026-08-30,
+            tercera vuelta: "quiero que el usuario vea primero si está
+            activo/pendiente/... antes que el nombre") — es lo primero que
+            hay que saber de una cuenta al escanear la lista, así que va
+            primero en el orden de lectura, no al final. */}
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-semibold text-gray-800">{user.nickname}</span>
-          <RoleIcon isAdmin={user.is_admin} isSuperadmin={user.is_superadmin} />
           <StatusBadge status={status} />
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-800">{user.nickname}</span>
+          <RoleIcon isAdmin={user.is_admin} isSuperadmin={user.is_superadmin} />
         </div>
         <p className="mt-0.5 truncate text-xs text-gray-400">
           {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.email || "—"}
