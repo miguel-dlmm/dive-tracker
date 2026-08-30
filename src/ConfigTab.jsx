@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { motion } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
   CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users,
 } from "lucide-react";
-import { NAVY, TEAL, GREEN, SUN } from "./App";
+import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
 import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab } from "./shared";
+import { usePrefersReducedMotion } from "./motion";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
 
@@ -406,6 +408,51 @@ function shortDateTime(iso) {
 // cuenta desactivada se muestra explícitamente "fecha no registrada
 // todavía" en vez de omitir el dato en silencio — dejar claro que es un
 // hueco real, no un olvido.
+// Arrastrar una fila de Usuarios hacia la izquierda revela "Eliminar"
+// detrás — un atajo ADICIONAL, no un segundo mecanismo de borrado: tocar
+// el botón revelado llama al mismo `onDelete` (el `requestDelete` ya
+// existente, que abre el mismo `ConfirmDialog` que la hoja de detalle)
+// — el gesto solo acorta el camino hasta esa confirmación, nunca la
+// salta (convención #5, CLAUDE.md: nunca eliminar sin diálogo). Sigue
+// habiendo un camino sin gestos (tocar la fila → hoja de detalle →
+// "Eliminar"), así que ningún usuario de teclado/lector de pantalla
+// pierde la posibilidad de eliminar por no poder arrastrar. Con
+// `prefers-reduced-motion`, el arrastre se desactiva del todo y solo
+// queda ese camino sin gestos.
+function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
+  const [open, setOpen] = useState(false);
+  const reduced = usePrefersReducedMotion();
+  if (reduced) return children;
+  return (
+    <div className="relative overflow-hidden">
+      <div className="absolute inset-y-0 right-0 w-20" style={{ backgroundColor: CORAL }}>
+        <button
+          onClick={() => { setOpen(false); onDelete(); }}
+          aria-label={deleteLabel}
+          tabIndex={open ? 0 : -1}
+          aria-hidden={!open}
+          className="flex h-full w-full flex-col items-center justify-center gap-0.5 text-white"
+        >
+          <Trash2 size={18} aria-hidden="true" />
+          <span className="text-[10px] font-medium">Eliminar</span>
+        </button>
+      </div>
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: -80, right: 0 }}
+        dragElastic={0.08}
+        dragMomentum={false}
+        animate={{ x: open ? -80 : 0 }}
+        transition={{ type: "spring", stiffness: 500, damping: 40 }}
+        onDragEnd={(_, info) => setOpen(info.offset.x < -40)}
+        className="relative bg-white"
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
 function UserListRow({ user, status, onOpen }) {
   return (
     <button
@@ -885,10 +932,15 @@ function UsersDirectory({ profile }) {
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((p) =>
-      [p.first_name, p.last_name, p.nickname, p.email].some((v) => String(v || "").toLowerCase().includes(q))
-    );
+    const base = q
+      ? rows.filter((p) =>
+          [p.first_name, p.last_name, p.nickname, p.email].some((v) => String(v || "").toLowerCase().includes(q))
+        )
+      : rows;
+    // Orden alfabético por nickname (el campo que encabeza cada fila) —
+    // localeCompare "es" para que "Á"/"a" ordenen de forma natural, no por
+    // el orden de alta que devolvía admin_list_profiles() antes.
+    return [...base].sort((a, b) => (a.nickname || "").localeCompare(b.nickname || "", "es", { sensitivity: "base" }));
   }, [rows, query]);
 
   const openUser = rows.find((p) => p.user_id === openUserId) || null;
@@ -956,7 +1008,13 @@ function UsersDirectory({ profile }) {
       toast?.success("Usuario eliminado");
       setPendingDelete(null);
       setOpenUserId(null); // la cuenta ya no existe — no queda nada que mostrar en la hoja de detalle
-      reload();
+      // Quita la fila del estado local en vez de recargar todo el listado
+      // (reload() antes) — un reload muestra "Cargando usuarios…" en el
+      // sitio de la lista mientras llega la respuesta, sustituyendo de
+      // golpe todo el contenido scrollable por ese único párrafo y
+      // perdiendo la posición de scroll en el proceso. Ya sabemos qué fila
+      // desapareció; no hace falta otro viaje de red para confirmarlo.
+      setRows((prev) => prev.filter((r) => r.user_id !== pendingDelete.user_id));
     } catch (err) {
       toast?.error(err.message || "No se pudo eliminar el usuario.");
     } finally {
@@ -1137,14 +1195,23 @@ function UsersDirectory({ profile }) {
         <p className="px-3 py-6 text-center text-sm text-gray-400">Sin resultados.</p>
       ) : (
         <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
-          {filteredRows.map((p) => (
-            <UserListRow
-              key={p.user_id}
-              user={p}
-              status={userStatus(activeByUser[p.user_id] ?? true, activatedAtByUser[p.user_id])}
-              onOpen={setOpenUserId}
-            />
-          ))}
+          {filteredRows.map((p) => {
+            const row = (
+              <UserListRow
+                user={p}
+                status={userStatus(activeByUser[p.user_id] ?? true, activatedAtByUser[p.user_id])}
+                onOpen={setOpenUserId}
+              />
+            );
+            const canDelete = !!profile?.is_superadmin && p.user_id !== profile?.user_id && !p.is_superadmin;
+            return (
+              <div key={p.user_id}>
+                {canDelete
+                  ? <SwipeToDeleteRow onDelete={() => requestDelete(p)} deleteLabel={`Eliminar a ${p.nickname}`}>{row}</SwipeToDeleteRow>
+                  : row}
+              </div>
+            );
+          })}
         </div>
       )}
 
