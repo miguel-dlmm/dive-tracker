@@ -156,14 +156,16 @@ describe("RatesTab — filtro de Escuela, solo con más de una escuela", () => {
   });
 });
 
-// Feedback explícito 2026-08-30: fecha de creación visible ("Alta: fecha",
-// mismo criterio que Usuarios), listado ordenado por más reciente primero,
-// subcabecera de Comisión simplificada, y "per person" fuera del frontal
-// (ni en la línea de la card ni como filtro — payment_type vale siempre
-// "Per Person" en la práctica, ver ADR-0003, así que filtrar por él nunca
-// tuvo ningún efecto real).
-describe("RatesTab — fecha de alta, orden por más reciente, y sin 'per person' en el frontal", () => {
-  it("muestra 'Alta: <fecha>' en vez de 'Curso · Per Person', y ordena por creación descendente", () => {
+// Feedback explícito 2026-08-30 (tercera vuelta): la card vuelve al mismo
+// lenguaje de dos líneas que EntryRow en Mi trabajo — "una sola línea" (la
+// vuelta anterior) queda descartada por alejar Tarifas de Movimientos, no
+// conservada como alternativa. Fecha de alta y tipo viven ahora en el
+// metadato de la segunda línea ("Alta: ... · Tipo"), igual que Mi trabajo
+// muestra "fecha · tipo" — no un badge propio de Tarifas. "per person"
+// sigue fuera del frontal (ni en la card ni como filtro — payment_type
+// vale siempre "Per Person" en la práctica, ver ADR-0003).
+describe("RatesTab — card de dos líneas (estilo Mi trabajo), sin 'per person', orden por más reciente", () => {
+  it("no muestra 'Per Person' en ningún sitio de la card, y ordena por creación descendente", () => {
     renderRatesTab({
       rates: rowsHook([
         { id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, created_at: "2026-08-01T00:00:00Z" },
@@ -173,8 +175,17 @@ describe("RatesTab — fecha de alta, orden por más reciente, y sin 'per person
     });
 
     expect(screen.queryByText(/Per Person/)).not.toBeInTheDocument();
-    const dates = screen.getAllByText(/^Alta: /).map((el) => el.textContent);
-    expect(dates).toEqual(["Alta: 15/8/2026", "Alta: 1/8/2026"]); // más reciente (r2) primero
+    // Más reciente (r2, "Advanced") primero.
+    const activityNames = screen.getAllByText(/^(Open Water|Advanced)$/).map((el) => el.textContent);
+    expect(activityNames).toEqual(["Advanced", "Open Water"]);
+  });
+
+  it("la fecha de alta y el tipo se ven en el listado, como metadato de la segunda línea", () => {
+    renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, created_at: "2026-08-15T00:00:00Z" }]),
+    });
+
+    expect(screen.getByText("Alta: 15/8/2026 · Curso")).toBeInTheDocument();
   });
 
   it("la subcabecera de Comisión, al crear, dice solo 'Lo que cobras por traer a un cliente.'", async () => {
@@ -194,21 +205,11 @@ describe("RatesTab — fecha de alta, orden por más reciente, y sin 'per person
 });
 
 // Feedback explícito 2026-08-30: el tipo (Curso/Comisión) vuelve a verse
-// de un vistazo en la card (antes solo el color del borde, insuficiente),
-// y la moneda deja de ser un desplegable en el formulario — visible como
-// sufijo de "Tarifa", derivada sola de la escuela, nunca editable ahí.
-describe("RatesTab — tipo visible en la card y moneda visible-no-editable", () => {
-  it("cada tarifa lleva un icono de tipo con aria-label ('Curso'/'Comisión')", () => {
-    renderRatesTab({
-      activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20 }]),
-      commissionRates: rowsHook([{ id: "c1", school: "PADI Cozumel", activity: "Advanced", payment_type: "Per Person", currency: "EUR", rate: 15 }]),
-    });
-
-    expect(screen.getByLabelText("Curso")).toBeInTheDocument();
-    expect(screen.getByLabelText("Comisión")).toBeInTheDocument();
-  });
-
+// de un vistazo en la card (antes solo el color del borde, insuficiente) —
+// ver el metadato "Alta: ... · Tipo" en el describe de arriba. La moneda
+// deja de ser un desplegable en el formulario — visible como sufijo de
+// "Tarifa", derivada sola de la escuela, nunca editable ahí.
+describe("RatesTab — moneda visible-no-editable en el formulario", () => {
   it("no existe ningún campo 'Moneda' en la hoja de creación", async () => {
     const user = userEvent.setup();
     renderRatesTab({});

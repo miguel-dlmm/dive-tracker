@@ -231,41 +231,34 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
           <h3 className="text-sm font-semibold" style={{ color: NAVY }}>{filtered.length} tarifas</h3>
         </div>
 
-        <div className="divide-y divide-gray-100">
+        <div>
           {filtered.length === 0 && <p className="px-4 py-6 text-center text-sm text-gray-400">Sin resultados.</p>}
           {filtered.map((r) => (
-            // Mismo lenguaje que EntryRow en Mi trabajo: borde izquierdo de
-            // color por tipo (antes el tipo se deducía de en qué pestaña de
-            // página estabas — ahora la propia fila lo dice, porque ya no
-            // hay pestañas), título+importe arriba, metadato+acciones abajo,
-            // mismo RowMenu "⋯" para Editar/Eliminar. "Editar" abre la misma
-            // hoja que "Nueva tarifa", precargada.
+            // Vuelta explícita al lenguaje de EntryRow en Mi trabajo
+            // (feedback 2026-08-30, tercera vuelta: "no quiero seguir con
+            // la versión de una sola línea... quiero que vuelva a una
+            // presentación más parecida a Movimientos" — la versión de una
+            // sola línea de la vuelta anterior queda descartada, no
+            // conservada como alternativa). Borde izquierdo de color por
+            // tipo, título+importe arriba, metadato (fecha de alta + tipo,
+            // mismo formato "fecha · tipo" que la fila de Movimientos)
+            // + RowMenu abajo — misma estructura de dos líneas, no una
+            // tercera variante propia de Tarifas. Sin "divide-y" entre
+            // filas (feedback explícito, cuarta vuelta): la línea de
+            // separación entre cards ya se descartó en Mi trabajo por
+            // ruido visual — el borde izquierdo de color y el propio
+            // padding ya distinguen una fila de la siguiente.
             <div key={r.id} className="border-l-4 px-4 py-3.5 text-sm" style={{ borderColor: TYPE_META[r._source].color }}>
               <div className="flex items-start justify-between gap-2">
-                {/* Icono de tipo visible (feedback explícito 2026-08-30:
-                    "ahora no sale y quiero que se entienda de un vistazo")
-                    — antes solo el color del borde izquierdo lo indicaba,
-                    insuficiente por sí solo. Mismo icono que el selector de
-                    tipo de la propia hoja (CREATE_TYPES), mismo color que
-                    el borde — dos señales coherentes entre sí, no una
-                    tercera forma nueva de decir lo mismo. */}
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
-                  {r._source === "ganado"
-                    ? <GraduationCap size={15} style={{ color: TYPE_META[r._source].color }} role="img" aria-label={TYPE_LABEL[r._source]} />
-                    : <Handshake size={15} style={{ color: TYPE_META[r._source].color }} role="img" aria-label={TYPE_LABEL[r._source]} />}
-                </span>
                 <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
                 <span className="shrink-0 font-semibold tabular-nums" style={{ color: NAVY }}>
                   <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: NAVY }} />
                 </span>
               </div>
               <div className="mt-1.5 flex items-center justify-between gap-2">
-                {/* Fecha de alta de la tarifa (created_at, fijada sola al
-                    crearla — no es un campo del formulario) en vez de
-                    "Curso · Per Person": mismo dato y misma redacción que
-                    ya usa Usuarios ("Alta: <fecha>"), sin ambigüedad sobre
-                    qué fecha es. */}
-                <span className="truncate text-xs text-gray-400">Alta: {shortDate(r.created_at)}</span>
+                <span className="truncate text-xs text-gray-400">
+                  Alta: {shortDate(r.created_at)} · {TYPE_LABEL[r._source]}
+                </span>
                 <RowMenu onEdit={() => startEdit(r)} onDelete={() => deleteRate(r)} itemLabel={`la tarifa de ${r.school} - ${r.activity}`} />
               </div>
             </div>
@@ -281,6 +274,10 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: lighten(sheetTypeColor) }}>
               {creating === "ganado" ? <GraduationCap size={14} style={{ color: sheetTypeColor }} aria-hidden="true" /> : <Handshake size={14} style={{ color: sheetTypeColor }} aria-hidden="true" />}
             </span>
+            {/* Sin subtítulo de fecha aquí (una vuelta anterior la puso al
+                retirarla del listado) — la fecha de alta ha vuelto al
+                listado (metadato "Alta: ... · Tipo", ver más arriba), así
+                que repetirla aquí sería redundante. */}
             <h3 className="text-sm font-semibold text-gray-800">
               {editingEntry ? `Editar tarifa de ${editingEntry.school} - ${editingEntry.activity}` : `Nueva tarifa de ${TYPE_LABEL[creating]}`}
             </h3>
