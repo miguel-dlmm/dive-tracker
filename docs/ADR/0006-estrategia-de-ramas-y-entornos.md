@@ -1,9 +1,13 @@
 # ADR 0006 — Estrategia de ramas y entornos: GitHub Flow evolutivo hacia GitLab Flow
 
 **Fecha:** 2026-08-28
-**Estado:** Aprobado — fase actual (una sola rama de entorno) vigente y en
-uso. Fase futura (`test`, `main`) documentada y aprobada en su diseño, no
-implementada — se activa por disparadores objetivos, no por calendario.
+**Estado:** Aprobado — **parcialmente ejecutado**. El disparador de "Cuándo
+crear `main`" se cumplió el 2026-08-30: `main` existe, está publicada, y es
+la Production Branch real del proyecto Vercel productivo
+(`dive-tracker-exgg`) — ver detalle en la sección correspondiente más
+abajo. `test` (rama y segundo proyecto Vercel configurado como tal) y la
+separación de Supabase siguen sin implementarse, activables solo por sus
+disparadores — no por calendario.
 
 ## Contexto
 
@@ -40,7 +44,8 @@ un entorno real nuevo.
 
 | Rama | Rol | Notas |
 |---|---|---|
-| `develop` | Única rama de entorno. Test **y** producción a la vez para el grupo reducido de usuarios actual. | Decisión consciente y adecuada al tamaño actual del proyecto — no es una mala práctica pendiente de corregir. Protegida frente a push directo (ver Fase 6 operativa). Deploy automático a Vercel, sin cambios. |
+| `main` | Rama de producción real. | Creada el 2026-08-30 como copia exacta de `develop` en ese momento. Production Branch del proyecto Vercel productivo, `dive-tracker-exgg` — ver "Cuándo crear `main`" más abajo para el detalle de la migración. |
+| `develop` | Rama de integración/preparación. | Deja de ser simultáneamente producción — ese rol pasa a `main`. Sigue siendo donde se fusiona cada `feature/*`/`fix/*` validada y donde se prepara cada release (`ADR-0010`), y será la base del futuro entorno `test`. Protegida frente a push directo (ver Fase 6 operativa). |
 | `feature/*`, `fix/*` | Ramas efímeras de trabajo diario. | Nacen de `develop` actualizado, se prueban en su Preview Deployment automático de Vercel (equivalente funcional de las "Review Apps" de GitLab), se fusionan a `develop` y se borran (local y remoto) al mergear. |
 | `hotfix/*` | Corrección urgente sobre `develop`. | Mismo ciclo que `feature/*`, simplificado: no hay entorno downstream todavía al que propagar. |
 
@@ -100,24 +105,54 @@ usa el Preview Deployment que Vercel genera automáticamente para esa
 rama. Un proyecto/dominio propio para `test` solo se justifica si además
 hace falta una URL estable (no una preview cambiante).
 
-### Cuándo crear `main` (producción pública real)
+### Cuándo crear `main` (producción pública real) — EJECUTADO 2026-08-30
 
-Cuando exista de verdad un lanzamiento público distinto del uso actual —
-no antes. Al crearse: se cambia el Production Branch del proyecto Vercel
-de `develop` a `main`; `develop` (y `test`, si existe) pasan a Preview con
-URL estable. Nombre fijado ya como `main` (convención casi universal de
-Git para la rama principal/de producción) para no tener que redecidirlo
-ese día.
+`main` se creó como copia exacta de `develop` (mismo commit,
+`0ccedef8e579286969b4cdb1603d73e0415d9836`, ya con la release `v0.2.0` y
+el cierre documental de `ADR-0010` incluidos) y se publicó en `origin`.
 
-### Cuándo separar bases de datos
+**Aclaración importante sobre qué proyecto Vercel es la producción real**,
+que esta misma ADR dejaba como pregunta abierta ("Consecuencias" original):
+existen dos proyectos Vercel duplicados apuntando al mismo repositorio,
+`dive-tracker` y `dive-tracker-exgg`. Auditando ambos directamente (bundle
+servido, variables de entorno por proyecto) se confirmó que **el proyecto
+realmente usado por los usuarios reales es `dive-tracker-exgg`** — es el
+único con las variables `APP_URL`/`SUPABASE_SERVICE_ROLE_KEY`/
+`VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` configuradas en Production y
+Preview, y el único cuyo bundle desplegado contiene la conexión real a
+Supabase. `dive-tracker` no tenía ninguna variable en Production/Preview
+(solo en Development) — su bundle en producción no podía conectar con
+Supabase, señal de que nunca fue el proyecto real en uso.
 
-En el mismo momento en que nazca `main` como producción pública real —
-usuarios que no deban compartir datos con el entorno de pruebas ni verse
-afectados por migraciones experimentales. Separar antes tiene coste
-recurrente (esquema y dataset semilla duplicados) sin beneficio mientras
-solo hay un entorno real. `test`, cuando exista, sigue compartiendo el
-Supabase actual — es integración antes de `develop`, no un entorno con
-usuarios distintos.
+En consecuencia:
+- **Production Branch de `dive-tracker-exgg`** cambiado de `develop` a
+  `main` (no hay forma de hacer este cambio concreto vía API pública de
+  Vercel — se hizo manualmente desde el Dashboard). Validado tras el
+  cambio: deployment nuevo generado, mismo bundle exacto que antes
+  (`index-DBN7Epol.js`, sin diferencia de código), conexión a Supabase
+  intacta, cero errores de consola, login y datos existentes verificados
+  por el usuario. La URL pública (`dive-tracker-exgg.vercel.app`) no ha
+  cambiado — sin migración de usuarios.
+- **`dive-tracker`** (Production Branch todavía `develop`, sin variables
+  reales) queda identificado como el candidato natural a proyecto Vercel
+  del futuro entorno `test` — ver sección siguiente. Sigue sin
+  configurarse como tal; es solo la asignación de rol, no la ejecución.
+
+### Cuándo separar bases de datos — TODAVÍA PENDIENTE
+
+`main` ya existe como producción real (ver arriba), pero la separación de
+Supabase **no se ha ejecutado todavía** — sigue habiendo una única base de
+datos, compartida por lo que hoy es producción (`main`) y lo que en el
+futuro sea `test`. Esto es intencional en esta fase (crear `main` y
+separar Supabase son dos pasos distintos, no atómicos), pero dejar de ser
+cierto es justo el disparador para hacerlo: en cuanto exista de verdad un
+segundo entorno (`test`) que necesite escribir datos de prueba sin
+mezclarlos con los reales, toca separar. Hasta entonces, cualquier
+cambio de esquema sigue afectando a la única base de datos real — se
+mantiene el criterio de `CLAUDE.md` de proponer plan de migración antes de
+tocar el esquema. `test`, cuando exista, seguirá compartiendo el Supabase
+actual hasta ese momento — es integración antes de `develop`, no un
+entorno con usuarios distintos.
 
 ### Releases
 
@@ -141,23 +176,28 @@ misma decisión.
   las ramas `feature/*` y describía commit/push directo sobre `develop`,
   lo cual ya no es correcto — ver "Documentación actualizada" al cierre de
   esta sesión.
-- `docs/BACKLOG.md` registra la creación futura de `test` y `main` como
-  ítems de vigilancia condicionados a los disparadores de este documento,
-  no como tareas a priorizar.
-- Los proyectos Vercel duplicados (`dive-tracker` y `dive-tracker-exgg`,
-  ambos con Production Branch = `develop` hoy) y las ramas locales
-  muertas detectadas (`feature/app-redesign-experiments`,
-  `tmp/incident-401-backup`) siguen pendientes de confirmación del
-  operador — no bloquean esta decisión, se resuelven en el procedimiento
-  operativo cuando se apruebe.
+- `docs/BACKLOG.md` registra la creación futura de `test` como ítem de
+  vigilancia condicionado a los disparadores de este documento, no como
+  tarea a priorizar. El ítem de creación de `main` ya se completó (ver
+  "Cuándo crear `main`" arriba) y se marca como tal en el backlog.
+- **Resuelto:** los proyectos Vercel duplicados ya no son una ambigüedad
+  pendiente — `dive-tracker-exgg` es la producción real, `dive-tracker` es
+  el candidato a proyecto de `test`. Las ramas locales muertas detectadas
+  (`feature/app-redesign-experiments`, `tmp/incident-401-backup`) siguen
+  pendientes de confirmación del operador, sin relación con lo anterior.
 
 ## Límites actuales (explícito, para no reabrir este debate)
 
-Hoy **no existen** ni se crean en esta fase: rama `test`, rama `main`,
-segundo proyecto Vercel, segunda base de datos, ni ningún cambio en el
-flujo de despliegue actual. Todo lo anterior es evolución futura ya
-diseñada y aprobada en este documento, activable solo por los
-disparadores descritos — no deuda técnica pendiente.
+**Ya existe y está en uso** (desde 2026-08-30): rama `main`, publicada y
+configurada como Production Branch real del proyecto Vercel productivo
+(`dive-tracker-exgg`).
+
+Hoy **todavía no existen** ni se crean en esta fase: rama `test`, un
+proyecto Vercel configurado como entorno `test` (aunque `dive-tracker` ya
+está identificado como el candidato — falta configurarlo como tal),
+segunda base de datos de Supabase. Todo lo anterior sigue siendo
+evolución futura ya diseñada y aprobada en este documento, activable solo
+por los disparadores descritos — no deuda técnica pendiente.
 
 ## Condiciones que reactivarían esta decisión
 
