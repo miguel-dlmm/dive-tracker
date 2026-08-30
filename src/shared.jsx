@@ -217,6 +217,12 @@ export function focusRingStyle() {
   return {};
 }
 
+// Fecha corta ES, o "—" si no hay valor — mismo formato en cualquier
+// listado que muestre "cuándo se dio de alta esto" (Usuarios, Tarifas).
+export function shortDate(iso) {
+  return iso ? new Date(iso).toLocaleDateString("es-ES") : "—";
+}
+
 export function formatMoney(amount, code, currencyRows) {
   const cur = currencyRows.find((c) => c.code === code);
   const symbol = cur?.symbol || code || "";
