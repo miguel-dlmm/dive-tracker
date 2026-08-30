@@ -29,8 +29,15 @@ export default function EnvironmentIndicator() {
       aria-hidden="true"
       className="fixed flex items-center rounded-full font-bold uppercase tracking-wide shadow-lg"
       style={{
-        top: "calc(env(safe-area-inset-top) + 0.5rem)",
-        right: "calc(env(safe-area-inset-right) + 0.5rem)",
+        // Centrado con el eje horizontal de la cabecera (misma coordenada
+        // en toda la app, al montarse una única vez en App.jsx fuera de
+        // AuthGate — cubre por igual login/crear contraseña, que no
+        // tienen cabecera, y el resto de pantallas, que sí). Verticalmente
+        // apunta al centro de la fila de contenido de esa cabecera
+        // (App.jsx: safe-area-inset-top + py-4 ≈ 28px de alto medio).
+        top: "calc(env(safe-area-inset-top) + 1.75rem)",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
         zIndex: 9999,
         pointerEvents: "none",
         padding: "0.25rem 0.625rem",
