@@ -1,10 +1,14 @@
 # ADR 0018 — "Database error deleting user": faltaba ON DELETE CASCADE en 9 tablas
 
 **Fecha:** 2026-08-30
-**Estado:** Causa raíz confirmada con datos reales. `schema.sql` ya
-actualizado (estado objetivo). **Migración sobre la base de datos real
-NO ejecutada** — requiere acceso directo a Postgres que este entorno no
-tiene; el usuario debe ejecutarla él mismo (SQL Editor de Supabase).
+**Estado:** **Ejecutada.** Causa raíz confirmada con datos reales,
+`schema.sql` actualizado, y la migración de la sección "Migración" más
+abajo ejecutada por el usuario en el SQL Editor de Supabase (confirmado
+por el usuario — no verificable de forma independiente desde este
+entorno, que no tiene acceso directo a Postgres, solo a la API de
+PostgREST). Pendiente de una prueba real: eliminar una de las 5 cuentas
+originalmente afectadas y confirmar que ya no da "Database error
+deleting user".
 
 ## Síntoma reportado
 

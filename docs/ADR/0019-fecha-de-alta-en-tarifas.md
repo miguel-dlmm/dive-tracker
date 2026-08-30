@@ -1,10 +1,13 @@
 # ADR 0019 — Fecha de alta en Tarifas (`created_at`)
 
 **Fecha:** 2026-08-30
-**Estado:** `schema.sql` actualizado (estado objetivo) y frontend ya
-preparado para leerla. **Migración sobre la base de datos real NO
-ejecutada** — mismo límite que `docs/ADR/0018`: este entorno no tiene
-conexión directa a Postgres, el usuario debe ejecutarla él mismo.
+**Estado:** **Ejecutada.** `schema.sql` actualizado, frontend leyéndola,
+y la columna confirmada en la base real (verificado directamente desde
+este entorno vía consulta de solo lectura — a diferencia de `ADR-0018`,
+esto sí es comprobable con las claves de la app, sin necesitar conexión
+directa a Postgres): `rates`/`commission_rates` ya devuelven `created_at`
+con valores reales. Tarifas ya muestra "Alta: `<fecha>`" real en vez de
+"—".
 
 ## Encargo
 
