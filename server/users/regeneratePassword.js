@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 import { generateActivationLink } from "./activationLink.js";
+import { sendActivationEmail } from "../email/EmailService.js";
 
 // "Regenerar contraseña" — a diferencia de regenerate-activation-link.js,
 // esto invalida explícitamente la contraseña actual (no solo genera un
@@ -69,7 +70,7 @@ export async function handleRegeneratePassword({ method, headers, body }) {
 
   const { data: target, error: targetError } = await client
     .from("profiles")
-    .select("is_superadmin")
+    .select("is_superadmin, first_name, nickname")
     .eq("user_id", targetUserId)
     .maybeSingle();
   if (targetError) {
@@ -123,5 +124,22 @@ export async function handleRegeneratePassword({ method, headers, body }) {
     return { status: 500, payload: { error: linkErrorMessage } };
   }
 
-  return { status: 200, payload: { user_id: targetUserId, action_link: activationLink } };
+  let emailSent = false;
+  try {
+    const result = await sendActivationEmail({
+      email: authUser.user.email,
+      firstName: target.first_name,
+      nickname: target.nickname,
+      actionLink: activationLink,
+      reason: "password_reset",
+    });
+    emailSent = result.sent;
+  } catch (err) {
+    console.error("regenerate-password: sendActivationEmail lanzó una excepción inesperada", err);
+  }
+
+  return {
+    status: 200,
+    payload: { user_id: targetUserId, email_sent: emailSent, ...(!emailSent ? { action_link: activationLink } : {}) },
+  };
 }

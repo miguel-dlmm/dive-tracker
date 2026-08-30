@@ -1103,11 +1103,19 @@ function UsersDirectory({ profile }) {
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede activar cuentas o regenerar su enlace de acceso.", fallback: "No se pudo generar el enlace." }));
-      setLinkPanel({
-        title: "Enlace de activación generado",
-        description: `Comparte este enlace con ${pendingRegenerateLink.nickname}. Seguirá apareciendo como "Pendiente" hasta que lo use para crear su contraseña.`,
-        link: payload.action_link,
-      });
+      // El backend ya intenta enviar el email automáticamente — el panel con
+      // el enlace para copiar solo aparece si el envío falla (mismo patrón
+      // que CreateUserSheet más abajo).
+      if (payload.action_link) {
+        toast?.success(`Enlace generado (el email no se pudo enviar a ${pendingRegenerateLink.nickname})`);
+        setLinkPanel({
+          title: "Enlace de activación generado",
+          description: `Comparte este enlace con ${pendingRegenerateLink.nickname}. Seguirá apareciendo como "Pendiente" hasta que lo use para crear su contraseña.`,
+          link: payload.action_link,
+        });
+      } else {
+        toast?.success(`Email de activación enviado a ${pendingRegenerateLink.nickname}`);
+      }
       setPendingRegenerateLink(null);
       loadActiveStatus();
       loadActivatedAt();
@@ -1142,11 +1150,19 @@ function UsersDirectory({ profile }) {
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede regenerar la contraseña de otra cuenta.", fallback: "No se pudo regenerar la contraseña." }));
-      setLinkPanel({
-        title: "Contraseña regenerada",
-        description: `La contraseña anterior de ${pendingRegeneratePassword.nickname} ya no es válida. Comparte este enlace para que cree una nueva — la cuenta vuelve a "Pendiente" hasta entonces.`,
-        link: payload.action_link,
-      });
+      // El backend ya intenta enviar el email automáticamente — el panel con
+      // el enlace para copiar solo aparece si el envío falla (mismo patrón
+      // que CreateUserSheet más abajo).
+      if (payload.action_link) {
+        toast?.success(`Contraseña regenerada (el email no se pudo enviar a ${pendingRegeneratePassword.nickname})`);
+        setLinkPanel({
+          title: "Contraseña regenerada",
+          description: `La contraseña anterior de ${pendingRegeneratePassword.nickname} ya no es válida. Comparte este enlace para que cree una nueva — la cuenta vuelve a "Pendiente" hasta entonces.`,
+          link: payload.action_link,
+        });
+      } else {
+        toast?.success(`Contraseña regenerada y email enviado a ${pendingRegeneratePassword.nickname}`);
+      }
       setPendingRegeneratePassword(null);
       loadActiveStatus();
       loadActivatedAt();

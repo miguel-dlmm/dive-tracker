@@ -1,17 +1,42 @@
-// Copy del email de bienvenida — primera versión, deliberadamente editable
-// sin tocar la lógica de envío (ver sendWelcomeEmail.js) ni de renderizado.
-// Tono cercano-profesional, coherente con el resto de la app. No es texto
-// definitivo — iterar aquí libremente.
-export const WELCOME_EMAIL_COPY = {
-  subject: "Tu acceso a Ocean Flow ya está listo",
-  preheader: "Entra y crea tu contraseña para empezar.",
-  title: "Bienvenido/a a Ocean Flow",
-  greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
-  intro: "Se te ha dado de alta en Ocean Flow, la herramienta que usamos para llevar el control de clases, comisiones y pagos.",
-  ctaLabel: "Entrar en Ocean Flow",
-  securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu propia contraseña.",
-  expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
-  footer: "Ocean Flow",
+// Generalización de la plantilla de bienvenida (antes welcomeEmailTemplate.js)
+// para que un único template sirva a los tres flujos que envían "aquí tienes
+// un enlace para entrar y fijar tu contraseña": alta, reactivación y
+// regenerar contraseña. Solo cambia el copy (motivo), nunca el layout —
+// evita triplicar HTML/texto para el mismo email con distinto contexto.
+export const ACTIVATION_EMAIL_COPY = {
+  signup: {
+    subject: "Tu acceso a Ocean Flow ya está listo",
+    preheader: "Entra y crea tu contraseña para empezar.",
+    title: "Bienvenido/a a Ocean Flow",
+    greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
+    intro: "Se te ha dado de alta en Ocean Flow, la herramienta que usamos para llevar el control de clases, comisiones y pagos.",
+    ctaLabel: "Entrar en Ocean Flow",
+    securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu propia contraseña.",
+    expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
+    footer: "Ocean Flow",
+  },
+  reactivation: {
+    subject: "Tu acceso a Ocean Flow ha sido reactivado",
+    preheader: "Entra y crea tu contraseña para volver a acceder.",
+    title: "Bienvenido/a de nuevo a Ocean Flow",
+    greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
+    intro: "Tu cuenta en Ocean Flow ha sido reactivada.",
+    ctaLabel: "Entrar en Ocean Flow",
+    securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu propia contraseña.",
+    expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
+    footer: "Ocean Flow",
+  },
+  password_reset: {
+    subject: "Se ha restablecido tu contraseña en Ocean Flow",
+    preheader: "Crea tu nueva contraseña para volver a acceder.",
+    title: "Restablece tu contraseña",
+    greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
+    intro: "Se ha invalidado tu contraseña anterior en Ocean Flow. Usa el siguiente enlace para crear una nueva.",
+    ctaLabel: "Crear nueva contraseña",
+    securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu nueva contraseña.",
+    expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
+    footer: "Ocean Flow",
+  },
 };
 
 function escapeHtml(value) {
@@ -25,7 +50,7 @@ function escapeHtml(value) {
 // template no puede reutilizar las clases Tailwind del resto de la app —
 // es su propio sistema reducido, coherente en color/tipografía pero
 // técnicamente independiente. Una sola columna, mobile-first.
-export function renderWelcomeEmailHtml({ firstName, actionLink, copy = WELCOME_EMAIL_COPY }) {
+export function renderActivationEmailHtml({ firstName, actionLink, copy = ACTIVATION_EMAIL_COPY.signup }) {
   const safeName = escapeHtml(firstName);
   const safeLink = escapeHtml(actionLink);
   return `<!doctype html>
@@ -74,7 +99,7 @@ export function renderWelcomeEmailHtml({ firstName, actionLink, copy = WELCOME_E
 
 // Parte de texto plano — mejora la entregabilidad en clientes/filtros que
 // la valoran, coste mínimo al reutilizar el mismo copy.
-export function renderWelcomeEmailText({ firstName, actionLink, copy = WELCOME_EMAIL_COPY }) {
+export function renderActivationEmailText({ firstName, actionLink, copy = ACTIVATION_EMAIL_COPY.signup }) {
   return [
     copy.greeting(firstName),
     "",

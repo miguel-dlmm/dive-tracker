@@ -306,12 +306,12 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     })));
   });
 
-  it("regenerar enlace (cuenta pendiente) pide confirmación, llama a /api/regenerate-activation-link y muestra el enlace devuelto", async () => {
+  it("regenerar enlace (cuenta pendiente) pide confirmación, llama a /api/regenerate-activation-link y muestra el enlace devuelto si el email falla", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
     global.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", action_link: "https://app.example/activate?token_hash=abc" }) }) // regenerate-activation-link
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: false, action_link: "https://app.example/activate?token_hash=abc" }) }) // regenerate-activation-link
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
 
     await openUsuarios(user);
@@ -328,11 +328,33 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     expect(await screen.findByText(/https:\/\/app\.example\/activate/)).toBeInTheDocument();
   });
 
-  it("regenerar contraseña pide confirmación, llama a /api/regenerate-password y muestra el enlace devuelto", async () => {
+  it("regenerar enlace no muestra el panel manual cuando el email se envía correctamente", async () => {
+    const user = userEvent.setup();
+    mockProfilesFrom(null);
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }) // regenerate-activation-link
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
+
+    await openUsuarios(user);
+    await waitFor(() => expect(screen.getByText("Pendiente")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar enlace" })).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Regenerar enlace" }));
+    await user.click(screen.getByRole("button", { name: "Generar enlace" }));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/regenerate-activation-link", expect.objectContaining({
+      body: JSON.stringify({ target_user_id: "target-1" }),
+    })));
+    expect(screen.queryByText(/https:\/\/app\.example\/activate/)).not.toBeInTheDocument();
+  });
+
+  it("regenerar contraseña pide confirmación, llama a /api/regenerate-password y muestra el enlace devuelto si el email falla", async () => {
     const user = userEvent.setup();
     global.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", action_link: "https://app.example/activate?token_hash=xyz" }) }) // regenerate-password
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: false, action_link: "https://app.example/activate?token_hash=xyz" }) }) // regenerate-password
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
 
     await openUsuarios(user);
@@ -347,6 +369,27 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       body: JSON.stringify({ target_user_id: "target-1" }),
     })));
     expect(await screen.findByText(/https:\/\/app\.example\/activate/)).toBeInTheDocument();
+  });
+
+  it("regenerar contraseña no muestra el panel manual cuando el email se envía correctamente", async () => {
+    const user = userEvent.setup();
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }) // regenerate-password
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
+
+    await openUsuarios(user);
+    await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar contraseña" })).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Regenerar contraseña" }));
+    await user.click(screen.getByRole("button", { name: "Regenerar", exact: true }));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/regenerate-password", expect.objectContaining({
+      body: JSON.stringify({ target_user_id: "target-1" }),
+    })));
+    expect(screen.queryByText(/https:\/\/app\.example\/activate/)).not.toBeInTheDocument();
   });
 
   it("eliminar (desde la hoja de detalle) pide confirmación danger y llama a /api/delete-user", async () => {

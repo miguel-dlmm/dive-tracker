@@ -1,5 +1,6 @@
 import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 import { generateActivationLink } from "./activationLink.js";
+import { sendActivationEmail } from "../email/EmailService.js";
 
 // "Activar" una cuenta desactivada, y "regenerar link" para una que sigue
 // pendiente de completar su primer acceso, son la MISMA acción — ninguna
@@ -13,6 +14,11 @@ import { generateActivationLink } from "./activationLink.js";
 // Por eso esto es un endpoint aparte y no una reutilización de
 // `active: true` en set-user-active.js: esa ruta concedía acceso
 // instantáneo, comportamiento que se abandona con este cambio.
+//
+// Envío de email best-effort, igual que createUser.js: si sendActivationEmail
+// falla o no está configurado, la respuesta sigue incluyendo action_link
+// para que el superadmin lo comparta a mano — nunca deja al usuario sin
+// forma de completar el acceso.
 
 function parseBody(body) {
   if (body == null) return {};
@@ -70,7 +76,7 @@ export async function handleRegenerateActivationLink({ method, headers, body }) 
 
   const { data: target, error: targetError } = await client
     .from("profiles")
-    .select("is_superadmin")
+    .select("is_superadmin, first_name, nickname")
     .eq("user_id", targetUserId)
     .maybeSingle();
   if (targetError) {
@@ -105,5 +111,22 @@ export async function handleRegenerateActivationLink({ method, headers, body }) 
     return { status: 500, payload: { error: linkErrorMessage } };
   }
 
-  return { status: 200, payload: { user_id: targetUserId, action_link: activationLink } };
+  let emailSent = false;
+  try {
+    const result = await sendActivationEmail({
+      email: authUser.user.email,
+      firstName: target.first_name,
+      nickname: target.nickname,
+      actionLink: activationLink,
+      reason: "reactivation",
+    });
+    emailSent = result.sent;
+  } catch (err) {
+    console.error("regenerate-activation-link: sendActivationEmail lanzó una excepción inesperada", err);
+  }
+
+  return {
+    status: 200,
+    payload: { user_id: targetUserId, email_sent: emailSent, ...(!emailSent ? { action_link: activationLink } : {}) },
+  };
 }

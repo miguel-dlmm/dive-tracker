@@ -10,8 +10,8 @@ async function sendWithEnv(args, envOverrides = {}) {
       else process.env[key] = value;
     }
     vi.resetModules();
-    const mod = await import("./sendWelcomeEmail.js");
-    return mod.sendWelcomeEmail(args);
+    const mod = await import("./resendProvider.js");
+    return mod.sendViaResend(args);
   } finally {
     for (const key of Object.keys(ENV)) {
       if (previous[key] === undefined) delete process.env[key];
@@ -22,10 +22,10 @@ async function sendWithEnv(args, envOverrides = {}) {
 }
 
 const VALID_ARGS = {
-  email: "diver@example.com",
-  firstName: "Ada",
-  nickname: "ada",
-  actionLink: "https://example.supabase.co/verify?token=abc",
+  to: "diver@example.com",
+  subject: "Asunto de prueba",
+  html: "<p>hola</p>",
+  text: "hola",
 };
 
 beforeEach(() => {
@@ -36,13 +36,6 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it("nunca lanza y devuelve sent:false si falta el enlace de acceso", async () => {
-  const result = await sendWithEnv({ ...VALID_ARGS, actionLink: undefined });
-
-  expect(result).toEqual({ sent: false, error: "Falta el enlace de acceso." });
-  expect(fetch).not.toHaveBeenCalled();
-});
-
 it("devuelve sent:false si falta configuración de email en el servidor", async () => {
   const result = await sendWithEnv(VALID_ARGS, { RESEND_API_KEY: undefined });
 
@@ -50,7 +43,7 @@ it("devuelve sent:false si falta configuración de email en el servidor", async 
   expect(fetch).not.toHaveBeenCalled();
 });
 
-it("llama a la API de Resend con el remitente, destinatario y asunto esperados", async () => {
+it("llama a la API de Resend con el remitente, destinatario, asunto y cuerpo esperados", async () => {
   fetch.mockResolvedValue({ ok: true });
 
   await sendWithEnv(VALID_ARGS);
@@ -63,10 +56,7 @@ it("llama a la API de Resend con el remitente, destinatario y asunto esperados",
     })
   );
   const body = JSON.parse(fetch.mock.calls[0][1].body);
-  expect(body.from).toBe(ENV.EMAIL_FROM);
-  expect(body.to).toBe(VALID_ARGS.email);
-  expect(body.html).toContain(VALID_ARGS.actionLink);
-  expect(body.text).toContain(VALID_ARGS.actionLink);
+  expect(body).toEqual({ from: ENV.EMAIL_FROM, to: VALID_ARGS.to, subject: VALID_ARGS.subject, html: VALID_ARGS.html, text: VALID_ARGS.text });
 });
 
 it("devuelve sent:true cuando Resend responde ok", async () => {
@@ -82,7 +72,7 @@ it("devuelve sent:false sin lanzar si Resend responde con error", async () => {
 
   const result = await sendWithEnv(VALID_ARGS);
 
-  expect(result).toEqual({ sent: false, error: "No se pudo enviar el email de bienvenida." });
+  expect(result).toEqual({ sent: false, error: "No se pudo enviar el email." });
 });
 
 it("devuelve sent:false sin lanzar si fetch falla (red caída)", async () => {
@@ -90,5 +80,5 @@ it("devuelve sent:false sin lanzar si fetch falla (red caída)", async () => {
 
   const result = await sendWithEnv(VALID_ARGS);
 
-  expect(result).toEqual({ sent: false, error: "No se pudo enviar el email de bienvenida." });
+  expect(result).toEqual({ sent: false, error: "No se pudo enviar el email." });
 });

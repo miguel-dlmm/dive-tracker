@@ -9,9 +9,14 @@ vi.mock("./activationLink.js", () => ({
   generateActivationLink: vi.fn(),
 }));
 
+vi.mock("../email/EmailService.js", () => ({
+  sendActivationEmail: vi.fn(),
+}));
+
 import { handleRegenerateActivationLink } from "./regenerateActivationLink.js";
 import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 import { generateActivationLink } from "./activationLink.js";
+import { sendActivationEmail } from "../email/EmailService.js";
 
 const CALLER_ID = "caller-1";
 const TARGET_ID = "target-1";
@@ -43,6 +48,8 @@ beforeEach(() => {
   getServiceRoleClient.mockReset();
   generateActivationLink.mockReset();
   generateActivationLink.mockResolvedValue({ activationLink: "https://app.example/activate?token_hash=abc", error: null });
+  sendActivationEmail.mockReset();
+  sendActivationEmail.mockResolvedValue({ sent: false, error: "Configuración de email incompleta." });
 });
 
 it("rechaza métodos distintos de POST sin tocar Supabase", async () => {
@@ -126,7 +133,7 @@ it("rechaza regenerar el enlace de una cuenta superadmin", async () => {
   expect(client.auth.admin.updateUserById).not.toHaveBeenCalled();
 });
 
-it("quita el baneo (ban_duration: none) y genera un enlace nuevo, sin tocar activated_at", async () => {
+it("quita el baneo (ban_duration: none), genera un enlace nuevo y devuelve action_link si el email no se pudo enviar", async () => {
   const client = makeClient({ lookupResult: { data: { is_superadmin: false }, error: null } });
   getServiceRoleClient.mockReturnValue(client);
 
@@ -134,7 +141,27 @@ it("quita el baneo (ban_duration: none) y genera un enlace nuevo, sin tocar acti
 
   expect(client.auth.admin.updateUserById).toHaveBeenCalledWith(TARGET_ID, { ban_duration: "none" });
   expect(generateActivationLink).toHaveBeenCalledWith(TARGET_EMAIL);
-  expect(result).toEqual({ status: 200, payload: { user_id: TARGET_ID, action_link: "https://app.example/activate?token_hash=abc" } });
+  expect(result).toEqual({
+    status: 200,
+    payload: { user_id: TARGET_ID, email_sent: false, action_link: "https://app.example/activate?token_hash=abc" },
+  });
+});
+
+it("envía el email de reactivación con los datos del perfil objetivo y no devuelve action_link si se envía bien", async () => {
+  const client = makeClient({ lookupResult: { data: { is_superadmin: false, first_name: "Ana", nickname: "ana" }, error: null } });
+  getServiceRoleClient.mockReturnValue(client);
+  sendActivationEmail.mockResolvedValue({ sent: true });
+
+  const result = await handleRegenerateActivationLink(request());
+
+  expect(sendActivationEmail).toHaveBeenCalledWith({
+    email: TARGET_EMAIL,
+    firstName: "Ana",
+    nickname: "ana",
+    actionLink: "https://app.example/activate?token_hash=abc",
+    reason: "reactivation",
+  });
+  expect(result).toEqual({ status: 200, payload: { user_id: TARGET_ID, email_sent: true } });
 });
 
 it("devuelve 500 si no se pudo obtener el email de la cuenta objetivo", async () => {

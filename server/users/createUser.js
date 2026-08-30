@@ -1,5 +1,5 @@
 import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
-import { sendWelcomeEmail } from "../email/sendWelcomeEmail.js";
+import { sendActivationEmail } from "../email/EmailService.js";
 import { generateActivationLink } from "./activationLink.js";
 
 // Alta de usuarios (MVP) — el acceso depende exclusivamente del enlace de
@@ -133,21 +133,22 @@ export async function handleCreateUser({ method, headers, body }) {
   if (linkErrorMessage) {
     emailError = linkErrorMessage;
   } else {
-    // try/catch defensivo: sendWelcomeEmail está documentado como "nunca
+    // try/catch defensivo: sendActivationEmail está documentado como "nunca
     // lanza", pero no dependemos solo de esa convención — si algún día deja
     // de cumplirse, esto sigue garantizando email_sent:false + el fallback
     // de action_link en vez de tumbar toda la petición sin respuesta útil.
     try {
-      const result = await sendWelcomeEmail({
+      const result = await sendActivationEmail({
         email,
         firstName: first_name,
         nickname,
         actionLink: activationLink,
+        reason: "signup",
       });
       emailSent = result.sent;
       if (!result.sent) emailError = result.error;
     } catch (err) {
-      console.error("create-user: sendWelcomeEmail lanzó una excepción inesperada", err);
+      console.error("create-user: sendActivationEmail lanzó una excepción inesperada", err);
       emailError = "No se pudo enviar el email de bienvenida.";
     }
   }
