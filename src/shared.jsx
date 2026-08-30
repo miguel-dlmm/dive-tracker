@@ -670,7 +670,7 @@ export const MOVEMENT_TYPE_META = {
 // desglose, para añadir un segundo movimiento ese día sin perder la vista
 // de lo que ya hay. Sin este prop (p. ej. en Resumen, un calendario de
 // solo análisis) el comportamiento es exactamente el de antes.
-export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false, onCreateForDay }) {
+export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, caption, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false, onCreateForDay }) {
   const reducedMotion = usePrefersReducedMotion();
   const [selectedDay, setSelectedDayState] = useState(null);
   const userSelectedRef = useRef(false);
@@ -709,6 +709,18 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
 
   const dayList = (d) => byDay[d] || [];
   const colorForDay = (list) => (typeof dotColor === "function" ? (dotColor(list) || CAL_NEUTRAL) : dotColor);
+
+  // Total del día — todas las fuentes juntas (Curso + Comisión + Ajuste),
+  // igual criterio que "Generado este mes" en Home (no "Ganado": incluye
+  // también lo que te pagan/pagas por Ajustes de curso, no solo cursos
+  // impartidos). Por moneda, nunca sumado entre monedas distintas (mismo
+  // criterio de seguridad que el resto de la app) — MoneyLine ya sabe
+  // pintar más de una si el día mezcla monedas.
+  const dayTotals = (list) => {
+    const totals = {};
+    list.forEach((e) => { totals[e.currency] = (totals[e.currency] || 0) + e.total; });
+    return totals;
+  };
 
   // Agregado por actividad (comportamiento por defecto); si showSchool
   // está activo, se agrupa por escuela+actividad para poder mostrar la
@@ -760,6 +772,14 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
+      {/* Encima de los días de la semana, dentro de la propia tarjeta —
+          antes vivía como un párrafo aparte debajo de todo el calendario
+          (feedback 2026-08-30: se leía como una nota a pie de página, no
+          como instrucción de uso del propio calendario). Opcional: solo
+          Home lo pasa hoy, Resumen no lo necesita. */}
+      {caption && (
+        <p className="mb-2 text-center text-[11px] text-gray-400">{caption}</p>
+      )}
       <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-gray-400">
         {CAL_WEEKDAYS.map((w) => <div key={w}>{w}</div>)}
       </div>
@@ -852,6 +872,21 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
               <button onClick={() => setSelectedDay(null)} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600" aria-label="Cerrar detalle del día"><X size={14} /></button>
             </div>
           </div>
+
+          {groupBySource && detailed && (
+            // Total del día — respuesta directa a "¿cuánto ha dado este
+            // día?" sin tener que sumar mentalmente el desglose de abajo
+            // (feedback 2026-08-30). Solo aquí (el detalle "por entrada"
+            // de Home): el resto de vistas del calendario (agregado por
+            // actividad, tabla) no lo necesitan porque agregan menos
+            // información en primer lugar.
+            <div className="mb-3 flex items-center justify-between border-b border-gray-200 pb-2">
+              <span className="text-xs font-medium text-gray-500">Generado el día</span>
+              <span className="font-semibold" style={{ color: "#1F2937" }}>
+                <MoneyLine totals={dayTotals(dayList(selectedDay))} currencyRows={currencyRows} />
+              </span>
+            </div>
+          )}
 
           {groupBySource && detailed ? (
             <div className="space-y-3">
