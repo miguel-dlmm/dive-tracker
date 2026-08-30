@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr, ExpandableCard } from "./shared";
-import { listItemVariants, usePrefersReducedMotion } from "./motion";
+import { listItemVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
 import { computeRateTotal, comparePeriods } from "./rateCalc";
 import { NAVY, CORAL, GREEN } from "./App";
 
@@ -267,31 +267,43 @@ const TREND_RADIUS = 3;
 // cambia de tamaño, solo el color/alto de la barra DENTRO de él, así que
 // el alto total del botón (carril + etiqueta + punto) es constante para
 // los 7 periodos siempre, sin desbordar nada.
+// Animada 2026-08-30 (feedback explícito: "el click debe sentirse vivo,
+// pero sin exagerar"): la barra crece/decrece con una transición corta en
+// vez de saltar de golpe a su altura nueva (misma sensación de "algo
+// cambió" que ya usa MoneyLine para el importe), y el toque da feedback
+// inmediato con un ligero scale-down (mismo whileTap que el resto de
+// botones con motion de la app, DURATION.xs — microinteracción, no una
+// animación de pantalla completa). prefers-reduced-motion colapsa ambas a
+// prácticamente cero sin perder el resultado final (bar bajo/alta, tacto
+// registrado), igual que en cualquier otra animación de motion.js.
 function TrendBars({ periods, color, onSelect }) {
+  const reduced = usePrefersReducedMotion();
   const max = Math.max(1, ...periods.map((p) => magnitude(p.totals)));
   return (
     <div className="flex gap-1.5">
       {periods.map((p) => (
-        <button
+        <motion.button
           key={`${p.year}-${p.unitIndex}`}
           type="button"
           onClick={() => onSelect(p)}
           disabled={p.isSelected}
           aria-label={`Ir a ${p.label}${p.isCurrent ? " (periodo actual)" : ""}`}
           aria-current={p.isSelected ? "true" : undefined}
+          whileTap={reduced ? undefined : { scale: 0.88 }}
           className="flex flex-1 flex-col items-center gap-1"
         >
           <div className="flex h-11 w-full items-end">
-            <div
+            <motion.div
               className="w-full rounded-sm"
-              style={{ height: Math.round(Math.max(4, (magnitude(p.totals) / max) * 44)), backgroundColor: p.isSelected ? color : `${color}4D` }}
+              animate={{ height: Math.round(Math.max(4, (magnitude(p.totals) / max) * 44)), backgroundColor: p.isSelected ? color : `${color}4D` }}
+              transition={{ duration: reduced ? 0.01 : DURATION.sm, ease: EASE.standard }}
             />
           </div>
           <span className="truncate text-[10px] font-medium" style={{ color: p.isSelected ? color : "#9CA3AF" }}>
             {shortPeriodLabel(p.granularity, p.year, p.unitIndex)}
           </span>
           <span className="h-1 w-1 rounded-full" style={{ backgroundColor: color, opacity: p.isCurrent && !p.isSelected ? 1 : 0 }} aria-hidden="true" />
-        </button>
+        </motion.button>
       ))}
     </div>
   );
@@ -330,6 +342,7 @@ function SchoolGrowthBadge({ growth }) {
 
 // worklog / rates / comisiones / commissionRates / activities / schools / currencies / colleaguePayments: hooks de useSupabaseTable
 export default function SummaryTab({ worklog, rates, comisiones, commissionRates, activities, schools, currencies, colleaguePayments }) {
+  const reducedMotion = usePrefersReducedMotion();
   const now = new Date();
   const [granularity, setGranularity] = useState("mensual");
   const [source, setSource] = useState("total"); // "total" | "ganado" | "comision" | "companeros"
@@ -546,7 +559,26 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
               label="Granularidad del periodo"
             />
           </div>
-          <span className="flex-1 truncate text-center text-sm font-semibold tabular-nums" style={{ color: NAVY }}>{label}</span>
+          {/* AnimatePresence+key=label (feedback explícito 2026-08-30:
+              "claridad de qué periodo está activo") — sin esto, tocar una
+              barra de la tendencia cambiaba el texto de golpe, sin ninguna
+              señal de que ES ese toque lo que lo movió. Mismo criterio de
+              "standard" (cambio dentro del propio elemento, sin entrar/
+              salir de la pantalla) que el resto de motion.js. */}
+          <div className="relative flex-1 overflow-hidden">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.span
+                key={label}
+                initial={{ opacity: 0, y: reducedMotion ? 0 : 6 }}
+                animate={{ opacity: 1, y: 0, transition: { duration: reducedMotion ? 0.01 : DURATION.xs, ease: EASE.enter } }}
+                exit={{ opacity: 0, y: reducedMotion ? 0 : -6, transition: { duration: reducedMotion ? 0.01 : DURATION.xs, ease: EASE.exit } }}
+                className="block truncate text-center text-sm font-semibold tabular-nums"
+                style={{ color: NAVY }}
+              >
+                {label}
+              </motion.span>
+            </AnimatePresence>
+          </div>
         </div>
         {trendPeriods.length > 0 && (
           <div className="border-t border-gray-100 p-3">
