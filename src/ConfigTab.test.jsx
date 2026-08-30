@@ -143,6 +143,10 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     user_id: "target-1", first_name: "Ana", last_name: "López", nickname: "ana",
     email: "ana@example.com", is_admin: false, is_superadmin: false, created_at: "2026-08-01T00:00:00Z",
   };
+  const SUPERADMIN_PROFILE_ROW = {
+    user_id: "admin-1", first_name: "Yo", last_name: "Admin", nickname: "yo-admin",
+    email: "admin@example.com", is_admin: true, is_superadmin: true, created_at: "2026-08-01T00:00:00Z",
+  };
 
   // activated_at vive en profiles, no en admin_list_profiles() — se lee
   // aparte (loadActivatedAt) y se cruza por user_id. `activatedAt: null`
@@ -279,14 +283,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     const user = userEvent.setup();
     global.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }) // delete-user
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) }); // list-user-status tras reload
-    // admin_list_profiles(): la carga inicial trae a "ana"; tras eliminarla,
-    // el reload ya no la incluye — orden explícito, no depende del
-    // mockResolvedValue persistente de beforeEach.
-    supabase.rpc
-      .mockResolvedValueOnce({ data: [TARGET_PROFILE_ROW], error: null })
-      .mockResolvedValueOnce({ data: [], error: null });
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }); // delete-user
 
     await openUsuarios(user);
     await user.click(screen.getByRole("button", { name: /^ana/ }));
@@ -294,5 +291,93 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await user.click(screen.getByRole("button", { name: "Eliminar", exact: true }));
 
     await waitFor(() => expect(screen.queryByRole("button", { name: "Eliminar usuario" })).not.toBeInTheDocument());
+  });
+
+  // Antes admin_list_profiles() devolvía las filas en orden de alta, sin
+  // ordenar — con varios usuarios, encontrar uno concreto obligaba a leer
+  // toda la lista.
+  it("ordena el listado alfabéticamente por nickname, no por orden de alta", async () => {
+    const user = userEvent.setup();
+    supabase.rpc.mockResolvedValue({
+      data: [
+        { ...TARGET_PROFILE_ROW, user_id: "z-1", nickname: "zoe", created_at: "2026-08-01T00:00:00Z" },
+        { ...TARGET_PROFILE_ROW, user_id: "a-1", nickname: "ana", created_at: "2026-08-02T00:00:00Z" },
+      ],
+      error: null,
+    });
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+
+    render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
+    await user.click(screen.getByText("Usuarios"));
+    await waitFor(() => expect(screen.getByText("zoe")).toBeInTheDocument());
+
+    const names = screen.getAllByText(/^(ana|zoe)$/).map((el) => el.textContent);
+    expect(names).toEqual(["ana", "zoe"]);
+  });
+
+  // La causa raíz del salto de scroll al eliminar era reload() — sustituía
+  // toda la lista por "Cargando usuarios…" mientras llegaba la respuesta de
+  // admin_list_profiles(). Ahora la fila se quita del estado local: la RPC
+  // de listado solo debe haberse llamado una vez (la carga inicial).
+  it("eliminar un usuario actualiza el listado en el sitio, sin volver a pedir admin_list_profiles()", async () => {
+    const user = userEvent.setup();
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) });
+
+    await openUsuarios(user);
+    const rpcCallsBefore = supabase.rpc.mock.calls.length;
+
+    await user.click(screen.getByRole("button", { name: /^ana/ }));
+    await user.click(screen.getByRole("button", { name: "Eliminar usuario" }));
+    await user.click(screen.getByRole("button", { name: "Eliminar", exact: true }));
+
+    await waitFor(() => expect(screen.queryByText("ana")).not.toBeInTheDocument());
+    expect(supabase.rpc.mock.calls.length).toBe(rpcCallsBefore);
+  });
+
+  // Arrastrar para eliminar (bloque de usuarios, feedback explícito) es un
+  // atajo adicional al camino existente (fila → hoja de detalle →
+  // "Eliminar usuario"), con la misma restricción de a quién se puede
+  // eliminar (nunca uno mismo, nunca a otro superadmin).
+  describe("arrastrar para eliminar (atajo adicional a la hoja de detalle)", () => {
+    it("expone la acción de eliminar de la fila para un usuario normal", async () => {
+      const user = userEvent.setup();
+      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+      await openUsuarios(user);
+      // El botón revelado lleva aria-hidden mientras la fila no está
+      // arrastrada (no debe aparecer en el árbol de accesibilidad hasta
+      // que se revela, ni robarle el foco a un lector de pantalla) — se
+      // comprueba en el DOM directamente, no vía getByRole (que respeta
+      // aria-hidden al calcular el nombre accesible incluso con hidden:true).
+      expect(document.querySelector('[aria-label="Eliminar a ana"]')).not.toBeNull();
+    });
+
+    it("no expone la acción de eliminar sobre la propia cuenta del superadmin", async () => {
+      const user = userEvent.setup();
+      supabase.rpc.mockResolvedValue({ data: [SUPERADMIN_PROFILE_ROW], error: null });
+      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+
+      render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
+      await user.click(screen.getByText("Usuarios"));
+      await waitFor(() => expect(screen.getByText("yo-admin")).toBeInTheDocument());
+
+      expect(document.querySelector('[aria-label="Eliminar a yo-admin"]')).toBeNull();
+    });
+
+    it("no expone la acción de eliminar sobre otro superadmin", async () => {
+      const user = userEvent.setup();
+      supabase.rpc.mockResolvedValue({
+        data: [{ ...TARGET_PROFILE_ROW, is_superadmin: true, nickname: "otro-admin" }],
+        error: null,
+      });
+      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+
+      render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
+      await user.click(screen.getByText("Usuarios"));
+      await waitFor(() => expect(screen.getByText("otro-admin")).toBeInTheDocument());
+
+      expect(document.querySelector('[aria-label="Eliminar a otro-admin"]')).toBeNull();
+    });
   });
 });
