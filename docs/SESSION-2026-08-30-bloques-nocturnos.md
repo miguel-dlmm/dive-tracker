@@ -704,3 +704,66 @@ historial.
 
 **Commit de este bloque:** `docs(release): actualizar CHANGELOG y
 preparar release v0.2.0, sin ejecutar`.
+
+> Nota de rama: los bloques 17 (rama `feature/seo`) y 18 (MVP SEO) se
+> ejecutaron y comitearon en `feature/seo`, no aquí — ver esa rama para
+> su detalle. Esta sesión continúa en `feature/global-redesign` a partir
+> del bloque 19, tal como pedía el propio encargo (17/18 son los únicos
+> bloques específicos de SEO).
+
+### Bloque 19 — Backups: política MVP
+
+Encargo: investigar estado real de Supabase y plan actual; determinar
+backups existentes, frecuencia, retención, cobertura, estrategia
+adicional razonable, RPO/RTO, cómo recuperar y cómo verificar que un
+backup es utilizable; plan MVP económico y sostenible; si hay una
+acción segura implementable ya, hacerla; si requiere contratar/activar
+servicios de pago, dejar la recomendación preparada sin cambios
+irreversibles; documentar la política.
+
+**Bloqueo real, resuelto preguntando** (no derivable desde este
+entorno — no hay ningún token de gestión de Supabase en `.env.local`,
+solo las claves de la propia app): se preguntó al usuario el plan real
+de Supabase, porque cambia por completo el análisis (Free no incluye
+ninguna copia automática; Pro sí, con 7 días de retención). Respuesta:
+**Free**.
+
+**Hallazgo:** con Free, hoy no existe ningún mecanismo de recuperación
+más allá de lo que el propio operador guarde por su cuenta — riesgo
+real y no hipotético para una app que guarda datos financieros.
+
+**Política adoptada y documentada en
+`docs/ADR/0017-politica-de-backups-mvp.md`:** backup manual semanal vía
+`pg_dump` (`scripts/backup-db.mjs`, nuevo — alias `npm run backup:db`),
+usando la cadena de conexión directa a Postgres (`SUPABASE_DB_URL`,
+nunca comiteada, nunca impresa), no las claves anon/service_role ya
+existentes. RPO documentado explícitamente (hasta 7 días, aceptado como
+razonable para el volumen de uso actual — decisión informada, no
+supuesta) y RTO (minutos, `pg_restore` contra un proyecto nuevo).
+Procedimiento de simulacro de restauración documentado (proyecto
+Supabase temporal + comprobación de recuento de filas). `backups/`
+añadido a `.gitignore` — nunca al repo.
+
+**Trade-off señalado, no decidido por mí:** el propio repo vive dentro
+de iCloud Drive, así que guardar el `.dump` en `backups/` le da una
+copia fuera de la máquina gratis — pero eso replica datos financieros
+en texto plano en la infraestructura de Apple. Documentado como
+decisión pendiente del usuario (aceptar tal cual, o cifrar el fichero
+antes de dejarlo ahí), no resuelto unilateralmente.
+
+**Acción segura ya hecha, sin coste ni credenciales reales:**
+`scripts/backup-db.mjs` escrito y probado (falla con un mensaje claro
+sin `SUPABASE_DB_URL` — no se ha podido ejecutar contra la base real,
+no hay credenciales de conexión directa en este entorno, solo las de la
+app). `npm run backup:db` listo para usarse en cuanto el usuario tenga
+a mano la contraseña de base de datos.
+
+**No ejecutado, dejado como recomendación:** subir a Supabase Pro
+(coste recurrente, decisión de negocio del usuario) — fila añadida a
+`docs/BACKLOG.md`.
+
+**Validación:** suite completa **328/328**. Build limpio. Sin cambios
+de UI — `mobile-check` no aplica a este bloque.
+
+**Commit:** `feat(backups): política MVP de copias de seguridad
+(pg_dump manual) para el plan Free de Supabase`.
