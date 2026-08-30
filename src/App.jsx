@@ -251,14 +251,17 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             // X, no flecha "‹": Ayuda/Configuración no son un nivel más
             // dentro de la jerarquía de la pestaña actual — se entra
             // igual desde Home, Mi trabajo o Resumen, así que son más
-            // "una capa encima" (modal) que "un paso más adentro". Ayuda
-            // además ya usa su propia flecha "‹" para SU jerarquía interna
-            // (Categorías → Artículos → Artículo, ver HelpArticleList/
-            // HelpArticleView) — una segunda flecha aquí, con un
-            // significado distinto (salir de Ayuda entera, no retroceder
-            // un nivel dentro de ella), sería ambigua en el punto más
-            // profundo. X + "Cerrar" es además el mismo patrón que ya usan
-            // las hojas inferiores de la app.
+            // "una capa encima" (modal) que "un paso más adentro".
+            // Configuración además ya usa su propia flecha "‹" para SU
+            // jerarquía interna (menú → sección) — una segunda flecha
+            // aquí, con un significado distinto (salir de Configuración
+            // entera, no retroceder un nivel dentro de ella), sería
+            // ambigua en el punto más profundo. X + "Cerrar" es además el
+            // mismo patrón que ya usan las hojas inferiores de la app.
+            // (Ayuda ya no tiene jerarquía propia desde 2026-08-30 — ver
+            // HelpTab.jsx, "de índice a guía viva" — pero el razonamiento
+            // de fondo, "capa encima" vs. "un paso más adentro", se
+            // mantiene igual para las dos.)
             <button onClick={() => changeTab(returnTab)} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Cerrar">
               <X size={20} style={{ color: NAVY }} aria-hidden="true" />
               <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{SECONDARY_TITLES[tab]}</h1>

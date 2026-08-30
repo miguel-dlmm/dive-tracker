@@ -7,7 +7,7 @@ import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, Chev
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./colors";
-import { DURATION, panelVariants, sheetVariants, usePrefersReducedMotion } from "./motion";
+import { DURATION, panelVariants, sheetVariants, listItemVariants, usePrefersReducedMotion } from "./motion";
 
 export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
 
@@ -1266,6 +1266,41 @@ export function FloatingPanel({ open, pos, panelRef, matchWidth = true, align = 
 // componente o de omitir el menú entero, "Eliminar" se muestra desactivado
 // con el motivo en el título — sigue siendo obvio que la opción existe,
 // solo que no está disponible para esta fila en concreto.
+// Tarjeta plegable — profundidad bajo demanda, sin pantalla ni selector
+// aparte (ver docs/ADR/0009-rediseno-resumen.md). Extraída de SummaryTab.jsx
+// 2026-08-30 al ganar un segundo consumidor real (Ayuda: cada categoría es
+// una tarjeta que se despliega en el sitio, en vez de navegar a una
+// pantalla nueva — ver docs/ADR/0011, addendum "de índice a guía viva").
+// `subtitle` es opcional (Resumen no lo usa; Ayuda sí, para la descripción
+// corta de la categoría, visible antes de desplegar).
+export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = NAVY, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const reduced = usePrefersReducedMotion();
+  return (
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex min-h-[52px] w-full items-center gap-2 px-4 py-3 text-left"
+      >
+        {Icon && <Icon size={16} style={{ color: iconColor }} aria-hidden="true" className="shrink-0" />}
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-semibold text-gray-800">{title}</span>
+          {subtitle && <span className="block truncate text-xs text-gray-400">{subtitle}</span>}
+        </span>
+        <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-gray-400 transition-transform" style={{ transform: open ? "rotate(180deg)" : "none" }} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div {...listItemVariants(reduced)} className="border-t border-gray-100 px-4 py-3">
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // Botón flotante de creación — convención #3 (CLAUDE.md): mismo lenguaje
 // visual (fixed bottom-24 right-4, 52×52, color de acento de la sección)
 // en toda pantalla de lista con FAB+hoja (Mi trabajo, Tarifas,

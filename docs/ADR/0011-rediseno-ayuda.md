@@ -125,3 +125,65 @@ Sin cambios de código de producto, solo de contenido (`src/help/content.js`)
 y de orden de categorías — verificado que ningún test depende del orden
 del array (`HelpCategoryList` preserva el orden de `HELP_CATEGORIES`,
 solo filtra por `group`).
+
+## Addendum (2026-08-30) — de índice a guía viva: se retira la navegación por pantallas
+
+**Feedback explícito:** "Ahora hay un primer nivel y, cuando entro, un
+segundo nivel con un solo item. Ese patrón no me gusta: es el antipatrón
+de lo que queremos en Ocean Flow (...) Quiero que la ayuda se comporte
+más como una guía viva que como un índice pobre."
+
+**Causa raíz confirmada en el propio contenido:** las 8 categorías de
+`HELP_CATEGORIES` tienen, cada una, exactamente **un** artículo. El
+modelo de navegación por pantallas que el addendum anterior (2026-08-29)
+heredó sin cuestionar — categorías → lista de artículos de la categoría
+→ artículo — hacía que la pantalla intermedia ("lista de artículos")
+mostrara siempre, literalmente, una sola fila: la misma información que
+la propia categoría ya anunciaba, repetida, antes de por fin llegar al
+contenido real. No era un artículo mal escrito ni un problema de
+contenido — la mecánica de navegación estaba resolviendo un problema
+("varios artículos por categoría") que no existe hoy en ningún sitio.
+
+**Decisión:** en vez de "arreglar" esa pantalla intermedia (p. ej.
+saltándola automáticamente cuando hay un único artículo, un parche que
+seguiría arrastrando el modelo de 3 pantallas por si algún día hiciera
+falta), se retira el modelo de navegación por pantallas entero. Ayuda
+pasa a ser **una sola página que se recorre haciendo scroll**, con cada
+categoría como una `ExpandableCard` — el mismo componente que Resumen ya
+usa para "Por escuela"/"Por curso"/Comisiones/Calendario (extraído a
+`shared.jsx` en este mismo cambio, al ganar un segundo consumidor real).
+Tocar una categoría despliega su artículo completo en el sitio; no hay
+"volver" porque no hay ningún nivel de profundidad que atravesar.
+
+**Por qué esto y no otra cosa:**
+- Misma interacción que ya existe y funciona en Resumen — no una tercera
+  forma de plegar/desplegar contenido en la misma app (criterio explícito
+  del proyecto: "no quiero soluciones distintas para la misma
+  interacción").
+- Resuelve el antipatrón de raíz, no solo su síntoma más visible (el
+  "segundo nivel con un solo item") — no queda ninguna pantalla ni
+  transición que solo exista para sostener una jerarquía que el contenido
+  real no tiene.
+- "Guía viva" encaja mejor con un documento único explorable de un
+  vistazo (con secciones que se abren bajo demanda) que con un asistente
+  de varias pantallas — más cerca de un FAQ/manual que de un flujo con
+  pasos.
+
+**Qué deja de hacer falta, y por qué es correcto que desaparezca (no un
+recorte):** `HelpCategoryList.jsx` y `HelpArticleList.jsx` (pantallas de
+navegación) se eliminan — ninguna aporta ya nada que la propia lista de
+`ExpandableCard`s no resuelva. `HelpArticleView.jsx` se sustituye por
+`HelpArticleBody.jsx` (mismo contenido visual — pasos numerados, aviso de
+consejos, resultado esperado — sin el título/resumen/botón de "volver"
+que ahora pone la propia tarjeta). El gesto de "deslizar para volver"
+(`useSwipeBack`, añadido en el bloque anterior de esta misma sesión para
+Configuración y Ayuda) deja de aplicarse a Ayuda por el mismo motivo: sin
+niveles de navegación, no hay "atrás" al que volver — sigue aplicándose
+a Configuración, que sí conserva jerarquía real (menú → sección).
+
+**Si algún día una categoría necesita más de un artículo:** es una
+decisión de contenido/estructura nueva que tomar en ese momento (con esa
+necesidad real delante), no algo que este cambio deba prever de
+antemano — construir esa flexibilidad hoy, sin ningún caso real que la
+use, sería exactamente la sobreingeniería que este proyecto evita a
+propósito.
