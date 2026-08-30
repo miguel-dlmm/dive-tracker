@@ -149,15 +149,13 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           dotColor={TEAL}
           currencyRows={currencies.rows}
           activityColor={activityColor}
+          caption="Toca un día para ver el detalle, o uno vacío para añadir un movimiento"
           autoSelectFirstDay
           detailed
           groupBySource
           sourceMeta={MOVEMENT_TYPE_META}
           onCreateForDay={(dateStr) => onQuickCreate("ganado", dateStr)}
         />
-        <p className="mt-2 px-1 text-center text-[11px] text-gray-400">
-          Toca un día para ver el detalle, o uno vacío para añadir un movimiento.
-        </p>
       </div>
 
       {/* 3. Generado este mes — información secundaria de cierre, no la
