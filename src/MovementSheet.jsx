@@ -325,10 +325,6 @@ export default function MovementSheet({
                 </div>
               )}
 
-              {creating === "companeros" && (
-                <p className="mb-3 text-xs text-gray-400">Importe positivo si te paga a ti; negativo si le pagas tú a él/ella.</p>
-              )}
-
               {/* Curso primero: es el único campo sin buen valor por
                   defecto — Fecha ya es hoy, Escuela ya trae la tuya de
                   Configuración (o la última que usaste en esa escuela, ver
@@ -382,7 +378,10 @@ export default function MovementSheet({
                           {colleagueSuggestions(form.school).map((n) => <option key={n} value={n} />)}
                         </datalist>
                       </Field>
-                      <Field label={`Importe · ${form.currency}`}>
+                      <Field
+                        label={`Importe · ${form.currency}`}
+                        hint="Positivo si te paga a ti; negativo si le pagas tú a él/ella"
+                      >
                         <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
                       </Field>
                     </div>
