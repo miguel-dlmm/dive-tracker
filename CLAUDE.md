@@ -179,7 +179,12 @@ ningún control de seguridad.
 
 Ver `schema.sql` — es el esquema consolidado actual (sustituye a las ~10
 migraciones sueltas del historial de chat, que ya no hace falta volver a
-mirar salvo para entender el porqué de alguna decisión).
+mirar salvo para entender el porqué de alguna decisión). Para levantar
+una base de datos nueva desde cero (TEST, o cualquier entorno futuro):
+ejecutar `schema.sql` y después `seed.sql` — este último siembra lo
+mínimo que la app necesita para ser utilizable (moneda por defecto,
+`nav_sections`, `app_config`, dataset `ihasia`). Nunca hace falta contra
+producción, que ya tiene sus propias filas reales.
 
 For database and architecture changes:
 Always propose a migration plan first.
