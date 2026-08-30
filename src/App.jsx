@@ -135,8 +135,20 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   // desaparece del DOM mientras la página estaba desplazada. blur()
   // suelta el foco/toque ANTES de que React desmonte ese elemento, en vez
   // de dejar que WebKit lo gestione a mitad del propio desmontaje.
+  // 2026-08-30, segunda vuelta (el puente Home -> Resumen seguía perdiendo
+  // la barra tras el fix de blur): el scroll a 0 vivía solo en el efecto
+  // de más abajo, reactivo a `tab` — eso lo dispara DESPUÉS de que React
+  // ya haya empezado a desmontar la pestaña anterior (Home, desplazada
+  // 1260px en el caso reportado) y a montar la nueva, con la animación de
+  // salida/entrada de por medio corriendo mientras el scroll real todavía
+  // está a 1260px. Se adelanta aquí, síncrono, ANTES de `setTab` — cuando
+  // React empieza a desmontar/montar, el scroll ya está a 0, así que
+  // ninguna animación llega a correr con la página desplazada. El efecto
+  // de abajo se mantiene como red de seguridad (por si algo más desplaza
+  // el scroll ya con la pestaña nueva montada), no se retira.
   const changeTab = (next) => {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    window.scrollTo(0, 0);
     setTab(next);
   };
   // Pestaña primaria a la que vuelve "‹ Volver" desde Ayuda/Configuración
