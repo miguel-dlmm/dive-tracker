@@ -6,7 +6,7 @@ import {
   CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users,
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab } from "./shared";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate } from "./shared";
 import { usePrefersReducedMotion } from "./motion";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
@@ -375,12 +375,6 @@ function BooleanToggle({ checked, onChange, disabled, ariaLabel, color = TEAL })
       </span>
     </button>
   );
-}
-
-// Fecha corta ES, o "—" si no hay valor — usado tanto en la fila como en
-// la hoja de detalle.
-function shortDate(iso) {
-  return iso ? new Date(iso).toLocaleDateString("es-ES") : "—";
 }
 
 // Fecha + hora, para "último login real" — una fecha sola no basta para

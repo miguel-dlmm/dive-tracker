@@ -139,6 +139,11 @@ create table if not exists rates (
   payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
+  -- Fecha de alta de la tarifa — no editable, no es un campo del
+  -- formulario, la fija Postgres sola al crear la fila. Mostrada en la
+  -- interfaz como "Alta: <fecha>" (RatesTab.jsx), mismo criterio que
+  -- profiles.created_at en Usuarios. Ver docs/ADR/0019.
+  created_at timestamptz not null default now(),
   user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
@@ -154,6 +159,7 @@ create table if not exists commission_rates (
   payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
+  created_at timestamptz not null default now(), -- ver nota en rates.created_at
   user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 

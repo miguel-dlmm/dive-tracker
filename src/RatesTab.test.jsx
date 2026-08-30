@@ -155,3 +155,40 @@ describe("RatesTab — filtro de Escuela, solo con más de una escuela", () => {
     expect(screen.getByText("Escuela")).toBeInTheDocument();
   });
 });
+
+// Feedback explícito 2026-08-30: fecha de creación visible ("Alta: fecha",
+// mismo criterio que Usuarios), listado ordenado por más reciente primero,
+// subcabecera de Comisión simplificada, y "per person" fuera del frontal
+// (ni en la línea de la card ni como filtro — payment_type vale siempre
+// "Per Person" en la práctica, ver ADR-0003, así que filtrar por él nunca
+// tuvo ningún efecto real).
+describe("RatesTab — fecha de alta, orden por más reciente, y sin 'per person' en el frontal", () => {
+  it("muestra 'Alta: <fecha>' en vez de 'Curso · Per Person', y ordena por creación descendente", () => {
+    renderRatesTab({
+      rates: rowsHook([
+        { id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, created_at: "2026-08-01T00:00:00Z" },
+        { id: "r2", school: "PADI Cozumel", activity: "Advanced", payment_type: "Per Person", currency: "EUR", rate: 30, created_at: "2026-08-15T00:00:00Z" },
+      ]),
+      activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
+    });
+
+    expect(screen.queryByText(/Per Person/)).not.toBeInTheDocument();
+    const dates = screen.getAllByText(/^Alta: /).map((el) => el.textContent);
+    expect(dates).toEqual(["Alta: 15/8/2026", "Alta: 1/8/2026"]); // más reciente (r2) primero
+  });
+
+  it("la subcabecera de Comisión, al crear, dice solo 'Lo que cobras por traer a un cliente.'", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({});
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getByRole("tab", { name: /Comisión/ }));
+    expect(screen.getByText("Lo que cobras por traer a un cliente.")).toBeInTheDocument();
+  });
+
+  it("no existe ningún filtro 'Pago' (payment_type no tiene ningún efecto real de filtrado)", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({});
+    await user.click(screen.getByRole("button", { name: "Filtrar" }));
+    expect(screen.queryByText("Pago")).not.toBeInTheDocument();
+  });
+});
