@@ -4,11 +4,7 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
-Acumulado desde `v0.1.0` en `develop` y en la rama de trabajo de esta
-sesión (`feature/global-redesign`), pendiente de fusionar y etiquetar —
-ver `docs/ADR/0010-proceso-de-release.md` y
-`docs/SESSION-2026-08-28-rediseno-global.md` para el candidato de
-versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
+## [0.2.0] - 2026-08-30
 
 ### Added
 - **"Mi trabajo"**: nueva pantalla que unifica Registro, Comisiones y
