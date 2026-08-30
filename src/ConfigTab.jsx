@@ -681,6 +681,17 @@ function ActivationLinkPanel({ title, description, link, onClose }) {
           Cerrar
         </button>
       </div>
+      {/* TEMPORAL — quitar en cuanto el dominio de Resend esté verificado
+          (ver conversación 2026-08-31). Simula en la UI que el email SÍ se
+          envió, sin llamar a Resend — solo para probar visualmente ese
+          camino mientras el dominio sigue sin verificar. No toca ningún
+          estado real del backend. */}
+      <button
+        onClick={() => { toast?.success("(Mock) Email enviado correctamente"); onClose(); }}
+        className="mt-2 flex min-h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 text-xs font-medium text-amber-700"
+      >
+        Simular envío correcto (mock)
+      </button>
     </Sheet>
   );
 }
@@ -800,6 +811,17 @@ function CreateUserSheet({ onClose, onCreated }) {
             Cerrar
           </button>
         </div>
+        {/* TEMPORAL — quitar en cuanto el dominio de Resend esté verificado
+            (ver conversación 2026-08-31). Simula en la UI que el email SÍ se
+            envió, sin llamar a Resend — solo para probar visualmente ese
+            camino mientras el dominio sigue sin verificar. No toca ningún
+            estado real del backend. */}
+        <button
+          onClick={() => { toast?.success("(Mock) Usuario creado y email enviado correctamente"); onCreated(); }}
+          className="mt-2 flex min-h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 text-xs font-medium text-amber-700"
+        >
+          Simular envío correcto (mock)
+        </button>
       </Sheet>
     );
   }
