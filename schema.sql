@@ -6,6 +6,17 @@
 -- ya tienes montada (usa "create table if not exists" por seguridad,
 -- pero no lo relances a menos que sea una base de datos nueva).
 -- Las ~10 migraciones sueltas del chat ya no hace falta consultarlas.
+--
+-- 2026-08-30: las 9 tablas de negocio (schools/activities/payment_types/
+-- payment_statuses/rates/commission_rates/worklog/comisiones/
+-- colleague_payments) llevan "on delete cascade" en su FK a auth.users —
+-- antes no lo tenían, y eliminar cualquier usuario con datos reales en
+-- alguna de esas tablas fallaba con "Database error deleting user" (el
+-- FK sin cascade bloqueaba el borrado de auth.users). Confirmado con
+-- datos reales, ver docs/ADR/0018-cascade-borrado-de-usuario.md. "create
+-- table if not exists" no aplica esto a tablas que Postgres ya creó —
+-- una base de datos existente necesita la migración ALTER TABLE de ese
+-- ADR, ejecutada a mano una sola vez.
 -- =================================================================
 
 -- ---------- Catálogos de configuración ----------
@@ -19,7 +30,7 @@ create table if not exists schools (
   name text not null,
   is_default boolean not null default false,
   color text not null default '#0F766E',
-  user_id uuid not null references auth.users(id) default auth.uid(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   unique (user_id, name)
 );
 
@@ -28,7 +39,7 @@ create table if not exists activities (
   name text not null,
   color text not null default '#0E7C7B',
   is_default boolean not null default false,
-  user_id uuid not null references auth.users(id) default auth.uid(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   unique (user_id, name)
 );
 
@@ -36,7 +47,7 @@ create table if not exists payment_types (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   is_default boolean not null default false,
-  user_id uuid not null references auth.users(id) default auth.uid(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   unique (user_id, name)
 );
 
@@ -45,7 +56,7 @@ create table if not exists payment_statuses (
   name text not null,
   is_default boolean not null default false,
   color text not null default '#64748B',
-  user_id uuid not null references auth.users(id) default auth.uid(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   unique (user_id, name)
 );
 
@@ -128,7 +139,7 @@ create table if not exists rates (
   payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
-  user_id uuid not null references auth.users(id) default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table rates enable row level security;
@@ -143,7 +154,7 @@ create table if not exists commission_rates (
   payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
-  user_id uuid not null references auth.users(id) default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table commission_rates enable row level security;
@@ -162,7 +173,7 @@ create table if not exists worklog (
   notes text default '',
   status text not null default 'Pending',
   currency text not null default 'EUR', -- legado; el importe real usa la moneda de `rates`, no esta columna
-  user_id uuid not null references auth.users(id) default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table worklog enable row level security;
@@ -179,7 +190,7 @@ create table if not exists comisiones (
   currency text not null default 'EUR', -- legado; ver nota en worklog.currency
   notes text default '',
   status text not null default 'Pending',
-  user_id uuid not null references auth.users(id) default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table comisiones enable row level security;
@@ -197,7 +208,7 @@ create table if not exists colleague_payments (
   status text not null default 'Pending',
   notes text default '',
   currency text not null default 'EUR',
-  user_id uuid not null references auth.users(id) default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table colleague_payments enable row level security;
