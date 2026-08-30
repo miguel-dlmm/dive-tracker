@@ -45,13 +45,19 @@ compañeros, Tarifas, Resumen).
 ## Ramas y entornos
 
 Modelo completo en `docs/ADR/0006-estrategia-de-ramas-y-entornos.md`. Hoy:
-`develop` es la única rama de entorno (test **y** producción a la vez
-para el grupo reducido de usuarios actual — decisión consciente, no una
-mala práctica pendiente de corregir). Todo cambio nace en una rama
-`feature/*`/`fix/*`/`hotfix/*` creada desde `develop` y vuelve a fusionarse
-ahí — nunca commits directos sobre `develop`. No existen todavía `test`
-ni `main`; se crean solo cuando se cumpla alguno de los disparadores
-objetivos que describe el ADR, no por adelantado.
+`main` es la producción real (proyecto Vercel `dive-tracker-exgg`,
+`dive-tracker-exgg.vercel.app`) y `develop` es la rama de
+integración/preparación, que además hace de entorno TEST de facto para el
+proyecto Vercel `dive-tracker` (`dive-tracker-three.vercel.app`), con su
+propio Supabase separado del de producción — ver "Indicador visual de
+entorno TEST" más abajo y el ADR para el detalle completo. Todo cambio
+nace en una rama `feature/*`/`fix/*`/`hotfix/*` creada desde `develop` y
+vuelve a fusionarse ahí — nunca commits directos sobre `develop`. Empujar
+esa rama a GitHub (sin fusionarla) genera sola un Preview Deployment en
+Vercel con las mismas variables TEST, útil para validar sin tocar
+`develop`. No existe todavía una rama `test` dedicada; se crea solo
+cuando se cumpla alguno de los disparadores objetivos que describe el
+ADR, no por adelantado.
 
 ## Bypass de login en desarrollo
 
@@ -98,6 +104,46 @@ ningún control de seguridad.
   cuenta de un usuario real; no comitear `.env.local`; no configurar
   `VITE_DEV_AUTH_BYPASS` ni `VITE_DEV_DEMO_*` en Vercel — es exclusivamente
   para `npm run dev` en local.
+
+## Indicador visual de entorno TEST
+
+Igual que el bypass de login de arriba, es una herramienta permanente,
+no una tarea puntual — para que nadie confunda nunca el entorno TEST con
+producción, sin que la identificación visual altere en nada la copia
+exacta de producción (posiciones, tamaños, layout).
+
+- **Fuente de verdad única:** `VITE_ENVIRONMENT`. Vale `"test"` en el
+  entorno TEST, cualquier otro valor (o ausente) en producción y en local
+  por defecto. Nunca detección de rama Git, de proyecto Vercel ni de URL.
+- **Componente:** `src/EnvironmentIndicator.jsx` — aislado a propósito, no
+  depende de auth/navegación/negocio. Se monta una única vez en
+  `App.jsx`, como hermano de `<AuthGate />` dentro de
+  `export default function App()`, fuera de cualquier condicional — por
+  eso aparece igual en login, crear contraseña y cualquier pestaña, sin
+  tener que montarlo en cada pantalla por separado.
+- **Qué hace:** una pill "TEST" `position: fixed`, centrada en el eje
+  horizontal y alineada verticalmente con la fila de la cabecera (mismas
+  coordenadas en toda la app, incluidas las pantallas sin cabecera propia
+  como login), `z-index` por encima de todo (incluidos modales) y
+  `pointer-events: none` — nunca intercepta taps. Además antepone
+  `[TEST] ` al `document.title`. No ocupa espacio de layout: al ser
+  `fixed`, nunca desplaza el header ni ningún componente.
+- **Eliminado del bundle de producción, no solo oculto:** al no estar
+  `VITE_ENVIRONMENT` definida en el build de producción, Vite elimina la
+  rama entera por dead-code elimination — verificado con `grep` sobre
+  `dist/`, el string ni siquiera aparece en el JS servido. Mismo nivel de
+  garantía que el `MODE === "development"` del bypass de login, sin
+  necesitar ese doble candado aquí (no hay riesgo de seguridad que
+  mitigar, es solo un indicador visual).
+- **Dónde está activo hoy:** `.env.local` (local) y el proyecto Vercel
+  `dive-tracker` (Production y Preview, `dive-tracker-three.vercel.app` y
+  cualquier Preview Deployment de rama) tienen `VITE_ENVIRONMENT=test`. El
+  proyecto de producción real (`dive-tracker-exgg`, rama `main`) no la
+  tiene — nunca debe configurarse ahí.
+- **Favicon:** `public/icon.svg` (referenciado por `index.html`) usa el
+  mismo icono `Waves` de `lucide-react` y el mismo color `TEAL` que ya usa
+  la app en cabecera/login/spinner — antes ese archivo no existía
+  (`<link>` roto, sin favicon real).
 
 ## Convenciones — seguirlas es más importante que "queda bien"
 
@@ -157,9 +203,10 @@ ningún control de seguridad.
   pantalla). El calendario de Home sí admite crear un movimiento al tocar
   un día vacío o desde el propio desglose de un día con actividad — ver
   `onCreateForDay` en `MonthCalendar`, `shared.jsx`.
-- Los iconos/imágenes que referencia `index.html` (`/icon.svg`,
-  `/icon-192.png`, `/icon-512.png`, `/og-image.png`) son placeholders — hay
-  que generarlos
+- Los iconos/imágenes que referencia `index.html` (`/icon-192.png`,
+  `/icon-512.png`, `/og-image.png`) son placeholders — hay que generarlos.
+  `/icon.svg` (favicon) ya no lo es — ver "Indicador visual de entorno
+  TEST" arriba
 - El icono del logo real de Ocean Flow — de momento el loading usa iconos de
   lucide-react (configurable en Configuración → Ajustes) a la espera del
   logo oficial
