@@ -169,7 +169,7 @@ export const HELP_CATEGORIES = [
           "En Home, la tarjeta \"Generado este mes\" ya está siempre visible, sin tocar nada — y tocarla te lleva a Resumen para profundizar.",
           "En Resumen, elige la granularidad y el periodo en el control de arriba (mensual, trimestral, semestral, anual o un rango personalizado) y, si quieres, el tipo (Curso, Comisión o Ajuste).",
           "La tarjeta principal muestra el total del periodo y cuánto ha cambiado respecto al periodo anterior.",
-          "Toca \"Por escuela\", \"Por curso\", \"Calendario\", \"Comisiones\" o \"Pagos de compañeros\" para profundizar — cada uno se despliega solo si lo pides.",
+          "Toca \"Por escuela\", \"Por curso\", \"Comisiones\", \"Ajustes de curso\" o \"Calendario\" para profundizar — cada uno se despliega solo si lo pides.",
         ],
         tips: [
           "Dentro de \"Por escuela\", toca una escuela para ver su desglose por curso en el sitio, sin cambiar de pantalla.",
@@ -224,13 +224,13 @@ export const HELP_CATEGORIES = [
         whatYouCanDo: "Resumen combina una respuesta rápida (el total del periodo, comparado con el anterior) con tarjetas plegables para quien quiera profundizar.",
         whenToUseIt: "Para entender cómo va un periodo, comparar escuelas o cursos, o repasar comisiones y ajustes con compañeros.",
         steps: [
-          "Elige granularidad (mensual, trimestral, semestral, anual o personalizado) y navega entre periodos con las flechas.",
+          "Elige granularidad (mensual, trimestral, semestral, anual o personalizado); la franja de periodos de debajo navega sola — toca cualquiera para recentrar ahí.",
           "Filtra por tipo (Total, Curso, Comisión o Ajuste) con el segmentado de debajo.",
           "La tarjeta principal muestra el total y, cuando tiene sentido calcularla, la comparación con el periodo anterior.",
-          "Toca cualquier tarjeta (Por escuela, Por curso, Calendario, Comisiones, Pagos de compañeros) para desplegarla.",
+          "Toca cualquier tarjeta (Por escuela, Por curso, Comisiones, Ajustes de curso, Calendario) para desplegarla.",
         ],
         tips: [
-          "\"Por escuela\" empieza desplegada porque suele ser la pregunta más frecuente después del total — las demás empiezan cerradas.",
+          "Con más de una escuela, \"Por escuela\" empieza desplegada por ser la pregunta más frecuente después del total; con una sola, ese apartado no aparece (no habría nada que comparar) y es \"Por curso\" quien empieza desplegada. Las demás siempre empiezan cerradas.",
           "Dentro de \"Por escuela\", toca una escuela para ver su desglose por curso sin salir de la tarjeta.",
         ],
         expectedResult: "Tienes la cifra que buscabas, con tanto o tan poco detalle como hayas pedido.",
@@ -254,7 +254,7 @@ export const HELP_CATEGORIES = [
         steps: [
           "Toca cualquier fila del menú para entrar en esa sección; \"‹ Configuración\" vuelve al menú.",
           "Escuelas, Cursos, Tipos de pago, Estados de pago y Monedas crean mediante el botón \"+\" flotante, igual que en Mi trabajo.",
-          "Tarifas tiene su propia pantalla con dos modos (Instructor/Comisión) y filtros propios.",
+          "Tarifas muestra Curso y Comisión en una única lista (el tipo se elige como filtro, o al crear, dentro de la propia hoja) — mismo patrón visual que Mi trabajo.",
         ],
         tips: [
           "Solo un superadmin puede crear usuarios o eliminarlos — un admin normal ve el directorio de usuarios en modo solo lectura.",

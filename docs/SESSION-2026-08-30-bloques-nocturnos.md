@@ -794,3 +794,50 @@ decenas de usuarios activos, no un puñado).
 
 **Commit:** `docs(analitica): documentar por qué no se implementa
 analítica de uso todavía`.
+
+### Bloque 21 — Documentación y literatura: auditoría transversal
+
+Encargo: revisar literales/nombres antiguos/mensajes de usuario/textos
+técnicos visibles en busca de vocabulario inconsistente, especialmente
+conceptos ya consolidados (Actividades→Cursos, Registro/Comisiones/
+Compañeros→Movimientos, Pago de compañeros→Ajuste de curso)
+sobreviviendo en algún rincón; documentar cambios importantes, sin
+convertirlo en una reescritura literaria infinita.
+
+**Auditoría:** `grep` de "Registro"/"Compañeros"/"Actividad"/"Pago(s)
+de compañeros" en toda la interfaz alcanzable (excluidas las 4
+pantallas heredadas sin ruta de navegación real —
+`WorkLogTab`/`ComisionesTab`/`CompanerosTab`/`PaymentsTab`, halladas en
+el bloque 11 — tocar su texto no cambia nada que un usuario real vea).
+Las referencias en comentarios de código y en `WhatsNew.jsx` (la propia
+diapositiva que ANUNCIA el rename "Registro, Comisiones y Compañeros
+ahora es Mi trabajo") son historia correcta, no un error — se dejan tal
+cual.
+
+**4 inconsistencias reales encontradas, las 4 en `src/help/content.js`**
+(Ayuda describía la Resumen/Tarifas de ANTES de esta noche):
+1. Los pasos de "Ver cuánto has generado" listaban las tarjetas de
+   Resumen como "Por escuela, Por curso, Calendario, Comisiones, Pagos
+   de compañeros" — nombre antiguo y orden antiguo (el actual, desde el
+   bloque 8: Por escuela, Por curso, Comisiones, Ajustes de curso,
+   Calendario).
+2. Mismo problema (nombre + orden) en los pasos de "Resumen, de un
+   vistazo".
+3. La misma sección decía "navega entre periodos con las flechas" — las
+   flechas ‹ › se retiraron esta noche (bloque 7); ahora se navega
+   tocando la franja de tendencia.
+4. Configuración describía Tarifas con "dos modos (Instructor/
+   Comisión)" — la arquitectura de dos páginas que el bloque 1 de esta
+   noche sustituyó por una lista combinada con el tipo como filtro/
+   pestaña dentro de la hoja.
+
+Aprovechado también para precisar el tip de "Por escuela" (bloque 10):
+con una sola escuela ese apartado no aparece y es "Por curso" quien
+empieza desplegada — antes el tip solo cubría el caso de varias
+escuelas.
+
+**Validación:** suite completa **328/328**. Build limpio. `mobile-check`
+(toca Ayuda, contenido visible): 41 capturas, sin errores de consola.
+
+**Commit:** `docs(ayuda): actualizar literales de Resumen y Tarifas a
+la nomenclatura y el comportamiento actuales`.
