@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Waves, Coins, TrendingUp, Hand, ShieldCheck } from "lucide-react";
+import { X, Briefcase, Coins, TrendingUp, Hand, ShieldCheck } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
@@ -12,15 +12,18 @@ import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 // con la misma fuente de verdad que CHANGELOG.md (no una tarea aparte
 // inventada después).
 //
-// Contenido reescrito 2026-08-30 (feedback explícito): resume TODO lo
-// acumulado desde v0.1.0 hasta la fusión de las ramas de esta sesión —
-// no solo el bloque anterior de Mi trabajo/Configuración/Resumen. Pensado
-// para "un instructor en el descanso del barco, con las manos mojadas":
-// 5 diapositivas, una frase de título + una de cuerpo, nada que exija
-// pararse a leer. Se prioriza lo que un instructor SIENTE al usar la app
-// (nombre nuevo, Tarifas más clara, Resumen más fácil de recorrer, gestos
-// en toda la app, más estable) sobre el detalle técnico de cada cambio —
-// ese detalle ya vive en CHANGELOG.md para quien lo quiera.
+// Contenido reescrito 2026-08-30, segunda vuelta (feedback explícito: "no
+// hables del cambio de nombre de la app... piensa en un instructor en el
+// descanso del barco, con las manos mojadas, sin ganas de leer texto
+// largo"). La primera reescritura de esta sesión abría con una diapositiva
+// dedicada a "Ocean Pulse → Ocean Flow" — dato interno de branding, no algo
+// que un instructor necesite parar a leer entre inmersiones. Se sustituye
+// por Mi trabajo (la unificación real de Registro/Comisiones/Compañeros en
+// una sola pantalla, el cambio de fondo más grande de esta tanda de
+// ramas) y se mantiene el resto: 5 diapositivas, título + una frase de
+// cuerpo, nada que exija pararse a leer. Se prioriza lo que un instructor
+// SIENTE al usar la app sobre el detalle técnico — ese detalle ya vive en
+// CHANGELOG.md para quien lo quiera.
 //
 // Sin capturas de pantalla, mismo motivo que la versión anterior de este
 // archivo: ninguna captura real de esta sesión queda presentable para un
@@ -29,10 +32,10 @@ import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 // visual") sin ese riesgo.
 const SLIDES = [
   {
-    icon: Waves,
+    icon: Briefcase,
     color: TEAL,
-    title: "Ocean Flow — mismo nombre en todas partes",
-    body: "Antes era \"Ocean Pulse, de Ocean Flow\". Ahora es un único nombre: Ocean Flow, en toda la app.",
+    title: "Mi trabajo, todo en un sitio",
+    body: "Cursos, comisiones y ajustes con compañeros, en una única lista — sin saltar entre tres pantallas para lo mismo.",
   },
   {
     icon: Coins,
