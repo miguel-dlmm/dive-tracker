@@ -486,6 +486,19 @@ async function main() {
   await page.locator("text=Tarifas").first().tap();
   await page.waitForTimeout(300);
   await shot(page, "configuracion-tarifas");
+
+  console.log("→ Configuración: recargar dentro de Tarifas debe reabrir en Tarifas, no en el menú (feedback 2026-08-30)");
+  await page.reload();
+  // exact: true — sin esto, "Tarifas" también hace match (substring, sin
+  // distinguir mayúsculas) contra el encabezado "13 tarifas" de la propia
+  // lista, dos elementos "heading" a la vez = "strict mode violation" en
+  // Playwright, que un .catch() sin más trata como "no encontrado".
+  const reopenedInTarifas = await page.getByRole("heading", { name: "Tarifas", exact: true })
+    .waitFor({ timeout: 15000 }).then(() => true).catch(() => false);
+  if (!reopenedInTarifas) {
+    consoleIssues.push("[configuracion] Recargar dentro de Tarifas no reabrió en Tarifas — volvió al menú principal de Configuración.");
+  }
+  await shot(page, "configuracion-tarifas-tras-recargar");
   const rateMenuBtn = page.getByRole("button", { name: "Más acciones" }).first();
   if (await rateMenuBtn.isVisible().catch(() => false)) {
     await rateMenuBtn.tap();
