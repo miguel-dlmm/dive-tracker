@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "backup:db": "node scripts/backup-db.mjs",
     "mobile-check": "node scripts/mobile-check.mjs"
   },
   "dependencies": {
