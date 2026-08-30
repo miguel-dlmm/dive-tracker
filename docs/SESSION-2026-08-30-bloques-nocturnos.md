@@ -767,3 +767,30 @@ de UI — `mobile-check` no aplica a este bloque.
 
 **Commit:** `feat(backups): política MVP de copias de seguridad
 (pg_dump manual) para el plan Free de Supabase`.
+
+### Bloque 20 — Analítica de uso: analizado, sin implementar
+
+Encargo explícito: solo si sobra margen tras lo importante, pensar como
+Product Manager qué medir y por qué antes de nada; no implementar sin
+estudiar privacidad/coste/valor/granularidad/complejidad; si sobra
+mucho margen investigar y proponer arquitectura mínima e implementar si
+es simple y segura; si no, dejar el análisis documentado.
+
+**Decisión:** documentar y no implementar. Con el "grupo reducido de
+usuarios actual" (`CLAUDE.md`), un puñado de sesiones de uso no da una
+señal estadística fiable para priorizar rediseños — el feedback directo
+del propio usuario (exactamente lo que ha dirigido esta sesión de 24
+bloques) ya cumple esa función mejor y más rápido a esta escala.
+Construir analítica propia sobre Supabase reinventaría herramientas que
+ya existen y funcionan bien; una herramienta de terceros sin cookies
+(Plausible o similar) sería la vía correcta el día que compense, pero
+implica coste recurrente y una actualización real de
+`privacyPolicy.js` (nueva `VERSION`, reaceptación) — ninguna de las dos
+justificada hoy.
+
+**Documentación:** fila añadida en `docs/BACKLOG.md` ("No hacer por
+ahora"), con la condición concreta que reactivaría la decisión (varias
+decenas de usuarios activos, no un puñado).
+
+**Commit:** `docs(analitica): documentar por qué no se implementa
+analítica de uso todavía`.
