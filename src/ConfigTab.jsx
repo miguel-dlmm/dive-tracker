@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
-  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users,
+  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck,
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
 import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate } from "./shared";
@@ -330,9 +330,9 @@ function userStatus(active, activatedAt) {
 }
 
 const STATUS_META = {
-  activo: { label: "Activo", cls: "bg-emerald-50 text-emerald-700" },
-  pendiente: { label: "Pendiente", cls: "bg-amber-50 text-amber-700" },
-  desactivado: { label: "Desactivado", cls: "bg-gray-100 text-gray-500" },
+  activo: { label: "Activo", cls: "bg-emerald-50 text-emerald-700", dot: "#10B981" },
+  pendiente: { label: "Pendiente", cls: "bg-amber-50 text-amber-700", dot: "#D97706" },
+  desactivado: { label: "Desactivado", cls: "bg-gray-100 text-gray-500", dot: "#9CA3AF" },
 };
 
 // Badge de solo lectura — cualquier admin puede VERLO, cambiarlo es cosa
@@ -340,9 +340,31 @@ const STATUS_META = {
 // "mostrar estado" de "cambiar estado" es justo lo que permite que la
 // lista (donde nunca hay acción) y el detalle (donde sí la hay, junto al
 // switch) reutilicen la misma pieza sin condicionales de por medio.
+// Punto de color delante del texto (feedback explícito 2026-08-30: "quiero
+// que se entienda de un vistazo, sin obligar a leer demasiado") — el texto
+// se mantiene (nunca solo color, que no llega a quien no distingue bien
+// los colores ni a un lector de pantalla), el punto es el atajo visual.
 function StatusBadge({ status }) {
   const meta = STATUS_META[status] || STATUS_META.desactivado;
-  return <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.cls}`}>{meta.label}</span>;
+  return (
+    <span className={`inline-flex min-h-6 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.cls}`}>
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: meta.dot }} aria-hidden="true" />
+      {meta.label}
+    </span>
+  );
+}
+
+// Rol junto al nickname (feedback explícito 2026-08-30) — un icono, no
+// texto: admin/superadmin son la excepción, no el caso general (la
+// mayoría de filas no lleva nada aquí), así que un icono compacto con
+// aria-label se lee rápido sin ocupar el ancho de una segunda pastilla de
+// texto junto a la de estado. ShieldCheck (relleno) para superadmin,
+// Shield (contorno) para admin — mismo icono base, distinción por "nivel
+// de relleno" en vez de dos formas distintas sin relación visual entre sí.
+function RoleIcon({ isAdmin, isSuperadmin }) {
+  if (isSuperadmin) return <ShieldCheck size={14} className="shrink-0" style={{ color: SUN }} role="img" aria-label="Superadmin" />;
+  if (isAdmin) return <Shield size={14} className="shrink-0" style={{ color: NAVY }} role="img" aria-label="Administrador" />;
+  return null;
 }
 
 // Switch Activar/Desactivar — sustituye el botón-pastilla anterior (2026-08-29,
@@ -454,8 +476,9 @@ function UserListRow({ user, status, onOpen }) {
       className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left"
     >
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <span className="truncate text-sm font-semibold text-gray-800">{user.nickname}</span>
+          <RoleIcon isAdmin={user.is_admin} isSuperadmin={user.is_superadmin} />
           <StatusBadge status={status} />
         </div>
         <p className="mt-0.5 truncate text-xs text-gray-400">

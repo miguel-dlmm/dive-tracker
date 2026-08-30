@@ -380,4 +380,41 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       expect(document.querySelector('[aria-label="Eliminar a otro-admin"]')).toBeNull();
     });
   });
+
+  // Feedback explícito 2026-08-30: estado con punto de color (no solo
+  // texto) y rol visible junto al nickname, ambos "de un vistazo".
+  describe("estado con punto de color y rol junto al nickname", () => {
+    it("un usuario normal activo no lleva icono de rol", async () => {
+      const user = userEvent.setup();
+      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+      await openUsuarios(user);
+      expect(screen.queryByLabelText("Administrador")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Superadmin")).not.toBeInTheDocument();
+    });
+
+    it("un admin lleva el icono 'Administrador' junto al nickname", async () => {
+      const user = userEvent.setup();
+      supabase.rpc.mockResolvedValue({ data: [{ ...TARGET_PROFILE_ROW, is_admin: true }], error: null });
+      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+
+      render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
+      await user.click(screen.getByText("Usuarios"));
+      await waitFor(() => expect(screen.getByText("ana")).toBeInTheDocument());
+
+      expect(screen.getByLabelText("Administrador")).toBeInTheDocument();
+    });
+
+    it("un superadmin lleva el icono 'Superadmin', no el de 'Administrador'", async () => {
+      const user = userEvent.setup();
+      supabase.rpc.mockResolvedValue({ data: [SUPERADMIN_PROFILE_ROW], error: null });
+      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+
+      render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
+      await user.click(screen.getByText("Usuarios"));
+      await waitFor(() => expect(screen.getByText("yo-admin")).toBeInTheDocument());
+
+      expect(screen.getByLabelText("Superadmin")).toBeInTheDocument();
+      expect(screen.queryByLabelText("Administrador")).not.toBeInTheDocument();
+    });
+  });
 });
