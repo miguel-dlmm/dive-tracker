@@ -475,10 +475,19 @@ create policy "update own or admin updates any" on public.profiles
 -- is_admin = false, is_superadmin = false por defecto — no hay forma de
 -- volverse admin desde la app. Tras crear la primera cuenta (nickname
 -- "admin") vía el dashboard de Supabase, hay que promoverla a mano UNA VEZ
--- con esta consulta (no forma parte de ningún flujo de la app a propósito,
--- ver protect_profile_roles_trigger más arriba):
+-- (no forma parte de ningún flujo de la app a propósito).
 --
+-- IMPORTANTE, confirmado al bootstrapear Supabase TEST: protect_profile_
+-- roles_trigger (ver arriba) bloquea CUALQUIER cambio a is_superadmin sin
+-- excepción — los triggers de Postgres no se saltan por rol, a diferencia
+-- de la RLS, así que ni siquiera service_role puede saltárselo. Hace
+-- falta desactivar el trigger, hacer el cambio, y reactivarlo — requiere
+-- conexión directa a Postgres (psql o SQL Editor de Supabase), la API
+-- REST/PostgREST no puede ejecutar `alter table ... disable trigger`:
+--
+-- alter table public.profiles disable trigger protect_profile_roles_trigger;
 -- update public.profiles set is_admin = true, is_superadmin = true where nickname = 'admin';
+-- alter table public.profiles enable trigger protect_profile_roles_trigger;
 
 -- ---------- RLS ----------
 -- Estado actual — migración de RLS completa en las 12 tablas:
