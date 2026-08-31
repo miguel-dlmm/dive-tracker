@@ -15,6 +15,21 @@ export const ACTIVATION_EMAIL_COPY = {
     expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
     footer: "Ocean Flow",
   },
+  // Registro externo (ADR-0023) — a diferencia de "signup" (alta manual
+  // por un admin), aquí la propia persona se ha registrado, así que el
+  // tono confirma su propia acción ("gracias por registrarte") en vez de
+  // avisar de un alta hecha por otra persona.
+  external_signup: {
+    subject: "Confirma tu cuenta en Ocean Flow",
+    preheader: "Entra y crea tu contraseña para empezar.",
+    title: "¡Gracias por registrarte en Ocean Flow!",
+    greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
+    intro: "Ya casi está — confirma tu cuenta para empezar a llevar el control de tus clases, comisiones y pagos.",
+    ctaLabel: "Confirmar cuenta",
+    securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu propia contraseña.",
+    expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, vuelve a registrarte desde la pantalla de acceso.",
+    footer: "Ocean Flow",
+  },
   reactivation: {
     subject: "Tu acceso a Ocean Flow ha sido reactivado",
     preheader: "Entra y crea tu contraseña para volver a acceder.",

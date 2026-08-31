@@ -166,6 +166,33 @@ describe("ConfigTab — gesto de deslizar hacia la derecha = atrás, recursivo",
   });
 });
 
+describe("ConfigTab — Ajustes generales: permitir registro externo (ADR-0023)", () => {
+  it("refleja el valor actual y lo invierte al pulsar el switch", async () => {
+    const updateRow = vi.fn().mockResolvedValue({});
+    const appConfig = { ...rowsHook([{ logo_icon: "Waves", allow_external_registration: false }]), updateRow };
+    const user = userEvent.setup();
+    render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: true, is_superadmin: true }, appConfig })} />);
+
+    await user.click(screen.getByText("Ajustes generales"));
+    const toggle = screen.getByRole("switch", { name: "Permitir registro externo" });
+    expect(toggle).not.toBeChecked();
+
+    await user.click(toggle);
+
+    expect(updateRow).toHaveBeenCalledWith(true, { allow_external_registration: true });
+  });
+
+  it("con el flag ya activado, el switch aparece marcado", async () => {
+    const appConfig = rowsHook([{ logo_icon: "Waves", allow_external_registration: true }]);
+    const user = userEvent.setup();
+    render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: true, is_superadmin: true }, appConfig })} />);
+
+    await user.click(screen.getByText("Ajustes generales"));
+
+    expect(screen.getByRole("switch", { name: "Permitir registro externo" })).toBeChecked();
+  });
+});
+
 describe("ConfigTab — CrudTable crea vía FAB + hoja (ver Escuelas)", () => {
   it("el formulario de alta no es visible hasta pulsar el FAB, y crear cierra la hoja", async () => {
     const user = userEvent.setup();

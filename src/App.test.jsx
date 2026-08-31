@@ -1,11 +1,19 @@
 vi.mock("./useSession", () => ({ useSession: vi.fn(), ACCOUNT_DEACTIVATED_MESSAGE: "Tu cuenta ha sido desactivada. Contacta con un administrador si crees que es un error." }));
 vi.mock("./useSupabaseTable", () => ({ useSupabaseTable: vi.fn() }));
+// AuthGate llama a supabase.rpc("external_registration_enabled") directamente
+// (no vía useSession/useSupabaseTable, ambos ya mockeados arriba) para saber
+// si mostrar "Regístrate" en el login — sin este mock haría una llamada de
+// red real durante los tests. Mismo patrón que ConfigTab.test.jsx.
+vi.mock("./supabaseClient", () => ({
+  supabase: { rpc: vi.fn() },
+}));
 
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { useSession } from "./useSession";
 import { useSupabaseTable } from "./useSupabaseTable";
+import { supabase } from "./supabaseClient";
 
 const SESSION = { user: { id: "u1", email: "diver@example.com" } };
 
@@ -26,6 +34,7 @@ function mockUseSession(overrides) {
 
 beforeEach(() => {
   useSession.mockReset();
+  supabase.rpc.mockReset().mockResolvedValue({ data: false, error: null });
   useSupabaseTable.mockReset().mockReturnValue({
     rows: [],
     loaded: true,
@@ -84,6 +93,30 @@ describe("AuthGate", () => {
     render(<App />);
 
     expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument();
+  });
+
+  it("registro externo desactivado (por defecto): el login no muestra 'Regístrate'", async () => {
+    mockUseSession({ session: null, profile: null });
+
+    render(<App />);
+
+    await waitFor(() => expect(supabase.rpc).toHaveBeenCalledWith("external_registration_enabled"));
+    expect(screen.queryByText("Regístrate")).not.toBeInTheDocument();
+  });
+
+  it("registro externo activado: el login muestra 'Regístrate', y lleva a RegisterScreen y de vuelta", async () => {
+    supabase.rpc.mockResolvedValue({ data: true, error: null });
+    mockUseSession({ session: null, profile: null });
+    const user = userEvent.setup();
+
+    render(<App />);
+    await screen.findByText("Regístrate");
+
+    await user.click(screen.getByText("Regístrate"));
+    expect(screen.getByLabelText("Nickname")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Volver a entrar/ }));
+    expect(screen.getByLabelText("Email o nickname")).toBeInTheDocument();
   });
 
   it("Caso B — sesión existente con activated_at sin fijar, reanuda mostrando la pantalla de activación sin pedir login", () => {

@@ -275,6 +275,47 @@ function GeneralSettings({ appConfig }) {
         <AppLoading iconName={row.logo_icon} color={TEAL} size={32} />
         <span className="text-xs text-gray-400">Vista previa</span>
       </div>
+
+      <hr className="my-4 border-gray-100" />
+
+      <ExternalRegistrationSetting appConfig={appConfig} row={row} />
+    </div>
+  );
+}
+
+// Registro externo (ADR-0023) — off por defecto en cualquier instalación.
+// Encendido, "Regístrate" aparece en el login y cualquiera puede darse de
+// alta él mismo (mismo mecanismo que el alta hecha por un superadmin,
+// solo que autoservicio — ver server/users/externalRegister.js). El
+// endpoint público ya comprueba este mismo flag en cada petición, así que
+// este switch es la única fuente de verdad — nunca hay una vía que lo
+// esquive.
+function ExternalRegistrationSetting({ appConfig, row }) {
+  const toast = useToast();
+  const [saving, setSaving] = useState(false);
+  const enabled = !!row.allow_external_registration;
+
+  const toggle = async () => {
+    setSaving(true);
+    try {
+      await appConfig.updateRow(true, { allow_external_registration: !enabled });
+      toast?.success(enabled ? "Registro externo desactivado" : "Registro externo activado");
+    } catch {
+      toast?.error("No se pudo guardar. Inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-800">Permitir registro externo</h3>
+          <p className="mt-0.5 text-xs text-gray-400">Muestra "Regístrate" en el login para que cualquiera pueda crear su propia cuenta.</p>
+        </div>
+        <BooleanToggle checked={enabled} onChange={toggle} disabled={saving} ariaLabel="Permitir registro externo" />
+      </div>
     </div>
   );
 }

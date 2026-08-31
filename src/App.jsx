@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from "motion/react";
 import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
+import { supabase } from "./supabaseClient";
 import { ToastProvider, AppLoading, useScrolled } from "./shared";
 import EnvironmentIndicator from "./EnvironmentIndicator";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG } from "./colors";
 import LoginScreen from "./LoginScreen";
 import ForgotPasswordScreen from "./ForgotPasswordScreen";
+import RegisterScreen from "./RegisterScreen";
 import CreatePasswordScreen from "./CreatePasswordScreen";
 import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
@@ -557,6 +559,26 @@ function AuthGate() {
   // URL (ver más abajo, hasActivationLink lo cierra solo si se llega aquí
   // con un enlace real).
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  // "Regístrate" en el login — condicionado a app_config.allow_external_registration
+  // (ver ADR-0023). Se lee vía RPC pública (external_registration_enabled)
+  // porque app_config no es legible sin sesión (su policy de SELECT exige
+  // auth.uid() is not null). null mientras carga: el botón no aparece ni
+  // desaparece de golpe, simplemente no está hasta saber que debe estarlo.
+  const [externalRegistrationEnabled, setExternalRegistrationEnabled] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    supabase.rpc("external_registration_enabled").then(({ data, error }) => {
+      if (!active) return;
+      if (error) {
+        console.error("No se pudo comprobar si el registro externo está habilitado", error);
+        return;
+      }
+      setExternalRegistrationEnabled(Boolean(data));
+    });
+    return () => { active = false; };
+  }, []);
 
   const params = new URLSearchParams(window.location.search);
   const tokenHash = params.get("token_hash");
@@ -595,7 +617,14 @@ function AuthGate() {
   if (!session && !activating) {
     if (hasActivationLink) return <CreatePasswordScreen onSubmit={handleActivate} />;
     if (showForgotPassword) return <ForgotPasswordScreen onBack={() => setShowForgotPassword(false)} />;
-    return <LoginScreen signIn={signIn} onForgotPassword={() => setShowForgotPassword(true)} />;
+    if (showRegister) return <RegisterScreen onBack={() => setShowRegister(false)} />;
+    return (
+      <LoginScreen
+        signIn={signIn}
+        onForgotPassword={() => setShowForgotPassword(true)}
+        onRegister={externalRegistrationEnabled ? () => setShowRegister(true) : undefined}
+      />
+    );
   }
 
   if (activating || !profile || !profile.activated_at) {

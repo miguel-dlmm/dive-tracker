@@ -50,3 +50,8 @@
   from = "/api/request-password-reset"
   to = "/.netlify/functions/request-password-reset"
   status = 200
+
+[[redirects]]
+  from = "/api/external-register"
+  to = "/.netlify/functions/external-register"
+  status = 200

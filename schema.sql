@@ -206,8 +206,20 @@ create policy "admin write" on nav_sections for all using (public.is_admin(auth.
 create table if not exists app_config (
   id boolean primary key default true,
   logo_icon text not null default 'Waves',
+  -- Si "Regístrate" aparece en el login (ver ADR-0023). Off por defecto:
+  -- una instalación nueva nunca expone alta pública sin que un superadmin
+  -- lo active a propósito.
+  allow_external_registration boolean not null default false,
   constraint app_config_single_row check (id)
 );
+
+-- Migración aditiva para instalaciones existentes (TEST/PROD) creadas antes
+-- de que app_config tuviera esta columna — ejecutar a mano en el SQL editor
+-- de Supabase. Ver ADR-0023. El `create table if not exists` de arriba ya
+-- la incluye para instalaciones nuevas desde cero.
+--
+--   alter table public.app_config
+--     add column if not exists allow_external_registration boolean not null default false;
 
 -- RLS: mismo patrón que currencies/nav_sections — lectura abierta, escritura solo admin.
 alter table app_config enable row level security;
@@ -379,6 +391,20 @@ language sql security definer set search_path = public stable as $$
 $$;
 
 grant execute on function public.email_for_nickname(text) to anon, authenticated;
+
+-- RPC estrecha para el login: ¿debe mostrarse "Regístrate"? (ver ADR-0023).
+-- security definer por el mismo motivo que email_for_nickname — expone
+-- solo este booleano, invocable por "anon" porque LoginScreen la llama
+-- antes de autenticar. app_config no puede leerse directo desde el cliente
+-- sin sesión (su policy de SELECT exige auth.uid() is not null), de ahí
+-- esta función en vez de relajar esa policy para toda la tabla.
+create or replace function public.external_registration_enabled()
+returns boolean
+language sql security definer set search_path = public stable as $$
+  select coalesce((select allow_external_registration from public.app_config where id), false);
+$$;
+
+grant execute on function public.external_registration_enabled() to anon, authenticated;
 
 -- RPC admin-only para el directorio de usuarios (Configuración → Usuarios).
 -- profiles no tiene columna email a propósito (ver regla arquitectónica de
