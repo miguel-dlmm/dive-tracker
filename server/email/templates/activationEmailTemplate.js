@@ -37,6 +37,22 @@ export const ACTIVATION_EMAIL_COPY = {
     expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
     footer: "Ocean Flow",
   },
+  // Distinto de "password_reset" (ese es cuando UN ADMIN invalida la
+  // contraseña de otra cuenta). Este es autoservicio — la propia persona
+  // lo ha pedido desde "¿Olvidaste tu contraseña?" en el login — así que el
+  // tono es "lo pediste tú" en vez de "un admin te la ha invalidado", y
+  // añade la nota de seguridad estándar de "si no has sido tú, ignóralo".
+  password_reset_request: {
+    subject: "Restablece tu contraseña en Ocean Flow",
+    preheader: "Crea una nueva contraseña para volver a acceder.",
+    title: "Restablece tu contraseña",
+    greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
+    intro: "Has solicitado restablecer tu contraseña en Ocean Flow. Si no has sido tú, puedes ignorar este email — tu contraseña actual seguirá funcionando.",
+    ctaLabel: "Crear nueva contraseña",
+    securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu nueva contraseña.",
+    expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, vuelve a solicitar la recuperación desde la pantalla de acceso.",
+    footer: "Ocean Flow",
+  },
 };
 
 function escapeHtml(value) {
