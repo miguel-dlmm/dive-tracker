@@ -335,9 +335,15 @@ create policy "own rows" on colleague_payments for all using (auth.uid() = user_
 -- intacto a propósito, así el código que todavía no se ha desplegado sigue
 -- funcionando durante la ventana de transición. No requiere cambios de
 -- RLS/triggers/RPCs: ninguno de los tres referencia password_set hoy.
--- Fase 2 (retirar password_set con `alter table ... drop column`) es una
--- migración aparte, deliberadamente no incluida aquí — solo debe ejecutarse
--- una vez el código nuevo lleve un tiempo estable en producción.
+-- Fase 2 (retirar password_set) es una migración aparte, deliberadamente
+-- no incluida aquí — solo debe ejecutarse una vez el código nuevo lleve un
+-- tiempo estable en producción. Confirmado 2026-08-31 (limpieza técnica,
+-- ver ADR-0021): ningún archivo de src/ ni server/ lee ni escribe
+-- password_set ya — activated_at lo sustituyó por completo desde
+-- ADR-0015 (2026-08-29). Lista para ejecutar en cuanto se apruebe, TEST
+-- primero:
+--
+--   alter table public.profiles drop column if exists password_set;
 --
 --   alter table public.profiles
 --     add column if not exists activated_at timestamptz;
