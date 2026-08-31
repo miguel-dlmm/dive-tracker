@@ -62,6 +62,30 @@ describe("AuthGate", () => {
     expect(screen.getByLabelText("Email o nickname")).toBeInTheDocument();
   });
 
+  it("desde el login, '¿Olvidaste tu contraseña?' muestra ForgotPasswordScreen, y 'Volver a entrar' regresa al login", async () => {
+    mockUseSession({ session: null, profile: null });
+    const user = userEvent.setup();
+
+    render(<App />);
+    await user.click(screen.getByText("¿Olvidaste tu contraseña?"));
+
+    expect(screen.getByLabelText("Email")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Email o nickname")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Volver a entrar/ }));
+
+    expect(screen.getByLabelText("Email o nickname")).toBeInTheDocument();
+  });
+
+  it("un enlace de activación en la URL prevalece sobre ForgotPasswordScreen", () => {
+    window.history.pushState({}, "", "/?token_hash=hash-1&type=recovery");
+    mockUseSession({ session: null, profile: null });
+
+    render(<App />);
+
+    expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument();
+  });
+
   it("Caso B — sesión existente con activated_at sin fijar, reanuda mostrando la pantalla de activación sin pedir login", () => {
     window.history.pushState({}, "", "/?token_hash=hash-1&type=recovery");
     mockUseSession({ session: SESSION, profile: { user_id: "u1", activated_at: null } });

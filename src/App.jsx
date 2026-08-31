@@ -8,6 +8,7 @@ import EnvironmentIndicator from "./EnvironmentIndicator";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG } from "./colors";
 import LoginScreen from "./LoginScreen";
+import ForgotPasswordScreen from "./ForgotPasswordScreen";
 import CreatePasswordScreen from "./CreatePasswordScreen";
 import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
@@ -550,6 +551,12 @@ function AuthGate() {
   // compuesta para que CreatePasswordScreen siga siendo quien decide qué
   // mostrar mientras dura.
   const [activating, setActivating] = useState(false);
+  // Pantalla de "olvidé mi contraseña" — estado local, no ruta ni parámetro
+  // de URL, igual que el resto de la navegación pre-login. Solo tiene
+  // sentido mostrarla sin sesión y sin un enlace de activación ya en la
+  // URL (ver más abajo, hasActivationLink lo cierra solo si se llega aquí
+  // con un enlace real).
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const params = new URLSearchParams(window.location.search);
   const tokenHash = params.get("token_hash");
@@ -586,8 +593,9 @@ function AuthGate() {
   }
 
   if (!session && !activating) {
-    if (!hasActivationLink) return <LoginScreen signIn={signIn} />;
-    return <CreatePasswordScreen onSubmit={handleActivate} />;
+    if (hasActivationLink) return <CreatePasswordScreen onSubmit={handleActivate} />;
+    if (showForgotPassword) return <ForgotPasswordScreen onBack={() => setShowForgotPassword(false)} />;
+    return <LoginScreen signIn={signIn} onForgotPassword={() => setShowForgotPassword(true)} />;
   }
 
   if (activating || !profile || !profile.activated_at) {

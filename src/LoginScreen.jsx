@@ -11,7 +11,7 @@ import { ACCOUNT_DEACTIVATED_MESSAGE } from "./useSession";
 // accountBanned (ver AuthGate en App.jsx), así que aquí se ignora
 // explícitamente para no duplicar el aviso con un texto distinto ("email/
 // contraseña incorrectos" sería además incorrecto en ese caso).
-export default function LoginScreen({ signIn, accountBanned = false }) {
+export default function LoginScreen({ signIn, accountBanned = false, onForgotPassword }) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -61,6 +61,12 @@ export default function LoginScreen({ signIn, accountBanned = false }) {
               className={`${inputCls} w-full`}
             />
           </Field>
+
+          {onForgotPassword && (
+            <button type="button" onClick={onForgotPassword} className="text-xs font-medium" style={{ color: TEAL }}>
+              ¿Olvidaste tu contraseña?
+            </button>
+          )}
 
           {accountBanned && <p role="alert" className="text-sm text-red-600">{ACCOUNT_DEACTIVATED_MESSAGE}</p>}
           {error && <p role="alert" className="text-sm text-red-600">{error}</p>}

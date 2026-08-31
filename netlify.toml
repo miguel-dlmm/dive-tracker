@@ -45,3 +45,8 @@
   from = "/api/regenerate-password"
   to = "/.netlify/functions/regenerate-password"
   status = 200
+
+[[redirects]]
+  from = "/api/request-password-reset"
+  to = "/.netlify/functions/request-password-reset"
+  status = 200
