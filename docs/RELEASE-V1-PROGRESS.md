@@ -25,7 +25,7 @@
 | 0 | Contexto, reglas permanentes y protocolo | ✅ Hecho (2026-09-01) |
 | 0.5 | Análisis de riesgos y decisiones (lote nocturno) | ✅ Hecho (2026-09-01, noche) |
 | 1 | Rama y saneamiento | ✅ Hecho (2026-09-01, noche) |
-| 2 | Multidioma | 🟡 En curso |
+| 2 | Multidioma | ✅ Hecho (2026-09-01, noche) |
 | 3 | KPIs en la home | ⬜ Pendiente |
 | 4 | Cabecera y notificaciones | ⬜ Pendiente |
 | 5 | Sistema de Training Records | ⬜ Pendiente |
@@ -565,9 +565,108 @@ cada uno de los 4 commits de esta fase. Registro externo verificado en
 vivo contra un Preview Deployment real (no solo tests), con limpieza de
 las cuentas de prueba usadas para verificar.
 
-## Fase 2 — Multidioma
+## Fase 2 — Multidioma (✅ 2026-09-01, noche)
 
-⬜ Pendiente — no iniciada.
+### Lo hecho
+
+**Infraestructura:**
+- `i18next` + `react-i18next` instalados. `src/i18n/index.js`: un
+  namespace por pantalla (11 en total: `common`, `app`, `auth`,
+  `home`, `summary`, `trabajo`, `config`, `profile`, `help`,
+  `notices`, `rates`), recursos bundleados en build time (sin backend
+  de carga diferida — MVP, la app es pequeña).
+- Migración aditiva `0007-idioma-perfil.sql` aplicada a TEST:
+  `profiles.language` (es/en, default 'es'), `handle_new_user()`
+  actualizado para copiarla del alta.
+- Idioma inicial: `profiles.language` una vez hay sesión (sincronizado
+  en `AppShell`); `localStorage` (`oceanpulse:language`) como
+  respaldo para pantallas sin sesión (Login, Registro...).
+- `vitest.setup.js` inicializa i18next globalmente — los 540 tests
+  existentes siguen en verde sin tocarlos porque cada `es.json` es
+  idéntico, palabra por palabra, al texto que había hardcodeado.
+
+**Traducción completa (es/en) de las 21 pantallas/componentes
+alcanzables por un usuario real:** shared.jsx (15 componentes
+compartidos), cabecera/navegación (App.jsx), Login, Registro, olvidé
+contraseña, restablecer contraseña, crear contraseña, aceptar bases
+legales + textos legales, Home, Resumen, Mi trabajo + MovementSheet,
+Configuración completa (incluida gestión de usuarios y Datasets
+iniciales), Mi perfil, Ayuda completa, WhatsNew, DeploymentNotice,
+Tarifas, PendingCollectionCard. Verificado con un barrido final
+(`grep` de texto español renderizado en JSX, no en comentarios) sin
+resultados — nada queda sin traducir en las pantallas reales de la
+app.
+
+**Selectores de idioma** (encargo explícito: "en el perfil, en el
+registro y en el alta de usuarios") en los 3 sitios pedidos —
+Registro, Mi perfil, "Crear usuario" (admin) — cada uno cambia
+`i18n.changeLanguage()` al instante además de persistir el valor.
+
+**Deliberadamente fuera de la traducción de esta fase:**
+- `WorkLogTab.jsx`/`ComisionesTab.jsx`/`CompanerosTab.jsx`/
+  `PaymentsTab.jsx`: rutas muertas sin ningún punto de entrada en la
+  UI desde la unificación en "Mi trabajo" (ADR-0005) — confirmado en
+  Fase 0. Traducirlas habría sido esfuerzo sobre código inalcanzable.
+- `EnvironmentIndicator.jsx`: la pill "TEST" — mismo texto en
+  cualquier idioma, herramienta de desarrollo, no dato de producto.
+- Contenido dinámico de `deployment_notices` (el resumen/cambios de
+  cada aviso concreto): se sigue redactando en español al crearlo, es
+  contenido editorial de cada sesión, no texto de interfaz.
+- Traducción de los emails transaccionales (activación, avisos) al
+  idioma del destinatario — la infraestructura de idioma por usuario
+  ya existe (`profiles.language`), pero conectarla a `EmailService`
+  no se pidió explícitamente esta fase y no se ha hecho.
+
+### Decisiones y su porqué
+
+- **`common:movementTypes` como fuente única de Curso/Comisión/Ajuste**
+  (pedido explícito del usuario a mitad de fase): antes cada pantalla
+  que mostraba el tipo de movimiento (Home, Resumen, Mi trabajo,
+  Tarifas) traducía `MOVEMENT_TYPE_META.label` por su cuenta. Ahora
+  todas resuelven `t("common:movementTypes.<key>")` — un único sitio
+  que editar, mismo literal garantizado en todas partes.
+- **`TYPE_OPTIONS`/`TYPE_KEY` (Mi trabajo, Tarifas) se quedan en
+  español fijo, a propósito.** Son a la vez el texto mostrado y la
+  clave de búsqueda del `Select` de filtro (`shared.jsx` no separa
+  value/label) — traducirlos rompería el mapeo interno. El label
+  visible en cada fila SÍ usa `common:movementTypes`; solo el valor
+  interno del filtro se queda fijo. Documentado en el código para que
+  no se "corrija" por error en el futuro.
+- **Reparto del trabajo en 9 agentes en paralelo**, cada uno dueño
+  exclusivo de un archivo/namespace, para completar una traducción de
+  esta escala en una sola noche. Un primer intento del namespace
+  `help` no llegó a hacer el trabajo real (reportó sobre coordinación
+  ajena en vez de traducir sus archivos) — detectado verificando el
+  estado real de los ficheros, no solo el informe, y relanzado desde
+  cero con éxito. `RatesTab.jsx` se quedó fuera del reparto inicial
+  (vive en su propio archivo pero se renderiza dentro de
+  Configuración) — detectado en el barrido final y traducido aparte.
+- **Selector de idioma con nombre nativo siempre** ("Español"/
+  "English", nunca traducidos entre sí) — convención estándar de
+  cualquier selector de idioma reconocible sin depender de que la
+  persona ya entienda el idioma actual de la interfaz.
+
+### Descartado
+
+- Traducir automáticamente los emails transaccionales al idioma del
+  perfil en esta misma fase — la columna ya existe para cuando se
+  decida hacerlo, pero conectar `EmailService` a `profiles.language`
+  es un cambio aparte, no pedido explícitamente esta noche.
+
+### Riesgos
+
+- La traducción al inglés de política de privacidad/términos de uso
+  es fiel pero automática, sobre un borrador que ya tenía
+  `[PENDIENTE]` en español — **necesita revisión legal humana en
+  ambos idiomas** antes de tratarse como definitiva. No bloquea
+  probar el resto de la app, sí bloquea confiar en el contenido legal
+  real todavía.
+
+### Verificación
+
+`npm run test` (540/540) y `npm run build` en verde tras cada uno de
+los 9 commits de esta fase. Barrido final de texto español renderizado
+(no en comentarios) sin resultados en ningún archivo vivo.
 
 ## Fase 3 — KPIs en la home
 
@@ -634,3 +733,51 @@ no perderlas.
   un cambio de autenticación real — sigue la regla de `CLAUDE.md` de
   proponer un plan de migración completo y pedir aprobación explícita
   antes de tocar nada, no implementar en un solo paso.
+
+- **Enlace de invitación desde Configuración → Usuarios.** Junto al
+  botón "Crear usuario" existente (superadmin), un botón nuevo para
+  generar un enlace de invitación de un solo uso: quien lo recibe puede
+  autoregistrarse aunque `app_config.allow_external_registration` esté
+  desactivado (el registro público general puede seguir cerrado; el
+  enlace es una excepción puntual y controlada, pensada para invitar a
+  una persona concreta sin abrir el registro a cualquiera).
+  **Especificado por el usuario (2026-09-01, noche):**
+  - **Expira en 24h** desde que se genera.
+  - **Flujo completo:** el superadmin genera el enlace → la persona
+    invitada lo visita → crea su perfil (mismo formulario que el
+    registro externo hoy: email, nombre, apellidos, nickname, idioma)
+    → recibe un email con un enlace de activación (mismo mecanismo que
+    ya existe, `generateActivationLink`) → lo pulsa → entra en la app y
+    empieza a usarla directamente (mismo camino que ya recorre hoy
+    cualquier alta: `CreatePasswordScreen` con aceptación de bases
+    legales, `activateAccount()`). No es un flujo nuevo de principio a
+    fin — el tramo nuevo es solo "crear perfil sin que
+    `allow_external_registration` tenga que estar activado", el resto
+    reutiliza el alta ya existente tal cual.
+  **Puntos a resolver en el diseño antes de implementar** (auth real,
+  sigue la regla de `CLAUDE.md` de proponer plan de migración y pedir
+  aprobación primero, no en un solo paso):
+  - Tabla nueva para el token (p. ej. `invitation_links`: token, quién
+    lo generó, `created_at`, `expires_at` = `created_at` + 24h,
+    usado/no usado) — un token de un solo uso, no reutilizable, y
+    caduca solo por tiempo (no hace falta un job de limpieza aparte,
+    basta con comprobar `expires_at` al validar).
+  - Qué dataset inicial clona un alta por invitación — ¿el mismo
+    criterio que ya usa `externalRegister.js` (dataset activo
+    `is_default`), o lo elige el superadmin al generar el enlace, como
+    ya hace `createUser.js`? Decisión de producto pendiente.
+  - El endpoint de registro público necesita aceptar un `token` y
+    saltarse la comprobación de `allow_external_registration` solo
+    cuando el token es válido, no usado y no caducado — reutilizar la
+    mayor parte de `externalRegister.js`/`RegisterScreen.jsx`, no
+    duplicar el flujo entero.
+  - Qué mensaje ve la persona si visita el enlace ya caducado o ya
+    usado — decidir el texto (tono cercano, no un error técnico) antes
+    de implementar.
+
+- **Bug de UI: el campo "cantidad" del Ajuste de compañeros descuadra
+  el formulario y provoca un salto.** En `MovementSheet.jsx`, el
+  formulario de crear/editar un Ajuste de compañeros no mantiene el
+  mismo formato/altura de navegación entre tipos que el resto —
+  revisar y ajustar para que cambiar de tipo de movimiento no salte ni
+  descuadre el layout, igual que ya no lo hace con Curso/Comisión.
