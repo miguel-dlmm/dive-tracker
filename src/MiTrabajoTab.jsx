@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, RotateCcw, SlidersHorizontal, PartyPopper } from "lucide-react";
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
@@ -55,9 +56,9 @@ function EntryRowTitle({ entry, activityColor }) {
 // "Confirmar cobro" no describe bien saldar una deuda hacia un compañero
 // (importe negativo) — el resto del vocabulario ("Marcar pendiente") se
 // mantiene igual porque sí es correcto en ambos sentidos.
-function actionLabel(entry, isPending) {
-  if (!isPending) return "Marcar pendiente";
-  return entry._source === "companeros" && entry.total < 0 ? "Marcar liquidado" : "Confirmar cobro";
+function actionLabel(entry, isPending, t) {
+  if (!isPending) return t("actionLabel.markPending");
+  return entry._source === "companeros" && entry.total < 0 ? t("actionLabel.markSettled") : t("actionLabel.confirmCollection");
 }
 
 // El cambio de estado es la acción de más frecuencia de la fila — se
@@ -94,6 +95,7 @@ const HEIGHT_MS = 220;
 const EXIT_MS = HEIGHT_DELAY_MS + HEIGHT_MS + 30; // margen antes de disparar el borrado real
 
 function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onEdit, onDelete, animPhase }) {
+  const { t } = useTranslation("trabajo");
   const isAjuste = entry._source === "companeros";
   const negative = isAjuste && entry.total < 0;
   const amountColor = isAjuste ? (negative ? CORAL : GREEN) : NAVY;
@@ -223,7 +225,7 @@ function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onE
         )}
         <div className="mt-1.5 flex items-center justify-between gap-2">
           <span className="truncate text-xs text-gray-400">
-            {entry.date}{MOVEMENT_TYPE_META[entry._source]?.label ? ` · ${MOVEMENT_TYPE_META[entry._source].label}` : ""}
+            {entry.date}{MOVEMENT_TYPE_META[entry._source] ? ` · ${t(`common:movementTypes.${entry._source}`)}` : ""}
           </span>
           <div className="flex shrink-0 items-center gap-1">
             <button
@@ -232,9 +234,9 @@ function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onE
               style={{ color: isPending ? TEAL : "#6B7280" }}
             >
               {isPending ? <Check size={14} aria-hidden="true" /> : <RotateCcw size={13} aria-hidden="true" />}
-              {actionLabel(entry, isPending)}
+              {actionLabel(entry, isPending, t)}
             </button>
-            <RowMenu onEdit={onEdit} onDelete={handleDelete} itemLabel={isAjuste ? `el ajuste con ${entry.colleague_name}` : `${entry.activity} en ${entry.school}`} />
+            <RowMenu onEdit={onEdit} onDelete={handleDelete} itemLabel={isAjuste ? t("rowMenu.adjustmentWith", { name: entry.colleague_name }) : t("rowMenu.courseAt", { activity: entry.activity, school: entry.school })} />
           </div>
         </div>
       </div>
@@ -269,21 +271,21 @@ function useHideFabOnScroll() {
 // Cabecera de grupo por día en la lista — "Hoy"/"Ayer" para orientarse de
 // un vistazo, día+mes abreviado el resto. Ayuda a escanear rápido cuando
 // hay muchos elementos, sin necesitar abrir "Filtrar" para acotar fechas.
-const WEEKDAYS_SHORT_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-const MONTHS_SHORT_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-function dateGroupLabel(dateStr) {
-  if (dateStr === todayStr()) return "Hoy";
-  if (dateStr === addDays(todayStr(), -1)) return "Ayer";
+function dateGroupLabel(dateStr, t) {
+  if (dateStr === todayStr()) return t("dateGroup.today");
+  if (dateStr === addDays(todayStr(), -1)) return t("dateGroup.yesterday");
   const [, m, d] = dateStr.split("-").map(Number);
   const weekday = (new Date(dateStr + "T00:00:00").getDay() + 6) % 7;
-  return `${WEEKDAYS_SHORT_ES[weekday]}, ${d} ${MONTHS_SHORT_ES[m - 1]}`;
+  const weekdaysShort = t("dateGroup.weekdaysShort", { returnObjects: true });
+  const monthsShort = t("dateGroup.monthsShort", { returnObjects: true });
+  return `${weekdaysShort[weekday]}, ${d} ${monthsShort[m - 1]}`;
 }
 
-function emptyMessage(statusFilter, hasActiveFilters) {
+function emptyMessage(statusFilter, hasActiveFilters, t) {
   if (statusFilter === "pendientes") {
-    return hasActiveFilters ? "Sin elementos pendientes con estos filtros." : "Estás al día — nada pendiente.";
+    return hasActiveFilters ? t("emptyMessage.pendingWithFilters") : t("emptyMessage.pendingNoFilters");
   }
-  return hasActiveFilters ? "Sin elementos cobrados con estos filtros." : "Todavía no has marcado nada como cobrado.";
+  return hasActiveFilters ? t("emptyMessage.paidWithFilters") : t("emptyMessage.paidNoFilters");
 }
 
 // schools / activities / paymentTypes / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
@@ -299,6 +301,7 @@ export default function MiTrabajoTab({
   rates, commissionRates, worklog, comisiones, colleaguePayments,
   accentColor = TEAL, userId = null, onOpenPayments,
 }) {
+  const { t } = useTranslation("trabajo");
   const toast = useToast();
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
 
@@ -446,21 +449,21 @@ export default function MiTrabajoTab({
       const undo = async () => {
         try {
           await changeStatus({ ...entry, status: target }, previousStatus);
-          toast?.success("Deshecho");
+          toast?.success(t("toggleStatus.undoneToast"));
         } catch {
-          toast?.error("No se pudo deshacer. Inténtalo de nuevo.");
+          toast?.error(t("toggleStatus.undoError"));
         }
       };
-      const action = { label: "Deshacer", onClick: undo };
+      const action = { label: t("toggleStatus.undoAction"), onClick: undo };
       if (isPendingStatus(target, paymentStatuses.rows)) {
-        toast?.success("Marcado como pendiente", { action });
+        toast?.success(t("toggleStatus.markedPending"), { action });
       } else if (statusFilter === "pendientes") {
-        toast?.success('Marcado como cobrado — cámbialo a "Cobrados" para verlo', { action });
+        toast?.success(t("toggleStatus.markedPaidSwitchTab"), { action });
       } else {
-        toast?.success("Marcado como cobrado", { action });
+        toast?.success(t("toggleStatus.markedPaid"), { action });
       }
     } catch {
-      toast?.error("No se pudo actualizar. Inténtalo de nuevo.");
+      toast?.error(t("genericUpdateError"));
     }
   };
 
@@ -495,12 +498,10 @@ export default function MiTrabajoTab({
     if (pendingAll.length === 0) return;
     const targetStatus = oppositeStatus(pendingAll[0].status, paymentStatuses.rows);
     const count = await bulkUpdateStatus(pendingAll, targetStatus);
-    const verb = hasNegativeAjuste ? "cobrado o liquidado" : "cobrado";
-    const verbPlural = hasNegativeAjuste ? "cobrados o liquidados" : "cobrados";
-    const msg = statusFilter === "pendientes"
-      ? `${count} ${count === 1 ? `movimiento marcado como ${verb}` : `movimientos marcados como ${verbPlural}`} — cambia a "Cobrados" para verlos`
-      : `${count} ${count === 1 ? `movimiento marcado como ${verb}` : `movimientos marcados como ${verbPlural}`}`;
-    toast?.success(msg);
+    const verb = t(hasNegativeAjuste ? "collectAll.verbCobradoOLiquidado" : "collectAll.verbCobrado");
+    const verbPlural = t(hasNegativeAjuste ? "collectAll.verbCobradoOLiquidadoPlural" : "collectAll.verbCobradoPlural");
+    const msgKey = statusFilter === "pendientes" ? "collectAll.toastSwitch" : "collectAll.toastNoSwitch";
+    toast?.success(t(msgKey, { count, verb, verbPlural }));
   };
 
   const [confirmingCollectAll, setConfirmingCollectAll] = useState(false);
@@ -511,7 +512,7 @@ export default function MiTrabajoTab({
       await collectAllPending();
       setConfirmingCollectAll(false);
     } catch {
-      toast?.error("No se pudo actualizar. Inténtalo de nuevo.");
+      toast?.error(t("genericUpdateError"));
     } finally {
       setCollectingAll(false);
     }
@@ -525,7 +526,7 @@ export default function MiTrabajoTab({
     if (paidAll.length === 0) return;
     const targetStatus = oppositeStatus(paidAll[0].status, paymentStatuses.rows);
     const count = await bulkUpdateStatus(paidAll, targetStatus);
-    toast?.success(`${count} ${count === 1 ? "movimiento marcado como pendiente" : "movimientos marcados como pendientes"}`);
+    toast?.success(t("markAllPending.toast", { count }));
   };
 
   const [confirmingMarkAllPending, setConfirmingMarkAllPending] = useState(false);
@@ -536,7 +537,7 @@ export default function MiTrabajoTab({
       await markAllPaidAsPending();
       setConfirmingMarkAllPending(false);
     } catch {
-      toast?.error("No se pudo actualizar. Inténtalo de nuevo.");
+      toast?.error(t("genericUpdateError"));
     } finally {
       setMarkingAllPending(false);
     }
@@ -555,7 +556,7 @@ export default function MiTrabajoTab({
       <PendingCollectionCard totals={pendingTotals} count={pendingIncomeCount} currencyRows={currencies.rows} color={SUN} onPress={onOpenPayments} />
 
       <div className="flex items-center gap-5 border-b border-gray-200">
-        {[["pendientes", `Pendientes${pendingAll.length > 0 ? ` · ${pendingAll.length}` : ""}`], ["cobrados", "Cobrados"]].map(([key, label]) => (
+        {[["pendientes", `${t("tabs.pending")}${pendingAll.length > 0 ? ` · ${pendingAll.length}` : ""}`], ["cobrados", t("tabs.paid")]].map(([key, label]) => (
           <button
             key={key}
             onClick={() => setStatusFilter(key)}
@@ -575,32 +576,28 @@ export default function MiTrabajoTab({
           className={`flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors ${filtersOpen ? "border-transparent text-white" : "border-gray-200 bg-white text-gray-600"}`}
           style={filtersOpen ? { backgroundColor: TEAL } : {}}
         >
-          <SlidersHorizontal size={15} aria-hidden="true" /> Filtrar{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
+          <SlidersHorizontal size={15} aria-hidden="true" /> {t("filter.label")}{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
         </button>
         {statusFilter === "pendientes" && pendingAll.length > 0 && (
           <button onClick={() => setConfirmingCollectAll(true)} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
-            Cobrar todos
+            {t("collectAll.button")}
           </button>
         )}
         {statusFilter === "cobrados" && paidAll.length > 0 && (
           <button onClick={() => setConfirmingMarkAllPending(true)} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
-            Marcar todos como pendientes
+            {t("markAllPending.button")}
           </button>
         )}
       </div>
 
       <ConfirmDialog
         open={confirmingCollectAll}
-        title={`¿Cobrar ${pendingAll.length} ${pendingAll.length === 1 ? "movimiento pendiente" : "movimientos pendientes"}?`}
-        message={
-          hasNegativeAjuste
-            ? `Vas a marcar ${pendingAll.length === 1 ? "este movimiento" : `estos ${pendingAll.length} movimientos`} como cobrado(s) o liquidado(s) de golpe, según corresponda a cada uno. Puedes revertir cada uno por separado después, igual que al confirmarlo de uno en uno.`
-            : `Vas a marcar ${pendingAll.length === 1 ? "este movimiento" : `estos ${pendingAll.length} movimientos`} como cobrado${pendingAll.length === 1 ? "" : "s"} de golpe. Puedes revertir cada uno por separado después, igual que al confirmarlo de uno en uno.`
-        }
+        title={t("collectAll.title", { count: pendingAll.length })}
+        message={t(hasNegativeAjuste ? "collectAll.messageAjuste" : "collectAll.messageSimple", { count: pendingAll.length })}
         onConfirm={confirmCollectAll}
         onCancel={() => setConfirmingCollectAll(false)}
         loading={collectingAll}
-        confirmLabel="Cobrar"
+        confirmLabel={t("collectAll.confirmLabel")}
         danger={false}
       />
 
@@ -609,18 +606,18 @@ export default function MiTrabajoTab({
           activos (paidAll), mismo componente de confirmación. */}
       <ConfirmDialog
         open={confirmingMarkAllPending}
-        title={`¿Marcar ${paidAll.length} ${paidAll.length === 1 ? "movimiento cobrado" : "movimientos cobrados"} como pendientes?`}
-        message={`Vas a devolver ${paidAll.length === 1 ? "este movimiento" : `estos ${paidAll.length} movimientos`} a pendiente de golpe. Puedes revertir cada uno por separado después, igual que al hacerlo de uno en uno.`}
+        title={t("markAllPending.title", { count: paidAll.length })}
+        message={t("markAllPending.message", { count: paidAll.length })}
         onConfirm={confirmMarkAllPending}
         onCancel={() => setConfirmingMarkAllPending(false)}
         loading={markingAllPending}
-        confirmLabel="Marcar pendientes"
+        confirmLabel={t("markAllPending.confirmLabel")}
         danger={false}
       />
 
       {filtersOpen && (
         <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50/60 p-3">
-          <Field label="Periodo">
+          <Field label={t("filter.period")}>
             <DateRangePicker from={filters.from} to={filters.to} onChange={(r) => setFilters({ ...filters, ...r })} />
           </Field>
           {/* Filtro de Escuela oculto con una sola escuela configurada
@@ -629,14 +626,21 @@ export default function MiTrabajoTab({
               aparecer en cuanto exista una segunda escuela. */}
           <div className={`grid grid-cols-2 gap-2 ${schools.rows.length > 1 ? "sm:grid-cols-3" : ""}`}>
             {schools.rows.length > 1 && (
-              <Field label="Escuela"><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Todas" /></Field>
+              <Field label={t("filter.school")}><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder={t("filter.allFeminine")} /></Field>
             )}
-            <Field label="Curso"><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder="Todos" /></Field>
-            <Field label="Tipo"><Select value={filters.type} onChange={(v) => setFilters({ ...filters, type: v })} options={TYPE_OPTIONS} placeholder="Todos" /></Field>
+            {/* TYPE_OPTIONS (valores del filtro Tipo) se dejan sin traducir a
+                propósito: Select solo admite value===label como string plano
+                (sin pares {value,label}), y esos mismos textos son también
+                la clave que usa TYPE_KEY para mapear a _source — traducirlos
+                aquí rompería ese cruce. Requiere ampliar Select para
+                value/label separados antes de poder traducir esta lista;
+                anotado para quien toque shared.jsx. */}
+            <Field label={t("filter.course")}><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder={t("filter.allMasculine")} /></Field>
+            <Field label={t("filter.type")}><Select value={filters.type} onChange={(v) => setFilters({ ...filters, type: v })} options={TYPE_OPTIONS} placeholder={t("filter.allMasculine")} /></Field>
           </div>
           {hasActiveFilters && (
             <button onClick={clearFilters} className="min-h-9 text-xs font-medium text-gray-400 hover:text-gray-600">
-              Limpiar filtros
+              {t("filter.clear")}
             </button>
           )}
         </div>
@@ -666,10 +670,10 @@ export default function MiTrabajoTab({
           // aparición ya existente en la app en vez de crear una nueva.
           <div className="flex flex-col items-center gap-2 px-4 py-10 text-center animate-help-fade-in">
             {statusFilter === "pendientes" && !hasActiveFilters && <PartyPopper size={26} className="text-gray-300" aria-hidden="true" />}
-            <p className="text-sm text-gray-400">{emptyMessage(statusFilter, hasActiveFilters)}</p>
+            <p className="text-sm text-gray-400">{emptyMessage(statusFilter, hasActiveFilters, t)}</p>
             {hasActiveFilters && (
               <button onClick={clearFilters} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
-                Limpiar filtros
+                {t("filter.clear")}
               </button>
             )}
           </div>
@@ -681,7 +685,7 @@ export default function MiTrabajoTab({
                 <React.Fragment key={entryKey(e)}>
                   {showGroupHeader && (
                     <div className="bg-gray-50/80 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                      {dateGroupLabel(e.date)}
+                      {dateGroupLabel(e.date, t)}
                     </div>
                   )}
                   <EntryRow
@@ -697,7 +701,7 @@ export default function MiTrabajoTab({
             })}
             {showPaidCapHint && (
               <p className="px-4 py-3 text-center text-xs text-gray-400">
-                Mostrando los {RECENT_PAID_LIMIT} cobrados más recientes de {paidAll.length} — usa "Filtrar" para ver un periodo concreto.
+                {t("paidCapHint", { limit: RECENT_PAID_LIMIT, total: paidAll.length })}
               </p>
             )}
           </div>
@@ -713,7 +717,7 @@ export default function MiTrabajoTab({
           Ajuste. */}
       <Fab
         onClick={() => setSheetRequest({ type: "ganado", editingEntry: null })}
-        label="Añadir"
+        label={t("fabAdd")}
         color={accentColor}
         visible={fabVisible}
       />

@@ -1,1 +1,132 @@
-{}
+{
+  "actionLabel": {
+    "markPending": "Mark pending",
+    "markSettled": "Mark settled",
+    "confirmCollection": "Confirm payment"
+  },
+  "dateGroup": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "weekdaysShort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "monthsShort": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "No pending items match these filters.",
+    "pendingNoFilters": "You're all caught up — nothing pending.",
+    "paidWithFilters": "No collected items match these filters.",
+    "paidNoFilters": "You haven't marked anything as collected yet."
+  },
+  "rowMenu": {
+    "adjustmentWith": "the adjustment with {{name}}",
+    "courseAt": "{{activity}} at {{school}}"
+  },
+  "tabs": {
+    "pending": "Pending",
+    "paid": "Collected"
+  },
+  "filter": {
+    "label": "Filter",
+    "period": "Period",
+    "school": "School",
+    "course": "Course",
+    "type": "Type",
+    "allFeminine": "All",
+    "allMasculine": "All",
+    "clear": "Clear filters"
+  },
+  "collectAll": {
+    "button": "Collect all",
+    "confirmLabel": "Collect",
+    "title_one": "Collect {{count}} pending movement?",
+    "title_other": "Collect {{count}} pending movements?",
+    "messageAjuste_one": "You're about to mark this movement as collected/settled at once, whichever applies. You can revert each one separately afterwards, just like confirming them one by one.",
+    "messageAjuste_other": "You're about to mark these {{count}} movements as collected/settled at once, whichever applies to each. You can revert each one separately afterwards, just like confirming them one by one.",
+    "messageSimple_one": "You're about to mark this movement as collected at once. You can revert it afterwards, just like confirming it on its own.",
+    "messageSimple_other": "You're about to mark these {{count}} movements as collected at once. You can revert each one separately afterwards, just like confirming them one by one.",
+    "toastSwitch_one": "{{count}} movement marked as {{verb}} — switch to \"Collected\" to see it",
+    "toastSwitch_other": "{{count}} movements marked as {{verbPlural}} — switch to \"Collected\" to see them",
+    "toastNoSwitch_one": "{{count}} movement marked as {{verb}}",
+    "toastNoSwitch_other": "{{count}} movements marked as {{verbPlural}}",
+    "verbCobrado": "collected",
+    "verbCobradoPlural": "collected",
+    "verbCobradoOLiquidado": "collected or settled",
+    "verbCobradoOLiquidadoPlural": "collected or settled"
+  },
+  "markAllPending": {
+    "button": "Mark all as pending",
+    "confirmLabel": "Mark pending",
+    "title_one": "Mark {{count}} collected movement as pending?",
+    "title_other": "Mark {{count}} collected movements as pending?",
+    "message_one": "You're about to move this movement back to pending at once. You can revert it afterwards, just like doing it on its own.",
+    "message_other": "You're about to move these {{count}} movements back to pending at once. You can revert each one separately afterwards, just like doing it one by one.",
+    "toast_one": "{{count}} movement marked as pending",
+    "toast_other": "{{count}} movements marked as pending"
+  },
+  "paidCapHint": "Showing the {{limit}} most recent collected of {{total}} — use \"Filter\" to see a specific period.",
+  "fabAdd": "Add",
+  "toggleStatus": {
+    "undoneToast": "Undone",
+    "undoError": "Couldn't undo. Try again.",
+    "undoAction": "Undo",
+    "markedPending": "Marked as pending",
+    "markedPaidSwitchTab": "Marked as collected — switch to \"Collected\" to see it",
+    "markedPaid": "Marked as collected"
+  },
+  "genericUpdateError": "Couldn't update. Try again.",
+  "sheet": {
+    "close": "Close",
+    "typeSelectorAria": "Movement type",
+    "createTypes": {
+      "ganado": "Course taught",
+      "comision": "Commission",
+      "companeros": "Colleague adjustment"
+    },
+    "titleEdit": {
+      "ganado": "Edit course taught",
+      "comision": "Edit commission",
+      "companeros": "Edit colleague adjustment"
+    },
+    "titleNew": {
+      "ganado": "New course taught",
+      "comision": "New commission",
+      "companeros": "New colleague adjustment"
+    },
+    "fields": {
+      "course": "Course",
+      "school": "School",
+      "date": "Date",
+      "relatedColleague": "Related colleague",
+      "amount": "Amount · {{currency}}",
+      "amountHint": "Positive if they pay you; negative if you pay them",
+      "colleaguePlaceholder": "Ana, Marc...",
+      "amountPlaceholder": "90 or -30",
+      "peopleCount": "No. of people",
+      "lessPeople": "Fewer people",
+      "morePeople": "More people",
+      "total": "Total",
+      "perPerson": "/ person",
+      "addRate": "Add rate",
+      "notes": "Notes",
+      "notesPlaceholder": "Optional",
+      "addNote": "Add note"
+    },
+    "rate": {
+      "label": "Rate — {{school}} · {{activity}}",
+      "cancel": "Cancel",
+      "placeholder": "Rate",
+      "ariaLabel": "Rate · {{currency}}",
+      "saving": "Saving rate",
+      "save": "Save rate"
+    },
+    "save": "Save",
+    "toasts": {
+      "changesSaved": "Changes saved",
+      "adjustmentAdded": "Adjustment added",
+      "courseAdded": "Course added",
+      "commissionAdded": "Commission added",
+      "saveError": "Couldn't save. Try again.",
+      "rateAdded": "Rate added",
+      "rateSaveError": "Couldn't save the rate. Try again."
+    }
+  }
+}
