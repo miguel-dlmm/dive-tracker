@@ -1,1 +1,51 @@
-{}
+{
+  "whatsNew": {
+    "close": "Close",
+    "slideTablist": "Slide",
+    "back": "Back",
+    "next": "Next",
+    "start": "Let's go",
+    "slides": [
+      {
+        "title": "My work, all in one place",
+        "body": "Courses, commissions and adjustments with colleagues, in a single list — no more jumping between three screens for the same thing."
+      },
+      {
+        "title": "Rates, with the same look as My work",
+        "body": "Type, date added and currency, all at a glance on every rate — no extra fields to fill in each time."
+      },
+      {
+        "title": "Summary, easier to explore",
+        "body": "Tap any period on the strip up top to jump to it, and any course to see where the money comes from."
+      },
+      {
+        "title": "Swipe, not just tap",
+        "body": "Close sheets and go back in Settings and Help by swiping — just like any app you're already used to."
+      },
+      {
+        "title": "More stable end to end",
+        "body": "Fixed several things under the hood: the bottom bar, end-of-month totals, and user management."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Close",
+    "eyebrow": "New deployment",
+    "branchLabel": "Branch",
+    "commitLabel": "commit",
+    "technicalChanges": "Technical changes",
+    "functionalChanges": "Feature changes",
+    "uiChangesLabel": "UI changes:",
+    "uiChangesYes": "Yes",
+    "uiChangesNo": "No",
+    "stepsHeading": "What to test / what to do",
+    "testsLabel": "Tests:",
+    "buildLabel": "Build:",
+    "notReported": "not reported",
+    "previewCommit": "View commit preview",
+    "previewCommitEmpty": "Commit preview: not available yet",
+    "previewIntegrated": "View integrated preview (Release-V1)",
+    "previewIntegratedEmpty": "Integrated preview: not available yet",
+    "understood": "Got it"
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Briefcase, Coins, TrendingUp, Hand, ShieldCheck } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
@@ -30,50 +31,33 @@ import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 // usuario real (cuenta "dev-bypass", datos de prueba). Iconografía + color
 // coherente con el resto de la app cumple igual el objetivo ("muy
 // visual") sin ese riesgo.
-const SLIDES = [
-  {
-    icon: Briefcase,
-    color: TEAL,
-    title: "Mi trabajo, todo en un sitio",
-    body: "Cursos, comisiones y ajustes con compañeros, en una única lista — sin saltar entre tres pantallas para lo mismo.",
-  },
-  {
-    icon: Coins,
-    color: SUN,
-    title: "Tarifas, con la misma cara que Mi trabajo",
-    body: "Tipo, fecha de alta y moneda se ven de un vistazo en cada tarifa — sin campos de más que rellenar cada vez.",
-  },
-  {
-    icon: TrendingUp,
-    color: GREEN,
-    title: "Resumen, más fácil de recorrer",
-    body: "Toca cualquier periodo de la franja de arriba para saltar a él, y cualquier curso para ver de dónde viene el dinero.",
-  },
-  {
-    icon: Hand,
-    color: CORAL,
-    title: "Desliza, no solo toques",
-    body: "Cierra formularios y vuelve atrás en Configuración y Ayuda deslizando — como en cualquier app a la que ya estás acostumbrado.",
-  },
-  {
-    icon: ShieldCheck,
-    color: NAVY,
-    title: "Más estable de un extremo a otro",
-    body: "Corregidos varios detalles de fondo: la barra inferior, los totales de fin de mes, y la gestión de usuarios.",
-  },
+// icon/color no son traducibles — título/cuerpo de cada diapositiva viven en
+// notices.json (whatsNew.slides, mismo orden por índice) y se combinan con
+// este array en el componente.
+const SLIDE_ICONS = [
+  { icon: Briefcase, color: TEAL },
+  { icon: Coins, color: SUN },
+  { icon: TrendingUp, color: GREEN },
+  { icon: Hand, color: CORAL },
+  { icon: ShieldCheck, color: NAVY },
 ];
 
 const SWIPE_THRESHOLD = 60;
 
 export default function WhatsNew({ onClose }) {
+  const { t } = useTranslation("notices");
   const [step, setStep] = useState(0);
   const reduced = usePrefersReducedMotion();
   useEscapeClose(true, onClose);
   useBodyScrollLock(true);
 
-  const slide = SLIDES[step];
+  // returnObjects: true — necesario en i18next para leer un array/objeto
+  // completo de la traducción en vez de una única cadena.
+  const slideCopy = t("whatsNew.slides", { returnObjects: true });
+  const slides = SLIDE_ICONS.map((s, i) => ({ ...s, ...slideCopy[i] }));
+  const slide = slides[step];
   const Icon = slide.icon;
-  const isLast = step === SLIDES.length - 1;
+  const isLast = step === slides.length - 1;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
@@ -85,7 +69,7 @@ export default function WhatsNew({ onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-end p-2">
-          <button onClick={onClose} aria-label="Cerrar" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50">
+          <button onClick={onClose} aria-label={t("whatsNew.close")} className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50">
             <X size={18} aria-hidden="true" />
           </button>
         </div>
@@ -114,8 +98,8 @@ export default function WhatsNew({ onClose }) {
           </AnimatePresence>
         </div>
 
-        <div className="flex items-center justify-center gap-1.5 py-4" role="tablist" aria-label="Diapositiva">
-          {SLIDES.map((_, i) => (
+        <div className="flex items-center justify-center gap-1.5 py-4" role="tablist" aria-label={t("whatsNew.slideTablist")}>
+          {slides.map((_, i) => (
             <span
               key={i}
               className="h-1.5 rounded-full transition-all"
@@ -130,7 +114,7 @@ export default function WhatsNew({ onClose }) {
               onClick={() => setStep((s) => s - 1)}
               className="min-h-11 flex-1 rounded-md border border-gray-200 text-sm font-medium text-gray-600"
             >
-              Atrás
+              {t("whatsNew.back")}
             </button>
           )}
           <button
@@ -138,7 +122,7 @@ export default function WhatsNew({ onClose }) {
             className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-semibold text-white"
             style={{ backgroundColor: TEAL }}
           >
-            {isLast ? "Empezar" : "Siguiente"}
+            {isLast ? t("whatsNew.start") : t("whatsNew.next")}
           </button>
         </div>
       </div>

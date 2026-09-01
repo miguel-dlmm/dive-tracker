@@ -1,1 +1,51 @@
-{}
+{
+  "whatsNew": {
+    "close": "Cerrar",
+    "slideTablist": "Diapositiva",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "start": "Empezar",
+    "slides": [
+      {
+        "title": "Mi trabajo, todo en un sitio",
+        "body": "Cursos, comisiones y ajustes con compañeros, en una única lista — sin saltar entre tres pantallas para lo mismo."
+      },
+      {
+        "title": "Tarifas, con la misma cara que Mi trabajo",
+        "body": "Tipo, fecha de alta y moneda se ven de un vistazo en cada tarifa — sin campos de más que rellenar cada vez."
+      },
+      {
+        "title": "Resumen, más fácil de recorrer",
+        "body": "Toca cualquier periodo de la franja de arriba para saltar a él, y cualquier curso para ver de dónde viene el dinero."
+      },
+      {
+        "title": "Desliza, no solo toques",
+        "body": "Cierra formularios y vuelve atrás en Configuración y Ayuda deslizando — como en cualquier app a la que ya estás acostumbrado."
+      },
+      {
+        "title": "Más estable de un extremo a otro",
+        "body": "Corregidos varios detalles de fondo: la barra inferior, los totales de fin de mes, y la gestión de usuarios."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Cerrar",
+    "eyebrow": "Nuevo despliegue",
+    "branchLabel": "Rama",
+    "commitLabel": "commit",
+    "technicalChanges": "Cambios técnicos",
+    "functionalChanges": "Cambios de funcionalidad",
+    "uiChangesLabel": "Cambios de UI:",
+    "uiChangesYes": "Sí",
+    "uiChangesNo": "No",
+    "stepsHeading": "Qué probar / qué hacer",
+    "testsLabel": "Tests:",
+    "buildLabel": "Build:",
+    "notReported": "no reportado",
+    "previewCommit": "Preview del commit",
+    "previewCommitEmpty": "Preview del commit: sin preview todavía",
+    "previewIntegrated": "Preview integrada (Release-V1)",
+    "previewIntegratedEmpty": "Preview integrada: sin preview todavía",
+    "understood": "Entendido"
+  }
+}

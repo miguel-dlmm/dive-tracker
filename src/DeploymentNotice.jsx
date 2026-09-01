@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Rocket, ExternalLink } from "lucide-react";
 import { NAVY, TEAL } from "./colors";
@@ -20,6 +21,7 @@ import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 // ni se hace la consulta para un admin normal o un usuario sin rol, doble
 // garantía junto con la policy RLS "superadmin read" de la propia tabla.
 export default function DeploymentNotice({ userId }) {
+  const { t } = useTranslation("notices");
   const [notice, setNotice] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const reduced = usePrefersReducedMotion();
@@ -85,7 +87,7 @@ export default function DeploymentNotice({ userId }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-end p-2">
-          <button onClick={dismiss} aria-label="Cerrar" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50">
+          <button onClick={dismiss} aria-label={t("deploymentNotice.close")} className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50">
             <X size={18} aria-hidden="true" />
           </button>
         </div>
@@ -100,16 +102,16 @@ export default function DeploymentNotice({ userId }) {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
               <Rocket size={26} style={{ color: TEAL }} aria-hidden="true" />
             </div>
-            <p className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>Nuevo despliegue</p>
+            <p className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>{t("deploymentNotice.eyebrow")}</p>
             <h2 id="deployment-notice-title" className="mb-2 text-center text-base font-bold" style={{ color: NAVY }}>{notice.summary}</h2>
             <p className="mb-3 text-center text-[11px] text-gray-400">
-              Rama <span className="font-medium text-gray-600">{notice.branch}</span>
-              {" · "}commit <span className="font-mono">{notice.commit_hash?.slice(0, 7)}</span>
+              {t("deploymentNotice.branchLabel")} <span className="font-medium text-gray-600">{notice.branch}</span>
+              {" · "}{t("deploymentNotice.commitLabel")} <span className="font-mono">{notice.commit_hash?.slice(0, 7)}</span>
             </p>
 
             {technicalChanges.length > 0 && (
               <div className="mb-3">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Cambios técnicos</p>
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{t("deploymentNotice.technicalChanges")}</p>
                 <ul className="space-y-1 text-sm text-gray-600">
                   {technicalChanges.map((item, i) => <li key={i} className="flex gap-1.5"><span aria-hidden="true">•</span><span>{item}</span></li>)}
                 </ul>
@@ -118,7 +120,7 @@ export default function DeploymentNotice({ userId }) {
 
             {functionalChanges.length > 0 && (
               <div className="mb-3">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Cambios de funcionalidad</p>
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{t("deploymentNotice.functionalChanges")}</p>
                 <ul className="space-y-1 text-sm text-gray-600">
                   {functionalChanges.map((item, i) => <li key={i} className="flex gap-1.5"><span aria-hidden="true">•</span><span>{item}</span></li>)}
                 </ul>
@@ -126,13 +128,13 @@ export default function DeploymentNotice({ userId }) {
             )}
 
             <p className="mb-3 text-sm text-gray-600">
-              <span className="font-semibold" style={{ color: NAVY }}>Cambios de UI:</span>{" "}
-              {notice.has_ui_changes ? (notice.ui_changes_note || "Sí") : "No"}
+              <span className="font-semibold" style={{ color: NAVY }}>{t("deploymentNotice.uiChangesLabel")}</span>{" "}
+              {notice.has_ui_changes ? (notice.ui_changes_note || t("deploymentNotice.uiChangesYes")) : t("deploymentNotice.uiChangesNo")}
             </p>
 
             {steps.length > 0 && (
               <div className="mb-3">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Qué probar / qué hacer</p>
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{t("deploymentNotice.stepsHeading")}</p>
                 <ol className="space-y-1 text-sm text-gray-600">
                   {steps.map((item, i) => <li key={i} className="flex gap-1.5"><span aria-hidden="true">{i + 1}.</span><span>{item}</span></li>)}
                 </ol>
@@ -140,7 +142,7 @@ export default function DeploymentNotice({ userId }) {
             )}
 
             <p className="mb-3 text-xs text-gray-500">
-              Tests: {notice.tests_status || "no reportado"} · Build: {notice.build_status || "no reportado"}
+              {t("deploymentNotice.testsLabel")} {notice.tests_status || t("deploymentNotice.notReported")} · {t("deploymentNotice.buildLabel")} {notice.build_status || t("deploymentNotice.notReported")}
             </p>
 
             <div className="mb-3 space-y-2">
@@ -151,10 +153,10 @@ export default function DeploymentNotice({ userId }) {
                   rel="noreferrer"
                   className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 text-sm font-medium text-gray-600"
                 >
-                  Preview del commit <ExternalLink size={14} aria-hidden="true" />
+                  {t("deploymentNotice.previewCommit")} <ExternalLink size={14} aria-hidden="true" />
                 </a>
               ) : (
-                <p className="text-center text-xs text-gray-400">Preview del commit: sin preview todavía</p>
+                <p className="text-center text-xs text-gray-400">{t("deploymentNotice.previewCommitEmpty")}</p>
               )}
               {notice.integration_preview_url ? (
                 <a
@@ -163,10 +165,10 @@ export default function DeploymentNotice({ userId }) {
                   rel="noreferrer"
                   className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 text-sm font-medium text-gray-600"
                 >
-                  Preview integrada (Release-V1) <ExternalLink size={14} aria-hidden="true" />
+                  {t("deploymentNotice.previewIntegrated")} <ExternalLink size={14} aria-hidden="true" />
                 </a>
               ) : (
-                <p className="text-center text-xs text-gray-400">Preview integrada: sin preview todavía</p>
+                <p className="text-center text-xs text-gray-400">{t("deploymentNotice.previewIntegratedEmpty")}</p>
               )}
             </div>
           </motion.div>
@@ -178,7 +180,7 @@ export default function DeploymentNotice({ userId }) {
             className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-semibold text-white"
             style={{ backgroundColor: TEAL }}
           >
-            Entendido
+            {t("deploymentNotice.understood")}
           </button>
         </div>
       </div>
