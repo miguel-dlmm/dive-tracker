@@ -125,11 +125,34 @@ sea barato el día que haga falta, sin necesitar hoy soportar dos a la vez.
   "olvidé mi contraseña" es una decisión de producto y seguridad
   (rate-limiting, enumeración de emails) que no estaba en el encargo de
   esta sesión.
-- Verificar un dominio propio en Resend. `EMAIL_FROM` usa hoy el dominio de
-  pruebas `onboarding@resend.dev` (solo entrega al email del titular de la
-  cuenta Resend) — suficiente para validar el flujo completo antes de dar
-  de alta usuarios reales. Verificar dominio + DNS queda como acción
-  manual pendiente, no bloqueante para el código de esta sesión.
+- ~~Verificar un dominio propio en Resend.~~ Hecho — ver addendum
+  2026-09-01 abajo.
 - Selector de proveedor configurable (`EMAIL_PROVIDER=`) — ver punto 4 de
   la Decisión. Se añadirá el día que exista un segundo proveedor real que
   soportar, no antes.
+
+## Addendum 2026-09-01 (noche) — dominio verificado, `EMAIL_FROM` corregido en local, pendiente en Vercel
+
+Encontrado durante Release V1 (registro externo real probado por el
+usuario contra TEST): `EMAIL_FROM` seguía apuntando al dominio de
+pruebas de Resend (`onboarding@resend.dev`), que Resend solo entrega al
+email del titular de la cuenta — cualquier registro con OTRO email
+fallaba en silencio (best-effort: la cuenta se creaba igual, pero el
+email de activación nunca llegaba, sin ningún error visible para quien
+se registraba). El dominio `oceanflow.money` ya estaba verificado en
+Resend (`status: verified`, comprobado vía API) desde esta misma sesión,
+pero nadie había actualizado `EMAIL_FROM` para usarlo — exactamente el
+paso manual que este ADR ya dejó anotado como pendiente el 2026-08-31.
+
+- **`EMAIL_FROM` corregido a `Ocean Flow <no-reply@oceanflow.money>` en
+  `.env.local`** (verificado con un envío real de prueba — `200`, y
+  reenviado con éxito el email de activación pendiente de la cuenta de
+  prueba afectada).
+- **Pendiente, acción manual fuera del alcance de esta sesión:**
+  actualizar `EMAIL_FROM` en las variables de entorno de Vercel — tanto
+  en el proyecto `dive-tracker` (TEST) como en `dive-tracker-exgg`
+  (producción) — al mismo valor. Hasta que se haga, el registro externo y
+  cualquier alta de usuario en TEST/producción seguirán sin enviar el
+  email de activación a nadie que no sea el titular de la cuenta Resend.
+  Ver `docs/RELEASE-V1-PROGRESS.md`, sección "Nota — dominio de Resend",
+  para el seguimiento.

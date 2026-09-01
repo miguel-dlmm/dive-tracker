@@ -265,6 +265,47 @@ reales del código), con la propuesta de acciones concretas que pide el
 encargo. Si el usuario quiere pruebas de carga reales, es una decisión
 aparte que tomar mañana.
 
+### Nota — dominio de Resend y bug real encontrado (email transaccional, ADR-0021)
+
+**Estado del dominio:** comprobado 2026-09-01 noche vía
+`scripts/check-resend-domain.local.mjs` — `oceanflow.money`, **verified**,
+envío habilitado.
+
+**Bug real encontrado en vivo:** el usuario probó el registro externo
+contra TEST mientras se escribía este informe y reportó un 400 en
+consola + una cuenta creada sin email de activación. Investigado a
+fondo (ver ADR-0021, addendum 2026-09-01): **causa raíz confirmada**,
+`EMAIL_FROM` seguía apuntando al remitente de pruebas de Resend
+(`onboarding@resend.dev`), que solo entrega al titular de la cuenta
+Resend — cualquier alta con otro email fallaba el envío en silencio
+(la cuenta SÍ se crea, `best-effort` por diseño, pero el email nunca
+llega y no se muestra ningún error real al usuario más allá del toast
+genérico "no se pudo enviar"). El 400 de consola resultó ser de un
+intento anterior (nickname/validación), un evento distinto — no la
+misma causa que el email no enviado.
+
+**Corregido esta noche:**
+- `EMAIL_FROM` → `Ocean Flow <no-reply@oceanflow.money>` en
+  `.env.local` (verificado con un envío de prueba real, 200 OK).
+- Reenviado con éxito el email de activación pendiente a la cuenta de
+  prueba afectada (`mi.gueldlmm@gmail.com`, nickname `mmm`) usando el
+  código real de `generateActivationLink`/`sendActivationEmail` — ya no
+  está bloqueada.
+- `docs/ADR/0021-servicio-de-email-transaccional.md` actualizado con el
+  addendum completo.
+
+**⚠️ Pendiente — acción manual que el usuario debe hacer mañana (fuera
+de mi alcance esta noche, son variables de entorno de Vercel, no
+código):** actualizar `EMAIL_FROM` a `Ocean Flow <no-reply@oceanflow.money>`
+en las variables de entorno de **ambos** proyectos Vercel —
+`dive-tracker` (TEST) y `dive-tracker-exgg` (producción). Hasta que se
+haga, cualquier alta de usuario real en TEST o en producción seguirá sin
+enviar el email de activación a nadie que no sea el titular de la
+cuenta Resend — esto **bloquea el lanzamiento público** (el objetivo
+completo de Release V1) si no se corrige antes de abrir el registro a
+desconocidos. Es el hallazgo más importante de toda la noche — revisar
+esto primero mañana.
+
 ### Fase 8 — Revisión visual y libro de estilo
 
 **Riesgo:** bajo — expresamente sin backend ni funcionalidades nuevas
