@@ -1,16 +1,18 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Waves, Loader2, ArrowLeft, MailCheck } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
-import { inputCls, Field } from "./shared";
+import { inputCls, Field, Select } from "./shared";
 import { useToast } from "./shared";
+import i18n, { setStoredLanguage, SUPPORTED_LANGUAGES } from "./i18n";
 
 // No pide contraseña ni aceptación legal aquí — eso ya lo resuelve
 // CreatePasswordScreen (tiene su propio checkbox de bases legales) cuando
 // la persona pulsa el enlace del email de confirmación. Mismo mecanismo
 // que el alta hecha por un admin (activateAccount()), autoregistrado en
 // vez de admin-invitado — ver ADR-0023. Nunca un segundo camino de
-// autenticación paralelo.
-const CONFIRMATION_MESSAGE = "Te hemos enviado un email para confirmar tu cuenta. Ábrelo y crea tu contraseña para empezar a usar Ocean Flow.";
+// autenticación paralelo. Texto real en i18n/locales/*/auth.json →
+// register.confirmationMessage.
 
 const emptyForm = { email: "", first_name: "", last_name: "", nickname: "" };
 
@@ -21,14 +23,34 @@ const emptyForm = { email: "", first_name: "", last_name: "", nickname: "" };
 // veces un email guardado (mucha gente usa su email como "username" en
 // otros sitios) — sin este aviso, quien acepta esa sugerencia por error
 // solo se enteraría al fallar el envío.
-const NICKNAME_AT_ERROR = 'El nickname no puede contener "@".';
+
+// Nombres de idioma en SU PROPIA lengua, no traducidos con el resto de la
+// pantalla — convención estándar de cualquier selector de idioma (un
+// hablante de inglés debe poder reconocer "Español" aunque la interfaz
+// esté en inglés, y viceversa). SUPPORTED_LANGUAGES (src/i18n/index.js) es
+// la fuente de verdad de qué idiomas existen; este objeto es solo su
+// etiqueta visual.
+const LANGUAGE_NATIVE_NAME = { es: "Español", en: "English" };
 
 export default function RegisterScreen({ onBack }) {
+  const { t } = useTranslation("auth");
   const [form, setForm] = useState(emptyForm);
+  const [language, setLanguage] = useState(() => (SUPPORTED_LANGUAGES.includes(i18n.language) ? i18n.language : "es"));
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const toast = useToast();
+
+  // Cambiar el idioma aquí traduce la pantalla entera al instante
+  // (incluido este propio selector) — i18n.changeLanguage re-renderiza
+  // cualquier componente que use useTranslation(). setStoredLanguage
+  // persiste la elección para el resto de pantallas sin sesión (Login...)
+  // hasta que haya perfil real que la sustituya (ver App.jsx → AppShell).
+  const changeLanguage = (lang) => {
+    setLanguage(lang);
+    i18n.changeLanguage(lang);
+    setStoredLanguage(lang);
+  };
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
   const nicknameHasAt = form.nickname.includes("@");
@@ -42,11 +64,11 @@ export default function RegisterScreen({ onBack }) {
       const res = await fetch("/api/external-register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, language }),
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(payload.error || "No se pudo completar el registro. Inténtalo de nuevo.");
+        setError(payload.error || t("register.genericError"));
         return;
       }
       if (!payload.email_sent) {
@@ -55,12 +77,12 @@ export default function RegisterScreen({ onBack }) {
         // saber qué ha pasado — aquí no hay ningún admin al que enseñarle
         // un enlace manual, así que solo queda pedirle que lo intente de
         // nuevo más tarde.
-        toast?.error("No se pudo enviar el email de confirmación. Inténtalo de nuevo en unos minutos.");
+        toast?.error(t("register.emailFailedToast"));
         return;
       }
       setSent(true);
     } catch {
-      setError("No se pudo completar el registro. Comprueba tu conexión e inténtalo de nuevo.");
+      setError(t("register.networkError"));
     } finally {
       setLoading(false);
     }
@@ -77,13 +99,13 @@ export default function RegisterScreen({ onBack }) {
         {sent ? (
           <div className="flex flex-col items-center gap-3 rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
             <MailCheck size={28} style={{ color: TEAL }} aria-hidden="true" />
-            <p className="text-sm text-gray-700">{CONFIRMATION_MESSAGE}</p>
+            <p className="text-sm text-gray-700">{t("register.confirmationMessage")}</p>
             <button
               onClick={onBack}
               className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white"
               style={{ backgroundColor: TEAL }}
             >
-              Volver a entrar
+              {t("register.backToLogin")}
             </button>
           </div>
         ) : (
@@ -93,27 +115,38 @@ export default function RegisterScreen({ onBack }) {
               onClick={onBack}
               className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-gray-500"
             >
-              <ArrowLeft size={16} aria-hidden="true" /> Volver a entrar
+              <ArrowLeft size={16} aria-hidden="true" /> {t("register.backToLogin")}
             </button>
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: NAVY }}>Crea tu cuenta</h2>
-              <p className="mt-1 text-xs text-gray-500">Te enviaremos un email para confirmar tu cuenta y crear tu contraseña.</p>
+              <h2 className="text-sm font-semibold" style={{ color: NAVY }}>{t("register.title")}</h2>
+              <p className="mt-1 text-xs text-gray-500">{t("register.description")}</p>
             </div>
-            <Field label="Email">
+            <Field label={t("register.languageLabel")}>
+              <Select
+                value={LANGUAGE_NATIVE_NAME[language]}
+                onChange={(label) => {
+                  const lang = Object.keys(LANGUAGE_NATIVE_NAME).find((code) => LANGUAGE_NATIVE_NAME[code] === label);
+                  if (lang) changeLanguage(lang);
+                }}
+                options={SUPPORTED_LANGUAGES.map((code) => LANGUAGE_NATIVE_NAME[code])}
+                label={t("register.languageLabel")}
+              />
+            </Field>
+            <Field label={t("register.emailLabel")}>
               <input type="email" value={form.email} onChange={set("email")} autoComplete="email" autoFocus required className={`${inputCls} w-full`} />
             </Field>
             <div className="grid grid-cols-2 gap-2">
-              <Field label="Nombre">
+              <Field label={t("register.firstNameLabel")}>
                 <input type="text" value={form.first_name} onChange={set("first_name")} autoComplete="given-name" className={`${inputCls} w-full`} />
               </Field>
-              <Field label="Apellidos">
+              <Field label={t("register.lastNameLabel")}>
                 <input type="text" value={form.last_name} onChange={set("last_name")} autoComplete="family-name" className={`${inputCls} w-full`} />
               </Field>
             </div>
-            <Field label="Nickname">
+            <Field label={t("register.nicknameLabel")}>
               <input type="text" value={form.nickname} onChange={set("nickname")} autoComplete="username" required className={`${inputCls} w-full`} />
             </Field>
-            {nicknameHasAt && <p role="alert" className="text-sm text-red-600">{NICKNAME_AT_ERROR}</p>}
+            {nicknameHasAt && <p role="alert" className="text-sm text-red-600">{t("register.nicknameAtError")}</p>}
 
             {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
@@ -124,7 +157,7 @@ export default function RegisterScreen({ onBack }) {
               style={{ backgroundColor: TEAL }}
             >
               {loading && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
-              Registrarme
+              {t("register.submit")}
             </button>
           </form>
         )}

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Waves, Loader2, ArrowLeft, MailCheck } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
 import { inputCls, Field } from "./shared";
@@ -9,10 +10,11 @@ import { inputCls, Field } from "./shared";
 // rama que distinga "encontrado" de "no encontrado". Nunca reintenta ni
 // muestra un botón de "reenviar" inmediato: forzaría al backend a exponer
 // más información de la que ya da, sin beneficio real (el email, si
-// existía, ya se envió).
-const CONFIRMATION_MESSAGE = "Si ese email tiene una cuenta en Ocean Flow, hemos enviado un enlace para restablecer la contraseña. Revisa tu bandeja de entrada y sigue las instrucciones.";
+// existía, ya se envió). Texto real en i18n/locales/*/auth.json →
+// forgotPassword.confirmationMessage.
 
 export default function ForgotPasswordScreen({ onBack }) {
+  const { t } = useTranslation("auth");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -48,13 +50,13 @@ export default function ForgotPasswordScreen({ onBack }) {
         {sent ? (
           <div className="flex flex-col items-center gap-3 rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
             <MailCheck size={28} style={{ color: TEAL }} aria-hidden="true" />
-            <p className="text-sm text-gray-700">{CONFIRMATION_MESSAGE}</p>
+            <p className="text-sm text-gray-700">{t("forgotPassword.confirmationMessage")}</p>
             <button
               onClick={onBack}
               className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white"
               style={{ backgroundColor: TEAL }}
             >
-              Volver a entrar
+              {t("forgotPassword.backToLogin")}
             </button>
           </div>
         ) : (
@@ -64,13 +66,13 @@ export default function ForgotPasswordScreen({ onBack }) {
               onClick={onBack}
               className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-gray-500"
             >
-              <ArrowLeft size={16} aria-hidden="true" /> Volver a entrar
+              <ArrowLeft size={16} aria-hidden="true" /> {t("forgotPassword.backToLogin")}
             </button>
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: NAVY }}>Recuperar contraseña</h2>
-              <p className="mt-1 text-xs text-gray-500">Escribe el email con el que te diste de alta y te enviaremos un enlace para crear una nueva contraseña.</p>
+              <h2 className="text-sm font-semibold" style={{ color: NAVY }}>{t("forgotPassword.title")}</h2>
+              <p className="mt-1 text-xs text-gray-500">{t("forgotPassword.description")}</p>
             </div>
-            <Field label="Email">
+            <Field label={t("forgotPassword.emailLabel")}>
               <input
                 type="email"
                 value={email}
@@ -88,7 +90,7 @@ export default function ForgotPasswordScreen({ onBack }) {
               style={{ backgroundColor: TEAL }}
             >
               {loading && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
-              Enviar enlace
+              {t("forgotPassword.submit")}
             </button>
           </form>
         )}

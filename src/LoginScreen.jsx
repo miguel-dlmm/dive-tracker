@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Waves, Loader2 } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
 import { inputCls, Field } from "./shared";
@@ -12,6 +13,7 @@ import { ACCOUNT_DEACTIVATED_MESSAGE } from "./useSession";
 // explícitamente para no duplicar el aviso con un texto distinto ("email/
 // contraseña incorrectos" sería además incorrecto en ese caso).
 export default function LoginScreen({ signIn, accountBanned = false, onForgotPassword, onRegister }) {
+  const { t } = useTranslation("auth");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,7 +28,7 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
       await signIn(identifier, password);
     } catch (err) {
       if (err?.code !== "user_banned") {
-        setError("Email/nickname o contraseña incorrectos.");
+        setError(t("login.error"));
       }
     } finally {
       setLoading(false);
@@ -42,7 +44,7 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <Field label="Email o nickname">
+          <Field label={t("login.emailOrNicknameLabel")}>
             <input
               type="text"
               value={identifier}
@@ -52,7 +54,7 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
               className={`${inputCls} w-full`}
             />
           </Field>
-          <Field label="Contraseña">
+          <Field label={t("login.passwordLabel")}>
             <input
               type="password"
               value={password}
@@ -64,7 +66,7 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
 
           {onForgotPassword && (
             <button type="button" onClick={onForgotPassword} className="-my-2 flex min-h-11 items-center text-xs font-medium" style={{ color: TEAL }}>
-              ¿Olvidaste tu contraseña?
+              {t("login.forgotPassword")}
             </button>
           )}
 
@@ -78,14 +80,14 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
             style={{ backgroundColor: TEAL }}
           >
             {loading && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
-            Entrar
+            {t("login.submit")}
           </button>
 
           {onRegister && (
             <p className="text-center text-xs text-gray-500">
-              ¿Primera vez?{" "}
+              {t("login.firstTime")}{" "}
               <button type="button" onClick={onRegister} className="-my-2 inline-flex min-h-11 items-center font-medium" style={{ color: TEAL }}>
-                Regístrate
+                {t("login.register")}
               </button>
             </p>
           )}
