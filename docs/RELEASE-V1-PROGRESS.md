@@ -24,8 +24,8 @@
 |---|---|---|
 | 0 | Contexto, reglas permanentes y protocolo | ✅ Hecho (2026-09-01) |
 | 0.5 | Análisis de riesgos y decisiones (lote nocturno) | ✅ Hecho (2026-09-01, noche) |
-| 1 | Rama y saneamiento | 🟡 En curso |
-| 2 | Multidioma | ⬜ Pendiente |
+| 1 | Rama y saneamiento | ✅ Hecho (2026-09-01, noche) |
+| 2 | Multidioma | 🟡 En curso |
 | 3 | KPIs en la home | ⬜ Pendiente |
 | 4 | Cabecera y notificaciones | ⬜ Pendiente |
 | 5 | Sistema de Training Records | ⬜ Pendiente |
@@ -477,9 +477,81 @@ resultado.
 
 ---
 
-## Fase 1 — Rama y saneamiento
+## Fase 1 — Rama y saneamiento (✅ 2026-09-01, noche)
 
-⬜ Pendiente — no iniciada.
+### Lo hecho
+
+1. **Rama renombrada:** `nightjob-2026.08.31` → `Release-V1`, local y en
+   `origin` (rama vieja eliminada de `origin` tras confirmar que el push
+   de la nueva funcionaba). Saneadas también las referencias colgantes
+   al nombre anterior en el sistema de avisos de despliegue (email +
+   slide in-app + comentarios), que mostraban literalmente "Preview
+   integrada (nightjob)" — commit `e003292`.
+2. **Ayuda sin contenido de admin/superadmin** (commit `8990a49`):
+   - "Configuración, de un vistazo" reescrita — ya no menciona
+     Administración/Superadmin/Usuarios, solo Escuelas/Cursos/Tarifas.
+   - Categoría "Datasets iniciales" (antes `superadminOnly: true`)
+     eliminada por completo, no solo oculta.
+   - "Mi perfil, de un vistazo" ya no menciona la restricción de
+     autoeliminación de superadmin.
+   - `HelpTab.jsx` ya no recibe `profile` ni filtra por
+     `adminOnly`/`superadminOnly` — mecanismo retirado por completo al
+     quedarse sin ningún contenido real que filtrar.
+3. **Confirmación `CANCELAR` para eliminar cuenta** (commit `61860ec`):
+   segundo paso tras el `ConfirmDialog` habitual — un campo de texto
+   exige escribir la palabra exacta `CANCELAR` antes de habilitar el
+   botón de borrado real. Implementado local a `ProfileTab.jsx`, sin
+   tocar el `ConfirmDialog` compartido.
+4. **Bug real encontrado y corregido de paso** (no pedido explícitamente
+   en Fase 1, pero descubierto probando el registro en vivo durante esta
+   fase): `EMAIL_FROM` seguía en el remitente de pruebas de Resend — ver
+   sección "Nota — dominio de Resend y bug real encontrado" más arriba
+   para el detalle completo. Corregido en `.env.local` y en Vercel TEST
+   (ambos con permiso explícito del usuario), verificado end-to-end
+   contra un Preview Deployment real. Pendiente solo producción real.
+
+### Decisiones y su porqué
+
+- **`Release-V1` sin espacio** (no "Release V1" literal): compatibilidad
+  con URLs/env vars de Vercel y con el propio tooling de git, que no
+  siempre maneja bien espacios en nombres de rama.
+- **No se creó un tercer entorno ni se tocó el modelo `main`/`develop`
+  de ADR-0006** — `Release-V1` sigue siendo una rama de trabajo larga
+  hacia el lanzamiento, la misma función que ya cumplía `nightjob`, solo
+  con nombre más claro.
+- **El filtro `adminOnly`/`superadminOnly` de Ayuda se retiró en vez de
+  dejarse "por si acaso"** — con cero contenido real que filtrar tras
+  esta fase, mantenerlo habría sido infraestructura especulativa
+  (principio ya fijado del proyecto: no construir para necesidades que
+  no existen todavía).
+- **La confirmación `CANCELAR` vive en `ProfileTab.jsx`, no en
+  `ConfirmDialog`** — única eliminación de la app con este paso extra;
+  generalizar el componente compartido para un único consumidor real
+  habría sido coste sin beneficio.
+- **Botón de abortar el segundo paso dice "Volver", no "Cancelar"** —
+  con la palabra a escribir siendo literalmente "CANCELAR", un botón
+  "Cancelar" al lado habría sido confuso de leer rápido (regla
+  permanente de manos mojadas). Pequeña desviación deliberada de la
+  redacción literal del encargo, documentada aquí tal como pide la
+  regla de justificar en la documentación.
+
+### Descartado
+
+- Guardar el nombre anterior de la rama en algún sitio visible para el
+  usuario — el historial de git ya lo conserva, y `docs/ADR/0006` no
+  necesita un ADR nuevo solo por un renombrado de rama de trabajo.
+
+### Riesgos
+
+- Ninguno pendiente de esta fase. Los 532 tests y el build pasan tras
+  cada commit.
+
+### Verificación
+
+`npm run test` (532/532) y `npm run build` ejecutados y en verde tras
+cada uno de los 4 commits de esta fase. Registro externo verificado en
+vivo contra un Preview Deployment real (no solo tests), con limpieza de
+las cuentas de prueba usadas para verificar.
 
 ## Fase 2 — Multidioma
 
