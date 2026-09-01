@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pencil, Eye, EyeOff, Loader2, Trash2, Check } from "lucide-react";
 import { NAVY, TEAL, CORAL } from "./colors";
-import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select } from "./shared";
+import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, getFavoriteCurrency, setFavoriteCurrency } from "./shared";
 import { AVATAR_ICONS, AVATAR_COLORS, resolveAvatar } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
 
@@ -17,17 +17,6 @@ import { supabase } from "./supabaseClient";
 // solo protege is_admin/is_superadmin, columnas que esta pantalla nunca
 // toca. onProfileUpdated (useSession.updateProfile) mantiene el resto de
 // la app (cabecera, avatar) sincronizado sin recargar la página.
-
-const favoriteCurrencyKey = (userId) => `oceanpulse:favoriteCurrency:${userId || "anon"}`;
-function getFavoriteCurrency(userId) {
-  try { return localStorage.getItem(favoriteCurrencyKey(userId)); } catch { return null; }
-}
-function setFavoriteCurrency(userId, code) {
-  try {
-    if (code) localStorage.setItem(favoriteCurrencyKey(userId), code);
-    else localStorage.removeItem(favoriteCurrencyKey(userId));
-  } catch { /* no-op — preferencia de UI, no crítica */ }
-}
 
 function friendlyProfileError(err) {
   if (err?.code === "23505" || err?.message?.includes("profiles_nickname_lower_key")) return "Ese nickname ya está en uso.";
@@ -183,6 +172,23 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
 function CurrencySection({ profile, currencies }) {
   const toast = useToast();
   const [favorite, setFavoriteState] = useState(() => getFavoriteCurrency(profile.user_id));
+
+  // Inicializa la moneda favorita de un usuario que todavía no ha elegido
+  // ninguna con la moneda favorita global de la app (currencies.is_default)
+  // — mismo respaldo que ya usaba "Ajuste de curso" (ADR-0007), pero ahora
+  // se fija de verdad la primera vez que abre Mi perfil, en vez de quedar
+  // en blanco pese a que el resto de la app ya la estuviera usando de
+  // facto. No es una segunda fuente de verdad: sigue derivándose de
+  // currencies.is_default, solo que ahora se persiste como punto de
+  // partida real. Espera a que currencies esté cargada (evita fijar "" en
+  // el primer render, antes de que lleguen las filas).
+  useEffect(() => {
+    if (favorite || !currencies.loaded) return;
+    const globalDefault = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code;
+    if (!globalDefault) return;
+    setFavoriteCurrency(profile.user_id, globalDefault);
+    setFavoriteState(globalDefault);
+  }, [favorite, currencies.loaded, currencies.rows, profile.user_id]);
 
   const choose = (code) => {
     setFavoriteCurrency(profile.user_id, code);

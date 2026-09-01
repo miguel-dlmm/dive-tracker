@@ -247,6 +247,23 @@ export function formatMoney(amount, code, currencyRows) {
   return `${n} ${symbol}`;
 }
 
+// Moneda favorita — preferencia personal del instructor, no dato de
+// negocio (localStorage, no Supabase, ver docs/ADR/0007). Única fuente de
+// verdad de esta clave: antes vivía duplicada en MovementSheet.jsx (solo
+// lectura) y ProfileTab.jsx (lectura+escritura, pantalla "Mi perfil" del
+// Bloque 5) — unificada aquí el 2026-09-01 para que ambas usen exactamente
+// la misma clave/formato sin poder desincronizarse.
+const FAVORITE_CURRENCY_KEY = (userId) => `oceanpulse:favoriteCurrency:${userId || "anon"}`;
+export function getFavoriteCurrency(userId) {
+  try { return localStorage.getItem(FAVORITE_CURRENCY_KEY(userId)); } catch { return null; }
+}
+export function setFavoriteCurrency(userId, code) {
+  try {
+    if (code) localStorage.setItem(FAVORITE_CURRENCY_KEY(userId), code);
+    else localStorage.removeItem(FAVORITE_CURRENCY_KEY(userId));
+  } catch { /* no-op — preferencia de UI, no crítica */ }
+}
+
 // Cifra monetaria "de verdad": tabular-nums para que las columnas de
 // importes alineen, símbolo de moneda más apagado que la cifra — el
 // patrón que comparten Stripe y Mercury en sus paneles financieros.

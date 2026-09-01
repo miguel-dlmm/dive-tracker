@@ -103,16 +103,35 @@ describe("datos personales", () => {
 });
 
 describe("moneda favorita", () => {
-  it("sin nada elegido todavía, muestra el placeholder", () => {
+  it("un usuario que nunca ha elegido moneda ve inicializada la favorita global (currencies.is_default), no un placeholder en blanco", async () => {
     renderProfile();
-    expect(screen.getByText("Sin elegir — usa la moneda por defecto de la app")).toBeInTheDocument();
+
+    expect(await screen.findByText("EUR — Euro (€)")).toBeInTheDocument();
+    expect(localStorage.getItem("oceanpulse:favoriteCurrency:u1")).toBe("EUR");
   });
 
-  it("elegir una moneda la guarda en localStorage con la clave por usuario", async () => {
-    const user = userEvent.setup();
+  it("si ninguna moneda tiene is_default, inicializa con la primera del catálogo", async () => {
+    const noDefault = { rows: [{ code: "USD", name: "Dólar", symbol: "$" }, { code: "GBP", name: "Libra", symbol: "£" }], loaded: true };
+    renderProfile({ currencies: noDefault });
+
+    expect(await screen.findByText("USD — Dólar ($)")).toBeInTheDocument();
+    expect(localStorage.getItem("oceanpulse:favoriteCurrency:u1")).toBe("USD");
+  });
+
+  it("no pisa una moneda favorita ya elegida por el usuario", async () => {
+    localStorage.setItem("oceanpulse:favoriteCurrency:u1", "USD");
     renderProfile();
 
-    await user.click(screen.getByText("Sin elegir — usa la moneda por defecto de la app"));
+    expect(await screen.findByText("USD — Dólar ($)")).toBeInTheDocument();
+    expect(localStorage.getItem("oceanpulse:favoriteCurrency:u1")).toBe("USD");
+  });
+
+  it("elegir otra moneda la guarda en localStorage con la clave por usuario", async () => {
+    const user = userEvent.setup();
+    renderProfile();
+    await screen.findByText("EUR — Euro (€)");
+
+    await user.click(screen.getByRole("button", { name: "Sin elegir — usa la moneda por defecto de la app" }));
     await user.click(screen.getByText("USD — Dólar ($)"));
 
     expect(localStorage.getItem("oceanpulse:favoriteCurrency:u1")).toBe("USD");

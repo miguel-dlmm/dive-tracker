@@ -4,7 +4,7 @@ import { Plus, Minus, X, Check, Loader2, StickyNote, GraduationCap, Handshake, U
 import { TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   inputCls, formatMoney, Field, Select, MoneyInput,
-  DatePicker, lighten, useToast, useBodyScrollLock, todayStr,
+  DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency,
 } from "./shared";
 import { DURATION, sheetVariants, usePrefersReducedMotion } from "./motion";
 import { computeRateTotal, buildActivityEntries } from "./rateCalc";
@@ -30,17 +30,6 @@ function formAccentColor(creating, amount) {
   if (creating === "ganado") return TEAL;
   if (creating === "comision") return SUN;
   return Number(amount) < 0 ? CORAL : GREEN;
-}
-
-// Moneda favorita — preferencia personal del instructor, no dato de
-// negocio (no vive en Supabase a propósito, ver docs/ADR/0007). Solo
-// lectura aquí desde 2026-08-30: escribirla (antes, el botón "Usar X como
-// favorita" en el propio formulario) queda para la futura pantalla
-// "Configuración → Moneda favorita" (ver docs/BACKLOG.md) — misma clave de
-// localStorage, mismo formato, nada que migrar cuando se construya.
-const favoriteCurrencyKey = (userId) => `oceanpulse:favoriteCurrency:${userId || "anon"}`;
-function getFavoriteCurrency(userId) {
-  try { return localStorage.getItem(favoriteCurrencyKey(userId)); } catch { return null; }
 }
 
 // Notas se expande sola con el contenido — sin WYSIWYG, pero más cómoda en
@@ -82,11 +71,11 @@ export default function MovementSheet({
   const defaultPaymentType = paymentTypes.rows.find((t) => t.name === "Per Person")?.name || paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "Per Person";
 
   // 2026-08-30: la moneda deja de elegirse por movimiento — pasa a ser una
-  // configuración global (ver docs/BACKLOG.md, "Configuración → Moneda
-  // favorita"). Se sigue leyendo la misma preferencia de siempre
-  // (localStorage, ADR-0007), pero ya no hay ningún campo en este
-  // formulario desde el que cambiarla — esa gestión explícita queda para
-  // la futura pantalla de Configuración, todavía sin implementar.
+  // configuración global. Se sigue leyendo la misma preferencia de
+  // siempre (localStorage, ADR-0007, helper compartido en shared.jsx),
+  // pero ya no hay ningún campo en este formulario desde el que cambiarla
+  // — esa gestión explícita vive en Mi perfil → Moneda favorita
+  // (ProfileTab.jsx, Bloque 5, 2026-09-01).
   const favoriteCurrency = getFavoriteCurrency(userId);
 
   const schoolNames = schools.rows.map((s) => s.name);
