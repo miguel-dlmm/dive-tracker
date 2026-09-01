@@ -881,6 +881,50 @@ drop policy if exists "superadmin insert own view" on public.deployment_notice_v
 create policy "superadmin insert own view" on public.deployment_notice_views
   for insert with check (public.is_superadmin(auth.uid()) and user_id = auth.uid());
 
+-- ---------- Training Records (Release V1, Fase 5) ----------
+-- Plantillas de PDF (SSI Training Record) que se rellenan al vuelo en
+-- cliente para generar el registro de inmersiones de un curso terminado.
+-- Nada de datos de alumnos/firmas se guarda aquí ni en ningún otro sitio —
+-- solo METADATOS de la plantilla en sí (dónde está el PDF, qué campos
+-- opcionales tiene, si ya se validó). status: 'pending_validation' hasta
+-- que se confirme (a mano hoy; con un pipeline de análisis automático más
+-- adelante, ver docs/RELEASE-V1-PROGRESS.md) que el mapeo de campos del
+-- PDF es correcto — un instructor solo ve/usa plantillas 'active'.
+create table if not exists public.training_record_templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  code text not null unique,
+  storage_path text not null,
+  -- Índices de los pasos opcionales que quedan en blanco en variantes de
+  -- la misma plantilla (p. ej. Open Water en 2 días vs. 3 días).
+  optional_dives jsonb not null default '[]',
+  status text not null default 'pending_validation' check (status in ('pending_validation','active','rejected')),
+  missing_fields jsonb not null default '[]',
+  created_by uuid references auth.users(id),
+  created_at timestamptz not null default now()
+);
+
+alter table public.training_record_templates enable row level security;
+create policy "read active templates" on public.training_record_templates
+  for select using (status = 'active' or public.is_admin(auth.uid()));
+create policy "admin write templates" on public.training_record_templates
+  for all using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+
+-- Bucket privado — el PDF de cada plantilla se sirve solo a usuarios
+-- autenticados (para generar registros), nunca públicamente. Gestionarlo
+-- (subir/reemplazar) es exclusivo de admin.
+insert into storage.buckets (id, name, public) values ('training-record-templates', 'training-record-templates', false)
+  on conflict (id) do nothing;
+create policy "read template files" on storage.objects
+  for select using (bucket_id = 'training-record-templates' and auth.uid() is not null);
+create policy "admin manage template files" on storage.objects
+  for all using (bucket_id = 'training-record-templates' and public.is_admin(auth.uid()))
+  with check (bucket_id = 'training-record-templates' and public.is_admin(auth.uid()));
+
+-- Migración aditiva Release V1, Fase 5 (2026-09-02) para instalaciones
+-- existentes — scripts/migrations/0008-training-record-templates.sql
+-- tiene el mismo DDL, aplicarlo con scripts/apply-migration.mjs.
+
 -- ---------- Notas de diseño del esquema ----------
 -- - No existe tabla "activity_types" (Instructor/Comisión) — se eliminó al
 --   separar Work Log y Comisiones en flujos independientes.

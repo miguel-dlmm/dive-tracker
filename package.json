@@ -20,9 +20,12 @@
     "i18next": "^26.4.1",
     "lucide-react": "^1.33.0",
     "motion": "^13.1.1",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.3.289",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-i18next": "^17.0.13"
+    "react-i18next": "^17.0.13",
+    "signature_pad": "^5.1.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
