@@ -130,7 +130,7 @@ it("sobrescribe la contraseña con una cadena aleatoria de 64 caracteres hex, qu
 
   expect(client.update).toHaveBeenCalledWith({ activated_at: null, deactivated_at: null });
   expect(client.eqForUpdate).toHaveBeenCalledWith("user_id", TARGET_ID);
-  expect(generateActivationLink).toHaveBeenCalledWith(TARGET_EMAIL);
+  expect(generateActivationLink).toHaveBeenCalledWith(TARGET_EMAIL, { flow: "recovery" });
   expect(result).toEqual({
     status: 200,
     payload: { user_id: TARGET_ID, email_sent: false, action_link: "https://app.example/activate?token_hash=xyz" },
