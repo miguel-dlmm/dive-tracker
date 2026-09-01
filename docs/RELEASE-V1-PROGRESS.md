@@ -27,7 +27,7 @@
 | 1 | Rama y saneamiento | ✅ Hecho (2026-09-01, noche) |
 | 2 | Multidioma | ✅ Hecho (2026-09-01, noche) |
 | 3 | KPIs en la home | ✅ Hecho (2026-09-01, noche) |
-| 4 | Cabecera y notificaciones | ⬜ Pendiente |
+| 4 | Cabecera y notificaciones | ✅ Hecho (2026-09-01/02, noche) |
 | 5 | Sistema de Training Records | ⬜ Pendiente |
 | 6 | Slides y avisos | ⬜ Pendiente |
 | 7 | Usabilidad, carga y escalabilidad | ⬜ Pendiente |
@@ -714,9 +714,61 @@ viewport móvil 430×932): las tres tarjetas animan correctamente, sin
 errores de consola, en español e inglés, con datos reales de la
 cuenta demo (4 alumnos / 92 cursos / 0 captados este mes).
 
-## Fase 4 — Cabecera y notificaciones
+## Fase 4 — Cabecera y notificaciones (✅ 2026-09-01/02, noche)
 
-⬜ Pendiente — no iniciada.
+### Investigación previa (fuentes contrastadas, según pide CLAUDE.md)
+
+- **[Mobile Navigation Design: 8 Types, Examples & Best Practices](https://www.uxpin.com/studio/blog/mobile-navigation-examples/)** (UXPin) y **[Stop the overuse of overflow menus](https://www.freecodecamp.org/news/stop-the-overuse-of-overflow-menus-5caa4b54e843)** (freeCodeCamp): estructurar navegación primaria con máximo 4-5 elementos; **no ocultar tareas frecuentes** dentro de menús overflow/cajones — los overflow menus sirven para lo secundario/infrecuente, no lo contrario. Objetivo táctil mínimo 44×44 (ya cumplido en toda la app).
+- **[Design Guidelines For Better Notifications UX](https://www.smashingmagazine.com/2025/07/design-guidelines-better-notifications-ux/)** (Smashing Magazine, jul. 2025): notificaciones se clasifican en tres niveles de atención (alta/media/baja); control del usuario sobre qué puede revisar/personalizar es un principio recurrente en el diseño actual de notificaciones.
+- **[Deep: The UX of notifications](https://departmentofproduct.substack.com/p/deep-the-ux-of-notifications)** (Department of Product): notificaciones deben sentirse útiles, no disruptivas; personalización y relevancia por encima de "ping genérico".
+
+### Lo hecho
+
+**Cabecera** — "Cerrar sesión" (5º icono) se mueve de la cabecera a Mi
+perfil: es una tarea infrecuente (como mucho una vez por sesión), el
+caso exacto que la investigación recomienda sacar del nivel superior
+de navegación — a diferencia de Ayuda/Configuración, que SÍ se quedan
+donde estaban por ser tareas frecuentes (la propia investigación
+advierte explícitamente contra esconder justo esas). Cabecera pasa de
+4 elementos tocables a 3 (logo/Home, Ayuda, Configuración) + avatar.
+Nueva ubicación en Mi perfil: entre "Seguridad" y "Privacidad", en
+gris neutro (no rojo — no es una acción destructiva, no debe leerse
+como una).
+
+**Notificaciones** — "Ver qué hay de nuevo en esta versión", enlace
+nuevo al principio de Ayuda que reabre `WhatsNew.jsx` bajo demanda.
+Antes, cerrar ese slide lo perdía hasta el siguiente release — sin
+ninguna forma de volver a consultarlo. No toca el gate de "una vez
+por versión al entrar" (sigue sin auto-mostrarse si ya se vio; solo
+añade una vía para reabrirlo cuando se quiera), en línea con el
+principio de "control del usuario" de la investigación.
+
+### Decisiones y su porqué
+
+- **Alcance de "rediseñar notificaciones" para esta fase: mejora de la
+  UX alrededor del mecanismo ya existente, no un rediseño visual
+  completo ni un centro de notificaciones nuevo.** `WhatsNew.jsx`/
+  `DeploymentNotice.jsx` ya cumplen razonablemente bien los criterios
+  de la investigación (dismissible, una a la vez, contenido
+  contextual, jerarquía visual clara) — no había una razón real,
+  respaldada por la investigación, para un cambio visual mayor; habría
+  sido cambiar por cambiar. La generalización real del mecanismo
+  (avisos para todos los usuarios, no solo superadmin) es trabajo de
+  Fase 6, con su propio cambio de esquema — acoplarlo aquí habría
+  mezclado una mejora de UX con un cambio de datos, dos intenciones
+  distintas.
+- **Ayuda como ubicación de "Ver qué hay de nuevo"**, no un icono
+  nuevo en la cabecera — evita repetir el propio problema que esta
+  fase intenta resolver (más iconos en la cabecera), y es el sitio
+  natural para "quiero repasar algo de la app".
+
+### Verificación
+
+`npm run test` (547/547) y `npm run build` en verde. Verificado en
+navegador real (viewport móvil, bypass de desarrollo): cabecera con 3
+iconos en vez de 4, "Cerrar sesión" funciona desde Mi perfil, "Ver
+qué hay de nuevo" reabre el slide correctamente, ambos en español e
+inglés, sin errores de consola.
 
 ## Fase 5 — Sistema de generación de Training Records
 
