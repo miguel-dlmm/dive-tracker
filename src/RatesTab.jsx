@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Check, X, Search, SlidersHorizontal, GraduationCap, Handshake } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import {
@@ -18,12 +19,21 @@ import {
 // presentación) — se combinan únicamente en esta capa, con el mismo
 // patrón que buildActivityEntries ya usa para worklog/comisiones.
 const TYPE_META = { ganado: MOVEMENT_TYPE_META.ganado, comision: MOVEMENT_TYPE_META.comision };
+// TYPE_OPTIONS/TYPE_KEY se quedan en español fijo a propósito (i18n, Fase 2):
+// son a la vez el texto mostrado y la clave de búsqueda del Select de
+// filtro (shared.jsx Select no separa value/label) — traducir el texto
+// rompería TYPE_KEY[filters.type]. El label visible SÍ se traduce en
+// render vía t(`common:movementTypes.${_source}`) — misma fuente única
+// que usan HomeTab/SummaryTab/MiTrabajoTab, consolidada en common.json
+// para no repetir la traducción de "Curso"/"Comisión"/"Ajuste" en cada
+// pantalla (pedido explícito del usuario, 2026-09-01). Estas dos
+// constantes solo alimentan ese Select en concreto. Mismo criterio ya
+// aplicado en MiTrabajoTab.jsx.
 const TYPE_OPTIONS = ["Curso", "Comisión"];
 const TYPE_KEY = { "Curso": "ganado", "Comisión": "comision" };
-const TYPE_LABEL = { ganado: "Curso", comision: "Comisión" };
 const CREATE_TYPES = [
-  { key: "ganado", label: "Curso", icon: GraduationCap },
-  { key: "comision", label: "Comisión", icon: Handshake },
+  { key: "ganado", icon: GraduationCap },
+  { key: "comision", icon: Handshake },
 ];
 
 // schools / activities / paymentTypes / currencies: { rows: [...] } — de useSupabaseTable
@@ -31,6 +41,7 @@ const CREATE_TYPES = [
 // worklog / comisiones: { rows: [...] } — para comprobar si una tarifa está en uso antes de dejar borrarla
 // accentColor: color de sección (nav_sections), para el botón flotante de crear
 export default function RatesTab({ schools, activities, paymentTypes, currencies, rates, commissionRates, worklog, comisiones, accentColor = TEAL }) {
+  const { t } = useTranslation("rates");
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
   // El tipo de pago ya no se elige en ningún formulario — toda tarifa nueva
   // se crea como "Per Person" (si no existe esa fila en payment_types, cae
@@ -155,14 +166,14 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
     try {
       if (editingEntry) {
         await tableFor(creating).updateRow(editingEntry.id, { ...form, rate: Number(form.rate) });
-        toast?.success("Cambios guardados");
+        toast?.success(t("toasts.saved"));
       } else {
         await tableFor(creating).insertRow({ ...form, rate: Number(form.rate) });
-        toast?.success("Tarifa añadida");
+        toast?.success(t("toasts.added"));
       }
       closeSheet();
     } catch {
-      toast?.error("No se pudo guardar. Inténtalo de nuevo.");
+      toast?.error(t("toasts.saveError"));
     }
   };
 
@@ -172,7 +183,7 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
   const deleteRate = async (r) => {
     const inUse = entriesForSource(r._source).filter((e) => e.school === r.school && e.activity === r.activity).length;
     if (inUse > 0) {
-      throw new Error(`No se puede eliminar: hay ${inUse} ${inUse === 1 ? "registro que usa" : "registros que usan"} esta tarifa.`);
+      throw new Error(t("deleteInUse", { count: inUse }));
     }
     await tableFor(r._source).deleteRow(r.id);
   };
@@ -188,11 +199,11 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
           className={`flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors ${filtersOpen ? "border-transparent text-white" : "border-gray-200 bg-white text-gray-600"}`}
           style={filtersOpen ? { backgroundColor: TEAL } : {}}
         >
-          <SlidersHorizontal size={15} aria-hidden="true" /> Filtrar{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
+          <SlidersHorizontal size={15} aria-hidden="true" /> {t("filter.button")}{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
         </button>
         <div className="relative flex-1">
           <Search size={14} className="pointer-events-none absolute left-3 top-3.5 text-gray-400" aria-hidden="true" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar" aria-label="Buscar tarifa" className={`${inputCls} w-full pl-9`} />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search.placeholder")} aria-label={t("search.ariaLabel")} className={`${inputCls} w-full pl-9`} />
         </div>
       </div>
 
@@ -209,18 +220,18 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
                 Person" (ver docs/ADR/0003), así que filtrar por él nunca
                 reducía la lista a nada: era una opción de filtro sin ningún
                 efecto real, solo exponía el nombre interno del concepto. */}
-            <Field label="Tipo"><Select value={filters.type} onChange={(v) => setFilters({ ...filters, type: v })} options={TYPE_OPTIONS} placeholder="Todos" label="Tipo" /></Field>
+            <Field label={t("filter.type")}><Select value={filters.type} onChange={(v) => setFilters({ ...filters, type: v })} options={TYPE_OPTIONS} placeholder={t("filter.typeAll")} label={t("filter.type")} /></Field>
             {/* Con una sola escuela configurada, filtrar por escuela no
                 filtra nada — se oculta hasta que exista una segunda
                 (2026-08-30, reducción de complejidad). */}
             {schools.rows.length > 1 && (
-              <Field label="Escuela"><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Todas" label="Escuela" /></Field>
+              <Field label={t("filter.school")}><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder={t("filter.schoolAll")} label={t("filter.school")} /></Field>
             )}
-            <Field label="Curso"><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder="Todos" /></Field>
+            <Field label={t("filter.course")}><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder={t("filter.courseAll")} /></Field>
           </div>
           {hasFilters && (
             <button onClick={() => setFilters({ type: "", school: "", activity: [] })} className="min-h-9 text-xs font-medium text-gray-400 hover:text-gray-600">
-              Limpiar filtros
+              {t("filter.clear")}
             </button>
           )}
         </div>
@@ -228,11 +239,11 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
 
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div className="border-b border-gray-100 px-4 py-3">
-          <h3 className="text-sm font-semibold" style={{ color: NAVY }}>{filtered.length} tarifas</h3>
+          <h3 className="text-sm font-semibold" style={{ color: NAVY }}>{t("list.count", { count: filtered.length })}</h3>
         </div>
 
         <div>
-          {filtered.length === 0 && <p className="px-4 py-6 text-center text-sm text-gray-400">Sin resultados.</p>}
+          {filtered.length === 0 && <p className="px-4 py-6 text-center text-sm text-gray-400">{t("list.empty")}</p>}
           {filtered.map((r) => (
             // Vuelta explícita al lenguaje de EntryRow en Mi trabajo
             // (feedback 2026-08-30, tercera vuelta: "no quiero seguir con
@@ -257,16 +268,16 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
               </div>
               <div className="mt-1.5 flex items-center justify-between gap-2">
                 <span className="truncate text-xs text-gray-400">
-                  Alta: {shortDate(r.created_at)} · {TYPE_LABEL[r._source]}
+                  {t("list.createdOn", { date: shortDate(r.created_at), type: t(`common:movementTypes.${r._source}`) })}
                 </span>
-                <RowMenu onEdit={() => startEdit(r)} onDelete={() => deleteRate(r)} itemLabel={`la tarifa de ${r.school} - ${r.activity}`} />
+                <RowMenu onEdit={() => startEdit(r)} onDelete={() => deleteRate(r)} itemLabel={t("rowMenu.itemLabel", { school: r.school, activity: r.activity })} />
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      <Fab onClick={openCreateSheet} label="Nueva tarifa" color={accentColor} />
+      <Fab onClick={openCreateSheet} label={t("fab")} color={accentColor} />
 
       <Sheet open={sheetOpen} onClose={closeSheet}>
         <div className="mb-1 flex items-center justify-between">
@@ -279,18 +290,18 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
                 listado (metadato "Alta: ... · Tipo", ver más arriba), así
                 que repetirla aquí sería redundante. */}
             <h3 className="text-sm font-semibold text-gray-800">
-              {editingEntry ? `Editar tarifa de ${editingEntry.school} - ${editingEntry.activity}` : `Nueva tarifa de ${TYPE_LABEL[creating]}`}
+              {editingEntry ? t("sheet.editTitle", { school: editingEntry.school, activity: editingEntry.activity }) : t("sheet.createTitle", { type: t(`common:movementTypes.${creating}`) })}
             </h3>
           </div>
-          <button onClick={closeSheet} className="text-gray-400" aria-label="Cerrar"><X size={19} /></button>
+          <button onClick={closeSheet} className="text-gray-400" aria-label={t("sheet.close")}><X size={19} /></button>
         </div>
 
         {/* Selector de tipo integrado — mismo patrón que MovementSheet.
             Solo al crear: el tipo de una tarifa ya guardada no se cambia
             desde aquí (movería la fila entre tablas, fuera de alcance). */}
         {!editingEntry && (
-          <div className="mb-3 grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="Tipo de tarifa">
-            {CREATE_TYPES.map(({ key, label, icon: Icon }) => (
+          <div className="mb-3 grid grid-cols-2 gap-1 rounded-lg bg-gray-100 p-1" role="tablist" aria-label={t("sheet.typeTablistLabel")}>
+            {CREATE_TYPES.map(({ key, icon: Icon }) => (
               <button
                 key={key}
                 type="button"
@@ -301,22 +312,20 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
                 style={creating === key ? { backgroundColor: "white", color: TYPE_META[key].color, boxShadow: "0 1px 2px rgba(0,0,0,0.08)" } : { color: "#6B7280" }}
               >
                 <Icon size={14} aria-hidden="true" />
-                {label}
+                {t(`common:movementTypes.${key}`)}
               </button>
             ))}
           </div>
         )}
 
         <p className="mb-3 text-xs text-gray-400">
-          {creating === "ganado"
-            ? "Lo que cobras por impartir tú el curso."
-            : "Lo que cobras por traer a un cliente."}
+          {creating === "ganado" ? t("sheet.hintGanado") : t("sheet.hintComision")}
         </p>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-          <Field label="Escuela">
+          <Field label={t("sheet.school")}>
             <Select value={form.school} onChange={(v) => setForm({ ...form, school: v, currency: lastCurrencyFor(v) })} options={schoolNames} />
           </Field>
-          <Field label="Curso">
+          <Field label={t("sheet.course")}>
             <Select value={form.activity} onChange={(v) => setForm({ ...form, activity: v })} options={activityNames} />
           </Field>
           {/* Moneda: visible, no editable (feedback 2026-08-30) — viaja como
@@ -325,7 +334,7 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
               deriva sola de la escuela (lastCurrencyFor), nunca se pierde
               el contexto de en qué moneda está esta tarifa, pero no hay
               ningún desplegable que tocar cada vez. */}
-          <Field label={`Tarifa · ${form.currency}`}>
+          <Field label={t("sheet.rateLabel", { currency: form.currency })}>
             <MoneyInput value={form.rate} onChange={(v) => setForm({ ...form, rate: v })} />
           </Field>
         </div>
@@ -335,7 +344,7 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
           className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"
           style={{ backgroundColor: accentColor }}
         >
-          {editingEntry ? <Check size={16} /> : <Plus size={16} />} Guardar
+          {editingEntry ? <Check size={16} /> : <Plus size={16} />} {t("sheet.save")}
         </button>
       </Sheet>
     </div>
