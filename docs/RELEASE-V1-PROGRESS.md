@@ -23,7 +23,8 @@
 | Fase | Título | Estado |
 |---|---|---|
 | 0 | Contexto, reglas permanentes y protocolo | ✅ Hecho (2026-09-01) |
-| 1 | Rama y saneamiento | ⬜ Pendiente |
+| 0.5 | Análisis de riesgos y decisiones (lote nocturno) | ✅ Hecho (2026-09-01, noche) |
+| 1 | Rama y saneamiento | 🟡 En curso |
 | 2 | Multidioma | ⬜ Pendiente |
 | 3 | KPIs en la home | ⬜ Pendiente |
 | 4 | Cabecera y notificaciones | ⬜ Pendiente |
@@ -31,6 +32,244 @@
 | 6 | Slides y avisos | ⬜ Pendiente |
 | 7 | Usabilidad, carga y escalabilidad | ⬜ Pendiente |
 | 8 | Revisión visual y libro de estilo | ⬜ Pendiente |
+
+> Ver sección "Análisis de riesgos y decisiones previas al trabajo
+> nocturno" más abajo para el detalle completo de cada fase (riesgo,
+> decisión, migración+rollback cuando aplica) antes de tocar el "Fase 0"
+> original.
+
+---
+
+## Análisis de riesgos y decisiones previas al trabajo nocturno (2026-09-01, noche)
+
+> El usuario pidió, antes de irse a dormir, que se resolvieran por
+> adelantado TODAS las dudas bloqueantes de las 8 fases, para poder
+> trabajar el resto de la noche sin interrupciones. Esta sección es ese
+> análisis + las decisiones ya cerradas con él. A partir de aquí, cada
+> fase se ejecuta sin pedir aprobación adicional salvo bloqueo genuino
+> (imposible de decidir con lo ya acordado aquí).
+
+### Nivel de autonomía acordado para esta iniciativa
+
+- **Frontend/UI (Fases 3, 4-parte visual, 7, 8):** autónomo, sin pausas.
+- **Endpoints de servidor nuevos:** autónomo (incluye los que necesite el
+  generador de Training Records) — priorizando siempre reutilizar y
+  componentizar sobre `server/` ya existente antes de escribir algo desde
+  cero.
+- **Cambios de esquema/BD:** permitidos esta noche, con condición
+  explícita del usuario: **siempre contra TEST únicamente** (nunca
+  producción — el propio script `scripts/apply-migration.mjs` ya lo
+  garantiza estructuralmente: exige `SUPABASE_TEST_DB_URL` y `.env.local`
+  no contiene ninguna URL de conexión Postgres directa a producción, solo
+  `PROD_SUPABASE_URL`/`PROD_SUPABASE_SERVICE_ROLE_KEY` de solo lectura vía
+  API, no de escritura DDL), **documentando y persistiendo el rollback
+  antes de ejecutar cada migración**, y **justificando la decisión en la
+  documentación** (instrucciones explícitas del usuario, mid-sesión).
+- **Rama:** renombrar `nightjob-2026.08.31` → `Release-V1` (aprobado).
+  Push de esa rama a `origin` es seguro y ya está contemplado por
+  `CLAUDE.md` ("Ramas y entornos": empujar una rama sin fusionarla genera
+  un Preview Deployment en Vercel con variables TEST) — se usa esta noche
+  para dejar el trabajo visible y para poder disparar el aviso de
+  despliegue (ver Fase 6) como mecanismo de notificación al admin en vez
+  de interrumpir por chat.
+- **Fusión a `develop`/`main`:** NO se hace esta noche sin revisión
+  explícita — queda para que el usuario la revise y apruebe mañana.
+
+### Fase 1 — Rama y saneamiento
+
+**Riesgo:** bajo. Renombrar rama es reversible (`git branch -m` de
+vuelta). Limpiar Ayuda y añadir confirmación `CANCELAR` son cambios
+locales de UI, cubiertos por tests existentes.
+**Decisión cerrada:** renombrar `nightjob-2026.08.31` → `Release-V1`
+(sin espacio, por compatibilidad con Vercel/tooling que no siempre
+soporta espacios en nombres de rama en URLs/env vars) tanto local como
+en `origin`. No se toca el modelo `main`/`develop` de ADR-0006: esta
+sigue siendo una rama de trabajo larga hacia el lanzamiento, no un
+tercer entorno.
+
+### Fase 2 — Multidioma
+
+**Riesgo:** medio — alcance grande (toda la app), riesgo real es dejar
+texto sin traducir o romper interpolaciones dentro de un string
+traducido. Mitigación: extracción sistemática archivo a archivo,
+`npm run test`/`npm run build` como red de seguridad tras cada bloque de
+pantallas.
+**Decisión cerrada:** traducir **toda la app** esta noche (Home, Mi
+trabajo, Comisiones, Compañeros, Tarifas, Pagos, Configuración, Resumen,
+Ayuda, textos de emails, textos legales) — el usuario prefiere revisar
+sobre la marcha usando la app a que quede nada sin traducir por defecto.
+**Migración aprobada — `0007-idioma-perfil.sql`:**
+
+```sql
+-- Aditiva: nueva columna con default 'es' (regla del documento maestro:
+-- español por defecto), check limita a los 2 idiomas soportados hoy.
+alter table public.profiles
+  add column if not exists language text not null default 'es'
+  check (language in ('es','en'));
+comment on column public.profiles.language is 'Idioma preferido de la interfaz (es/en) — Release V1 Fase 2.';
+```
+
+**Rollback documentado (antes de aplicar):**
+
+```sql
+alter table public.profiles drop column if exists language;
+```
+
+**Justificación:** columna en `profiles` (no `localStorage`) porque el
+encargo pide fijar el idioma en el perfil, en el registro y en el alta
+de usuario por admin — necesita sincronizarse entre dispositivos del
+mismo usuario, cosa que `localStorage` no da (mismo razonamiento que ya
+usa el proyecto para diferenciar qué va en `localStorage`, ADR-0007,
+frente a qué va en BD). Librería: `react-i18next` — estándar de facto en
+el ecosistema React para este problema exacto (coherente con la regla
+fijada de "estándares primero, no inventar método propio").
+
+### Fase 3 — KPIs en la home
+
+**Riesgo:** bajo. Solo lectura de datos ya cargados por los hooks
+existentes (`useSupabaseTable`), cálculo en cliente — sin coste de
+servidor añadido a los volúmenes actuales de datos de un instructor
+freelance. Construir sobre `motion.js` ya existente, no añadir librería
+de animación nueva.
+
+### Fase 4 — Cabecera y notificaciones
+
+**Riesgo:** bajo en la parte de cabecera (solo reorganización visual).
+**Decisión de alcance:** no se construye un centro de notificaciones
+persistente (icono de campana + bandeja) porque no se pidió
+explícitamente y añadiría esquema/complejidad no solicitados — Fase 4
+se limita a rediseñar la cabecera (menos iconos sueltos) y a mejorar
+visualmente los popups de avisos que ya existen (`WhatsNew.jsx` /
+`DeploymentNotice.jsx`), cuyo mecanismo de datos se generaliza en Fase 6.
+
+### Fase 5 — Sistema de generación de Training Records
+
+**Riesgo:** medio-alto por tamaño (subsistema nuevo completo), bajo por
+diseño: nada de datos de alumnos/firmas se persiste (tal como pide el
+encargo), así que no hay riesgo de fuga de datos sensibles en BD.
+**Decisión de arquitectura:** generación de PDF **enteramente en
+cliente** (`pdf-lib` para rellenar los campos del PDF, `pdfjs-dist` para
+componer el JPG de páginas concatenadas) — no hace falta ningún
+endpoint de servidor para la generación en sí, solo para servir la
+lista de plantillas activas (ya cubierto por RLS directo a la tabla, sin
+endpoint custom). Coherente con "reutilizar antes que construir": evita
+transmitir firmas/datos de alumnos a un servidor que no los necesita.
+Rama aparte según pide el encargo: `feature/training-records`, creada
+desde `Release-V1`.
+**Migración aprobada — `0008-training-record-templates.sql`:**
+
+```sql
+create table if not exists public.training_record_templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  code text not null unique,
+  storage_path text not null,
+  optional_dives jsonb not null default '[]',
+  status text not null default 'pending_validation' check (status in ('pending_validation','active','rejected')),
+  missing_fields jsonb not null default '[]',
+  created_by uuid references auth.users(id),
+  created_at timestamptz not null default now()
+);
+alter table public.training_record_templates enable row level security;
+create policy "read active templates" on public.training_record_templates
+  for select using (status = 'active' or public.is_admin(auth.uid()));
+create policy "admin write templates" on public.training_record_templates
+  for all using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+
+insert into storage.buckets (id, name, public) values ('training-record-templates', 'training-record-templates', false)
+  on conflict (id) do nothing;
+create policy "read template files" on storage.objects
+  for select using (bucket_id = 'training-record-templates' and auth.uid() is not null);
+create policy "admin manage template files" on storage.objects
+  for all using (bucket_id = 'training-record-templates' and public.is_admin(auth.uid()))
+  with check (bucket_id = 'training-record-templates' and public.is_admin(auth.uid()));
+```
+
+**Rollback documentado (antes de aplicar):**
+
+```sql
+drop policy if exists "admin manage template files" on storage.objects;
+drop policy if exists "read template files" on storage.objects;
+delete from storage.objects where bucket_id = 'training-record-templates';
+delete from storage.buckets where id = 'training-record-templates';
+drop policy if exists "admin write templates" on public.training_record_templates;
+drop policy if exists "read active templates" on public.training_record_templates;
+drop table if exists public.training_record_templates;
+```
+
+**Justificación:** tabla + bucket en vez de guardar los PDF en el propio
+repo — el encargo ya anticipa que el admin subirá plantillas nuevas
+desde la app en el futuro, así que el almacenamiento tiene que ser
+gestionable en runtime, no solo en build time. El pipeline de
+análisis/validación de campos (que bloquea activar una plantilla si
+faltan campos) se deja explícitamente para cuando la interfaz de
+generación esté terminada — así lo pide el propio encargo ("se hará una
+vez esté completamente terminada la interfaz"). Esta noche, las 10
+plantillas ya presentes en la raíz del repo se cargan directamente con
+`status = 'active'` (semilla manual, no pasan por el pipeline todavía).
+
+### Fase 6 — Slides y avisos
+
+**Riesgo:** medio — cambia el comportamiento de un sistema que ya
+funciona en producción-adyacente (`DeploymentNotice.jsx`, ADR-0024, ya
+implementado pese a que el ADR sigue etiquetado "Propuesto" — se corrige
+el estado del ADR en esta misma fase).
+**Decisión cerrada con el usuario:** existen dos tipos de aviso
+distintos sobre el mismo mecanismo de "visto una vez" — (a) **release**:
+novedades para todos los usuarios, (b) **admin**: el resumen formateado
+de sesión, solo para superadmin (comportamiento actual de
+`DeploymentNotice`, sin cambios de audiencia). Se comportan igual
+(gate por fila no vista en `deployment_notice_views`), solo cambia a
+quién llegan.
+**Decisión de arquitectura:** se generaliza `deployment_notices`
+(columna `audience`) en vez de crear una tabla paralela — mínimo diff,
+reutiliza RLS/policies/tests ya existentes. Sustituye también el gate de
+`WhatsNew.jsx` (hoy por versión en `localStorage`) por este mismo
+mecanismo basado en BD, porque el encargo pide comportamientos
+(usuarios creados después del deploy nunca lo ven; usuarios que inician
+sesión después del deploy lo ven tras el login y vuelven a home) que
+requieren comparar `created_at` del aviso con la fecha de alta del
+usuario — imposible de garantizar solo con `localStorage`.
+**Migración aprobada — `0009-avisos-generalizados.sql`:**
+
+```sql
+alter table public.deployment_notices
+  add column if not exists audience text not null default 'superadmin' check (audience in ('all','superadmin'));
+
+drop policy if exists "superadmin read" on public.deployment_notices;
+create policy "read own audience" on public.deployment_notices
+  for select using (
+    (audience = 'superadmin' and public.is_superadmin(auth.uid()))
+    or (audience = 'all' and auth.uid() is not null)
+  );
+-- La policy de escritura no cambia: sigue restringida a superadmin.
+```
+
+**Rollback documentado (antes de aplicar):**
+
+```sql
+drop policy if exists "read own audience" on public.deployment_notices;
+create policy "superadmin read" on public.deployment_notices for select using (public.is_superadmin(auth.uid()));
+alter table public.deployment_notices drop column if exists audience;
+```
+
+### Fase 7 — Usabilidad, carga y escalabilidad
+
+**Riesgo:** bajo, salvo un punto: "simular carga" contra infraestructura
+real tiene coste/cuota compartida.
+**Decisión tomada (sin preguntar, bajo riesgo, documentada):** no se
+ejecutan pruebas de carga reales contra Supabase TEST esta noche. El
+análisis de escalabilidad se hace de forma teórica/documental (límites
+publicados del plan actual de Supabase/Vercel vs. patrones de consulta
+reales del código), con la propuesta de acciones concretas que pide el
+encargo. Si el usuario quiere pruebas de carga reales, es una decisión
+aparte que tomar mañana.
+
+### Fase 8 — Revisión visual y libro de estilo
+
+**Riesgo:** bajo — expresamente sin backend ni funcionalidades nuevas
+que requieran BBDD (restricción del propio encargo). Evoluciona
+`docs/ESTILO.md` existente en vez de crear un documento paralelo.
 
 ---
 
