@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { Plus, Minus, X, Check, Loader2, StickyNote, GraduationCap, Handshake, Users } from "lucide-react";
 import { TEAL, SUN, CORAL, GREEN } from "./App";
 import {
-  inputCls, formatMoney, Field, Select, CurrencySearchSelect, MoneyInput,
+  inputCls, formatMoney, Field, Select, MoneyInput,
   DatePicker, lighten, useToast, useBodyScrollLock, todayStr,
 } from "./shared";
 import { DURATION, sheetVariants, usePrefersReducedMotion } from "./motion";
@@ -100,6 +100,16 @@ export default function MovementSheet({
   const tableFor = (source) => (source === "ganado" ? worklog : source === "comision" ? comisiones : colleaguePayments);
   const ratesTableFor = (type) => (type === "ganado" ? rates : commissionRates);
   const rateFor = (type, school, activity) => ratesTableFor(type).rows.find((r) => r.school === school && r.activity === activity);
+  // Mismo criterio que RatesTab.jsx (lastCurrencyFor) para la tarifa
+  // creada al vuelo desde aquí (feedback 2026-08-30: moneda visible, no
+  // editable, en el propio formulario de tarifa) — la de la tarifa más
+  // reciente de esa escuela en cualquiera de las dos tablas, o el default
+  // de la app si la escuela no tiene ninguna todavía.
+  const lastCurrencyFor = (school) => {
+    const matches = [...rates.rows, ...commissionRates.rows].filter((r) => r.school === school);
+    if (matches.length === 0) return defaultCurrency;
+    return [...matches].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0].currency;
+  };
 
   const activitiesForSchool = (school) => {
     const names = [...new Set(rates.rows.filter((r) => r.school === school).map((r) => r.activity))];
@@ -227,7 +237,7 @@ export default function MovementSheet({
   };
 
   const openInlineRate = () => {
-    setRateForm({ school: form.school, activity: form.activity, payment_type: defaultPaymentType, currency: defaultCurrency, rate: "" });
+    setRateForm({ school: form.school, activity: form.activity, payment_type: defaultPaymentType, currency: lastCurrencyFor(form.school), rate: "" });
     setAddingRate(true);
   };
   const saveRate = async () => {
@@ -325,10 +335,6 @@ export default function MovementSheet({
                 </div>
               )}
 
-              {creating === "companeros" && (
-                <p className="mb-3 text-xs text-gray-400">Importe positivo si te paga a ti; negativo si le pagas tú a él/ella.</p>
-              )}
-
               {/* Curso primero: es el único campo sin buen valor por
                   defecto — Fecha ya es hoy, Escuela ya trae la tuya de
                   Configuración (o la última que usaste en esa escuela, ver
@@ -382,7 +388,10 @@ export default function MovementSheet({
                           {colleagueSuggestions(form.school).map((n) => <option key={n} value={n} />)}
                         </datalist>
                       </Field>
-                      <Field label={`Importe · ${form.currency}`}>
+                      <Field
+                        label={`Importe · ${form.currency}`}
+                        hint="Positivo si te paga a ti; negativo si le pagas tú a él/ella"
+                      >
                         <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
                       </Field>
                     </div>
@@ -454,10 +463,12 @@ export default function MovementSheet({
                         </button>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-32 shrink-0">
-                          <CurrencySearchSelect value={rateForm.currency} onChange={(v) => setRateForm({ ...rateForm, currency: v })} currencyRows={currencies.rows} />
-                        </div>
-                        <MoneyInput value={rateForm.rate} onChange={(v) => setRateForm({ ...rateForm, rate: v })} placeholder="Tarifa" aria-label="Tarifa" className="flex-1" />
+                        {/* Moneda visible, no editable (feedback 2026-08-30,
+                            mismo criterio que RatesTab.jsx) — derivada sola
+                            de la tarifa más reciente de esta escuela, nunca
+                            un desplegable que haya que tocar aquí. */}
+                        <span className="shrink-0 text-xs font-medium text-gray-400">{rateForm.currency}</span>
+                        <MoneyInput value={rateForm.rate} onChange={(v) => setRateForm({ ...rateForm, rate: v })} placeholder="Tarifa" aria-label={`Tarifa · ${rateForm.currency}`} className="flex-1" />
                         <button
                           type="button"
                           onClick={saveRate}

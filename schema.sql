@@ -6,7 +6,110 @@
 -- ya tienes montada (usa "create table if not exists" por seguridad,
 -- pero no lo relances a menos que sea una base de datos nueva).
 -- Las ~10 migraciones sueltas del chat ya no hace falta consultarlas.
+--
+-- 2026-08-30: las 9 tablas de negocio (schools/activities/payment_types/
+-- payment_statuses/rates/commission_rates/worklog/comisiones/
+-- colleague_payments) llevan "on delete cascade" en su FK a auth.users —
+-- antes no lo tenían, y eliminar cualquier usuario con datos reales en
+-- alguna de esas tablas fallaba con "Database error deleting user" (el
+-- FK sin cascade bloqueaba el borrado de auth.users). Confirmado con
+-- datos reales, ver docs/ADR/0018-cascade-borrado-de-usuario.md. "create
+-- table if not exists" no aplica esto a tablas que Postgres ya creó —
+-- una base de datos existente necesita la migración ALTER TABLE de ese
+-- ADR, ejecutada a mano una sola vez.
 -- =================================================================
+
+-- ---------- Bootstrap: currencies, profiles, is_admin/is_superadmin ----------
+-- Este bloque va antes que cualquier otra cosa por una cadena de
+-- dependencias real, no por estilo: la RLS de currencies/nav_sections/
+-- app_config necesita is_admin() ya creada; is_admin() hace un `select`
+-- contra `profiles`, y Postgres SÍ resuelve esa referencia al crear la
+-- función `language sql` (falla con "relation public.profiles does not
+-- exist" si no existe todavía — confirmado al crear Supabase TEST); y
+-- `profiles.default_currency` referencia `currencies(code)`, así que
+-- currencies tiene que existir antes que profiles. Orden obligado:
+-- currencies (tabla) -> profiles (tabla) -> is_admin/is_superadmin
+-- (funciones). El resto de cada tabla (RLS, triggers, índices que no sean
+-- de esta dependencia) se queda en su sección original más abajo, sin
+-- moverse — esto es solo lo mínimo que hace falta adelantar.
+
+create table if not exists currencies (
+  code text primary key,
+  name text not null,
+  symbol text not null,
+  is_default boolean not null default false
+);
+
+-- Regla arquitectónica — se mantiene para todo desarrollo futuro:
+-- - auth.users es la ÚNICA fuente de verdad para datos de autenticación
+--   (email, password/hash, confirmación, MFA, ciclo de vida de la sesión).
+--   Gestionada por Supabase — no se toca directamente. NUNCA se duplica el
+--   email (ni ningún otro campo de auth.users) en public.profiles.
+-- - public.profiles guarda EXCLUSIVAMENTE datos de perfil de la aplicación
+--   que auth.users no tiene: nombre, nickname, preferencias, roles
+--   (is_admin/is_superadmin), etc. Es 1:1 con auth.users vía user_id, pero
+--   es una tabla separada, no una extensión con columnas de auth mezcladas.
+-- - Cuando la app necesita cruzar ambas (p. ej. mostrar el email de otro
+--   usuario), se hace vía una función security definer dedicada que decide
+--   ella misma quién puede ver qué (ver email_for_nickname y
+--   admin_list_profiles más abajo) — nunca dando acceso de cliente directo
+--   a auth.users ni copiando su contenido a profiles.
+--
+-- nickname: identificador público dentro de la app, único (comparación
+-- case-insensitive vía el índice de abajo) y alternativa a el email para
+-- iniciar sesión (ver email_for_nickname más abajo). No puede contener "@"
+-- porque el login decide si lo que se ha escrito es email o nickname
+-- comprobando justo eso — si el nickname pudiera llevar "@" el flujo de
+-- login sería ambiguo.
+create table if not exists public.profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  first_name text,
+  last_name text,
+  nickname text not null,
+  default_currency text references currencies(code), -- preferencia personal; distinto de currencies.is_default (el respaldo global de la app)
+  is_admin boolean not null default false,
+  is_superadmin boolean not null default false,
+  -- true en cuanto el usuario ha fijado su propia contraseña al menos una
+  -- vez (via auth.updateUser, tras entrar por el enlace de primer acceso).
+  -- Por defecto false para no afectar a cuentas ya existentes ni al
+  -- superadmin de arranque; el gate de la app usa este campo para saber si
+  -- debe forzar la pantalla de "crear tu contraseña" antes de dejar entrar.
+  -- DEPRECATED: sustituido por activated_at (ver justo abajo). Se mantiene
+  -- sin tocar durante la migración y se retira en un paso aparte, no en
+  -- este mismo cambio — ver la migración aditiva más abajo.
+  password_set boolean not null default false,
+  -- Momento en que la activación de la cuenta completó la fase de
+  -- contraseña (ver activateAccount() en useSession.js) — null mientras
+  -- esté pendiente. Sustituye a password_set con la misma semántica de
+  -- "puede pasar" pero como instante, no como flag. IMPORTANTE: no
+  -- significa que se haya completado TODO el onboarding — un usuario puede
+  -- tener activated_at con fecha y aun así tener consentimiento legal
+  -- pendiente (ver pendingLegalConsents); son dos puertas independientes
+  -- que AuthGate comprueba por separado, nunca una sustituye a la otra.
+  activated_at timestamptz,
+  created_at timestamptz not null default now(),
+  constraint profiles_nickname_no_at check (nickname !~ '@')
+);
+
+create unique index if not exists profiles_nickname_lower_key on public.profiles (lower(nickname));
+
+-- Helper para políticas de otras tablas ("¿es admin quien llama?"). security
+-- definer para no reevaluar RLS de profiles recursivamente al consultarla.
+create or replace function public.is_admin(uid uuid)
+returns boolean language sql security definer set search_path = public stable as $$
+  select coalesce((select is_admin or is_superadmin from public.profiles where user_id = uid), false);
+$$;
+
+-- Permiso específico: ¿es esta persona superadmin? Gemela de is_admin(uid),
+-- pero sin el "or is_superadmin" — is_admin() sigue devolviendo true para
+-- admin O superadmin (se usa donde cualquiera de los dos vale, p. ej.
+-- lectura de currencies/nav_sections/app_config); esta función es para los
+-- sitios donde hace falta distinguir estrictamente superadmin, como el
+-- cambio de is_admin de otra cuenta (ver protect_profile_roles() abajo).
+create or replace function public.is_superadmin(uid uuid)
+returns boolean language sql security definer set search_path = public stable as $$
+  select coalesce((select is_superadmin from public.profiles where user_id = uid), false);
+$$;
 
 -- ---------- Catálogos de configuración ----------
 
@@ -19,7 +122,7 @@ create table if not exists schools (
   name text not null,
   is_default boolean not null default false,
   color text not null default '#0F766E',
-  user_id uuid not null references auth.users(id) default auth.uid(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   unique (user_id, name)
 );
 
@@ -28,7 +131,7 @@ create table if not exists activities (
   name text not null,
   color text not null default '#0E7C7B',
   is_default boolean not null default false,
-  user_id uuid not null references auth.users(id) default auth.uid(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   unique (user_id, name)
 );
 
@@ -36,7 +139,7 @@ create table if not exists payment_types (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   is_default boolean not null default false,
-  user_id uuid not null references auth.users(id) default auth.uid(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   unique (user_id, name)
 );
 
@@ -45,7 +148,7 @@ create table if not exists payment_statuses (
   name text not null,
   is_default boolean not null default false,
   color text not null default '#64748B',
-  user_id uuid not null references auth.users(id) default auth.uid(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   unique (user_id, name)
 );
 
@@ -66,12 +169,8 @@ alter table payment_statuses enable row level security;
 drop policy if exists "allow all" on payment_statuses;
 create policy "own rows" on payment_statuses for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
-create table if not exists currencies (
-  code text primary key,
-  name text not null,
-  symbol text not null,
-  is_default boolean not null default false
-);
+-- currencies ya se creó en el bloque "Bootstrap" del principio del
+-- fichero (la necesitaba profiles.default_currency antes de llegar aquí).
 
 -- RLS: catálogo global — cualquier autenticado puede leerlo, solo
 -- admins/superadmins pueden gestionarlo. is_admin(auth.uid()) ya cubre
@@ -128,7 +227,12 @@ create table if not exists rates (
   payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
-  user_id uuid not null references auth.users(id) default auth.uid()
+  -- Fecha de alta de la tarifa — no editable, no es un campo del
+  -- formulario, la fija Postgres sola al crear la fila. Mostrada en la
+  -- interfaz como "Alta: <fecha>" (RatesTab.jsx), mismo criterio que
+  -- profiles.created_at en Usuarios. Ver docs/ADR/0019.
+  created_at timestamptz not null default now(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table rates enable row level security;
@@ -143,7 +247,8 @@ create table if not exists commission_rates (
   payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
-  user_id uuid not null references auth.users(id) default auth.uid()
+  created_at timestamptz not null default now(), -- ver nota en rates.created_at
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table commission_rates enable row level security;
@@ -162,7 +267,7 @@ create table if not exists worklog (
   notes text default '',
   status text not null default 'Pending',
   currency text not null default 'EUR', -- legado; el importe real usa la moneda de `rates`, no esta columna
-  user_id uuid not null references auth.users(id) default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table worklog enable row level security;
@@ -179,7 +284,7 @@ create table if not exists comisiones (
   currency text not null default 'EUR', -- legado; ver nota en worklog.currency
   notes text default '',
   status text not null default 'Pending',
-  user_id uuid not null references auth.users(id) default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table comisiones enable row level security;
@@ -197,7 +302,7 @@ create table if not exists colleague_payments (
   status text not null default 'Pending',
   notes text default '',
   currency text not null default 'EUR',
-  user_id uuid not null references auth.users(id) default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table colleague_payments enable row level security;
@@ -206,58 +311,11 @@ create policy "own rows" on colleague_payments for all using (auth.uid() = user_
 
 -- ---------- Auth (Supabase Auth) y perfiles ----------
 
--- Regla arquitectónica — se mantiene para todo desarrollo futuro:
--- - auth.users es la ÚNICA fuente de verdad para datos de autenticación
---   (email, password/hash, confirmación, MFA, ciclo de vida de la sesión).
---   Gestionada por Supabase — no se toca directamente. NUNCA se duplica el
---   email (ni ningún otro campo de auth.users) en public.profiles.
--- - public.profiles guarda EXCLUSIVAMENTE datos de perfil de la aplicación
---   que auth.users no tiene: nombre, nickname, preferencias, roles
---   (is_admin/is_superadmin), etc. Es 1:1 con auth.users vía user_id, pero
---   es una tabla separada, no una extensión con columnas de auth mezcladas.
--- - Cuando la app necesita cruzar ambas (p. ej. mostrar el email de otro
---   usuario), se hace vía una función security definer dedicada que decide
---   ella misma quién puede ver qué (ver email_for_nickname y
---   admin_list_profiles más abajo) — nunca dando acceso de cliente directo
---   a auth.users ni copiando su contenido a profiles.
---
--- nickname: identificador público dentro de la app, único (comparación
--- case-insensitive vía el índice de abajo) y alternativa a el email para
--- iniciar sesión (ver email_for_nickname más abajo). No puede contener "@"
--- porque el login decide si lo que se ha escrito es email o nickname
--- comprobando justo eso — si el nickname pudiera llevar "@" el flujo de
--- login sería ambiguo.
-create table if not exists public.profiles (
-  user_id uuid primary key references auth.users(id) on delete cascade,
-  first_name text,
-  last_name text,
-  nickname text not null,
-  default_currency text references currencies(code), -- preferencia personal; distinto de currencies.is_default (el respaldo global de la app)
-  is_admin boolean not null default false,
-  is_superadmin boolean not null default false,
-  -- true en cuanto el usuario ha fijado su propia contraseña al menos una
-  -- vez (via auth.updateUser, tras entrar por el enlace de primer acceso).
-  -- Por defecto false para no afectar a cuentas ya existentes ni al
-  -- superadmin de arranque; el gate de la app usa este campo para saber si
-  -- debe forzar la pantalla de "crear tu contraseña" antes de dejar entrar.
-  -- DEPRECATED: sustituido por activated_at (ver justo abajo). Se mantiene
-  -- sin tocar durante la migración y se retira en un paso aparte, no en
-  -- este mismo cambio — ver la migración aditiva más abajo.
-  password_set boolean not null default false,
-  -- Momento en que la activación de la cuenta completó la fase de
-  -- contraseña (ver activateAccount() en useSession.js) — null mientras
-  -- esté pendiente. Sustituye a password_set con la misma semántica de
-  -- "puede pasar" pero como instante, no como flag. IMPORTANTE: no
-  -- significa que se haya completado TODO el onboarding — un usuario puede
-  -- tener activated_at con fecha y aun así tener consentimiento legal
-  -- pendiente (ver pendingLegalConsents); son dos puertas independientes
-  -- que AuthGate comprueba por separado, nunca una sustituye a la otra.
-  activated_at timestamptz,
-  created_at timestamptz not null default now(),
-  constraint profiles_nickname_no_at check (nickname !~ '@')
-);
-
-create unique index if not exists profiles_nickname_lower_key on public.profiles (lower(nickname));
+-- public.profiles ya se creó en el bloque "Bootstrap" del principio del
+-- fichero (is_admin() la necesitaba antes de llegar aquí) — ver ahí mismo
+-- la regla arquitectónica de auth.users vs. profiles y el criterio de
+-- nickname. El resto de este bloque (migración aditiva, trigger de alta,
+-- RPCs, protección de roles, RLS de profiles) sí va aquí, sin mover.
 
 -- Migración aditiva password_set -> activated_at (fase 1 de 2). Ejecutar a
 -- mano en el SQL editor de Supabase antes o junto con el despliegue del
@@ -301,23 +359,9 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- Helper para políticas de otras tablas ("¿es admin quien llama?"). security
--- definer para no reevaluar RLS de profiles recursivamente al consultarla.
-create or replace function public.is_admin(uid uuid)
-returns boolean language sql security definer set search_path = public stable as $$
-  select coalesce((select is_admin or is_superadmin from public.profiles where user_id = uid), false);
-$$;
-
--- Permiso específico: ¿es esta persona superadmin? Gemela de is_admin(uid),
--- pero sin el "or is_superadmin" — is_admin() sigue devolviendo true para
--- admin O superadmin (se usa donde cualquiera de los dos vale, p. ej.
--- lectura de currencies/nav_sections/app_config); esta función es para los
--- sitios donde hace falta distinguir estrictamente superadmin, como el
--- cambio de is_admin de otra cuenta (ver protect_profile_roles() abajo).
-create or replace function public.is_superadmin(uid uuid)
-returns boolean language sql security definer set search_path = public stable as $$
-  select coalesce((select is_superadmin from public.profiles where user_id = uid), false);
-$$;
+-- is_admin()/is_superadmin() ya están definidas al principio del fichero
+-- (antes de "Catálogos de configuración") — sus políticas RLS las
+-- necesitan disponibles antes de que exista `profiles`.
 
 -- RPC estrecha para el login por nickname: recibe un nickname y devuelve
 -- solo el email asociado (o null), nada más de la fila de profiles.
@@ -431,10 +475,19 @@ create policy "update own or admin updates any" on public.profiles
 -- is_admin = false, is_superadmin = false por defecto — no hay forma de
 -- volverse admin desde la app. Tras crear la primera cuenta (nickname
 -- "admin") vía el dashboard de Supabase, hay que promoverla a mano UNA VEZ
--- con esta consulta (no forma parte de ningún flujo de la app a propósito,
--- ver protect_profile_roles_trigger más arriba):
+-- (no forma parte de ningún flujo de la app a propósito).
 --
+-- IMPORTANTE, confirmado al bootstrapear Supabase TEST: protect_profile_
+-- roles_trigger (ver arriba) bloquea CUALQUIER cambio a is_superadmin sin
+-- excepción — los triggers de Postgres no se saltan por rol, a diferencia
+-- de la RLS, así que ni siquiera service_role puede saltárselo. Hace
+-- falta desactivar el trigger, hacer el cambio, y reactivarlo — requiere
+-- conexión directa a Postgres (psql o SQL Editor de Supabase), la API
+-- REST/PostgREST no puede ejecutar `alter table ... disable trigger`:
+--
+-- alter table public.profiles disable trigger protect_profile_roles_trigger;
 -- update public.profiles set is_admin = true, is_superadmin = true where nickname = 'admin';
+-- alter table public.profiles enable trigger protect_profile_roles_trigger;
 
 -- ---------- RLS ----------
 -- Estado actual — migración de RLS completa en las 12 tablas:

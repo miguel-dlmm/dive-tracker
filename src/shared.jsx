@@ -2,12 +2,12 @@ import React, { useState, useRef, useEffect, useMemo, useCallback, createContext
 import { createPortal } from "react-dom";
 import * as Icons from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./colors";
-import { DURATION, panelVariants, sheetVariants, usePrefersReducedMotion } from "./motion";
+import { DURATION, panelVariants, sheetVariants, listItemVariants, usePrefersReducedMotion } from "./motion";
 
 export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
 
@@ -217,6 +217,12 @@ export function focusRingStyle() {
   return {};
 }
 
+// Fecha corta ES, o "—" si no hay valor — mismo formato en cualquier
+// listado que muestre "cuándo se dio de alta esto" (Usuarios, Tarifas).
+export function shortDate(iso) {
+  return iso ? new Date(iso).toLocaleDateString("es-ES") : "—";
+}
+
 export function formatMoney(amount, code, currencyRows) {
   const cur = currencyRows.find((c) => c.code === code);
   const symbol = cur?.symbol || code || "";
@@ -239,10 +245,33 @@ export function Money({ amount, code, currencyRows, className = "", muted = fals
   );
 }
 
-export function Field({ label, children }) {
+// `hint` es opcional: una aclaración corta que no merece ocupar espacio
+// fijo en pantalla (p. ej. "importe positivo/negativo según quién paga a
+// quién" en Ajuste de curso) — un icono "?" junto a la etiqueta la
+// muestra/oculta al tocarlo, en vez de un párrafo siempre visible debajo
+// del campo. type="button" + preventDefault: el icono vive dentro del
+// mismo <label> que el campo (para que el campo siga teniendo nombre
+// accesible por asociación); sin esto, el clic en el icono también
+// activaría/enfocaría el campo por delegación del <label>.
+export function Field({ label, hint, children }) {
+  const [showHint, setShowHint] = useState(false);
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-xs font-medium text-gray-500">{label}</span>
+      <span className="flex items-center gap-0.5 text-xs font-medium text-gray-500">
+        {label}
+        {hint && (
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); setShowHint((v) => !v); }}
+            aria-expanded={showHint}
+            aria-label={showHint ? "Ocultar ayuda" : "Ayuda"}
+            className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-gray-400"
+          >
+            <HelpCircle size={13} aria-hidden="true" />
+          </button>
+        )}
+      </span>
+      {hint && showHint && <span className="-mt-0.5 text-[11px] italic text-gray-400">{hint}</span>}
       {children}
     </label>
   );
@@ -664,7 +693,7 @@ export const MOVEMENT_TYPE_META = {
 // desglose, para añadir un segundo movimiento ese día sin perder la vista
 // de lo que ya hay. Sin este prop (p. ej. en Resumen, un calendario de
 // solo análisis) el comportamiento es exactamente el de antes.
-export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false, onCreateForDay }) {
+export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, caption, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false, onCreateForDay }) {
   const reducedMotion = usePrefersReducedMotion();
   const [selectedDay, setSelectedDayState] = useState(null);
   const userSelectedRef = useRef(false);
@@ -675,12 +704,21 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
 
+  // Comparación por string ("YYYY-MM"/día), nunca parseando e.date con
+  // `new Date(...)` — bug real corregido 2026-08-30 (mismo que
+  // SummaryTab.jsx, ver la nota junto a withinRange ahí): un string de
+  // fecha sin hora se interpreta como medianoche UTC, y
+  // getFullYear()/getMonth()/getDate() la leen de vuelta en la zona
+  // horaria LOCAL del navegador — en cualquier huso negativo (América,
+  // incluida cualquier escuela en México/Caribe), un movimiento del día 1
+  // de un mes podía desaparecer del calendario entero (agrupado bajo el
+  // mes/día anterior, que ni siquiera se pinta en esta cuadrícula).
   const byDay = useMemo(() => {
     const map = {};
+    const monthPrefix = `${year}-${pad2(month + 1)}`;
     entries.forEach((e) => {
-      const d = new Date(e.date);
-      if (d.getFullYear() !== year || d.getMonth() !== month) return;
-      const day = d.getDate();
+      if (e.date.slice(0, 7) !== monthPrefix) return;
+      const day = Number(e.date.slice(8, 10));
       if (!map[day]) map[day] = [];
       map[day].push(e);
     });
@@ -703,6 +741,18 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
 
   const dayList = (d) => byDay[d] || [];
   const colorForDay = (list) => (typeof dotColor === "function" ? (dotColor(list) || CAL_NEUTRAL) : dotColor);
+
+  // Total del día — todas las fuentes juntas (Curso + Comisión + Ajuste),
+  // igual criterio que "Generado este mes" en Home (no "Ganado": incluye
+  // también lo que te pagan/pagas por Ajustes de curso, no solo cursos
+  // impartidos). Por moneda, nunca sumado entre monedas distintas (mismo
+  // criterio de seguridad que el resto de la app) — MoneyLine ya sabe
+  // pintar más de una si el día mezcla monedas.
+  const dayTotals = (list) => {
+    const totals = {};
+    list.forEach((e) => { totals[e.currency] = (totals[e.currency] || 0) + e.total; });
+    return totals;
+  };
 
   // Agregado por actividad (comportamiento por defecto); si showSchool
   // está activo, se agrupa por escuela+actividad para poder mostrar la
@@ -754,6 +804,14 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
+      {/* Encima de los días de la semana, dentro de la propia tarjeta —
+          antes vivía como un párrafo aparte debajo de todo el calendario
+          (feedback 2026-08-30: se leía como una nota a pie de página, no
+          como instrucción de uso del propio calendario). Opcional: solo
+          Home lo pasa hoy, Resumen no lo necesita. */}
+      {caption && (
+        <p className="mb-2 text-center text-[11px] text-gray-400">{caption}</p>
+      )}
       <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-gray-400">
         {CAL_WEEKDAYS.map((w) => <div key={w}>{w}</div>)}
       </div>
@@ -846,6 +904,21 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
               <button onClick={() => setSelectedDay(null)} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600" aria-label="Cerrar detalle del día"><X size={14} /></button>
             </div>
           </div>
+
+          {groupBySource && detailed && (
+            // Total del día — respuesta directa a "¿cuánto ha dado este
+            // día?" sin tener que sumar mentalmente el desglose de abajo
+            // (feedback 2026-08-30). Solo aquí (el detalle "por entrada"
+            // de Home): el resto de vistas del calendario (agregado por
+            // actividad, tabla) no lo necesitan porque agregan menos
+            // información en primer lugar.
+            <div className="mb-3 flex items-center justify-between border-b border-gray-200 pb-2">
+              <span className="text-xs font-medium text-gray-500">Generado el día</span>
+              <span className="font-semibold" style={{ color: "#1F2937" }}>
+                <MoneyLine totals={dayTotals(dayList(selectedDay))} currencyRows={currencyRows} />
+              </span>
+            </div>
+          )}
 
           {groupBySource && detailed ? (
             <div className="space-y-3">
@@ -1193,6 +1266,50 @@ export function FloatingPanel({ open, pos, panelRef, matchWidth = true, align = 
 // componente o de omitir el menú entero, "Eliminar" se muestra desactivado
 // con el motivo en el título — sigue siendo obvio que la opción existe,
 // solo que no está disponible para esta fila en concreto.
+// Tarjeta plegable — profundidad bajo demanda, sin pantalla ni selector
+// aparte (ver docs/ADR/0009-rediseno-resumen.md). Extraída de SummaryTab.jsx
+// 2026-08-30 al ganar un segundo consumidor real (Ayuda: cada categoría es
+// una tarjeta que se despliega en el sitio, en vez de navegar a una
+// pantalla nueva — ver docs/ADR/0011, addendum "de índice a guía viva").
+// `subtitle` es opcional (Resumen no lo usa; Ayuda sí, para la descripción
+// corta de la categoría, visible antes de desplegar).
+// `open`/`onToggle` (opcionales, controlado): sin pasarlos, la tarjeta
+// gestiona su propio estado (Resumen, sin necesidad de coordinar varias
+// tarjetas entre sí). Ayuda SÍ los pasa — necesita saber en todo momento
+// cuál está abierta para persistirlo en sessionStorage (ver HelpTab.jsx,
+// "recargar mantiene la pantalla actual") y para que el gesto de "atrás"
+// sepa qué colapsar.
+export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = NAVY, defaultOpen = false, open: controlledOpen, onToggle, children }) {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const toggle = () => (isControlled ? onToggle?.(!open) : setInternalOpen((o) => !o));
+  const reduced = usePrefersReducedMotion();
+  return (
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <button
+        onClick={toggle}
+        aria-expanded={open}
+        className="flex min-h-[52px] w-full items-center gap-2 px-4 py-3 text-left"
+      >
+        {Icon && <Icon size={16} style={{ color: iconColor }} aria-hidden="true" className="shrink-0" />}
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-semibold text-gray-800">{title}</span>
+          {subtitle && <span className="block truncate text-xs text-gray-400">{subtitle}</span>}
+        </span>
+        <ChevronDown size={16} aria-hidden="true" className="shrink-0 text-gray-400 transition-transform" style={{ transform: open ? "rotate(180deg)" : "none" }} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div {...listItemVariants(reduced)} className="border-t border-gray-100 px-4 py-3">
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // Botón flotante de creación — convención #3 (CLAUDE.md): mismo lenguaje
 // visual (fixed bottom-24 right-4, 52×52, color de acento de la sección)
 // en toda pantalla de lista con FAB+hoja (Mi trabajo, Tarifas,

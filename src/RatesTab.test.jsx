@@ -45,7 +45,7 @@ describe("RatesTab — alta de tarifa con catálogo de tipos de pago vacío (cue
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
     await user.click(screen.getByRole("button", { name: "Curso" }));
     await user.click(screen.getByRole("option", { name: "Open Water" }));
-    await user.type(screen.getByRole("textbox", { name: "Tarifa" }), "25");
+    await user.type(screen.getByRole("textbox", { name: "Tarifa · EUR" }), "25");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(rates.insertRow).toHaveBeenCalledWith(
@@ -68,7 +68,7 @@ describe("RatesTab — editar abre la hoja de creación, precargada", () => {
     await user.click(screen.getByRole("menuitem", { name: "Editar" }));
 
     expect(screen.getByText("Editar tarifa de PADI Cozumel - Open Water")).toBeInTheDocument();
-    const rateInput = screen.getByRole("textbox", { name: "Tarifa" });
+    const rateInput = screen.getByRole("textbox", { name: "Tarifa · EUR" });
     expect(rateInput).toHaveValue("20,00");
 
     await user.clear(rateInput);
@@ -128,7 +128,7 @@ describe("RatesTab — lista combinada de Curso y Comisión", () => {
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
     await user.click(screen.getByRole("button", { name: "Curso" }));
     await user.click(screen.getByRole("option", { name: "Open Water" }));
-    await user.type(screen.getByRole("textbox", { name: "Tarifa" }), "10");
+    await user.type(screen.getByRole("textbox", { name: "Tarifa · EUR" }), "10");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(commissionRates.insertRow).toHaveBeenCalledWith(
@@ -153,5 +153,87 @@ describe("RatesTab — filtro de Escuela, solo con más de una escuela", () => {
     renderRatesTab({ schools: rowsHook([{ name: "PADI Cozumel" }, { name: "Ihasia" }]) });
     await user.click(screen.getByRole("button", { name: "Filtrar" }));
     expect(screen.getByText("Escuela")).toBeInTheDocument();
+  });
+});
+
+// Feedback explícito 2026-08-30 (tercera vuelta): la card vuelve al mismo
+// lenguaje de dos líneas que EntryRow en Mi trabajo — "una sola línea" (la
+// vuelta anterior) queda descartada por alejar Tarifas de Movimientos, no
+// conservada como alternativa. Fecha de alta y tipo viven ahora en el
+// metadato de la segunda línea ("Alta: ... · Tipo"), igual que Mi trabajo
+// muestra "fecha · tipo" — no un badge propio de Tarifas. "per person"
+// sigue fuera del frontal (ni en la card ni como filtro — payment_type
+// vale siempre "Per Person" en la práctica, ver ADR-0003).
+describe("RatesTab — card de dos líneas (estilo Mi trabajo), sin 'per person', orden por más reciente", () => {
+  it("no muestra 'Per Person' en ningún sitio de la card, y ordena por creación descendente", () => {
+    renderRatesTab({
+      rates: rowsHook([
+        { id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, created_at: "2026-08-01T00:00:00Z" },
+        { id: "r2", school: "PADI Cozumel", activity: "Advanced", payment_type: "Per Person", currency: "EUR", rate: 30, created_at: "2026-08-15T00:00:00Z" },
+      ]),
+      activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
+    });
+
+    expect(screen.queryByText(/Per Person/)).not.toBeInTheDocument();
+    // Más reciente (r2, "Advanced") primero.
+    const activityNames = screen.getAllByText(/^(Open Water|Advanced)$/).map((el) => el.textContent);
+    expect(activityNames).toEqual(["Advanced", "Open Water"]);
+  });
+
+  it("la fecha de alta y el tipo se ven en el listado, como metadato de la segunda línea", () => {
+    renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, created_at: "2026-08-15T00:00:00Z" }]),
+    });
+
+    expect(screen.getByText("Alta: 15/8/2026 · Curso")).toBeInTheDocument();
+  });
+
+  it("la subcabecera de Comisión, al crear, dice solo 'Lo que cobras por traer a un cliente.'", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({});
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getByRole("tab", { name: /Comisión/ }));
+    expect(screen.getByText("Lo que cobras por traer a un cliente.")).toBeInTheDocument();
+  });
+
+  it("no existe ningún filtro 'Pago' (payment_type no tiene ningún efecto real de filtrado)", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({});
+    await user.click(screen.getByRole("button", { name: "Filtrar" }));
+    expect(screen.queryByText("Pago")).not.toBeInTheDocument();
+  });
+});
+
+// Feedback explícito 2026-08-30: el tipo (Curso/Comisión) vuelve a verse
+// de un vistazo en la card (antes solo el color del borde, insuficiente) —
+// ver el metadato "Alta: ... · Tipo" en el describe de arriba. La moneda
+// deja de ser un desplegable en el formulario — visible como sufijo de
+// "Tarifa", derivada sola de la escuela, nunca editable ahí.
+describe("RatesTab — moneda visible-no-editable en el formulario", () => {
+  it("no existe ningún campo 'Moneda' en la hoja de creación", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({});
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    expect(screen.queryByText("Moneda")).not.toBeInTheDocument();
+  });
+
+  it("sin tarifas previas para la escuela, 'Tarifa' muestra la moneda por defecto de la app", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({});
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getByRole("button", { name: "Escuela" }));
+    await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
+    expect(screen.getByRole("textbox", { name: "Tarifa · EUR" })).toBeInTheDocument();
+  });
+
+  it("con una tarifa previa de la escuela en otra moneda, 'Tarifa' adopta esa moneda sola", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "THB", rate: 1500 }]),
+    });
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getByRole("button", { name: "Escuela" }));
+    await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
+    expect(screen.getByRole("textbox", { name: "Tarifa · THB" })).toBeInTheDocument();
   });
 });

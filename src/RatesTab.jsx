@@ -2,8 +2,8 @@ import React, { useState, useMemo } from "react";
 import { Plus, Check, X, Search, SlidersHorizontal, GraduationCap, Handshake } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import {
-  inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, CurrencySearchSelect, MoneyInput,
-  EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab,
+  inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, MoneyInput,
+  EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate,
 } from "./shared";
 
 // Rediseño 2026-08-30 — Tarifas pasa a hablar el mismo idioma visual que Mi
@@ -54,7 +54,7 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
   // Filtros colapsables detrás de un botón "Filtrar" (mismo patrón que Mi
   // trabajo, ver filtersOpen/activeFilterCount en MiTrabajoTab.jsx).
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filters, setFilters] = useState({ type: "", school: "", activity: [], payment_type: "" });
+  const [filters, setFilters] = useState({ type: "", school: "", activity: [] });
   // creating: tipo elegido en la hoja — solo relevante al CREAR (ver
   // switchType); al editar, se fija al tipo real de la fila y no cambia
   // (mover una tarifa de tabla sería un cambio de modelo, fuera de
@@ -72,42 +72,61 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
 
   // Única lista combinada — mismo patrón que buildActivityEntries
   // (rateCalc.js) para worklog/comisiones: dos tablas reales, una sola
-  // vista de presentación, ordenada por escuela y luego por tipo para que
-  // las tarifas de una misma escuela queden agrupadas visualmente.
+  // vista de presentación. Orden: más recientes primero (created_at desc,
+  // igual que Movimientos) — feedback explícito 2026-08-30. `created_at`
+  // todavía no existe en `rates`/`commission_rates` en la base de datos
+  // real (columna pendiente de migración, ver docs/ADR/0019) — hasta que
+  // se aplique, todas las filas comparan como "sin fecha" (empatan) y el
+  // criterio de desempate (escuela/tipo/curso) decide el orden, igual que
+  // antes de este cambio. En cuanto exista la columna, el orden por fecha
+  // entra en vigor sin tocar nada más aquí.
   const allRows = useMemo(() => {
     const ganado = rates.rows.map((r) => ({ ...r, _source: "ganado" }));
     const comision = commissionRates.rows.map((r) => ({ ...r, _source: "comision" }));
-    // Curso antes que Comisión dentro de la misma escuela: es el caso
-    // dominante (ver docs/ADR/0005 — el FAB de Mi trabajo entra directo a
-    // "Curso impartido"), un orden alfabético por _source lo dejaría al
-    // revés por casualidad ("comision" < "ganado").
+    // Curso antes que Comisión dentro de la misma escuela (desempate): es
+    // el caso dominante (ver docs/ADR/0005 — el FAB de Mi trabajo entra
+    // directo a "Curso impartido"), un orden alfabético por _source lo
+    // dejaría al revés por casualidad ("comision" < "ganado").
     const TYPE_RANK = { ganado: 0, comision: 1 };
     return [...ganado, ...comision].sort((a, b) =>
-      a.school.localeCompare(b.school) || TYPE_RANK[a._source] - TYPE_RANK[b._source] || a.activity.localeCompare(b.activity)
+      (new Date(b.created_at || 0) - new Date(a.created_at || 0))
+      || a.school.localeCompare(b.school) || TYPE_RANK[a._source] - TYPE_RANK[b._source] || a.activity.localeCompare(b.activity)
     );
   }, [rates.rows, commissionRates.rows]);
 
   const presentValues = (key) => [...new Set(allRows.map((r) => r[key]).filter(Boolean))].sort();
-  const hasFilters = filters.type || filters.school || (filters.activity && filters.activity.length > 0) || filters.payment_type;
-  const activeFilterCount = [Boolean(filters.type), Boolean(filters.school), filters.activity.length > 0, Boolean(filters.payment_type)].filter(Boolean).length;
+  const hasFilters = filters.type || filters.school || (filters.activity && filters.activity.length > 0);
+  const activeFilterCount = [Boolean(filters.type), Boolean(filters.school), filters.activity.length > 0].filter(Boolean).length;
 
   const filtered = useMemo(() => {
     let list = allRows;
     if (filters.type) list = list.filter((r) => r._source === TYPE_KEY[filters.type]);
     if (filters.school) list = list.filter((r) => r.school === filters.school);
     if (filters.activity && filters.activity.length > 0) list = list.filter((r) => filters.activity.includes(r.activity));
-    if (filters.payment_type) list = list.filter((r) => r.payment_type === filters.payment_type);
     if (query.trim()) {
       const q = query.toLowerCase();
-      list = list.filter((r) => [r.school, r.activity, r.payment_type].some((v) => String(v ?? "").toLowerCase().includes(q)));
+      list = list.filter((r) => [r.school, r.activity].some((v) => String(v ?? "").toLowerCase().includes(q)));
     }
     return list;
   }, [allRows, query, filters]);
 
   const closeSheet = () => { setSheetOpen(false); setEditingEntry(null); };
 
+  // Moneda: smart default por escuela, no un desplegable que haya que
+  // tocar cada vez (feedback explícito 2026-08-30 — "quitar la edición de
+  // moneda, pero que siga viéndose"). Mismo criterio que lastActivityFor
+  // en MovementSheet.jsx: la moneda de la tarifa más reciente ya guardada
+  // para esa escuela, no un valor global fijo — una escuela en THB sigue
+  // proponiendo THB para su siguiente tarifa. Sin ninguna tarifa previa
+  // para esa escuela, cae al default de la app (emptyForm.currency).
+  const lastCurrencyFor = (school) => {
+    const matches = allRows.filter((r) => r.school === school);
+    if (matches.length === 0) return defaultCurrency;
+    return [...matches].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))[0].currency;
+  };
+
   const openCreateSheet = () => {
-    setForm({ ...emptyForm, currency: form.currency });
+    setForm(emptyForm);
     setCreating("ganado");
     setEditingEntry(null);
     setSheetOpen(true);
@@ -183,7 +202,13 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
             {/* label explícito en cada Select: sin él, el nombre accesible
                 del botón es el placeholder ("Todos"/"Todas") — con varios
                 filtros compartiendo el mismo placeholder genérico, quedarían
-                indistinguibles para un lector de pantalla. */}
+                indistinguibles para un lector de pantalla.
+                Sin filtro "Pago" a propósito (2026-08-30, feedback
+                explícito: quitar "per person" de todo el frontal) — ningún
+                formulario expone `payment_type` y hoy vale siempre "Per
+                Person" (ver docs/ADR/0003), así que filtrar por él nunca
+                reducía la lista a nada: era una opción de filtro sin ningún
+                efecto real, solo exponía el nombre interno del concepto. */}
             <Field label="Tipo"><Select value={filters.type} onChange={(v) => setFilters({ ...filters, type: v })} options={TYPE_OPTIONS} placeholder="Todos" label="Tipo" /></Field>
             {/* Con una sola escuela configurada, filtrar por escuela no
                 filtra nada — se oculta hasta que exista una segunda
@@ -192,10 +217,9 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
               <Field label="Escuela"><Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={presentValues("school")} placeholder="Todas" label="Escuela" /></Field>
             )}
             <Field label="Curso"><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder="Todos" /></Field>
-            <Field label="Pago"><Select value={filters.payment_type} onChange={(v) => setFilters({ ...filters, payment_type: v })} options={presentValues("payment_type")} placeholder="Todos" label="Pago" /></Field>
           </div>
           {hasFilters && (
-            <button onClick={() => setFilters({ type: "", school: "", activity: [], payment_type: "" })} className="min-h-9 text-xs font-medium text-gray-400 hover:text-gray-600">
+            <button onClick={() => setFilters({ type: "", school: "", activity: [] })} className="min-h-9 text-xs font-medium text-gray-400 hover:text-gray-600">
               Limpiar filtros
             </button>
           )}
@@ -207,15 +231,23 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
           <h3 className="text-sm font-semibold" style={{ color: NAVY }}>{filtered.length} tarifas</h3>
         </div>
 
-        <div className="divide-y divide-gray-100">
+        <div>
           {filtered.length === 0 && <p className="px-4 py-6 text-center text-sm text-gray-400">Sin resultados.</p>}
           {filtered.map((r) => (
-            // Mismo lenguaje que EntryRow en Mi trabajo: borde izquierdo de
-            // color por tipo (antes el tipo se deducía de en qué pestaña de
-            // página estabas — ahora la propia fila lo dice, porque ya no
-            // hay pestañas), título+importe arriba, metadato+acciones abajo,
-            // mismo RowMenu "⋯" para Editar/Eliminar. "Editar" abre la misma
-            // hoja que "Nueva tarifa", precargada.
+            // Vuelta explícita al lenguaje de EntryRow en Mi trabajo
+            // (feedback 2026-08-30, tercera vuelta: "no quiero seguir con
+            // la versión de una sola línea... quiero que vuelva a una
+            // presentación más parecida a Movimientos" — la versión de una
+            // sola línea de la vuelta anterior queda descartada, no
+            // conservada como alternativa). Borde izquierdo de color por
+            // tipo, título+importe arriba, metadato (fecha de alta + tipo,
+            // mismo formato "fecha · tipo" que la fila de Movimientos)
+            // + RowMenu abajo — misma estructura de dos líneas, no una
+            // tercera variante propia de Tarifas. Sin "divide-y" entre
+            // filas (feedback explícito, cuarta vuelta): la línea de
+            // separación entre cards ya se descartó en Mi trabajo por
+            // ruido visual — el borde izquierdo de color y el propio
+            // padding ya distinguen una fila de la siguiente.
             <div key={r.id} className="border-l-4 px-4 py-3.5 text-sm" style={{ borderColor: TYPE_META[r._source].color }}>
               <div className="flex items-start justify-between gap-2">
                 <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
@@ -224,7 +256,9 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
                 </span>
               </div>
               <div className="mt-1.5 flex items-center justify-between gap-2">
-                <span className="truncate text-xs text-gray-400">{TYPE_LABEL[r._source]} · {r.payment_type}</span>
+                <span className="truncate text-xs text-gray-400">
+                  Alta: {shortDate(r.created_at)} · {TYPE_LABEL[r._source]}
+                </span>
                 <RowMenu onEdit={() => startEdit(r)} onDelete={() => deleteRate(r)} itemLabel={`la tarifa de ${r.school} - ${r.activity}`} />
               </div>
             </div>
@@ -240,6 +274,10 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: lighten(sheetTypeColor) }}>
               {creating === "ganado" ? <GraduationCap size={14} style={{ color: sheetTypeColor }} aria-hidden="true" /> : <Handshake size={14} style={{ color: sheetTypeColor }} aria-hidden="true" />}
             </span>
+            {/* Sin subtítulo de fecha aquí (una vuelta anterior la puso al
+                retirarla del listado) — la fecha de alta ha vuelto al
+                listado (metadato "Alta: ... · Tipo", ver más arriba), así
+                que repetirla aquí sería redundante. */}
             <h3 className="text-sm font-semibold text-gray-800">
               {editingEntry ? `Editar tarifa de ${editingEntry.school} - ${editingEntry.activity}` : `Nueva tarifa de ${TYPE_LABEL[creating]}`}
             </h3>
@@ -272,19 +310,22 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
         <p className="mb-3 text-xs text-gray-400">
           {creating === "ganado"
             ? "Lo que cobras por impartir tú el curso."
-            : "Lo que cobras por traer un cliente que hace este curso con otra persona."}
+            : "Lo que cobras por traer a un cliente."}
         </p>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           <Field label="Escuela">
-            <Select value={form.school} onChange={(v) => setForm({ ...form, school: v })} options={schoolNames} />
+            <Select value={form.school} onChange={(v) => setForm({ ...form, school: v, currency: lastCurrencyFor(v) })} options={schoolNames} />
           </Field>
           <Field label="Curso">
             <Select value={form.activity} onChange={(v) => setForm({ ...form, activity: v })} options={activityNames} />
           </Field>
-          <Field label="Moneda">
-            <CurrencySearchSelect value={form.currency} onChange={(v) => setForm({ ...form, currency: v })} currencyRows={currencies.rows} />
-          </Field>
-          <Field label="Tarifa">
+          {/* Moneda: visible, no editable (feedback 2026-08-30) — viaja como
+              sufijo de la etiqueta de "Tarifa", mismo patrón ya usado en
+              Ajuste de curso ("Importe · EUR", MovementSheet.jsx). Se
+              deriva sola de la escuela (lastCurrencyFor), nunca se pierde
+              el contexto de en qué moneda está esta tarifa, pero no hay
+              ningún desplegable que tocar cada vez. */}
+          <Field label={`Tarifa · ${form.currency}`}>
             <MoneyInput value={form.rate} onChange={(v) => setForm({ ...form, rate: v })} />
           </Field>
         </div>

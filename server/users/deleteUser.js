@@ -2,10 +2,15 @@ import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig 
 
 // Elimina una cuenta por completo — exclusivo de superadmin. Llama al Admin
 // API de Supabase Auth (auth.admin.deleteUser), que borra la fila de
-// auth.users; profiles.user_id referencia auth.users(id) on delete cascade
-// (ver schema.sql), así que el perfil y todo lo que cuelga de él (worklog,
-// comisiones, tarifas, etc., todo con RLS por user_id) desaparece con la
-// misma operación — no hace falta borrar tabla por tabla desde aquí.
+// auth.users; profiles.user_id y las 9 tablas de negocio (schools,
+// activities, payment_types, payment_statuses, rates, commission_rates,
+// worklog, comisiones, colleague_payments) referencian auth.users(id) on
+// delete cascade (ver schema.sql, corregido 2026-08-30 — antes NO tenían
+// cascade, y por eso deleteUser fallaba con "Database error deleting
+// user" para cualquier cuenta con datos reales, ver
+// docs/ADR/0018-cascade-borrado-de-usuario.md), así que todo lo que
+// cuelga del usuario desaparece con la misma operación — no hace falta
+// borrar tabla por tabla desde aquí.
 //
 // No requiere ningún cambio de esquema: a diferencia de "desactivar" (que sí
 // necesitaría poder distinguir el estado en el directorio de usuarios y por

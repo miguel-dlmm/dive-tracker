@@ -25,13 +25,12 @@
 // la categoría, para que la Ayuda use los mismos colores que el resto de
 // la app en vez de una paleta propia (ver CLAUDE.md, convención 2).
 //
-// steps: array de strings, o de objetos { text, image: { src, alt } } —
-// el campo image sigue sin usarse en ningún artículo. Se evaluaron
-// capturas reales para esta reescritura (igual que en WhatsNew.jsx) pero
-// las generadas en esta sesión mostraban la cuenta de desarrollo
-// ("dev-bypass") y datos de prueba repetidos — no presentables. El
-// renderer (HelpStep) ya sabe pintarlas en cuanto existan capturas
-// limpias generadas a propósito.
+// steps: array de strings, o de objetos { text, image: { src, alt } }.
+// Las capturas evaluadas en la reescritura de 2026-08-29 se descartaron
+// por mostrar la cuenta de desarrollo y datos repetidos; el 2026-08-30 se
+// generaron de nuevo con scripts/capture-help-screenshots.mjs, que
+// recorta la cabecera para no mostrar la cuenta — un paso por artículo
+// lleva ahora su captura real.
 //
 // adminOnly (opcional, en categoría o en artículo): oculta el contenido
 // a quien no sea admin/superadmin, igual que ADMIN_SECTIONS en ConfigTab.
@@ -49,7 +48,10 @@ export const HELP_CATEGORIES = [
         whatYouCanDo: "Ocean Flow te ayuda a llevar el control de tus ingresos como instructor freelance: las clases que impartes, las comisiones que generas por clientes referidos y los ajustes económicos con otros instructores — todo bajo un mismo concepto, \"movimiento\".",
         whenToUseIt: "La primera vez que abres la app, o cuando quieras recordar para qué sirve cada pantalla.",
         steps: [
-          "Home: cuánto tienes pendiente de cobrar, un widget con tus deudas más antiguas, el calendario del mes y un acceso directo para crear un movimiento.",
+          {
+            text: "Home: cuánto tienes pendiente de cobrar, un widget con tus deudas más antiguas, el calendario del mes y un acceso directo para crear un movimiento.",
+            image: { src: "/help/home-vistazo.png", alt: "Pantalla de Home con el total pendiente de cobrar y el calendario del mes" },
+          },
           "Mi trabajo: la lista completa de tus movimientos (cursos, comisiones y ajustes), para crearlos, editarlos, cobrarlos o eliminarlos.",
           "Resumen: tu balance por el periodo que elijas, con la posibilidad de profundizar por escuela, por curso o por comisiones.",
         ],
@@ -80,7 +82,10 @@ export const HELP_CATEGORIES = [
         whatYouCanDo: "Configuración se organiza en dos bloques: lo que cualquier usuario mantiene (Escuelas, Cursos, Tarifas) y, si tienes rol de administrador, un bloque de \"Administración\" con catálogos de toda la app (tipos y estados de pago, monedas, colores, usuarios).",
         whenToUseIt: "Antes de registrar tu primer movimiento, y después cada vez que empieces a trabajar con una escuela o curso nuevo, o cambies un precio.",
         steps: [
-          "Entra en Configuración (icono de engranaje, arriba a la derecha) y toca la sección que necesites.",
+          {
+            text: "Entra en Configuración (icono de engranaje, arriba a la derecha) y toca la sección que necesites.",
+            image: { src: "/help/configuracion-menu.png", alt: "Menú de Configuración con las secciones Escuelas, Cursos y Tarifas" },
+          },
           "Da de alta tus Escuelas y Cursos primero — una Tarifa siempre relaciona una escuela con un curso, así que hace falta que existan los dos antes.",
           "Dentro de una sección, pulsa el botón \"+\" flotante para crear; \"‹ Configuración\" te devuelve al menú.",
           "Toca el color de una fila para personalizarlo, y la estrella para marcarla como favorita.",
@@ -109,7 +114,10 @@ export const HELP_CATEGORIES = [
         whenToUseIt: "Justo después de dar una clase, al cerrar una comisión, o cuando acuerdes un ajuste con otro instructor.",
         steps: [
           "Pulsa \"Añadir movimiento\": el botón \"+\" de la tarjeta \"Pendiente de cobrar\" en Home, el mismo botón tocando un día del calendario de Home, o el \"+\" flotante de Mi trabajo.",
-          "Arriba del formulario, elige el tipo: Curso impartido, Comisión o Ajuste de curso.",
+          {
+            text: "Arriba del formulario, elige el tipo: Curso impartido, Comisión o Ajuste de curso.",
+            image: { src: "/help/crear-movimiento-tipo.png", alt: "Hoja de creación de movimiento con el selector de tipo: Curso impartido, Comisión o Ajuste de curso" },
+          },
           "Curso impartido: escuela, curso, fecha y nº de personas — la tarifa por curso calcula el importe sola.",
           "Comisión: igual que un curso, pero para un cliente que has referido y que forma otro instructor — usa su propia tarifa de comisión, no la de curso.",
           "Ajuste de curso: no depende de ninguna tarifa — indica tú mismo el importe (positivo si te deben, negativo si tú debes) y con qué compañero es el ajuste.",
@@ -138,7 +146,10 @@ export const HELP_CATEGORIES = [
         whatYouCanDo: "Cada movimiento tiene un estado (pendiente o cobrado). Cambiarlo es inmediato, de un solo toque, con la opción de deshacer si te equivocas. Puedes hacerlo movimiento a movimiento, o de golpe sobre toda la lista visible.",
         whenToUseIt: "En cuanto una escuela o un compañero te paga (uno a uno), o de golpe cuando revisas periódicamente y ya te han pagado varios pendientes a la vez.",
         steps: [
-          "Para cobrar uno: entra en Mi trabajo (la pestaña \"Pendientes\" se abre por defecto) y pulsa \"Confirmar cobro\" en su fila (o \"Marcar liquidado\" si es un ajuste en tu contra).",
+          {
+            text: "Para cobrar uno: entra en Mi trabajo (la pestaña \"Pendientes\" se abre por defecto) y pulsa \"Confirmar cobro\" en su fila (o \"Marcar liquidado\" si es un ajuste en tu contra).",
+            image: { src: "/help/mi-trabajo-pendientes.png", alt: "Lista de movimientos pendientes en Mi trabajo con el botón Confirmar cobro" },
+          },
           "La tarjeta \"Pendiente de cobrar\" de Home te lleva directa a esa misma pestaña — un toque desde la pantalla principal.",
           "Para cobrar varios a la vez: en Mi trabajo, usa \"Cobrar todos\" arriba de la lista — afecta a todo lo que esté visible en ese momento.",
           "Antes de \"Cobrar todos\", usa \"Filtrar\" (por fecha, escuela, curso o tipo) para acotar la lista a justo lo que quieres cobrar de golpe.",
@@ -167,9 +178,12 @@ export const HELP_CATEGORIES = [
         whenToUseIt: "Home, para un vistazo rápido al entrar en la app. Resumen, cuando quieras un periodo distinto al mes actual o entender de dónde viene el dinero.",
         steps: [
           "En Home, la tarjeta \"Generado este mes\" ya está siempre visible, sin tocar nada — y tocarla te lleva a Resumen para profundizar.",
-          "En Resumen, elige la granularidad y el periodo en el control de arriba (mensual, trimestral, semestral, anual o un rango personalizado) y, si quieres, el tipo (Curso, Comisión o Ajuste).",
+          {
+            text: "En Resumen, elige la granularidad y el periodo en el control de arriba (mensual, trimestral, semestral, anual o un rango personalizado) y, si quieres, el tipo (Curso, Comisión o Ajuste).",
+            image: { src: "/help/resumen-tendencia.png", alt: "Pantalla de Resumen con la franja de tendencia mensual y el total del periodo" },
+          },
           "La tarjeta principal muestra el total del periodo y cuánto ha cambiado respecto al periodo anterior.",
-          "Toca \"Por escuela\", \"Por curso\", \"Calendario\", \"Comisiones\" o \"Pagos de compañeros\" para profundizar — cada uno se despliega solo si lo pides.",
+          "Toca \"Por escuela\", \"Por curso\", \"Comisiones\", \"Ajustes de curso\" o \"Calendario\" para profundizar — cada uno se despliega solo si lo pides.",
         ],
         tips: [
           "Dentro de \"Por escuela\", toca una escuela para ver su desglose por curso en el sitio, sin cambiar de pantalla.",
@@ -224,13 +238,13 @@ export const HELP_CATEGORIES = [
         whatYouCanDo: "Resumen combina una respuesta rápida (el total del periodo, comparado con el anterior) con tarjetas plegables para quien quiera profundizar.",
         whenToUseIt: "Para entender cómo va un periodo, comparar escuelas o cursos, o repasar comisiones y ajustes con compañeros.",
         steps: [
-          "Elige granularidad (mensual, trimestral, semestral, anual o personalizado) y navega entre periodos con las flechas.",
+          "Elige granularidad (mensual, trimestral, semestral, anual o personalizado); la franja de periodos de debajo navega sola — toca cualquiera para recentrar ahí.",
           "Filtra por tipo (Total, Curso, Comisión o Ajuste) con el segmentado de debajo.",
           "La tarjeta principal muestra el total y, cuando tiene sentido calcularla, la comparación con el periodo anterior.",
-          "Toca cualquier tarjeta (Por escuela, Por curso, Calendario, Comisiones, Pagos de compañeros) para desplegarla.",
+          "Toca cualquier tarjeta (Por escuela, Por curso, Comisiones, Ajustes de curso, Calendario) para desplegarla.",
         ],
         tips: [
-          "\"Por escuela\" empieza desplegada porque suele ser la pregunta más frecuente después del total — las demás empiezan cerradas.",
+          "Con más de una escuela, \"Por escuela\" empieza desplegada por ser la pregunta más frecuente después del total; con una sola, ese apartado no aparece (no habría nada que comparar) y es \"Por curso\" quien empieza desplegada. Las demás siempre empiezan cerradas.",
           "Dentro de \"Por escuela\", toca una escuela para ver su desglose por curso sin salir de la tarjeta.",
         ],
         expectedResult: "Tienes la cifra que buscabas, con tanto o tan poco detalle como hayas pedido.",
@@ -254,7 +268,7 @@ export const HELP_CATEGORIES = [
         steps: [
           "Toca cualquier fila del menú para entrar en esa sección; \"‹ Configuración\" vuelve al menú.",
           "Escuelas, Cursos, Tipos de pago, Estados de pago y Monedas crean mediante el botón \"+\" flotante, igual que en Mi trabajo.",
-          "Tarifas tiene su propia pantalla con dos modos (Instructor/Comisión) y filtros propios.",
+          "Tarifas muestra Curso y Comisión en una única lista (el tipo se elige como filtro, o al crear, dentro de la propia hoja) — mismo patrón visual que Mi trabajo.",
         ],
         tips: [
           "Solo un superadmin puede crear usuarios o eliminarlos — un admin normal ve el directorio de usuarios en modo solo lectura.",

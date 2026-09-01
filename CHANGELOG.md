@@ -4,11 +4,7 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
-Acumulado desde `v0.1.0` en `develop` y en la rama de trabajo de esta
-sesión (`feature/global-redesign`), pendiente de fusionar y etiquetar —
-ver `docs/ADR/0010-proceso-de-release.md` y
-`docs/SESSION-2026-08-28-rediseno-global.md` para el candidato de
-versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
+## [0.2.0] - 2026-08-30
 
 ### Added
 - **"Mi trabajo"**: nueva pantalla que unifica Registro, Comisiones y
@@ -128,6 +124,14 @@ versión propuesto (`v0.2.0`) y los pasos pendientes de aprobación.
   movimiento" explica ahora qué distingue a Curso, Comisión y Ajuste.
 
 ### Fixed
+- **Movimientos del primer o último día de un periodo podían desaparecer
+  de sus totales** (Resumen, Home, calendario) en cualquier huso horario
+  distinto de UTC+0 — incluidos husos reales de instructores/escuelas de
+  este proyecto (América, con offset negativo; Tailandia, con offset
+  positivo). Causa: se comparaban fechas parseadas como medianoche UTC
+  contra límites de periodo construidos en hora local del navegador.
+  Confirmado y corregido comparando fechas como texto ("YYYY-MM-DD"),
+  nunca como objetos `Date`.
 - Alta de tarifas bloqueada en cuentas nuevas sin `payment_types`
   configurado.
 - La barra de navegación inferior podía desaparecer al navegar desde una

@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { motion } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
-  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users,
+  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck,
 } from "lucide-react";
-import { NAVY, TEAL, GREEN, SUN } from "./App";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab } from "./shared";
+import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate } from "./shared";
+import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
 
@@ -328,9 +330,9 @@ function userStatus(active, activatedAt) {
 }
 
 const STATUS_META = {
-  activo: { label: "Activo", cls: "bg-emerald-50 text-emerald-700" },
-  pendiente: { label: "Pendiente", cls: "bg-amber-50 text-amber-700" },
-  desactivado: { label: "Desactivado", cls: "bg-gray-100 text-gray-500" },
+  activo: { label: "Activo", cls: "bg-emerald-50 text-emerald-700", dot: "#10B981" },
+  pendiente: { label: "Pendiente", cls: "bg-amber-50 text-amber-700", dot: "#D97706" },
+  desactivado: { label: "Desactivado", cls: "bg-gray-100 text-gray-500", dot: "#9CA3AF" },
 };
 
 // Badge de solo lectura — cualquier admin puede VERLO, cambiarlo es cosa
@@ -338,9 +340,31 @@ const STATUS_META = {
 // "mostrar estado" de "cambiar estado" es justo lo que permite que la
 // lista (donde nunca hay acción) y el detalle (donde sí la hay, junto al
 // switch) reutilicen la misma pieza sin condicionales de por medio.
+// Punto de color delante del texto (feedback explícito 2026-08-30: "quiero
+// que se entienda de un vistazo, sin obligar a leer demasiado") — el texto
+// se mantiene (nunca solo color, que no llega a quien no distingue bien
+// los colores ni a un lector de pantalla), el punto es el atajo visual.
 function StatusBadge({ status }) {
   const meta = STATUS_META[status] || STATUS_META.desactivado;
-  return <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.cls}`}>{meta.label}</span>;
+  return (
+    <span className={`inline-flex min-h-6 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.cls}`}>
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: meta.dot }} aria-hidden="true" />
+      {meta.label}
+    </span>
+  );
+}
+
+// Rol junto al nickname (feedback explícito 2026-08-30) — un icono, no
+// texto: admin/superadmin son la excepción, no el caso general (la
+// mayoría de filas no lleva nada aquí), así que un icono compacto con
+// aria-label se lee rápido sin ocupar el ancho de una segunda pastilla de
+// texto junto a la de estado. ShieldCheck (relleno) para superadmin,
+// Shield (contorno) para admin — mismo icono base, distinción por "nivel
+// de relleno" en vez de dos formas distintas sin relación visual entre sí.
+function RoleIcon({ isAdmin, isSuperadmin }) {
+  if (isSuperadmin) return <ShieldCheck size={14} className="shrink-0" style={{ color: SUN }} role="img" aria-label="Superadmin" />;
+  if (isAdmin) return <Shield size={14} className="shrink-0" style={{ color: NAVY }} role="img" aria-label="Administrador" />;
+  return null;
 }
 
 // Switch Activar/Desactivar — sustituye el botón-pastilla anterior (2026-08-29,
@@ -375,12 +399,6 @@ function BooleanToggle({ checked, onChange, disabled, ariaLabel, color = TEAL })
   );
 }
 
-// Fecha corta ES, o "—" si no hay valor — usado tanto en la fila como en
-// la hoja de detalle.
-function shortDate(iso) {
-  return iso ? new Date(iso).toLocaleDateString("es-ES") : "—";
-}
-
 // Fecha + hora, para "último login real" — una fecha sola no basta para
 // distinguir "hace 5 minutos" de "hace 20 horas" el mismo día.
 function shortDateTime(iso) {
@@ -406,6 +424,51 @@ function shortDateTime(iso) {
 // cuenta desactivada se muestra explícitamente "fecha no registrada
 // todavía" en vez de omitir el dato en silencio — dejar claro que es un
 // hueco real, no un olvido.
+// Arrastrar una fila de Usuarios hacia la izquierda revela "Eliminar"
+// detrás — un atajo ADICIONAL, no un segundo mecanismo de borrado: tocar
+// el botón revelado llama al mismo `onDelete` (el `requestDelete` ya
+// existente, que abre el mismo `ConfirmDialog` que la hoja de detalle)
+// — el gesto solo acorta el camino hasta esa confirmación, nunca la
+// salta (convención #5, CLAUDE.md: nunca eliminar sin diálogo). Sigue
+// habiendo un camino sin gestos (tocar la fila → hoja de detalle →
+// "Eliminar"), así que ningún usuario de teclado/lector de pantalla
+// pierde la posibilidad de eliminar por no poder arrastrar. Con
+// `prefers-reduced-motion`, el arrastre se desactiva del todo y solo
+// queda ese camino sin gestos.
+function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
+  const [open, setOpen] = useState(false);
+  const reduced = usePrefersReducedMotion();
+  if (reduced) return children;
+  return (
+    <div className="relative overflow-hidden">
+      <div className="absolute inset-y-0 right-0 w-20" style={{ backgroundColor: CORAL }}>
+        <button
+          onClick={() => { setOpen(false); onDelete(); }}
+          aria-label={deleteLabel}
+          tabIndex={open ? 0 : -1}
+          aria-hidden={!open}
+          className="flex h-full w-full flex-col items-center justify-center gap-0.5 text-white"
+        >
+          <Trash2 size={18} aria-hidden="true" />
+          <span className="text-[10px] font-medium">Eliminar</span>
+        </button>
+      </div>
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: -80, right: 0 }}
+        dragElastic={0.08}
+        dragMomentum={false}
+        animate={{ x: open ? -80 : 0 }}
+        transition={{ type: "spring", stiffness: 500, damping: 40 }}
+        onDragEnd={(_, info) => setOpen(info.offset.x < -40)}
+        className="relative bg-white"
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
 function UserListRow({ user, status, onOpen }) {
   return (
     <button
@@ -413,9 +476,15 @@ function UserListRow({ user, status, onOpen }) {
       className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left"
     >
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-semibold text-gray-800">{user.nickname}</span>
+        {/* Estado antes que el nickname (feedback explícito 2026-08-30,
+            tercera vuelta: "quiero que el usuario vea primero si está
+            activo/pendiente/... antes que el nombre") — es lo primero que
+            hay que saber de una cuenta al escanear la lista, así que va
+            primero en el orden de lectura, no al final. */}
+        <div className="flex items-center gap-1.5">
           <StatusBadge status={status} />
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-800">{user.nickname}</span>
+          <RoleIcon isAdmin={user.is_admin} isSuperadmin={user.is_superadmin} />
         </div>
         <p className="mt-0.5 truncate text-xs text-gray-400">
           {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.email || "—"}
@@ -885,10 +954,15 @@ function UsersDirectory({ profile }) {
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((p) =>
-      [p.first_name, p.last_name, p.nickname, p.email].some((v) => String(v || "").toLowerCase().includes(q))
-    );
+    const base = q
+      ? rows.filter((p) =>
+          [p.first_name, p.last_name, p.nickname, p.email].some((v) => String(v || "").toLowerCase().includes(q))
+        )
+      : rows;
+    // Orden alfabético por nickname (el campo que encabeza cada fila) —
+    // localeCompare "es" para que "Á"/"a" ordenen de forma natural, no por
+    // el orden de alta que devolvía admin_list_profiles() antes.
+    return [...base].sort((a, b) => (a.nickname || "").localeCompare(b.nickname || "", "es", { sensitivity: "base" }));
   }, [rows, query]);
 
   const openUser = rows.find((p) => p.user_id === openUserId) || null;
@@ -956,7 +1030,13 @@ function UsersDirectory({ profile }) {
       toast?.success("Usuario eliminado");
       setPendingDelete(null);
       setOpenUserId(null); // la cuenta ya no existe — no queda nada que mostrar en la hoja de detalle
-      reload();
+      // Quita la fila del estado local en vez de recargar todo el listado
+      // (reload() antes) — un reload muestra "Cargando usuarios…" en el
+      // sitio de la lista mientras llega la respuesta, sustituyendo de
+      // golpe todo el contenido scrollable por ese único párrafo y
+      // perdiendo la posición de scroll en el proceso. Ya sabemos qué fila
+      // desapareció; no hace falta otro viaje de red para confirmarlo.
+      setRows((prev) => prev.filter((r) => r.user_id !== pendingDelete.user_id));
     } catch (err) {
       toast?.error(err.message || "No se pudo eliminar el usuario.");
     } finally {
@@ -1137,14 +1217,23 @@ function UsersDirectory({ profile }) {
         <p className="px-3 py-6 text-center text-sm text-gray-400">Sin resultados.</p>
       ) : (
         <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
-          {filteredRows.map((p) => (
-            <UserListRow
-              key={p.user_id}
-              user={p}
-              status={userStatus(activeByUser[p.user_id] ?? true, activatedAtByUser[p.user_id])}
-              onOpen={setOpenUserId}
-            />
-          ))}
+          {filteredRows.map((p) => {
+            const row = (
+              <UserListRow
+                user={p}
+                status={userStatus(activeByUser[p.user_id] ?? true, activatedAtByUser[p.user_id])}
+                onOpen={setOpenUserId}
+              />
+            );
+            const canDelete = !!profile?.is_superadmin && p.user_id !== profile?.user_id && !p.is_superadmin;
+            return (
+              <div key={p.user_id}>
+                {canDelete
+                  ? <SwipeToDeleteRow onDelete={() => requestDelete(p)} deleteLabel={`Eliminar a ${p.nickname}`}>{row}</SwipeToDeleteRow>
+                  : row}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -1304,6 +1393,21 @@ const ADMIN_SECTIONS = [
   { key: "usuarios", label: "Usuarios", icon: Users, description: "Cuentas con acceso a la app" },
 ];
 
+// Sub-navegación de Configuración persistida (feedback explícito
+// 2026-08-30: recargar la página dentro de, p. ej., Tarifas devolvía al
+// menú principal de Configuración, perdiendo el contexto). Misma vida que
+// el resto de la navegación (oceanpulse:navState, App.jsx): sessionStorage,
+// sobrevive a una recarga, no a cerrar la pestaña ni a cerrar sesión.
+// Clave propia en vez de meterlo en oceanpulse:navState — ConfigTab no
+// necesita saber nada de cómo App.jsx guarda tab/returnTab, ni viceversa.
+const CONFIG_SECTION_KEY = "oceanpulse:configSection";
+function readStoredSection() {
+  try { return sessionStorage.getItem(CONFIG_SECTION_KEY) || null; } catch { return null; }
+}
+export function clearStoredSection() {
+  try { sessionStorage.removeItem(CONFIG_SECTION_KEY); } catch { /* no-op */ }
+}
+
 function ConfigMenuGroup({ title, items, onSelect }) {
   return (
     <div>
@@ -1333,15 +1437,32 @@ function ConfigMenuGroup({ title, items, onSelect }) {
 // schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
 // rates / commissionRates / worklog / comisiones: hooks que necesitan las secciones Tarifas y Pagos, embebidas aquí
 // profile: fila propia de profiles (useSession) — is_admin/is_superadmin deciden qué secciones se ven
-export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile }) {
+// onClose (opcional): cierra Configuración entera (mismo handler que la "X"
+// de la cabecera, ver App.jsx) — lo dispara el gesto de "atrás" cuando ya
+// estamos en el menú principal, sin ninguna sección abierta (ver backProps).
+export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose }) {
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
-  const [section, setSection] = useState(null);
+  const allowedSectionKeys = [...BUSINESS_SECTIONS, ...(isAdmin ? ADMIN_SECTIONS : [])].map((s) => s.key);
+  const [section, setSectionState] = useState(() => {
+    const stored = readStoredSection();
+    return allowedSectionKeys.includes(stored) ? stored : null;
+  });
+  const setSection = (next) => {
+    setSectionState(next);
+    if (next) { try { sessionStorage.setItem(CONFIG_SECTION_KEY, next); } catch { /* no-op */ } }
+    else clearStoredSection();
+  };
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const currentLabel = [...BUSINESS_SECTIONS, ...ADMIN_SECTIONS].find((s) => s.key === section)?.label;
+  // Deslizar hacia la derecha = "atrás", recursivo (feedback explícito
+  // 2026-08-30: "no como una excepción, no como un truco, no como una
+  // interacción aislada"): dentro de una sección, vuelve al menú; ya en el
+  // menú, cierra Configuración entera — el mismo gesto en cualquier nivel.
+  const backProps = useSwipeBack(section == null ? onClose : () => setSection(null));
 
   if (section == null) {
     return (
-      <div className="space-y-5">
+      <div className="space-y-5" {...backProps}>
         <ConfigMenuGroup items={BUSINESS_SECTIONS} onSelect={setSection} />
         {isAdmin && <ConfigMenuGroup title="Administración" items={ADMIN_SECTIONS} onSelect={setSection} />}
       </div>
@@ -1349,7 +1470,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" {...backProps}>
       <button
         onClick={() => setSection(null)}
         className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium"

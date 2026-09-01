@@ -304,6 +304,27 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     expect(screen.getByText("Importe · USD")).toBeInTheDocument();
   });
 
+  // Feedback explícito 2026-08-30: la explicación de qué significa un
+  // importe positivo/negativo pasa de un párrafo siempre visible sobre el
+  // formulario a una ayuda contextual del propio campo — oculta hasta que
+  // se pide, para no recargar la pantalla.
+  it("el campo Importe de Ajuste de curso tiene una ayuda contextual oculta por defecto", async () => {
+    const user = userEvent.setup();
+    renderMiTrabajo({});
+
+    await user.click(screen.getByRole("button", { name: "Añadir" }));
+    await user.click(screen.getByRole("tab", { name: /Ajuste de curso/ }));
+
+    const helpText = "Positivo si te paga a ti; negativo si le pagas tú a él/ella";
+    expect(screen.queryByText(helpText)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Ayuda" }));
+    expect(screen.getByText(helpText)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Ocultar ayuda" }));
+    expect(screen.queryByText(helpText)).not.toBeInTheDocument();
+  });
+
   it("añadir tarifa se expande dentro de la misma hoja (no abre un segundo modal) y guarda la tarifa nueva", async () => {
     const user = userEvent.setup();
     const { rates } = renderMiTrabajo({});
@@ -318,7 +339,7 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     // segundo modal apilado encima.
     expect(screen.getAllByRole("heading", { name: /curso impartido/i })).toHaveLength(1);
 
-    await user.type(screen.getByLabelText("Tarifa"), "30");
+    await user.type(screen.getByLabelText("Tarifa · EUR"), "30");
     await user.click(screen.getByRole("button", { name: "Guardar tarifa" }));
 
     expect(rates.insertRow).toHaveBeenCalledWith(expect.objectContaining({

@@ -21,8 +21,22 @@ import PendingCollectionCard from "./PendingCollectionCard";
 // monta de cero al entrar (no queda en el DOM mientras se ve otra pestaña,
 // ver App.jsx), así que ya abre por defecto en "Mes"/mes actual sin
 // necesidad de pasarle ningún estado de periodo.
+// "YYYY-MM" de un Date construido con componentes locales — nunca
+// toISOString() ni new Date(e.date).getMonth(): un string de fecha sin
+// hora ("2026-08-01") se parsea como medianoche UTC (ECMA-262), y
+// .getMonth()/.getFullYear() lo leen de vuelta en la zona horaria LOCAL —
+// en cualquier huso negativo (América, incluida cualquier escuela en
+// México/Caribe), esa medianoche UTC cae la noche anterior en local, así
+// que un movimiento del día 1 de un mes podía contarse en el mes
+// ANTERIOR. Comparar "YYYY-MM" como string evita el problema de raíz: ni
+// el mes actual ni la fecha del movimiento pasan nunca por ese parseo.
+// Mismo bug, mismo tipo de corrección que en SummaryTab.jsx (ver nota
+// junto a withinRange ahí).
+const monthKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+
 export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary }) {
   const now = new Date();
+  const currentMonthKey = monthKey(now);
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
 
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
@@ -38,10 +52,9 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const comisionEntries = useMemo(() => comisiones.rows.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" })), [comisiones.rows, commissionRates.rows, fallbackCurrency]);
   const companerosEntries = useMemo(() => colleaguePayments.rows.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" })), [colleaguePayments.rows]);
 
-  const monthAllEntries = useMemo(() => [...ganadoEntries, ...comisionEntries, ...companerosEntries].filter((e) => {
-    const d = new Date(e.date);
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-  }), [ganadoEntries, comisionEntries, companerosEntries]);
+  const monthAllEntries = useMemo(() => [...ganadoEntries, ...comisionEntries, ...companerosEntries].filter((e) =>
+    e.date.slice(0, 7) === currentMonthKey
+  ), [ganadoEntries, comisionEntries, companerosEntries, currentMonthKey]);
 
   // Dato secundario de "Generado este mes" — personas formadas, no comisión
   // ni ajustes: son clientes que TÚ has impartido este mes, un dato humano y
@@ -50,8 +63,8 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // la tarjeta un segundo dato con el mismo peso visual que "N pagos
   // pendientes" en la tarjeta de al lado.
   const peopleTrainedThisMonth = useMemo(() => ganadoEntries
-    .filter((e) => { const d = new Date(e.date); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); })
-    .reduce((sum, e) => sum + (e.people || 0), 0), [ganadoEntries]);
+    .filter((e) => e.date.slice(0, 7) === currentMonthKey)
+    .reduce((sum, e) => sum + (e.people || 0), 0), [ganadoEntries, currentMonthKey]);
 
   // Base común de las dos métricas financieras del dashboard — ver
   // buildIncomeEntries en rateCalc.js y docs/ADR/0004-home-dashboard-operativo-instructor.md.
@@ -68,10 +81,10 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const monthTotals = useMemo(() => {
     const map = {};
     incomeEntries
-      .filter((e) => { const d = new Date(e.date); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); })
+      .filter((e) => e.date.slice(0, 7) === currentMonthKey)
       .forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
     return map;
-  }, [incomeEntries]);
+  }, [incomeEntries, currentMonthKey]);
 
   // "Pendiente de cobrar": sin filtro de fecha (una deuda de hace 2 meses
   // sigue siendo una deuda), solo estado pendiente.
@@ -87,14 +100,14 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // es la misma regla de comparación que ya usa HeroTotal en Resumen: se
   // omite (null) si cualquiera de los dos meses mezcla más de una moneda,
   // en vez de mostrar un delta agregado que parecería preciso sin serlo.
-  const previousMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const previousMonthKey = monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
   const previousMonthTotals = useMemo(() => {
     const map = {};
     incomeEntries
-      .filter((e) => { const d = new Date(e.date); return d.getFullYear() === previousMonthDate.getFullYear() && d.getMonth() === previousMonthDate.getMonth(); })
+      .filter((e) => e.date.slice(0, 7) === previousMonthKey)
       .forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
     return map;
-  }, [incomeEntries]);
+  }, [incomeEntries, previousMonthKey]);
   const monthTrend = useMemo(() => comparePeriods(monthTotals, previousMonthTotals), [monthTotals, previousMonthTotals]);
 
   return (
@@ -149,15 +162,13 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           dotColor={TEAL}
           currencyRows={currencies.rows}
           activityColor={activityColor}
+          caption="Toca un día para ver el detalle, o uno vacío para añadir un movimiento"
           autoSelectFirstDay
           detailed
           groupBySource
           sourceMeta={MOVEMENT_TYPE_META}
           onCreateForDay={(dateStr) => onQuickCreate("ganado", dateStr)}
         />
-        <p className="mt-2 px-1 text-center text-[11px] text-gray-400">
-          Toca un día para ver el detalle, o uno vacío para añadir un movimiento.
-        </p>
       </div>
 
       {/* 3. Generado este mes — información secundaria de cierre, no la

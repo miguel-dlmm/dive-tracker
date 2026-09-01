@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Plus, Layers, ClipboardList, Settings, BarChart3 } from "lucide-react";
+import { X, Briefcase, Coins, TrendingUp, Hand, ShieldCheck } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
@@ -12,51 +12,54 @@ import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 // con la misma fuente de verdad que CHANGELOG.md (no una tarea aparte
 // inventada después).
 //
-// Cada diapositiva cubre un concepto distinto, sin solaparse con las
-// demás: creación (el flujo, no una pantalla concreta), la unificación
-// conceptual Registro/Comisiones/Compañeros → Mi trabajo (el "antes/
-// ahora" del nombre), qué se puede HACER dentro de Mi trabajo (acciones
-// concretas — antes esto se mezclaba con la diapositiva de unificación,
-// haciendo que ambas dijeran casi lo mismo), Configuración, y Resumen.
+// Contenido reescrito 2026-08-30, segunda vuelta (feedback explícito: "no
+// hables del cambio de nombre de la app... piensa en un instructor en el
+// descanso del barco, con las manos mojadas, sin ganas de leer texto
+// largo"). La primera reescritura de esta sesión abría con una diapositiva
+// dedicada a "Ocean Pulse → Ocean Flow" — dato interno de branding, no algo
+// que un instructor necesite parar a leer entre inmersiones. Se sustituye
+// por Mi trabajo (la unificación real de Registro/Comisiones/Compañeros en
+// una sola pantalla, el cambio de fondo más grande de esta tanda de
+// ramas) y se mantiene el resto: 5 diapositivas, título + una frase de
+// cuerpo, nada que exija pararse a leer. Se prioriza lo que un instructor
+// SIENTE al usar la app sobre el detalle técnico — ese detalle ya vive en
+// CHANGELOG.md para quien lo quiera.
 //
-// Sin capturas de pantalla a propósito: se evaluaron capturas reales de
-// esta misma sesión (Home, Mi trabajo, Resumen) y ninguna quedaba
-// presentable para mostrarle a un usuario real — mostraban el nombre de la
-// cuenta de desarrollo ("dev-bypass") y datos de prueba repetidos de esta
-// sesión. Iconografía + color, ya coherente con el resto de la app
-// (mismos iconos que MOVEMENT_TYPE_META/CREATE_TYPES/navegación), cumple
-// igual el objetivo ("muy visual") sin ese riesgo — capturas reales quedan
-// para una futura release si en su momento se generan limpias a propósito.
+// Sin capturas de pantalla, mismo motivo que la versión anterior de este
+// archivo: ninguna captura real de esta sesión queda presentable para un
+// usuario real (cuenta "dev-bypass", datos de prueba). Iconografía + color
+// coherente con el resto de la app cumple igual el objetivo ("muy
+// visual") sin ese riesgo.
 const SLIDES = [
   {
-    icon: Plus,
+    icon: Briefcase,
     color: TEAL,
-    title: "Un único botón para crear",
-    body: "Desde Home o desde Mi trabajo, un solo \"Añadir movimiento\" — el propio formulario te deja elegir Curso, Comisión o Ajuste, sin acertar antes el botón correcto.",
+    title: "Mi trabajo, todo en un sitio",
+    body: "Cursos, comisiones y ajustes con compañeros, en una única lista — sin saltar entre tres pantallas para lo mismo.",
   },
   {
-    icon: Layers,
+    icon: Coins,
     color: SUN,
-    title: "Registro, Comisiones y Compañeros ahora es Mi trabajo",
-    body: "Antes vivían en tres pantallas separadas, cada una con su propia forma de crear y editar. Ahora es una sola pantalla, con una sola forma de hacer las cosas.",
+    title: "Tarifas, con la misma cara que Mi trabajo",
+    body: "Tipo, fecha de alta y moneda se ven de un vistazo en cada tarifa — sin campos de más que rellenar cada vez.",
   },
   {
-    icon: ClipboardList,
+    icon: TrendingUp,
     color: GREEN,
-    title: "Mi trabajo: todo sin salir de la lista",
-    body: "Crear, editar, marcar cobrado o pendiente y eliminar un movimiento ocurre en el sitio, sin cambiar de pantalla. La moneda se recuerda de la última vez, y puedes dar de alta una tarifa nueva sin abandonar el formulario.",
+    title: "Resumen, más fácil de recorrer",
+    body: "Toca cualquier periodo de la franja de arriba para saltar a él, y cualquier curso para ver de dónde viene el dinero.",
   },
   {
-    icon: Settings,
+    icon: Hand,
     color: CORAL,
-    title: "Configuración, con menos vueltas",
-    body: "Escuelas, Cursos, Tarifas y el resto de catálogos se crean ahora con el mismo botón flotante que ya conoces de Mi trabajo. Y en Usuarios puedes desactivar una cuenta sin perder ningún dato, o eliminarla del todo si hace falta.",
+    title: "Desliza, no solo toques",
+    body: "Cierra formularios y vuelve atrás en Configuración y Ayuda deslizando — como en cualquier app a la que ya estás acostumbrado.",
   },
   {
-    icon: BarChart3,
+    icon: ShieldCheck,
     color: NAVY,
-    title: "Resumen: la respuesta rápida, y todo lo demás si lo pides",
-    body: "Arriba, un único total con la comparación al periodo anterior. Debajo, cada desglose — por escuela, por curso, calendario, comisiones — se despliega solo cuando lo tocas.",
+    title: "Más estable de un extremo a otro",
+    body: "Corregidos varios detalles de fondo: la barra inferior, los totales de fin de mes, y la gestión de usuarios.",
   },
 ];
 

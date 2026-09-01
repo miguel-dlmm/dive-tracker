@@ -801,3 +801,265 @@ ejecutado para este bloque.
 
 **Commit (en `feature/seo`):** `fix(seo): mover robots.txt y
 manifest.json a public/ para que se publiquen de verdad en build`.
+
+> Nota de rama: los bloques 17 (rama `feature/seo`) y 18 (MVP SEO) se
+> ejecutaron y comitearon en `feature/seo`, no aquí — ver el detalle
+> completo justo arriba, escrito en el momento en esa misma rama. Esta
+> sesión continúa en `feature/global-redesign` a partir del bloque 19,
+> tal como pedía el propio encargo (17/18 son los únicos bloques
+> específicos de SEO).
+
+### Bloque 19 — Backups: política MVP
+
+Encargo: investigar estado real de Supabase y plan actual; determinar
+backups existentes, frecuencia, retención, cobertura, estrategia
+adicional razonable, RPO/RTO, cómo recuperar y cómo verificar que un
+backup es utilizable; plan MVP económico y sostenible; si hay una
+acción segura implementable ya, hacerla; si requiere contratar/activar
+servicios de pago, dejar la recomendación preparada sin cambios
+irreversibles; documentar la política.
+
+**Bloqueo real, resuelto preguntando** (no derivable desde este
+entorno — no hay ningún token de gestión de Supabase en `.env.local`,
+solo las claves de la propia app): se preguntó al usuario el plan real
+de Supabase, porque cambia por completo el análisis (Free no incluye
+ninguna copia automática; Pro sí, con 7 días de retención). Respuesta:
+**Free**.
+
+**Hallazgo:** con Free, hoy no existe ningún mecanismo de recuperación
+más allá de lo que el propio operador guarde por su cuenta — riesgo
+real y no hipotético para una app que guarda datos financieros.
+
+**Política adoptada y documentada en
+`docs/ADR/0017-politica-de-backups-mvp.md`:** backup manual semanal vía
+`pg_dump` (`scripts/backup-db.mjs`, nuevo — alias `npm run backup:db`),
+usando la cadena de conexión directa a Postgres (`SUPABASE_DB_URL`,
+nunca comiteada, nunca impresa), no las claves anon/service_role ya
+existentes. RPO documentado explícitamente (hasta 7 días, aceptado como
+razonable para el volumen de uso actual — decisión informada, no
+supuesta) y RTO (minutos, `pg_restore` contra un proyecto nuevo).
+Procedimiento de simulacro de restauración documentado (proyecto
+Supabase temporal + comprobación de recuento de filas). `backups/`
+añadido a `.gitignore` — nunca al repo.
+
+**Trade-off señalado, no decidido por mí:** el propio repo vive dentro
+de iCloud Drive, así que guardar el `.dump` en `backups/` le da una
+copia fuera de la máquina gratis — pero eso replica datos financieros
+en texto plano en la infraestructura de Apple. Documentado como
+decisión pendiente del usuario (aceptar tal cual, o cifrar el fichero
+antes de dejarlo ahí), no resuelto unilateralmente.
+
+**Acción segura ya hecha, sin coste ni credenciales reales:**
+`scripts/backup-db.mjs` escrito y probado (falla con un mensaje claro
+sin `SUPABASE_DB_URL` — no se ha podido ejecutar contra la base real,
+no hay credenciales de conexión directa en este entorno, solo las de la
+app). `npm run backup:db` listo para usarse en cuanto el usuario tenga
+a mano la contraseña de base de datos.
+
+**No ejecutado, dejado como recomendación:** subir a Supabase Pro
+(coste recurrente, decisión de negocio del usuario) — fila añadida a
+`docs/BACKLOG.md`.
+
+**Validación:** suite completa **328/328**. Build limpio. Sin cambios
+de UI — `mobile-check` no aplica a este bloque.
+
+**Commit:** `feat(backups): política MVP de copias de seguridad
+(pg_dump manual) para el plan Free de Supabase`.
+
+### Bloque 20 — Analítica de uso: analizado, sin implementar
+
+Encargo explícito: solo si sobra margen tras lo importante, pensar como
+Product Manager qué medir y por qué antes de nada; no implementar sin
+estudiar privacidad/coste/valor/granularidad/complejidad; si sobra
+mucho margen investigar y proponer arquitectura mínima e implementar si
+es simple y segura; si no, dejar el análisis documentado.
+
+**Decisión:** documentar y no implementar. Con el "grupo reducido de
+usuarios actual" (`CLAUDE.md`), un puñado de sesiones de uso no da una
+señal estadística fiable para priorizar rediseños — el feedback directo
+del propio usuario (exactamente lo que ha dirigido esta sesión de 24
+bloques) ya cumple esa función mejor y más rápido a esta escala.
+Construir analítica propia sobre Supabase reinventaría herramientas que
+ya existen y funcionan bien; una herramienta de terceros sin cookies
+(Plausible o similar) sería la vía correcta el día que compense, pero
+implica coste recurrente y una actualización real de
+`privacyPolicy.js` (nueva `VERSION`, reaceptación) — ninguna de las dos
+justificada hoy.
+
+**Documentación:** fila añadida en `docs/BACKLOG.md` ("No hacer por
+ahora"), con la condición concreta que reactivaría la decisión (varias
+decenas de usuarios activos, no un puñado).
+
+**Commit:** `docs(analitica): documentar por qué no se implementa
+analítica de uso todavía`.
+
+### Bloque 21 — Documentación y literatura: auditoría transversal
+
+Encargo: revisar literales/nombres antiguos/mensajes de usuario/textos
+técnicos visibles en busca de vocabulario inconsistente, especialmente
+conceptos ya consolidados (Actividades→Cursos, Registro/Comisiones/
+Compañeros→Movimientos, Pago de compañeros→Ajuste de curso)
+sobreviviendo en algún rincón; documentar cambios importantes, sin
+convertirlo en una reescritura literaria infinita.
+
+**Auditoría:** `grep` de "Registro"/"Compañeros"/"Actividad"/"Pago(s)
+de compañeros" en toda la interfaz alcanzable (excluidas las 4
+pantallas heredadas sin ruta de navegación real —
+`WorkLogTab`/`ComisionesTab`/`CompanerosTab`/`PaymentsTab`, halladas en
+el bloque 11 — tocar su texto no cambia nada que un usuario real vea).
+Las referencias en comentarios de código y en `WhatsNew.jsx` (la propia
+diapositiva que ANUNCIA el rename "Registro, Comisiones y Compañeros
+ahora es Mi trabajo") son historia correcta, no un error — se dejan tal
+cual.
+
+**4 inconsistencias reales encontradas, las 4 en `src/help/content.js`**
+(Ayuda describía la Resumen/Tarifas de ANTES de esta noche):
+1. Los pasos de "Ver cuánto has generado" listaban las tarjetas de
+   Resumen como "Por escuela, Por curso, Calendario, Comisiones, Pagos
+   de compañeros" — nombre antiguo y orden antiguo (el actual, desde el
+   bloque 8: Por escuela, Por curso, Comisiones, Ajustes de curso,
+   Calendario).
+2. Mismo problema (nombre + orden) en los pasos de "Resumen, de un
+   vistazo".
+3. La misma sección decía "navega entre periodos con las flechas" — las
+   flechas ‹ › se retiraron esta noche (bloque 7); ahora se navega
+   tocando la franja de tendencia.
+4. Configuración describía Tarifas con "dos modos (Instructor/
+   Comisión)" — la arquitectura de dos páginas que el bloque 1 de esta
+   noche sustituyó por una lista combinada con el tipo como filtro/
+   pestaña dentro de la hoja.
+
+Aprovechado también para precisar el tip de "Por escuela" (bloque 10):
+con una sola escuela ese apartado no aparece y es "Por curso" quien
+empieza desplegada — antes el tip solo cubría el caso de varias
+escuelas.
+
+**Validación:** suite completa **328/328**. Build limpio. `mobile-check`
+(toca Ayuda, contenido visible): 41 capturas, sin errores de consola.
+
+**Commit:** `docs(ayuda): actualizar literales de Resumen y Tarifas a
+la nomenclatura y el comportamiento actuales`.
+
+## Bloque 24 — Informe final
+
+Bloques 1-21 completados (22-24 no son bloques aparte, son la disciplina
+transversal ya aplicada en cada uno: validación tras cada cambio,
+commits pequeños de una sola intención, sin push ni merge a `develop`).
+
+### Hecho
+
+**`feature/global-redesign`** (17 commits esta noche, `7710687`..`1ec6e7f`,
+61 por delante de `develop`, sin remoto):
+- Tarifas: rediseño completo (lista combinada, acento por tipo, hoja
+  con motion) — `Sheet` extraído como base reutilizable.
+- Marca: renombrado completo a "Ocean Flow" (12 archivos, incluido el
+  email de bienvenida real y los documentos legales, con reaceptación).
+- Calendario de Home: día de hoy marcado visualmente.
+- Ajuste de curso: moneda global (sin campo por movimiento) + formulario
+  más compacto.
+- Gestos: arrastrar para cerrar en todas las hojas de Configuración
+  (antes solo Mi trabajo).
+- Resumen: cabecera de periodo + franja de tendencia fusionadas,
+  arreglado solape/inestabilidad, secciones renombradas ("Ajustes de
+  curso") y reordenadas.
+- Bug de payment_type: causa raíz confirmada con datos reales,
+  documentado en `ADR-0003` (sin parche aislado, a propósito).
+- Por escuela: funcionalidades multi-escuela ocultas con una sola
+  escuela configurada (Tarifas, Mi trabajo, Resumen).
+- Ajustes de curso: eliminado el "0 personas" en los desgloses
+  agregados de Resumen.
+- Home "Añadir movimiento": evaluado, mantenido tal cual (ya era la
+  mejor solución).
+- Separadores de miles: auditados, ya coherentes en toda la app
+  (`Intl`/`es-ES`, sin implementación propia).
+- FAB de creación consolidado en un componente compartido + libro de
+  estilo práctico (`docs/ESTILO.md`).
+- Tarifas y depreciación histórica: analizado (`ADR-0016`), snapshot
+  del importe recomendado, sin implementar.
+- Release `v0.2.0`: `CHANGELOG.md` puesto al día, plan de ejecución
+  documentado paso a paso, nada ejecutado.
+- Backups: política MVP para el plan Free de Supabase
+  (`scripts/backup-db.mjs`, `ADR-0017`).
+- Analítica de uso: analizada, diferida con criterio explícito de
+  reactivación.
+- Ayuda: literales de Resumen/Tarifas actualizados a la nomenclatura y
+  comportamiento actuales.
+
+**`feature/seo`** (2 commits, creada desde `92a4a0a` de
+`feature/global-redesign`, sin remoto):
+- Confirmado que `noindex,nofollow` + `robots.txt` (`Disallow: /`) son
+  una decisión de producto correcta y deliberada (app privada por
+  invitación) — no se ha optimizado para posicionamiento, sería ir
+  contra esa decisión.
+- Bug real corregido: `robots.txt`/`manifest.json` vivían fuera de
+  `public/` y nunca llegaban a `dist/` — confirmado y arreglado.
+- Encontrados y documentados (sin tocar) `favicon.svg`/`icons.svg`,
+  sobras sin usar de una plantilla anterior.
+
+### Pendiente (ver `docs/BACKLOG.md` para el detalle completo)
+
+- Eliminar `payment_type` del todo (`ADR-0003`) — ahora con evidencia
+  real, no solo teórica.
+- Snapshot de tarifa en movimientos (`ADR-0016`) — recomendado, sin
+  implementar.
+- Configuración → Moneda favorita (pantalla nueva, hoy sin forma de
+  cambiarla desde la UI).
+- Animación de salida completa en `UserDetailSheet`/`CreateUserSheet`/
+  `ActivationLinkPanel` (entrada+gesto ya funcionan, la salida es
+  abrupta).
+- Subir a Supabase Pro (backups automáticos) — decisión de coste del
+  usuario, no técnica.
+- Analítica de uso — diferida hasta que crezca la base de usuarios.
+- Assets huérfanos (`favicon.svg`/`icons.svg`) — sin certeza suficiente
+  para borrar, documentados para no confundirlos con la marca real.
+- Icono/imagen OG reales de Ocean Flow — placeholders a la espera del
+  logo oficial (ya documentado antes de esta sesión).
+- Bug no reproducido: "añadir tarifa inline bloquea el formulario" —
+  necesita prueba en iPhone físico real.
+- "Actividades" → "Cursos" fase 2 (renombrado interno de variables) —
+  baja prioridad, invisible para el usuario.
+
+### Release
+
+- Rama: `feature/global-redesign`, **61 commits** por delante de
+  `develop`, sin publicar (sin remoto).
+- Rama separada: `feature/seo`, 2 commits desde el mismo punto, sin
+  publicar.
+- Versión candidata: **`v0.2.0`** (confirmada, sigue siendo correcta —
+  `git tag -l v0.2.0` vacío).
+- `CHANGELOG.md` → `Unreleased` puesto al día con todo lo de esta
+  sesión y la anterior.
+- Validación repetida tras casi cada bloque: **328/328 tests**, build
+  limpio, `mobile-check` sin errores de consola (41 capturas en la
+  última pasada).
+- **Nada ejecutado**: sin merge a `develop`, sin tag, sin push, sin
+  GitHub Release, sin deploy. Plan de 8 pasos documentado en el bloque
+  16 de esta sesión, a la espera de tu aprobación explícita.
+- Pendiente de decidir: si incorporar `feature/seo` a
+  `feature/global-redesign` antes de la release, o mantenerla aparte
+  hasta más adelante — no se ha tomado esa decisión por ti.
+
+### Pruebas que debo hacer yo (el usuario)
+
+- **Tarifas** (rediseño completo, bloque 1): crear/editar Curso y
+  Comisión, cambiar de tipo en la propia hoja, arrastrar para cerrar —
+  en un iPhone real.
+- **Gestos** (bloque 6): arrastrar para cerrar en las hojas de
+  Configuración (Escuelas, Cursos, Tarifas, Usuarios) — motor real de
+  Safari/WebKit, no verificable desde aquí.
+- **Resumen** (bloques 7, 8, 10): navegar la franja de tendencia
+  tocando barras, comprobar que "Por escuela" desaparece de verdad si
+  alguna vez usas una cuenta con una sola escuela.
+- **Home**: el punto de "hoy" en el calendario, crear un movimiento
+  desde un día vacío y desde el desglose de un día con actividad.
+- **Usuarios** (Configuración): no se ha tocado nada esta noche, pero
+  conviene una pasada antes de una release — activación, roles,
+  desactivar/reactivar.
+- **Bug ya conocido, sin reproducir aquí:** "añadir tarifa inline
+  bloquea el formulario" — solo se puede confirmar en un iPhone físico
+  con Safari real (ver nota en `docs/BACKLOG.md`).
+- **Login/bypass**: sin cambios esta noche, pero forma parte de
+  cualquier checklist de release.
+- Si en algún momento se despliega `feature/seo`: comprobar
+  `/robots.txt` y `/manifest.json` responden 200 en la URL real (aquí
+  solo se ha verificado en `dist/` local).

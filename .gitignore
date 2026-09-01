@@ -39,3 +39,7 @@ scripts/mobile-check-output/
 # Enlaces de activación de cuentas demo generados por scripts/create-demo-user.js
 # — nunca al repo, son tokens de un solo uso válidos varias horas.
 usuarios de prueba.md
+
+# Copias de seguridad generadas por scripts/backup-db.mjs — datos
+# financieros reales, nunca al repo (ver docs/ADR/0017-politica-de-backups-mvp.md).
+backups/

@@ -4,6 +4,7 @@ import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle,
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { ToastProvider, AppLoading, useScrolled } from "./shared";
+import EnvironmentIndicator from "./EnvironmentIndicator";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG } from "./colors";
 import LoginScreen from "./LoginScreen";
@@ -12,14 +13,14 @@ import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
-import ConfigTab from "./ConfigTab";
+import ConfigTab, { clearStoredSection } from "./ConfigTab";
 import CompanerosTab from "./CompanerosTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
 import WhatsNew from "./WhatsNew";
 import { APP_VERSION } from "./version";
 import SummaryTab from "./SummaryTab";
-import HelpTab from "./HelpTab";
+import HelpTab, { clearStoredHelpOpen } from "./HelpTab";
 import PaymentsTab from "./PaymentsTab";
 
 // ---------------------------------------------------------------
@@ -84,6 +85,8 @@ function readStoredNav() {
 }
 function clearStoredNav() {
   try { sessionStorage.removeItem(NAV_STORAGE_KEY); } catch { /* no-op */ }
+  clearStoredSection(); // sub-navegación de Configuración — misma vida que el resto
+  clearStoredHelpOpen(); // categoría desplegada en Ayuda — misma vida que el resto
 }
 
 // "Qué hay de nuevo" — se muestra una vez por versión y por cuenta (no por
@@ -135,8 +138,20 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   // desaparece del DOM mientras la página estaba desplazada. blur()
   // suelta el foco/toque ANTES de que React desmonte ese elemento, en vez
   // de dejar que WebKit lo gestione a mitad del propio desmontaje.
+  // 2026-08-30, segunda vuelta (el puente Home -> Resumen seguía perdiendo
+  // la barra tras el fix de blur): el scroll a 0 vivía solo en el efecto
+  // de más abajo, reactivo a `tab` — eso lo dispara DESPUÉS de que React
+  // ya haya empezado a desmontar la pestaña anterior (Home, desplazada
+  // 1260px en el caso reportado) y a montar la nueva, con la animación de
+  // salida/entrada de por medio corriendo mientras el scroll real todavía
+  // está a 1260px. Se adelanta aquí, síncrono, ANTES de `setTab` — cuando
+  // React empieza a desmontar/montar, el scroll ya está a 0, así que
+  // ninguna animación llega a correr con la página desplazada. El efecto
+  // de abajo se mantiene como red de seguridad (por si algo más desplaza
+  // el scroll ya con la pestaña nueva montada), no se retira.
   const changeTab = (next) => {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    window.scrollTo(0, 0);
     setTab(next);
   };
   // Pestaña primaria a la que vuelve "‹ Volver" desde Ayuda/Configuración
@@ -193,6 +208,20 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const bottomTabActive = PRIMARY_TABS.some((t) => t.id === tab) ? tab : null;
   const isSecondary = tab in SECONDARY_TITLES;
+  // Cerrar Configuración/Ayuda (la "X" de la cabecera, y el gesto de
+  // "atrás" de cada una en su nivel más externo — ver ConfigTab.jsx/
+  // HelpTab.jsx) siempre vuelve al INICIO de esa pantalla la próxima vez
+  // que se abra, nunca a la última subsección/categoría vista — distinto
+  // de recargar la página, que sí la conserva (feedback explícito
+  // 2026-08-30: "si cierro con la X y reabro, quiero el inicio; si
+  // recargo dentro, quiero seguir donde estaba"). Limpiar aquí, no dentro
+  // de cada pantalla, porque es la MISMA acción ("salir de esta pantalla
+  // por completo") sin importar en qué subnivel se estuviera al cerrar.
+  const closeSecondary = () => {
+    if (tab === "config") clearStoredSection();
+    if (tab === "help") clearStoredHelpOpen();
+    changeTab(returnTab);
+  };
   const logoIcon = appConfig.rows[0]?.logo_icon || "Waves";
   // La cabecera acompaña siempre al usuario (ver rediseño de navegación
   // global) — antes se quedaba en flujo normal y desaparecía al hacer
@@ -238,15 +267,18 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             // X, no flecha "‹": Ayuda/Configuración no son un nivel más
             // dentro de la jerarquía de la pestaña actual — se entra
             // igual desde Home, Mi trabajo o Resumen, así que son más
-            // "una capa encima" (modal) que "un paso más adentro". Ayuda
-            // además ya usa su propia flecha "‹" para SU jerarquía interna
-            // (Categorías → Artículos → Artículo, ver HelpArticleList/
-            // HelpArticleView) — una segunda flecha aquí, con un
-            // significado distinto (salir de Ayuda entera, no retroceder
-            // un nivel dentro de ella), sería ambigua en el punto más
-            // profundo. X + "Cerrar" es además el mismo patrón que ya usan
-            // las hojas inferiores de la app.
-            <button onClick={() => changeTab(returnTab)} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Cerrar">
+            // "una capa encima" (modal) que "un paso más adentro".
+            // Configuración además ya usa su propia flecha "‹" para SU
+            // jerarquía interna (menú → sección) — una segunda flecha
+            // aquí, con un significado distinto (salir de Configuración
+            // entera, no retroceder un nivel dentro de ella), sería
+            // ambigua en el punto más profundo. X + "Cerrar" es además el
+            // mismo patrón que ya usan las hojas inferiores de la app.
+            // (Ayuda ya no tiene jerarquía propia desde 2026-08-30 — ver
+            // HelpTab.jsx, "de índice a guía viva" — pero el razonamiento
+            // de fondo, "capa encima" vs. "un paso más adentro", se
+            // mantiene igual para las dos.)
+            <button onClick={closeSecondary} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Cerrar">
               <X size={20} style={{ color: NAVY }} aria-hidden="true" />
               <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{SECONDARY_TITLES[tab]}</h1>
             </button>
@@ -330,10 +362,10 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
           <ConfigTab
             schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
-            navSections={navSections} appConfig={appConfig} profile={profile}
+            navSections={navSections} appConfig={appConfig} profile={profile} onClose={closeSecondary}
           />
         )}
-        {tab === "help" && <HelpTab navSections={navSections} profile={profile} />}
+        {tab === "help" && <HelpTab navSections={navSections} profile={profile} onClose={closeSecondary} />}
         {tab === "pagos" && (
           <PaymentsTab
             activities={activities} schools={schools} paymentStatuses={paymentStatuses} currencies={currencies}
@@ -571,8 +603,11 @@ function AuthGate() {
 
 export default function App() {
   return (
-    <ToastProvider>
-      <AuthGate />
-    </ToastProvider>
+    <>
+      <EnvironmentIndicator />
+      <ToastProvider>
+        <AuthGate />
+      </ToastProvider>
+    </>
   );
 }

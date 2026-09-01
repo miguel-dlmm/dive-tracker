@@ -1,10 +1,16 @@
 # ADR 0010 — Proceso mínimo viable de release: crear → validar → desplegar
 
 **Fecha:** 2026-08-29
-**Estado:** Aprobado (proceso). La primera aplicación real de este proceso
-(la propia release que motiva este documento) queda **preparada, no
-ejecutada** — ver `docs/SESSION-2026-08-28-rediseno-global.md` para el
-candidato concreto y los comandos pendientes de aprobación explícita.
+**Estado:** Aprobado (proceso) y **ejecutado por primera vez**. La
+release `v0.2.0` — candidato descrito en
+`docs/SESSION-2026-08-28-rediseno-global.md` — se completó el
+2026-08-30: merge `--ff-only` de `feature/global-redesign` a `develop`,
+commit `chore: prepare release v0.2.0`, tag anotado `v0.2.0` (commit
+`91b9986`) y push de `develop` + tag. Pendiente únicamente el paso 7 de
+este proceso (`gh release create`, réplica en GitHub Releases) — no
+ejecutado por no disponer de `gh` CLI en el entorno de esta sesión; no
+bloquea nada, es solo visibilidad adicional sobre el mismo tag ya
+publicado.
 
 ## Contexto
 
@@ -166,11 +172,9 @@ la misma fuente de verdad.
 
 ## Consecuencias
 
-- El primer uso real de este proceso es la propia release pendiente de
-  esta sesión — ver el documento de sesión para el candidato concreto
-  (versión propuesta, contenido de changelog, comandos exactos) a la
-  espera de aprobación explícita antes de ejecutar el paso 1 (mergear a
-  `develop`) en adelante.
+- El primer uso real de este proceso fue la release `v0.2.0`
+  (2026-08-30) — ver el documento de sesión para el candidato original
+  y `CHANGELOG.md` para el contenido final publicado.
 - `CHANGELOG.md` deja de quedarse desactualizado entre releases: pasa a
   actualizarse en el mismo commit que introduce el cambio.
 - Ninguna rama, entorno ni herramienta nueva — el proceso vive

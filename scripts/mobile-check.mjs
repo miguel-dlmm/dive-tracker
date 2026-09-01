@@ -424,17 +424,33 @@ async function main() {
   await page.waitForTimeout(300);
   await shot(page, "ayuda-menu-agrupado");
 
-  console.log("→ Ayuda: entrar en una categoría de 'Quiero...', abrir un artículo y volver");
-  await page.locator("text=Registrar un movimiento").first().tap();
-  await page.waitForTimeout(200);
-  await shot(page, "ayuda-lista-articulos");
-  await page.locator("text=Crear un movimiento").first().tap();
-  await page.waitForTimeout(200);
-  await shot(page, "ayuda-articulo");
+  console.log("→ Ayuda: tocar una categoría de 'Quiero...' despliega su artículo en el sitio (2026-08-30, 'de índice a guía viva')");
+  const registrarCategoryBtn = page.getByRole("button", { name: /Registrar un movimiento/ });
+  await registrarCategoryBtn.tap();
+  await page.waitForTimeout(300);
+  const expanded = await registrarCategoryBtn.getAttribute("aria-expanded");
+  if (expanded !== "true") {
+    consoleIssues.push("[ayuda] Tocar una categoría no la desplegó (aria-expanded !== 'true').");
+  }
+  await shot(page, "ayuda-categoria-desplegada");
+  const pasosVisible = await page.getByText("Pasos", { exact: true }).isVisible().catch(() => false);
+  if (!pasosVisible) {
+    consoleIssues.push("[ayuda] Al desplegar una categoría no se ve el contenido del artículo ('Pasos').");
+  }
   await page.mouse.wheel(0, 500);
   await page.waitForTimeout(250);
   await shot(page, "ayuda-scroll-cabecera");
   await page.mouse.wheel(0, -500);
+
+  console.log("→ Ayuda: cerrar con 'X' con una categoría desplegada y reabrir debe volver al índice plegado (feedback 2026-08-30, segunda vuelta) — recargar (no probado aquí, ver ConfigTab/HelpTab.test.jsx) sí la conservaría");
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(300);
+  await page.locator('button[aria-label="Ayuda"]').tap();
+  await page.waitForTimeout(300);
+  const stillExpandedAfterReopen = await page.getByRole("button", { name: /Registrar un movimiento/ }).getAttribute("aria-expanded");
+  if (stillExpandedAfterReopen !== "false") {
+    consoleIssues.push("[ayuda] Cerrar con 'X' y reabrir Ayuda no volvió a mostrar el índice plegado (la categoría seguía desplegada).");
+  }
   await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
   await page.waitForTimeout(300);
   await page.locator('button[aria-label="Configuración"]').tap();
@@ -486,6 +502,34 @@ async function main() {
   await page.locator("text=Tarifas").first().tap();
   await page.waitForTimeout(300);
   await shot(page, "configuracion-tarifas");
+
+  console.log("→ Configuración: recargar dentro de Tarifas debe reabrir en Tarifas, no en el menú (feedback 2026-08-30)");
+  await page.reload();
+  // exact: true — sin esto, "Tarifas" también hace match (substring, sin
+  // distinguir mayúsculas) contra el encabezado "13 tarifas" de la propia
+  // lista, dos elementos "heading" a la vez = "strict mode violation" en
+  // Playwright, que un .catch() sin más trata como "no encontrado".
+  const reopenedInTarifas = await page.getByRole("heading", { name: "Tarifas", exact: true })
+    .waitFor({ timeout: 15000 }).then(() => true).catch(() => false);
+  if (!reopenedInTarifas) {
+    consoleIssues.push("[configuracion] Recargar dentro de Tarifas no reabrió en Tarifas — volvió al menú principal de Configuración.");
+  }
+  await shot(page, "configuracion-tarifas-tras-recargar");
+
+  console.log("→ Configuración: cerrar con 'X' desde dentro de Tarifas y reabrir debe volver al menú principal, no a Tarifas (feedback 2026-08-30, segunda vuelta — distinto de recargar, probado justo arriba, que sí la conserva)");
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(200);
+  await page.locator('button[aria-label="Configuración"]').tap();
+  await page.waitForTimeout(200);
+  const backAtMenuAfterClose = (await page.getByText("Escuelas", { exact: true }).isVisible().catch(() => false))
+    && (await page.getByText("Cursos", { exact: true }).isVisible().catch(() => false));
+  if (!backAtMenuAfterClose) {
+    consoleIssues.push("[configuracion] Cerrar con 'X' desde dentro de Tarifas y reabrir Configuración no volvió al menú principal.");
+  }
+  await shot(page, "configuracion-tras-cerrar-y-reabrir");
+  await page.locator("text=Tarifas").first().tap();
+  await page.waitForTimeout(300);
+
   const rateMenuBtn = page.getByRole("button", { name: "Más acciones" }).first();
   if (await rateMenuBtn.isVisible().catch(() => false)) {
     await rateMenuBtn.tap();

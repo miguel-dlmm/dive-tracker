@@ -244,3 +244,36 @@ describe("HomeTab — calendario: el día de hoy queda marcado", () => {
     expect(withHoy).toHaveLength(1);
   });
 });
+
+// Feedback explícito 2026-08-30: la instrucción de uso del calendario pasa
+// de un párrafo suelto DEBAJO de todo el calendario a vivir DENTRO de la
+// propia tarjeta, encima de la fila de días de la semana, sin punto final.
+describe("HomeTab — calendario: instrucción de uso encima, dentro de la tarjeta", () => {
+  it("el texto de instrucción no termina en punto, y precede a la fila de días de la semana", () => {
+    renderHome({});
+    const caption = screen.getByText("Toca un día para ver el detalle, o uno vacío para añadir un movimiento");
+    expect(caption.textContent.endsWith(".")).toBe(false);
+    const weekdayHeader = screen.getByText("L");
+    // eslint-disable-next-line no-bitwise
+    expect(caption.compareDocumentPosition(weekdayHeader) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
+
+// Feedback explícito 2026-08-30: total combinado (Curso+Comisión+Ajuste,
+// mismo criterio que "Generado este mes") del día seleccionado, para no
+// tener que sumar mentalmente el desglose de abajo.
+describe("HomeTab — calendario: total del día seleccionado", () => {
+  it("muestra 'Generado el día' con la suma de todas las fuentes de ese día", () => {
+    renderHome({
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+      colleaguePayments: [{ id: "p1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", colleague_name: "Ana", amount: 5, currency: "EUR", status: "Paid" }],
+      rates: RATES,
+    });
+    // autoSelectFirstDay ya abre el detalle del primer día con datos (hoy).
+    // Acotado al propio total del día (no al documento entero): "Generado
+    // este mes" muestra la misma cifra por coincidencia, al ser todos los
+    // datos de ejemplo del mismo día de hoy.
+    const label = screen.getByText("Generado el día");
+    expect(label.parentElement).toHaveTextContent("25,00"); // 20€ del curso + 5€ del ajuste
+  });
+});
