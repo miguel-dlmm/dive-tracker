@@ -218,25 +218,56 @@ function CurrencySection({ profile, currencies }) {
   );
 }
 
+// Corrección 3/7 (2026-09-01): antes cambiaba la contraseña sin pedir la
+// actual — cualquiera con la sesión abierta (p. ej. un móvil desbloqueado
+// ajeno) podía cambiarla sin demostrar conocerla. Ahora exige "Contraseña
+// actual" y la verifica de verdad antes de aplicar la nueva: supabase-js
+// no expone un "verifyPassword" aparte, así que la única forma soportada
+// de comprobarla es un signInWithPassword real contra el email de la
+// sesión — reautentica a la misma persona, no cambia de cuenta ni de
+// sesión de forma insegura. Si falla, error específico junto al campo
+// ("Contraseña actual incorrecta"), sin tocar la contraseña nueva.
+//
+// También corrige el layout: con "Nueva contraseña" como primer campo
+// pulsable de la sección, el propio banner de sugerencias de contraseña
+// de iOS podía solaparse con él (reportado en prueba real en iPhone) —
+// añadir "Contraseña actual" encima le da el espacio que le faltaba, y de
+// paso se quita el margen negativo (-mt-1) que apretaba la fila de
+// requisitos contra "Confirmar contraseña".
 function PasswordSection() {
   const toast = useToast();
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
   const [visible, setVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const lengthOk = password.length >= 8;
   const matchOk = confirm.length > 0 && password === confirm;
-  const canSave = lengthOk && matchOk && !saving;
+  const canSave = currentPassword.length > 0 && lengthOk && matchOk && !saving;
 
   const save = async () => {
     if (!canSave) return;
     setSaving(true);
+    setError("");
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error && error.code !== "same_password") throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      const email = session?.user?.email;
+      if (!email) throw new Error("no-session");
+
+      const { error: reauthError } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
+      if (reauthError) {
+        setError("Contraseña actual incorrecta.");
+        setSaving(false);
+        return;
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+      if (updateError && updateError.code !== "same_password") throw updateError;
       toast?.success("Contraseña actualizada");
-      setPassword(""); setConfirm("");
+      setCurrentPassword(""); setPassword(""); setConfirm("");
     } catch {
       toast?.error("No se pudo cambiar la contraseña. Inténtalo de nuevo.");
     } finally {
@@ -246,6 +277,19 @@ function PasswordSection() {
 
   return (
     <SectionCard title="Seguridad">
+      <div className="space-y-3">
+      <Field label="Contraseña actual">
+        <div className="relative">
+          <input
+            type={showCurrent ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+            autoComplete="current-password" className={`${inputCls} w-full pr-11`}
+          />
+          <button type="button" onClick={() => setShowCurrent((v) => !v)} aria-label={showCurrent ? "Ocultar contraseña actual" : "Mostrar contraseña actual"}
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-400">
+            {showCurrent ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+          </button>
+        </div>
+      </Field>
       <Field label="Nueva contraseña">
         <div className="relative">
           <input
@@ -258,7 +302,7 @@ function PasswordSection() {
           </button>
         </div>
       </Field>
-      <div className="-mt-1 mb-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
         <span className="flex items-center gap-1" style={{ color: lengthOk ? TEAL : "#9CA3AF" }}>
           {lengthOk && <Check size={12} aria-hidden="true" />} Mínimo 8 caracteres
         </span>
@@ -269,13 +313,15 @@ function PasswordSection() {
       <Field label="Confirmar contraseña">
         <input type={visible ? "text" : "password"} value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" className={`${inputCls} w-full`} />
       </Field>
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
       <button
         onClick={save} disabled={!canSave}
-        className="mt-1 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white disabled:opacity-50"
+        className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white disabled:opacity-50"
         style={{ backgroundColor: TEAL }}
       >
         {saving && <Loader2 size={15} className="animate-spin" aria-hidden="true" />} Cambiar contraseña
       </button>
+      </div>
     </SectionCard>
   );
 }
