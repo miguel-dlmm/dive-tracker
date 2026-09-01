@@ -26,7 +26,7 @@
 | 0.5 | Análisis de riesgos y decisiones (lote nocturno) | ✅ Hecho (2026-09-01, noche) |
 | 1 | Rama y saneamiento | ✅ Hecho (2026-09-01, noche) |
 | 2 | Multidioma | ✅ Hecho (2026-09-01, noche) |
-| 3 | KPIs en la home | ⬜ Pendiente |
+| 3 | KPIs en la home | ✅ Hecho (2026-09-01, noche) |
 | 4 | Cabecera y notificaciones | ⬜ Pendiente |
 | 5 | Sistema de Training Records | ⬜ Pendiente |
 | 6 | Slides y avisos | ⬜ Pendiente |
@@ -668,9 +668,51 @@ Registro, Mi perfil, "Crear usuario" (admin) — cada uno cambia
 los 9 commits de esta fase. Barrido final de texto español renderizado
 (no en comentarios) sin resultados en ningún archivo vivo.
 
-## Fase 3 — KPIs en la home
+## Fase 3 — KPIs en la home (✅ 2026-09-01, noche)
 
-⬜ Pendiente — no iniciada.
+### Lo hecho
+
+Sección nueva "Tu impacto" al final de Home, tres tarjetas con conteo
+ascendente animado:
+- **Alumnos este mes** — reutiliza el cálculo ya existente
+  (`peopleTrainedThisMonth`), no se duplica lógica.
+- **Cursos impartidos** — total histórico (`worklog.rows.length`), no
+  de mes, a propósito: da sensación de trayectoria acumulada.
+- **Captados este mes** — mismo criterio que alumnos, pero sobre
+  `comisionEntries` (aclaración explícita del usuario: "personas por
+  las que he comisionado" = clientes referidos, no formados por ti).
+
+`useCountUp` (hook nuevo, `motion.js`): anima de 0 al valor real con
+`requestAnimationFrame` + ease-out cúbico; respeta
+`prefers-reduced-motion` saltando directo al valor final. `KpiTile`
+entra con fade+slide-up escalonado por índice, mismo vocabulario
+`EASE.enter`/`DURATION.md` que ya usa el resto de la app — ningún
+sistema de animación nuevo aparte.
+
+### Decisiones y su porqué
+
+- **Colocación al final de Home, no al principio.** Pendiente de
+  cobrar y Generado este mes son las cifras financieras que se
+  consultan a diario (documentado así en el propio código de
+  HomeTab.jsx) — los KPIs son más "sensación de logro/trayectoria" que
+  consulta diaria, así que cierran la pantalla en vez de competir por
+  la primera mirada.
+- **No financieros, a propósito.** Lo financiero ya está cubierto por
+  las dos tarjetas de arriba — los tres KPIs nuevos responden un
+  ángulo distinto ("cómo me está yendo" en términos de actividad, no
+  de dinero).
+- **`useCountUp` con `requestAnimationFrame`, no con Motion.** No hay
+  ningún elemento del DOM que animar (solo un número entero de React
+  que además hay que redondear cada fotograma) — traer la librería
+  para esto habría sido más pesado que la propia implementación.
+
+### Verificación
+
+`npm run test` (541/541) y `npm run build` en verde. Verificado
+también en navegador real (`npm run dev` + bypass de desarrollo,
+viewport móvil 430×932): las tres tarjetas animan correctamente, sin
+errores de consola, en español e inglés, con datos reales de la
+cuenta demo (4 alumnos / 92 cursos / 0 captados este mes).
 
 ## Fase 4 — Cabecera y notificaciones
 
