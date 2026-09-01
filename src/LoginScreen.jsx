@@ -63,7 +63,7 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
           </Field>
 
           {onForgotPassword && (
-            <button type="button" onClick={onForgotPassword} className="text-xs font-medium" style={{ color: TEAL }}>
+            <button type="button" onClick={onForgotPassword} className="-my-2 flex min-h-11 items-center text-xs font-medium" style={{ color: TEAL }}>
               ¿Olvidaste tu contraseña?
             </button>
           )}
@@ -84,7 +84,7 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
           {onRegister && (
             <p className="text-center text-xs text-gray-500">
               ¿Primera vez?{" "}
-              <button type="button" onClick={onRegister} className="font-medium" style={{ color: TEAL }}>
+              <button type="button" onClick={onRegister} className="-my-2 inline-flex min-h-11 items-center font-medium" style={{ color: TEAL }}>
                 Regístrate
               </button>
             </p>
