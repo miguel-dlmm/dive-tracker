@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { Money, formatMoney, MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
@@ -39,6 +39,19 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const currentMonthKey = monthKey(now);
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
 
+  // Corrección 7/7 (2026-09-01): navegación de meses en el calendario de
+  // Home — antes fijo siempre al mes actual (now.getFullYear()/getMonth()
+  // pasados directos a MonthCalendar). Estado propio de Home, no de
+  // MonthCalendar (que sigue siendo controlado, ver shared.jsx): solo
+  // afecta a qué mes se ve en el calendario, nunca a "Generado este mes" /
+  // "Pendiente de cobrar" (arriba), que siguen ancladas al mes real de
+  // hoy — son cifras de "ahora mismo", no de lo que se esté navegando.
+  const [calendarCursor, setCalendarCursor] = useState({ year: now.getFullYear(), month: now.getMonth() });
+  const isCurrentCalendarMonth = calendarCursor.year === now.getFullYear() && calendarCursor.month === now.getMonth();
+  const goToPrevMonth = () => setCalendarCursor(({ year, month }) => (month === 0 ? { year: year - 1, month: 11 } : { year, month: month - 1 }));
+  const goToNextMonth = () => setCalendarCursor(({ year, month }) => (month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 }));
+  const goToCurrentMonth = () => setCalendarCursor({ year: now.getFullYear(), month: now.getMonth() });
+
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
   const rateTotal = (e, ratesTable) => {
     const r = ratesTable.rows.find((r) => r.school === e.school && r.activity === e.activity);
@@ -52,9 +65,12 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const comisionEntries = useMemo(() => comisiones.rows.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" })), [comisiones.rows, commissionRates.rows, fallbackCurrency]);
   const companerosEntries = useMemo(() => colleaguePayments.rows.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" })), [colleaguePayments.rows]);
 
-  const monthAllEntries = useMemo(() => [...ganadoEntries, ...comisionEntries, ...companerosEntries].filter((e) =>
-    e.date.slice(0, 7) === currentMonthKey
-  ), [ganadoEntries, comisionEntries, companerosEntries, currentMonthKey]);
+  // Sin filtrar por mes aquí: MonthCalendar (shared.jsx) ya filtra por su
+  // propio year/month internamente (byDay) — pre-filtrar al mes actual
+  // aquí impedía navegar a cualquier otro mes (los datos ya habrían
+  // desaparecido del array antes de llegar al calendario).
+  const calendarEntries = useMemo(() => [...ganadoEntries, ...comisionEntries, ...companerosEntries],
+    [ganadoEntries, comisionEntries, companerosEntries]);
 
   // Dato secundario de "Generado este mes" — personas formadas, no comisión
   // ni ajustes: son clientes que TÚ has impartido este mes, un dato humano y
@@ -156,9 +172,9 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           pasó este mes?", la pregunta más frecuente al entrar en Home. */}
       <div>
         <MonthCalendar
-          year={now.getFullYear()}
-          month={now.getMonth()}
-          entries={monthAllEntries}
+          year={calendarCursor.year}
+          month={calendarCursor.month}
+          entries={calendarEntries}
           dotColor={TEAL}
           currencyRows={currencies.rows}
           activityColor={activityColor}
@@ -168,6 +184,10 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           groupBySource
           sourceMeta={MOVEMENT_TYPE_META}
           onCreateForDay={(dateStr) => onQuickCreate("ganado", dateStr)}
+          onPrevMonth={goToPrevMonth}
+          onNextMonth={goToNextMonth}
+          onGoToday={goToCurrentMonth}
+          isCurrentMonth={isCurrentCalendarMonth}
         />
       </div>
 

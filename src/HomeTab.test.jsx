@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import HomeTab from "./HomeTab";
 
@@ -256,6 +256,82 @@ describe("HomeTab — calendario: instrucción de uso encima, dentro de la tarje
     const weekdayHeader = screen.getByText("L");
     // eslint-disable-next-line no-bitwise
     expect(caption.compareDocumentPosition(weekdayHeader) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
+
+// Corrección 7/7 (2026-09-01): el calendario de Home ya no está fijo al
+// mes actual — se puede navegar con "‹"/"›". Cubre los tres casos que
+// pide la corrección: mes actual (marcado, sin atajo "Hoy"), mes anterior
+// con actividad (los datos aparecen, no los del mes actual), y mes sin
+// actividad (no revienta, ninguna celda queda marcada).
+describe("HomeTab — calendario: navegación entre meses", () => {
+  it("el mes actual se muestra sin el atajo 'Hoy' (ya estás en él)", () => {
+    renderHome({});
+    expect(screen.queryByRole("button", { name: "Hoy" })).not.toBeInTheDocument();
+  });
+
+  it("retroceder un mes muestra los datos de ese mes (no los del actual) y ofrece volver con 'Hoy'", async () => {
+    const user = userEvent.setup();
+    renderHome({
+      worklog: [
+        { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }, // 20€, este mes
+        { id: "w2", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }, // 40€, mes anterior
+      ],
+      rates: RATES,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Mes anterior" }));
+
+    expect(screen.getByRole("button", { name: "Hoy" })).toBeInTheDocument();
+    // autoSelectFirstDay vuelve a auto-seleccionar el primer día con datos
+    // del mes ahora visible (LAST_MONTH, día 15) — su desglose muestra 40€,
+    // no los 20€ de hoy.
+    const label = screen.getByText("Generado el día");
+    expect(label.parentElement).toHaveTextContent("40,00");
+  });
+
+  it("navegar a un mes sin actividad no rompe el calendario y no deja ningún día marcado", async () => {
+    const user = userEvent.setup();
+    renderHome({
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+      rates: RATES,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Mes siguiente" }));
+
+    await waitFor(() => expect(screen.queryByText("Generado el día")).not.toBeInTheDocument());
+  });
+
+  it("navegar dos meses seguidos rápido nunca deja el detalle de un día de un mes distinto al que se muestra", () => {
+    // Bug real encontrado en verificación manual: sin esperar a que
+    // termine la transición del primer clic, un segundo clic rápido podía
+    // dejar visible "Día 1 de <mes anterior>" con el encabezado ya en el
+    // mes siguiente — un día y un mes que nunca deberían combinarse.
+    renderHome({
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+      rates: RATES,
+    });
+    const next = screen.getByRole("button", { name: "Mes siguiente" });
+
+    fireEvent.click(next);
+    fireEvent.click(next);
+
+    expect(screen.queryByText("Generado el día")).not.toBeInTheDocument();
+  });
+
+  it("'Hoy' vuelve al mes actual tras navegar", async () => {
+    const user = userEvent.setup();
+    renderHome({
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+      rates: RATES,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Mes anterior" }));
+    await user.click(screen.getByRole("button", { name: "Hoy" }));
+
+    expect(screen.queryByRole("button", { name: "Hoy" })).not.toBeInTheDocument();
+    const label = screen.getByText("Generado el día");
+    expect(label.parentElement).toHaveTextContent("20,00");
   });
 });
 

@@ -727,14 +727,44 @@ export const MOVEMENT_TYPE_META = {
 // desglose, para añadir un segundo movimiento ese día sin perder la vista
 // de lo que ya hay. Sin este prop (p. ej. en Resumen, un calendario de
 // solo análisis) el comportamiento es exactamente el de antes.
-export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, caption, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false, onCreateForDay }) {
+// onPrevMonth/onNextMonth (Corrección 7/7, 2026-09-01): opcionales — solo
+// Home los pasa hoy. Cuando están presentes, muestra una cabecera con
+// "‹ Mes año ›" (el propio componente NO lleva su propio year/month en
+// estado: sigue siendo controlado por quien lo usa, igual que antes, para
+// no duplicar esa fuente de verdad) y, si el mes mostrado no es el actual
+// (isCurrentMonth === false), un atajo "Hoy" para volver de un salto. Sin
+// estos props (Resumen, que ya tiene su propio selector de periodo fuera
+// del calendario) el comportamiento visual es exactamente el de antes.
+export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, caption, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false, onCreateForDay, onPrevMonth, onNextMonth, onGoToday, isCurrentMonth = true }) {
   const reducedMotion = usePrefersReducedMotion();
-  const [selectedDay, setSelectedDayState] = useState(null);
+  // La selección se guarda junto con el mes al que pertenece (monthKey) en
+  // vez de un simple número de día — necesario para navegación de meses
+  // (onPrevMonth/onNextMonth): si se limpiara `selectedDay` solo en un
+  // useEffect posterior al cambio de year/month, existe un render
+  // intermedio real en el que el día seleccionado del mes ANTERIOR ya se
+  // pinta junto al year/month NUEVO (el efecto que lo limpiaría corre un
+  // tick después del commit) — con AnimatePresence de por medio, ese
+  // fotograma incorrecto ("Día 1 de Octubre" con datos que en realidad son
+  // de Septiembre, o vacíos) puede llegar a verse durante la animación de
+  // salida. Derivar `selectedDay` comparando el monthKey guardado con el
+  // monthKey que se está pintando AHORA MISMO evita el problema de raíz:
+  // nunca hay un render, ni siquiera transitorio, con un día de un mes que
+  // no es el que se muestra.
+  const monthKey_ = `${year}-${month}`;
+  const [selection, setSelection] = useState({ monthKey: monthKey_, day: null });
   const userSelectedRef = useRef(false);
   const setSelectedDay = (day) => {
     userSelectedRef.current = true;
-    setSelectedDayState(day);
+    setSelection({ monthKey: monthKey_, day });
   };
+  const selectedDay = selection.monthKey === monthKey_ ? selection.day : null;
+  // Al cambiar de mes, se levanta el "candado" de selección manual — cada
+  // mes vuelve a comportarse como una carga fresca del calendario (auto-
+  // selecciona el primer día con actividad si autoSelectFirstDay, en vez
+  // de arrastrar la selección de un mes a otro sin relación entre sí).
+  useEffect(() => {
+    userSelectedRef.current = false;
+  }, [monthKey_]);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
 
@@ -766,8 +796,8 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   useEffect(() => {
     if (!autoSelectFirstDay || userSelectedRef.current) return;
     const days = Object.keys(byDay).map(Number);
-    if (days.length > 0) setSelectedDayState(Math.min(...days));
-  }, [autoSelectFirstDay, byDay]);
+    if (days.length > 0) setSelection({ monthKey: monthKey_, day: Math.min(...days) });
+  }, [autoSelectFirstDay, byDay, monthKey_]);
 
   const cells = [];
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
@@ -843,6 +873,38 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           (feedback 2026-08-30: se leía como una nota a pie de página, no
           como instrucción de uso del propio calendario). Opcional: solo
           Home lo pasa hoy, Resumen no lo necesita. */}
+      {(onPrevMonth || onNextMonth) && (
+        <div className="mb-2 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onPrevMonth}
+            aria-label="Mes anterior"
+            className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
+          >
+            <ChevronLeft size={18} aria-hidden="true" />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold" style={{ color: NAVY }}>{CAL_MONTHS[month]} {year}</span>
+            {!isCurrentMonth && onGoToday && (
+              <button
+                type="button"
+                onClick={onGoToday}
+                className="min-h-7 rounded-full border border-gray-200 px-2 text-[11px] font-medium text-gray-500"
+              >
+                Hoy
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onNextMonth}
+            aria-label="Mes siguiente"
+            className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
+          >
+            <ChevronRight size={18} aria-hidden="true" />
+          </button>
+        </div>
+      )}
       {caption && (
         <p className="mb-2 text-center text-[11px] text-gray-400">{caption}</p>
       )}
@@ -918,8 +980,18 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           desglose), en vez de aparecer/desaparecer de golpe. Sin key por
           selectedDay a propósito: cambiar de un día a otro con el panel ya
           abierto actualiza el contenido en el sitio, sin volver a animar
-          la entrada — solo abrir/cerrar el panel dispara la transición. */}
-      <AnimatePresence initial={false}>
+          la entrada — solo abrir/cerrar el panel dispara la transición.
+          key={monthKey_} en el AnimatePresence SÍ es necesario (bug real
+          encontrado navegando meses rápido, 2026-09-01): sin él, al
+          cambiar de mes con el panel abierto, AnimatePresence anima la
+          SALIDA del panel manteniendo su contenido congelado del mes
+          anterior (es lo que hace para poder animar algo que ya no
+          existe) — durante esa animación se veía "Día 1 de Septiembre"
+          bajo un encabezado que ya decía "Octubre". Cambiar la key fuerza
+          a remontar el propio AnimatePresence al cambiar de mes: no hay
+          nada que animar de salida, así que el contenido incorrecto nunca
+          llega a pintarse, ni un fotograma. */}
+      <AnimatePresence key={monthKey_} initial={false}>
         {selectedDay && (
         <motion.div {...panelVariants(reducedMotion)} className="mt-3 overflow-hidden rounded-md bg-gray-50">
         <div className="p-3">
