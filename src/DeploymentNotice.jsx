@@ -67,8 +67,13 @@ export default function DeploymentNotice({ userId }) {
 
   if (!loaded || !notice) return null;
 
-  const changes = Array.isArray(notice.changes) ? notice.changes : [];
-  const suggestedTests = Array.isArray(notice.suggested_tests) ? notice.suggested_tests : [];
+  const technicalChanges = Array.isArray(notice.technical_changes) && notice.technical_changes.length
+    ? notice.technical_changes
+    : (Array.isArray(notice.changes) ? notice.changes : []);
+  const functionalChanges = Array.isArray(notice.functional_changes) ? notice.functional_changes : [];
+  const steps = Array.isArray(notice.steps) && notice.steps.length
+    ? notice.steps
+    : (Array.isArray(notice.suggested_tests) ? notice.suggested_tests : []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={dismiss}>
@@ -102,45 +107,72 @@ export default function DeploymentNotice({ userId }) {
               {" · "}commit <span className="font-mono">{notice.commit_hash?.slice(0, 7)}</span>
             </p>
 
-            {changes.length > 0 && (
+            {technicalChanges.length > 0 && (
               <div className="mb-3">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Qué cambió</p>
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Cambios técnicos</p>
                 <ul className="space-y-1 text-sm text-gray-600">
-                  {changes.map((item, i) => <li key={i} className="flex gap-1.5"><span aria-hidden="true">•</span><span>{item}</span></li>)}
+                  {technicalChanges.map((item, i) => <li key={i} className="flex gap-1.5"><span aria-hidden="true">•</span><span>{item}</span></li>)}
                 </ul>
               </div>
             )}
 
-            {suggestedTests.length > 0 && (
+            {functionalChanges.length > 0 && (
               <div className="mb-3">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Pruebas sugeridas</p>
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Cambios de funcionalidad</p>
                 <ul className="space-y-1 text-sm text-gray-600">
-                  {suggestedTests.map((item, i) => <li key={i} className="flex gap-1.5"><span aria-hidden="true">•</span><span>{item}</span></li>)}
+                  {functionalChanges.map((item, i) => <li key={i} className="flex gap-1.5"><span aria-hidden="true">•</span><span>{item}</span></li>)}
                 </ul>
+              </div>
+            )}
+
+            <p className="mb-3 text-sm text-gray-600">
+              <span className="font-semibold" style={{ color: NAVY }}>Cambios de UI:</span>{" "}
+              {notice.has_ui_changes ? (notice.ui_changes_note || "Sí") : "No"}
+            </p>
+
+            {steps.length > 0 && (
+              <div className="mb-3">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Qué probar / qué hacer</p>
+                <ol className="space-y-1 text-sm text-gray-600">
+                  {steps.map((item, i) => <li key={i} className="flex gap-1.5"><span aria-hidden="true">{i + 1}.</span><span>{item}</span></li>)}
+                </ol>
               </div>
             )}
 
             <p className="mb-3 text-xs text-gray-500">
               Tests: {notice.tests_status || "no reportado"} · Build: {notice.build_status || "no reportado"}
             </p>
+
+            <div className="mb-3 space-y-2">
+              {notice.preview_url ? (
+                <a
+                  href={notice.preview_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 text-sm font-medium text-gray-600"
+                >
+                  Preview del commit <ExternalLink size={14} aria-hidden="true" />
+                </a>
+              ) : (
+                <p className="text-center text-xs text-gray-400">Preview del commit: sin preview todavía</p>
+              )}
+              {notice.integration_preview_url ? (
+                <a
+                  href={notice.integration_preview_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 text-sm font-medium text-gray-600"
+                >
+                  Preview integrada (nightjob) <ExternalLink size={14} aria-hidden="true" />
+                </a>
+              ) : (
+                <p className="text-center text-xs text-gray-400">Preview integrada: sin preview todavía</p>
+              )}
+            </div>
           </motion.div>
         </AnimatePresence>
 
         <div className="flex gap-2 border-t border-gray-100 p-3">
-          {notice.preview_url ? (
-            <a
-              href={notice.preview_url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md border border-gray-200 text-sm font-medium text-gray-600"
-            >
-              Ver preview <ExternalLink size={14} aria-hidden="true" />
-            </a>
-          ) : (
-            <span className="flex min-h-11 flex-1 items-center justify-center text-center text-xs text-gray-400">
-              Sin preview todavía
-            </span>
-          )}
           <button
             onClick={dismiss}
             className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-semibold text-white"

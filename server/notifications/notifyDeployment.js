@@ -81,9 +81,15 @@ export async function handleNotifyDeployment({ method, headers, body }) {
       summary,
       changes: asStringArray(input.changes),
       suggested_tests: asStringArray(input.suggested_tests),
+      technical_changes: asStringArray(input.technical_changes),
+      functional_changes: asStringArray(input.functional_changes),
+      has_ui_changes: Boolean(input.has_ui_changes),
+      ui_changes_note: input.ui_changes_note || null,
+      steps: asStringArray(input.steps),
       tests_status: input.tests_status || null,
       build_status: input.build_status || null,
       preview_url: input.preview_url || null,
+      integration_preview_url: input.integration_preview_url || null,
     })
     .select()
     .single();

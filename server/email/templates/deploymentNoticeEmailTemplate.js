@@ -2,11 +2,15 @@
 // mismo sistema visual (tabla + CSS inline, colores Ocean Flow) que
 // activationEmailTemplate.js, pero forma de contenido distinta a propósito:
 // no es un CTA de "un solo uso" hacia un enlace de recuperación, es un
-// resumen de lo que cambió en un commit — lista de cambios, pruebas
-// sugeridas y (si existe ya) un botón hacia la Preview URL de Vercel. Por
-// eso vive en su propio fichero en vez de forzarlo dentro de
-// ACTIVATION_EMAIL_COPY, cuya forma (actionLink/ctaLabel/securityNote/
-// expiryNote únicos) no encaja con "lista de cambios + lista de pruebas".
+// resumen de lo que cambió en un commit. Por eso vive en su propio fichero
+// en vez de forzarlo dentro de ACTIVATION_EMAIL_COPY, cuya forma
+// (actionLink/ctaLabel/securityNote/expiryNote únicos) no encaja aquí.
+//
+// Formato ampliado 2026-09-01 (encargo explícito): separa cambios técnicos
+// de cambios de funcionalidad, confirma si hay cambios de UI, da un paso a
+// paso de qué probar/hacer, y distingue la preview de SOLO la rama del
+// bloque de la preview YA INTEGRADA en nightjob-2026.08.31 — dos URLs
+// distintas, no una.
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => ({
@@ -21,17 +25,42 @@ function renderList(items) {
     .join("")}</ul>`;
 }
 
-export function renderDeploymentNoticeEmailHtml({ notice }) {
-  const { summary, changes = [], suggested_tests: suggestedTests = [], commit_hash: commitHash, branch, tests_status: testsStatus, build_status: buildStatus, preview_url: previewUrl } = notice;
-  const shortHash = commitHash ? commitHash.slice(0, 7) : "";
+function renderSteps(items) {
+  if (!items || items.length === 0) return "";
+  return `<ol style="margin:0 0 20px 0;padding:0 0 0 20px;">${items
+    .map((item) => `<li style="font-size:13.5px;line-height:1.6;color:#374151;margin-bottom:6px;">${escapeHtml(item)}</li>`)
+    .join("")}</ol>`;
+}
 
-  const previewButton = previewUrl
+function renderSection(title, html) {
+  if (!html) return "";
+  return `<tr><td style="padding:0 28px;"><p style="margin:0 0 6px 0;font-size:12px;font-weight:700;color:#0F172A;text-transform:uppercase;letter-spacing:0.02em;">${title}</p>${html}</td></tr>`;
+}
+
+function renderPreviewButton(label, url) {
+  return url
     ? `<tr><td style="padding:4px 28px 0 28px;text-align:center;">
-        <a href="${escapeHtml(previewUrl)}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;background-color:#0F766E;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 24px;border-radius:8px;">Ver preview</a>
+        <a href="${escapeHtml(url)}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;background-color:#0F766E;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:8px;margin-bottom:8px;">${escapeHtml(label)}</a>
       </td></tr>`
     : `<tr><td style="padding:4px 28px 0 28px;">
-        <p style="margin:0;font-size:12.5px;line-height:1.6;color:#9CA3AF;text-align:center;">Todavía no hay Preview Deployment para esta rama.</p>
+        <p style="margin:0 0 8px 0;font-size:12.5px;line-height:1.6;color:#9CA3AF;text-align:center;">${escapeHtml(label)}: todavía no hay Preview Deployment.</p>
       </td></tr>`;
+}
+
+export function renderDeploymentNoticeEmailHtml({ notice }) {
+  const {
+    summary, commit_hash: commitHash, branch,
+    technical_changes: technicalChanges = [], functional_changes: functionalChanges = [],
+    has_ui_changes: hasUiChanges, ui_changes_note: uiChangesNote,
+    steps = [], tests_status: testsStatus, build_status: buildStatus,
+    preview_url: previewUrl, integration_preview_url: integrationPreviewUrl,
+    // legado — solo si el aviso no usa todavía los campos nuevos
+    changes = [], suggested_tests: suggestedTests = [],
+  } = notice;
+  const shortHash = commitHash ? commitHash.slice(0, 7) : "";
+  const uiLine = hasUiChanges
+    ? `Sí${uiChangesNote ? ` — ${uiChangesNote}` : ""}`
+    : "No";
 
   return `<!doctype html>
 <html>
@@ -53,14 +82,21 @@ export function renderDeploymentNoticeEmailHtml({ notice }) {
                 <p style="margin:0 0 20px 0;font-size:14px;line-height:1.6;color:#374151;">${escapeHtml(summary)}</p>
               </td>
             </tr>
-            ${changes.length ? `<tr><td style="padding:0 28px;"><p style="margin:0 0 6px 0;font-size:12px;font-weight:700;color:#0F172A;text-transform:uppercase;letter-spacing:0.02em;">Qué cambió</p>${renderList(changes)}</td></tr>` : ""}
-            ${suggestedTests.length ? `<tr><td style="padding:0 28px;"><p style="margin:0 0 6px 0;font-size:12px;font-weight:700;color:#0F172A;text-transform:uppercase;letter-spacing:0.02em;">Pruebas sugeridas</p>${renderList(suggestedTests)}</td></tr>` : ""}
+            ${renderSection("Cambios técnicos", renderList(technicalChanges.length ? technicalChanges : changes))}
+            ${renderSection("Cambios de funcionalidad", renderList(functionalChanges))}
             <tr>
-              <td style="padding:0 28px 0 28px;">
-                <p style="margin:0;font-size:12px;line-height:1.6;color:#6B7280;">Tests: ${escapeHtml(testsStatus || "no reportado")} &middot; Build: ${escapeHtml(buildStatus || "no reportado")}</p>
+              <td style="padding:0 28px;">
+                <p style="margin:0 0 16px 0;font-size:13.5px;line-height:1.6;color:#374151;"><strong>Cambios de UI:</strong> ${escapeHtml(uiLine)}</p>
               </td>
             </tr>
-            ${previewButton}
+            ${renderSection("Qué probar / qué hacer", renderSteps(steps.length ? steps : suggestedTests))}
+            <tr>
+              <td style="padding:0 28px 0 28px;">
+                <p style="margin:0 0 16px 0;font-size:12px;line-height:1.6;color:#6B7280;">Tests: ${escapeHtml(testsStatus || "no reportado")} &middot; Build: ${escapeHtml(buildStatus || "no reportado")}</p>
+              </td>
+            </tr>
+            ${renderPreviewButton("Ver preview del commit (solo esta rama)", previewUrl)}
+            ${renderPreviewButton("Ver preview integrada (nightjob)", integrationPreviewUrl)}
             <tr>
               <td style="padding:24px 28px 32px 28px;">
                 <p style="margin:0;font-size:11.5px;line-height:1.5;color:#9CA3AF;text-align:center;">Solo lo reciben las cuentas superadmin de Ocean Flow.</p>
@@ -76,16 +112,28 @@ export function renderDeploymentNoticeEmailHtml({ notice }) {
 }
 
 export function renderDeploymentNoticeEmailText({ notice }) {
-  const { summary, changes = [], suggested_tests: suggestedTests = [], commit_hash: commitHash, branch, tests_status: testsStatus, build_status: buildStatus, preview_url: previewUrl } = notice;
+  const {
+    summary, commit_hash: commitHash, branch,
+    technical_changes: technicalChanges = [], functional_changes: functionalChanges = [],
+    has_ui_changes: hasUiChanges, ui_changes_note: uiChangesNote,
+    steps = [], tests_status: testsStatus, build_status: buildStatus,
+    preview_url: previewUrl, integration_preview_url: integrationPreviewUrl,
+    changes = [], suggested_tests: suggestedTests = [],
+  } = notice;
   const lines = [
     `Nuevo aviso de despliegue — rama ${branch}, commit ${commitHash ? commitHash.slice(0, 7) : ""}`,
     "",
     summary,
     "",
   ];
-  if (changes.length) lines.push("Qué cambió:", ...changes.map((c) => `- ${c}`), "");
-  if (suggestedTests.length) lines.push("Pruebas sugeridas:", ...suggestedTests.map((t) => `- ${t}`), "");
+  const tech = technicalChanges.length ? technicalChanges : changes;
+  if (tech.length) lines.push("Cambios técnicos:", ...tech.map((c) => `- ${c}`), "");
+  if (functionalChanges.length) lines.push("Cambios de funcionalidad:", ...functionalChanges.map((c) => `- ${c}`), "");
+  lines.push(`Cambios de UI: ${hasUiChanges ? `Sí${uiChangesNote ? ` — ${uiChangesNote}` : ""}` : "No"}`, "");
+  const stepList = steps.length ? steps : suggestedTests;
+  if (stepList.length) lines.push("Qué probar / qué hacer:", ...stepList.map((s, i) => `${i + 1}. ${s}`), "");
   lines.push(`Tests: ${testsStatus || "no reportado"} · Build: ${buildStatus || "no reportado"}`);
-  lines.push(previewUrl ? `Preview: ${previewUrl}` : "Todavía no hay Preview Deployment para esta rama.");
+  lines.push(previewUrl ? `Preview del commit: ${previewUrl}` : "Preview del commit: todavía no hay Preview Deployment.");
+  lines.push(integrationPreviewUrl ? `Preview integrada (nightjob): ${integrationPreviewUrl}` : "Preview integrada (nightjob): todavía no hay Preview Deployment.");
   return lines.join("\n");
 }

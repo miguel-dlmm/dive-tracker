@@ -61,7 +61,7 @@ it("muestra el aviso más reciente no visto, con resumen, cambios, pruebas suger
   expect(await screen.findByText("Resumen del aviso A")).toBeInTheDocument();
   expect(screen.getByText("Cambio 1")).toBeInTheDocument();
   expect(screen.getByText("Probar X")).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: /Ver preview/ })).toHaveAttribute("href", "https://preview.example");
+  expect(screen.getByRole("link", { name: /Preview del commit/ })).toHaveAttribute("href", "https://preview.example");
 });
 
 it("salta el aviso ya visto y muestra el siguiente no visto", async () => {
@@ -69,8 +69,8 @@ it("salta el aviso ya visto y muestra el siguiente no visto", async () => {
   render(<DeploymentNotice userId={USER_ID} />);
 
   expect(await screen.findByText("Resumen del aviso B")).toBeInTheDocument();
-  expect(screen.queryByRole("link", { name: /Ver preview/ })).not.toBeInTheDocument();
-  expect(screen.getByText("Sin preview todavía")).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /Preview del commit/ })).not.toBeInTheDocument();
+  expect(screen.getByText("Preview del commit: sin preview todavía")).toBeInTheDocument();
 });
 
 it("al pulsar 'Entendido', marca el aviso como visto para este usuario y lo cierra", async () => {
