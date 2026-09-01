@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Lightbulb, CheckCircle2 } from "lucide-react";
 import { TEAL } from "../App";
 import HelpStep from "./HelpStep";
@@ -15,22 +16,23 @@ const sectionLabelCls = "mb-1 text-xs font-semibold uppercase tracking-wide text
 // article: { summary, whatYouCanDo, whenToUseIt, steps, tips, expectedResult }
 // accentColor: color heredado de la sección (nav_sections)
 export default function HelpArticleBody({ article, accentColor }) {
+  const { t } = useTranslation("help");
   return (
     <div className="space-y-3">
       <p className="text-sm text-gray-500">{article.summary}</p>
 
       <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <h3 className={sectionLabelCls}>Qué puedes hacer</h3>
+        <h3 className={sectionLabelCls}>{t("sections.whatYouCanDo")}</h3>
         <p className="text-sm text-gray-700">{article.whatYouCanDo}</p>
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <h3 className={sectionLabelCls}>Cuándo usarlo</h3>
+        <h3 className={sectionLabelCls}>{t("sections.whenToUseIt")}</h3>
         <p className="text-sm text-gray-700">{article.whenToUseIt}</p>
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Pasos</h3>
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("sections.steps")}</h3>
         <ol className="space-y-3">
           {article.steps.map((step, i) => (
             <HelpStep
@@ -46,7 +48,7 @@ export default function HelpArticleBody({ article, accentColor }) {
       {article.tips?.length > 0 && (
         <div className="rounded-lg p-4" style={{ backgroundColor: "#F0FDFA" }}>
           <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: TEAL }}>
-            <Lightbulb size={14} aria-hidden="true" /> Consejos y errores habituales
+            <Lightbulb size={14} aria-hidden="true" /> {t("sections.tips")}
           </h3>
           <ul className="space-y-1.5">
             {article.tips.map((tip, i) => (
@@ -59,7 +61,7 @@ export default function HelpArticleBody({ article, accentColor }) {
       <div className="flex items-start gap-2 rounded-lg border p-4" style={{ borderColor: accentColor, backgroundColor: "#FAFAFA" }}>
         <CheckCircle2 size={18} className="mt-0.5 shrink-0" style={{ color: accentColor }} aria-hidden="true" />
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">Resultado esperado</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("sections.expectedResult")}</h3>
           <p className="mt-0.5 text-sm text-gray-700">{article.expectedResult}</p>
         </div>
       </div>

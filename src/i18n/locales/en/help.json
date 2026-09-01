@@ -1,1 +1,191 @@
-{}
+{
+  "emptyState": "No help content yet.",
+  "groupLabels": {
+    "quiero": "I want to...",
+    "funcionalidades": "Features"
+  },
+  "sections": {
+    "whatYouCanDo": "What you can do",
+    "whenToUseIt": "When to use it",
+    "steps": "Steps",
+    "tips": "Tips and common mistakes",
+    "expectedResult": "Expected result"
+  },
+  "categories": {
+    "bienvenida": { "label": "Getting started", "description": "What Ocean Flow is and how it's organised" },
+    "quiero-configurar": { "label": "Set up your app", "description": "Schools, courses, rates and catalogues" },
+    "quiero-crear-movimiento": { "label": "Log an entry", "description": "A course taught, a commission, or an adjustment" },
+    "quiero-cobrar": { "label": "Collect pending entries", "description": "Mark as collected, one by one or all at once" },
+    "quiero-consultar-generado": { "label": "Check how much you've earned", "description": "At a glance, or in detail by period" },
+    "func-mi-trabajo": { "label": "My work", "description": "Create, edit, collect and delete entries" },
+    "func-resumen": { "label": "Summary", "description": "Quick glance and depth on demand" },
+    "func-configuracion": { "label": "Settings", "description": "The menu, and what's in each section" },
+    "func-perfil": { "label": "My profile", "description": "Avatar, details, favourite currency and password" },
+    "func-filtros": { "label": "Filters and search", "description": "The same pattern across the whole app" }
+  },
+  "articles": {
+    "primeros-pasos": {
+      "title": "Getting started with Ocean Flow",
+      "summary": "A quick tour of the three main screens before you log your first entry.",
+      "whatYouCanDo": "Ocean Flow helps you keep track of your income as a freelance instructor: the classes you teach, the commissions you earn from referred clients, and the money adjustments with other instructors — all under one concept, \"entry\".",
+      "whenToUseIt": "The first time you open the app, or whenever you want a reminder of what each screen is for.",
+      "steps": [
+        { "text": "Home: how much you have pending to collect, a widget with your oldest debts, the month's calendar, and a shortcut to create an entry.", "imageAlt": "Home screen with the total pending to collect and the month's calendar" },
+        "My work: the full list of your entries (courses, commissions and adjustments) — create, edit, collect or delete them.",
+        "Summary: your balance for whichever period you pick, with the option to drill down by school, by course, or by commissions."
+      ],
+      "tips": [
+        "The natural order for a new account is: 1) Set up your app (schools, courses, rates), 2) Log one entry of each type you use, 3) Collect — one at a time as you get paid, or all at once if you check in periodically. Each of these three steps has its own guide in \"I want to...\" below."
+      ],
+      "expectedResult": "You know which screen to use for each situation, and in what order, so the app is ready for your day-to-day."
+    },
+    "configurar-app": {
+      "title": "Set up your app",
+      "summary": "Nothing is fixed in the app: schools, courses, rates and payment catalogues are all edited from Settings.",
+      "whatYouCanDo": "Settings is organised into two blocks: what any user maintains (Schools, Courses, Rates) and, if you have an admin role, an \"Administration\" block with catalogues for the whole app (payment types and statuses, currencies, colours, users).",
+      "whenToUseIt": "Before logging your first entry, and afterwards every time you start working with a new school or course, or change a price.",
+      "steps": [
+        { "text": "Go to Settings (gear icon, top right) and tap the section you need.", "imageAlt": "Settings menu with the Schools, Courses and Rates sections" },
+        "Add your Schools and Courses first — a Rate always links a school to a course, so both need to exist beforehand.",
+        "Inside a section, tap the floating \"+\" button to create one; \"‹ Settings\" takes you back to the menu.",
+        "Tap a row's colour to customise it, and the star to mark it as a favourite."
+      ],
+      "tips": [
+        "A school, course or currency marked as a favourite comes preselected in creation forms.",
+        "Closing Settings (the \"✕\" in the header) always takes you back to the tab you came in from."
+      ],
+      "expectedResult": "The new school, course or rate is available right away when you create an entry — with this done, you're ready to move on to \"Log an entry\"."
+    },
+    "crear-movimiento": {
+      "title": "Create an entry",
+      "summary": "The same form covers a course taught, a commission, or an adjustment with a colleague — each type has its own fields.",
+      "whatYouCanDo": "\"Add entry\" is the only creation entry point in the whole app — the form itself lets you pick the type, no need to find a different button for each case.",
+      "whenToUseIt": "Right after teaching a class, when closing a commission, or when you agree an adjustment with another instructor.",
+      "steps": [
+        "Tap \"Add entry\": the \"+\" button on the \"Pending to collect\" card in Home, the same button by tapping a day on Home's calendar, or the floating \"+\" in My work.",
+        { "text": "At the top of the form, choose the type: Course taught, Commission, or Course adjustment.", "imageAlt": "Entry creation sheet with the type selector: Course taught, Commission or Course adjustment" },
+        "Course taught: school, course, date and number of people — the course rate calculates the amount for you.",
+        "Commission: same as a course, but for a client you referred who trains with another instructor — it uses its own commission rate, not the course one.",
+        "Course adjustment: doesn't depend on any rate — you enter the amount yourself (positive if you're owed, negative if you owe) and which colleague it's with.",
+        "Save. If you opened the form from Home, you'll see the entry in My work right after saving."
+      ],
+      "tips": [
+        "If there isn't a rate yet for that school + course, the form lets you create one on the fly without leaving the screen (\"Add rate\") — this only applies to Course and Commission, an Adjustment never needs a rate.",
+        "Cancelling or closing the form without saving creates nothing — you can open and close it freely without worrying about leaving half-finished entries."
+      ],
+      "expectedResult": "The entry shows up in My work, under \"Pending\", and gets added to \"Earned this month\" on Home (except for an adjustment against you, which doesn't count as earned)."
+    },
+    "cobrar-movimientos": {
+      "title": "Mark entries as collected",
+      "summary": "Keep track of what you have pending to collect and update the status as soon as you get paid — one at a time, or all at once.",
+      "whatYouCanDo": "Every entry has a status (pending or collected). Changing it is instant, a single tap, with the option to undo if you make a mistake. You can do it entry by entry, or all at once across the whole visible list.",
+      "whenToUseIt": "As soon as a school or a colleague pays you (one at a time), or all at once when you check in periodically and several payments have already come through.",
+      "steps": [
+        { "text": "To collect one: go to My work (the \"Pending\" tab opens by default) and tap \"Confirm payment\" on its row (or \"Mark settled\" if it's an adjustment against you).", "imageAlt": "List of pending entries in My work with the Confirm payment button" },
+        "The \"Pending to collect\" card on Home takes you straight to that same tab — one tap from the main screen.",
+        "To collect several at once: in My work, use \"Collect all\" above the list — it affects everything currently visible.",
+        "Before \"Collect all\", use \"Filter\" (by date, school, course or type) to narrow the list down to exactly what you want to collect in one go."
+      ],
+      "tips": [
+        "A toast with \"Undo\" appears after every change — you have a few seconds to revert it without having to find the entry again.",
+        "\"Collect all\" asks for confirmation before applying — there's no \"Undo\" for the whole batch, unlike collecting one at a time."
+      ],
+      "expectedResult": "The entry (or all the filtered ones) moves to the \"Collected\" tab and its amount stops counting toward \"Pending to collect\" on Home."
+    },
+    "consultar-generado": {
+      "title": "Check how much you've earned",
+      "summary": "A quick glance on Home, or the full detail for whichever period you choose in Summary.",
+      "whatYouCanDo": "\"Earned this month\" on Home gives you the current month's figure, with a hint of whether you're doing better or worse than last month, without leaving the main screen. Tapping it takes you straight to Summary, which goes further: any period, compared with the previous one, with the option to drill down by school or by course.",
+      "whenToUseIt": "Home, for a quick glance when you open the app. Summary, when you want a period other than the current month or want to understand where the money is coming from.",
+      "steps": [
+        "On Home, the \"Earned this month\" card is always visible, no need to tap anything — and tapping it takes you to Summary to dig deeper.",
+        { "text": "In Summary, choose the granularity and period in the control at the top (monthly, quarterly, half-yearly, yearly, or a custom range) and, if you want, the type (Course, Commission or Adjustment).", "imageAlt": "Summary screen with the monthly trend strip and the period total" },
+        "The main card shows the period's total and how much it's changed compared with the previous period.",
+        "Tap \"By school\", \"By course\", \"Commissions\", \"Course adjustments\" or \"Calendar\" to drill down — each one only expands when you ask for it."
+      ],
+      "tips": [
+        "Inside \"By school\", tap a school to see its breakdown by course right there, without leaving the card.",
+        "The comparison with the previous period doesn't show up if you mix more than one currency in the same period — this avoids showing a calculation that wouldn't be accurate."
+      ],
+      "expectedResult": "You have a balance figure for the period you chose, with the detail of where each bit of income comes from if you need it."
+    },
+    "mi-trabajo-referencia": {
+      "title": "My work, at a glance",
+      "summary": "The full list of your entries — courses, commissions and adjustments — with their actions.",
+      "whatYouCanDo": "My work unifies what used to be three separate screens (Log, Commissions and Colleagues) into a single place, grouped by collection status.",
+      "whenToUseIt": "This is your day-to-day work screen — create, review, collect and edit entries.",
+      "steps": [
+        "Pending / Collected: the two tabs at the top, with the pending total on the card above them.",
+        "\"Filter\": narrows the list by period, school, course or entry type.",
+        "On each row: \"Confirm payment\"/\"Mark pending\" to change the status, and the \"⋯\" menu for Edit or Delete.",
+        "The floating \"+\" button opens the same creation form as the rest of the app."
+      ],
+      "tips": [
+        "\"Collect all\"/\"Mark all pending\" act on the visible list — with filters active, they only affect what's filtered.",
+        "Deleting asks for confirmation and animates the row leaving, so you see exactly what you've deleted."
+      ],
+      "expectedResult": "You can find and update any entry without leaving this screen."
+    },
+    "resumen-referencia": {
+      "title": "Summary, at a glance",
+      "summary": "One headline total at the top; everything else only expands if you ask for it.",
+      "whatYouCanDo": "Summary combines a quick answer (the period's total, compared with the previous one) with collapsible cards for anyone who wants to dig deeper.",
+      "whenToUseIt": "To understand how a period is going, compare schools or courses, or review commissions and adjustments with colleagues.",
+      "steps": [
+        "Choose a granularity (monthly, quarterly, half-yearly, yearly or custom); the period strip below scrolls on its own — tap any period to re-centre on it.",
+        "Filter by type (Total, Course, Commission or Adjustment) with the segmented control below.",
+        "The main card shows the total and, when it makes sense to calculate it, the comparison with the previous period.",
+        "Tap any card (By school, By course, Commissions, Course adjustments, Calendar) to expand it."
+      ],
+      "tips": [
+        "With more than one school, \"By school\" starts expanded, since it's the most common question after the total; with just one school, that card doesn't appear at all (there'd be nothing to compare), and \"By course\" starts expanded instead. The rest always start collapsed.",
+        "Inside \"By school\", tap a school to see its breakdown by course without leaving the card."
+      ],
+      "expectedResult": "You get the figure you were looking for, with as much or as little detail as you asked for."
+    },
+    "configuracion-referencia": {
+      "title": "Settings, at a glance",
+      "summary": "The menu where you maintain your own base data: schools, courses and rates.",
+      "whatYouCanDo": "Schools, Courses and Rates — the catalogues you use when logging an entry in My work.",
+      "whenToUseIt": "To keep your base data up to date: adding a new school, a new course, or adjusting a rate.",
+      "steps": [
+        "Tap any row in the menu to enter that section; \"‹ Settings\" takes you back to the menu.",
+        "Schools and Courses are created with the floating \"+\" button, same as in My work.",
+        "Rates shows Course and Commission in a single list (the type is chosen as a filter, or when creating one, right inside the sheet) — same visual pattern as My work."
+      ],
+      "expectedResult": "You can find any catalogue or setting without having to remember which tab it used to live in."
+    },
+    "perfil-referencia": {
+      "title": "My profile, at a glance",
+      "summary": "Your avatar, your details, your favourite currency and your password — all in one place, reachable from your name in the header.",
+      "whatYouCanDo": "Tap your avatar or your nickname, top right on any screen, to go into My profile: change your avatar (icon and colour), edit your first name/last name/nickname, choose your favourite currency, change your password, and delete your account if you ever need to.",
+      "whenToUseIt": "Whenever you want to personalise your account, fix a detail, or change your password without having to sign out and go through \"forgot my password\".",
+      "steps": [
+        "Tap the avatar/nickname in the header to go into My profile.",
+        "The pencil over the avatar opens the icon and colour picker — the change saves as soon as you pick it, no separate \"Save\" button.",
+        "\"Edit\" in Personal details opens first name, last name and nickname; the nickname can't contain \"@\" or match another account's.",
+        "Favourite currency is used as a fallback in Course adjustment when there's no rate to determine it — every other entry always uses its own rate's currency."
+      ],
+      "tips": [
+        "Changing your password here doesn't ask for your current one — since you're already inside the app, the active session is considered enough.",
+        "Deleting your account is permanent and erases all your data — to confirm it you have to type the word CANCEL, so nothing gets deleted by an accidental tap."
+      ],
+      "expectedResult": "Your account reflects the avatar, details and currency you choose, and you can change your password whenever you want without leaving the app."
+    },
+    "filtros-referencia": {
+      "title": "Filter and search",
+      "summary": "My work, Rates and the Settings catalogues all share the same filter pattern.",
+      "whatYouCanDo": "A \"Filter\" button (showing the number of active filters) expands a panel with the fields available — period, school, course, type... — instead of always showing them above the list.",
+      "whenToUseIt": "When the list has too many items to review them all at a glance.",
+      "steps": [
+        "Tap \"Filter\" to expand the panel of fields available on that screen.",
+        "Choose one or several — the course filter supports multiple selection.",
+        "\"Clear filters\" appears as soon as at least one is active."
+      ],
+      "tips": [
+        "The catalogue search (Courses, Currencies) filters as you type, ignoring case and accents."
+      ],
+      "expectedResult": "The list shows only what you're interested in, without losing sight of how many filters you have active."
+    }
+  }
+}

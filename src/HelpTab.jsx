@@ -1,10 +1,34 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import * as Icons from "lucide-react";
 import { TEAL } from "./App";
 import { ExpandableCard } from "./shared";
 import { useSwipeBack } from "./motion";
 import { HELP_CATEGORIES } from "./help/content";
 import HelpArticleBody from "./help/HelpArticleBody";
+
+// Combina el texto traducido (namespace "help", claves `articles.<id>.*`)
+// con los metadatos no traducibles de content.js (`stepImages`: índice de
+// paso -> src de la captura) para dar a HelpArticleBody el mismo shape de
+// `article` que tenía antes de la Fase 2 (steps: string | { text, image }).
+function resolveArticle(articleMeta, t) {
+  const base = `articles.${articleMeta.id}`;
+  const steps = t(`${base}.steps`, { returnObjects: true });
+  const tips = t(`${base}.tips`, { returnObjects: true, defaultValue: [] });
+  return {
+    title: t(`${base}.title`),
+    summary: t(`${base}.summary`),
+    whatYouCanDo: t(`${base}.whatYouCanDo`),
+    whenToUseIt: t(`${base}.whenToUseIt`),
+    steps: steps.map((step, i) => {
+      const src = articleMeta.stepImages?.[i];
+      if (typeof step === "string") return src ? { text: step, image: { src, alt: "" } } : step;
+      return src ? { text: step.text, image: { src, alt: step.imageAlt } } : step.text;
+    }),
+    tips,
+    expectedResult: t(`${base}.expectedResult`),
+  };
+}
 
 // Rediseño 2026-08-30 (ver docs/ADR/0011-rediseno-ayuda.md, addendum "de
 // índice a guía viva" — feedback explícito: "un primer nivel y, cuando
@@ -42,7 +66,9 @@ import HelpArticleBody from "./help/HelpArticleBody";
 // onClose: cierra Ayuda entera (mismo handler que la "X" de la cabecera,
 // ver App.jsx) — lo dispara el gesto de "atrás" cuando no hay ninguna
 // categoría desplegada (ver backProps más abajo).
-const GROUP_LABELS = { quiero: "Quiero...", funcionalidades: "Funcionalidades" };
+// Etiqueta de grupo resuelta en render vía t(`groupLabels.${group}`)
+// (namespace "help") — GROUP_LABELS ya no guarda texto, solo qué grupos
+// existen y en qué orden.
 const GROUP_ORDER = [undefined, "quiero", "funcionalidades"];
 
 // Categoría desplegada, persistida (feedback explícito 2026-08-30: "recargar
@@ -61,6 +87,7 @@ export function clearStoredHelpOpen() {
 }
 
 export default function HelpTab({ navSections, onClose }) {
+  const { t } = useTranslation("help");
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const [openId, setOpenIdState] = useState(readStoredOpen);
   const setOpenId = (id) => {
@@ -80,7 +107,7 @@ export default function HelpTab({ navSections, onClose }) {
   const categories = HELP_CATEGORIES.filter((c) => c.articles.length > 0);
 
   if (categories.length === 0) {
-    return <p className="px-3 py-10 text-center text-sm text-gray-400">Todavía no hay contenido de ayuda.</p>;
+    return <p className="px-3 py-10 text-center text-sm text-gray-400">{t("emptyState")}</p>;
   }
 
   return (
@@ -90,21 +117,21 @@ export default function HelpTab({ navSections, onClose }) {
         if (rows.length === 0) return null;
         return (
           <div key={group || "sin-grupo"}>
-            {GROUP_LABELS[group] && (
+            {group && (
               <h2 className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                {GROUP_LABELS[group]}
+                {t(`groupLabels.${group}`)}
               </h2>
             )}
             <div className="space-y-2">
               {rows.map((category) => {
                 const Icon = Icons[category.icon] || Icons.HelpCircle;
                 const color = sectionColor(category.sectionKey);
-                const article = category.articles[0];
+                const article = resolveArticle(category.articles[0], t);
                 return (
                   <ExpandableCard
                     key={category.id}
-                    title={category.label}
-                    subtitle={category.description}
+                    title={t(`categories.${category.id}.label`)}
+                    subtitle={t(`categories.${category.id}.description`)}
                     icon={Icon}
                     iconColor={color}
                     open={openId === category.id}
