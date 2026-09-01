@@ -249,13 +249,38 @@ describe("privacidad — eliminar cuenta", () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
-  it("al confirmar, llama a /api/delete-own-account con el token de sesión y avisa al padre", async () => {
+  // Release V1, Fase 1 (encargo explícito): tras confirmar, un segundo
+  // paso exige escribir la palabra CANCELAR antes de poder borrar de
+  // verdad — nunca basta con un único toque de confirmación.
+  it("tras confirmar, pide escribir CANCELAR y el botón de borrar sigue deshabilitado hasta que coincide exactamente", async () => {
+    const user = userEvent.setup();
+    renderProfile();
+
+    await user.click(screen.getByRole("button", { name: /Eliminar mi cuenta/ }));
+    await user.click(within(screen.getByRole("alertdialog")).getByText("Continuar"));
+
+    const deleteButton = screen.getByRole("button", { name: /^Eliminar cuenta$/ });
+    expect(deleteButton).toBeDisabled();
+
+    const input = screen.getByLabelText(/Escribe CANCELAR/i);
+    await user.type(input, "cancelar");
+    expect(deleteButton).toBeDisabled();
+
+    await user.clear(input);
+    await user.type(input, "CANCELAR");
+    expect(deleteButton).not.toBeDisabled();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("al escribir CANCELAR y confirmar, llama a /api/delete-own-account con el token de sesión y avisa al padre", async () => {
     const user = userEvent.setup();
     global.fetch.mockResolvedValue({ ok: true, json: async () => ({ deleted: true }) });
     const { onAccountDeleted } = renderProfile();
 
     await user.click(screen.getByRole("button", { name: /Eliminar mi cuenta/ }));
-    await user.click(within(screen.getByRole("alertdialog")).getByText("Eliminar cuenta"));
+    await user.click(within(screen.getByRole("alertdialog")).getByText("Continuar"));
+    await user.type(screen.getByLabelText(/Escribe CANCELAR/i), "CANCELAR");
+    await user.click(screen.getByRole("button", { name: /^Eliminar cuenta$/ }));
 
     await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/delete-own-account", expect.objectContaining({
       method: "POST",
@@ -270,7 +295,9 @@ describe("privacidad — eliminar cuenta", () => {
     const { onAccountDeleted } = renderProfile();
 
     await user.click(screen.getByRole("button", { name: /Eliminar mi cuenta/ }));
-    await user.click(within(screen.getByRole("alertdialog")).getByText("Eliminar cuenta"));
+    await user.click(within(screen.getByRole("alertdialog")).getByText("Continuar"));
+    await user.type(screen.getByLabelText(/Escribe CANCELAR/i), "CANCELAR");
+    await user.click(screen.getByRole("button", { name: /^Eliminar cuenta$/ }));
 
     expect(await screen.findByText("Una cuenta superadmin no puede eliminarse a sí misma desde aquí.")).toBeInTheDocument();
     expect(onAccountDeleted).not.toHaveBeenCalled();

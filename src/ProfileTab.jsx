@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Pencil, Eye, EyeOff, Loader2, Trash2, Check } from "lucide-react";
 import { NAVY, TEAL, CORAL } from "./colors";
-import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, getFavoriteCurrency, setFavoriteCurrency } from "./shared";
+import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
 import { AVATAR_ICONS, AVATAR_COLORS, resolveAvatar } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
 
@@ -357,11 +357,29 @@ function PasswordSection() {
   );
 }
 
+// Palabra que hay que escribir en el segundo paso para confirmar el
+// borrado (Release V1, Fase 1 — encargo explícito del usuario). Segundo
+// paso separado del ConfirmDialog habitual (en vez de añadirle un campo de
+// texto) a propósito: ConfirmDialog es un componente compartido por todo
+// tipo de confirmaciones de borrado sencillas (una fila de una lista) y
+// esta es la única eliminación de la app con un paso de más — meterle esta
+// lógica encarecería el componente compartido para un único consumidor
+// real. El botón para abortar este segundo paso dice "Volver", no
+// "Cancelar": con la palabra a escribir siendo literalmente "CANCELAR",
+// un botón "Cancelar" justo al lado sería confuso de leer rápido (regla
+// permanente de manos mojadas, CLAUDE.md).
+const DELETE_ACCOUNT_WORD = "CANCELAR";
+
 function PrivacySection({ profile, onAccountDeleted }) {
   const toast = useToast();
-  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState(null); // null | "confirm" | "type-word"
+  const [wordInput, setWordInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const reset = () => { setStep(null); setWordInput(""); setError(""); };
+  useEscapeClose(step === "type-word", loading ? () => {} : reset);
+  useBodyScrollLock(step === "type-word");
 
   const handleDelete = async () => {
     setLoading(true);
@@ -392,21 +410,61 @@ function PrivacySection({ profile, onAccountDeleted }) {
         Eliminar tu cuenta borra tu acceso y todos tus datos de Ocean Flow de forma permanente: escuelas, cursos, tarifas, registro de clases, comisiones y ajustes con compañeros. No se conserva ninguna copia. Esta acción no se puede deshacer.
       </p>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => setStep("confirm")}
         className="flex min-h-11 items-center gap-1.5 rounded-md border border-red-200 px-3 text-sm font-medium text-red-600"
       >
         <Trash2 size={14} aria-hidden="true" /> Eliminar mi cuenta
       </button>
       <ConfirmDialog
-        open={open}
+        open={step === "confirm"}
         title="¿Eliminar tu cuenta?"
         message={`Vas a eliminar la cuenta "${profile.nickname}" y todos sus datos de forma permanente. No podrás deshacer esta acción.`}
-        confirmLabel={loading ? "Eliminando…" : "Eliminar cuenta"}
-        onConfirm={handleDelete}
-        onCancel={() => { setOpen(false); setError(""); }}
-        loading={loading}
+        confirmLabel="Continuar"
+        onConfirm={() => setStep("type-word")}
+        onCancel={reset}
       />
-      {error && <p role="alert" className="mt-2 text-sm text-red-600">{error}</p>}
+      {step === "type-word" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={loading ? undefined : reset}>
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-word-title"
+            className="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="delete-word-title" className="mb-1 text-sm font-semibold text-gray-800">Última comprobación</h3>
+            <p className="mb-3 text-sm text-gray-500">
+              Escribe <strong>{DELETE_ACCOUNT_WORD}</strong> para confirmar que quieres eliminar tu cuenta de forma permanente.
+            </p>
+            <input
+              type="text"
+              value={wordInput}
+              onChange={(e) => setWordInput(e.target.value)}
+              autoFocus
+              autoCapitalize="characters"
+              autoComplete="off"
+              aria-label={`Escribe ${DELETE_ACCOUNT_WORD} para confirmar`}
+              placeholder={DELETE_ACCOUNT_WORD}
+              className={`${inputCls} mb-4 w-full`}
+            />
+            {error && <p role="alert" className="mb-3 text-sm text-red-600">{error}</p>}
+            <div className="flex justify-end gap-2">
+              <button onClick={reset} disabled={loading} className="min-h-11 rounded-md border border-gray-200 px-3.5 text-sm font-medium text-gray-600 disabled:opacity-50">
+                Volver
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={loading || wordInput !== DELETE_ACCOUNT_WORD}
+                className="flex min-h-11 items-center gap-1.5 rounded-md px-3.5 text-sm font-medium text-white disabled:opacity-50"
+                style={{ backgroundColor: CORAL }}
+              >
+                {loading && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}
+                Eliminar cuenta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </SectionCard>
   );
 }
