@@ -28,7 +28,7 @@
 | 2 | Multidioma | ✅ Hecho (2026-09-01, noche) |
 | 3 | KPIs en la home | ✅ Hecho (2026-09-01, noche) |
 | 4 | Cabecera y notificaciones | ✅ Hecho (2026-09-01/02, noche) |
-| 5 | Sistema de Training Records | ⬜ Pendiente |
+| 5 | Sistema de Training Records | 🟡 Bloqueada — necesita tu revisión (ver detalle) |
 | 6 | Slides y avisos | ⬜ Pendiente |
 | 7 | Usabilidad, carga y escalabilidad | ⬜ Pendiente |
 | 8 | Revisión visual y libro de estilo | ⬜ Pendiente |
@@ -770,10 +770,117 @@ iconos en vez de 4, "Cerrar sesión" funciona desde Mi perfil, "Ver
 qué hay de nuevo" reabre el slide correctamente, ambos en español e
 inglés, sin errores de consola.
 
-## Fase 5 — Sistema de generación de Training Records
+## Fase 5 — Sistema de generación de Training Records (🟡 en curso — bloqueada en un punto concreto, ver abajo)
 
-⬜ Pendiente — no iniciada. Recordatorio del documento maestro: en rama
-aparte, aunque se integre en Release V1.
+**Rama:** `feature/training-records` (creada desde `Release-V1`, tal como
+pedía el encargo — no se ha fusionado todavía).
+
+### ⚠️ Hallazgo importante — leer antes de continuar esta fase
+
+Al analizar los 10 PDF que estaban en la raíz del repo para diseñar el
+generador, aparecieron dos problemas de fondo que **cambian el alcance
+real de esta fase** respecto a lo que asumía el encargo original:
+
+1. **Solo 4 de las 10 plantillas son formularios PDF rellenables de
+   verdad** (tienen campos AcroForm interactivos, comprobado con
+   `pdf-lib`): **OWD** (Open Water Diver, 72 campos, 2 páginas),
+   **AOWD** (Advanced Open Water Diver, 49 campos), **SC-DD** (Deep
+   Diving, 40 campos), **SC-EAN** (Enriched Air Nitrox, 34 campos).
+   Las otras 6 — **BD** (Basic Diver), **SC-LV** (Night & Limited
+   Visibility), **SC-NV** (Navigation), **SC-PB** (Perfect Buoyancy),
+   **SC-RR** (React Right), **SC-SR** (Diver Stress & Rescue) — **no
+   tienen ningún campo de formulario**, solo texto e imágenes fijas.
+   Rellenar estas 6 por programa necesitaría un enfoque técnico
+   distinto (superponer texto en coordenadas concretas de cada
+   página, calculadas a mano por plantilla) — mucho más frágil y
+   costoso que rellenar un campo de formulario, y no construido esta
+   noche.
+2. **Los nombres de los campos de las 4 plantillas rellenables son IDs
+   opacos sin significado** (p. ej. `undefined.tr-input-23905086-2`),
+   no algo como `nombre_alumno` o `firma_instructor`. Probé un
+   enfoque de correlación por posición (extraer coordenadas de cada
+   campo con `pdf-lib` + coordenadas del texto de cada etiqueta con
+   `pdfjs-dist`, y emparejar cada campo con su etiqueta más cercana)
+   — funciona razonablemente bien para deducir una propuesta de
+   mapeo, pero **no es fiable al 100%** sin comprobación visual
+   humana: en OWD, por ejemplo, hay bloques de firma repetidos varias
+   veces en la página 2 (parece corresponder a distintas
+   combinaciones de finalización — Referral Diver, Scuba Diver,
+   Indoor Diver — el propio formulario lo menciona en sus
+   instrucciones) donde un error de mapeo pondría una firma en el
+   sitio equivocado.
+
+**Por qué no seguí adivinando el mapeo esta noche, ni siquiera con la
+autonomía del resto de fases:** un Training Record es un documento de
+certificación real, con implicación de seguridad — no es una pantalla
+más de la app donde un fallo se corrige con un segundo intento.
+Generar un PDF con datos en el campo equivocado (una fecha en el
+campo de otro alumno, un número de instructor en el campo de firma)
+sería peor que no generarlo. Es exactamente el tipo de decisión que
+CLAUDE.md pide validar humanamente antes de dar por cerrada, y que la
+regla 5 (revisión arquitectónica continua) pide comunicar en vez de
+ignorar o improvisar.
+
+**Lo que necesito de ti para desbloquear esto:**
+- Confirmar (o corregir) el mapeo campo↔significado de las 4
+  plantillas rellenables — puedo dejar preparada una vista de
+  depuración (imagen de cada página + qué campo cree el sistema que
+  es cada cosa) para que sea un vistazo rápido, no releer PDFs a mano.
+- Decidir qué hacer con las 6 plantillas sin campos: ¿vale la pena el
+  coste de mapear coordenadas a mano para todas/algunas, o se dejan
+  fuera del generador por ahora y solo se ofrecen las 4 rellenables?
+
+### Lo hecho hasta el bloqueo
+
+- Migración aditiva `0008-training-record-templates.sql` aplicada a
+  TEST (rollback documentado abajo antes de ejecutarla): tabla
+  `training_record_templates` + bucket privado
+  `training-record-templates` en Storage.
+- Las 10 plantillas subidas al bucket y registradas en la tabla, todas
+  con `status = 'pending_validation'` (ninguna se ofrece todavía al
+  generador — eso solo pasa con `status = 'active'`) y `missing_fields`
+  explicando por qué cada una no está lista (mapeo sin verificar, o
+  sin campos de formulario). Nombres reales extraídos del propio texto
+  de cada PDF, no de la abreviatura del archivo.
+- PDFs retirados de la raíz del repo (ya redundantes, el bucket es
+  ahora la fuente real) — verificado byte a byte antes de borrarlos
+  que la subida fue idéntica al original.
+- Dependencias instaladas: `pdf-lib` (rellenar formularios),
+  `pdfjs-dist` (renderizar páginas / extraer texto), `signature_pad`
+  (captura de firma táctil) — decisión de arquitectura ya tomada:
+  generación **enteramente en cliente**, sin endpoint de servidor para
+  el relleno en sí (evita transmitir firmas/datos de alumnos a un
+  servidor que no los necesita).
+
+### Migración aplicada — con rollback
+
+```sql
+-- Aplicada (ver arriba). Rollback:
+drop policy if exists "admin manage template files" on storage.objects;
+drop policy if exists "read template files" on storage.objects;
+delete from storage.objects where bucket_id = 'training-record-templates';
+delete from storage.buckets where id = 'training-record-templates';
+drop policy if exists "admin write templates" on public.training_record_templates;
+drop policy if exists "read active templates" on public.training_record_templates;
+drop table if exists public.training_record_templates;
+```
+
+### Próximos pasos (una vez desbloqueado)
+
+1. Confirmar el mapeo de campos de las 4 plantillas rellenables (con
+   tu revisión) y marcarlas `active`.
+2. Construir el generador propiamente dicho: roster de alumnos
+   (formulario + iniciales autogeneradas), captura de firma
+   (`signature_pad`, nada se guarda en BD), relleno del PDF en
+   cliente (`pdf-lib`) y exportación a PDF/JPG (página larga
+   concatenada con `pdfjs-dist` para las multipágina).
+3. Decidir el enfoque para las 6 plantillas sin campos de formulario.
+4. Ubicación del acceso en la navegación — todavía sin decidir, queda
+   pendiente junto con el resto de la interfaz.
+5. El pipeline de análisis automático de plantillas nuevas (lo que
+   subiría un admin en el futuro) sigue explícitamente fuera de
+   alcance hasta que la interfaz de generación esté terminada, tal
+   como pedía el encargo original.
 
 ## Fase 6 — Slides y avisos
 
