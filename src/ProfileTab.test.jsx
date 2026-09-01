@@ -10,6 +10,7 @@ import userEvent from "@testing-library/user-event";
 import ProfileTab from "./ProfileTab";
 import { ToastProvider } from "./shared";
 import { supabase } from "./supabaseClient";
+import i18n from "./i18n";
 
 const PROFILE = { user_id: "u1", first_name: "Ada", last_name: "Lovelace", nickname: "ada", avatar_icon: "Fish", avatar_color: "#0F766E" };
 const CURRENCIES = { rows: [{ code: "EUR", name: "Euro", symbol: "€", is_default: true }, { code: "USD", name: "Dólar", symbol: "$" }], loaded: true };
@@ -301,5 +302,36 @@ describe("privacidad — eliminar cuenta", () => {
 
     expect(await screen.findByText("Una cuenta superadmin no puede eliminarse a sí misma desde aquí.")).toBeInTheDocument();
     expect(onAccountDeleted).not.toHaveBeenCalled();
+  });
+});
+
+// Release V1, Fase 2 (multidioma): selector de idioma en Mi perfil —
+// única sección que cambia el idioma de toda la app al elegir una opción,
+// no solo guarda un dato. afterEach fuerza 'es' de vuelta: i18n es un
+// singleton de módulo, así que un test que deja el idioma en "en" filtra
+// a los siguientes tests de este mismo archivo si no se resetea (mismo
+// cuidado que ya tomó el fork de auth.json en RegisterScreen.test.jsx).
+describe("idioma", () => {
+  afterEach(async () => {
+    await i18n.changeLanguage("es");
+  });
+
+  it("muestra Español como opción actual cuando profile.language es 'es'", () => {
+    renderProfile({ profile: { ...PROFILE, language: "es" } });
+    expect(screen.getByRole("button", { name: "Selecciona un idioma" })).toHaveTextContent("Español");
+  });
+
+  it("elegir English actualiza profiles.language, notifica al padre y cambia el idioma de la app", async () => {
+    const user = userEvent.setup();
+    const { update, eq } = mockUpdate({ error: null });
+    const { onProfileUpdated } = renderProfile({ profile: { ...PROFILE, language: "es" } });
+
+    await user.click(screen.getByRole("button", { name: "Selecciona un idioma" }));
+    await user.click(screen.getByRole("option", { name: "English" }));
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ language: "en" }));
+    expect(eq).toHaveBeenCalledWith("user_id", "u1");
+    expect(onProfileUpdated).toHaveBeenCalledWith({ language: "en" });
+    await waitFor(() => expect(i18n.language).toBe("en"));
   });
 });

@@ -1,1 +1,79 @@
-{}
+{
+  "sections": {
+    "personalData": "Datos personales",
+    "favoriteCurrency": "Moneda favorita",
+    "language": "Idioma",
+    "security": "Seguridad",
+    "privacy": "Privacidad"
+  },
+  "avatar": {
+    "changeAvatar": "Cambiar avatar",
+    "closeAvatarPicker": "Cerrar selector de avatar",
+    "colorLabel": "Color {{name}}",
+    "iconLabel": "Icono {{name}}",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "toastSuccess": "Avatar actualizado",
+    "toastError": "No se pudo guardar el avatar. Inténtalo de nuevo."
+  },
+  "personalData": {
+    "nameLine": "Nombre:",
+    "nicknameLine": "Nickname:",
+    "edit": "Editar",
+    "nameLabel": "Nombre",
+    "lastNameLabel": "Apellidos",
+    "nicknameLabel": "Nickname",
+    "nicknameAtError": "No puede contener \"@\".",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "toastSuccess": "Perfil actualizado",
+    "errors": {
+      "nicknameTaken": "Ese nickname ya está en uso.",
+      "nicknameAt": "El nickname no puede contener \"@\".",
+      "generic": "No se pudo guardar. Inténtalo de nuevo."
+    }
+  },
+  "currency": {
+    "hint": "Se usa como moneda por defecto en Ajuste de curso, cuando no hay una tarifa que la determine. El resto de movimientos siempre usan la moneda de su tarifa.",
+    "placeholder": "Sin elegir — usa la moneda por defecto de la app",
+    "toastSuccess": "Moneda favorita actualizada"
+  },
+  "language": {
+    "placeholder": "Selecciona un idioma",
+    "toastSuccess": "Idioma actualizado",
+    "toastError": "No se pudo cambiar el idioma. Inténtalo de nuevo."
+  },
+  "password": {
+    "currentLabel": "Contraseña actual",
+    "newLabel": "Nueva contraseña",
+    "confirmLabel": "Confirmar contraseña",
+    "showCurrent": "Mostrar contraseña actual",
+    "hideCurrent": "Ocultar contraseña actual",
+    "show": "Mostrar contraseña",
+    "hide": "Ocultar contraseña",
+    "minLength": "Mínimo 8 caracteres",
+    "matches": "Las contraseñas coinciden",
+    "submit": "Cambiar contraseña",
+    "toastSuccess": "Contraseña actualizada",
+    "toastError": "No se pudo cambiar la contraseña. Inténtalo de nuevo.",
+    "wrongCurrent": "Contraseña actual incorrecta."
+  },
+  "deleteAccount": {
+    "confirmWord": "CANCELAR",
+    "description": "Eliminar tu cuenta borra tu acceso y todos tus datos de Ocean Flow de forma permanente: escuelas, cursos, tarifas, registro de clases, comisiones y ajustes con compañeros. No se conserva ninguna copia. Esta acción no se puede deshacer.",
+    "button": "Eliminar mi cuenta",
+    "confirmTitle": "¿Eliminar tu cuenta?",
+    "confirmMessage": "Vas a eliminar la cuenta \"{{nickname}}\" y todos sus datos de forma permanente. No podrás deshacer esta acción.",
+    "continue": "Continuar",
+    "finalCheckTitle": "Última comprobación",
+    "typeWordPrefix": "Escribe",
+    "typeWordSuffix": "para confirmar que quieres eliminar tu cuenta de forma permanente.",
+    "typeWordAriaLabel": "Escribe {{word}} para confirmar",
+    "back": "Volver",
+    "deleteButton": "Eliminar cuenta",
+    "toastSuccess": "Cuenta eliminada",
+    "genericError": "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
+    "networkError": "No se pudo eliminar la cuenta. Comprueba tu conexión e inténtalo de nuevo."
+  }
+}

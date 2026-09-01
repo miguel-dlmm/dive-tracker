@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pencil, Eye, EyeOff, Loader2, Trash2, Check } from "lucide-react";
 import { NAVY, TEAL, CORAL } from "./colors";
 import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
 import { AVATAR_ICONS, AVATAR_COLORS, resolveAvatar } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
+import i18n, { setStoredLanguage } from "./i18n";
 
 // Pantalla "Mi perfil" (Bloque 5, 2026-09-01) — pantalla secundaria como
 // Configuración/Ayuda (ver App.jsx, SECONDARY_TITLES), no un modal Sheet:
@@ -17,11 +19,16 @@ import { supabase } from "./supabaseClient";
 // solo protege is_admin/is_superadmin, columnas que esta pantalla nunca
 // toca. onProfileUpdated (useSession.updateProfile) mantiene el resto de
 // la app (cabecera, avatar) sincronizado sin recargar la página.
+//
+// i18n (Release V1, Fase 2): namespace "profile" — un t() por sección, ya
+// que cada sección es su propio componente. friendlyProfileError recibe
+// `t` como parámetro porque vive fuera de cualquier componente (no puede
+// llamar a useTranslation()).
 
-function friendlyProfileError(err) {
-  if (err?.code === "23505" || err?.message?.includes("profiles_nickname_lower_key")) return "Ese nickname ya está en uso.";
-  if (err?.message?.includes("profiles_nickname_no_at")) return 'El nickname no puede contener "@".';
-  return "No se pudo guardar. Inténtalo de nuevo.";
+function friendlyProfileError(err, t) {
+  if (err?.code === "23505" || err?.message?.includes("profiles_nickname_lower_key")) return t("personalData.errors.nicknameTaken");
+  if (err?.message?.includes("profiles_nickname_no_at")) return t("personalData.errors.nicknameAt");
+  return t("personalData.errors.generic");
 }
 
 function SectionCard({ title, children }) {
@@ -34,6 +41,7 @@ function SectionCard({ title, children }) {
 }
 
 function AvatarPicker({ profile, onProfileUpdated }) {
+  const { t } = useTranslation("profile");
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -63,10 +71,10 @@ function AvatarPicker({ profile, onProfileUpdated }) {
       const { error } = await supabase.from("profiles").update({ avatar_icon: draftIcon, avatar_color: draftColor }).eq("user_id", profile.user_id);
       if (error) throw error;
       onProfileUpdated?.({ avatar_icon: draftIcon, avatar_color: draftColor });
-      toast?.success("Avatar actualizado");
+      toast?.success(t("avatar.toastSuccess"));
       setOpen(false);
     } catch {
-      toast?.error("No se pudo guardar el avatar. Inténtalo de nuevo.");
+      toast?.error(t("avatar.toastError"));
     } finally {
       setSaving(false);
     }
@@ -82,7 +90,7 @@ function AvatarPicker({ profile, onProfileUpdated }) {
     <div className="flex flex-col items-center gap-3">
       <button
         onClick={() => (open ? cancel() : openPicker())}
-        aria-label={open ? "Cerrar selector de avatar" : "Cambiar avatar"}
+        aria-label={open ? t("avatar.closeAvatarPicker") : t("avatar.changeAvatar")}
         className="relative -m-1 flex min-h-11 min-w-11 items-center justify-center rounded-full p-1"
       >
         <Avatar icon={preview.icon} color={preview.color} size={72} />
@@ -101,7 +109,7 @@ function AvatarPicker({ profile, onProfileUpdated }) {
               <button
                 key={c.name}
                 onClick={() => setDraftColor(c.value)}
-                aria-label={`Color ${c.name}`}
+                aria-label={t("avatar.colorLabel", { name: c.name })}
                 aria-pressed={draftColor === c.value}
                 disabled={saving}
                 className="flex min-h-11 min-w-11 items-center justify-center rounded-full disabled:opacity-50"
@@ -120,7 +128,7 @@ function AvatarPicker({ profile, onProfileUpdated }) {
               <button
                 key={name}
                 onClick={() => setDraftIcon(name)}
-                aria-label={`Icono ${name}`}
+                aria-label={t("avatar.iconLabel", { name })}
                 aria-pressed={draftIcon === name}
                 disabled={saving}
                 className="flex min-h-11 items-center justify-center rounded-md border disabled:opacity-50"
@@ -130,7 +138,7 @@ function AvatarPicker({ profile, onProfileUpdated }) {
               </button>
             ))}
           </div>
-          <EditActions onSave={save} onCancel={cancel} saveLabel={saving ? "Guardando…" : "Guardar"} />
+          <EditActions onSave={save} onCancel={cancel} saveLabel={saving ? t("avatar.saving") : t("avatar.save")} />
         </div>
       )}
     </div>
@@ -138,6 +146,7 @@ function AvatarPicker({ profile, onProfileUpdated }) {
 }
 
 function PersonalDataSection({ profile, onProfileUpdated }) {
+  const { t } = useTranslation("profile");
   const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -160,10 +169,10 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
       const { error } = await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
       if (error) throw error;
       onProfileUpdated?.(patch);
-      toast?.success("Perfil actualizado");
+      toast?.success(t("personalData.toastSuccess"));
       setEditing(false);
     } catch (err) {
-      toast?.error(friendlyProfileError(err));
+      toast?.error(friendlyProfileError(err, t));
     } finally {
       setSaving(false);
     }
@@ -171,36 +180,37 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
 
   if (!editing) {
     return (
-      <SectionCard title="Datos personales">
+      <SectionCard title={t("sections.personalData")}>
         <div className="space-y-2 text-sm">
-          <p><span className="text-gray-400">Nombre:</span> {profile.first_name || "—"} {profile.last_name || ""}</p>
-          <p><span className="text-gray-400">Nickname:</span> {profile.nickname}</p>
+          <p><span className="text-gray-400">{t("personalData.nameLine")}</span> {profile.first_name || "—"} {profile.last_name || ""}</p>
+          <p><span className="text-gray-400">{t("personalData.nicknameLine")}</span> {profile.nickname}</p>
         </div>
         <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: TEAL }}>
-          <Pencil size={14} aria-hidden="true" /> Editar
+          <Pencil size={14} aria-hidden="true" /> {t("personalData.edit")}
         </button>
       </SectionCard>
     );
   }
 
   return (
-    <SectionCard title="Datos personales">
+    <SectionCard title={t("sections.personalData")}>
       <div className="grid grid-cols-2 gap-2">
-        <Field label="Nombre"><input value={firstName} onChange={(e) => setFirstName(e.target.value)} className={`${inputCls} w-full`} /></Field>
-        <Field label="Apellidos"><input value={lastName} onChange={(e) => setLastName(e.target.value)} className={`${inputCls} w-full`} /></Field>
+        <Field label={t("personalData.nameLabel")}><input value={firstName} onChange={(e) => setFirstName(e.target.value)} className={`${inputCls} w-full`} /></Field>
+        <Field label={t("personalData.lastNameLabel")}><input value={lastName} onChange={(e) => setLastName(e.target.value)} className={`${inputCls} w-full`} /></Field>
       </div>
-      <Field label="Nickname">
+      <Field label={t("personalData.nicknameLabel")}>
         <input value={nickname} onChange={(e) => setNickname(e.target.value)} className={`${inputCls} w-full`} />
       </Field>
-      {nickname.includes("@") && <p role="alert" className="-mt-2 text-xs text-red-600">No puede contener "@".</p>}
+      {nickname.includes("@") && <p role="alert" className="-mt-2 text-xs text-red-600">{t("personalData.nicknameAtError")}</p>}
       <div className="mt-3">
-        <EditActions onSave={save} onCancel={() => setEditing(false)} saveLabel={saving ? "Guardando…" : "Guardar"} />
+        <EditActions onSave={save} onCancel={() => setEditing(false)} saveLabel={saving ? t("personalData.saving") : t("personalData.save")} />
       </div>
     </SectionCard>
   );
 }
 
 function CurrencySection({ profile, currencies }) {
+  const { t } = useTranslation("profile");
   const toast = useToast();
   const [favorite, setFavoriteState] = useState(() => getFavoriteCurrency(profile.user_id));
 
@@ -224,7 +234,7 @@ function CurrencySection({ profile, currencies }) {
   const choose = (code) => {
     setFavoriteCurrency(profile.user_id, code);
     setFavoriteState(code);
-    toast?.success("Moneda favorita actualizada");
+    toast?.success(t("currency.toastSuccess"));
   };
 
   // Select (shared.jsx) trabaja con opciones-string planas, no {value,label}
@@ -235,15 +245,59 @@ function CurrencySection({ profile, currencies }) {
   const currentLabel = currencies.rows.find((c) => c.code === favorite);
 
   return (
-    <SectionCard title="Moneda favorita">
+    <SectionCard title={t("sections.favoriteCurrency")}>
       <p className="mb-3 text-xs text-gray-400">
-        Se usa como moneda por defecto en Ajuste de curso, cuando no hay una tarifa que la determine. El resto de movimientos siempre usan la moneda de su tarifa.
+        {t("currency.hint")}
       </p>
       <Select
         value={currentLabel ? labelFor(currentLabel) : ""}
         onChange={(label) => choose(label ? label.slice(0, label.indexOf(" —")) : "")}
         options={options}
-        placeholder="Sin elegir — usa la moneda por defecto de la app"
+        placeholder={t("currency.placeholder")}
+      />
+    </SectionCard>
+  );
+}
+
+// Idioma preferido (Release V1, Fase 2 — multidioma): "se configurará en
+// el perfil" es requisito explícito del documento maestro. Escribe
+// profiles.language directamente (mismo patrón que el resto de esta
+// pantalla) y, a diferencia de cualquier otro campo de aquí, además
+// cambia el idioma de la interfaz al instante (i18n.changeLanguage) y
+// actualiza el respaldo de localStorage que usan las pantallas sin
+// sesión — no hace falta recargar para ver el cambio.
+const LANGUAGE_OPTIONS = [
+  { code: "es", label: "Español" },
+  { code: "en", label: "English" },
+];
+
+function LanguageSection({ profile, onProfileUpdated }) {
+  const { t } = useTranslation("profile");
+  const toast = useToast();
+  const current = LANGUAGE_OPTIONS.find((o) => o.code === profile.language) || LANGUAGE_OPTIONS[0];
+
+  const choose = async (label) => {
+    const option = LANGUAGE_OPTIONS.find((o) => o.label === label);
+    if (!option || option.code === profile.language) return;
+    try {
+      const { error } = await supabase.from("profiles").update({ language: option.code }).eq("user_id", profile.user_id);
+      if (error) throw error;
+      onProfileUpdated?.({ language: option.code });
+      await i18n.changeLanguage(option.code);
+      setStoredLanguage(option.code);
+      toast?.success(t("language.toastSuccess"));
+    } catch {
+      toast?.error(t("language.toastError"));
+    }
+  };
+
+  return (
+    <SectionCard title={t("sections.language")}>
+      <Select
+        value={current.label}
+        onChange={choose}
+        options={LANGUAGE_OPTIONS.map((o) => o.label)}
+        placeholder={t("language.placeholder")}
       />
     </SectionCard>
   );
@@ -266,6 +320,7 @@ function CurrencySection({ profile, currencies }) {
 // paso se quita el margen negativo (-mt-1) que apretaba la fila de
 // requisitos contra "Confirmar contraseña".
 function PasswordSection() {
+  const { t } = useTranslation("profile");
   const toast = useToast();
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
@@ -290,44 +345,44 @@ function PasswordSection() {
 
       const { error: reauthError } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
       if (reauthError) {
-        setError("Contraseña actual incorrecta.");
+        setError(t("password.wrongCurrent"));
         setSaving(false);
         return;
       }
 
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError && updateError.code !== "same_password") throw updateError;
-      toast?.success("Contraseña actualizada");
+      toast?.success(t("password.toastSuccess"));
       setCurrentPassword(""); setPassword(""); setConfirm("");
     } catch {
-      toast?.error("No se pudo cambiar la contraseña. Inténtalo de nuevo.");
+      toast?.error(t("password.toastError"));
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <SectionCard title="Seguridad">
+    <SectionCard title={t("sections.security")}>
       <div className="space-y-3">
-      <Field label="Contraseña actual">
+      <Field label={t("password.currentLabel")}>
         <div className="relative">
           <input
             type={showCurrent ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
             autoComplete="current-password" className={`${inputCls} w-full pr-11`}
           />
-          <button type="button" onClick={() => setShowCurrent((v) => !v)} aria-label={showCurrent ? "Ocultar contraseña actual" : "Mostrar contraseña actual"}
+          <button type="button" onClick={() => setShowCurrent((v) => !v)} aria-label={showCurrent ? t("password.hideCurrent") : t("password.showCurrent")}
             className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-400">
             {showCurrent ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
           </button>
         </div>
       </Field>
-      <Field label="Nueva contraseña">
+      <Field label={t("password.newLabel")}>
         <div className="relative">
           <input
             type={visible ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password" className={`${inputCls} w-full pr-11`}
           />
-          <button type="button" onClick={() => setVisible((v) => !v)} aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
+          <button type="button" onClick={() => setVisible((v) => !v)} aria-label={visible ? t("password.hide") : t("password.show")}
             className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-400">
             {visible ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
           </button>
@@ -335,13 +390,13 @@ function PasswordSection() {
       </Field>
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
         <span className="flex items-center gap-1" style={{ color: lengthOk ? TEAL : "#9CA3AF" }}>
-          {lengthOk && <Check size={12} aria-hidden="true" />} Mínimo 8 caracteres
+          {lengthOk && <Check size={12} aria-hidden="true" />} {t("password.minLength")}
         </span>
         <span className="flex items-center gap-1" style={{ color: matchOk ? TEAL : "#9CA3AF" }}>
-          {matchOk && <Check size={12} aria-hidden="true" />} Las contraseñas coinciden
+          {matchOk && <Check size={12} aria-hidden="true" />} {t("password.matches")}
         </span>
       </div>
-      <Field label="Confirmar contraseña">
+      <Field label={t("password.confirmLabel")}>
         <input type={visible ? "text" : "password"} value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" className={`${inputCls} w-full`} />
       </Field>
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
@@ -350,28 +405,17 @@ function PasswordSection() {
         className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white disabled:opacity-50"
         style={{ backgroundColor: TEAL }}
       >
-        {saving && <Loader2 size={15} className="animate-spin" aria-hidden="true" />} Cambiar contraseña
+        {saving && <Loader2 size={15} className="animate-spin" aria-hidden="true" />} {t("password.submit")}
       </button>
       </div>
     </SectionCard>
   );
 }
 
-// Palabra que hay que escribir en el segundo paso para confirmar el
-// borrado (Release V1, Fase 1 — encargo explícito del usuario). Segundo
-// paso separado del ConfirmDialog habitual (en vez de añadirle un campo de
-// texto) a propósito: ConfirmDialog es un componente compartido por todo
-// tipo de confirmaciones de borrado sencillas (una fila de una lista) y
-// esta es la única eliminación de la app con un paso de más — meterle esta
-// lógica encarecería el componente compartido para un único consumidor
-// real. El botón para abortar este segundo paso dice "Volver", no
-// "Cancelar": con la palabra a escribir siendo literalmente "CANCELAR",
-// un botón "Cancelar" justo al lado sería confuso de leer rápido (regla
-// permanente de manos mojadas, CLAUDE.md).
-const DELETE_ACCOUNT_WORD = "CANCELAR";
-
 function PrivacySection({ profile, onAccountDeleted }) {
+  const { t } = useTranslation("profile");
   const toast = useToast();
+  const confirmWord = t("deleteAccount.confirmWord");
   const [step, setStep] = useState(null); // null | "confirm" | "type-word"
   const [wordInput, setWordInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -392,34 +436,34 @@ function PrivacySection({ profile, onAccountDeleted }) {
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(payload.error || "No se pudo eliminar la cuenta. Inténtalo de nuevo.");
+        setError(payload.error || t("deleteAccount.genericError"));
         setLoading(false);
         return;
       }
-      toast?.success("Cuenta eliminada");
+      toast?.success(t("deleteAccount.toastSuccess"));
       onAccountDeleted?.();
     } catch {
-      setError("No se pudo eliminar la cuenta. Comprueba tu conexión e inténtalo de nuevo.");
+      setError(t("deleteAccount.networkError"));
       setLoading(false);
     }
   };
 
   return (
-    <SectionCard title="Privacidad">
+    <SectionCard title={t("sections.privacy")}>
       <p className="mb-3 text-xs text-gray-500">
-        Eliminar tu cuenta borra tu acceso y todos tus datos de Ocean Flow de forma permanente: escuelas, cursos, tarifas, registro de clases, comisiones y ajustes con compañeros. No se conserva ninguna copia. Esta acción no se puede deshacer.
+        {t("deleteAccount.description")}
       </p>
       <button
         onClick={() => setStep("confirm")}
         className="flex min-h-11 items-center gap-1.5 rounded-md border border-red-200 px-3 text-sm font-medium text-red-600"
       >
-        <Trash2 size={14} aria-hidden="true" /> Eliminar mi cuenta
+        <Trash2 size={14} aria-hidden="true" /> {t("deleteAccount.button")}
       </button>
       <ConfirmDialog
         open={step === "confirm"}
-        title="¿Eliminar tu cuenta?"
-        message={`Vas a eliminar la cuenta "${profile.nickname}" y todos sus datos de forma permanente. No podrás deshacer esta acción.`}
-        confirmLabel="Continuar"
+        title={t("deleteAccount.confirmTitle")}
+        message={t("deleteAccount.confirmMessage", { nickname: profile.nickname })}
+        confirmLabel={t("deleteAccount.continue")}
         onConfirm={() => setStep("type-word")}
         onCancel={reset}
       />
@@ -432,9 +476,9 @@ function PrivacySection({ profile, onAccountDeleted }) {
             className="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 id="delete-word-title" className="mb-1 text-sm font-semibold text-gray-800">Última comprobación</h3>
+            <h3 id="delete-word-title" className="mb-1 text-sm font-semibold text-gray-800">{t("deleteAccount.finalCheckTitle")}</h3>
             <p className="mb-3 text-sm text-gray-500">
-              Escribe <strong>{DELETE_ACCOUNT_WORD}</strong> para confirmar que quieres eliminar tu cuenta de forma permanente.
+              {t("deleteAccount.typeWordPrefix")} <strong>{confirmWord}</strong> {t("deleteAccount.typeWordSuffix")}
             </p>
             <input
               type="text"
@@ -443,23 +487,23 @@ function PrivacySection({ profile, onAccountDeleted }) {
               autoFocus
               autoCapitalize="characters"
               autoComplete="off"
-              aria-label={`Escribe ${DELETE_ACCOUNT_WORD} para confirmar`}
-              placeholder={DELETE_ACCOUNT_WORD}
+              aria-label={t("deleteAccount.typeWordAriaLabel", { word: confirmWord })}
+              placeholder={confirmWord}
               className={`${inputCls} mb-4 w-full`}
             />
             {error && <p role="alert" className="mb-3 text-sm text-red-600">{error}</p>}
             <div className="flex justify-end gap-2">
               <button onClick={reset} disabled={loading} className="min-h-11 rounded-md border border-gray-200 px-3.5 text-sm font-medium text-gray-600 disabled:opacity-50">
-                Volver
+                {t("deleteAccount.back")}
               </button>
               <button
                 onClick={handleDelete}
-                disabled={loading || wordInput !== DELETE_ACCOUNT_WORD}
+                disabled={loading || wordInput !== confirmWord}
                 className="flex min-h-11 items-center gap-1.5 rounded-md px-3.5 text-sm font-medium text-white disabled:opacity-50"
                 style={{ backgroundColor: CORAL }}
               >
                 {loading && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}
-                Eliminar cuenta
+                {t("deleteAccount.deleteButton")}
               </button>
             </div>
           </div>
@@ -476,6 +520,7 @@ export default function ProfileTab({ profile, currencies, onProfileUpdated, onAc
       <AvatarPicker profile={profile} onProfileUpdated={onProfileUpdated} />
       <PersonalDataSection profile={profile} onProfileUpdated={onProfileUpdated} />
       <CurrencySection profile={profile} currencies={currencies} />
+      <LanguageSection profile={profile} onProfileUpdated={onProfileUpdated} />
       <PasswordSection />
       <PrivacySection profile={profile} onAccountDeleted={onAccountDeleted} />
     </div>
