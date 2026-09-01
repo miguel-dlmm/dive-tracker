@@ -1,3 +1,5 @@
+import { renderEmailShell, escapeHtml, TEAL, NAVY } from "./emailLayout.js";
+
 // Generalización de la plantilla de bienvenida (antes welcomeEmailTemplate.js)
 // para que un único template sirva a los tres flujos que envían "aquí tienes
 // un enlace para entrar y fijar tu contraseña": alta, reactivación y
@@ -70,62 +72,39 @@ export const ACTIVATION_EMAIL_COPY = {
   },
 };
 
-function escapeHtml(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[c]));
-}
-
 // HTML con tabla + CSS inline a propósito: los clientes de email (Outlook
 // sobre todo) no soportan Flexbox/Grid ni <style> externo, así que este
 // template no puede reutilizar las clases Tailwind del resto de la app —
-// es su propio sistema reducido, coherente en color/tipografía pero
-// técnicamente independiente. Una sola columna, mobile-first.
+// es su propio sistema reducido, coherente en color/tipografía con el
+// resto de la app (mismo NAVY/TEAL, mismo icono Waves que el login —
+// ver emailLayout.js). Una sola columna, mobile-first.
 export function renderActivationEmailHtml({ firstName, actionLink, copy = ACTIVATION_EMAIL_COPY.signup }) {
   const safeName = escapeHtml(firstName);
   const safeLink = escapeHtml(actionLink);
-  return `<!doctype html>
-<html>
-  <body style="margin:0;padding:0;background-color:#F7F8F8;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">
-    <span style="display:none;font-size:1px;color:#F7F8F8;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${escapeHtml(copy.preheader)}</span>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F7F8F8;padding:24px 0;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background-color:#ffffff;border-radius:12px;overflow:hidden;">
-            <tr>
-              <td style="padding:32px 28px 8px 28px;text-align:center;">
-                <div style="font-size:15px;font-weight:700;color:#0F172A;">Ocean Flow</div>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:24px 28px 0 28px;">
-                <h1 style="margin:0 0 16px 0;font-size:20px;color:#0F172A;">${escapeHtml(copy.title)}</h1>
-                <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#374151;">${copy.greeting(safeName)}</p>
-                <p style="margin:0 0 24px 0;font-size:14px;line-height:1.6;color:#374151;">${escapeHtml(copy.intro)}</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:0 28px;text-align:center;">
-                <a href="${safeLink}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;background-color:#0F766E;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 24px;border-radius:8px;">${escapeHtml(copy.ctaLabel)}</a>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:16px 28px 0 28px;">
-                <p style="margin:0;font-size:12.5px;line-height:1.6;color:#6B7280;text-align:center;">${escapeHtml(copy.securityNote)}</p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:24px 28px 32px 28px;">
-                <p style="margin:0;font-size:11.5px;line-height:1.5;color:#9CA3AF;text-align:center;">${escapeHtml(copy.expiryNote)}</p>
-              </td>
-            </tr>
-          </table>
-          <p style="margin:20px 0 0 0;font-size:11px;color:#9CA3AF;">${escapeHtml(copy.footer)}</p>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
+  const bodyRows = `
+    <tr>
+      <td style="padding:12px 28px 0 28px;">
+        <h1 style="margin:0 0 16px 0;font-size:20px;color:${NAVY};">${escapeHtml(copy.title)}</h1>
+        <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#374151;">${copy.greeting(safeName)}</p>
+        <p style="margin:0 0 24px 0;font-size:14px;line-height:1.6;color:#374151;">${escapeHtml(copy.intro)}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 28px;text-align:center;">
+        <a href="${safeLink}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;background-color:${TEAL};color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 24px;border-radius:8px;">${escapeHtml(copy.ctaLabel)}</a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 28px 0 28px;">
+        <p style="margin:0;font-size:12.5px;line-height:1.6;color:#6B7280;text-align:center;">${escapeHtml(copy.securityNote)}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:24px 28px 32px 28px;">
+        <p style="margin:0;font-size:11.5px;line-height:1.5;color:#9CA3AF;text-align:center;">${escapeHtml(copy.expiryNote)}</p>
+      </td>
+    </tr>`;
+  return renderEmailShell({ preheader: copy.preheader, bodyRows, footerText: copy.footer });
 }
 
 // Parte de texto plano — mejora la entregabilidad en clientes/filtros que
