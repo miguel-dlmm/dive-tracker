@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle, LogOut } from "lucide-react";
+import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { supabase } from "./supabaseClient";
@@ -225,6 +225,14 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
     markWhatsNewSeen(profile?.user_id);
     setWhatsNewOpen(false);
   };
+  // Fase 4, Release V1 (rediseño de notificaciones — investigación de
+  // patrones de UX, ver docs/RELEASE-V1-PROGRESS.md, Fase 4: "user control
+  // and customization" es un principio recurrente en el diseño de
+  // notificaciones actual). Antes, una vez cerrado, "Qué hay de nuevo" no
+  // se podía volver a consultar hasta el siguiente release — sin tocar el
+  // gate de "una vez por versión" (whatsNewOpen sigue naciendo en false si
+  // ya se vio), esto solo permite reabrirlo bajo demanda desde Ayuda.
+  const showWhatsNewAgain = () => setWhatsNewOpen(true);
 
   const loaded = schools.loaded && activities.loaded && paymentTypes.loaded && paymentStatuses.loaded
     && currencies.loaded && rates.loaded && commissionRates.loaded && worklog.loaded
@@ -247,6 +255,20 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
     if (tab === "config") clearStoredSection();
     if (tab === "help") clearStoredHelpOpen();
     changeTab(returnTab);
+  };
+  // Cerrar sesión — Fase 4, Release V1 (rediseño de cabecera): antes vivía
+  // como icono propio en la cabecera; investigación de patrones de
+  // navegación móvil (ver docs/RELEASE-V1-PROGRESS.md, Fase 4 — UXPin,
+  // "avoid hiding frequent tasks inside overflow menus", pero cerrar sesión
+  // es justo lo contrario, una tarea INFRECUENTE, el caso de libro para
+  // sacarla del nivel superior) apoya moverla a Mi perfil, donde vive en
+  // casi cualquier app de referencia. Misma función que antes (limpia
+  // navegación guardada, respeta el bypass de desarrollo si está activo),
+  // solo cambia desde dónde se dispara.
+  const handleSignOut = () => {
+    clearStoredNav();
+    if (DEV_AUTH_BYPASS) disableDevBypass();
+    onSignOut();
   };
   const logoIcon = appConfig.rows[0]?.logo_icon || "Waves";
   // La cabecera acompaña siempre al usuario (ver rediseño de navegación
@@ -344,9 +366,6 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
                 </span>
               </button>
             )}
-            <button onClick={() => { clearStoredNav(); if (DEV_AUTH_BYPASS) disableDevBypass(); onSignOut(); }} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label={t("aria.signOut")}>
-              <LogOut size={20} style={{ color: NAVY }} aria-hidden="true" />
-            </button>
           </div>
         </div>
       </header>
@@ -400,11 +419,12 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             navSections={navSections} appConfig={appConfig} profile={profile} onClose={closeSecondary}
           />
         )}
-        {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} />}
+        {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} />}
         {tab === "perfil" && (
           <ProfileTab
             profile={profile} currencies={currencies}
             onClose={closeSecondary} onProfileUpdated={onProfileUpdated} onAccountDeleted={onSignOut}
+            onSignOut={handleSignOut}
           />
         )}
         {tab === "pagos" && (

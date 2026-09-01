@@ -86,7 +86,7 @@ export function clearStoredHelpOpen() {
   try { sessionStorage.removeItem(HELP_OPEN_KEY); } catch { /* no-op */ }
 }
 
-export default function HelpTab({ navSections, onClose }) {
+export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
   const { t } = useTranslation("help");
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const [openId, setOpenIdState] = useState(readStoredOpen);
@@ -112,6 +112,26 @@ export default function HelpTab({ navSections, onClose }) {
 
   return (
     <div className="space-y-5" {...backProps}>
+      {/* Fase 4, Release V1 — "Ver novedades": antes, cerrar el slide de
+          "Qué hay de nuevo" (WhatsNew.jsx) lo perdía hasta el siguiente
+          release; investigación de UX de notificaciones (Smashing
+          Magazine, 2025 — ver docs/RELEASE-V1-PROGRESS.md, Fase 4) señala
+          el control del usuario sobre qué ha visto/puede revisar como un
+          principio recurrente. No toca el gate de "una vez por versión"
+          (whatsNewOpen en App.jsx sigue naciendo cerrado si ya se vio) —
+          solo ofrece una forma de volver a abrirlo bajo demanda. Vive en
+          Ayuda por ser el sitio natural para "quiero repasar algo de la
+          app", no una notificación en sí. */}
+      {onShowWhatsNew && (
+        <button
+          type="button"
+          onClick={onShowWhatsNew}
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700"
+        >
+          <Icons.Sparkles size={16} style={{ color: TEAL }} aria-hidden="true" />
+          {t("whatsNewReplay")}
+        </button>
+      )}
       {GROUP_ORDER.map((group) => {
         const rows = categories.filter((c) => c.group === group);
         if (rows.length === 0) return null;

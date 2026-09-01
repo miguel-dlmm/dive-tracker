@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Eye, EyeOff, Loader2, Trash2, Check } from "lucide-react";
+import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut } from "lucide-react";
 import { NAVY, TEAL, CORAL } from "./colors";
 import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
 import { AVATAR_ICONS, AVATAR_COLORS, resolveAvatar } from "./avatarCatalog";
@@ -513,7 +513,30 @@ function PrivacySection({ profile, onAccountDeleted }) {
   );
 }
 
-export default function ProfileTab({ profile, currencies, onProfileUpdated, onAccountDeleted }) {
+// Cerrar sesión — Fase 4, Release V1 (rediseño de cabecera). Antes vivía
+// como icono suelto en la cabecera de App.jsx, junto a Ayuda/Configuración/
+// Avatar; movido aquí tras revisar patrones de navegación móvil
+// (docs/RELEASE-V1-PROGRESS.md, Fase 4, con fuentes): cerrar sesión es una
+// tarea infrecuente (como mucho una vez por sesión), justo el tipo de
+// acción que la investigación de UX recomienda sacar del nivel superior de
+// navegación en vez de competir por espacio con tareas frecuentes como
+// Ayuda/Configuración. Mismo patrón visual que "Eliminar mi cuenta" (botón
+// con borde, no una tarjeta llena) pero en gris neutro, no en rojo — no es
+// una acción destructiva, así que no debe leerse como una.
+function SignOutSection({ onSignOut }) {
+  const { t } = useTranslation("profile");
+  if (!onSignOut) return null;
+  return (
+    <button
+      onClick={onSignOut}
+      className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 text-sm font-medium text-gray-600"
+    >
+      <LogOut size={15} aria-hidden="true" /> {t("signOut.button")}
+    </button>
+  );
+}
+
+export default function ProfileTab({ profile, currencies, onProfileUpdated, onAccountDeleted, onSignOut }) {
   if (!profile) return null;
   return (
     <div className="space-y-4 pb-16">
@@ -522,6 +545,7 @@ export default function ProfileTab({ profile, currencies, onProfileUpdated, onAc
       <CurrencySection profile={profile} currencies={currencies} />
       <LanguageSection profile={profile} onProfileUpdated={onProfileUpdated} />
       <PasswordSection />
+      <SignOutSection onSignOut={onSignOut} />
       <PrivacySection profile={profile} onAccountDeleted={onAccountDeleted} />
     </div>
   );

@@ -121,3 +121,23 @@ describe("HelpTab — gesto de deslizar hacia la derecha = atrás, recursivo", (
     expect(onClose).not.toHaveBeenCalled();
   });
 });
+
+// Fase 4, Release V1: "Ver qué hay de nuevo" — reabre el slide WhatsNew
+// bajo demanda desde Ayuda, sin tocar su gate de "una vez por versión"
+// (eso vive en App.jsx, fuera del alcance de este componente).
+describe("HelpTab — 'Ver qué hay de nuevo'", () => {
+  it("sin onShowWhatsNew, no muestra el botón", () => {
+    render(<HelpTab navSections={navSections} />);
+    expect(screen.queryByText("Ver qué hay de nuevo en esta versión")).not.toBeInTheDocument();
+  });
+
+  it("con onShowWhatsNew, pulsar el botón lo llama", async () => {
+    const user = userEvent.setup();
+    const onShowWhatsNew = vi.fn();
+    render(<HelpTab navSections={navSections} onShowWhatsNew={onShowWhatsNew} />);
+
+    await user.click(screen.getByText("Ver qué hay de nuevo en esta versión"));
+
+    expect(onShowWhatsNew).toHaveBeenCalledTimes(1);
+  });
+});

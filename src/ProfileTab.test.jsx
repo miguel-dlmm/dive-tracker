@@ -335,3 +335,24 @@ describe("idioma", () => {
     await waitFor(() => expect(i18n.language).toBe("en"));
   });
 });
+
+// Fase 4, Release V1: "Cerrar sesión" se movió de la cabecera (App.jsx) a
+// Mi perfil — ver el test equivalente en App.test.jsx para la cobertura de
+// extremo a extremo (icono ya no en la cabecera + sí en Mi perfil). Aquí
+// solo se prueba el componente en aislamiento.
+describe("cerrar sesión", () => {
+  it("sin onSignOut, no muestra el botón (uso fuera de App.jsx, p. ej. en otros tests)", () => {
+    renderProfile();
+    expect(screen.queryByRole("button", { name: "Cerrar sesión" })).not.toBeInTheDocument();
+  });
+
+  it("con onSignOut, el botón lo llama al pulsarlo", async () => {
+    const user = userEvent.setup();
+    const onSignOut = vi.fn();
+    renderProfile({ onSignOut });
+
+    await user.click(screen.getByRole("button", { name: "Cerrar sesión" }));
+
+    expect(onSignOut).toHaveBeenCalledTimes(1);
+  });
+});

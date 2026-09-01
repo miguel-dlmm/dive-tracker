@@ -6,6 +6,9 @@
     "security": "Security",
     "privacy": "Privacy"
   },
+  "signOut": {
+    "button": "Sign out"
+  },
   "avatar": {
     "changeAvatar": "Change avatar",
     "closeAvatarPicker": "Close avatar picker",

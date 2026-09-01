@@ -143,6 +143,56 @@ describe("AuthGate", () => {
     expect(screen.getByText("ada")).toBeInTheDocument();
   });
 
+  // Fase 4, Release V1 (rediseño de cabecera, ver docs/RELEASE-V1-PROGRESS.md):
+  // "Cerrar sesión" deja de vivir como icono en la cabecera (tarea
+  // infrecuente, no debe competir por espacio con Ayuda/Configuración) y
+  // pasa a Mi perfil. Cubre las dos mitades del cambio: el icono ya no
+  // está arriba, y sí aparece dentro de Mi perfil.
+  it("Fase 4 — 'Cerrar sesión' ya no está en la cabecera; vive en Mi perfil", async () => {
+    const signOut = vi.fn();
+    mockUseSession({
+      session: SESSION,
+      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
+      pendingLegalConsents: [],
+      signOut,
+    });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText("Ocean Flow");
+
+    expect(screen.queryByLabelText("Cerrar sesión")).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Mi perfil"));
+
+    const signOutButton = await screen.findByRole("button", { name: "Cerrar sesión" });
+    await user.click(signOutButton);
+    expect(signOut).toHaveBeenCalled();
+  });
+
+  // Fase 4, Release V1: "Ver qué hay de nuevo" en Ayuda reabre WhatsNew sin
+  // tocar su gate de "una vez por versión" (se marca como ya visto en
+  // localStorage antes de renderizar, para probar la reapertura de verdad
+  // en vez de que ya estuviera abierto por no haberse visto todavía).
+  it("Fase 4 — 'Ver qué hay de nuevo' en Ayuda reabre el slide de novedades ya visto", async () => {
+    localStorage.setItem("oceanpulse:whatsNewSeen:u1", "0.2.0");
+    mockUseSession({
+      session: SESSION,
+      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
+      pendingLegalConsents: [],
+    });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText("Ocean Flow");
+    expect(screen.queryByText("Mi trabajo, todo en un sitio")).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Ayuda"));
+    await user.click(await screen.findByText("Ver qué hay de nuevo en esta versión"));
+
+    expect(await screen.findByText("Mi trabajo, todo en un sitio")).toBeInTheDocument();
+  });
+
   it("activated_at fijado pero con consentimiento legal pendiente, muestra la pantalla de aceptación legal en vez de la app", () => {
     mockUseSession({
       session: SESSION,
