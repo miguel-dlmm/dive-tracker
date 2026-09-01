@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "backup:db": "node scripts/backup-db.mjs",
-    "mobile-check": "node scripts/mobile-check.mjs"
+    "mobile-check": "node scripts/mobile-check.mjs",
+    "verify-deployment-notice": "node scripts/verify-deployment-notice.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
