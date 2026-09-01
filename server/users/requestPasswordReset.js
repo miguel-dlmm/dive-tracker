@@ -84,7 +84,7 @@ export async function handleRequestPasswordReset({ method, body }) {
       return { status: 200, payload: GENERIC_RESPONSE };
     }
 
-    const { activationLink, error: linkErrorMessage } = await generateActivationLink(email);
+    const { activationLink, error: linkErrorMessage } = await generateActivationLink(email, { flow: "recovery" });
     if (linkErrorMessage) {
       console.error("request-password-reset: no se pudo generar el enlace", linkErrorMessage);
       return { status: 200, payload: GENERIC_RESPONSE };

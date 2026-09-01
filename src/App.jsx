@@ -10,6 +10,7 @@ import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG } from "./colors";
 import LoginScreen from "./LoginScreen";
 import ForgotPasswordScreen from "./ForgotPasswordScreen";
+import ResetPasswordScreen from "./ResetPasswordScreen";
 import RegisterScreen from "./RegisterScreen";
 import CreatePasswordScreen from "./CreatePasswordScreen";
 import AcceptLegalScreen from "./AcceptLegalScreen";
@@ -496,7 +497,7 @@ function disableDevBypass() {
 }
 
 function AuthGate() {
-  const { session, profile, loading, accountBanned, signIn, signOut, activateAccount, pendingLegalConsents, acceptLegalConsents } = useSession();
+  const { session, profile, loading, accountBanned, signIn, signOut, activateAccount, resetPassword, pendingLegalConsents, acceptLegalConsents } = useSession();
   const [bypassAttempted, setBypassAttempted] = useState(false);
   // Mientras esté en true, se muestra el mismo loading que "loading" en vez
   // de dejar parpadear LoginScreen durante el auto-signIn. Si falla o
@@ -584,12 +585,32 @@ function AuthGate() {
   const tokenHash = params.get("token_hash");
   const type = params.get("type");
   const hasActivationLink = Boolean(tokenHash && type);
+  // flow=recovery solo lo lleva el enlace de "olvidé mi contraseña"
+  // (requestPasswordReset.js → activationLink.js) — decide qué pantalla
+  // mostrar (ResetPasswordScreen, sin bases legales) y qué función de
+  // useSession llamar (resetPassword, sin acceptLegalConsents). Los
+  // enlaces de alta/reactivación/regenerar-contraseña-por-admin no llevan
+  // este parámetro, así que siguen exactamente igual que antes.
+  const isRecoveryFlow = params.get("flow") === "recovery";
 
   const handleActivate = async (password) => {
     setActivating(true);
     try {
       await activateAccount({ tokenHash, type, expectedEmail: session?.user?.email, password });
       setJustActivated(true);
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  // Deliberadamente NO pone justActivated: esa bandera abre AppShell en
+  // Ayuda en vez de Home, pensado para alguien completando su primer
+  // acceso — quien recupera una contraseña ya conoce la app, no es una
+  // persona nueva a la que orientar.
+  const handleResetPassword = async (password) => {
+    setActivating(true);
+    try {
+      await resetPassword({ tokenHash, type, expectedEmail: session?.user?.email, password });
     } finally {
       setActivating(false);
     }
@@ -615,7 +636,11 @@ function AuthGate() {
   }
 
   if (!session && !activating) {
-    if (hasActivationLink) return <CreatePasswordScreen onSubmit={handleActivate} />;
+    if (hasActivationLink) {
+      return isRecoveryFlow
+        ? <ResetPasswordScreen onSubmit={handleResetPassword} />
+        : <CreatePasswordScreen onSubmit={handleActivate} />;
+    }
     if (showForgotPassword) return <ForgotPasswordScreen onBack={() => setShowForgotPassword(false)} />;
     if (showRegister) return <RegisterScreen onBack={() => setShowRegister(false)} />;
     return (
@@ -628,7 +653,9 @@ function AuthGate() {
   }
 
   if (activating || !profile || !profile.activated_at) {
-    return <CreatePasswordScreen onSubmit={handleActivate} />;
+    return isRecoveryFlow
+      ? <ResetPasswordScreen onSubmit={handleResetPassword} />
+      : <CreatePasswordScreen onSubmit={handleActivate} />;
   }
 
   if (pendingLegalConsents.length > 0) {

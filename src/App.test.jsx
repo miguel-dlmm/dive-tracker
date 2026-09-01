@@ -26,6 +26,7 @@ function mockUseSession(overrides) {
     signIn: vi.fn(),
     signOut: vi.fn(),
     activateAccount: vi.fn(),
+    resetPassword: vi.fn(),
     pendingLegalConsents: [],
     acceptLegalConsents: vi.fn(),
     ...overrides,
@@ -187,5 +188,78 @@ describe("AuthGate", () => {
         password: "password123",
       })
     );
+  });
+
+  // flow=recovery — encargo explícito 2026-09-01: el enlace de "volver a
+  // crear contraseña" (recuperación autoservicio, generado por
+  // requestPasswordReset.js con flow: "recovery") no debe reutilizar
+  // CreatePasswordScreen/activateAccount ni su exigencia de bases legales.
+  // Ver resetPassword()/resolveRecoverySession() en useSession.js.
+  describe("flow=recovery (recuperación de contraseña)", () => {
+    it("sin sesión: muestra ResetPasswordScreen (no CreatePasswordScreen) y no pide bases legales", () => {
+      window.history.pushState({}, "", "/?token_hash=hash-1&type=recovery&flow=recovery");
+      mockUseSession({ session: null, profile: null });
+
+      render(<App />);
+
+      expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /guardar nueva contraseña/i })).toBeInTheDocument();
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /crear contraseña/i })).not.toBeInTheDocument();
+    });
+
+    it("sesión existente reanudada (activated_at sin fijar) con flow=recovery: también muestra ResetPasswordScreen, sin bases legales", () => {
+      window.history.pushState({}, "", "/?token_hash=hash-1&type=recovery&flow=recovery");
+      mockUseSession({ session: SESSION, profile: { user_id: "u1", activated_at: null } });
+
+      render(<App />);
+
+      expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument();
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    });
+
+    it("sin flow (o con otro valor), un enlace de activación sigue mostrando CreatePasswordScreen con bases legales — comportamiento sin cambios", () => {
+      window.history.pushState({}, "", "/?token_hash=hash-1&type=recovery");
+      mockUseSession({ session: null, profile: null });
+
+      render(<App />);
+
+      expect(screen.getByRole("checkbox")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /crear contraseña/i })).toBeInTheDocument();
+    });
+
+    it("al enviar la contraseña, llama a resetPassword (no activateAccount) con token_hash, type y el email de la sesión", async () => {
+      window.history.pushState({}, "", "/?token_hash=hash-1&type=recovery&flow=recovery");
+      const resetPassword = vi.fn().mockResolvedValue({ userId: "u1" });
+      const activateAccount = vi.fn();
+      mockUseSession({ session: SESSION, profile: { user_id: "u1", activated_at: null }, resetPassword, activateAccount });
+      const user = userEvent.setup();
+
+      render(<App />);
+
+      await user.type(screen.getByLabelText("Nueva contraseña"), "password123");
+      await user.type(screen.getByLabelText("Confirmar contraseña"), "password123");
+      await user.click(screen.getByRole("button", { name: /guardar nueva contraseña/i }));
+
+      await waitFor(() =>
+        expect(resetPassword).toHaveBeenCalledWith({
+          tokenHash: "hash-1",
+          type: "recovery",
+          expectedEmail: "diver@example.com",
+          password: "password123",
+        })
+      );
+      expect(activateAccount).not.toHaveBeenCalled();
+    });
+
+    it("accountBanned prevalece también sobre flow=recovery — muestra login, no ResetPasswordScreen", () => {
+      window.history.pushState({}, "", "/?token_hash=hash-1&type=recovery&flow=recovery");
+      mockUseSession({ session: SESSION, profile: { user_id: "u1", activated_at: null }, accountBanned: true });
+
+      render(<App />);
+
+      expect(screen.getByLabelText("Email o nickname")).toBeInTheDocument();
+      expect(screen.queryByLabelText("Nueva contraseña")).not.toBeInTheDocument();
+    });
   });
 });

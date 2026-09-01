@@ -70,3 +70,41 @@ punto único.
   admin lo decida explícitamente.
 - `docs/BACKLOG.md` gana una entrada gemela a la de `email_for_nickname()`
   para rate limiting de endpoints públicos — pendiente, no bloqueante.
+
+## Corrección 2026-09-01 — separar recuperación de "alta de usuario"
+
+El párrafo de arriba ("el 'cambiar contraseña' tras pulsar el enlace no
+necesitó código nuevo... self-service converge en el mismo punto único")
+resultó ser un error de diseño: al converger en `activateAccount()`, la
+recuperación de contraseña heredaba también `CreatePasswordScreen` y su
+exigencia de **aceptar las bases legales** — una aceptación que ya se
+hizo en el alta original de la cuenta y que no tiene sentido repetir solo
+por haber olvidado una contraseña.
+
+**Decisión corregida:** `requestPasswordReset.js` genera su enlace con un
+parámetro nuevo, `flow: "recovery"` (`generateActivationLink(email,
+{ flow: "recovery" })`), que `activationLink.js` añade a la URL solo en
+este caso — los otros tres llamadores (alta, reactivación, regenerar
+contraseña vía admin) no lo pasan y su comportamiento no cambia. En
+`App.jsx`, `AuthGate` detecta `flow=recovery` en la URL y, en ese caso,
+muestra `ResetPasswordScreen.jsx` (pantalla nueva, sin checkbox ni enlaces
+de bases legales) en vez de `CreatePasswordScreen`, y llama a
+`resetPassword()` (función nueva en `useSession.js`) en vez de
+`activateAccount()`.
+
+`resetPassword()` comparte con `activateAccount()` la resolución de
+sesión/verificación del enlace (`token_hash`+`type`, detección de sesión
+ya resuelta, detección de cuenta baneada) — extraída a un helper común,
+`resolveRecoverySession()` — y sigue marcando `activated_at` si la cuenta
+aún no lo tenía (una cuenta de alta admin que recupera contraseña antes de
+completar su primer acceso también debe quedar activada). La única
+diferencia real de contrato es que **`resetPassword()` nunca llama a
+`acceptLegalConsents()`**. Esto no deja un hueco de seguridad: el gate
+`pendingLegalConsents` en `AuthGate` sigue aplicando de forma
+independiente a cualquier sesión autenticada con consentimientos
+desactualizados, sea cual sea el camino por el que llegó.
+
+No fue necesario tocar `activateAccount()` más allá de la extracción del
+helper compartido — su contrato (sí exige y registra aceptación legal)
+queda exactamente igual para alta, reactivación y regenerar contraseña
+vía admin.

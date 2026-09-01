@@ -60,7 +60,7 @@ it("devuelve 400 si falta el email", async () => {
 it("flujo correcto: cuenta existente, genera enlace y envía email con motivo password_reset_request", async () => {
   const result = await handleRequestPasswordReset(request());
 
-  expect(generateActivationLink).toHaveBeenCalledWith(EXISTING_EMAIL);
+  expect(generateActivationLink).toHaveBeenCalledWith(EXISTING_EMAIL, { flow: "recovery" });
   expect(sendActivationEmail).toHaveBeenCalledWith({
     email: EXISTING_EMAIL,
     firstName: "Ada",
@@ -127,6 +127,6 @@ it("configuración de servidor incompleta: respuesta genérica, no revela el pro
 it("no distingue mayúsculas/minúsculas al buscar el email", async () => {
   const result = await handleRequestPasswordReset(request({ body: JSON.stringify({ email: "DIVER@EXAMPLE.COM" }) }));
 
-  expect(generateActivationLink).toHaveBeenCalledWith(EXISTING_EMAIL);
+  expect(generateActivationLink).toHaveBeenCalledWith(EXISTING_EMAIL, { flow: "recovery" });
   expect(result).toEqual({ status: 200, payload: { ok: true } });
 });

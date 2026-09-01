@@ -3,6 +3,27 @@ import userEvent from "@testing-library/user-event";
 import PaymentsTab from "./PaymentsTab";
 import { ToastProvider } from "./shared";
 
+// Reloj congelado dentro de agosto 2026 — coherente con las fechas fijas del
+// fixture de abajo (2026-08-05/2026-08-10). Sin esto, el test "el filtro de
+// periodo..." dependía de la fecha real del sistema: DatePicker (shared.jsx)
+// abre siempre en el mes de "hoy" cuando no hay fecha elegida, así que
+// "10 de Agosto" solo era visible sin navegar el calendario mientras "hoy"
+// cayera en agosto — dejó de serlo el 2026-09-01 (encontrado y confirmado
+// como la causa real, no un fallo intermitente sin explicación).
+beforeEach(() => {
+  // Solo se falsea `Date` — dejar setTimeout/setInterval reales es
+  // imprescindible: userEvent (@testing-library/user-event) depende de
+  // temporizadores reales para simular clicks/escritura, y con
+  // vi.useFakeTimers() sin scoping los tests que usan userEvent cuelgan
+  // (confirmado: 5 tests con timeout al probarlo sin `toFake`).
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 7, 15, 12, 0, 0)); // 15 de agosto de 2026
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 const rowsHook = (rows) => ({
   rows, loaded: true,
   insertRow: vi.fn(),

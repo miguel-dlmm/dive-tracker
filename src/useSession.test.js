@@ -357,6 +357,100 @@ describe("activateAccount", () => {
   });
 });
 
+// Recuperación de contraseña autoservicio — encargo explícito 2026-09-01:
+// separada de activateAccount() precisamente para NO repetir la aceptación
+// de bases legales (ya se hizo en el alta original). El contrato clave de
+// todo este describe: consentsInsert (legal_consents) NUNCA se llama desde
+// resetPassword(), en ningún escenario — a diferencia de activateAccount(),
+// que sí lo llama siempre (ver describe de arriba).
+describe("resetPassword", () => {
+  it("recuperación desde cero: fija la contraseña y activated_at, pero NUNCA toca legal_consents", async () => {
+    const { result } = await renderWithoutSession();
+    const mocks = setupFromMock({ profile: { user_id: "u1", activated_at: "2026-08-01T00:00:00Z" }, consents: [] });
+    supabase.auth.verifyOtp.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+    supabase.auth.updateUser.mockResolvedValue({ error: null });
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState").mockImplementation(() => {});
+
+    await act(async () => {
+      await result.current.resetPassword({
+        tokenHash: "hash-1",
+        type: "recovery",
+        expectedEmail: "diver@example.com",
+        password: "nueva-123",
+      });
+    });
+
+    expect(supabase.auth.verifyOtp).toHaveBeenCalledWith({ token_hash: "hash-1", type: "recovery" });
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: "nueva-123" });
+    expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({ activated_at: expect.any(String) }));
+    expect(mocks.consentsInsert).not.toHaveBeenCalled();
+    expect(replaceStateSpy).toHaveBeenCalledWith(null, "", window.location.pathname);
+
+    replaceStateSpy.mockRestore();
+  });
+
+  it("cuenta admin-creada nunca activada (activated_at null) que recupera por este camino: sí marca activated_at, sigue sin tocar legal_consents", async () => {
+    const { result } = await renderWithoutSession();
+    const mocks = setupFromMock({ profile: { user_id: "u1", activated_at: null }, consents: [] });
+    supabase.auth.verifyOtp.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+    supabase.auth.updateUser.mockResolvedValue({ error: null });
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState").mockImplementation(() => {});
+
+    await act(async () => {
+      await result.current.resetPassword({ tokenHash: "hash-1", type: "recovery", expectedEmail: "diver@example.com", password: "nueva-123" });
+    });
+
+    expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({ activated_at: expect.any(String) }));
+    expect(mocks.consentsInsert).not.toHaveBeenCalled();
+
+    replaceStateSpy.mockRestore();
+  });
+
+  it("verifyOtp falla (enlace usado o caducado): lanza el mensaje de enlace inválido, sin tocar updateUser ni legal_consents", async () => {
+    const { result } = await renderWithoutSession();
+    supabase.auth.verifyOtp.mockResolvedValue({ data: null, error: { message: "Token has expired or is invalid" } });
+
+    await expect(
+      result.current.resetPassword({ tokenHash: "hash-1", type: "recovery", expectedEmail: "diver@example.com", password: "x" })
+    ).rejects.toThrow("Este enlace ya no es válido");
+
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+
+  it("reanudación: sesión existente con el mismo email, no vuelve a llamar a verifyOtp", async () => {
+    const { result } = await renderReadySession({ user_id: "u1", activated_at: "2026-08-01T00:00:00Z" });
+    const mocks = setupFromMock({ profile: { user_id: "u1", activated_at: "2026-08-01T00:00:00Z" }, consents: [] });
+    supabase.auth.updateUser.mockResolvedValue({ error: null });
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState").mockImplementation(() => {});
+
+    await act(async () => {
+      await result.current.resetPassword({
+        tokenHash: "hash-1",
+        type: "recovery",
+        expectedEmail: FAKE_SESSION.user.email,
+        password: "nueva-123",
+      });
+    });
+
+    expect(supabase.auth.verifyOtp).not.toHaveBeenCalled();
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: "nueva-123" });
+    expect(mocks.consentsInsert).not.toHaveBeenCalled();
+
+    replaceStateSpy.mockRestore();
+  });
+
+  it("sesión existente con email distinto: lanza sin tocar ni verifyOtp ni updateUser", async () => {
+    const { result } = await renderReadySession({ user_id: "u1", activated_at: "2026-08-01T00:00:00Z" });
+
+    await expect(
+      result.current.resetPassword({ tokenHash: "hash-1", type: "recovery", expectedEmail: "otra@example.com", password: "x" })
+    ).rejects.toThrow("No se pudo activar esta cuenta desde la sesión actual.");
+
+    expect(supabase.auth.verifyOtp).not.toHaveBeenCalled();
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
+  });
+});
+
 // Cuenta desactivada — los dos bugs reportados en producción (2026-08-29):
 // una sesión persistida de una cuenta ya desactivada llevaba a
 // CreatePasswordScreen en vez de a login con aviso, y un login nuevo contra
