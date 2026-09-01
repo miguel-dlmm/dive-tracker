@@ -25,10 +25,8 @@
 -- app_config necesita is_admin() ya creada; is_admin() hace un `select`
 -- contra `profiles`, y Postgres SÍ resuelve esa referencia al crear la
 -- función `language sql` (falla con "relation public.profiles does not
--- exist" si no existe todavía — confirmado al crear Supabase TEST); y
--- `profiles.default_currency` referencia `currencies(code)`, así que
--- currencies tiene que existir antes que profiles. Orden obligado:
--- currencies (tabla) -> profiles (tabla) -> is_admin/is_superadmin
+-- exist" si no existe todavía — confirmado al crear Supabase TEST).
+-- Orden obligado: currencies (tabla) -> profiles (tabla) -> is_admin/is_superadmin
 -- (funciones). El resto de cada tabla (RLS, triggers, índices que no sean
 -- de esta dependencia) se queda en su sección original más abajo, sin
 -- moverse — esto es solo lo mínimo que hace falta adelantar.
@@ -66,7 +64,15 @@ create table if not exists public.profiles (
   first_name text,
   last_name text,
   nickname text not null,
-  default_currency text references currencies(code), -- preferencia personal; distinto de currencies.is_default (el respaldo global de la app)
+  -- Avatar (Bloque 5, 2026-09-01): icono de lucide-react + color de marca,
+  -- mismo criterio que el icono de carga de la app (GeneralSettings,
+  -- ConfigTab.jsx) — nunca una imagen subida, evita moderación de
+  -- contenido y almacenamiento de ficheros para un catálogo cerrado y
+  -- pequeño. Null hasta que el usuario elige uno explícitamente;
+  -- ProfileTab.jsx resuelve un valor por defecto determinista (a partir
+  -- del nickname) mientras tanto, nunca deja el avatar "vacío" en UI.
+  avatar_icon text,
+  avatar_color text,
   is_admin boolean not null default false,
   is_superadmin boolean not null default false,
   -- Momento en que la activación de la cuenta completó la fase de
@@ -81,6 +87,24 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
+
+-- Migración aditiva Bloque 5 (2026-09-01) para instalaciones existentes —
+-- ejecutar en el SQL editor de Supabase, o con scripts/apply-migration.mjs
+-- (scripts/migrations/0005-perfil-de-usuario.sql tiene el mismo DDL):
+--
+--   alter table public.profiles
+--     add column if not exists avatar_icon text,
+--     add column if not exists avatar_color text,
+--     drop column if exists default_currency;
+--
+-- default_currency se retira: confirmado (grep en src/ y server/) que
+-- ningún archivo la leía ni la escribía nunca — la moneda favorita real es
+-- oceanpulse:favoriteCurrency:<user_id> en localStorage desde ADR-0007
+-- (decisión deliberada: preferencia personal, no dato de negocio en
+-- Supabase). Esta columna quedó como vestigio sin uso; retirarla es la
+-- "única fuente de verdad" que pide el Bloque 5 para moneda favorita —
+-- Configuración → Perfil pasa a ser la UI que faltaba para ese mecanismo
+-- ya existente, no un mecanismo nuevo en paralelo.
 
 create unique index if not exists profiles_nickname_lower_key on public.profiles (lower(nickname));
 
@@ -161,7 +185,7 @@ drop policy if exists "allow all" on payment_statuses;
 create policy "own rows" on payment_statuses for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- currencies ya se creó en el bloque "Bootstrap" del principio del
--- fichero (la necesitaba profiles.default_currency antes de llegar aquí).
+-- fichero (is_admin() la necesitaba antes de llegar aquí).
 
 -- RLS: catálogo global — cualquier autenticado puede leerlo, solo
 -- admins/superadmins pueden gestionarlo. is_admin(auth.uid()) ya cubre

@@ -4,7 +4,8 @@ import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle,
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { supabase } from "./supabaseClient";
-import { ToastProvider, AppLoading, useScrolled } from "./shared";
+import { ToastProvider, AppLoading, useScrolled, Avatar } from "./shared";
+import { resolveAvatar } from "./avatarCatalog";
 import EnvironmentIndicator from "./EnvironmentIndicator";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG } from "./colors";
@@ -27,6 +28,7 @@ import { APP_VERSION } from "./version";
 import SummaryTab from "./SummaryTab";
 import HelpTab, { clearStoredHelpOpen } from "./HelpTab";
 import PaymentsTab from "./PaymentsTab";
+import ProfileTab from "./ProfileTab";
 
 // ---------------------------------------------------------------
 // Paleta — profesional y contenida: un único acento neutro, fondo
@@ -64,7 +66,7 @@ const PRIMARY_TABS = [
 // "pagos" sigue en este mapa por si se reactiva, pero ya no tiene ningún
 // punto de entrada en la UI — ver docs/ADR/0005 (Mi trabajo cubre su
 // función con "Cobrar todos" + filtro por escuela).
-const SECONDARY_TITLES = { config: "Configuración", help: "Ayuda", pagos: "Pagos" };
+const SECONDARY_TITLES = { config: "Configuración", help: "Ayuda", pagos: "Pagos", perfil: "Mi perfil" };
 
 // Recuerda la pestaña activa y a cuál "volver" desde una pantalla
 // secundaria — corrige de raíz dos problemas reales, no dos parches
@@ -108,7 +110,7 @@ function markWhatsNewSeen(userId) {
   try { localStorage.setItem(whatsNewSeenKey(userId), APP_VERSION); } catch { /* no-op */ }
 }
 
-function AppShell({ onSignOut, profile, initialTab = "home" }) {
+function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" }) {
   const schools = useSupabaseTable("schools", "name");
   const activities = useSupabaseTable("activities", "name");
   const paymentTypes = useSupabaseTable("payment_types", "name");
@@ -211,6 +213,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
     && comisiones.loaded && colleaguePayments.loaded && navSections.loaded && appConfig.loaded;
 
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
+  const avatar = resolveAvatar(profile);
   const bottomTabActive = PRIMARY_TABS.some((t) => t.id === tab) ? tab : null;
   const isSecondary = tab in SECONDARY_TITLES;
   // Cerrar Configuración/Ayuda (la "X" de la cabecera, y el gesto de
@@ -309,10 +312,17 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
                 <Settings size={20} style={{ color: NAVY }} aria-hidden="true" />
               </button>
             )}
-            {profile?.nickname && (
-              <span className="max-w-[104px] truncate text-[12px] font-medium text-gray-500" title={profile.nickname}>
-                {profile.nickname}
-              </span>
+            {profile?.nickname && tab !== "perfil" && (
+              <button
+                onClick={() => changeTab("perfil")}
+                className="-m-1 flex min-h-11 items-center gap-1.5 rounded-full p-1"
+                aria-label="Mi perfil"
+              >
+                <Avatar icon={avatar.icon} color={avatar.color} size={28} />
+                <span className="max-w-[88px] truncate text-[12px] font-medium text-gray-500" title={profile.nickname}>
+                  {profile.nickname}
+                </span>
+              </button>
             )}
             <button onClick={() => { clearStoredNav(); if (DEV_AUTH_BYPASS) disableDevBypass(); onSignOut(); }} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Cerrar sesión">
               <LogOut size={20} style={{ color: NAVY }} aria-hidden="true" />
@@ -371,6 +381,12 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
           />
         )}
         {tab === "help" && <HelpTab navSections={navSections} profile={profile} onClose={closeSecondary} />}
+        {tab === "perfil" && (
+          <ProfileTab
+            profile={profile} currencies={currencies}
+            onClose={closeSecondary} onProfileUpdated={onProfileUpdated} onAccountDeleted={onSignOut}
+          />
+        )}
         {tab === "pagos" && (
           <PaymentsTab
             activities={activities} schools={schools} paymentStatuses={paymentStatuses} currencies={currencies}
@@ -503,7 +519,7 @@ function disableDevBypass() {
 }
 
 function AuthGate() {
-  const { session, profile, loading, accountBanned, signIn, signOut, activateAccount, resetPassword, pendingLegalConsents, acceptLegalConsents } = useSession();
+  const { session, profile, loading, accountBanned, signIn, signOut, activateAccount, resetPassword, pendingLegalConsents, acceptLegalConsents, updateProfile } = useSession();
   const [bypassAttempted, setBypassAttempted] = useState(false);
   // Mientras esté en true, se muestra el mismo loading que "loading" en vez
   // de dejar parpadear LoginScreen durante el auto-signIn. Si falla o
@@ -668,7 +684,7 @@ function AuthGate() {
     return <AcceptLegalScreen onSubmit={acceptLegalConsents} />;
   }
 
-  return <AppShell onSignOut={signOut} profile={profile} initialTab={justActivated ? "help" : "home"} />;
+  return <AppShell onSignOut={signOut} profile={profile} onProfileUpdated={updateProfile} initialTab={justActivated ? "help" : "home"} />;
 }
 
 export default function App() {

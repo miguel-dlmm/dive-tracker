@@ -361,6 +361,16 @@ export function useSession() {
     return { userId };
   }, [resolveRecoverySession, completePasswordChange, markAccountActivated]);
 
+  // Parche optimista local del perfil (Bloque 5, ProfileTab.jsx) — quien
+  // llama ya ha escrito en Supabase (supabase.from("profiles").update(...))
+  // y sabe que ha funcionado; esto solo evita esperar al próximo
+  // onAuthStateChange (que no se dispara por una edición de perfil, solo
+  // por cambios de sesión) para que la cabecera/el resto de la app vean el
+  // cambio. Mismo patrón que markAccountActivated de arriba.
+  const updateProfile = useCallback((patch) => {
+    setProfile((p) => (p ? { ...p, ...patch } : p));
+  }, []);
+
   return {
     session,
     profile,
@@ -373,6 +383,7 @@ export function useSession() {
     acceptLegalConsents,
     activateAccount,
     resetPassword,
+    updateProfile,
     pendingLegalConsents,
   };
 }

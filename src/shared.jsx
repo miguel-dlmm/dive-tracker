@@ -97,6 +97,23 @@ export function AppLoading({ iconName = "Waves", color = TEAL, size = 40, label 
   );
 }
 
+// Avatar circular icono+color (Bloque 5, 2026-09-01) — icon/color ya
+// resueltos por avatarCatalog.js (resolveAvatar), este componente solo
+// dibuja. Mismo lookup dinámico por nombre que AppLoading, con el mismo
+// respaldo a Waves si el nombre no existe en el catálogo (nunca un hueco
+// en blanco).
+export function Avatar({ icon, color = TEAL, size = 36 }) {
+  const Icon = Icons[icon] || Icons.Waves;
+  return (
+    <span
+      className="inline-flex shrink-0 items-center justify-center rounded-full"
+      style={{ width: size, height: size, backgroundColor: `${color}1A` }}
+    >
+      <Icon size={Math.round(size * 0.55)} style={{ color }} aria-hidden="true" />
+    </span>
+  );
+}
+
 // =================================================================
 // Hoja inferior con motion — extraída de MovementSheet.jsx (2026-08-30):
 // esa hoja fue la primera en tener animación real (deslizar desde abajo)
