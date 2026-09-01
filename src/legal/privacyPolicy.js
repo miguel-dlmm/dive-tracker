@@ -6,13 +6,17 @@
 // lo único que hace falta tocar para forzar que todos los usuarios vuelvan
 // a aceptar (ver pendingLegalConsents en useSession.js).
 export const DOCUMENT_TYPE = "privacy_policy";
-export const VERSION = "v1";
+// v2 (2026-08-30): renombrado de producto (antes "Ocean Pulse", una app
+// "de Ocean Flow") a un único nombre, "Ocean Flow" — cambio de contenido
+// real, sube VERSION para forzar la reaceptación (ver nota de VERSION
+// más abajo).
+export const VERSION = "v2";
 export const TITLE = "Política de Privacidad";
 
 export const SECTIONS = [
   {
     heading: "1. Responsable del tratamiento",
-    body: "Ocean Flow — [PENDIENTE: razón social, dirección y datos de contacto del responsable] es responsable del tratamiento de los datos personales tratados a través de Ocean Pulse.\n\nPara cualquier cuestión relacionada con esta política puedes escribir a [PENDIENTE: email de contacto de privacidad].",
+    body: "Ocean Flow — [PENDIENTE: razón social, dirección y datos de contacto del responsable] es responsable del tratamiento de los datos personales que gestiona esta aplicación.\n\nPara cualquier cuestión relacionada con esta política puedes escribir a [PENDIENTE: email de contacto de privacidad].",
   },
   {
     heading: "2. Qué datos tratamos",
@@ -28,7 +32,7 @@ export const SECTIONS = [
   },
   {
     heading: "5. Conservación",
-    body: "Tus datos se conservan mientras mantengas una cuenta activa en Ocean Pulse. Los datos con relevancia fiscal o contable pueden conservarse el tiempo exigido por la normativa aplicable, incluso si solicitas la baja de tu cuenta.",
+    body: "Tus datos se conservan mientras mantengas una cuenta activa en Ocean Flow. Los datos con relevancia fiscal o contable pueden conservarse el tiempo exigido por la normativa aplicable, incluso si solicitas la baja de tu cuenta.",
   },
   {
     heading: "6. Encargados del tratamiento",

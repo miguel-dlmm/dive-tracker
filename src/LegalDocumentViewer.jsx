@@ -23,7 +23,7 @@ export default function LegalDocumentViewer({ title, sections, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="legal-document-title"
-        className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-t-xl bg-white shadow-xl sm:rounded-xl"
+        className="flex max-h-[85dvh] w-full max-w-lg flex-col rounded-t-xl bg-white shadow-xl sm:rounded-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">

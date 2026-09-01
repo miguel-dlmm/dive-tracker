@@ -1,8 +1,15 @@
-# Ocean Pulse — contexto del proyecto
+# Ocean Flow — contexto del proyecto
 
 App de control de ingresos para instructor de buceo freelance (Registro/Work
 Log de clases impartidas, Comisiones por clientes referidos, Pagos de
-compañeros, Tarifas, Resumen). Producto de la marca personal "Ocean Flow".
+compañeros, Tarifas, Resumen).
+
+> Nombre del producto: hasta el 2026-08-30 se llamaba "Ocean Pulse" (un
+> producto "de la marca personal Ocean Flow"). Se renombró a un único
+> nombre, "Ocean Flow", en toda la interfaz visible — ver CHANGELOG.md y
+> `docs/SESSION-2026-08-30-bloques-nocturnos.md`. Los ADR y sesiones
+> anteriores a esa fecha siguen diciendo "Ocean Pulse" a propósito: son
+> historial, no se reescriben.
 
 ## Stack
 
@@ -10,7 +17,12 @@ compañeros, Tarifas, Resumen). Producto de la marca personal "Ocean Flow".
 - Supabase (Postgres + JS client) como backend, sin auth todavía (single-user,
   políticas RLS "allow all")
 - lucide-react para iconos
-- Sin router — navegación por estado (`tab` en App.jsx), no hay URLs por pantalla
+- Sin router — navegación por estado (`tab` en App.jsx), no hay URLs por
+  pantalla. `tab` y `returnTab` (a qué pestaña primaria vuelve "‹"/"✕"
+  desde Ayuda/Configuración) se guardan en `sessionStorage` — sobreviven a
+  una recarga de página, pero no a cerrar la pestaña ni a cerrar sesión
+  (se limpian ahí a propósito, para que un usuario distinto no herede la
+  posición del anterior)
 
 ## Estructura
 
@@ -29,6 +41,109 @@ compañeros, Tarifas, Resumen). Producto de la marca personal "Ocean Flow".
 - Un archivo por pantalla: `HomeTab.jsx`, `WorkLogTab.jsx`, `ComisionesTab.jsx`,
   `CompanerosTab.jsx`, `RatesTab.jsx`, `PaymentsTab.jsx`, `ConfigTab.jsx`,
   `SummaryTab.jsx`
+
+## Ramas y entornos
+
+Modelo completo en `docs/ADR/0006-estrategia-de-ramas-y-entornos.md`. Hoy:
+`main` es la producción real (proyecto Vercel `dive-tracker-exgg`,
+`dive-tracker-exgg.vercel.app`) y `develop` es la rama de
+integración/preparación, que además hace de entorno TEST de facto para el
+proyecto Vercel `dive-tracker` (`dive-tracker-three.vercel.app`), con su
+propio Supabase separado del de producción — ver "Indicador visual de
+entorno TEST" más abajo y el ADR para el detalle completo. Todo cambio
+nace en una rama `feature/*`/`fix/*`/`hotfix/*` creada desde `develop` y
+vuelve a fusionarse ahí — nunca commits directos sobre `develop`. Empujar
+esa rama a GitHub (sin fusionarla) genera sola un Preview Deployment en
+Vercel con las mismas variables TEST, útil para validar sin tocar
+`develop`. No existe todavía una rama `test` dedicada; se crea solo
+cuando se cumpla alguno de los disparadores objetivos que describe el
+ADR, no por adelantado.
+
+## Bypass de login en desarrollo
+
+Herramienta permanente de desarrollo — **no evita autenticación, la
+automatiza**: en vez de una ruta alternativa que salte Supabase, hace
+login automáticamente con una cuenta demo real usando el mismo `signIn()`
+de `useSession.js` que usa cualquier usuario. Sigue siendo una sesión de
+Supabase real, con RLS real — sirve para no teclear el login a mano en
+cada recarga mientras se prueban cambios visuales/UX, no para eludir
+ningún control de seguridad.
+
+- **Cómo activarla:** en tu `.env.local` (nunca se comitea), pon:
+  ```
+  VITE_DEV_AUTH_BYPASS=true
+  VITE_DEV_DEMO_EMAIL=dev-bypass@oceanpulse.test
+  VITE_DEV_DEMO_PASSWORD=<la que le pusiste tú al activarla>
+  ```
+  Requiere que esa cuenta demo ya exista y tenga contraseña fijada — se
+  crea una vez con `node --env-file=.env.local scripts/create-demo-user.js
+  --email=... --nickname=...` y completando el enlace de primer acceso
+  que imprime, igual que cualquier alta real.
+- **Cómo desactivarla:** borra `VITE_DEV_AUTH_BYPASS` de `.env.local` o
+  ponla a `false` — vuelve a aparecer el login normal.
+- **Cerrar sesión respeta la decisión:** pulsar "Cerrar sesión" con el
+  bypass activo guarda `oceanpulse:devBypassDisabled=true` en
+  `localStorage` (por eso sobrevive a recargar la página, no solo a
+  `sessionStorage`) y dejas de auto-loguearte con la cuenta demo en ese
+  navegador hasta que inicies sesión a mano una vez — así se puede probar
+  con otra cuenta sin que el bypass "secuestre" la sesión de vuelta.
+- **Doble candado, no solo en teoría:** `import.meta.env.MODE ===
+  "development"` (constante que Vite resuelve en build time — en
+  `vite build`, mode "production", la rama se elimina del bundle por
+  completo, verificado con `grep` sobre `dist/`) + el opt-in explícito
+  `VITE_DEV_AUTH_BYPASS=true`. No está activo por defecto ni siquiera en
+  desarrollo. Se compara con `MODE`, no con el flag `DEV`, porque `DEV`
+  también es `true` bajo `vitest` (mode "test") — con `DEV` los tests que
+  cargan `.env.local` activarían el auto-login real y romperían los tests
+  de login.
+- **Limitaciones:** necesita que la cuenta demo exista con contraseña ya
+  fijada — no crea la cuenta ni la activa por sí solo. Los datos que
+  generes con ella (escuelas, tarifas, movimientos...) son reales y
+  persistentes en Supabase, no se limpian solos.
+- **Qué nunca debe hacerse:** no usarlo jamás con las credenciales de una
+  cuenta de un usuario real; no comitear `.env.local`; no configurar
+  `VITE_DEV_AUTH_BYPASS` ni `VITE_DEV_DEMO_*` en Vercel — es exclusivamente
+  para `npm run dev` en local.
+
+## Indicador visual de entorno TEST
+
+Igual que el bypass de login de arriba, es una herramienta permanente,
+no una tarea puntual — para que nadie confunda nunca el entorno TEST con
+producción, sin que la identificación visual altere en nada la copia
+exacta de producción (posiciones, tamaños, layout).
+
+- **Fuente de verdad única:** `VITE_ENVIRONMENT`. Vale `"test"` en el
+  entorno TEST, cualquier otro valor (o ausente) en producción y en local
+  por defecto. Nunca detección de rama Git, de proyecto Vercel ni de URL.
+- **Componente:** `src/EnvironmentIndicator.jsx` — aislado a propósito, no
+  depende de auth/navegación/negocio. Se monta una única vez en
+  `App.jsx`, como hermano de `<AuthGate />` dentro de
+  `export default function App()`, fuera de cualquier condicional — por
+  eso aparece igual en login, crear contraseña y cualquier pestaña, sin
+  tener que montarlo en cada pantalla por separado.
+- **Qué hace:** una pill "TEST" `position: fixed`, centrada en el eje
+  horizontal y alineada verticalmente con la fila de la cabecera (mismas
+  coordenadas en toda la app, incluidas las pantallas sin cabecera propia
+  como login), `z-index` por encima de todo (incluidos modales) y
+  `pointer-events: none` — nunca intercepta taps. Además antepone
+  `[TEST] ` al `document.title`. No ocupa espacio de layout: al ser
+  `fixed`, nunca desplaza el header ni ningún componente.
+- **Eliminado del bundle de producción, no solo oculto:** al no estar
+  `VITE_ENVIRONMENT` definida en el build de producción, Vite elimina la
+  rama entera por dead-code elimination — verificado con `grep` sobre
+  `dist/`, el string ni siquiera aparece en el JS servido. Mismo nivel de
+  garantía que el `MODE === "development"` del bypass de login, sin
+  necesitar ese doble candado aquí (no hay riesgo de seguridad que
+  mitigar, es solo un indicador visual).
+- **Dónde está activo hoy:** `.env.local` (local) y el proyecto Vercel
+  `dive-tracker` (Production y Preview, `dive-tracker-three.vercel.app` y
+  cualquier Preview Deployment de rama) tienen `VITE_ENVIRONMENT=test`. El
+  proyecto de producción real (`dive-tracker-exgg`, rama `main`) no la
+  tiene — nunca debe configurarse ahí.
+- **Favicon:** `public/icon.svg` (referenciado por `index.html`) usa el
+  mismo icono `Waves` de `lucide-react` y el mismo color `TEAL` que ya usa
+  la app en cabecera/login/spinner — antes ese archivo no existía
+  (`<link>` roto, sin favicon real).
 
 ## Convenciones — seguirlas es más importante que "queda bien"
 
@@ -71,33 +186,52 @@ compañeros, Tarifas, Resumen). Producto de la marca personal "Ocean Flow".
    no se elige en el formulario de Work Log/Comisiones — se deriva
    automáticamente de la tarifa que coincide con escuela+actividad. Si no hay
    tarifa, usar `currencies` con `is_default = true` como respaldo, nunca
-   dejar el símbolo en blanco.
+   dejar el símbolo en blanco. Ajuste de curso (sin tarifa asociada) tampoco
+   la elige por movimiento desde 2026-08-30: se resuelve sola (moneda
+   favorita en `localStorage`, ADR-0007, o `is_default` de `currencies` como
+   respaldo) y se muestra como referencia junto al importe, nunca como un
+   campo interactivo — ver `docs/BACKLOG.md`, "Configuración → Moneda
+   favorita", para la futura pantalla que la gestione explícitamente.
 10. **Tipografía única (Inter)**, jerarquía por peso/tamaño, no mezclar
     fuentes. Cifras de dinero: `tabular-nums` + símbolo de moneda más
     apagado que la cifra (componente `Money`).
 
 ## Cosas que NO existen todavía (no asumir que están hechas)
 
-- Autenticación / multiusuario (estimado ~5-7h si se pide: Supabase Auth ya
-  soportaría 50k MAU gratis, falta pantalla de login y `user_id` + RLS real
-  en las 12 tablas)
-- Interacción real en los calendarios (hoy son de solo lectura con un
-  desglose al pulsar un día; no filtran el resto de la pantalla)
-- El KPI superior de Home ("Ganado este mes") solo cuenta Work Log — el
-  desglose al pulsar un día del calendario de Home sí junta Ganado +
-  Comisiones + Pagos de compañeros (agrupados por tipo, como en el Resumen)
-- Los iconos/imágenes que referencia `index.html` (`/icon.svg`,
-  `/icon-192.png`, `/icon-512.png`, `/og-image.png`) son placeholders — hay
-  que generarlos
+- Interacción real en el calendario de Resumen (sigue siendo de solo
+  lectura, con un desglose al pulsar un día; no filtra el resto de la
+  pantalla). El calendario de Home sí admite crear un movimiento al tocar
+  un día vacío o desde el propio desglose de un día con actividad — ver
+  `onCreateForDay` en `MonthCalendar`, `shared.jsx`.
+- Los iconos/imágenes que referencia `index.html` (`/icon-192.png`,
+  `/icon-512.png`, `/og-image.png`) son placeholders — hay que generarlos.
+  `/icon.svg` (favicon) ya no lo es — ver "Indicador visual de entorno
+  TEST" arriba
 - El icono del logo real de Ocean Flow — de momento el loading usa iconos de
   lucide-react (configurable en Configuración → Ajustes) a la espera del
   logo oficial
+- **Un Design System unificado de Ocean Flow.** El rediseño de Movimientos
+  (paneles flotantes, tarjetas, animaciones, identidad visual por tipo de
+  movimiento) es una referencia de calidad, no el sistema de diseño
+  definitivo de la app. Sus componentes, patrones, colores y decisiones
+  visuales podrán consolidarse, ajustarse o incluso reemplazarse durante
+  una futura fase de unificación visual global. El objetivo final es una
+  identidad visual coherente en toda la aplicación — no que una pantalla
+  concreta condicione innecesariamente el diseño del resto porque se hizo
+  primero. No tratar ninguna decisión visual de Movimientos como
+  inamovible fuera de esa pantalla sin que se acuerde explícitamente
+  extenderla al resto de la app.
 
 ## Esquema de base de datos
 
 Ver `schema.sql` — es el esquema consolidado actual (sustituye a las ~10
 migraciones sueltas del historial de chat, que ya no hace falta volver a
-mirar salvo para entender el porqué de alguna decisión).
+mirar salvo para entender el porqué de alguna decisión). Para levantar
+una base de datos nueva desde cero (TEST, o cualquier entorno futuro):
+ejecutar `schema.sql` y después `seed.sql` — este último siembra lo
+mínimo que la app necesita para ser utilizable (moneda por defecto,
+`nav_sections`, `app_config`, dataset `ihasia`). Nunca hace falta contra
+producción, que ya tiene sus propias filas reales.
 
 For database and architecture changes:
 Always propose a migration plan first.
@@ -111,6 +245,9 @@ salvo que se acuerde explícitamente una excepción.
 
 ### 1. Control de cambios y gestión de commits
 
+- Todo cambio se desarrolla en una rama `feature/*`/`fix/*`/`hotfix/*`
+  creada desde `develop` — nunca se commitea directamente sobre `develop`
+  (ver "Ramas y entornos" arriba y `docs/ADR/0006-...md`).
 - Nunca hacer commit ni push directamente sin revisión previa del cambio.
 - Antes de cualquier commit, mostrar siempre: resumen funcional de los
   cambios, objetivo del cambio y problema que resuelve, lista completa de
@@ -136,8 +273,9 @@ salvo que se acuerde explícitamente una excepción.
 - Si falla el build: NO push. Informar error completo, archivo afectado,
   posible causa y solución propuesta.
 - Solo tras aprobación del mensaje de commit + tests correctos + build
-  correcto: `git add <archivos>`, `git commit -m "mensaje aprobado"`,
-  `git push origin develop`.
+  correcto: `git add <archivos>`, `git commit -m "mensaje aprobado"` sobre
+  la rama `feature/*`/`fix/*`/`hotfix/*` correspondiente, fusionarla a
+  `develop` y `git push origin develop`.
 - Tras el push, informar siempre: hash del commit, rama utilizada, resumen
   final de cambios, resultado final de tests, resultado final del build.
 
@@ -188,3 +326,97 @@ salvo que se acuerde explícitamente una excepción.
   qué coste añade y cuándo sería recomendable aplicarla.
 - La decisión final siempre debe buscar código simple, seguro, mantenible,
   fácil de evolucionar y sin complejidad innecesaria.
+
+### 7. Documentación viva de decisiones
+
+La conversación no es la fuente de verdad del proyecto: cada decisión
+relevante que se apruebe en una sesión debe quedar reflejada en la
+documentación, para que una sesión futura entienda el contexto sin
+depender del historial de chat.
+
+Es "decisión relevante" cualquier decisión de:
+- **Producto** (alcance, usuarios objetivo, flujos, prioridades,
+  funcionalidades descartadas).
+- **Arquitectura** (modelo de datos, estructura de código, patrones,
+  decisiones técnicas con impacto futuro).
+- **Seguridad/autenticación/permisos.**
+- **UX con impacto transversal** (no un ajuste puntual de una pantalla).
+
+Proceso obligatorio:
+1. Al detectar una decisión de este tipo, proponer dónde documentarla
+   antes de escribir nada: `docs/PRODUCT.md` si es visión o principio de
+   producto; un ADR nuevo en `docs/ADR/` si es una decisión arquitectónica
+   o de diseño con alternativas y trade-offs; `docs/BACKLOG.md` si es
+   priorización o algo pendiente; este mismo `CLAUDE.md` si es una regla
+   permanente de trabajo o desarrollo.
+2. No documentar nunca automáticamente sin avisar antes. Indicar primero:
+   que la decisión debería quedar registrada, el documento y sección
+   propuestos, y un resumen breve de lo que se guardaría.
+3. Actualizar el documento solo tras la aprobación.
+4. Toda respuesta que incluya un cambio documental cierra con una sección
+   final **"Documentación actualizada"**: archivo modificado, sección
+   afectada, resumen de la decisión registrada.
+
+Evitar llenar el proyecto de documentación innecesaria — esta regla es
+para decisiones que cambiarían de verdad el comportamiento de una sesión
+futura, no para cada detalle de implementación.
+
+### 8. Verificación UX/UI (mobile-check)
+
+Ocean Flow es mobile-first, pero verificar solo con Chrome de escritorio
+redimensionado deja fuera la clase de bugs más específica de móvil
+(paneles flotantes mal posicionados, objetivos táctiles pequeños,
+animaciones rotas, errores de consola) hasta que el usuario los prueba a
+mano en su iPhone. Para no depender de eso en cada ronda, existe
+`scripts/mobile-check.mjs` (`npm run mobile-check`).
+
+**Cuándo ejecutarlo.** Antes de dar por cerrado cualquier cambio de
+UX/UI relevante en el módulo verificado (hoy, Movimientos) — no solo
+cuando se pida explícitamente. Requiere `npm run dev` arrancado aparte,
+con `VITE_DEV_AUTH_BYPASS` activo (ver "Bypass de login en desarrollo"
+más arriba), y el motor Chromium de Playwright instalado una vez
+(`npx playwright install chromium`).
+
+**Qué verifica.** Recorre el flujo real de "Mi trabajo" (crear, cambiar
+tipo, seleccionar curso, buscar moneda, añadir nota, eliminar con
+animación) usando **Playwright con el motor Chromium** y emulación de
+`iPhone 14 Pro Max` (`devices["iPhone 14 Pro Max"]`): viewport, densidad
+de píxel (`deviceScaleFactor: 3`) y eventos táctiles reales (`tap()`, no
+clics de ratón) del dispositivo real de referencia del usuario. Vuelca
+capturas en `scripts/mobile-check-output/` (no versionado) para revisión
+visual humana, y falla (código de salida ≠ 0) si aparece cualquier error
+o aviso en la consola del navegador durante el recorrido.
+
+**Herramientas evaluadas y por qué esta.**
+- **BrowserStack / dispositivo remoto real**: la fidelidad más alta
+  posible, pero requiere cuenta de pago y credenciales del usuario — no
+  accionable sin que él configure el acceso.
+- **Simulador de iOS (Xcode)**: Xcode está instalado pero sin ningún
+  runtime de iOS descargado — instalarlo implica una descarga de varios
+  GB y posible login de Apple ID. No se ha intentado sin consultarlo
+  antes, por el coste y la incertidumbre (ver siguiente punto: WebKit ya
+  reveló restricciones reales de sandboxing en este entorno).
+- **Playwright + motor WebKit** (el motor real de Safari): la opción
+  teóricamente ideal. Instalada y probada a fondo — pero
+  `browser.newPage()` cuelga indefinidamente en este entorno concreto
+  (launch y contexto sí completan). Diagnosticado de forma aislada: el
+  mismo código con el motor Chromium de Playwright funciona
+  end-to-end sin problema, confirmando que el bloqueo es específico de la
+  arquitectura multiproceso de WebKit chocando con alguna capa de
+  sandboxing del entorno, no un fallo de configuración corregible desde
+  aquí.
+- **Playwright + motor Chromium con emulación de iPhone 14 Pro Max**
+  (elegida): no es el motor de Safari, pero da viewport/densidad/táctil
+  reales del dispositivo del usuario, funciona de forma fiable en este
+  entorno y no necesita cuentas externas ni descargas pesadas.
+
+**Limitaciones — cuándo sigue siendo imprescindible la prueba manual en
+el iPhone real del usuario.** `mobile-check` NO sustituye la prueba
+física para nada que dependa específicamente de: el motor de render/JS
+real de WebKit/Safari (soporte de CSS, particularidades del motor), el
+teclado virtual real de iOS y su efecto sobre `visualViewport`, o el
+tacto físico real (presión, gestos multitáctiles). Para todo lo demás
+(posición de paneles flotantes, tamaños de objetivo táctil, animaciones,
+flujos de interacción, errores de consola) sí sustituye la ausencia total
+de verificación móvil automática que había antes — se comprueba solo, en
+cada sesión, antes de pedirle nada al usuario.

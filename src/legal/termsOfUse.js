@@ -3,17 +3,21 @@
 // legal antes de considerarlo definitivo. Ver privacyPolicy.js para la nota
 // sobre cómo funciona VERSION.
 export const DOCUMENT_TYPE = "terms_of_use";
-export const VERSION = "v1";
+// v2 (2026-08-30): renombrado de producto (antes "Ocean Pulse", una app
+// "de Ocean Flow") a un único nombre, "Ocean Flow" — cambio de contenido
+// real, sube VERSION para forzar la reaceptación (ver nota de
+// privacyPolicy.js sobre cómo funciona VERSION).
+export const VERSION = "v2";
 export const TITLE = "Términos de Uso";
 
 export const SECTIONS = [
   {
     heading: "1. Objeto",
-    body: 'Estos términos regulan el uso de Ocean Pulse, una aplicación de Ocean Flow para que instructores de buceo freelance lleven el control de sus ingresos (clases, comisiones, pagos entre compañeros y tarifas).',
+    body: 'Estos términos regulan el uso de Ocean Flow, una aplicación para que instructores de buceo freelance lleven el control de sus ingresos (clases, comisiones, pagos entre compañeros y tarifas).',
   },
   {
     heading: "2. Acceso a la aplicación",
-    body: "El acceso a Ocean Pulse se realiza mediante una cuenta personal creada por un administrador. Eres responsable de la confidencialidad de tu contraseña y de toda la actividad realizada desde tu cuenta.",
+    body: "El acceso a Ocean Flow se realiza mediante una cuenta personal creada por un administrador. Eres responsable de la confidencialidad de tu contraseña y de toda la actividad realizada desde tu cuenta.",
   },
   {
     heading: "3. Uso adecuado",
@@ -25,11 +29,11 @@ export const SECTIONS = [
   },
   {
     heading: "5. Disponibilidad del servicio",
-    body: 'Ocean Pulse se ofrece "tal cual", sin garantía de disponibilidad continua. Podemos realizar mantenimientos o cambios en la app que afecten temporalmente al acceso.',
+    body: 'Ocean Flow se ofrece "tal cual", sin garantía de disponibilidad continua. Podemos realizar mantenimientos o cambios en la app que afecten temporalmente al acceso.',
   },
   {
     heading: "6. Propiedad intelectual",
-    body: "El diseño, código y marca de Ocean Pulse pertenecen a Ocean Flow. Los datos que introduces son tuyos; nosotros los tratamos según se describe en la Política de Privacidad.",
+    body: "El diseño, código y marca de Ocean Flow son propiedad de su operador. Los datos que introduces son tuyos; nosotros los tratamos según se describe en la Política de Privacidad.",
   },
   {
     heading: "7. Modificación de estos términos",

@@ -2,10 +2,16 @@ import React, { useState } from "react";
 import { Waves, Loader2 } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
 import { inputCls, Field } from "./shared";
+import { ACCOUNT_DEACTIVATED_MESSAGE } from "./useSession";
 
 // signIn: (identifier, password) => Promise — de useSession. identifier
-// acepta email o nickname indistintamente. Lanza en error.
-export default function LoginScreen({ signIn }) {
+// acepta email o nickname indistintamente. Lanza en error — error.code
+// "user_banned" (cuenta desactivada) es la única excepción a "mensaje
+// genérico siempre": ese caso ya se muestra aparte vía la prop
+// accountBanned (ver AuthGate en App.jsx), así que aquí se ignora
+// explícitamente para no duplicar el aviso con un texto distinto ("email/
+// contraseña incorrectos" sería además incorrecto en ese caso).
+export default function LoginScreen({ signIn, accountBanned = false }) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,22 +24,21 @@ export default function LoginScreen({ signIn }) {
     setError("");
     try {
       await signIn(identifier, password);
-    } catch {
-      setError("Email/nickname o contraseña incorrectos.");
+    } catch (err) {
+      if (err?.code !== "user_banned") {
+        setError("Email/nickname o contraseña incorrectos.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-5" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+    <div className="flex min-h-dvh items-center justify-center px-5" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-2">
           <Waves size={28} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
-          <div className="text-center leading-tight">
-            <h1 className="text-lg font-bold tracking-tight" style={{ color: NAVY }}>Ocean Pulse</h1>
-            <p className="text-[11px] font-medium text-gray-400">by Ocean Flow</p>
-          </div>
+          <h1 className="text-lg font-bold tracking-tight" style={{ color: NAVY }}>Ocean Flow</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
@@ -57,6 +62,7 @@ export default function LoginScreen({ signIn }) {
             />
           </Field>
 
+          {accountBanned && <p role="alert" className="text-sm text-red-600">{ACCOUNT_DEACTIVATED_MESSAGE}</p>}
           {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
           <button

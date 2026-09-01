@@ -1,4 +1,4 @@
-const ENV = { RESEND_API_KEY: "resend-key", EMAIL_FROM: "Ocean Pulse <hola@example.com>" };
+const ENV = { RESEND_API_KEY: "resend-key", EMAIL_FROM: "Ocean Flow <hola@example.com>" };
 
 async function sendWithEnv(args, envOverrides = {}) {
   const previous = {};

@@ -1,7 +1,7 @@
 {
-  "name": "Ocean Pulse",
-  "short_name": "Ocean Pulse",
-  "description": "Control de ingresos para instructores de buceo — por Ocean Flow",
+  "name": "Ocean Flow",
+  "short_name": "Ocean Flow",
+  "description": "Control de ingresos para instructores de buceo",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F7F8F8",

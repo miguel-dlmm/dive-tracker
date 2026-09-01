@@ -1,0 +1,647 @@
+// Verificación automática y recurrente en un navegador con emulación
+// móvil real (viewport, densidad de píxel y eventos táctiles de un
+// iPhone 14 Pro Max) — no solo Chrome de escritorio redimensionado a
+// mano. Ver CLAUDE.md "8. Verificación UX/UI (mobile-check)" para el
+// porqué de Chromium (no WebKit) en este proyecto.
+//
+// Requiere `npm run dev` arrancado aparte (con VITE_DEV_AUTH_BYPASS
+// activo, ver CLAUDE.md "Bypass de login en desarrollo") y el motor
+// Chromium de Playwright instalado una vez:
+//   npx playwright install chromium
+//
+// Uso:
+//   npm run dev                        # en una terminal
+//   npm run mobile-check                # en otra
+//   npm run mobile-check -- --headed    # para ver la ventana en vivo
+//
+// Cada pantalla relevante del recorrido se vuelca como captura en
+// scripts/mobile-check-output/ (no versionada, ver .gitignore) para
+// revisión visual humana; los errores/avisos de consola del navegador se
+// listan al final y el proceso termina con código de salida != 0 si hay
+// alguno, para poder engancharlo a un chequeo automático.
+//
+// Esto sigue sin ser una prueba en un iPhone físico real — usa el motor
+// de Chromium con emulación de iPhone 14 Pro Max (viewport, densidad de
+// píxel y taps reales vía Playwright, no clics de ratón), no el motor
+// WebKit que usa Safari de verdad. Sirve para detectar de forma
+// automática y recurrente, en cada sesión de trabajo, la clase de bugs
+// más frecuente (paneles flotantes mal posicionados, objetivos táctiles
+// pequeños, animaciones rotas, errores de consola) antes de pedirle al
+// usuario que lo pruebe en su iPhone — no para sustituir esa prueba en
+// los casos que dependen del motor de render real de Safari o del
+// teclado virtual de iOS (ver el ADR para el intento fallido con WebKit
+// en este entorno concreto).
+
+import { chromium, devices } from "playwright";
+import { mkdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const OUT_DIR = path.join(__dirname, "mobile-check-output");
+mkdirSync(OUT_DIR, { recursive: true });
+
+const headed = process.argv.includes("--headed");
+const BASE_URL = process.env.MOBILE_CHECK_URL || "http://localhost:5173";
+
+const consoleIssues = [];
+let shotCount = 0;
+async function shot(page, label) {
+  shotCount += 1;
+  const file = path.join(OUT_DIR, `${String(shotCount).padStart(2, "0")}-${label}.png`);
+  await page.screenshot({ path: file });
+  console.log(`  📸 ${label} -> ${path.relative(process.cwd(), file)}`);
+}
+
+async function main() {
+  const browser = await chromium.launch({ headless: !headed });
+  const context = await browser.newContext({ ...devices["iPhone 14 Pro Max"] });
+  const page = await context.newPage();
+
+  page.on("console", (msg) => {
+    if (["error", "warning"].includes(msg.type())) {
+      consoleIssues.push(`[${msg.type()}] ${msg.text()}`);
+    }
+  });
+  page.on("pageerror", (err) => consoleIssues.push(`[pageerror] ${err.message}`));
+
+  console.log(`\nChromium (emulación iPhone 14 Pro Max) · ${BASE_URL}\n`);
+
+  await page.goto(BASE_URL);
+  await Promise.race([
+    page.waitForSelector("text=Mi trabajo", { timeout: 15000 }),
+    page.waitForSelector("text=Privacidad y condiciones de uso", { timeout: 15000 }),
+  ]);
+
+  // Reaceptación legal (AcceptLegalScreen) — aparece si alguna versión de
+  // Términos/Privacidad cambió desde la última vez que esta cuenta de
+  // prueba aceptó (ver docs/legal, VERSION). No es un estado "normal" del
+  // recorrido, pero sí uno real y esperable tras cualquier cambio de
+  // contenido legal — se resuelve aquí para no bloquear el resto.
+  if (await page.getByText("Privacidad y condiciones de uso").isVisible().catch(() => false)) {
+    console.log("→ Reaceptación legal pendiente (nueva versión de Términos/Privacidad) — aceptar y continuar");
+    await shot(page, "reaceptacion-legal");
+    await page.getByRole("checkbox").tap();
+    await page.getByRole("button", { name: "Continuar" }).tap();
+    await page.waitForSelector("text=Mi trabajo", { timeout: 15000 });
+  }
+
+  console.log("→ 'Qué hay de nuevo': recorrer las diapositivas y cerrar con 'Empezar'");
+  if (await page.getByRole("dialog").isVisible().catch(() => false)) {
+    await shot(page, "whats-new-primera-diapositiva");
+
+    console.log("  → swipe lateral entre diapositivas");
+    const dialog = page.getByRole("dialog");
+    const firstSlideTitle = await dialog.getByRole("heading").textContent();
+    const dialogBox = await dialog.boundingBox();
+    const midY = dialogBox.y + dialogBox.height / 2;
+    const midX = dialogBox.x + dialogBox.width / 2;
+    // Swipe a la izquierda → avanza a la siguiente diapositiva.
+    await page.mouse.move(midX + 60, midY);
+    await page.mouse.down();
+    await page.mouse.move(midX - 100, midY, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+    const afterSwipeLeftTitle = await dialog.getByRole("heading").textContent();
+    if (afterSwipeLeftTitle === firstSlideTitle) {
+      consoleIssues.push("[whats-new] El swipe hacia la izquierda no avanzó de diapositiva");
+    }
+    await shot(page, "whats-new-tras-swipe-izquierda");
+    // Swipe a la derecha → vuelve a la diapositiva anterior.
+    await page.mouse.move(midX - 60, midY);
+    await page.mouse.down();
+    await page.mouse.move(midX + 100, midY, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+    const afterSwipeRightTitle = await dialog.getByRole("heading").textContent();
+    if (afterSwipeRightTitle !== firstSlideTitle) {
+      consoleIssues.push("[whats-new] El swipe hacia la derecha no volvió a la diapositiva anterior");
+    }
+
+    let guard = 0;
+    while (await page.getByRole("button", { name: "Siguiente" }).isVisible().catch(() => false) && guard < 10) {
+      await page.getByRole("button", { name: "Siguiente" }).tap();
+      await page.waitForTimeout(250);
+      guard += 1;
+    }
+    await shot(page, "whats-new-ultima-diapositiva");
+    await page.getByRole("button", { name: "Empezar" }).tap();
+    await page.waitForTimeout(200);
+  } else {
+    console.log("  (no apareció — ya se había marcado como vista para esta cuenta)");
+  }
+
+  await shot(page, "home");
+
+  console.log("→ Home: 'Generado este mes' navega a Resumen (puente táctil, 2026-08-29)");
+  await page.getByTestId("generated-this-month-card").tap();
+  await page.waitForTimeout(300);
+  const activeTabAfterGeneratedTap = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabAfterGeneratedTap?.trim() !== "Resumen") {
+    consoleIssues.push(`[home->resumen] Al tocar "Generado este mes", la pestaña activa es "${activeTabAfterGeneratedTap?.trim()}", no "Resumen"`);
+  }
+  await shot(page, "resumen-tras-tocar-generado-este-mes");
+  await page.locator("text=Home").first().tap();
+  await page.waitForTimeout(300);
+
+  console.log("→ Home: 'Añadir movimiento' (integrado en la tarjeta Pendiente de cobrar) abre el formulario SIN salir de Home");
+  await page.getByRole("button", { name: "Añadir movimiento", exact: true }).tap();
+  await page.waitForTimeout(250);
+  await shot(page, "home-anadir-movimiento");
+  const activeTabWithSheetOpen = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabWithSheetOpen?.trim() !== "Home") {
+    consoleIssues.push(`[nav] Al abrir 'Añadir movimiento' desde Home, la pestaña activa pasó a ser "${activeTabWithSheetOpen?.trim()}" — debe seguir en Home mientras se rellena`);
+  }
+
+  console.log("→ Cerrar el formulario sin guardar: debe quedarse en Home, no navegar a Mi trabajo");
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(200);
+  const activeTabAfterCancel = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabAfterCancel?.trim() !== "Home") {
+    consoleIssues.push(`[nav] Tras cerrar 'Añadir movimiento' sin guardar, la pestaña activa es "${activeTabAfterCancel?.trim()}", no "Home"`);
+  }
+  await shot(page, "home-tras-cerrar-sin-guardar");
+
+  console.log("→ Guardar desde el acceso rápido de Home: debe navegar a Mi trabajo solo tras el guardado, y el movimiento debe verse allí");
+  await page.getByRole("button", { name: "Añadir movimiento", exact: true }).tap();
+  await page.waitForTimeout(200);
+  await page.getByRole("button", { name: "Guardar", exact: false }).tap();
+  await page.waitForTimeout(600);
+  const activeTabAfterSave = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabAfterSave?.trim() !== "Mi trabajo") {
+    consoleIssues.push(`[nav] Tras guardar desde el acceso rápido de Home, la pestaña activa es "${activeTabAfterSave?.trim()}", no "Mi trabajo"`);
+  }
+  await shot(page, "mi-trabajo-tras-guardar-desde-home");
+  const pendientesTabAfterHomeSave = page.getByRole("button", { name: "Pendientes", exact: false });
+  if (!(await pendientesTabAfterHomeSave.isVisible().catch(() => false))) {
+    consoleIssues.push("[home->mi-trabajo] Tras guardar desde Home, no se encuentra la pestaña 'Pendientes' en Mi trabajo para localizar el movimiento recién creado");
+  }
+
+  // Volver a Home antes del siguiente paso, que también parte de Home.
+  await page.locator("text=Home").first().tap();
+  await page.waitForTimeout(300);
+
+  console.log("→ Home: tocar un día vacío del calendario abre 'Nuevo curso impartido' con esa fecha, sin salir de Home");
+  const creatableDay = page.locator('button[aria-label^="Añadir movimiento el"]').first();
+  const dayLabel = await creatableDay.getAttribute("aria-label");
+  console.log(`  (día tocado: "${dayLabel}" — comprobar que la fecha del formulario coincide, no la de hoy)`);
+  await creatableDay.tap();
+  await page.waitForTimeout(250);
+  await shot(page, "home-dia-vacio-abre-formulario");
+  const activeTabWithDaySheetOpen = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabWithDaySheetOpen?.trim() !== "Home") {
+    consoleIssues.push(`[nav] Al abrir el formulario desde un día del calendario de Home, la pestaña activa pasó a ser "${activeTabWithDaySheetOpen?.trim()}" — debe seguir en Home mientras se rellena`);
+  }
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(200);
+  // El día tocado navega a Mi trabajo (mismo flujo que el FAB) — volver a
+  // Home antes de continuar, para que el resto del recorrido no dependa
+  // de en qué pestaña te deja este paso concreto.
+  await page.locator("text=Home").first().tap();
+  await page.waitForTimeout(300);
+
+  console.log("→ Mi trabajo");
+  await page.locator("text=Mi trabajo").first().tap();
+  await page.waitForTimeout(400);
+  await shot(page, "mi-trabajo-lista");
+
+  console.log("→ Recargar en Mi trabajo: debe seguir en Mi trabajo, no volver a Home");
+  await page.reload();
+  await page.waitForSelector("text=Mi trabajo", { timeout: 15000 });
+  await page.waitForTimeout(300);
+  const activeTabAfterReload = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabAfterReload?.trim() !== "Mi trabajo") {
+    consoleIssues.push(`[nav] Tras recargar en Mi trabajo, la pestaña activa es "${activeTabAfterReload?.trim()}", no "Mi trabajo"`);
+  }
+  await shot(page, "mi-trabajo-tras-recargar");
+
+  console.log("→ Mi trabajo -> Ayuda -> Cerrar: debe volver a Mi trabajo, no a Home");
+  await page.locator('button[aria-label="Ayuda"]').tap();
+  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(300);
+  const activeTabAfterAyuda = await page.locator('nav button[aria-current="page"]').textContent();
+  if (activeTabAfterAyuda?.trim() !== "Mi trabajo") {
+    consoleIssues.push(`[nav] Tras cerrar Ayuda (entrada desde Mi trabajo), la pestaña activa es "${activeTabAfterAyuda?.trim()}", no "Mi trabajo"`);
+  }
+  await shot(page, "mi-trabajo-tras-cerrar-ayuda");
+
+  console.log("→ Crear Curso -> nace Pendiente -> alternar Cobrado/Pendiente en ambos sentidos");
+  await page.locator('button[aria-label="Añadir"]').tap();
+  await page.waitForTimeout(200);
+  await page.getByRole("button", { name: "Guardar", exact: false }).tap();
+  // El toast de "Curso añadido" dura 3000ms (sin acción) — esperar a que
+  // desaparezca del todo antes de seguir, para no confundirlo con el toast
+  // del siguiente paso (con "Deshacer", dura 5000ms) al leer su texto.
+  await page.waitForTimeout(3300);
+  await shot(page, "curso-creado-en-pendientes");
+  const toggleBtn = page.locator('button:has-text("Confirmar cobro")').first();
+  const hasNewPending = await toggleBtn.count() > 0;
+  if (!hasNewPending) {
+    consoleIssues.push("[payment-status] El Curso recién creado no aparece en Pendientes con la acción \"Confirmar cobro\" — revisar payment_statuses.");
+  } else {
+    await toggleBtn.tap();
+    await page.waitForTimeout(200);
+    const toastAfterCobrar = await page.locator('[role="status"]').last().textContent().catch(() => "");
+    console.log(`  (toast al cobrar: "${toastAfterCobrar?.trim()}")`);
+    if (!/cobrado/i.test(toastAfterCobrar || "")) {
+      consoleIssues.push(`[payment-status] Al confirmar cobro, el toast dice "${toastAfterCobrar?.trim()}" — se esperaba que mencionara "cobrado".`);
+    }
+    await page.waitForTimeout(5200); // deja expirar el toast (con "Deshacer", 5000ms) antes de seguir
+    await page.getByRole("button", { name: "Cobrados", exact: true }).tap();
+    await page.waitForTimeout(300);
+    await shot(page, "curso-tras-cobrar");
+    const pendingAgainBtn = page.locator('button:has-text("Marcar pendiente")').first();
+    if (await pendingAgainBtn.count() > 0) {
+      await pendingAgainBtn.tap();
+      await page.waitForTimeout(200);
+      const toastAfterPendiente = await page.locator('[role="status"]').last().textContent().catch(() => "");
+      console.log(`  (toast al marcar pendiente: "${toastAfterPendiente?.trim()}")`);
+      if (!/pendiente/i.test(toastAfterPendiente || "")) {
+        consoleIssues.push(`[payment-status] Al marcar pendiente, el toast dice "${toastAfterPendiente?.trim()}" — se esperaba que mencionara "pendiente".`);
+      }
+      await page.waitForTimeout(5200);
+      await page.getByRole("button", { name: /^Pendientes/ }).tap();
+      await page.waitForTimeout(300);
+      await shot(page, "curso-tras-marcar-pendiente-de-nuevo");
+      // Limpieza: no dejar el movimiento de prueba en la cuenta.
+      const rowMenu = page.locator('button[aria-label="Más acciones"]').first();
+      if (await rowMenu.count() > 0) {
+        await rowMenu.tap();
+        await page.waitForTimeout(150);
+        await page.getByRole("menuitem", { name: /Eliminar/ }).tap();
+        await page.waitForTimeout(100);
+        await page.getByRole("alertdialog").getByRole("button", { name: "Eliminar" }).tap();
+        await page.waitForTimeout(500);
+      }
+    } else {
+      consoleIssues.push('[payment-status] Tras cobrar, no se encontró el botón "Marcar pendiente" en Cobrados.');
+    }
+  }
+
+  console.log("→ Abrir creación (FAB)");
+  await page.locator('button[aria-label="Añadir"]').tap();
+  await page.waitForTimeout(200);
+  await shot(page, "form-curso");
+
+  console.log("→ Select Curso (abrir/cerrar)");
+  await page.getByLabel("Curso").tap();
+  await page.waitForTimeout(150);
+  await shot(page, "select-curso-abierto");
+  await page.getByRole("option").first().tap();
+  await page.waitForTimeout(150);
+  await shot(page, "select-curso-cerrado");
+
+  console.log("→ Cambiar tipo -> Ajuste de curso (sin campo de Moneda, es global desde 2026-08-30)");
+  await page.getByRole("tab", { name: /Ajuste de curso/ }).tap();
+  await page.waitForTimeout(150);
+  const hasMonedaField = await page.getByLabel(/Buscar moneda/).isVisible().catch(() => false);
+  if (hasMonedaField) {
+    consoleIssues.push("[ajuste] El formulario de Ajuste de curso todavía muestra un campo de Moneda — debería resolverse solo (moneda global).");
+  }
+  const importeLabelVisible = await page.getByText(/^Importe · /).isVisible().catch(() => false);
+  if (!importeLabelVisible) {
+    consoleIssues.push("[ajuste] No se ve la referencia de moneda junto a 'Importe' (etiqueta 'Importe · <código>').");
+  }
+  await shot(page, "ajuste-sin-campo-moneda");
+
+  console.log("→ Añadir nota (textarea autoexpandible)");
+  await page.getByRole("button", { name: /Añadir nota/ }).tap();
+  await page.getByLabel("Notas").fill("Prueba de nota larga para comprobar que el área de texto crece con el contenido, no solo en el formulario de escritorio.");
+  await page.waitForTimeout(150);
+  await shot(page, "nota-autoexpandida");
+
+  console.log("→ Cerrar hoja");
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(200);
+
+  console.log("→ Cobrados: menú '⋯' y borrado con animación");
+  await page.locator("text=Cobrados").tap();
+  await page.waitForTimeout(300);
+  await shot(page, "cobrados-lista");
+  const menuButtons = page.locator('button[aria-label="Más acciones"]');
+  if (await menuButtons.count() > 0) {
+    await menuButtons.first().tap();
+    await page.waitForTimeout(150);
+    await shot(page, "row-menu-abierto");
+    await page.getByRole("menuitem", { name: /Eliminar/ }).tap();
+    await page.waitForTimeout(100);
+    await shot(page, "confirm-dialog-eliminar");
+    await page.getByRole("alertdialog").getByRole("button", { name: "Eliminar" }).tap();
+    await page.waitForTimeout(80); // a mitad de la animación de salida
+    await shot(page, "fila-animando-salida");
+    await page.waitForTimeout(400);
+    await shot(page, "fila-eliminada");
+  } else {
+    console.log("  (sin filas en Cobrados para probar el borrado — omitido)");
+  }
+
+  console.log("→ Resumen: vistazo rápido (tarjeta principal + Por escuela abierta), y profundidad bajo demanda");
+  await page.locator("text=Resumen").first().tap();
+  await page.waitForTimeout(300);
+  await shot(page, "resumen-vistazo-rapido");
+
+  console.log("→ Resumen: franja de tendencia — nace centrada en el periodo actual; tocar una barra la recentra");
+  // Acotado a <main>: la cabecera global también tiene un botón "Ir a
+  // Home" que coincidiría con un patrón /^Ir a /  sin acotar.
+  const trendBars = page.getByRole("main").getByRole("button", { name: /^Ir a / });
+  const trendBarCount = await trendBars.count();
+  if (trendBarCount === 7) {
+    // El periodo actual nace elegido -> su barra (la central, índice 3) no es pulsable.
+    const centerDisabled = await trendBars.nth(3).isDisabled();
+    if (!centerDisabled) {
+      consoleIssues.push("[resumen] La franja de tendencia no nace con el periodo actual centrado y elegido.");
+    }
+    const periodLabelLocator = page.locator("main span.font-semibold.tabular-nums");
+    const labelBefore = await periodLabelLocator.first().textContent().catch(() => null);
+    await trendBars.first().tap();
+    await page.waitForTimeout(200);
+    const labelAfter = await periodLabelLocator.first().textContent().catch(() => null);
+    if (!labelAfter || labelAfter === labelBefore) {
+      consoleIssues.push("[resumen] Tocar la barra más antigua de la tendencia no cambió el periodo mostrado.");
+    }
+    await shot(page, "resumen-tendencia-navegada");
+    // Vuelve al periodo actual con "Mes" para el resto del recorrido.
+    await page.getByRole("button", { name: "Granularidad del periodo" }).tap();
+    await page.waitForTimeout(150);
+    await page.getByRole("option", { name: "Mes", exact: true }).tap();
+    await page.waitForTimeout(200);
+  } else {
+    consoleIssues.push(`[resumen] La franja de tendencia debería mostrar 7 barras, muestra ${trendBarCount}.`);
+  }
+
+  console.log("→ Resumen: granularidad+periodo fusionados en un único control — cambiar a 'Rango'");
+  await page.getByRole("button", { name: "Granularidad del periodo" }).tap();
+  await page.waitForTimeout(150);
+  await page.getByRole("option", { name: "Rango" }).tap();
+  await page.waitForTimeout(200);
+  const hasDesdeHasta = await page.getByText("Desde", { exact: true }).isVisible().catch(() => false);
+  if (!hasDesdeHasta) {
+    consoleIssues.push("[resumen] Al elegir granularidad 'Rango', no aparecen los selectores Desde/Hasta.");
+  }
+  await shot(page, "resumen-granularidad-rango");
+  // Vuelve a Mes para el resto del recorrido (Calendario solo se muestra en granularidad mensual).
+  await page.getByRole("button", { name: "Granularidad del periodo" }).tap();
+  await page.waitForTimeout(150);
+  await page.getByRole("option", { name: "Mes", exact: true }).tap();
+  await page.waitForTimeout(200);
+
+  console.log("→ Resumen: expandir Calendario y Comisiones (tarjetas plegables)");
+  await page.getByRole("button", { name: "Calendario", exact: false }).tap();
+  await page.waitForTimeout(350);
+  await shot(page, "resumen-calendario-expandido");
+  await page.getByRole("button", { name: "Comisiones", exact: false }).tap();
+  await page.waitForTimeout(350);
+  await shot(page, "resumen-comisiones-expandida");
+
+  console.log("→ Resumen: 'Por escuela' — evolución vs. el periodo anterior junto al nombre (sin toggle)");
+  // Comprobación blanda: solo aparece si la cuenta de prueba tiene alguna
+  // escuela con datos comparables en el mes anterior — igual de opcional
+  // que otros pasos que dependen de los datos reales de la cuenta demo.
+  const porEscuelaSection = page.getByRole("button", { name: "Por escuela", exact: false }).locator("xpath=..");
+  const growthBadgeVisible = await porEscuelaSection.getByText(/^[+-]\d+%$/).first().isVisible().catch(() => false);
+  console.log(growthBadgeVisible ? "  (indicio de evolución visible junto a una escuela)" : "  (sin escuela con dato comparable en la cuenta de prueba — omitido)");
+
+  console.log("→ Resumen: tocar una escuela en 'Por escuela' expande su desglose por curso en el sitio");
+  const porEscuelaCard = page.getByRole("button", { name: "Por escuela", exact: false }).locator("xpath=..");
+  const schoolToggle = porEscuelaCard.locator("ul li button").first();
+  if (await schoolToggle.count() > 0) {
+    await schoolToggle.tap();
+    await page.waitForTimeout(350);
+    await shot(page, "resumen-escuela-expandida");
+  } else {
+    console.log("  (sin escuelas con datos en el periodo actual — omitido)");
+  }
+
+  console.log("→ Resumen: cabecera sticky con sombra al hacer scroll");
+  await page.mouse.wheel(0, 600);
+  await page.waitForTimeout(250);
+  await shot(page, "resumen-scroll-cabecera-sticky");
+  await page.mouse.wheel(0, -600);
+
+  console.log("→ Ayuda/Configuración: acceso secundario con 'X Cerrar' en cabecera (vuelve a la pestaña de origen, ver App.jsx returnTab)");
+  await page.locator('button[aria-label="Ayuda"]').tap();
+  await page.waitForTimeout(300);
+  await shot(page, "ayuda-menu-agrupado");
+
+  console.log("→ Ayuda: tocar una categoría de 'Quiero...' despliega su artículo en el sitio (2026-08-30, 'de índice a guía viva')");
+  const registrarCategoryBtn = page.getByRole("button", { name: /Registrar un movimiento/ });
+  await registrarCategoryBtn.tap();
+  await page.waitForTimeout(300);
+  const expanded = await registrarCategoryBtn.getAttribute("aria-expanded");
+  if (expanded !== "true") {
+    consoleIssues.push("[ayuda] Tocar una categoría no la desplegó (aria-expanded !== 'true').");
+  }
+  await shot(page, "ayuda-categoria-desplegada");
+  const pasosVisible = await page.getByText("Pasos", { exact: true }).isVisible().catch(() => false);
+  if (!pasosVisible) {
+    consoleIssues.push("[ayuda] Al desplegar una categoría no se ve el contenido del artículo ('Pasos').");
+  }
+  await page.mouse.wheel(0, 500);
+  await page.waitForTimeout(250);
+  await shot(page, "ayuda-scroll-cabecera");
+  await page.mouse.wheel(0, -500);
+
+  console.log("→ Ayuda: cerrar con 'X' con una categoría desplegada y reabrir debe volver al índice plegado (feedback 2026-08-30, segunda vuelta) — recargar (no probado aquí, ver ConfigTab/HelpTab.test.jsx) sí la conservaría");
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(300);
+  await page.locator('button[aria-label="Ayuda"]').tap();
+  await page.waitForTimeout(300);
+  const stillExpandedAfterReopen = await page.getByRole("button", { name: /Registrar un movimiento/ }).getAttribute("aria-expanded");
+  if (stillExpandedAfterReopen !== "false") {
+    consoleIssues.push("[ayuda] Cerrar con 'X' y reabrir Ayuda no volvió a mostrar el índice plegado (la categoría seguía desplegada).");
+  }
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(300);
+  await page.locator('button[aria-label="Configuración"]').tap();
+  await page.waitForTimeout(300);
+  await shot(page, "configuracion-menu");
+
+  console.log("→ Configuración: entrar en Escuelas, crear vía FAB+hoja, y volver al menú con '‹ Configuración'");
+  await page.locator("text=Escuelas").first().tap();
+  await page.waitForTimeout(200);
+  await shot(page, "configuracion-escuelas");
+
+  console.log("→ Configuración: Escuelas — 'Editar' (RowMenu) abre la misma hoja, precargada");
+  const schoolMenuBtn = page.getByRole("button", { name: "Más acciones" }).first();
+  if (await schoolMenuBtn.isVisible().catch(() => false)) {
+    await schoolMenuBtn.tap();
+    await page.waitForTimeout(150);
+    await page.getByRole("menuitem", { name: "Editar" }).tap();
+    await page.waitForTimeout(200);
+    const editHeadingVisible = await page.getByRole("heading", { name: "Editar escuela" }).isVisible().catch(() => false);
+    if (!editHeadingVisible) {
+      consoleIssues.push("[configuracion] 'Editar' en Escuelas no abrió la hoja esperada ('Editar escuela').");
+    }
+    await shot(page, "configuracion-escuelas-editar-hoja");
+    await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+    await page.waitForTimeout(200);
+  }
+
+  await page.getByRole("button", { name: "Nueva escuela", exact: true }).tap();
+  await page.waitForTimeout(200);
+  await shot(page, "configuracion-escuelas-nueva-hoja");
+  // Dos botones "Cerrar" en pantalla a la vez aquí: el "✕ Cerrar" de la
+  // cabecera exterior (sale de Configuración entera) y el de la propia
+  // hoja de alta (solo la cierra a ella) — se escoge el de <main>, que es
+  // el de la hoja, no el de <header>.
+  await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(200);
+  // "Configuración" también es el texto de la cabecera exterior (que
+  // cierra la pantalla entera) — el "‹ Configuración" de vuelta al menú
+  // vive dentro de <main>, hay que acotar a esa región para no pulsar la
+  // cabecera por error.
+  await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
+  await page.waitForTimeout(200);
+  const backAtMenu = await page.getByText("Cursos", { exact: true }).isVisible().catch(() => false);
+  if (!backAtMenu) {
+    consoleIssues.push("[configuracion] Tras pulsar '‹ Configuración' desde Escuelas, no se ve de vuelta el menú agrupado.");
+  }
+
+  console.log("→ Configuración: Tarifas — fila con RowMenu '⋯' (coherencia con Mi trabajo)");
+  await page.locator("text=Tarifas").first().tap();
+  await page.waitForTimeout(300);
+  await shot(page, "configuracion-tarifas");
+
+  console.log("→ Configuración: recargar dentro de Tarifas debe reabrir en Tarifas, no en el menú (feedback 2026-08-30)");
+  await page.reload();
+  // exact: true — sin esto, "Tarifas" también hace match (substring, sin
+  // distinguir mayúsculas) contra el encabezado "13 tarifas" de la propia
+  // lista, dos elementos "heading" a la vez = "strict mode violation" en
+  // Playwright, que un .catch() sin más trata como "no encontrado".
+  const reopenedInTarifas = await page.getByRole("heading", { name: "Tarifas", exact: true })
+    .waitFor({ timeout: 15000 }).then(() => true).catch(() => false);
+  if (!reopenedInTarifas) {
+    consoleIssues.push("[configuracion] Recargar dentro de Tarifas no reabrió en Tarifas — volvió al menú principal de Configuración.");
+  }
+  await shot(page, "configuracion-tarifas-tras-recargar");
+
+  console.log("→ Configuración: cerrar con 'X' desde dentro de Tarifas y reabrir debe volver al menú principal, no a Tarifas (feedback 2026-08-30, segunda vuelta — distinto de recargar, probado justo arriba, que sí la conserva)");
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(200);
+  await page.locator('button[aria-label="Configuración"]').tap();
+  await page.waitForTimeout(200);
+  const backAtMenuAfterClose = (await page.getByText("Escuelas", { exact: true }).isVisible().catch(() => false))
+    && (await page.getByText("Cursos", { exact: true }).isVisible().catch(() => false));
+  if (!backAtMenuAfterClose) {
+    consoleIssues.push("[configuracion] Cerrar con 'X' desde dentro de Tarifas y reabrir Configuración no volvió al menú principal.");
+  }
+  await shot(page, "configuracion-tras-cerrar-y-reabrir");
+  await page.locator("text=Tarifas").first().tap();
+  await page.waitForTimeout(300);
+
+  const rateMenuBtn = page.getByRole("button", { name: "Más acciones" }).first();
+  if (await rateMenuBtn.isVisible().catch(() => false)) {
+    await rateMenuBtn.tap();
+    await page.waitForTimeout(200);
+    await shot(page, "configuracion-tarifas-menu-abierto");
+    const hasEditar = await page.getByRole("menuitem", { name: "Editar" }).isVisible().catch(() => false);
+    const hasEliminar = await page.getByRole("menuitem", { name: /Eliminar/ }).isVisible().catch(() => false);
+    if (!hasEditar || !hasEliminar) {
+      consoleIssues.push("[tarifas] El menú '⋯' de una tarifa no muestra Editar y Eliminar.");
+    }
+    if (hasEditar) {
+      await page.getByRole("menuitem", { name: "Editar" }).tap();
+      await page.waitForTimeout(200);
+      const editRateHeadingVisible = await page.getByText(/^Editar tarifa de /).isVisible().catch(() => false);
+      if (!editRateHeadingVisible) {
+        consoleIssues.push("[tarifas] 'Editar' no abrió la hoja de edición esperada ('Editar tarifa de ...').");
+      }
+      await shot(page, "configuracion-tarifas-editar-hoja");
+      await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+      await page.waitForTimeout(150);
+    } else {
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(150);
+    }
+  } else {
+    console.log("  (sin tarifas existentes para probar el RowMenu — omitido)");
+  }
+
+  console.log("→ Configuración: Tarifas — 'Nueva tarifa' con selector de tipo integrado (rediseño 2026-08-30)");
+  await page.getByRole("button", { name: "Nueva tarifa" }).tap();
+  await page.waitForTimeout(250);
+  await shot(page, "configuracion-tarifas-nueva-hoja");
+  const cursoTabVisible = await page.getByRole("tab", { name: "Curso" }).isVisible().catch(() => false);
+  const comisionTab = page.getByRole("tab", { name: "Comisión" });
+  if (!cursoTabVisible || !(await comisionTab.isVisible().catch(() => false))) {
+    consoleIssues.push("[tarifas] La hoja de 'Nueva tarifa' no muestra el selector de tipo (Curso/Comisión) integrado.");
+  } else {
+    await comisionTab.tap();
+    await page.waitForTimeout(200);
+    const comisionTitleVisible = await page.getByText("Nueva tarifa de Comisión").isVisible().catch(() => false);
+    if (!comisionTitleVisible) {
+      consoleIssues.push("[tarifas] Cambiar a la pestaña 'Comisión' en 'Nueva tarifa' no actualizó el título de la hoja.");
+    }
+    await shot(page, "configuracion-tarifas-nueva-hoja-comision");
+  }
+  await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(150);
+
+  await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
+  await page.waitForTimeout(200);
+
+  const hasAdminGroup = await page.getByText("Administración", { exact: true }).isVisible().catch(() => false);
+  if (hasAdminGroup) {
+    console.log("→ Configuración: grupo Administración visible (cuenta con rol admin/superadmin) — entrar en Usuarios");
+    await page.locator("text=Usuarios").first().tap();
+    // El directorio depende de una llamada real a Supabase (admin_list_profiles)
+    // más /api/list-user-status — un timeout fijo corto capturaba la
+    // captura en pleno "Cargando usuarios...". Se espera a que ese texto
+    // desaparezca en vez de adivinar cuánto tarda la red.
+    await page.getByText("Cargando usuarios…").waitFor({ state: "detached", timeout: 8000 }).catch(() => {
+      consoleIssues.push("[usuarios] El directorio siguió en 'Cargando usuarios…' más de 8s.");
+    });
+    await page.waitForTimeout(200);
+    await shot(page, "configuracion-usuarios");
+
+    console.log("→ Configuración: Usuarios — tocar una fila abre la hoja de detalle (lista + detalle, sin tabla de scroll lateral)");
+    const usersListVisible = await page.getByRole("main").locator(".divide-y.divide-gray-100.overflow-hidden.rounded-lg").first().isVisible().catch(() => false);
+    if (usersListVisible) {
+      const firstRow = page.getByRole("main").locator(".divide-y.divide-gray-100.overflow-hidden.rounded-lg").first().getByRole("button").first();
+      if (await firstRow.isVisible().catch(() => false)) {
+        await firstRow.tap();
+        await page.waitForTimeout(200);
+        await shot(page, "configuracion-usuarios-detalle");
+        await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+        await page.waitForTimeout(150);
+      } else {
+        console.log("  (sin usuarios en la lista para abrir el detalle — omitido)");
+      }
+    }
+
+    await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
+    await page.waitForTimeout(200);
+  } else {
+    console.log("  (grupo Administración no visible — cuenta sin rol admin/superadmin, esperado si no se usó dev-bypass con esos permisos)");
+  }
+
+  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await page.waitForTimeout(300);
+
+  console.log("→ Cerrar sesión (bypass, tras la recarga de antes): debe volver al login normal, no volver a autenticarse sola");
+  await page.locator('button[aria-label="Cerrar sesión"]').tap();
+  try {
+    await page.getByLabel("Email o nickname").waitFor({ timeout: 8000 });
+    console.log("  (pantalla de login normal visible tras cerrar sesión — correcto)");
+  } catch {
+    consoleIssues.push("[dev-bypass] Tras cerrar sesión, no apareció la pantalla de login normal en 8s (¿se quedó cargando?).");
+  }
+  await shot(page, "login-tras-logout");
+
+  await browser.close();
+
+  console.log(`\n${shotCount} capturas en scripts/mobile-check-output/`);
+  if (consoleIssues.length > 0) {
+    console.log(`\n⚠ ${consoleIssues.length} aviso(s)/error(es) de consola:`);
+    consoleIssues.forEach((m) => console.log("  " + m));
+    process.exitCode = 1;
+  } else {
+    console.log("\n✓ Sin errores ni avisos en consola durante el recorrido.");
+  }
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

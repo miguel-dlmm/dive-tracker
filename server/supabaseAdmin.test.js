@@ -130,7 +130,94 @@ describe("isSuperadmin", () => {
     expect(await isSuperadminWithProfile({ data: { is_superadmin: false }, error: null })).toBe(false);
   });
 
-  it("es false (fail-closed) si Supabase devuelve error", async () => {
-    expect(await isSuperadminWithProfile({ data: null, error: { message: "not found" } })).toBe(false);
+  it("lanza (no colapsa en false) si Supabase devuelve error", async () => {
+    // instanceof no es fiable aquí: cada llamada re-importa el módulo con
+    // vi.resetModules(), así que PermissionCheckError sería una clase
+    // distinta en cada reimportación — se comprueba el mensaje propagado.
+    await expect(isSuperadminWithProfile({ data: null, error: { message: "not found" } }))
+      .rejects.toThrow("not found");
+  });
+});
+
+describe("isAdmin", () => {
+  async function isAdminWithProfile(result) {
+    const single = vi.fn().mockResolvedValue(result);
+    const eq = vi.fn().mockReturnValue({ single });
+    const select = vi.fn().mockReturnValue({ eq });
+    const from = vi.fn().mockReturnValue({ select });
+    createClient.mockReturnValue({ from });
+
+    vi.resetModules();
+    const mod = await import("./supabaseAdmin.js");
+    return mod.isAdmin("user-1");
+  }
+
+  afterEach(() => {
+    vi.resetModules();
+  });
+
+  it("es true si el perfil tiene is_admin = true", async () => {
+    expect(await isAdminWithProfile({ data: { is_admin: true, is_superadmin: false }, error: null })).toBe(true);
+  });
+
+  it("es true si el perfil tiene is_superadmin = true (un superadmin también es admin)", async () => {
+    expect(await isAdminWithProfile({ data: { is_admin: false, is_superadmin: true }, error: null })).toBe(true);
+  });
+
+  it("es false si el perfil no tiene ningún rol de admin", async () => {
+    expect(await isAdminWithProfile({ data: { is_admin: false, is_superadmin: false }, error: null })).toBe(false);
+  });
+
+  it("lanza (no colapsa en false) si Supabase devuelve error", async () => {
+    await expect(isAdminWithProfile({ data: null, error: { message: "not found" } }))
+      .rejects.toThrow("not found");
+  });
+});
+
+// requireSuperadmin/requireAdmin: la capa que cada handler usa de verdad —
+// distingue "se comprobó y no tiene permiso" (403, mensaje exacto pasado
+// por el handler) de "no se pudo comprobar" (500, mensaje genérico), en
+// vez de colapsar ambos en el mismo 403 — ver el comentario de
+// PermissionCheckError en supabaseAdmin.js para el incidente real que
+// motivó esta distinción.
+describe("requireSuperadmin / requireAdmin", () => {
+  async function requireWithProfile(fnName, result) {
+    const single = vi.fn().mockResolvedValue(result);
+    const eq = vi.fn().mockReturnValue({ single });
+    const select = vi.fn().mockReturnValue({ eq });
+    const from = vi.fn().mockReturnValue({ select });
+    createClient.mockReturnValue({ from });
+
+    vi.resetModules();
+    const mod = await import("./supabaseAdmin.js");
+    return mod[fnName]("user-1", "Solo un superadmin puede hacer esto.");
+  }
+
+  afterEach(() => {
+    vi.resetModules();
+  });
+
+  it("requireSuperadmin devuelve null (permitido) si is_superadmin es true", async () => {
+    expect(await requireWithProfile("requireSuperadmin", { data: { is_superadmin: true }, error: null })).toBeNull();
+  });
+
+  it("requireSuperadmin devuelve 403 con el mensaje exacto si is_superadmin es false", async () => {
+    expect(await requireWithProfile("requireSuperadmin", { data: { is_superadmin: false }, error: null }))
+      .toEqual({ status: 403, payload: { error: "Solo un superadmin puede hacer esto." } });
+  });
+
+  it("requireSuperadmin devuelve 500 genérico (no 403) si la comprobación falla", async () => {
+    const result = await requireWithProfile("requireSuperadmin", { data: null, error: { message: "Invalid API key" } });
+    expect(result.status).toBe(500);
+    expect(result.payload.error).not.toBe("Solo un superadmin puede hacer esto.");
+  });
+
+  it("requireAdmin devuelve null (permitido) si is_admin es true", async () => {
+    expect(await requireWithProfile("requireAdmin", { data: { is_admin: true, is_superadmin: false }, error: null })).toBeNull();
+  });
+
+  it("requireAdmin devuelve 500 genérico (no 403) si la comprobación falla", async () => {
+    const result = await requireWithProfile("requireAdmin", { data: null, error: { message: "Invalid API key" } });
+    expect(result.status).toBe(500);
   });
 });

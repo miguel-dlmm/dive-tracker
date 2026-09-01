@@ -26,6 +26,50 @@ const ACTIVATION_GENERIC_RETRY = "No se pudo guardar la contraseña. Inténtalo 
 
 const ACTIVATION_SESSION_MISMATCH = "No se pudo activar esta cuenta desde la sesión actual.";
 
+// Mensaje único para cualquier punto del flujo (restauración de sesión,
+// recarga, login, activación, creación de contraseña) donde se detecta que
+// la cuenta está desactivada — ver isBannedError más abajo. Un solo texto,
+// reutilizado también por LoginScreen, para que nunca queden dos redacciones
+// distintas del mismo caso.
+export const ACCOUNT_DEACTIVATED_MESSAGE =
+  "Tu cuenta ha sido desactivada. Contacta con un administrador si crees que es un error.";
+
+// GoTrue devuelve error.code === "user_banned" en CUALQUIER endpoint de
+// auth.* (signInWithPassword, getUser, updateUser, verifyOtp, refreshSession)
+// cuando banned_until está en el futuro — confirmado en vivo contra el
+// proyecto real: incluso un access_token ya emitido ANTES del baneo deja de
+// aceptarse en cuanto se banea (GoTrue lo revalida en cada llamada, no solo
+// al emitirlo). Es el único punto de verdad del "está desactivado" en todo
+// este archivo — nunca se infiere desde profiles.activated_at, que ahora
+// también se limpia al desactivar y por tanto no basta para distinguir
+// "desactivado" de "pendiente de primer acceso" (ver docs/ADR "modelo de
+// activación").
+function isBannedError(error) {
+  return error?.code === "user_banned";
+}
+
+// Punto único de resolución de sesión — lo usan tanto la carga inicial como
+// onAuthStateChange, para que "restauración de sesión" y "recarga" tengan
+// EXACTAMENTE el mismo criterio de detección de cuenta desactivada que
+// "login" (signIn) y "activación" (activateAccount) más abajo. Sin esto,
+// getSession() por sí sola nunca detecta un baneo ocurrido después de emitir
+// el token: es una lectura local, no consulta al servidor mientras el token
+// no haya caducado — confirmado en vivo. supabase.auth.getUser() sí golpea
+// el servidor y sí lo detecta, de ahí la llamada explícita aquí.
+async function resolveSessionState(rawSession) {
+  if (!rawSession) return { session: null, profile: null, consents: [], banned: false };
+
+  const { error: getUserError } = await supabase.auth.getUser();
+  if (isBannedError(getUserError)) {
+    await supabase.auth.signOut();
+    return { session: null, profile: null, consents: [], banned: true };
+  }
+
+  const userId = rawSession.user?.id;
+  const [profileData, consentsData] = await Promise.all([loadProfile(userId), loadConsents(userId)]);
+  return { session: rawSession, profile: profileData, consents: consentsData, banned: false };
+}
+
 async function loadProfile(userId) {
   if (!userId) return null;
   const { data, error } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
@@ -60,20 +104,45 @@ export function useSession() {
   const [profile, setProfile] = useState(null);
   const [consents, setConsents] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Nunca se pone a false dentro de este efecto — solo resolveSessionState
+  // detectando un baneo (aquí o en signIn/activateAccount) lo pone a true.
+  // Motivo: el propio signOut() que dispara resolveSessionState al detectar
+  // el baneo provoca un SIGNED_OUT casi inmediato en onAuthStateChange, que
+  // vuelve a llamar a este mismo efecto con newSession=null — si ese camino
+  // normal (banned:false) pudiera poner accountBanned a false, borraría el
+  // aviso justo después de mostrarlo. Solo signIn() lo reinicia, al empezar
+  // un intento nuevo.
+  const [accountBanned, setAccountBanned] = useState(false);
 
   useEffect(() => {
+    // setSession/setProfile/setConsents se llaman siempre juntos, DESPUÉS de
+    // esperar los fetches (resolveSessionState ya usa Promise.all
+    // internamente) — nunca uno tras otro con un await de por medio. Con un
+    // await entre cada setState, cada uno dispara su propio render por
+    // separado (el batching automático de React 18 solo agrupa llamadas
+    // síncronas consecutivas, no las separadas por un await): había un
+    // instante real, no solo teórico, en el que `session` ya era la nueva
+    // sesión pero `profile` seguía siendo el de ANTES de iniciar sesión
+    // (null en un login fresco desde LoginScreen) — AuthGate leía ese
+    // instante como "sesión sin perfil activado" y mostraba
+    // CreatePasswordScreen/AcceptLegalScreen un instante de más en cualquier
+    // login normal, incluso para una cuenta ya completamente activada. Con
+    // un único bloque de setState tras el await, los tres cambian en el
+    // mismo render — nunca un estado a medias visible.
     supabase.auth.getSession().then(async ({ data }) => {
-      const userId = data.session?.user?.id;
-      setSession(data.session);
-      setProfile(await loadProfile(userId));
-      setConsents(await loadConsents(userId));
+      const resolved = await resolveSessionState(data.session);
+      setSession(resolved.session);
+      setProfile(resolved.profile);
+      setConsents(resolved.consents);
+      if (resolved.banned) setAccountBanned(true);
       setLoading(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      const userId = newSession?.user?.id;
-      setSession(newSession);
-      setProfile(await loadProfile(userId));
-      setConsents(await loadConsents(userId));
+      const resolved = await resolveSessionState(newSession);
+      setSession(resolved.session);
+      setProfile(resolved.profile);
+      setConsents(resolved.consents);
+      if (resolved.banned) setAccountBanned(true);
     });
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -81,8 +150,17 @@ export function useSession() {
   // identifier: email o nickname. Si no contiene "@" se resuelve a email vía
   // la RPC email_for_nickname (security definer, solo expone el email) antes
   // de autenticar. Nickname desconocido y contraseña incorrecta lanzan el
-  // mismo error genérico — no hay que revelar cuál de las dos falló.
+  // mismo error genérico — no hay que revelar cuál de las dos falló. Cuenta
+  // desactivada es la única excepción deliberada a esa ambigüedad: GoTrue ya
+  // distingue error.code "user_banned" de credenciales inválidas sin
+  // necesidad de una consulta aparte, así que aprovecharlo no añade ninguna
+  // superficie de enumeración nueva (ver isBannedError arriba). Reinicia
+  // accountBanned al empezar cada intento — es el único sitio del hook que
+  // lo pone a false (ver comentario en el useState), para que un intento
+  // nuevo (con o sin la cuenta ya reactivada) no arrastre el aviso del
+  // intento anterior.
   const signIn = useCallback(async (identifier, password) => {
+    setAccountBanned(false);
     const value = identifier.trim();
     let email = value;
     if (!value.includes("@")) {
@@ -91,7 +169,10 @@ export function useSession() {
       email = data;
     }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) {
+      if (isBannedError(error)) setAccountBanned(true);
+      throw error;
+    }
   }, []);
 
   const signOut = useCallback(() => supabase.auth.signOut(), []);
@@ -190,7 +271,19 @@ export function useSession() {
       userId = existing.user.id;
     } else {
       const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-      if (error) throw new Error(ACTIVATION_LINK_INVALID, { cause: error });
+      if (error) {
+        // Confirmado en vivo: un enlace recién generado para una cuenta ya
+        // desactivada también falla aquí con "user_banned" (GoTrue banea
+        // antes de aceptar el OTP, no solo antes de emitirlo) — nunca debe
+        // leerse como "enlace inválido/caducado", que sugeriría pedir uno
+        // nuevo cuando lo que hace falta es que un superadmin reactive la
+        // cuenta primero.
+        if (isBannedError(error)) {
+          setAccountBanned(true);
+          throw new Error(ACCOUNT_DEACTIVATED_MESSAGE, { cause: error });
+        }
+        throw new Error(ACTIVATION_LINK_INVALID, { cause: error });
+      }
       userId = data.user.id;
       // onAuthStateChange actualiza `session` (estado React) de forma
       // asíncrona a partir de aquí — todo lo de abajo usa `userId`, nunca
@@ -202,6 +295,19 @@ export function useSession() {
       await markAccountActivated(userId);
       await acceptLegalConsents(userId);
     } catch (err) {
+      // Caso "pantalla de activación ya abierta, la cuenta se desactiva
+      // mientras tanto": completePasswordChange golpea el mismo endpoint de
+      // GoTrue que ya confirmamos que revisa el baneo en cada llamada, así
+      // que este catch lo detecta igual que el de verifyOtp de arriba, sin
+      // necesidad de una comprobación previa aparte. signOut() explícito
+      // porque aquí SÍ puede existir ya una sesión real (Caso B, resumible,
+      // o la recién creada por verifyOtp) que hay que cerrar — nunca debe
+      // prevalecer sobre el estado real de cuenta desactivada.
+      if (isBannedError(err)) {
+        setAccountBanned(true);
+        await supabase.auth.signOut();
+        throw new Error(ACCOUNT_DEACTIVATED_MESSAGE, { cause: err });
+      }
       throw new Error(ACTIVATION_GENERIC_RETRY, { cause: err });
     }
 
@@ -213,6 +319,7 @@ export function useSession() {
     session,
     profile,
     loading,
+    accountBanned,
     signIn,
     signOut,
     completePasswordChange,

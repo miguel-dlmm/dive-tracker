@@ -8,6 +8,20 @@ body {
   font-family: 'Inter', sans-serif;
   font-feature-settings: "tnum" 1; /* cifras tabulares por defecto */
 }
+/* iOS Safari hace zoom automático de toda la página al enfocar cualquier
+   input/textarea con font-size por debajo de 16px — es la causa real del
+   "zoom inesperado" en iPhone (no un campo suelto: todos los inputs de la
+   app usan `inputCls`, con text-sm/14px). Se fuerza el mínimo solo en
+   viewports estrechos (móvil) para no cambiar el tamaño visual en
+   escritorio, y con !important porque cualquier utilidad de Tailwind con
+   la misma especificidad (p. ej. un `text-xs` añadido encima de
+   `inputCls`) debe perder siempre frente a esta regla en móvil. */
+@media (max-width: 639px) {
+  input,
+  textarea {
+    font-size: 16px !important;
+  }
+}
 /* Añade esto a src/index.css, después de lo que ya tenías (fuentes) —
    animación de "relleno" para el loading genérico de la app */
 @keyframes oceanFill {

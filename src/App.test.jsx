@@ -1,4 +1,4 @@
-vi.mock("./useSession", () => ({ useSession: vi.fn() }));
+vi.mock("./useSession", () => ({ useSession: vi.fn(), ACCOUNT_DEACTIVATED_MESSAGE: "Tu cuenta ha sido desactivada. Contacta con un administrador si crees que es un error." }));
 vi.mock("./useSupabaseTable", () => ({ useSupabaseTable: vi.fn() }));
 
 import { render, screen, waitFor } from "@testing-library/react";
@@ -14,6 +14,7 @@ function mockUseSession(overrides) {
     session: null,
     profile: null,
     loading: false,
+    accountBanned: false,
     signIn: vi.fn(),
     signOut: vi.fn(),
     activateAccount: vi.fn(),
@@ -79,7 +80,7 @@ describe("AuthGate", () => {
 
     render(<App />);
 
-    expect(await screen.findByText("Ocean Pulse")).toBeInTheDocument();
+    expect(await screen.findByText("Ocean Flow")).toBeInTheDocument();
     expect(screen.queryByLabelText("Nueva contraseña")).not.toBeInTheDocument();
     expect(screen.getByText("ada")).toBeInTheDocument();
   });
@@ -95,6 +96,17 @@ describe("AuthGate", () => {
 
     expect(screen.getByRole("button", { name: "Continuar" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Nueva contraseña")).not.toBeInTheDocument();
+  });
+
+  it("accountBanned prevalece sobre cualquier otro estado — ni un enlace de activación en la URL ni una sesión existente muestran otra pantalla", () => {
+    window.history.pushState({}, "", "/?token_hash=hash-1&type=recovery");
+    mockUseSession({ session: SESSION, profile: { user_id: "u1", activated_at: null }, accountBanned: true });
+
+    render(<App />);
+
+    expect(screen.getByLabelText("Email o nickname")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Nueva contraseña")).not.toBeInTheDocument();
+    expect(screen.getByText(/tu cuenta ha sido desactivada/i)).toBeInTheDocument();
   });
 
   it("al enviar la contraseña, llama a activateAccount con token_hash, type y el email de la sesión", async () => {
