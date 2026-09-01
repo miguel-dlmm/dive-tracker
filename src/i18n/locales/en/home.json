@@ -1,1 +1,8 @@
-{}
+{
+  "calendarCaption": "Tap a day to see the detail, or an empty one to add an entry",
+  "generatedThisMonth": "Generated this month",
+  "peopleTrained_one": "{{count}} person trained this month",
+  "peopleTrained_other": "{{count}} people trained this month",
+  "noCoursesThisMonth": "No courses this month",
+  "trendVsPreviousMonth": "{{delta}} vs last month"
+}

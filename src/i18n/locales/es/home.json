@@ -1,1 +1,8 @@
-{}
+{
+  "calendarCaption": "Toca un día para ver el detalle, o uno vacío para añadir un movimiento",
+  "generatedThisMonth": "Generado este mes",
+  "peopleTrained_one": "{{count}} persona formada este mes",
+  "peopleTrained_other": "{{count}} personas formadas este mes",
+  "noCoursesThisMonth": "Sin cursos este mes",
+  "trendVsPreviousMonth": "{{delta}} vs mes anterior"
+}

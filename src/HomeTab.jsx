@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { Money, formatMoney, MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
@@ -34,7 +35,22 @@ import PendingCollectionCard from "./PendingCollectionCard";
 // junto a withinRange ahí).
 const monthKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
+// Curso/Comisión/Ajuste traducidos una única vez (common:movementTypes,
+// fuente única compartida con SummaryTab/MiTrabajoTab/RatesTab, pedido
+// explícito del usuario 2026-09-01 para no repetir esta traducción por
+// pantalla) — MOVEMENT_TYPE_META (shared.jsx) sigue siendo la fuente de
+// los colores, solo el label se resuelve aquí con t().
+function useTranslatedMovementTypeMeta(t) {
+  return {
+    ganado: { ...MOVEMENT_TYPE_META.ganado, label: t("common:movementTypes.ganado") },
+    comision: { ...MOVEMENT_TYPE_META.comision, label: t("common:movementTypes.comision") },
+    companeros: { ...MOVEMENT_TYPE_META.companeros, label: t("common:movementTypes.companeros") },
+  };
+}
+
 export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary }) {
+  const { t } = useTranslation("home");
+  const translatedTypeMeta = useTranslatedMovementTypeMeta(t);
   const now = new Date();
   const currentMonthKey = monthKey(now);
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
@@ -159,8 +175,10 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           es también la vía más directa para crear (tocar un día vacío) y
           para entender el mes de un vistazo (qué días hubo actividad, de
           qué tipo), así que sube justo debajo de la cifra financiera
-          principal. sourceMeta viene de MOVEMENT_TYPE_META (shared.jsx,
-          única fuente para Home/Resumen/Mi trabajo). onCreateForDay solo
+          principal. sourceMeta viene de useTranslatedMovementTypeMeta,
+          sobre MOVEMENT_TYPE_META (shared.jsx) con el label ya traducido
+          desde common:movementTypes — única fuente para Home/Resumen/Mi
+          trabajo/Tarifas. onCreateForDay solo
           se pasa aquí, no en Resumen: tocar un día vacío inicia un
           movimiento para esa fecha; uno con datos conserva su desglose y
           gana un "+" para añadir otro.
@@ -178,11 +196,11 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           dotColor={TEAL}
           currencyRows={currencies.rows}
           activityColor={activityColor}
-          caption="Toca un día para ver el detalle, o uno vacío para añadir un movimiento"
+          caption={t("calendarCaption")}
           autoSelectFirstDay
           detailed
           groupBySource
-          sourceMeta={MOVEMENT_TYPE_META}
+          sourceMeta={translatedTypeMeta}
           onCreateForDay={(dateStr) => onQuickCreate("ganado", dateStr)}
           onPrevMonth={goToPrevMonth}
           onNextMonth={goToNextMonth}
@@ -222,7 +240,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
       >
         <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
           <TrendingUp size={14} style={{ color: TEAL }} aria-hidden="true" />
-          Generado este mes
+          {t("generatedThisMonth")}
         </div>
         <div className="mt-1 text-2xl font-bold tabular-nums" style={{ color: NAVY }}>
           {Object.keys(monthTotals).length === 0 ? (
@@ -235,15 +253,17 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         </div>
         <div className="mt-0.5 text-xs text-gray-400">
           {peopleTrainedThisMonth > 0
-            ? `${peopleTrainedThisMonth} ${peopleTrainedThisMonth === 1 ? "persona formada" : "personas formadas"} este mes`
-            : "Sin cursos este mes"}
+            ? t("peopleTrained", { count: peopleTrainedThisMonth })
+            : t("noCoursesThisMonth")}
         </div>
         {monthTrend && (
           <div className="mt-1.5 flex items-center gap-1 text-xs font-medium" style={{ color: monthTrend.delta > 0 ? GREEN : monthTrend.delta < 0 ? CORAL : "#9CA3AF" }}>
             {monthTrend.delta > 0 ? <TrendingUp size={12} aria-hidden="true" /> : monthTrend.delta < 0 ? <TrendingDown size={12} aria-hidden="true" /> : <Minus size={12} aria-hidden="true" />}
-            {monthTrend.pct !== null
-              ? `${monthTrend.delta >= 0 ? "+" : ""}${monthTrend.pct.toFixed(0)}% vs mes anterior`
-              : `${monthTrend.delta >= 0 ? "+" : ""}${formatMoney(monthTrend.delta, monthTrend.code, currencies.rows)} vs mes anterior`}
+            {t("trendVsPreviousMonth", {
+              delta: monthTrend.pct !== null
+                ? `${monthTrend.delta >= 0 ? "+" : ""}${monthTrend.pct.toFixed(0)}%`
+                : `${monthTrend.delta >= 0 ? "+" : ""}${formatMoney(monthTrend.delta, monthTrend.code, currencies.rows)}`,
+            })}
           </div>
         )}
       </button>
