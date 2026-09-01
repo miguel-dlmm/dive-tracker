@@ -6,10 +6,7 @@ import HelpTab from "./HelpTab";
 // addendum): Ayuda deja de navegar por pantallas (categorías → artículos
 // → detalle) — cada categoría es ahora una ExpandableCard que despliega
 // su artículo en el sitio. Se prueba el contrato de despliegue, no el
-// contenido exacto de cada artículo (es texto, no lógica). El filtrado
-// adminOnly (ver content.js) no tiene hoy ningún artículo real que lo
-// ejercite — el manual quedó orientado solo a usuario final tras revisar
-// el contenido.
+// contenido exacto de cada artículo (es texto, no lógica).
 const navSections = { rows: [] };
 
 // Ayuda persiste la categoría desplegada en sessionStorage
@@ -72,6 +69,27 @@ describe("HelpTab", () => {
 
     expect(screen.getByRole("button", { name: /Mi trabajo/ })).toHaveAttribute("aria-expanded", "false");
     expect(screen.getByRole("button", { name: /^Resumen/ })).toHaveAttribute("aria-expanded", "true");
+  });
+});
+
+// "Datasets iniciales" (Bloque 4/9) es superadminOnly: true en content.js
+// — a diferencia de adminOnly (is_admin O is_superadmin), este filtro
+// exige is_superadmin específicamente, porque un admin normal no puede
+// ni siquiera abrir esa pantalla en Configuración.
+describe("HelpTab — contenido exclusivo de superadmin (superadminOnly)", () => {
+  it("sin sesión ni perfil, no muestra 'Datasets iniciales'", () => {
+    render(<HelpTab navSections={navSections} profile={null} />);
+    expect(screen.queryByRole("button", { name: /Datasets iniciales/ })).not.toBeInTheDocument();
+  });
+
+  it("un admin normal (no superadmin) tampoco lo ve", () => {
+    render(<HelpTab navSections={navSections} profile={{ is_admin: true, is_superadmin: false }} />);
+    expect(screen.queryByRole("button", { name: /Datasets iniciales/ })).not.toBeInTheDocument();
+  });
+
+  it("un superadmin sí lo ve", () => {
+    render(<HelpTab navSections={navSections} profile={{ is_admin: true, is_superadmin: true }} />);
+    expect(screen.getByRole("button", { name: /Datasets iniciales/ })).toBeInTheDocument();
   });
 });
 

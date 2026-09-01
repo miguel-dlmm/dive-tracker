@@ -59,6 +59,11 @@ export function clearStoredHelpOpen() {
 
 export default function HelpTab({ navSections, profile, onClose }) {
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
+  // Bloque 4 (Datasets iniciales) es exclusivo de superadmin, no de
+  // cualquier admin — adminOnly ya existente no distingue los dos
+  // niveles, así que hace falta este segundo filtro específico en vez de
+  // reutilizar adminOnly con una semántica que no le corresponde.
+  const isSuperadmin = !!profile?.is_superadmin;
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const [openId, setOpenIdState] = useState(readStoredOpen);
   const setOpenId = (id) => {
@@ -76,8 +81,8 @@ export default function HelpTab({ navSections, profile, onClose }) {
   const backProps = useSwipeBack(openId ? () => setOpenId(null) : onClose);
 
   const categories = HELP_CATEGORIES
-    .filter((c) => !c.adminOnly || isAdmin)
-    .map((c) => ({ ...c, articles: c.articles.filter((a) => !a.adminOnly || isAdmin) }))
+    .filter((c) => (!c.adminOnly || isAdmin) && (!c.superadminOnly || isSuperadmin))
+    .map((c) => ({ ...c, articles: c.articles.filter((a) => (!a.adminOnly || isAdmin) && (!a.superadminOnly || isSuperadmin)) }))
     .filter((c) => c.articles.length > 0);
 
   if (categories.length === 0) {
