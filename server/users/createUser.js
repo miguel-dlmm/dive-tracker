@@ -55,10 +55,14 @@ export async function handleCreateUser({ method, headers, body }) {
     return { status: 400, payload: { error: "Cuerpo de la petición inválido." } };
   }
 
-  const { email, first_name, last_name, nickname, dataset_key } = input;
+  const { email, first_name, last_name, nickname, dataset_key, language } = input;
   if (!email || !nickname || !dataset_key) {
     return { status: 400, payload: { error: "Email, nickname y dataset inicial son obligatorios." } };
   }
+  // Mismos 2 idiomas que el check de profiles.language (schema.sql) — si
+  // llega algo distinto (o nada), provisionUser()/handle_new_user() caen
+  // al 'es' por defecto, nunca se propaga un valor sin validar a metadata.
+  const safeLanguage = ["es", "en"].includes(language) ? language : undefined;
 
   const caller = await verifyCaller(token);
   if (!caller) {
@@ -70,7 +74,7 @@ export async function handleCreateUser({ method, headers, body }) {
   const denied = await requireSuperadmin(caller.id, "Solo un superadmin puede crear usuarios.");
   if (denied) return denied;
 
-  const result = await provisionUser({ email, first_name, last_name, nickname, dataset_key, reason: "signup" });
+  const result = await provisionUser({ email, first_name, last_name, nickname, dataset_key, reason: "signup", language: safeLanguage });
   if (result.error) {
     console.error(result.error);
     return { status: 400, payload: { error: friendlyError(result.error.message) } };

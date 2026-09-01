@@ -64,7 +64,7 @@ async function validateNickname(client, nickname) {
 // is_admin / is_superadmin NUNCA se pasan aquí a propósito: handle_new_user()
 // no los toca al crear la fila de profiles, así que nace siempre con ambos
 // en false, sin importar el origen de la llamada.
-export async function provisionUser({ email, first_name, last_name, nickname, dataset_key, reason = "signup" }) {
+export async function provisionUser({ email, first_name, last_name, nickname, dataset_key, reason = "signup", language }) {
   const client = getServiceRoleClient();
 
   const nicknameError = await validateNickname(client, nickname);
@@ -79,6 +79,11 @@ export async function provisionUser({ email, first_name, last_name, nickname, da
       first_name: first_name || null,
       last_name: last_name || null,
       nickname,
+      // handle_new_user() (schema.sql) lee esto con coalesce a 'es' si
+      // viene null/ausente — nunca se pasa un idioma sin validar (ver
+      // createUser.js/externalRegister.js, que ya filtran contra
+      // SUPPORTED_LANGUAGES antes de llegar aquí).
+      language: language || null,
     },
   });
   if (createError) {

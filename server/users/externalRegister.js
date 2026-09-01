@@ -80,10 +80,14 @@ export async function handleExternalRegister({ method, body }) {
     return { status: 400, payload: { error: "Cuerpo de la petición inválido." } };
   }
 
-  const { email, first_name, last_name, nickname } = input;
+  const { email, first_name, last_name, nickname, language } = input;
   if (!email || !nickname) {
     return { status: 400, payload: { error: "Email y nickname son obligatorios." } };
   }
+  // Mismos 2 idiomas que el check de profiles.language (schema.sql) — si
+  // llega algo distinto (o nada), provisionUser()/handle_new_user() caen
+  // al 'es' por defecto, nunca se propaga un valor sin validar a metadata.
+  const safeLanguage = ["es", "en"].includes(language) ? language : undefined;
 
   const client = getServiceRoleClient();
 
@@ -113,6 +117,7 @@ export async function handleExternalRegister({ method, body }) {
     nickname,
     dataset_key: datasetKey,
     reason: "external_signup",
+    language: safeLanguage,
   });
   if (result.error) {
     if (result.error.message?.includes(EMAIL_ALREADY_REGISTERED)) {

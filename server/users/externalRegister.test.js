@@ -95,8 +95,24 @@ it("flujo correcto: registro externo activado, provisiona con el primer dataset 
     nickname: VALID_BODY.nickname,
     dataset_key: "ihasia",
     reason: "external_signup",
+    language: undefined,
   });
   expect(result).toEqual({ status: 200, payload: { email_sent: true } });
+});
+
+// Release V1, Fase 2 (multidioma): language solo se propaga si es uno de
+// los 2 idiomas soportados — cualquier otro valor cae a undefined, y
+// provisionUser()/handle_new_user() lo resuelven a 'es' por defecto.
+it("propaga language cuando es un idioma soportado", async () => {
+  await handleExternalRegister(request({ body: JSON.stringify({ ...VALID_BODY, language: "en" }) }));
+
+  expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ language: "en" }));
+});
+
+it("ignora un language no soportado, cae a undefined", async () => {
+  await handleExternalRegister(request({ body: JSON.stringify({ ...VALID_BODY, language: "fr" }) }));
+
+  expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ language: undefined }));
 });
 
 it("no expone user_id en la respuesta (a diferencia de create-user, aquí no hay superadmin al otro lado)", async () => {

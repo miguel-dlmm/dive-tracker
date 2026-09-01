@@ -172,8 +172,34 @@ describe("con permisos válidos", () => {
         first_name: VALID_BODY.first_name,
         last_name: VALID_BODY.last_name,
         nickname: VALID_BODY.nickname,
+        language: null,
       },
     });
+  });
+
+  // Release V1, Fase 2 (multidioma): language solo se propaga si es uno de
+  // los 2 idiomas soportados — cualquier otro valor cae a null, y
+  // handle_new_user() (schema.sql) lo resuelve a 'es' por defecto.
+  it("propaga language cuando es un idioma soportado", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+    const body = { ...VALID_BODY, language: "en" };
+
+    await handleCreateUser(request({ body: JSON.stringify(body) }));
+
+    expect(createUser).toHaveBeenCalledWith(expect.objectContaining({
+      user_metadata: expect.objectContaining({ language: "en" }),
+    }));
+  });
+
+  it("ignora un language no soportado, cae a null", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+    const body = { ...VALID_BODY, language: "fr" };
+
+    await handleCreateUser(request({ body: JSON.stringify(body) }));
+
+    expect(createUser).toHaveBeenCalledWith(expect.objectContaining({
+      user_metadata: expect.objectContaining({ language: null }),
+    }));
   });
 
   it("clona el dataset elegido en el usuario recién creado", async () => {

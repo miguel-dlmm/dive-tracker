@@ -46,8 +46,21 @@ it("crea el usuario sin contraseña, con los metadatos esperados", async () => {
   expect(client.auth.admin.createUser).toHaveBeenCalledWith({
     email: ARGS.email,
     email_confirm: true,
-    user_metadata: { first_name: "Ada", last_name: "Lovelace", nickname: "ada" },
+    user_metadata: { first_name: "Ada", last_name: "Lovelace", nickname: "ada", language: null },
   });
+});
+
+// Release V1, Fase 2 (multidioma): se pasa tal cual a metadata —
+// handle_new_user() (schema.sql) resuelve null/ausente a 'es'.
+it("propaga language a los metadatos cuando se indica", async () => {
+  const client = makeClient();
+  getServiceRoleClient.mockReturnValue(client);
+
+  await provisionUser({ ...ARGS, language: "en" });
+
+  expect(client.auth.admin.createUser).toHaveBeenCalledWith(expect.objectContaining({
+    user_metadata: expect.objectContaining({ language: "en" }),
+  }));
 });
 
 it("clona el dataset indicado en el usuario recién creado", async () => {

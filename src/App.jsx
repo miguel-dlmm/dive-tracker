@@ -29,6 +29,7 @@ import SummaryTab from "./SummaryTab";
 import HelpTab, { clearStoredHelpOpen } from "./HelpTab";
 import PaymentsTab from "./PaymentsTab";
 import ProfileTab from "./ProfileTab";
+import i18n, { setStoredLanguage } from "./i18n";
 
 // ---------------------------------------------------------------
 // Paleta — profesional y contenida: un único acento neutro, fondo
@@ -111,6 +112,18 @@ function markWhatsNewSeen(userId) {
 }
 
 function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" }) {
+  // profiles.language es la fuente de verdad una vez hay sesión (Release V1,
+  // Fase 2) — sincroniza la interfaz al idioma guardado del usuario y
+  // actualiza el respaldo de localStorage (oceanpulse:language) que usan
+  // las pantallas sin sesión (Login, Registro...) para que la próxima vez
+  // que se cierre sesión, esas pantallas ya arranquen en el idioma correcto.
+  useEffect(() => {
+    if (profile?.language && profile.language !== i18n.language) {
+      i18n.changeLanguage(profile.language);
+    }
+    if (profile?.language) setStoredLanguage(profile.language);
+  }, [profile?.language]);
+
   const schools = useSupabaseTable("schools", "name");
   const activities = useSupabaseTable("activities", "name");
   const paymentTypes = useSupabaseTable("payment_types", "name");
