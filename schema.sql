@@ -717,6 +717,77 @@ drop policy if exists "select own or admin sees all" on public.legal_consents;
 create policy "select own or admin sees all" on public.legal_consents
   for select using (auth.uid() = user_id or public.is_admin(auth.uid()));
 
+-- ---------- Avisos de despliegue para el superadmin (ADR-0024/0025) ----------
+
+-- Un aviso por commit de trabajo (no por deploy de Vercel en sí — un commit
+-- puede no llegar a desplegarse todavía). commit_hash es la clave de
+-- idempotencia real: un segundo intento de notificar el mismo commit no
+-- crea una fila nueva ni reenvía el email (ver server/notifications/
+-- notifyDeployment.js), así que reintentos o llamadas duplicadas desde
+-- varias pestañas/procesos nunca duplican el aviso.
+create table if not exists public.deployment_notices (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  commit_hash text not null unique,
+  branch text not null,
+  summary text not null,
+  changes jsonb not null default '[]',         -- array de strings
+  suggested_tests jsonb not null default '[]', -- array de strings
+  tests_status text,   -- p.ej. "442 passed (442)"
+  build_status text,   -- p.ej. "ok" / "warnings: chunk >500kB"
+  preview_url text      -- null si todavía no hay Preview Deployment
+);
+
+-- Quién (qué superadmin) ya vio cada aviso en el slide in-app. Tabla puente
+-- normal con PK compuesta en vez del jsonb `viewed_by` que proponía el
+-- diseño original de ADR-0024 — decisión tomada al implementar: un
+-- `insert ... on conflict do nothing` es atómico e idempotente de verdad
+-- ante varias pestañas del mismo superadmin marcando "visto" a la vez,
+-- mientras que un jsonb array actualizado con lectura-modificación-escritura
+-- desde el cliente puede perder una marca si dos pestañas escriben casi a
+-- la vez (la escritura que llega después pisa a la anterior). Con una fila
+-- por (aviso, usuario) y clave primaria compuesta, la segunda escritura
+-- simplemente no hace nada en vez de arriesgarse a perder la primera.
+create table if not exists public.deployment_notice_views (
+  notice_id uuid not null references public.deployment_notices(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  viewed_at timestamptz not null default now(),
+  primary key (notice_id, user_id)
+);
+
+-- Migración aditiva para instalaciones existentes — ejecutar a mano en el
+-- SQL editor de Supabase si las tablas de arriba no existen todavía. Los
+-- `create table if not exists` ya las crean solas en una instalación nueva.
+--
+--   create table if not exists public.deployment_notices (...);
+--   create table if not exists public.deployment_notice_views (...);
+--   (mismo DDL de arriba — no repetido aquí para no divergir en dos sitios)
+
+-- RLS: exclusivamente superadmin, tanto lectura como escritura — nunca
+-- is_admin(), que también es true para un admin normal (ver definición de
+-- is_admin(uid) al principio del fichero). El encargo original pedía
+-- "solo ADMIN [superadmin] verá"; una policy con is_admin() dejaría a un
+-- admin normal leer estos avisos directamente vía el cliente de Supabase
+-- aunque la UI nunca se los muestre — el control real tiene que vivir aquí,
+-- no solo en que el componente esté gateado por profile.is_superadmin.
+alter table public.deployment_notices enable row level security;
+drop policy if exists "superadmin read" on public.deployment_notices;
+create policy "superadmin read" on public.deployment_notices
+  for select using (public.is_superadmin(auth.uid()));
+drop policy if exists "superadmin write" on public.deployment_notices;
+create policy "superadmin write" on public.deployment_notices
+  for all using (public.is_superadmin(auth.uid())) with check (public.is_superadmin(auth.uid()));
+
+alter table public.deployment_notice_views enable row level security;
+drop policy if exists "superadmin read views" on public.deployment_notice_views;
+create policy "superadmin read views" on public.deployment_notice_views
+  for select using (public.is_superadmin(auth.uid()));
+-- insert restringido a "marcar mi propio visto" — un superadmin nunca
+-- marca un aviso como visto en nombre de otro.
+drop policy if exists "superadmin insert own view" on public.deployment_notice_views;
+create policy "superadmin insert own view" on public.deployment_notice_views
+  for insert with check (public.is_superadmin(auth.uid()) and user_id = auth.uid());
+
 -- ---------- Notas de diseño del esquema ----------
 -- - No existe tabla "activity_types" (Instructor/Comisión) — se eliminó al
 --   separar Work Log y Comisiones en flujos independientes.

@@ -22,6 +22,7 @@ import CompanerosTab from "./CompanerosTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
 import WhatsNew from "./WhatsNew";
+import DeploymentNotice from "./DeploymentNotice";
 import { APP_VERSION } from "./version";
 import SummaryTab from "./SummaryTab";
 import HelpTab, { clearStoredHelpOpen } from "./HelpTab";
@@ -431,6 +432,11 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
       />
 
       {whatsNewOpen && <WhatsNew onClose={closeWhatsNew} />}
+      {/* Solo superadmin, y solo tras cerrar "Qué hay de nuevo" — evita dos
+          modales fixed inset-0 apilados a la vez. Gate real de acceso vive
+          en RLS (ver schema.sql, "superadmin read"), esto es solo para no
+          hacer la consulta ni renderizar nada a quien nunca podría verlo. */}
+      {!whatsNewOpen && profile?.is_superadmin && <DeploymentNotice userId={profile.user_id} />}
     </div>
   );
 }

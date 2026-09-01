@@ -1,5 +1,6 @@
 import { sendViaResend } from "./providers/resendProvider.js";
 import { renderActivationEmailHtml, renderActivationEmailText, ACTIVATION_EMAIL_COPY } from "./templates/activationEmailTemplate.js";
+import { renderDeploymentNoticeEmailHtml, renderDeploymentNoticeEmailText } from "./templates/deploymentNoticeEmailTemplate.js";
 
 // Única puerta de entrada al envío de emails — createUser.js,
 // regenerateActivationLink.js y regeneratePassword.js dependen solo de
@@ -29,6 +30,23 @@ export async function sendActivationEmail({ email, firstName, nickname, actionLi
     });
   } catch (err) {
     console.error("sendActivationEmail: excepción inesperada", err);
+    return { sent: false, error: "No se pudo enviar el email." };
+  }
+}
+
+// Nunca lanza — mismo contrato best-effort que sendActivationEmail(): si
+// falla, notifyDeployment.js ya ha registrado el aviso en la tabla, así
+// que el slide in-app lo mostrará igual aunque el email no llegue.
+export async function sendDeploymentNoticeEmail({ email, notice }) {
+  try {
+    return await sendEmail({
+      to: email,
+      subject: `Ocean Flow — nuevo despliegue: ${notice.summary}`,
+      html: renderDeploymentNoticeEmailHtml({ notice }),
+      text: renderDeploymentNoticeEmailText({ notice }),
+    });
+  } catch (err) {
+    console.error("sendDeploymentNoticeEmail: excepción inesperada", err);
     return { sent: false, error: "No se pudo enviar el email." };
   }
 }
