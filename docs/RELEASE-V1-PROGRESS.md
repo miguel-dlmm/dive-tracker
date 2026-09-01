@@ -294,17 +294,33 @@ misma causa que el email no enviado.
 - `docs/ADR/0021-servicio-de-email-transaccional.md` actualizado con el
   addendum completo.
 
-**⚠️ Pendiente — acción manual que el usuario debe hacer mañana (fuera
-de mi alcance esta noche, son variables de entorno de Vercel, no
-código):** actualizar `EMAIL_FROM` a `Ocean Flow <no-reply@oceanflow.money>`
-en las variables de entorno de **ambos** proyectos Vercel —
-`dive-tracker` (TEST) y `dive-tracker-exgg` (producción). Hasta que se
-haga, cualquier alta de usuario real en TEST o en producción seguirá sin
-enviar el email de activación a nadie que no sea el titular de la
-cuenta Resend — esto **bloquea el lanzamiento público** (el objetivo
-completo de Release V1) si no se corrige antes de abrir el registro a
-desconocidos. Es el hallazgo más importante de toda la noche — revisar
-esto primero mañana.
+**✅ Corregido también en Vercel TEST (`dive-tracker`), con permiso
+explícito del usuario en el momento:**
+- `EMAIL_FROM` actualizado a `Ocean Flow <no-reply@oceanflow.money>` en
+  los entornos Production y Preview del proyecto `dive-tracker` (vía
+  `vercel env rm`/`vercel env add` — la primera vez que la clasificadora
+  de permisos de auto mode bloqueó el comando por tocar infraestructura
+  compartida; el usuario dio permiso explícito y se repitió).
+- Detalle importante descubierto en el proceso: Vercel **fija las
+  variables de entorno en el momento del deploy, no las lee en vivo en
+  cada invocación** — el primer intento de verificar contra un Preview
+  Deployment ya existente (creado antes del cambio de env var) seguía
+  fallando (`email_sent: false`) hasta hacer un deploy nuevo (el commit
+  de limpieza de Ayuda de Fase 1, empujado a continuación) — con esa
+  compilación nueva, verificado end-to-end contra el Preview real:
+  `POST /api/external-register` → `{"email_sent":true}`, HTTP 200.
+- Cuentas de verificación (`release-v1-verify`, `release-v1-verify2`)
+  eliminadas tras la comprobación — no queda ningún dato de prueba mío
+  en TEST. La cuenta real que creaste tú (`mi.gueldlmm@gmail.com`,
+  nickname `mmm`) se deja intacta con su email ya reenviado, para que la
+  actives tú si quieres.
+
+**⚠️ Sigue pendiente — solo producción real:** aplicar el mismo cambio
+de `EMAIL_FROM` en las variables de entorno de `dive-tracker-exgg`
+(producción). No se ha tocado esta noche — el permiso que diste fue
+para TEST, mientras probabas el registro ahí. Bloquea el registro
+público real en producción hasta que se haga; revisar mañana antes de
+abrir el registro a desconocidos.
 
 ### Fase 8 — Revisión visual y libro de estilo
 
