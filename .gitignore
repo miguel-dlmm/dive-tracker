@@ -34,6 +34,13 @@ dist-ssr
 # dive-tracker.zip llegó a comitearse por error el 2026-08-24).
 *.zip
 
+# Duplicados "Nombre 2.ext" que genera iCloud Drive al resolver un conflicto
+# de sincronización — este proyecto vive dentro de Mobile Documents
+# (com~apple~CloudDocs). Encontrados 19 casos byte-idénticos a su original
+# en la limpieza técnica de 2026-09-01; este patrón evita que vuelvan a
+# aparecer como "untracked" en git status.
+* 2.*
+
 # Capturas de scripts/mobile-check.mjs — resultado de una ejecución local,
 # no artefactos versionables.
 scripts/mobile-check-output/
