@@ -1,7 +1,15 @@
 # ADR 0023 — Registro externo: autoservicio del mismo alta que ya hace el superadmin
 
 **Fecha:** 2026-08-31
-**Estado:** Aprobado e implementado (código en TEST y en `schema.sql`; migración de `app_config` ejecutada solo contra Supabase TEST — ver "Aplicado" al final).
+**Estado:** Aprobado e implementado. Registro externo es una funcionalidad
+normal de la aplicación, no un experimento condicionado a un entorno: la
+migración de `app_config.allow_external_registration` + RPC
+`external_registration_enabled()` forma parte del cambio igual que
+cualquier otra migración de `schema.sql`, y se aplica al desplegar en
+cada entorno siguiendo su proceso estándar — sin bloqueo especial para
+producción más allá de la cautela general ya vigente para cualquier
+cambio de esquema contra PROD (ver "Aplicado" al final para el estado
+real de cada entorno a día de hoy).
 
 ## Contexto y problema
 
@@ -61,6 +69,15 @@ su cuenta en cada petición**, antes de tocar Supabase — nunca se fía de que
 el botón esté oculto en el cliente. Si alguien llama al endpoint
 directamente con el flag en `false`, recibe 403 sin crear nada.
 
+`allow_external_registration` es una columna de `app_config`, tabla con
+una fila por instalación de Supabase — cada entorno (TEST, producción, o
+cualquier Preview futuro con su propio Supabase) tiene su propia fila y
+por tanto su propio valor del toggle, independiente de los demás.
+Activarlo en TEST para probar el flujo no lo activa en producción, ni al
+revés; cada superadmin lo decide desde Configuración en su propio
+entorno. La migración que añade la columna (con `default false`) es la
+que viaja igual a todos los entornos — el *valor* del toggle no.
+
 ## Alternativas descartadas
 
 - **Registro con contraseña inmediata (`supabase.auth.signUp()` +
@@ -98,9 +115,23 @@ directamente con el flag en `false`, recibe 403 sin crear nada.
 
 ## Aplicado
 
-- Columna `app_config.allow_external_registration` y RPC
-  `external_registration_enabled()`: **ejecutadas contra Supabase TEST**
-  (`rwzbfrdidbjgkkuyuuzm`), no contra producción — mismo límite que el
-  resto de esta sesión (nunca tocar PROD sin aprobación explícita aparte).
-  `schema.sql` documenta el bloque de migración aditiva para replicarlo en
-  cualquier otra instalación, incluida producción cuando se apruebe.
+Registro externo no es una funcionalidad condicionada a TEST ni bloqueada
+para producción — es parte normal de la app, y su migración (aditiva,
+`app_config.allow_external_registration` + RPC
+`external_registration_enabled()`) viaja en `schema.sql` como cualquier
+otra. Se aplica a cada entorno siguiendo el proceso estándar de ese
+entorno, no un proceso especial de este ADR.
+
+- Columna y RPC: **ya ejecutadas contra Supabase TEST**
+  (`rwzbfrdidbjgkkuyuuzm`).
+- Contra Supabase producción: **pendiente de aplicar**, siguiendo el
+  mismo procedimiento estándar que cualquier migración aditiva de
+  `schema.sql` contra PROD (revisión + aprobación explícita del paso
+  concreto de aplicarla, no del feature en sí — el feature ya está
+  aprobado por este ADR). No es un bloqueo del diseño ni de la
+  funcionalidad, es simplemente el siguiente paso operativo pendiente de
+  ejecutar.
+- El toggle en sí (`allow_external_registration = true/false`) se decide
+  por separado en cada entorno una vez la columna existe ahí — aplicar la
+  migración en producción no lo activa automáticamente; sigue en `false`
+  hasta que un superadmin lo encienda desde Configuración.

@@ -55,8 +55,17 @@ create table if not exists deployment_notices (
 );
 
 alter table deployment_notices enable row level security;
-create policy "admin read" on deployment_notices for select using (public.is_admin(auth.uid()));
-create policy "admin write" on deployment_notices for all using (public.is_superadmin(auth.uid())) with check (public.is_superadmin(auth.uid()));
+-- Lectura restringida a is_superadmin(), NO is_admin() — corrección
+-- 2026-09-01. is_admin(uid) (ver schema.sql) devuelve true tanto para
+-- is_admin como para is_superadmin ("is_admin OR is_superadmin"), así
+-- que una policy de lectura con is_admin() dejaría a un admin normal
+-- (no superadmin) leer deployment_notices directamente vía el cliente
+-- de Supabase, aunque la UI nunca le muestre el slide — el encargo pide
+-- "Solo ADMIN [superadmin] verá" y eso debe cumplirse en el servidor,
+-- no solo en el cliente (mismo criterio que ya aplica ADR-0023 a
+-- handleExternalRegister: nunca fiarse de que el cliente oculte algo).
+create policy "superadmin read" on deployment_notices for select using (public.is_superadmin(auth.uid()));
+create policy "superadmin write" on deployment_notices for all using (public.is_superadmin(auth.uid())) with check (public.is_superadmin(auth.uid()));
 ```
 
 ### 3. El slide en el cliente
@@ -81,6 +90,15 @@ uso" — en su lugar: lista de cambios (`<ul>`), lista de pruebas
 sugeridas, y un botón que abre `preview_url` directamente (no un enlace
 de recovery de Supabase — es una URL pública de Vercel, no necesita
 `generateActivationLink`).
+
+**Destinatarios — corrección 2026-09-01, misma regla que la lectura y el
+slide:** el email se envía a todas las cuentas con `is_superadmin = true`
+(`select email from auth.users join public.profiles using (user_id)
+where profiles.is_superadmin`), nunca a `is_admin` sin más — el diseño ya
+anticipaba varios superadmins posibles (`viewed_by` es un array, no un
+único id), así que el envío debe cubrir a todos ellos, no a uno fijo. Con
+la instalación actual (un único superadmin) es una lista de un elemento,
+pero el endpoint no debe asumirlo.
 
 ## Nivel de abstracción — deliberadamente mínimo
 
