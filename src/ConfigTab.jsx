@@ -374,7 +374,11 @@ function userStatus(active, activatedAt) {
 const STATUS_META = {
   activo: { label: "Activo", cls: "bg-emerald-50 text-emerald-700", dot: "#10B981" },
   pendiente: { label: "Pendiente", cls: "bg-amber-50 text-amber-700", dot: "#D97706" },
-  desactivado: { label: "Desactivado", cls: "bg-gray-100 text-gray-500", dot: "#9CA3AF" },
+  // text-gray-600, no -500 (Bloque 11, accesibilidad): gray-500 sobre
+  // gray-100 da ~4.4:1 de contraste, justo por debajo del 4.5:1 mínimo
+  // AA para texto normal (12px, no es "texto grande") — comprobado con la
+  // fórmula de contraste relativo de WCAG. gray-600 sube a ~6.9:1.
+  desactivado: { label: "Desactivado", cls: "bg-gray-100 text-gray-600", dot: "#9CA3AF" },
 };
 
 // Badge de solo lectura — cualquier admin puede VERLO, cambiarlo es cosa
@@ -435,15 +439,12 @@ function shortDateTime(iso) {
 // UserDetailSheet, al tocar la fila.
 //
 // "Fecha de desactivación" (pedida explícitamente, "fecha de baja" en la
-// petición original): no existe hoy ninguna columna que registre CUÁNDO se
-// desactivó una cuenta — `banned_until` (Supabase Auth) guarda cuándo
-// TERMINARÍA el baneo, no cuándo empezó, así que no sirve para derivarla.
-// Añadirla requeriría una columna nueva (`profiles.deactivated_at`) — un
-// cambio de esquema real que las reglas del proyecto piden proponer aparte
-// antes de implementar (ver ADR de esta sesión). Mientras tanto, para una
-// cuenta desactivada se muestra explícitamente "fecha no registrada
-// todavía" en vez de omitir el dato en silencio — dejar claro que es un
-// hueco real, no un olvido.
+// petición original; también en docs/BACKLOG.md desde 2026-08-29):
+// implementada en el Bloque 11 (2026-09-01) — profiles.deactivated_at,
+// escrita por setUserActive.js al desactivar y limpiada a null por
+// regenerateActivationLink.js/regeneratePassword.js al reactivar (ver
+// schema.sql). `banned_until` (Supabase Auth) no servía para derivarla:
+// guarda cuándo TERMINARÍA el baneo, no cuándo empezó.
 // Arrastrar una fila de Usuarios hacia la izquierda revela "Eliminar"
 // detrás — un atajo ADICIONAL, no un segundo mecanismo de borrado: tocar
 // el botón revelado llama al mismo `onDelete` (el `requestDelete` ya
@@ -489,7 +490,7 @@ function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
   );
 }
 
-function UserListRow({ user, status, onOpen }) {
+function UserListRow({ user, status, deactivatedAt, onOpen }) {
   return (
     <button
       onClick={() => onOpen(user.user_id)}
@@ -512,7 +513,9 @@ function UserListRow({ user, status, onOpen }) {
       </div>
       <div className="shrink-0 text-right text-xs text-gray-400">
         <div>Alta: {shortDate(user.created_at)}</div>
-        {status === "desactivado" && <div className="mt-0.5 italic">Baja: fecha no registrada aún</div>}
+        {status === "desactivado" && (
+          <div className="mt-0.5 italic">Baja: {deactivatedAt ? shortDate(deactivatedAt) : "fecha no registrada"}</div>
+        )}
       </div>
       <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />
     </button>
@@ -536,7 +539,7 @@ function UserListRow({ user, status, onOpen }) {
 // de interacción (EditActions, Field, feedback por toast) sin forzar una
 // estructura de pantalla que no pinta nada en este caso.
 function UserDetailSheet({
-  user, status, lastSignInAt, currentUserId, viewerIsSuperadmin, actionBusy,
+  user, status, lastSignInAt, deactivatedAt, currentUserId, viewerIsSuperadmin, actionBusy,
   onClose, onRequestToggleAdmin, onRequestToggleActive, onRequestRegenerateLink,
   onRequestRegeneratePassword, onRequestDelete, onSaveProfile,
 }) {
@@ -599,7 +602,9 @@ function UserDetailSheet({
             {status === "desactivado" && (
               <div className="flex items-center justify-between gap-3">
                 <span className="shrink-0 text-xs text-gray-400">Baja</span>
-                <span className="italic text-gray-400">fecha no registrada aún</span>
+                <span className={deactivatedAt ? "text-gray-700" : "italic text-gray-400"}>
+                  {deactivatedAt ? shortDateTime(deactivatedAt) : "fecha no registrada"}
+                </span>
               </div>
             )}
             {editable && (
@@ -898,6 +903,7 @@ function UsersDirectory({ profile }) {
   const [activeByUser, setActiveByUser] = useState({});
   const [lastSignInByUser, setLastSignInByUser] = useState({});
   const [activatedAtByUser, setActivatedAtByUser] = useState({});
+  const [deactivatedAtByUser, setDeactivatedAtByUser] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [query, setQuery] = useState("");
@@ -955,18 +961,21 @@ function UsersDirectory({ profile }) {
     }
   };
 
-  // activated_at no está en admin_list_profiles() — se consulta aparte
-  // (RLS de profiles ya permite a un admin leer cualquier fila, ver ADR de
-  // esta sesión) y se cruza por user_id en el cliente, para no tocar
-  // schema.sql por este requisito. Igual de silencioso que loadActiveStatus:
-  // un fallo aquí no debe tumbar el resto del directorio.
-  const loadActivatedAt = async () => {
+  // activated_at/deactivated_at no están en admin_list_profiles() — se
+  // consultan aparte (RLS de profiles ya permite a un admin leer
+  // cualquier fila, ver ADR de esta sesión) y se cruzan por user_id en el
+  // cliente, para no tocar esa función por este requisito. Igual de
+  // silencioso que loadActiveStatus: un fallo aquí no debe tumbar el
+  // resto del directorio.
+  const loadAccountDates = async () => {
     try {
-      const { data, error } = await supabase.from("profiles").select("user_id, activated_at");
+      const { data, error } = await supabase.from("profiles").select("user_id, activated_at, deactivated_at");
       if (error) throw error;
-      const map = {};
-      (data || []).forEach((r) => { map[r.user_id] = r.activated_at; });
-      setActivatedAtByUser(map);
+      const activatedMap = {};
+      const deactivatedMap = {};
+      (data || []).forEach((r) => { activatedMap[r.user_id] = r.activated_at; deactivatedMap[r.user_id] = r.deactivated_at; });
+      setActivatedAtByUser(activatedMap);
+      setDeactivatedAtByUser(deactivatedMap);
     } catch (err) {
       console.error(err);
     }
@@ -976,7 +985,7 @@ function UsersDirectory({ profile }) {
     let active = true;
     supabase.rpc("admin_list_profiles").then((result) => { if (active) applyResult(result); });
     loadActiveStatus();
-    loadActivatedAt();
+    loadAccountDates();
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -988,7 +997,7 @@ function UsersDirectory({ profile }) {
     setLoading(true);
     supabase.rpc("admin_list_profiles").then(applyResult);
     loadActiveStatus();
-    loadActivatedAt();
+    loadAccountDates();
   };
 
   const filteredRows = useMemo(() => {
@@ -1110,7 +1119,7 @@ function UsersDirectory({ profile }) {
       toast?.success("Usuario desactivado");
       setPendingToggleActive(null);
       loadActiveStatus();
-      loadActivatedAt();
+      loadAccountDates();
     } catch (err) {
       toast?.error(err.message || "No se pudo actualizar el estado.");
     } finally {
@@ -1157,7 +1166,7 @@ function UsersDirectory({ profile }) {
       }
       setPendingRegenerateLink(null);
       loadActiveStatus();
-      loadActivatedAt();
+      loadAccountDates();
     } catch (err) {
       toast?.error(err.message || "No se pudo generar el enlace.");
     } finally {
@@ -1204,7 +1213,7 @@ function UsersDirectory({ profile }) {
       }
       setPendingRegeneratePassword(null);
       loadActiveStatus();
-      loadActivatedAt();
+      loadAccountDates();
     } catch (err) {
       toast?.error(err.message || "No se pudo regenerar la contraseña.");
     } finally {
@@ -1277,6 +1286,7 @@ function UsersDirectory({ profile }) {
               <UserListRow
                 user={p}
                 status={userStatus(activeByUser[p.user_id] ?? true, activatedAtByUser[p.user_id])}
+                deactivatedAt={deactivatedAtByUser[p.user_id]}
                 onOpen={setOpenUserId}
               />
             );
@@ -1304,6 +1314,7 @@ function UsersDirectory({ profile }) {
           user={openUser}
           status={userStatus(activeByUser[openUser.user_id] ?? true, activatedAtByUser[openUser.user_id])}
           lastSignInAt={lastSignInByUser[openUser.user_id] ?? null}
+          deactivatedAt={deactivatedAtByUser[openUser.user_id]}
           currentUserId={profile?.user_id}
           viewerIsSuperadmin={!!profile?.is_superadmin}
           actionBusy={submitting}

@@ -143,7 +143,7 @@ it("rechaza desactivar una cuenta superadmin", async () => {
   expect(client.auth.admin.updateUserById).not.toHaveBeenCalled();
 });
 
-it("desactiva con ban_duration de larga duración, limpia activated_at y devuelve { user_id, active: false }", async () => {
+it("desactiva con ban_duration de larga duración, limpia activated_at, registra deactivated_at y devuelve { user_id, active: false }", async () => {
   const client = makeClient({ lookupResult: { data: { is_superadmin: false }, error: null } });
   getServiceRoleClient.mockReturnValue(client);
 
@@ -151,7 +151,7 @@ it("desactiva con ban_duration de larga duración, limpia activated_at y devuelv
 
   expect(result).toEqual({ status: 200, payload: { user_id: TARGET_ID, active: false } });
   expect(client.auth.admin.updateUserById).toHaveBeenCalledWith(TARGET_ID, { ban_duration: "876000h" });
-  expect(client.update).toHaveBeenCalledWith({ activated_at: null });
+  expect(client.update).toHaveBeenCalledWith({ activated_at: null, deactivated_at: expect.any(String) });
   expect(client.eqForUpdate).toHaveBeenCalledWith("user_id", TARGET_ID);
 });
 

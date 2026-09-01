@@ -287,14 +287,17 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     email: "admin@example.com", is_admin: true, is_superadmin: true, created_at: "2026-08-01T00:00:00Z",
   };
 
-  // activated_at vive en profiles, no en admin_list_profiles() — se lee
-  // aparte (loadActivatedAt) y se cruza por user_id. `activatedAt: null`
-  // reproduce una cuenta nunca activada ("Pendiente" aunque no esté baneada).
-  function mockProfilesFrom(activatedAt) {
+  // activated_at/deactivated_at viven en profiles, no en
+  // admin_list_profiles() — se leen aparte (loadAccountDates) y se cruzan
+  // por user_id. `activatedAt: null` reproduce una cuenta nunca activada
+  // ("Pendiente" aunque no esté baneada); `deactivatedAt` solo importa
+  // cuando el estado es "Desactivado" (banned_until, mockeado aparte vía
+  // fetch("/api/list-user-status")).
+  function mockProfilesFrom(activatedAt, deactivatedAt = null) {
     supabase.from.mockImplementation((table) => {
       if (table !== "profiles") throw new Error(`tabla inesperada en el mock: ${table}`);
       return {
-        select: vi.fn().mockResolvedValue({ data: [{ user_id: "target-1", activated_at: activatedAt }], error: null }),
+        select: vi.fn().mockResolvedValue({ data: [{ user_id: "target-1", activated_at: activatedAt, deactivated_at: deactivatedAt }], error: null }),
         update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
       };
     });
@@ -329,6 +332,29 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await openUsuarios(user);
 
     await waitFor(() => expect(screen.getByText("Pendiente")).toBeInTheDocument());
+  });
+
+  it("cuenta desactivada con deactivated_at registrado: la fila muestra la fecha real de baja", async () => {
+    const user = userEvent.setup();
+    mockProfilesFrom("2026-08-02T00:00:00Z", "2026-08-15T10:00:00Z");
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: { "target-1": null } }) });
+
+    await openUsuarios(user);
+
+    await waitFor(() => expect(screen.getByText(/Baja:/)).toBeInTheDocument());
+    expect(screen.getByText(/Baja:/)).toHaveTextContent("15/8/2026");
+    expect(screen.queryByText(/fecha no registrada/)).not.toBeInTheDocument();
+  });
+
+  it("cuenta desactivada sin deactivated_at (baja anterior a esta migración): cae al aviso explícito, no a un dato inventado", async () => {
+    const user = userEvent.setup();
+    mockProfilesFrom("2026-08-02T00:00:00Z", null);
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: { "target-1": null } }) });
+
+    await openUsuarios(user);
+
+    await waitFor(() => expect(screen.getByText(/Baja:/)).toBeInTheDocument());
+    expect(screen.getByText(/fecha no registrada/)).toBeInTheDocument();
   });
 
   it("desactivar (desde el switch de la hoja de detalle) pide confirmación y llama a /api/set-user-active con active:false", async () => {

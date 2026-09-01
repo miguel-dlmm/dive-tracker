@@ -84,9 +84,23 @@ create table if not exists public.profiles (
   -- pendiente (ver pendingLegalConsents); son dos puertas independientes
   -- que AuthGate comprueba por separado, nunca una sustituye a la otra.
   activated_at timestamptz,
+  -- Momento en que se desactivó (baneó) la cuenta — null si nunca lo
+  -- estuvo o si se reactivó. Pedido explícito (Bloque 11, 2026-09-01;
+  -- también en docs/BACKLOG.md desde 2026-08-29): banned_until (Supabase
+  -- Auth) guarda cuándo TERMINARÍA el baneo, no cuándo empezó, así que no
+  -- sirve para derivar esta fecha. La escribe setUserActive.js al
+  -- desactivar, y regenerateActivationLink.js la limpia a null al
+  -- reactivar (quitar el baneo) — mismo criterio que activated_at.
+  deactivated_at timestamptz,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
+
+-- Migración aditiva Bloque 11 (2026-09-01) para instalaciones existentes:
+--
+--   alter table public.profiles add column if not exists deactivated_at timestamptz;
+--
+-- (scripts/migrations/0006-fecha-de-baja.sql tiene el mismo DDL)
 
 -- Migración aditiva Bloque 5 (2026-09-01) para instalaciones existentes —
 -- ejecutar en el SQL editor de Supabase, o con scripts/apply-migration.mjs

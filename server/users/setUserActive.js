@@ -104,12 +104,15 @@ export async function handleSetUserActive({ method, headers, body }) {
 
   // activated_at a null: si algún día se reactiva, queda "pendiente" hasta
   // completar un enlace nuevo — nunca vuelve a "activo" solo por quitar el
-  // baneo (ver regenerateActivationLink.js/regeneratePassword.js). No se
-  // corta la respuesta si esto falla: el baneo (lo importante para
-  // seguridad) ya se aplicó; el estado se corregirá en el próximo reload().
+  // baneo (ver regenerateActivationLink.js/regeneratePassword.js).
+  // deactivated_at a "ahora" (Bloque 11): fecha de baja para el
+  // directorio de Usuarios — regenerateActivationLink.js la limpia a
+  // null cuando se reactiva. No se corta la respuesta si esto falla: el
+  // baneo (lo importante para seguridad) ya se aplicó; el estado se
+  // corregirá en el próximo reload().
   const { error: profileError } = await client
     .from("profiles")
-    .update({ activated_at: null })
+    .update({ activated_at: null, deactivated_at: new Date().toISOString() })
     .eq("user_id", targetUserId);
   if (profileError) {
     console.error("set-user-active: no se pudo limpiar activated_at", profileError);

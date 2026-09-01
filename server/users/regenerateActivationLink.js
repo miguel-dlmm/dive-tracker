@@ -106,6 +106,16 @@ export async function handleRegenerateActivationLink({ method, headers, body }) 
     return { status: 400, payload: { error: unbanError.message } };
   }
 
+  // deactivated_at a null (Bloque 11): la cuenta ya no está de baja — no
+  // corta la respuesta si falla, el desbaneo (lo importante) ya se aplicó.
+  const { error: clearDeactivatedError } = await client
+    .from("profiles")
+    .update({ deactivated_at: null })
+    .eq("user_id", targetUserId);
+  if (clearDeactivatedError) {
+    console.error("regenerate-activation-link: no se pudo limpiar deactivated_at", clearDeactivatedError);
+  }
+
   const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email);
   if (linkErrorMessage) {
     return { status: 500, payload: { error: linkErrorMessage } };

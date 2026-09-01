@@ -116,7 +116,7 @@ it("rechaza regenerar la contraseña de una cuenta superadmin", async () => {
   expect(client.auth.admin.updateUserById).not.toHaveBeenCalled();
 });
 
-it("sobrescribe la contraseña con una cadena aleatoria de 64 caracteres hex, quita el baneo, limpia activated_at y genera un enlace nuevo", async () => {
+it("sobrescribe la contraseña con una cadena aleatoria de 64 caracteres hex, quita el baneo, limpia activated_at/deactivated_at y genera un enlace nuevo", async () => {
   const client = makeClient({ lookupResult: { data: { is_superadmin: false }, error: null } });
   getServiceRoleClient.mockReturnValue(client);
 
@@ -128,7 +128,7 @@ it("sobrescribe la contraseña con una cadena aleatoria de 64 caracteres hex, qu
   expect(calledPayload.ban_duration).toBe("none");
   expect(calledPayload.password).toMatch(/^[0-9a-f]{64}$/);
 
-  expect(client.update).toHaveBeenCalledWith({ activated_at: null });
+  expect(client.update).toHaveBeenCalledWith({ activated_at: null, deactivated_at: null });
   expect(client.eqForUpdate).toHaveBeenCalledWith("user_id", TARGET_ID);
   expect(generateActivationLink).toHaveBeenCalledWith(TARGET_EMAIL);
   expect(result).toEqual({

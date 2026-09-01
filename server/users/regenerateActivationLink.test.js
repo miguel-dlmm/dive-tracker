@@ -31,14 +31,19 @@ function request(overrides = {}) {
   };
 }
 
-function makeClient({ lookupResult, authUserResult = { data: { user: { email: TARGET_EMAIL } }, error: null }, unbanResult = { error: null } }) {
+function makeClient({ lookupResult, authUserResult = { data: { user: { email: TARGET_EMAIL } }, error: null }, unbanResult = { error: null }, clearDeactivatedResult = { error: null } }) {
   const maybeSingle = vi.fn().mockResolvedValue(lookupResult);
   const eq = vi.fn().mockReturnValue({ maybeSingle });
   const select = vi.fn().mockReturnValue({ eq });
-  const from = vi.fn().mockReturnValue({ select });
+  // update() limpia deactivated_at (Bloque 11) — encadena a su propio eq(),
+  // distinto del eq() de select() de arriba (ese sigue a maybeSingle(), este
+  // resuelve directamente).
+  const eqForUpdate = vi.fn().mockResolvedValue(clearDeactivatedResult);
+  const update = vi.fn().mockReturnValue({ eq: eqForUpdate });
+  const from = vi.fn().mockReturnValue({ select, update });
   const getUserById = vi.fn().mockResolvedValue(authUserResult);
   const updateUserById = vi.fn().mockResolvedValue(unbanResult);
-  return { from, select, eq, auth: { admin: { getUserById, updateUserById } } };
+  return { from, select, eq, update, eqForUpdate, auth: { admin: { getUserById, updateUserById } } };
 }
 
 beforeEach(() => {
@@ -140,6 +145,7 @@ it("quita el baneo (ban_duration: none), genera un enlace nuevo y devuelve actio
   const result = await handleRegenerateActivationLink(request());
 
   expect(client.auth.admin.updateUserById).toHaveBeenCalledWith(TARGET_ID, { ban_duration: "none" });
+  expect(client.update).toHaveBeenCalledWith({ deactivated_at: null });
   expect(generateActivationLink).toHaveBeenCalledWith(TARGET_EMAIL);
   expect(result).toEqual({
     status: 200,
@@ -187,6 +193,18 @@ it("propaga el error de Supabase si falla quitar el baneo", async () => {
 
   expect(result).toEqual({ status: 400, payload: { error: "connection lost" } });
   expect(generateActivationLink).not.toHaveBeenCalled();
+});
+
+it("no bloquea la respuesta si falla limpiar deactivated_at — el desbaneo (lo importante) ya se aplicó", async () => {
+  const client = makeClient({
+    lookupResult: { data: { is_superadmin: false }, error: null },
+    clearDeactivatedResult: { error: { message: "boom" } },
+  });
+  getServiceRoleClient.mockReturnValue(client);
+
+  const result = await handleRegenerateActivationLink(request());
+
+  expect(result.status).toBe(200);
 });
 
 it("devuelve 500 si falla la generación del enlace", async () => {

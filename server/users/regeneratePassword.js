@@ -108,12 +108,14 @@ export async function handleRegeneratePassword({ method, headers, body }) {
   // artificial. No toca legal_consents (tabla aparte, ver useSession.js):
   // aceptar las bases legales no depende de activated_at, así que no se
   // vuelve a pedir.
+  // deactivated_at a null (Bloque 11): esta llamada también desbanea (ver
+  // ban_duration arriba), así que la cuenta ya no está de baja.
   const { error: profileError } = await client
     .from("profiles")
-    .update({ activated_at: null })
+    .update({ activated_at: null, deactivated_at: null })
     .eq("user_id", targetUserId);
   if (profileError) {
-    console.error("regenerate-password: no se pudo limpiar activated_at", profileError);
+    console.error("regenerate-password: no se pudo limpiar activated_at/deactivated_at", profileError);
     // No se corta aquí: la contraseña ya se invalidó (lo importante para
     // seguridad) y el enlace nuevo sigue siendo válido — solo faltaría un
     // dato de estado, que se corregirá solo en el próximo reload().
