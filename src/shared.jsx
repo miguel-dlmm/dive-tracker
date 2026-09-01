@@ -1658,6 +1658,31 @@ export function EntryTitle({ school, activity, schoolColor, activityColor }) {
   );
 }
 
+// Switch on/off genérico — extraído de ConfigTab.jsx (Bloque 4, 2026-09-01)
+// al necesitarlo también DatasetsSection.jsx: hasta entonces vivía privado
+// ahí, usado solo por "Permitir registro externo".
+export function BooleanToggle({ checked, onChange, disabled, ariaLabel, color = TEAL }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={onChange}
+      className="relative -m-2 flex shrink-0 items-center justify-center p-2 disabled:cursor-not-allowed disabled:opacity-40"
+      style={{ minHeight: 44, minWidth: 44 }}
+    >
+      <span className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors" style={{ backgroundColor: checked ? color : "#D1D5DB" }}>
+        <span
+          className="inline-block h-5 w-5 rounded-full bg-white shadow transition-transform"
+          style={{ transform: checked ? "translateX(20px)" : "translateX(2px)" }}
+        />
+      </span>
+    </button>
+  );
+}
+
 export function StatusPill({ status, paymentStatusRows }) {
   const color = colorFor(paymentStatusRows, status);
   return (

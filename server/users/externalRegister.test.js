@@ -18,14 +18,27 @@ function request(overrides = {}) {
   return { method: "POST", body: JSON.stringify(VALID_BODY), ...overrides };
 }
 
-function makeClient({ configResult = { data: { allow_external_registration: true }, error: null }, datasetsResult = { data: [{ key: "ihasia" }], error: null } } = {}) {
+// pickDatasetKey (externalRegister.js) hace hasta dos consultas contra
+// setup_datasets: primero busca el activo marcado is_default
+// (.eq().eq().maybeSingle()) y, si no hay ninguno, cae a "el primero
+// activo por label" (.eq().order().limit()) — ambas ramas cuelgan del
+// mismo primer .eq("is_active", true), por eso el objeto que devuelve
+// necesita soportar tanto .eq() como .order() a continuación.
+function makeClient({
+  configResult = { data: { allow_external_registration: true }, error: null },
+  defaultDatasetResult = { data: null, error: null },
+  fallbackDatasetResult = { data: [{ key: "ihasia" }], error: null },
+} = {}) {
   const configMaybeSingle = vi.fn().mockResolvedValue(configResult);
   const configEq = vi.fn().mockReturnValue({ maybeSingle: configMaybeSingle });
   const configSelect = vi.fn().mockReturnValue({ eq: configEq });
 
-  const datasetsLimit = vi.fn().mockResolvedValue(datasetsResult);
-  const datasetsOrder = vi.fn().mockReturnValue({ limit: datasetsLimit });
-  const datasetsSelect = vi.fn().mockReturnValue({ order: datasetsOrder });
+  const defaultMaybeSingle = vi.fn().mockResolvedValue(defaultDatasetResult);
+  const fallbackLimit = vi.fn().mockResolvedValue(fallbackDatasetResult);
+  const fallbackOrder = vi.fn(() => ({ limit: fallbackLimit }));
+  const afterActiveEq = { eq: vi.fn(() => ({ maybeSingle: defaultMaybeSingle })), order: fallbackOrder };
+  const datasetsEq = vi.fn(() => afterActiveEq);
+  const datasetsSelect = vi.fn(() => ({ eq: datasetsEq }));
 
   const from = vi.fn((table) => {
     if (table === "app_config") return { select: configSelect };
@@ -92,13 +105,24 @@ it("no expone user_id en la respuesta (a diferencia de create-user, aquí no hay
   expect(result.payload.user_id).toBeUndefined();
 });
 
-it("devuelve 500 si no hay ningún dataset inicial disponible", async () => {
-  getServiceRoleClient.mockReturnValue(makeClient({ datasetsResult: { data: [], error: null } }));
+it("devuelve 500 si no hay ningún dataset activo disponible", async () => {
+  getServiceRoleClient.mockReturnValue(makeClient({ fallbackDatasetResult: { data: [], error: null } }));
 
   const result = await handleExternalRegister(request());
 
   expect(provisionUser).not.toHaveBeenCalled();
   expect(result).toEqual({ status: 500, payload: { error: "No se pudo completar el registro. Inténtalo más tarde." } });
+});
+
+it("usa el dataset activo marcado is_default cuando existe, sin caer al de respaldo", async () => {
+  getServiceRoleClient.mockReturnValue(makeClient({
+    defaultDatasetResult: { data: { key: "otro-dataset" }, error: null },
+    fallbackDatasetResult: { data: [{ key: "ihasia" }], error: null },
+  }));
+
+  await handleExternalRegister(request());
+
+  expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ dataset_key: "otro-dataset" }));
 });
 
 it("propaga el error de provisionUser traducido con friendlyError", async () => {

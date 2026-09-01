@@ -193,6 +193,27 @@ describe("ConfigTab — Ajustes generales: permitir registro externo (ADR-0023)"
   });
 });
 
+describe("ConfigTab — Datasets iniciales: exclusivo de superadmin (Bloque 4)", () => {
+  it("un admin normal (no superadmin) no ve el grupo 'Superadmin' ni 'Datasets iniciales'", () => {
+    render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: true, is_superadmin: false } })} />);
+
+    expect(screen.queryByText("Superadmin")).not.toBeInTheDocument();
+    expect(screen.queryByText("Datasets iniciales")).not.toBeInTheDocument();
+  });
+
+  it("un superadmin ve 'Datasets iniciales' y puede entrar en la sección", async () => {
+    supabase.from.mockReturnValue({
+      select: vi.fn().mockReturnValue({ order: vi.fn().mockResolvedValue({ data: [], error: null }) }),
+    });
+    const user = userEvent.setup();
+    render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: true, is_superadmin: true } })} />);
+
+    await user.click(screen.getByText("Datasets iniciales"));
+
+    expect(await screen.findByText("Sin datasets todavía.")).toBeInTheDocument();
+  });
+});
+
 describe("ConfigTab — CrudTable crea vía FAB + hoja (ver Escuelas)", () => {
   it("el formulario de alta no es visible hasta pulsar el FAB, y crear cierra la hoja", async () => {
     const user = userEvent.setup();

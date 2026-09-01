@@ -3,13 +3,14 @@ import { motion } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
-  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck,
+  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database,
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate } from "./shared";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle } from "./shared";
 import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
 import RatesTab from "./RatesTab";
+import DatasetsSection from "./DatasetsSection";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
 
@@ -418,28 +419,6 @@ function RoleIcon({ isAdmin, isSuperadmin }) {
 // pendiente de activación sigue sin poder entrar hasta completar el
 // enlace, el switch solo refleja el baneo, la pastilla de al lado matiza
 // el resto.
-function BooleanToggle({ checked, onChange, disabled, ariaLabel, color = TEAL }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={ariaLabel}
-      disabled={disabled}
-      onClick={onChange}
-      className="relative -m-2 flex shrink-0 items-center justify-center p-2 disabled:cursor-not-allowed disabled:opacity-40"
-      style={{ minHeight: 44, minWidth: 44 }}
-    >
-      <span className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors" style={{ backgroundColor: checked ? color : "#D1D5DB" }}>
-        <span
-          className="inline-block h-5 w-5 rounded-full bg-white shadow transition-transform"
-          style={{ transform: checked ? "translateX(20px)" : "translateX(2px)" }}
-        />
-      </span>
-    </button>
-  );
-}
-
 // Fecha + hora, para "último login real" — una fecha sola no basta para
 // distinguir "hace 5 minutos" de "hace 20 horas" el mismo día.
 function shortDateTime(iso) {
@@ -1468,6 +1447,16 @@ const ADMIN_SECTIONS = [
   { key: "ajustes", label: "Ajustes generales", icon: SlidersHorizontal, description: "Icono de carga de la app" },
   { key: "usuarios", label: "Usuarios", icon: Users, description: "Cuentas con acceso a la app" },
 ];
+// Exclusivo de superadmin — a diferencia de ADMIN_SECTIONS (visible a
+// cualquier admin), gestionar datasets iniciales es configuración de
+// infraestructura de la app, no una tarea de negocio del día a día (misma
+// decisión ya aplicada a los avisos de despliegue, ADR-0024). El gate real
+// vive en RLS (schema.sql: insert/update/delete de setup_datasets y sus 4
+// tablas hijas exigen is_superadmin(auth.uid())) — esto solo evita
+// mostrar una pantalla que un admin normal no podría usar.
+const SUPERADMIN_SECTIONS = [
+  { key: "datasets", label: "Datasets iniciales", icon: Database, description: "Configuración clonada al crear una cuenta" },
+];
 
 // Sub-navegación de Configuración persistida (feedback explícito
 // 2026-08-30: recargar la página dentro de, p. ej., Tarifas devolvía al
@@ -1518,7 +1507,8 @@ function ConfigMenuGroup({ title, items, onSelect }) {
 // estamos en el menú principal, sin ninguna sección abierta (ver backProps).
 export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose }) {
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
-  const allowedSectionKeys = [...BUSINESS_SECTIONS, ...(isAdmin ? ADMIN_SECTIONS : [])].map((s) => s.key);
+  const isSuperadmin = !!profile?.is_superadmin;
+  const allowedSectionKeys = [...BUSINESS_SECTIONS, ...(isAdmin ? ADMIN_SECTIONS : []), ...(isSuperadmin ? SUPERADMIN_SECTIONS : [])].map((s) => s.key);
   const [section, setSectionState] = useState(() => {
     const stored = readStoredSection();
     return allowedSectionKeys.includes(stored) ? stored : null;
@@ -1529,7 +1519,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
     else clearStoredSection();
   };
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
-  const currentLabel = [...BUSINESS_SECTIONS, ...ADMIN_SECTIONS].find((s) => s.key === section)?.label;
+  const currentLabel = [...BUSINESS_SECTIONS, ...ADMIN_SECTIONS, ...SUPERADMIN_SECTIONS].find((s) => s.key === section)?.label;
   // Deslizar hacia la derecha = "atrás", recursivo (feedback explícito
   // 2026-08-30: "no como una excepción, no como un truco, no como una
   // interacción aislada"): dentro de una sección, vuelve al menú; ya en el
@@ -1541,6 +1531,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
       <div className="space-y-5" {...backProps}>
         <ConfigMenuGroup items={BUSINESS_SECTIONS} onSelect={setSection} />
         {isAdmin && <ConfigMenuGroup title="Administración" items={ADMIN_SECTIONS} onSelect={setSection} />}
+        {isSuperadmin && <ConfigMenuGroup title="Superadmin" items={SUPERADMIN_SECTIONS} onSelect={setSection} />}
       </div>
     );
   }
@@ -1585,6 +1576,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
       {isAdmin && section === "navegacion" && <SectionColors navSections={navSections} />}
       {isAdmin && section === "ajustes" && <GeneralSettings appConfig={appConfig} />}
       {isAdmin && section === "usuarios" && <UsersDirectory profile={profile} />}
+      {isSuperadmin && section === "datasets" && <DatasetsSection />}
     </div>
   );
 }

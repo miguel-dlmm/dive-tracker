@@ -531,8 +531,27 @@ create table if not exists public.setup_datasets (
   key text not null unique,   -- slug estable, p. ej. 'ihasia' — lo referencian frontend/RPC
   label text not null,        -- p. ej. 'Ihasia' — lo que ve el superadmin en el desplegable
   created_at timestamptz not null default now(),
+  -- is_active: si aparece como opción elegible (desplegable de "Crear
+  -- usuario", auto-selección de externalRegister.js). Desactivar en vez de
+  -- borrar conserva el dataset como referencia sin ofrecerlo para altas
+  -- nuevas — mismo concepto que is_admin/is_active de otras entidades del
+  -- proyecto, aplicado aquí por primera vez a datasets (Bloque 4, 2026-09-01).
+  is_active boolean not null default true,
+  -- is_default: cuál usa externalRegister.js cuando hay más de un dataset
+  -- activo (antes de esto, "el primero por label" — ver ADR-0023, que ya
+  -- marcaba ese criterio como provisional). Mismo patrón is_default que
+  -- currencies/schools/activities — useSupabaseTable.setDefault() ya lo
+  -- soporta sin cambios.
+  is_default boolean not null default false,
   constraint setup_datasets_key_lowercase check (key = lower(key))
 );
+
+-- Como mucho un dataset por defecto a la vez — mismo criterio que exige
+-- exactamente una moneda/estado por defecto en el resto del proyecto,
+-- aplicado aquí a nivel de base de datos en vez de solo por convención de
+-- setDefault() (defensa real, no solo de cliente).
+create unique index if not exists setup_datasets_single_default
+  on public.setup_datasets (is_default) where is_default;
 
 -- school/activity en setup_dataset_rates son texto, igual que en la propia
 -- tabla rates — no hace falta remapear ids entre el dataset y las filas
@@ -584,26 +603,53 @@ create table if not exists public.setup_dataset_commission_rates (
 -- El dataset se mantiene deliberadamente estrecho: solo lo que varía de
 -- una escuela/negocio a otra, para no mezclar dos responsabilidades.
 
--- setup_datasets: solo admin/superadmin necesita verlo (desplegable de
--- "configuración inicial" al crear un usuario, y más adelante la import
--- manual desde Configuración). Sin policy de insert/update/delete: los
--- datasets se crean a mano vía SQL editor, no desde la app.
+-- setup_datasets — corregido en el Bloque 4 (2026-09-01, decisión
+-- explícita del usuario): lectura sigue abierta a cualquier admin (mismo
+-- nivel que ya tenía, el desplegable de "Crear usuario" la sigue
+-- necesitando), pero crear/editar/duplicar/activar/borrar pasa a ser
+-- exclusivo de superadmin — es configuración de infraestructura de la
+-- app, no una tarea de negocio del día a día (mismo criterio que ya
+-- aplica ADR-0024 a los avisos de despliegue). Ya NO es cierto que estos
+-- datasets "se crean a mano vía SQL editor, no desde la app": el editor
+-- de datasets es la vía normal desde ahora.
 alter table public.setup_datasets enable row level security;
 drop policy if exists "admin reads datasets" on public.setup_datasets;
 create policy "admin reads datasets" on public.setup_datasets
   for select using (public.is_admin(auth.uid()));
+drop policy if exists "superadmin manages datasets" on public.setup_datasets;
+create policy "superadmin manages datasets" on public.setup_datasets
+  for insert with check (public.is_superadmin(auth.uid()));
+drop policy if exists "superadmin updates datasets" on public.setup_datasets;
+create policy "superadmin updates datasets" on public.setup_datasets
+  for update using (public.is_superadmin(auth.uid())) with check (public.is_superadmin(auth.uid()));
+drop policy if exists "superadmin deletes datasets" on public.setup_datasets;
+create policy "superadmin deletes datasets" on public.setup_datasets
+  for delete using (public.is_superadmin(auth.uid()));
 
--- setup_dataset_schools/activities/rates/commission_rates: RLS activada,
--- SIN policies — cerradas por defecto, a propósito. Nada del frontend las
--- lee nunca directamente ni las leerá en el futuro: todo acceso (clonar al
--- crear un usuario, o la futura importación manual desde Configuración)
--- pasa exclusivamente por funciones security definer (clone_setup_dataset(),
--- próximo paso), nunca por un select/insert/update/delete directo del
--- cliente contra estas tablas.
+-- setup_dataset_schools/activities/rates/commission_rates — corregido en
+-- el Bloque 4: dejan de estar cerradas sin policies. El editor de
+-- datasets necesita leerlas y escribirlas directamente (son el contenido
+-- que se edita), siempre restringido a superadmin — clone_setup_dataset()
+-- (más abajo) sigue siendo la única vía de lectura para el ALTA de un
+-- usuario nuevo, vía su propia función security definer, ajena a estas
+-- policies.
 alter table public.setup_dataset_schools enable row level security;
 alter table public.setup_dataset_activities enable row level security;
 alter table public.setup_dataset_rates enable row level security;
 alter table public.setup_dataset_commission_rates enable row level security;
+
+drop policy if exists "superadmin manages dataset schools" on public.setup_dataset_schools;
+create policy "superadmin manages dataset schools" on public.setup_dataset_schools
+  for all using (public.is_superadmin(auth.uid())) with check (public.is_superadmin(auth.uid()));
+drop policy if exists "superadmin manages dataset activities" on public.setup_dataset_activities;
+create policy "superadmin manages dataset activities" on public.setup_dataset_activities
+  for all using (public.is_superadmin(auth.uid())) with check (public.is_superadmin(auth.uid()));
+drop policy if exists "superadmin manages dataset rates" on public.setup_dataset_rates;
+create policy "superadmin manages dataset rates" on public.setup_dataset_rates
+  for all using (public.is_superadmin(auth.uid())) with check (public.is_superadmin(auth.uid()));
+drop policy if exists "superadmin manages dataset commission rates" on public.setup_dataset_commission_rates;
+create policy "superadmin manages dataset commission rates" on public.setup_dataset_commission_rates
+  for all using (public.is_superadmin(auth.uid())) with check (public.is_superadmin(auth.uid()));
 
 -- Clona un dataset de configuración inicial (setup_dataset_*) en las
 -- tablas en vivo de un usuario. Fuente EXCLUSIVA: setup_dataset_schools/
@@ -712,11 +758,22 @@ create table if not exists public.deployment_notices (
   commit_hash text not null unique,
   branch text not null,
   summary text not null,
-  changes jsonb not null default '[]',         -- array de strings
-  suggested_tests jsonb not null default '[]', -- array de strings
+  changes jsonb not null default '[]',         -- array de strings (legado, ver technical_changes/functional_changes)
+  suggested_tests jsonb not null default '[]', -- array de strings (legado, ver steps)
   tests_status text,   -- p.ej. "442 passed (442)"
   build_status text,   -- p.ej. "ok" / "warnings: chunk >500kB"
-  preview_url text      -- null si todavía no hay Preview Deployment
+  preview_url text,     -- Preview Deployment de la RAMA suelta del bloque — null si todavía no existe
+  -- Columnas 2026-09-01 (encargo explícito del usuario: cada aviso debe
+  -- distinguir "qué cambió técnicamente" de "qué cambió de cara al
+  -- usuario", decir explícitamente si hay cambios de UI, dar pasos
+  -- concretos a probar/hacer, y separar la preview de SOLO la rama del
+  -- bloque de la preview YA INTEGRADA en nightjob-2026.08.31.
+  technical_changes jsonb not null default '[]',   -- array de strings — arquitectura/código, para un perfil técnico
+  functional_changes jsonb not null default '[]',  -- array de strings — qué cambia para quien usa la app
+  has_ui_changes boolean not null default false,
+  ui_changes_note text,          -- qué cambió visualmente, si has_ui_changes es true
+  steps jsonb not null default '[]', -- array de strings — paso a paso de qué probar o hacer
+  integration_preview_url text   -- Preview Deployment de nightjob-2026.08.31 YA con este commit integrado — null si aún no se ha empujado
 );
 
 -- Quién (qué superadmin) ya vio cada aviso en el slide in-app. Tabla puente

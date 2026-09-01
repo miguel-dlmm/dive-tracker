@@ -52,3 +52,4 @@ usuarios de prueba.md
 # Copias de seguridad generadas por scripts/backup-db.mjs — datos
 # financieros reales, nunca al repo (ver docs/ADR/0017-politica-de-backups-mvp.md).
 backups/
+.env*

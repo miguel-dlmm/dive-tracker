@@ -10,9 +10,12 @@ import { provisionUser, friendlyError } from "./provisionUser.js";
 //    oculto en el cliente (eso es solo UX, no el control de acceso real).
 //    Si está OFF, responde 403 sin tocar Supabase.
 // 2. No recibe dataset_key del cliente — un registrante externo no conoce
-//    (ni debe elegir) los datasets internos de arranque. Se usa siempre el
-//    primero disponible en setup_datasets (hoy solo existe "ihasia"). Si
-//    en el futuro hay varios, esto es lo primero a revisar — ver ADR-0023.
+//    (ni debe elegir) los datasets internos de arranque, decisión que
+//    ADR-0023 tomó a propósito. Se usa el dataset activo marcado
+//    is_default (ver pickDatasetKey más abajo) — antes de esto, "el
+//    primero por label"; ADR-0023 ya marcaba ese criterio como
+//    provisional en cuanto hubiera más de un dataset (Bloque 4, editor de
+//    datasets, 2026-09-01).
 // 3. reason: "external_signup" en vez de "signup" — mismo mecanismo de
 //    activación (enlace de un solo uso, fijar contraseña, aceptar bases
 //    legales, todo vía activateAccount() ya existente), pero el email deja
@@ -26,6 +29,31 @@ import { provisionUser, friendlyError } from "./provisionUser.js";
 // uno a uno contra este formulario y saber, por la respuesta, cuáles ya
 // tienen cuenta en Ocean Flow.
 const EMAIL_ALREADY_REGISTERED = "already been registered";
+
+// Dataset a usar para un registro externo: el activo marcado is_default,
+// o si ningún admin lo ha marcado todavía (instalación recién migrada,
+// antes de que el superadmin abra el editor de datasets por primera vez),
+// el primero activo por label — nunca deja el registro roto solo por
+// faltar ese marcado explícito. Nunca ofrece un dataset con is_active =
+// false: desactivar un dataset lo retira de esta selección igual que del
+// desplegable de "Crear usuario" (ver ConfigTab.jsx).
+async function pickDatasetKey(client) {
+  const { data: byDefault } = await client
+    .from("setup_datasets")
+    .select("key")
+    .eq("is_active", true)
+    .eq("is_default", true)
+    .maybeSingle();
+  if (byDefault?.key) return byDefault.key;
+
+  const { data: fallback } = await client
+    .from("setup_datasets")
+    .select("key")
+    .eq("is_active", true)
+    .order("label")
+    .limit(1);
+  return fallback?.[0]?.key || null;
+}
 
 function parseBody(body) {
   if (body == null) return {};
@@ -72,13 +100,9 @@ export async function handleExternalRegister({ method, body }) {
     return { status: 403, payload: { error: "El registro externo no está habilitado." } };
   }
 
-  const { data: datasets, error: datasetsError } = await client
-    .from("setup_datasets")
-    .select("key")
-    .order("label")
-    .limit(1);
-  if (datasetsError || !datasets?.length) {
-    console.error("external-register: no hay ningún dataset inicial disponible", datasetsError);
+  const datasetKey = await pickDatasetKey(client);
+  if (!datasetKey) {
+    console.error("external-register: no hay ningún dataset activo disponible");
     return { status: 500, payload: { error: "No se pudo completar el registro. Inténtalo más tarde." } };
   }
 
@@ -87,7 +111,7 @@ export async function handleExternalRegister({ method, body }) {
     first_name,
     last_name,
     nickname,
-    dataset_key: datasets[0].key,
+    dataset_key: datasetKey,
     reason: "external_signup",
   });
   if (result.error) {
