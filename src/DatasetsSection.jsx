@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Star, Copy, Loader2 } from "lucide-react";
 import { NAVY, TEAL } from "./colors";
 import { useSupabaseTable } from "./useSupabaseTable";
@@ -41,6 +42,7 @@ async function duplicateDatasetContent(sourceId, targetId) {
 }
 
 export default function DatasetsSection() {
+  const { t } = useTranslation("config");
   const datasets = useSupabaseTable("setup_datasets", "label", "id");
   const toast = useToast();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -56,11 +58,11 @@ export default function DatasetsSection() {
     setSaving(true);
     try {
       await datasets.insertRow({ label: trimmed, key: slugify(trimmed) });
-      toast?.success("Dataset creado — añade su contenido antes de activarlo");
+      toast?.success(t("datasets.toasts.created"));
       setSheetOpen(false);
       setLabel("");
     } catch (err) {
-      toast?.error(err?.message?.includes("setup_datasets_key_key") ? "Ya existe un dataset con esa clave." : "No se pudo crear. Inténtalo de nuevo.");
+      toast?.error(err?.message?.includes("setup_datasets_key_key") ? t("datasets.toasts.keyTaken") : t("datasets.toasts.createError"));
     } finally {
       setSaving(false);
     }
@@ -69,12 +71,12 @@ export default function DatasetsSection() {
   const duplicate = async (row) => {
     setDuplicatingId(row.id);
     try {
-      const newLabel = `${row.label} (copia)`;
+      const newLabel = `${row.label} (${t("datasets.copySuffix")})`;
       const created = await datasets.insertRow({ label: newLabel, key: `${row.key}-copia-${Date.now().toString(36)}`, is_active: false });
       await duplicateDatasetContent(row.id, created.id);
-      toast?.success(`"${newLabel}" creado con el mismo contenido que "${row.label}"`);
+      toast?.success(t("datasets.toasts.duplicated", { newLabel, sourceLabel: row.label }));
     } catch {
-      toast?.error("No se pudo duplicar. Inténtalo de nuevo.");
+      toast?.error(t("datasets.toasts.duplicateError"));
     } finally {
       setDuplicatingId(null);
     }
@@ -91,16 +93,16 @@ export default function DatasetsSection() {
       if (row.is_active && row.is_default) patch.is_default = false;
       await datasets.updateRow(row.id, patch);
     } catch {
-      toast?.error("No se pudo actualizar.");
+      toast?.error(t("datasets.toasts.updateError"));
     }
   };
 
   const handleDelete = async (row) => {
     if (row.is_default) {
-      throw new Error("Es el dataset predeterminado — marca otro como predeterminado antes de eliminar este.");
+      throw new Error(t("datasets.errors.isDefault"));
     }
     if (datasets.rows.length <= 1) {
-      throw new Error("No puedes eliminar el único dataset — el registro externo y el alta manual necesitan al menos uno.");
+      throw new Error(t("datasets.errors.lastOne"));
     }
     await datasets.deleteRow(row.id);
   };
@@ -108,7 +110,7 @@ export default function DatasetsSection() {
   return (
     <div className="space-y-3 pb-16">
       <p className="text-xs text-gray-400">
-        Configuración inicial (escuelas, cursos y tarifas) que se clona en cada cuenta nueva. {activeCount} activo{activeCount === 1 ? "" : "s"} de {datasets.rows.length}.
+        {t("datasets.summary", { count: activeCount, total: datasets.rows.length })}
       </p>
 
       <ul className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
@@ -116,13 +118,13 @@ export default function DatasetsSection() {
           <li key={row.id} className="flex items-center gap-2 px-4 py-2.5 text-sm">
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-gray-800">{row.label}</p>
-              <p className="truncate text-xs text-gray-400">{row.key}{!row.is_active && " · Inactivo"}</p>
+              <p className="truncate text-xs text-gray-400">{row.key}{!row.is_active && ` · ${t("datasets.inactive")}`}</p>
             </div>
             <button
               onClick={() => datasets.setDefault(row.id)}
               disabled={!row.is_active}
-              title="Marcar como predeterminado"
-              aria-label={`Marcar "${row.label}" como predeterminado`}
+              title={t("datasets.setDefault")}
+              aria-label={t("datasets.setDefaultAria", { label: row.label })}
               className={`-m-2 flex min-h-11 min-w-11 items-center justify-center rounded p-2 disabled:opacity-30 ${row.is_default ? "text-amber-500" : "text-gray-300 hover:text-amber-400"}`}
             >
               <Star size={15} fill={row.is_default ? "currentColor" : "none"} aria-hidden="true" />
@@ -130,27 +132,27 @@ export default function DatasetsSection() {
             <button
               onClick={() => duplicate(row)}
               disabled={duplicatingId === row.id}
-              title="Duplicar"
-              aria-label={`Duplicar "${row.label}"`}
+              title={t("datasets.duplicate")}
+              aria-label={t("datasets.duplicateAria", { label: row.label })}
               className="-m-2 flex min-h-11 min-w-11 items-center justify-center rounded p-2 text-gray-400 hover:text-gray-600 disabled:opacity-40"
             >
               {duplicatingId === row.id ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
             </button>
-            <BooleanToggle checked={row.is_active} onChange={() => toggleActive(row)} ariaLabel={`Dataset "${row.label}" activo`} />
-            <DeleteButton onConfirm={() => handleDelete(row)} itemLabel={`el dataset "${row.label}"`} />
+            <BooleanToggle checked={row.is_active} onChange={() => toggleActive(row)} ariaLabel={t("datasets.activeAria", { label: row.label })} />
+            <DeleteButton onConfirm={() => handleDelete(row)} itemLabel={t("datasets.deleteItemLabel", { label: row.label })} />
           </li>
         ))}
         {datasets.loaded && datasets.rows.length === 0 && (
-          <li className="px-4 py-6 text-center text-sm text-gray-400">Sin datasets todavía.</li>
+          <li className="px-4 py-6 text-center text-sm text-gray-400">{t("datasets.empty")}</li>
         )}
       </ul>
 
-      <Fab onClick={() => setSheetOpen(true)} label="Nuevo dataset" color={TEAL} />
+      <Fab onClick={() => setSheetOpen(true)} label={t("datasets.fab")} color={TEAL} />
 
       <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
-        <h3 className="mb-1 text-sm font-semibold text-gray-800">Nuevo dataset</h3>
-        <p className="mb-3 text-xs text-gray-400">Nace vacío e inactivo — duplica uno existente si quieres partir de contenido ya cargado.</p>
-        <Field label="Nombre">
+        <h3 className="mb-1 text-sm font-semibold text-gray-800">{t("datasets.sheetTitle")}</h3>
+        <p className="mb-3 text-xs text-gray-400">{t("datasets.sheetHint")}</p>
+        <Field label={t("datasets.nameLabel")}>
           <input
             value={label}
             onChange={(e) => setLabel(e.target.value)}
@@ -165,7 +167,7 @@ export default function DatasetsSection() {
           className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:opacity-50"
           style={{ backgroundColor: TEAL }}
         >
-          {saving && <Loader2 size={15} className="animate-spin" aria-hidden="true" />} Crear
+          {saving && <Loader2 size={15} className="animate-spin" aria-hidden="true" />} {t("datasets.create")}
         </button>
       </Sheet>
     </div>
