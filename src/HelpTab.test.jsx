@@ -20,7 +20,7 @@ beforeEach(() => {
 
 describe("HelpTab", () => {
   it("agrupa las categorías en 'Quiero...' y 'Funcionalidades', todas plegadas de entrada", () => {
-    render(<HelpTab navSections={navSections} profile={null} />);
+    render(<HelpTab navSections={navSections} />);
 
     expect(screen.getByText("Quiero...")).toBeInTheDocument();
     expect(screen.getByText("Funcionalidades")).toBeInTheDocument();
@@ -31,7 +31,7 @@ describe("HelpTab", () => {
 
   it("tocar una categoría despliega su artículo en el sitio, sin cambiar de pantalla", async () => {
     const user = userEvent.setup();
-    render(<HelpTab navSections={navSections} profile={null} />);
+    render(<HelpTab navSections={navSections} />);
 
     const miTrabajo = screen.getByRole("button", { name: /Mi trabajo/ });
     await user.click(miTrabajo);
@@ -45,7 +45,7 @@ describe("HelpTab", () => {
 
   it("tocar de nuevo la misma categoría la vuelve a plegar", async () => {
     const user = userEvent.setup();
-    render(<HelpTab navSections={navSections} profile={null} />);
+    render(<HelpTab navSections={navSections} />);
 
     const miTrabajo = screen.getByRole("button", { name: /Mi trabajo/ });
     await user.click(miTrabajo);
@@ -62,34 +62,13 @@ describe("HelpTab", () => {
   // igual que el menú con drill-down de Configuración.
   it("desplegar una categoría pliega la que estuviera abierta antes (acordeón)", async () => {
     const user = userEvent.setup();
-    render(<HelpTab navSections={navSections} profile={null} />);
+    render(<HelpTab navSections={navSections} />);
 
     await user.click(screen.getByRole("button", { name: /Mi trabajo/ }));
     await user.click(screen.getByRole("button", { name: /^Resumen/ }));
 
     expect(screen.getByRole("button", { name: /Mi trabajo/ })).toHaveAttribute("aria-expanded", "false");
     expect(screen.getByRole("button", { name: /^Resumen/ })).toHaveAttribute("aria-expanded", "true");
-  });
-});
-
-// "Datasets iniciales" (Bloque 4/9) es superadminOnly: true en content.js
-// — a diferencia de adminOnly (is_admin O is_superadmin), este filtro
-// exige is_superadmin específicamente, porque un admin normal no puede
-// ni siquiera abrir esa pantalla en Configuración.
-describe("HelpTab — contenido exclusivo de superadmin (superadminOnly)", () => {
-  it("sin sesión ni perfil, no muestra 'Datasets iniciales'", () => {
-    render(<HelpTab navSections={navSections} profile={null} />);
-    expect(screen.queryByRole("button", { name: /Datasets iniciales/ })).not.toBeInTheDocument();
-  });
-
-  it("un admin normal (no superadmin) tampoco lo ve", () => {
-    render(<HelpTab navSections={navSections} profile={{ is_admin: true, is_superadmin: false }} />);
-    expect(screen.queryByRole("button", { name: /Datasets iniciales/ })).not.toBeInTheDocument();
-  });
-
-  it("un superadmin sí lo ve", () => {
-    render(<HelpTab navSections={navSections} profile={{ is_admin: true, is_superadmin: true }} />);
-    expect(screen.getByRole("button", { name: /Datasets iniciales/ })).toBeInTheDocument();
   });
 });
 
@@ -102,11 +81,11 @@ describe("HelpTab — contenido exclusivo de superadmin (superadminOnly)", () =>
 describe("HelpTab — la categoría desplegada sobrevive a una recarga", () => {
   it("recargar (unmount+render) mantiene la categoría desplegada", async () => {
     const user = userEvent.setup();
-    const { unmount } = render(<HelpTab navSections={navSections} profile={null} />);
+    const { unmount } = render(<HelpTab navSections={navSections} />);
     await user.click(screen.getByRole("button", { name: /Mi trabajo/ }));
     unmount();
 
-    render(<HelpTab navSections={navSections} profile={null} />);
+    render(<HelpTab navSections={navSections} />);
 
     expect(screen.getByRole("button", { name: /Mi trabajo/ })).toHaveAttribute("aria-expanded", "true");
   });
@@ -123,7 +102,7 @@ describe("HelpTab — gesto de deslizar hacia la derecha = atrás, recursivo", (
 
   it("deslizar sin ninguna categoría abierta llama a onClose", () => {
     const onClose = vi.fn();
-    const { container } = render(<HelpTab navSections={navSections} profile={null} onClose={onClose} />);
+    const { container } = render(<HelpTab navSections={navSections} onClose={onClose} />);
 
     swipeRight(container.firstChild);
 
@@ -133,7 +112,7 @@ describe("HelpTab — gesto de deslizar hacia la derecha = atrás, recursivo", (
   it("deslizar con una categoría abierta la colapsa, sin llamar a onClose", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    const { container } = render(<HelpTab navSections={navSections} profile={null} onClose={onClose} />);
+    const { container } = render(<HelpTab navSections={navSections} onClose={onClose} />);
     await user.click(screen.getByRole("button", { name: /Mi trabajo/ }));
 
     swipeRight(container.firstChild);

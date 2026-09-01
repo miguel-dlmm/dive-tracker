@@ -34,8 +34,11 @@ import HelpArticleBody from "./help/HelpArticleBody";
 //
 // navSections: { rows } — la Ayuda hereda el color de cada sección en vez
 // de tener su propia paleta (ver CLAUDE.md, convención 2)
-// profile: fila de profiles (useSession) — is_admin/is_superadmin filtran
-// categorías/artículos adminOnly (p.ej. "Gestionar usuarios")
+// Sin prop `profile`: la Ayuda no documenta nada de admin/superadmin (regla
+// permanente, Release V1 Fase 1 — ver CLAUDE.md), así que no necesita saber
+// el rol de quien la abre. Antes sí lo recibía, para un filtro
+// adminOnly/superadminOnly retirado 2026-09-01 junto con el contenido que
+// filtraba.
 // onClose: cierra Ayuda entera (mismo handler que la "X" de la cabecera,
 // ver App.jsx) — lo dispara el gesto de "atrás" cuando no hay ninguna
 // categoría desplegada (ver backProps más abajo).
@@ -57,13 +60,7 @@ export function clearStoredHelpOpen() {
   try { sessionStorage.removeItem(HELP_OPEN_KEY); } catch { /* no-op */ }
 }
 
-export default function HelpTab({ navSections, profile, onClose }) {
-  const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
-  // Bloque 4 (Datasets iniciales) es exclusivo de superadmin, no de
-  // cualquier admin — adminOnly ya existente no distingue los dos
-  // niveles, así que hace falta este segundo filtro específico en vez de
-  // reutilizar adminOnly con una semántica que no le corresponde.
-  const isSuperadmin = !!profile?.is_superadmin;
+export default function HelpTab({ navSections, onClose }) {
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const [openId, setOpenIdState] = useState(readStoredOpen);
   const setOpenId = (id) => {
@@ -80,10 +77,7 @@ export default function HelpTab({ navSections, profile, onClose }) {
   // cualquier nivel de profundidad.
   const backProps = useSwipeBack(openId ? () => setOpenId(null) : onClose);
 
-  const categories = HELP_CATEGORIES
-    .filter((c) => (!c.adminOnly || isAdmin) && (!c.superadminOnly || isSuperadmin))
-    .map((c) => ({ ...c, articles: c.articles.filter((a) => (!a.adminOnly || isAdmin) && (!a.superadminOnly || isSuperadmin)) }))
-    .filter((c) => c.articles.length > 0);
+  const categories = HELP_CATEGORIES.filter((c) => c.articles.length > 0);
 
   if (categories.length === 0) {
     return <p className="px-3 py-10 text-center text-sm text-gray-400">Todavía no hay contenido de ayuda.</p>;

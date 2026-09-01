@@ -380,7 +380,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             navSections={navSections} appConfig={appConfig} profile={profile} onClose={closeSecondary}
           />
         )}
-        {tab === "help" && <HelpTab navSections={navSections} profile={profile} onClose={closeSecondary} />}
+        {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} />}
         {tab === "perfil" && (
           <ProfileTab
             profile={profile} currencies={currencies}

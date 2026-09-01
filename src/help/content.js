@@ -32,8 +32,15 @@
 // recorta la cabecera para no mostrar la cuenta — un paso por artículo
 // lleva ahora su captura real.
 //
-// adminOnly (opcional, en categoría o en artículo): oculta el contenido
-// a quien no sea admin/superadmin, igual que ADMIN_SECTIONS en ConfigTab.
+// Regla permanente (Release V1, Fase 1 — ver CLAUDE.md, "Reglas
+// permanentes — Release V1"): la Ayuda nunca documenta funcionalidades
+// de admin ni de superadmin, ni siquiera detrás de un filtro de rol —
+// solo lo que aplica a cualquier usuario estándar. Antes existía un
+// mecanismo `adminOnly`/`superadminOnly` que ocultaba contenido según el
+// rol de quien lo veía (retirado 2026-09-01 junto con la categoría
+// "Datasets iniciales" y las menciones a Administración/Usuarios que
+// tenía "Configuración, de un vistazo") — ocultar no es lo mismo que no
+// documentar, así que ese mecanismo dejó de tener sentido aquí.
 export const HELP_CATEGORIES = [
   {
     id: "bienvenida",
@@ -262,17 +269,13 @@ export const HELP_CATEGORIES = [
       {
         id: "configuracion-referencia",
         title: "Configuración, de un vistazo",
-        summary: "Un menú agrupado: lo que mantiene cualquier usuario, y lo que solo ve quien administra la cuenta.",
-        whatYouCanDo: "Escuelas, Cursos y Tarifas son visibles para cualquier usuario. Si tienes rol de administrador, ves además \"Administración\": Tipos de pago, Estados de pago, Monedas, Colores de navegación, Ajustes generales y Usuarios. Si eres superadmin, hay un tercer grupo, \"Superadmin\", con los Datasets iniciales que se clonan al crear una cuenta.",
-        whenToUseIt: "Para mantener tus datos base, o —si administras la cuenta— gestionar catálogos y usuarios.",
+        summary: "El menú donde mantienes tus propios datos base: escuelas, cursos y tarifas.",
+        whatYouCanDo: "Escuelas, Cursos y Tarifas — los catálogos que usas al registrar un movimiento en Mi trabajo.",
+        whenToUseIt: "Para mantener tus datos base al día: añadir una escuela nueva, un curso nuevo, o ajustar una tarifa.",
         steps: [
           "Toca cualquier fila del menú para entrar en esa sección; \"‹ Configuración\" vuelve al menú.",
-          "Escuelas, Cursos, Tipos de pago, Estados de pago y Monedas crean mediante el botón \"+\" flotante, igual que en Mi trabajo.",
+          "Escuelas y Cursos se crean mediante el botón \"+\" flotante, igual que en Mi trabajo.",
           "Tarifas muestra Curso y Comisión en una única lista (el tipo se elige como filtro, o al crear, dentro de la propia hoja) — mismo patrón visual que Mi trabajo.",
-        ],
-        tips: [
-          "Solo un superadmin puede crear usuarios o eliminarlos — un admin normal ve el directorio de usuarios en modo solo lectura.",
-          "Eliminar un usuario es irreversible y borra también sus datos — pide confirmación explícita.",
         ],
         expectedResult: "Encuentras cualquier catálogo o ajuste sin tener que recordar en qué pestaña vivía antes.",
       },
@@ -299,36 +302,9 @@ export const HELP_CATEGORIES = [
         ],
         tips: [
           "Cambiar la contraseña aquí no te pide la contraseña actual — si ya estás dentro de la app, se confía en que la sesión activa es suficiente.",
-          "Eliminar tu cuenta es permanente y borra todos tus datos — una cuenta superadmin no puede eliminarse a sí misma por aquí, para no dejar la instalación sin nadie que la administre.",
+          "Eliminar tu cuenta es permanente y borra todos tus datos — para confirmarlo tienes que escribir la palabra CANCELAR, así no se borra nada por un toque accidental.",
         ],
         expectedResult: "Tu cuenta refleja el avatar, los datos y la moneda que elijas, y puedes cambiar tu contraseña cuando quieras sin salir de la app.",
-      },
-    ],
-  },
-  {
-    id: "func-datasets",
-    group: "funcionalidades",
-    superadminOnly: true,
-    icon: "Database",
-    label: "Datasets iniciales",
-    description: "La configuración que se clona al crear una cuenta",
-    articles: [
-      {
-        id: "datasets-referencia",
-        title: "Datasets iniciales, de un vistazo",
-        summary: "Un dataset es la configuración (escuelas, cursos, tarifas) que se clona entera al dar de alta una cuenta nueva — antes solo se podía tocar a mano en el SQL editor de Supabase.",
-        whatYouCanDo: "Configuración → Superadmin → \"Datasets iniciales\": crear uno nuevo, duplicar uno existente con todo su contenido, activarlo/desactivarlo, marcarlo como predeterminado, o eliminarlo.",
-        whenToUseIt: "Al preparar una nueva plantilla de alta (por ejemplo, para un tipo de negocio distinto), o al revisar qué se está clonando hoy en las cuentas nuevas.",
-        steps: [
-          "\"+\" crea un dataset vacío e inactivo — duplica uno existente si quieres partir de contenido ya cargado, en vez de rellenarlo desde cero.",
-          "El interruptor activa/desactivar: uno inactivo deja de ofrecerse para altas nuevas (alta manual o registro externo), pero se conserva como referencia.",
-          "La estrella marca cuál es el predeterminado — el que usa el registro externo cuando hay más de un dataset activo.",
-        ],
-        tips: [
-          "No se puede eliminar el dataset predeterminado, ni el único que quede — el alta de cuentas siempre necesita al menos uno disponible.",
-          "Editar el contenido de un dataset fila a fila (qué escuelas/tarifas concretas lleva) no está disponible todavía desde esta pantalla — para eso sigue haciendo falta el SQL editor.",
-        ],
-        expectedResult: "Sabes qué dataset se clona en cada alta nueva, y puedes preparar uno distinto sin tocar Supabase directamente.",
       },
     ],
   },
