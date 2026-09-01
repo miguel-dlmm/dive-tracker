@@ -69,6 +69,6 @@ describe("renderDeploymentNoticeEmailText", () => {
   it("incluye ambas URLs de preview en texto plano", () => {
     const text = renderDeploymentNoticeEmailText({ notice: NOTICE });
     expect(text).toContain("Preview del commit: https://preview.example/commit");
-    expect(text).toContain("Preview integrada (nightjob): https://preview.example/nightjob");
+    expect(text).toContain("Preview integrada (Release-V1): https://preview.example/nightjob");
   });
 });

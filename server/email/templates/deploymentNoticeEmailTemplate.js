@@ -9,8 +9,9 @@ import { renderEmailShell, escapeHtml, TEAL, NAVY } from "./emailLayout.js";
 // Formato ampliado 2026-09-01 (encargo explícito): separa cambios
 // técnicos de cambios de funcionalidad, confirma si hay cambios de UI,
 // da un paso a paso de qué probar/hacer, y distingue la preview de SOLO
-// la rama del bloque de la preview YA INTEGRADA en nightjob-2026.08.31 —
-// dos URLs, no una.
+// la rama del bloque de la preview YA INTEGRADA en la rama larga de
+// lanzamiento (Release-V1, antes nightjob-2026.08.31 — renombrada
+// 2026-09-01, Fase 1 de Release V1) — dos URLs, no una.
 
 function renderList(items) {
   if (!items || items.length === 0) return "";
@@ -78,7 +79,7 @@ export function renderDeploymentNoticeEmailHtml({ notice }) {
       </td>
     </tr>
     ${renderPreviewButton("Ver preview del commit (solo esta rama)", previewUrl)}
-    ${renderPreviewButton("Ver preview integrada (nightjob)", integrationPreviewUrl)}
+    ${renderPreviewButton("Ver preview integrada (Release-V1)", integrationPreviewUrl)}
     <tr>
       <td style="padding:24px 28px 32px 28px;">
         <p style="margin:0;font-size:11.5px;line-height:1.5;color:#9CA3AF;text-align:center;">Solo lo reciben las cuentas superadmin de Ocean Flow.</p>
@@ -111,6 +112,6 @@ export function renderDeploymentNoticeEmailText({ notice }) {
   if (stepList.length) lines.push("Qué probar / qué hacer:", ...stepList.map((s, i) => `${i + 1}. ${s}`), "");
   lines.push(`Tests: ${testsStatus || "no reportado"} · Build: ${buildStatus || "no reportado"}`);
   lines.push(previewUrl ? `Preview del commit: ${previewUrl}` : "Preview del commit: todavía no hay Preview Deployment.");
-  lines.push(integrationPreviewUrl ? `Preview integrada (nightjob): ${integrationPreviewUrl}` : "Preview integrada (nightjob): todavía no hay Preview Deployment.");
+  lines.push(integrationPreviewUrl ? `Preview integrada (Release-V1): ${integrationPreviewUrl}` : "Preview integrada (Release-V1): todavía no hay Preview Deployment.");
   return lines.join("\n");
 }

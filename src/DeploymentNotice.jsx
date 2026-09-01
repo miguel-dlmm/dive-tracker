@@ -163,7 +163,7 @@ export default function DeploymentNotice({ userId }) {
                   rel="noreferrer"
                   className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 text-sm font-medium text-gray-600"
                 >
-                  Preview integrada (nightjob) <ExternalLink size={14} aria-hidden="true" />
+                  Preview integrada (Release-V1) <ExternalLink size={14} aria-hidden="true" />
                 </a>
               ) : (
                 <p className="text-center text-xs text-gray-400">Preview integrada: sin preview todavía</p>

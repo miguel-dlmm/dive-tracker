@@ -8,8 +8,8 @@ import { handleNotifyDeployment } from "../server/notifications/notifyDeployment
 // extremo a extremo una vez; esta es la que se usa en el día a día,
 // commit a commit, con el payload completo: cambios técnicos, cambios de
 // funcionalidad, confirmación de UI, pasos a probar/hacer, y las dos URLs
-// de preview — la de la rama suelta y la de nightjob-2026.08.31 ya con el
-// commit integrado).
+// de preview — la de la rama suelta y la de la rama larga de lanzamiento
+// (Release-V1, antes nightjob-2026.08.31) ya con el commit integrado).
 //
 // Uso:
 //   node --env-file=.env.local scripts/send-deployment-notice.mjs <ruta-al-.json>
