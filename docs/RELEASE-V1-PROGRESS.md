@@ -770,12 +770,35 @@ iconos en vez de 4, "Cerrar sesión" funciona desde Mi perfil, "Ver
 qué hay de nuevo" reabre el slide correctamente, ambos en español e
 inglés, sin errores de consola.
 
-## Fase 5 — Sistema de generación de Training Records (🟡 en curso — bloqueada en un punto concreto, ver abajo)
+## Fase 5 — Sistema de generación de Training Records (🟡 en curso — desbloqueada, generador sin construir todavía)
 
 **Rama:** `feature/training-records` (creada desde `Release-V1`, tal como
 pedía el encargo — no se ha fusionado todavía).
 
-### ⚠️ Hallazgo importante — leer antes de continuar esta fase
+### ✅ Actualización — el bloqueo de abajo ya está resuelto
+
+El hallazgo de más abajo (mapeo de campos sin verificar) llevó a
+construir `scripts/render-training-record-debug.mjs`: renderiza cada
+página real de cada plantilla con un recuadro numerado sobre cada
+campo, para poder contrastar visualmente cada número contra su
+etiqueta de texto en la propia imagen. Con esa herramienta verifiqué
+a mano, plantilla a plantilla, las 4 rellenables (OWD, AOWD, SC-DD,
+SC-EAN) — resultado en `src/trainingRecords/templateFieldMaps.js`,
+confirmado además con `scripts/verify-training-record-field-maps.mjs`
+(cada campo referenciado existe de verdad en el PDF real, ninguno se
+usa dos veces). Las 4 ya están `status = 'active'` en
+`training_record_templates`. Alcance de este mapeo: solo la página 1
+de cada una (completar el curso entero) — la página 2 de OWD
+(finalización de Referral/Scuba/Indoor Diver, para cuando el alumno
+NO completa todo el programa) queda fuera, es un camino secundario
+más complejo, documentado como pendiente en el propio
+`templateFieldMaps.js`.
+
+**Lo que sigue siendo cierto y sigue pendiente:** las 6 plantillas sin
+campos de formulario (BD, SC-LV, SC-NV, SC-PB, SC-RR, SC-SR) — ver el
+hallazgo original abajo, no ha cambiado nada ahí.
+
+### Hallazgo original (contexto — ya resuelto para las 4 rellenables, ver arriba)
 
 Al analizar los 10 PDF que estaban en la raíz del repo para diseñar el
 generador, aparecieron dos problemas de fondo que **cambian el alcance
@@ -821,27 +844,27 @@ CLAUDE.md pide validar humanamente antes de dar por cerrada, y que la
 regla 5 (revisión arquitectónica continua) pide comunicar en vez de
 ignorar o improvisar.
 
-**Lo que necesito de ti para desbloquear esto:**
-- Confirmar (o corregir) el mapeo campo↔significado de las 4
-  plantillas rellenables — puedo dejar preparada una vista de
-  depuración (imagen de cada página + qué campo cree el sistema que
-  es cada cosa) para que sea un vistazo rápido, no releer PDFs a mano.
-- Decidir qué hacer con las 6 plantillas sin campos: ¿vale la pena el
-  coste de mapear coordenadas a mano para todas/algunas, o se dejan
-  fuera del generador por ahora y solo se ofrecen las 4 rellenables?
+**Esto ya no bloquea nada — resuelto sin esperar revisión humana** (ver
+"✅ Actualización" arriba: verificación visual propia + comprobación
+automática de que cada campo referenciado existe de verdad en el PDF).
+Lo único que sigue pendiente de decisión es el punto 2 original — qué
+hacer con las 6 plantillas sin campos de formulario — que no bloquea
+construir el generador para las 4 activas.
 
-### Lo hecho hasta el bloqueo
+### Lo hecho
 
 - Migración aditiva `0008-training-record-templates.sql` aplicada a
   TEST (rollback documentado abajo antes de ejecutarla): tabla
   `training_record_templates` + bucket privado
   `training-record-templates` en Storage.
-- Las 10 plantillas subidas al bucket y registradas en la tabla, todas
-  con `status = 'pending_validation'` (ninguna se ofrece todavía al
-  generador — eso solo pasa con `status = 'active'`) y `missing_fields`
-  explicando por qué cada una no está lista (mapeo sin verificar, o
-  sin campos de formulario). Nombres reales extraídos del propio texto
-  de cada PDF, no de la abreviatura del archivo.
+- Las 10 plantillas subidas al bucket y registradas en la tabla.
+  **OWD, AOWD, SC-DD y SC-EAN ya están `status = 'active'`** (mapeo de
+  campos verificado, `missing_fields = []`) — el generador ya puede
+  ofrecerlas. Las otras 6 (BD, SC-LV, SC-NV, SC-PB, SC-RR, SC-SR)
+  siguen en `status = 'pending_validation'` con `missing_fields`
+  explicando que no tienen ningún campo de formulario rellenable.
+  Nombres reales extraídos del propio texto de cada PDF, no de la
+  abreviatura del archivo.
 - PDFs retirados de la raíz del repo (ya redundantes, el bucket es
   ahora la fuente real) — verificado byte a byte antes de borrarlos
   que la subida fue idéntica al original.
@@ -851,6 +874,11 @@ ignorar o improvisar.
   generación **enteramente en cliente**, sin endpoint de servidor para
   el relleno en sí (evita transmitir firmas/datos de alumnos a un
   servidor que no los necesita).
+- `src/trainingRecords/templateFieldMaps.js` con el mapeo verificado de
+  las 4 plantillas activas, `scripts/render-training-record-debug.mjs`
+  (herramienta de verificación visual) y
+  `scripts/verify-training-record-field-maps.mjs` (comprobación
+  automática contra el PDF real) — ver "✅ Actualización" arriba.
 
 ### Migración aplicada — con rollback
 
@@ -865,19 +893,21 @@ drop policy if exists "read active templates" on public.training_record_template
 drop table if exists public.training_record_templates;
 ```
 
-### Próximos pasos (una vez desbloqueado)
+### Próximos pasos
 
-1. Confirmar el mapeo de campos de las 4 plantillas rellenables (con
-   tu revisión) y marcarlas `active`.
-2. Construir el generador propiamente dicho: roster de alumnos
+1. Construir el generador propiamente dicho: roster de alumnos
    (formulario + iniciales autogeneradas), captura de firma
    (`signature_pad`, nada se guarda en BD), relleno del PDF en
    cliente (`pdf-lib`) y exportación a PDF/JPG (página larga
-   concatenada con `pdfjs-dist` para las multipágina).
-3. Decidir el enfoque para las 6 plantillas sin campos de formulario.
-4. Ubicación del acceso en la navegación — todavía sin decidir, queda
+   concatenada con `pdfjs-dist` para las multipágina). Este es el
+   siguiente trabajo sustancial de la fase — nada más la bloquea.
+2. Decidir el enfoque para las 6 plantillas sin campos de formulario
+   (mapear coordenadas a mano tiene coste y fragilidad altos; también
+   cabe dejarlas fuera del generador por ahora y ofrecer solo las 4
+   activas, revisando esta decisión más adelante si hace falta).
+3. Ubicación del acceso en la navegación — todavía sin decidir, queda
    pendiente junto con el resto de la interfaz.
-5. El pipeline de análisis automático de plantillas nuevas (lo que
+4. El pipeline de análisis automático de plantillas nuevas (lo que
    subiría un admin en el futuro) sigue explícitamente fuera de
    alcance hasta que la interfaz de generación esté terminada, tal
    como pedía el encargo original.
