@@ -80,6 +80,34 @@ export function usePrefersReducedMotion() {
   return reduced;
 }
 
+// Cuenta ascendente para cifras de KPI (Fase 3, Release V1 — "algún KPI
+// interesante en formato animado"): anima de 0 al valor real con ease-out
+// cúbico (decelera al llegar, mismo espíritu que EASE.enter aunque aquí no
+// puede reutilizarse tal cual — Motion anima propiedades CSS/transform, no
+// un número entero arbitrario que además hay que redondear en cada
+// fotograma). requestAnimationFrame, no Motion: no hay ningún elemento del
+// DOM que animar, solo un valor de React — traer la librería para esto
+// sería más pesado que 15 líneas de rAF. Con prefers-reduced-motion, salta
+// directa al valor final (mismo criterio que el resto de la app: el
+// resultado nunca cambia, solo si se ve la transición).
+export function useCountUp(target, { duration = 1.1, reduced = false } = {}) {
+  const [value, setValue] = useState(reduced ? target : 0);
+  useEffect(() => {
+    if (reduced) { setValue(target); return; }
+    let raf;
+    const startTime = performance.now();
+    const animate = (now) => {
+      const progress = Math.min((now - startTime) / (duration * 1000), 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(target * eased));
+      if (progress < 1) raf = requestAnimationFrame(animate);
+    };
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration, reduced]);
+  return value;
+}
+
 // Deslizar hacia la derecha = "atrás" — feedback explícito 2026-08-30,
 // pensado para Configuración y Ayuda ("debe sentirse como navegación real,
 // no como un truco aislado").

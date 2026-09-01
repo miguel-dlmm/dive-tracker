@@ -4,5 +4,11 @@
   "peopleTrained_one": "{{count}} person trained this month",
   "peopleTrained_other": "{{count}} people trained this month",
   "noCoursesThisMonth": "No courses this month",
-  "trendVsPreviousMonth": "{{delta}} vs last month"
+  "trendVsPreviousMonth": "{{delta}} vs last month",
+  "kpis": {
+    "sectionTitle": "Your impact",
+    "studentsThisMonth": "Students this month",
+    "coursesTotal": "Courses taught",
+    "referredThisMonth": "Referred this month"
+  }
 }

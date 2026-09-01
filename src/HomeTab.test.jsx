@@ -353,3 +353,35 @@ describe("HomeTab — calendario: total del día seleccionado", () => {
     expect(label.parentElement).toHaveTextContent("25,00"); // 20€ del curso + 5€ del ajuste
   });
 });
+
+// Fase 3, Release V1: KPIs animados al final de Home. La cifra hace un
+// conteo ascendente (useCountUp, motion.js) — se espera con waitFor a que
+// termine en vez de asumir que aparece ya resuelta en el primer render.
+describe("HomeTab — KPIs (alumnos este mes, cursos impartidos, captados este mes)", () => {
+  it("alumnos este mes y captados este mes solo cuentan el mes actual; cursos impartidos cuenta todo el histórico", async () => {
+    renderHome({
+      worklog: [
+        { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" },
+        { id: "w2", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" },
+        { id: "w3", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 3, status: "Paid" },
+      ],
+      comisiones: [
+        { id: "c1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 4, status: "Paid" },
+        { id: "c2", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 9, status: "Paid" },
+      ],
+      rates: RATES,
+      commissionRates: COMMISSION_RATES,
+    });
+
+    expect(screen.getByText("Tu impacto")).toBeInTheDocument();
+    expect(screen.getByText("Alumnos este mes")).toBeInTheDocument();
+    expect(screen.getByText("Cursos impartidos")).toBeInTheDocument();
+    expect(screen.getByText("Captados este mes")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("Alumnos este mes").previousSibling).toHaveTextContent("3"); // 2 + 1, solo este mes
+      expect(screen.getByText("Cursos impartidos").previousSibling).toHaveTextContent("3"); // los 3 worklog, histórico
+      expect(screen.getByText("Captados este mes").previousSibling).toHaveTextContent("4"); // solo c1, este mes
+    }, { timeout: 2000 });
+  });
+});

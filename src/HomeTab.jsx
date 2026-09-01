@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { motion } from "motion/react";
+import { TrendingUp, TrendingDown, Minus, GraduationCap, Award, Handshake } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { Money, formatMoney, MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
 import { computeRateTotal, buildIncomeEntries, comparePeriods } from "./rateCalc";
+import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import PendingCollectionCard from "./PendingCollectionCard";
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
@@ -48,9 +50,33 @@ function useTranslatedMovementTypeMeta(t) {
   };
 }
 
+// Tarjeta de KPI animada (Fase 3, Release V1 — "algún KPI interesante en
+// formato animado y chulo"). Entra con fade+slide-up escalonado (index*80ms
+// de retraso entre las tres) y la cifra hace un conteo ascendente
+// (useCountUp, motion.js) — mismo vocabulario EASE.enter/DURATION.md que
+// usa el resto de la app para lo que ENTRA en pantalla, no un cuarto
+// sistema de animación aparte.
+function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
+  const count = useCountUp(value, { reduced });
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
+      className="flex flex-col items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 py-4 text-center"
+    >
+      <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+        <Icon size={17} style={{ color }} aria-hidden="true" />
+      </span>
+      <span className="text-xl font-bold tabular-nums" style={{ color: NAVY }}>{count}</span>
+      <span className="text-[10.5px] font-medium leading-tight text-gray-500">{label}</span>
+    </motion.div>
+  );
+}
+
 export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary }) {
   const { t } = useTranslation("home");
   const translatedTypeMeta = useTranslatedMovementTypeMeta(t);
+  const reducedMotion = usePrefersReducedMotion();
   const now = new Date();
   const currentMonthKey = monthKey(now);
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
@@ -97,6 +123,21 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const peopleTrainedThisMonth = useMemo(() => ganadoEntries
     .filter((e) => e.date.slice(0, 7) === currentMonthKey)
     .reduce((sum, e) => sum + (e.people || 0), 0), [ganadoEntries, currentMonthKey]);
+
+  // KPIs de Fase 3 (Release V1) — tres ángulos distintos de "cómo me está
+  // yendo", deliberadamente no financieros (eso ya lo cubren "Pendiente de
+  // cobrar" y "Generado este mes" arriba): alumnos este mes ya se calculaba
+  // (peopleTrainedThisMonth, se reutiliza tal cual); cursos impartidos es
+  // un total histórico, no de mes — un instructor lleva meses/años usando
+  // la app, "cuántos cursos he dado en total" es una cifra que solo crece
+  // y da sensación de trayectoria, no de "este mes concreto". Personas
+  // captadas: mismo criterio que people trained pero sobre comisionEntries
+  // (aclaración explícita del usuario: "personas por las que he
+  // comisionado" — clientes referidos, no formados por ti).
+  const coursesTotal = worklog.rows.length;
+  const referredThisMonth = useMemo(() => comisionEntries
+    .filter((e) => e.date.slice(0, 7) === currentMonthKey)
+    .reduce((sum, e) => sum + (e.people || 0), 0), [comisionEntries, currentMonthKey]);
 
   // Base común de las dos métricas financieras del dashboard — ver
   // buildIncomeEntries en rateCalc.js y docs/ADR/0004-home-dashboard-operativo-instructor.md.
@@ -267,6 +308,25 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           </div>
         )}
       </button>
+
+      {/* 4. KPIs — Fase 3, Release V1 ("algún KPI interesante en formato
+          animado y chulo"). Cierre de la pantalla, no protagonista: tres
+          ángulos no financieros de "cómo me está yendo" (financiero ya lo
+          cubren las dos tarjetas de arriba), pensados para sensación de
+          trayectoria/logro más que para consultarse a diario — por eso van
+          al final, no compitiendo con Pendiente/Calendario por la primera
+          mirada. Conteo ascendente + entrada escalonada (KpiTile, arriba)
+          en vez de aparecer estáticas de golpe. */}
+      <div>
+        <h2 className="mb-2 px-0.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          {t("kpis.sectionTitle")}
+        </h2>
+        <div className="grid grid-cols-3 gap-2">
+          <KpiTile icon={GraduationCap} color={TEAL} value={peopleTrainedThisMonth} label={t("kpis.studentsThisMonth")} index={0} reduced={reducedMotion} />
+          <KpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
+          <KpiTile icon={Handshake} color={GREEN} value={referredThisMonth} label={t("kpis.referredThisMonth")} index={2} reduced={reducedMotion} />
+        </div>
+      </div>
     </div>
   );
 }
