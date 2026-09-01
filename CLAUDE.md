@@ -196,6 +196,49 @@ exacta de producción (posiciones, tamaños, layout).
     fuentes. Cifras de dinero: `tabular-nums` + símbolo de moneda más
     apagado que la cifra (componente `Money`).
 
+## Reglas permanentes — Release V1 (lanzamiento público)
+
+Reglas de trabajo que arrancan con la iniciativa "Release V1" (documento
+maestro de fases del usuario, iniciado 2026-09-01: preparar Ocean Flow
+para hacerlo público fuera de usuarios de test) y que se aplican siempre
+a partir de ahora, sin que haga falta repetirlas en cada sesión. El
+progreso fase a fase de esa iniciativa se lleva en
+`docs/RELEASE-V1-PROGRESS.md` — ver la sección 9 de "Reglas de trabajo
+obligatorias" más abajo para el mecanismo general de trabajo por lotes.
+
+1. **La Ayuda nunca documenta funcionalidades de admin ni de
+   superadmin.** No basta con ocultarlas a quien no tiene el rol — hoy
+   `help/content.js` ya soporta marcar una categoría/artículo
+   `adminOnly`/`superadminOnly` y `HelpTab.jsx` los filtra en cliente,
+   pero eso solo esconde el contenido, no lo elimina. Contenido de
+   admin/superadmin no debe existir en la Ayuda en absoluto. Se aplica
+   cada vez que se regenera o modifica la Ayuda, sin excepción.
+2. **Tono de los textos de producto: cercano, humano, agradable — un
+   punto joven y fresco, sin salirse de una línea profesional.** Nunca
+   mensajes de "máquina" (errores genéricos, jerga técnica expuesta al
+   usuario). Aplica a toda copy nueva: toasts, estados vacíos,
+   confirmaciones, emails, slides de novedades.
+3. **Contexto de uso real: manos mojadas.** El usuario típico está en el
+   móvil, a menudo recién salido del agua — cualquier pantalla nueva debe
+   leerse y entenderse rápido, sin párrafos largos. Refuerza (no
+   sustituye) la convención 7 de mobile-first/accesibilidad de arriba.
+4. **MVP y reutilización primero.** Ya es el principio de trabajo #2 de
+   `docs/PRODUCT.md` ("la solución más barata que resuelve el problema
+   real gana") — se reafirma aquí explícitamente para esta iniciativa:
+   preferir siempre lo sencillo, integrable y ya construido (p. ej.
+   `motion.js`, `shared.jsx`, `ESTILO.md`) sobre una solución nueva y más
+   elaborada.
+5. **Benchmarking y tendencias: solo con fuentes contrastadas.** Cuando
+   se pida investigar mercado, patrones de UX o tendencias (p. ej. las
+   fases de cabecera/notificaciones y revisión visual), citar de dónde
+   sale cada afirmación — nunca una recomendación de diseño sin respaldo
+   verificable.
+6. **Validación humana antes de cerrar cualquier fase.** Además de tests
+   y build (regla 2 de "Reglas de trabajo obligatorias" abajo), todo
+   entregable de UI se comprueba de verdad (con `npm run mobile-check`
+   cuando el módulo lo soporte, o navegación manual/browser tool) antes
+   de reportarlo como terminado.
+
 ## Cosas que NO existen todavía (no asumir que están hechas)
 
 - Interacción real en el calendario de Resumen (sigue siendo de solo
@@ -420,3 +463,26 @@ tacto físico real (presión, gestos multitáctiles). Para todo lo demás
 flujos de interacción, errores de consola) sí sustituye la ausencia total
 de verificación móvil automática que había antes — se comprueba solo, en
 cada sesión, antes de pedirle nada al usuario.
+
+### 9. Trabajo por fases en iniciativas largas
+
+Cuando una iniciativa se trabaja **por lotes** (una fase por sesión,
+sesiones largas, sin que el usuario tenga que repetir contexto), aplica
+este mecanismo — elegido para la iniciativa "Release V1" (ver sección
+"Reglas permanentes — Release V1" arriba) y reutilizable para cualquier
+iniciativa futura equivalente:
+
+- **Un documento de progreso dedicado por iniciativa**, en `docs/`
+  (ejemplo: `docs/RELEASE-V1-PROGRESS.md`), con una sección por fase:
+  estado, lo hecho, decisiones tomadas y su porqué, lo descartado,
+  riesgos, y el punto exacto por el que se iba. Se actualiza al cerrar
+  (o al compactar/cortar) cada fase — nunca se deja para "luego".
+- **No sustituye la documentación de decisiones ya exigida por la regla
+  7** ("Documentación viva de decisiones"): una decisión de arquitectura
+  o producto con impacto futuro real sigue yendo a su propio ADR, a
+  `docs/PRODUCT.md` o a `docs/BACKLOG.md`. El documento de progreso
+  enlaza a esos, no los repite ni los reemplaza — es el "por dónde iba",
+  no la fuente de verdad de cada decisión.
+- **Una sesión nueva, sin nada del contexto de la anterior, debe poder
+  leer solo ese documento y continuar** exactamente donde se quedó la
+  fase anterior, sin tener que releer el historial de chat.
