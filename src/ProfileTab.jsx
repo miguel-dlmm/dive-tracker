@@ -37,14 +37,32 @@ function AvatarPicker({ profile, onProfileUpdated }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const current = resolveAvatar(profile);
+  const saved = resolveAvatar(profile);
+  // Corrección 5/7 (2026-09-01): antes, pulsar cualquier icono/color
+  // guardaba al instante y cerraba el selector — no dejaba probar
+  // combinaciones. Ahora el selector trabaja sobre un borrador local
+  // (draftIcon/draftColor) que solo se escribe en Supabase al pulsar
+  // "Guardar" (EditActions, mismo patrón que el resto de ediciones de la
+  // app); "Cancelar" descarta el borrador y no toca nada. Se reinicializa
+  // desde `saved` cada vez que se abre, así que reabrir tras cancelar
+  // siempre parte del valor real guardado, nunca de un borrador viejo.
+  const [draftIcon, setDraftIcon] = useState(saved.icon);
+  const [draftColor, setDraftColor] = useState(saved.color);
 
-  const choose = async (icon, color) => {
+  const openPicker = () => {
+    setDraftIcon(saved.icon);
+    setDraftColor(saved.color);
+    setOpen(true);
+  };
+
+  const cancel = () => setOpen(false);
+
+  const save = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase.from("profiles").update({ avatar_icon: icon, avatar_color: color }).eq("user_id", profile.user_id);
+      const { error } = await supabase.from("profiles").update({ avatar_icon: draftIcon, avatar_color: draftColor }).eq("user_id", profile.user_id);
       if (error) throw error;
-      onProfileUpdated?.({ avatar_icon: icon, avatar_color: color });
+      onProfileUpdated?.({ avatar_icon: draftIcon, avatar_color: draftColor });
       toast?.success("Avatar actualizado");
       setOpen(false);
     } catch {
@@ -54,14 +72,20 @@ function AvatarPicker({ profile, onProfileUpdated }) {
     }
   };
 
+  // El avatar grande de arriba refleja el borrador mientras el selector
+  // está abierto (para poder ver el resultado de lo que se está probando)
+  // y el valor guardado en cualquier otro momento — nunca un estado a
+  // medias tras cancelar.
+  const preview = open ? { icon: draftIcon, color: draftColor } : saved;
+
   return (
     <div className="flex flex-col items-center gap-3">
       <button
-        onClick={() => setOpen((o) => !o)}
-        aria-label="Cambiar avatar"
+        onClick={() => (open ? cancel() : openPicker())}
+        aria-label={open ? "Cerrar selector de avatar" : "Cambiar avatar"}
         className="relative -m-1 flex min-h-11 min-w-11 items-center justify-center rounded-full p-1"
       >
-        <Avatar icon={current.icon} color={current.color} size={72} />
+        <Avatar icon={preview.icon} color={preview.color} size={72} />
         <span
           className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-white"
           style={{ backgroundColor: TEAL }}
@@ -76,13 +100,18 @@ function AvatarPicker({ profile, onProfileUpdated }) {
             {AVATAR_COLORS.map((c) => (
               <button
                 key={c.name}
-                onClick={() => choose(current.icon, c.value)}
+                onClick={() => setDraftColor(c.value)}
                 aria-label={`Color ${c.name}`}
+                aria-pressed={draftColor === c.value}
                 disabled={saving}
-                className="flex h-8 w-8 items-center justify-center rounded-full disabled:opacity-50"
-                style={{ backgroundColor: c.value, outline: current.color === c.value ? `2px solid ${NAVY}` : "none", outlineOffset: 2 }}
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-full disabled:opacity-50"
               >
-                {current.color === c.value && <Check size={14} className="text-white" aria-hidden="true" />}
+                <span
+                  className="flex h-8 w-8 items-center justify-center rounded-full"
+                  style={{ backgroundColor: c.value, outline: draftColor === c.value ? `2px solid ${NAVY}` : "none", outlineOffset: 2 }}
+                >
+                  {draftColor === c.value && <Check size={14} className="text-white" aria-hidden="true" />}
+                </span>
               </button>
             ))}
           </div>
@@ -90,16 +119,18 @@ function AvatarPicker({ profile, onProfileUpdated }) {
             {AVATAR_ICONS.map(({ name, Icon }) => (
               <button
                 key={name}
-                onClick={() => choose(name, current.color)}
+                onClick={() => setDraftIcon(name)}
                 aria-label={`Icono ${name}`}
+                aria-pressed={draftIcon === name}
                 disabled={saving}
                 className="flex min-h-11 items-center justify-center rounded-md border disabled:opacity-50"
-                style={{ borderColor: current.icon === name ? current.color : "#E5E7EB", backgroundColor: current.icon === name ? `${current.color}1A` : "white" }}
+                style={{ borderColor: draftIcon === name ? draftColor : "#E5E7EB", backgroundColor: draftIcon === name ? `${draftColor}1A` : "white" }}
               >
-                <Icon size={18} style={{ color: current.icon === name ? current.color : "#9CA3AF" }} aria-hidden="true" />
+                <Icon size={18} style={{ color: draftIcon === name ? draftColor : "#9CA3AF" }} aria-hidden="true" />
               </button>
             ))}
           </div>
+          <EditActions onSave={save} onCancel={cancel} saveLabel={saving ? "Guardando…" : "Guardar"} />
         </div>
       )}
     </div>

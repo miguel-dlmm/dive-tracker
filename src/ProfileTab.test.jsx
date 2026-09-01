@@ -47,17 +47,59 @@ it("nada si no hay perfil todavía", () => {
 });
 
 describe("avatar", () => {
-  it("abre el selector y guarda el icono/color elegido", async () => {
+  it("elegir un icono no guarda nada hasta pulsar Guardar", async () => {
+    const user = userEvent.setup();
+    const { update } = mockUpdate();
+    renderProfile();
+
+    await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
+    await user.click(screen.getByRole("button", { name: "Icono Anchor" }));
+
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("permite probar varios iconos/colores y solo guarda la selección final al pulsar Guardar", async () => {
     const user = userEvent.setup();
     const { update, eq } = mockUpdate();
     const { onProfileUpdated } = renderProfile();
 
     await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
     await user.click(screen.getByRole("button", { name: "Icono Anchor" }));
+    await user.click(screen.getByRole("button", { name: "Icono Turtle" }));
+    await user.click(screen.getByRole("button", { name: "Color teal" }));
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
 
-    expect(update).toHaveBeenCalledWith({ avatar_icon: "Anchor", avatar_color: "#0F766E" });
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledWith({ avatar_icon: "Turtle", avatar_color: "#0F766E" });
     expect(eq).toHaveBeenCalledWith("user_id", "u1");
-    expect(onProfileUpdated).toHaveBeenCalledWith({ avatar_icon: "Anchor", avatar_color: "#0F766E" });
+    expect(onProfileUpdated).toHaveBeenCalledWith({ avatar_icon: "Turtle", avatar_color: "#0F766E" });
+  });
+
+  it("Cancelar descarta la selección probada y no guarda nada", async () => {
+    const user = userEvent.setup();
+    const { update } = mockUpdate();
+    const { onProfileUpdated } = renderProfile();
+
+    await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
+    await user.click(screen.getByRole("button", { name: "Icono Anchor" }));
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(update).not.toHaveBeenCalled();
+    expect(onProfileUpdated).not.toHaveBeenCalled();
+  });
+
+  it("tras cancelar, reabrir el selector parte del avatar guardado, no del borrador descartado", async () => {
+    const user = userEvent.setup();
+    mockUpdate();
+    renderProfile();
+
+    await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
+    await user.click(screen.getByRole("button", { name: "Icono Anchor" }));
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
+    expect(screen.getByRole("button", { name: "Icono Fish" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Icono Anchor" })).toHaveAttribute("aria-pressed", "false");
   });
 });
 
