@@ -1,7 +1,7 @@
 vi.mock("./supabaseClient", () => ({
   supabase: {
     from: vi.fn(),
-    auth: { updateUser: vi.fn(), getSession: vi.fn() },
+    auth: { updateUser: vi.fn(), getSession: vi.fn(), signInWithPassword: vi.fn() },
   },
 }));
 
@@ -36,6 +36,7 @@ beforeEach(() => {
   supabase.from.mockReset();
   supabase.auth.updateUser.mockReset();
   supabase.auth.getSession.mockReset().mockResolvedValue({ data: { session: { access_token: "tok-1" } } });
+  supabase.auth.signInWithPassword.mockReset();
   global.fetch = vi.fn();
   try { localStorage.clear(); } catch { /* noop */ }
 });
@@ -139,9 +140,10 @@ describe("moneda favorita", () => {
 });
 
 describe("contraseña", () => {
-  it("el botón sigue deshabilitado hasta que la contraseña tiene 8+ caracteres y coincide con la confirmación", async () => {
+  it("el botón sigue deshabilitado hasta que hay contraseña actual, la nueva tiene 8+ caracteres y coincide con la confirmación", async () => {
     const user = userEvent.setup();
     renderProfile();
+    const current = screen.getByLabelText("Contraseña actual");
     const password = screen.getByLabelText("Nueva contraseña");
     const confirm = screen.getByLabelText("Confirmar contraseña");
 
@@ -155,19 +157,42 @@ describe("contraseña", () => {
     await user.clear(confirm);
     await user.type(password, "contraseñaLarga1");
     await user.type(confirm, "contraseñaLarga1");
+    expect(screen.getByRole("button", { name: "Cambiar contraseña" })).toBeDisabled();
+
+    await user.type(current, "laActual1");
     expect(screen.getByRole("button", { name: "Cambiar contraseña" })).not.toBeDisabled();
   });
 
-  it("guarda la contraseña nueva vía supabase.auth.updateUser", async () => {
+  it("verifica la contraseña actual con signInWithPassword antes de guardar la nueva", async () => {
     const user = userEvent.setup();
+    supabase.auth.getSession.mockResolvedValue({ data: { session: { user: { email: "ada@example.com" } } } });
+    supabase.auth.signInWithPassword.mockResolvedValue({ error: null });
     supabase.auth.updateUser.mockResolvedValue({ error: null });
     renderProfile();
 
+    await user.type(screen.getByLabelText("Contraseña actual"), "laActual1");
     await user.type(screen.getByLabelText("Nueva contraseña"), "contraseñaLarga1");
     await user.type(screen.getByLabelText("Confirmar contraseña"), "contraseñaLarga1");
     await user.click(screen.getByRole("button", { name: "Cambiar contraseña" }));
 
-    await waitFor(() => expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: "contraseñaLarga1" }));
+    await waitFor(() => expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({ email: "ada@example.com", password: "laActual1" }));
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: "contraseñaLarga1" });
+  });
+
+  it("si la contraseña actual es incorrecta, no cambia la contraseña y muestra el error junto al campo", async () => {
+    const user = userEvent.setup();
+    supabase.auth.getSession.mockResolvedValue({ data: { session: { user: { email: "ada@example.com" } } } });
+    supabase.auth.signInWithPassword.mockResolvedValue({ error: { message: "Invalid login credentials" } });
+    supabase.auth.updateUser.mockResolvedValue({ error: null });
+    renderProfile();
+
+    await user.type(screen.getByLabelText("Contraseña actual"), "incorrecta");
+    await user.type(screen.getByLabelText("Nueva contraseña"), "contraseñaLarga1");
+    await user.type(screen.getByLabelText("Confirmar contraseña"), "contraseñaLarga1");
+    await user.click(screen.getByRole("button", { name: "Cambiar contraseña" }));
+
+    expect(await screen.findByText("Contraseña actual incorrecta.")).toBeInTheDocument();
+    expect(supabase.auth.updateUser).not.toHaveBeenCalled();
   });
 });
 
