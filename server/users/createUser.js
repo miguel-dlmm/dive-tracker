@@ -7,16 +7,14 @@ import { provisionUser, friendlyError } from "./provisionUser.js";
 // — este handler solo se ocupa de HTTP + autorización de superadmin + qué
 // dataset_key usar (aquí, el que el propio superadmin elige en el formulario).
 //
-// Lógica de negocio pura, sin nada de Netlify ni de Vercel: recibe una
-// petición ya normalizada ({ method, headers, body }) y devuelve una
-// respuesta normalizada ({ status, payload }). Los adaptadores de cada
-// proveedor (netlify/functions/create-user.js, api/create-user.js) son los
-// únicos que traducen el formato de evento/HTTP de su plataforma hacia/desde
-// esta forma — así no hay lógica duplicada entre proveedores.
+// Lógica de negocio pura, sin nada de Vercel: recibe una petición ya
+// normalizada ({ method, headers, body }) y devuelve una respuesta
+// normalizada ({ status, payload }). El adaptador (api/create-user.js) es
+// el único que traduce el formato de evento/HTTP de la plataforma
+// hacia/desde esta forma.
 
-// Netlify entrega event.body como string; Vercel ya entrega req.body
-// parseado como objeto cuando el Content-Type es JSON. Se acepta cualquiera
-// de las dos formas aquí para que ningún adaptador tenga que parsear nada.
+// req.body ya llega parseado como objeto cuando el Content-Type es JSON;
+// se acepta también un string por si acaso, sin nada que parsear de más.
 function parseBody(body) {
   if (body == null) return {};
   if (typeof body !== "string") return body;
@@ -27,8 +25,8 @@ function parseBody(body) {
   }
 }
 
-// event.headers (Netlify) y req.headers (Vercel) no garantizan la misma
-// capitalización, así que la búsqueda es case-insensitive.
+// req.headers no garantiza una capitalización concreta, así que la
+// búsqueda es case-insensitive.
 function getHeader(headers, name) {
   if (!headers) return undefined;
   const key = Object.keys(headers).find((k) => k.toLowerCase() === name.toLowerCase());

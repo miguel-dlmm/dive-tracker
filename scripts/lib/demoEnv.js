@@ -1,5 +1,5 @@
 // Utilidades compartidas por los scripts de scripts/ — nada de esto se usa
-// desde la app real (server/, api/, netlify/functions/).
+// desde la app real (server/, api/).
 import { getServiceRoleClient } from "../../server/supabaseAdmin.js";
 
 const REQUIRED_ENV_VARS = ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"];

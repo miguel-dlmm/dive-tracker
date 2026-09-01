@@ -28,9 +28,11 @@ dist-ssr
 *.sln
 *.sw?
 
-# Local Netlify folder
-.netlify
 .vercel
+
+# Backups/zips de trabajo — nunca al repo (ver limpieza técnica 2026-09-01,
+# dive-tracker.zip llegó a comitearse por error el 2026-08-24).
+*.zip
 
 # Capturas de scripts/mobile-check.mjs — resultado de una ejecución local,
 # no artefactos versionables.

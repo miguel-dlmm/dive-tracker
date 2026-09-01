@@ -3,10 +3,10 @@ import { createClient } from "@supabase/supabase-js";
 // Helpers de Supabase con service role, compartidos por cualquier acción de
 // gestión de usuarios (hoy solo create-user; edición/roles llegarán más
 // adelante y reutilizarán este mismo módulo en vez de duplicar esta lógica).
-// No sabe nada de Netlify ni de Vercel — solo habla con Supabase.
+// No sabe nada de Vercel — solo habla con Supabase.
 //
-// SUPABASE_SERVICE_ROLE_KEY vive SOLO en el entorno del servidor (Netlify o
-// Vercel, según dónde se despliegue), nunca con prefijo VITE_ — Vite mete
+// SUPABASE_SERVICE_ROLE_KEY vive SOLO en el entorno del servidor (Vercel),
+// nunca con prefijo VITE_ — Vite mete
 // cualquier VITE_* en el bundle del cliente. VITE_SUPABASE_URL y
 // VITE_SUPABASE_ANON_KEY sí se reutilizan aquí tal cual: no son secretos
 // (el propio frontend los expone), así que no hace falta duplicarlos bajo

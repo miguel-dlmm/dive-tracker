@@ -2,16 +2,16 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// api/*.js (Vercel) y netlify/functions/*.js (Netlify) son adaptadores finos
-// sobre server/users/*.js — reciben {method, headers, body} y devuelven
-// {status, payload}, sin nada específico de un proveedor (ver comentarios en
-// esos propios archivos). Bajo `vite dev` puro no existe ningún runtime de
-// funciones serverless: cualquier fetch("/api/...") devuelve 404 (confirmado
-// al investigar "no puedo eliminar usuarios: me da error" — no era un bug de
-// deleteUser.js, era que /api/delete-user nunca llega a ejecutarse en local).
-// Este plugin es un TERCER adaptador, solo para el propio servidor de
-// desarrollo de Vite — monta los mismos handlers sin nada nuevo que
-// mantener. `configureServer` solo se ejecuta en `vite`/`vite dev`, nunca en
+// api/*.js (Vercel) es un adaptador fino sobre server/users/*.js — recibe
+// {method, headers, body} y devuelve {status, payload}, sin nada
+// específico de Vercel (ver comentarios en esos propios archivos). Bajo
+// `vite dev` puro no existe ningún runtime de funciones serverless:
+// cualquier fetch("/api/...") devuelve 404 (confirmado al investigar "no
+// puedo eliminar usuarios: me da error" — no era un bug de deleteUser.js,
+// era que /api/delete-user nunca llega a ejecutarse en local). Este plugin
+// es un SEGUNDO adaptador, solo para el propio servidor de desarrollo de
+// Vite — monta los mismos handlers sin nada nuevo que mantener.
+// `configureServer` solo se ejecuta en `vite`/`vite dev`, nunca en
 // `vite build`, así que no aparece en el bundle de producción.
 //
 // Los handlers se importan de forma DINÁMICA, dentro de configureServer, no
@@ -39,7 +39,9 @@ function localApiRoutes() {
             import('./server/users/listUserStatus.js'),
             import('./server/users/regenerateActivationLink.js'),
             import('./server/users/regeneratePassword.js'),
-          ]).then(([createUser, updateAdminStatus, deleteUser, setUserActive, listUserStatus, regenerateActivationLink, regeneratePassword]) => ({
+            import('./server/users/requestPasswordReset.js'),
+            import('./server/users/externalRegister.js'),
+          ]).then(([createUser, updateAdminStatus, deleteUser, setUserActive, listUserStatus, regenerateActivationLink, regeneratePassword, requestPasswordReset, externalRegister]) => ({
             '/api/create-user': createUser.handleCreateUser,
             '/api/update-admin-status': updateAdminStatus.handleUpdateAdminStatus,
             '/api/delete-user': deleteUser.handleDeleteUser,
@@ -47,6 +49,8 @@ function localApiRoutes() {
             '/api/list-user-status': listUserStatus.handleListUserStatus,
             '/api/regenerate-activation-link': regenerateActivationLink.handleRegenerateActivationLink,
             '/api/regenerate-password': regeneratePassword.handleRegeneratePassword,
+            '/api/request-password-reset': requestPasswordReset.handleRequestPasswordReset,
+            '/api/external-register': externalRegister.handleExternalRegister,
           }))
         }
         return routesPromise

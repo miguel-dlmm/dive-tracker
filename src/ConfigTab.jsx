@@ -745,8 +745,8 @@ function ActivationLinkPanel({ title, description, link, onClose }) {
 const emptyUserForm = { email: "", first_name: "", last_name: "", nickname: "" };
 
 // Hoja de creación de usuario — solo visible/usable para superadmin (ver
-// UsersDirectory). Llama a la función Netlify create-user, que es la única
-// pieza con permiso para invocar el Admin API de Supabase Auth.
+// UsersDirectory). Llama a la función serverless create-user, que es la
+// única pieza con permiso para invocar el Admin API de Supabase Auth.
 function CreateUserSheet({ onClose, onCreated }) {
   const [form, setForm] = useState(emptyUserForm);
   const [datasetLabel, setDatasetLabel] = useState("");
@@ -791,9 +791,6 @@ function CreateUserSheet({ onClose, onCreated }) {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
-      // Ruta única e independiente del proveedor: en Vercel /api/create-user
-      // ya sirve directamente api/create-user.js; en Netlify, netlify.toml
-      // reescribe esta misma ruta hacia la función en netlify/functions/.
       const res = await fetch("/api/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
