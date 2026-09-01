@@ -69,15 +69,6 @@ create table if not exists public.profiles (
   default_currency text references currencies(code), -- preferencia personal; distinto de currencies.is_default (el respaldo global de la app)
   is_admin boolean not null default false,
   is_superadmin boolean not null default false,
-  -- true en cuanto el usuario ha fijado su propia contraseña al menos una
-  -- vez (via auth.updateUser, tras entrar por el enlace de primer acceso).
-  -- Por defecto false para no afectar a cuentas ya existentes ni al
-  -- superadmin de arranque; el gate de la app usa este campo para saber si
-  -- debe forzar la pantalla de "crear tu contraseña" antes de dejar entrar.
-  -- DEPRECATED: sustituido por activated_at (ver justo abajo). Se mantiene
-  -- sin tocar durante la migración y se retira en un paso aparte, no en
-  -- este mismo cambio — ver la migración aditiva más abajo.
-  password_set boolean not null default false,
   -- Momento en que la activación de la cuenta completó la fase de
   -- contraseña (ver activateAccount() en useSession.js) — null mientras
   -- esté pendiente. Sustituye a password_set con la misma semántica de
@@ -329,29 +320,19 @@ create policy "own rows" on colleague_payments for all using (auth.uid() = user_
 -- nickname. El resto de este bloque (migración aditiva, trigger de alta,
 -- RPCs, protección de roles, RLS de profiles) sí va aquí, sin mover.
 
--- Migración aditiva password_set -> activated_at (fase 1 de 2). Ejecutar a
--- mano en el SQL editor de Supabase antes o junto con el despliegue del
--- código que empieza a leer/escribir activated_at — password_set se deja
--- intacto a propósito, así el código que todavía no se ha desplegado sigue
--- funcionando durante la ventana de transición. No requiere cambios de
--- RLS/triggers/RPCs: ninguno de los tres referencia password_set hoy.
--- Fase 2 (retirar password_set) es una migración aparte, deliberadamente
--- no incluida aquí — solo debe ejecutarse una vez el código nuevo lleve un
--- tiempo estable en producción. Confirmado 2026-08-31 (limpieza técnica,
--- ver ADR-0021): ningún archivo de src/ ni server/ lee ni escribe
--- password_set ya — activated_at lo sustituyó por completo desde
--- ADR-0015 (2026-08-29). Lista para ejecutar en cuanto se apruebe, TEST
--- primero:
+-- Migración password_set -> activated_at, completada. Fase 1 (añadir
+-- activated_at + backfill desde password_set) se ejecutó junto con
+-- ADR-0015 (2026-08-29). Fase 2 (retirar password_set del todo) se
+-- ejecutó el 2026-09-01 en TEST — confirmado antes ningún archivo de
+-- src/ ni server/ leía ni escribía password_set (ADR-0021). El
+-- `create table` de arriba ya no la incluye para instalaciones nuevas.
+--
+-- Migración aditiva para instalaciones existentes que aún tengan la
+-- columna (ejecutar en el SQL editor de Supabase; scripts/migrations/
+-- 0002-drop-password-set.sql tiene el mismo DDL para aplicarlo con
+-- scripts/apply-migration.mjs):
 --
 --   alter table public.profiles drop column if exists password_set;
---
---   alter table public.profiles
---     add column if not exists activated_at timestamptz;
---
---   update public.profiles
---     set activated_at = now()
---     where password_set = true
---       and activated_at is null;
 
 -- Crea automáticamente la fila de profiles al darse de alta un auth.users
 -- nuevo (hoy: solo el alta manual del admin vía la función de creación de
