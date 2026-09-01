@@ -1,1 +1,22 @@
-{}
+{
+  "tabs": {
+    "home": "Home",
+    "trabajo": "Mi trabajo",
+    "summary": "Resumen"
+  },
+  "secondaryTitles": {
+    "config": "Configuración",
+    "help": "Ayuda",
+    "pagos": "Pagos",
+    "perfil": "Mi perfil"
+  },
+  "aria": {
+    "close": "Cerrar",
+    "goHome": "Ir a Home",
+    "help": "Ayuda",
+    "config": "Configuración",
+    "profile": "Mi perfil",
+    "signOut": "Cerrar sesión",
+    "mainNav": "Navegación principal"
+  }
+}

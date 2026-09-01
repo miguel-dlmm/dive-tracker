@@ -1,1 +1,22 @@
-{}
+{
+  "tabs": {
+    "home": "Home",
+    "trabajo": "My work",
+    "summary": "Summary"
+  },
+  "secondaryTitles": {
+    "config": "Settings",
+    "help": "Help",
+    "pagos": "Payments",
+    "perfil": "My profile"
+  },
+  "aria": {
+    "close": "Close",
+    "goHome": "Go to Home",
+    "help": "Help",
+    "config": "Settings",
+    "profile": "My profile",
+    "signOut": "Sign out",
+    "mainNav": "Main navigation"
+  }
+}

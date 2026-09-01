@@ -315,6 +315,18 @@ explícito del usuario en el momento:**
   nickname `mmm`) se deja intacta con su email ya reenviado, para que la
   actives tú si quieres.
 
+**⚠️ URL de prueba a usar esta noche:** el dominio automático de Vercel
+para la rama vieja (`dive-tracker-git-nightjob-20260831-*.vercel.app`)
+quedó congelado en el último deploy de antes del renombrado — sigue
+respondiendo (Vercel no lo borra solo) pero con el código y el
+`EMAIL_FROM` de antes de esta sesión, así que un 400/email no enviado
+ahí **no es un bug nuevo**, es esperado. El dominio correcto para probar
+el trabajo de esta rama es `https://dive-tracker-git-release-v1-ocean-pulse1.vercel.app`
+(verificado en vivo: registro completo, `email_sent: true`). El alias
+estable `dive-tracker-three.vercel.app` seguirá apuntando a `develop`
+hasta que esta rama se fusione ahí — no antes de que el usuario lo
+revise y apruebe.
+
 **⚠️ Sigue pendiente — solo producción real:** aplicar el mismo cambio
 de `EMAIL_FROM` en las variables de entorno de `dive-tracker-exgg`
 (producción). No se ha tocado esta noche — el permiso que diste fue
@@ -584,3 +596,41 @@ aparte, aunque se integre en Release V1.
 restricción de esta fase = nada de backend ni funcionalidades nuevas que
 requieran BBDD nueva; si surge algo así de interesante, se anota como
 propuesta de próximos pasos, no se implementa.
+
+---
+
+## Cola de tareas adicionales (fuera de las 8 fases)
+
+Pedidas explícitamente por el usuario mid-sesión, con la instrucción de
+hacerlas **al final de todas las fases**, no ahora — se anotan aquí para
+no perderlas.
+
+- **Avatares de perfil: que todos sean animales marinos.** Hoy
+  `avatarCatalog.js` usa un catálogo de iconos genéricos de
+  `lucide-react` (sin relación temática con buceo/mar). Pendiente:
+  sustituir por un catálogo de iconos de animales marinos — revisar qué
+  ofrece `lucide-react` en esa temática (p. ej. `Fish`; `Waves` ya se usa
+  como logo de la app, así que no debería repetirse como avatar) y
+  confirmar cuántos iconos reales hay disponibles antes de prometer un
+  catálogo concreto.
+
+- **Robustecer la contraseña (1 mayúscula + 1 símbolo mínimo) y migrar
+  cuentas existentes que no lo cumplan.** Pedido explícito, también
+  "al final". Encargo: cualquier cuenta ya creada cuya contraseña no
+  cumpla la nueva regla debe, en su próximo login, ir a la pantalla de
+  crear contraseña (sin bases legales, ya aceptadas antes) explicando
+  que toca crear una nueva porque se reforzó la seguridad.
+  **Reto de diseño a resolver antes de implementar** (no trivial, por
+  eso se deja para el final y no se improvisa ahora): las contraseñas
+  se guardan hasheadas (Supabase Auth) — no hay forma de "leer" si una
+  contraseña ya existente cumple la regla nueva, así que no se puede
+  detectar por inspección. La vía razonable es un flag nuevo en
+  `profiles` (p. ej. `password_meets_policy boolean`), puesto a
+  `false`/`null` para TODAS las cuentas existentes en la migración que
+  introduzca la regla, y a `true` solo cuando alguien fija una
+  contraseña nueva ya validada contra la regla (activación, reset,
+  cambio desde perfil). El login comprobaría ese flag y, si es falso,
+  redirigiría al flujo de crear contraseña en vez de dejar entrar. Es
+  un cambio de autenticación real — sigue la regla de `CLAUDE.md` de
+  proponer un plan de migración completo y pedir aprobación explícita
+  antes de tocar nada, no implementar en un solo paso.

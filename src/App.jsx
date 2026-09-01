@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
@@ -53,10 +54,12 @@ export const BODY_FONT = "'Inter', sans-serif";
 // pantallas siguen existiendo en el código (rutas "log"/"comisiones"/
 // "colegas" más abajo) por si hiciera falta revertir, aunque ya no tienen
 // ningún punto de entrada en la UI.
+// label se resuelve en render vía t(`tabs.${id}`) (namespace "app") — estos
+// ids son también las claves de traducción, no solo rutas internas.
 const PRIMARY_TABS = [
-  { id: "home", label: "Home", icon: HomeIcon },
-  { id: "trabajo", label: "Mi trabajo", icon: Briefcase },
-  { id: "summary", label: "Resumen", icon: BarChart3 },
+  { id: "home", icon: HomeIcon },
+  { id: "trabajo", icon: Briefcase },
+  { id: "summary", icon: BarChart3 },
 ];
 
 // Configuración/Ayuda son accesos secundarios (desde la cabecera). Al
@@ -67,7 +70,8 @@ const PRIMARY_TABS = [
 // "pagos" sigue en este mapa por si se reactiva, pero ya no tiene ningún
 // punto de entrada en la UI — ver docs/ADR/0005 (Mi trabajo cubre su
 // función con "Cobrar todos" + filtro por escuela).
-const SECONDARY_TITLES = { config: "Configuración", help: "Ayuda", pagos: "Pagos", perfil: "Mi perfil" };
+// Título resuelto en render vía t(`secondaryTitles.${tab}`) (namespace "app").
+const SECONDARY_TABS = ["config", "help", "pagos", "perfil"];
 
 // Recuerda la pestaña activa y a cuál "volver" desde una pantalla
 // secundaria — corrige de raíz dos problemas reales, no dos parches
@@ -112,6 +116,7 @@ function markWhatsNewSeen(userId) {
 }
 
 function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" }) {
+  const { t } = useTranslation("app");
   // profiles.language es la fuente de verdad una vez hay sesión (Release V1,
   // Fase 2) — sincroniza la interfaz al idioma guardado del usuario y
   // actualiza el respaldo de localStorage (oceanpulse:language) que usan
@@ -180,7 +185,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   // que navega para mantenerla al día.
   const [returnTab, setReturnTab] = useState(() => readStoredNav()?.returnTab || "home");
   useEffect(() => {
-    if (PRIMARY_TABS.some((t) => t.id === tab)) setReturnTab(tab);
+    if (PRIMARY_TABS.some((tabItem) => tabItem.id === tab)) setReturnTab(tab);
   }, [tab]);
   useEffect(() => {
     try { sessionStorage.setItem(NAV_STORAGE_KEY, JSON.stringify({ tab, returnTab })); } catch { /* no-op */ }
@@ -227,8 +232,8 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
 
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const avatar = resolveAvatar(profile);
-  const bottomTabActive = PRIMARY_TABS.some((t) => t.id === tab) ? tab : null;
-  const isSecondary = tab in SECONDARY_TITLES;
+  const bottomTabActive = PRIMARY_TABS.some((tabItem) => tabItem.id === tab) ? tab : null;
+  const isSecondary = SECONDARY_TABS.includes(tab);
   // Cerrar Configuración/Ayuda (la "X" de la cabecera, y el gesto de
   // "atrás" de cada una en su nivel más externo — ver ConfigTab.jsx/
   // HelpTab.jsx) siempre vuelve al INICIO de esa pantalla la próxima vez
@@ -299,9 +304,9 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             // HelpTab.jsx, "de índice a guía viva" — pero el razonamiento
             // de fondo, "capa encima" vs. "un paso más adentro", se
             // mantiene igual para las dos.)
-            <button onClick={closeSecondary} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Cerrar">
+            <button onClick={closeSecondary} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label={t("aria.close")}>
               <X size={20} style={{ color: NAVY }} aria-hidden="true" />
-              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{SECONDARY_TITLES[tab]}</h1>
+              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{t(`secondaryTitles.${tab}`)}</h1>
             </button>
           ) : (
             // 2026-08-30: la marca se unifica en "Ocean Flow" — antes
@@ -309,19 +314,21 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             // personal) como subtítulo aparte; con un único nombre, esa
             // segunda línea sería literalmente repetir el mismo texto dos
             // veces, así que desaparece en vez de quedar redundante.
-            <button onClick={() => changeTab("home")} className="-m-2 flex min-h-11 items-center gap-2.5 p-2" aria-label="Ir a Home">
+            // "Ocean Flow" es el nombre de marca — no se traduce en
+            // ningún idioma, igual que cualquier nombre propio de producto.
+            <button onClick={() => changeTab("home")} className="-m-2 flex min-h-11 items-center gap-2.5 p-2" aria-label={t("aria.goHome")}>
               <Waves size={20} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
               <h1 className="text-[15px] font-bold tracking-tight" style={{ color: NAVY }}>Ocean Flow</h1>
             </button>
           )}
           <div className="flex items-center gap-1">
             {tab !== "help" && (
-              <button onClick={() => changeTab("help")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Ayuda">
+              <button onClick={() => changeTab("help")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label={t("aria.help")}>
                 <HelpCircle size={20} style={{ color: NAVY }} aria-hidden="true" />
               </button>
             )}
             {tab !== "config" && (
-              <button onClick={() => changeTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Configuración">
+              <button onClick={() => changeTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label={t("aria.config")}>
                 <Settings size={20} style={{ color: NAVY }} aria-hidden="true" />
               </button>
             )}
@@ -329,7 +336,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
               <button
                 onClick={() => changeTab("perfil")}
                 className="-m-1 flex min-h-11 items-center gap-1.5 rounded-full p-1"
-                aria-label="Mi perfil"
+                aria-label={t("aria.profile")}
               >
                 <Avatar icon={avatar.icon} color={avatar.color} size={28} />
                 <span className="max-w-[88px] truncate text-[12px] font-medium text-gray-500" title={profile.nickname}>
@@ -337,7 +344,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
                 </span>
               </button>
             )}
-            <button onClick={() => { clearStoredNav(); if (DEV_AUTH_BYPASS) disableDevBypass(); onSignOut(); }} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Cerrar sesión">
+            <button onClick={() => { clearStoredNav(); if (DEV_AUTH_BYPASS) disableDevBypass(); onSignOut(); }} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label={t("aria.signOut")}>
               <LogOut size={20} style={{ color: NAVY }} aria-hidden="true" />
             </button>
           </div>
@@ -417,25 +424,25 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
           elementos fixed cuando la barra de direcciones se oculta al hacer
           scroll. */}
       <nav
-        aria-label="Navegación principal"
+        aria-label={t("aria.mainNav")}
         className="fixed inset-x-0 bottom-0 z-20 border-t border-black/5 bg-white"
         style={{ paddingBottom: "env(safe-area-inset-bottom)", transform: "translateZ(0)" }}
       >
         <div className="mx-auto flex max-w-3xl items-stretch justify-around px-2 py-1">
-          {PRIMARY_TABS.map((t) => {
-            const Icon = t.icon;
-            const active = bottomTabActive === t.id;
-            const c = sectionColor(t.id);
+          {PRIMARY_TABS.map((tabItem) => {
+            const Icon = tabItem.icon;
+            const active = bottomTabActive === tabItem.id;
+            const c = sectionColor(tabItem.id);
             return (
               <button
-                key={t.id}
-                onClick={() => changeTab(t.id)}
+                key={tabItem.id}
+                onClick={() => changeTab(tabItem.id)}
                 aria-current={active ? "page" : undefined}
                 className="flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-2 transition-colors"
                 style={{ color: active ? c : "#9CA3AF" }}
               >
                 <Icon size={19} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-                <span className="text-[10.5px] font-medium">{t.label}</span>
+                <span className="text-[10.5px] font-medium">{t(`tabs.${tabItem.id}`)}</span>
               </button>
             );
           })}
