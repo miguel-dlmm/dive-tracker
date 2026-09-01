@@ -92,9 +92,24 @@ create table if not exists public.profiles (
   -- desactivar, y regenerateActivationLink.js la limpia a null al
   -- reactivar (quitar el baneo) — mismo criterio que activated_at.
   deactivated_at timestamptz,
+  -- Idioma preferido de la interfaz (Release V1 Fase 2, multidioma
+  -- es/en). 'es' por defecto en todo alta nueva (registro, alta admin) —
+  -- regla del documento maestro de la iniciativa. check limita a los 2
+  -- idiomas soportados hoy; ampliar la lista es un check nuevo, no una
+  -- migración de datos.
+  language text not null default 'es' check (language in ('es', 'en')),
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
+
+-- Migración aditiva Release V1, Fase 2 (2026-09-01) para instalaciones
+-- existentes:
+--
+--   alter table public.profiles
+--     add column if not exists language text not null default 'es'
+--     check (language in ('es', 'en'));
+--
+-- (scripts/migrations/0007-idioma-perfil.sql tiene el mismo DDL)
 
 -- Migración aditiva Bloque 11 (2026-09-01) para instalaciones existentes:
 --
@@ -373,19 +388,21 @@ create policy "own rows" on colleague_payments for all using (auth.uid() = user_
 --   alter table public.profiles drop column if exists password_set;
 
 -- Crea automáticamente la fila de profiles al darse de alta un auth.users
--- nuevo (hoy: solo el alta manual del admin vía la función de creación de
--- usuarios; mañana: también altas por signup público, sin cambios en este
--- trigger). Lee first_name/last_name/nickname de los metadatos del usuario
--- (raw_user_meta_data) pasados al crear la cuenta.
+-- nuevo (alta manual del admin o signup público). Lee
+-- first_name/last_name/nickname/language de los metadatos del usuario
+-- (raw_user_meta_data) pasados al crear la cuenta — language con coalesce
+-- a 'es' porque insertar explícitamente NULL (metadata ausente) saltaría
+-- el default de la columna.
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (user_id, first_name, last_name, nickname)
+  insert into public.profiles (user_id, first_name, last_name, nickname, language)
   values (
     new.id,
     new.raw_user_meta_data->>'first_name',
     new.raw_user_meta_data->>'last_name',
-    new.raw_user_meta_data->>'nickname'
+    new.raw_user_meta_data->>'nickname',
+    coalesce(new.raw_user_meta_data->>'language', 'es')
   );
   return new;
 end;
