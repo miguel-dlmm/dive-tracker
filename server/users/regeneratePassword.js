@@ -121,7 +121,13 @@ export async function handleRegeneratePassword({ method, headers, body }) {
     // dato de estado, que se corregirá solo en el próximo reload().
   }
 
-  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email);
+  // flow: "recovery" — esta cuenta ya existe y ya tiene una contraseña (la
+  // que se acaba de invalidar arriba): regenerar contraseña nunca es un
+  // alta, así que el enlace debe entrar por ResetPasswordScreen, nunca por
+  // CreatePasswordScreen (que exige aceptar de nuevo las bases legales).
+  // Corrección 2026-09-01: antes no se pasaba `flow`, así que este enlace
+  // mostraba la pantalla de bienvenida/alta por error.
+  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email, { flow: "recovery" });
   if (linkErrorMessage) {
     return { status: 500, payload: { error: linkErrorMessage } };
   }
