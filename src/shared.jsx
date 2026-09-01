@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import * as Icons from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
@@ -83,10 +84,11 @@ export function useToast() {
 // para poder cambiarlo por el logo oficial cuando esté listo, sin
 // tocar código.
 // =================================================================
-export function AppLoading({ iconName = "Waves", color = TEAL, size = 40, label = "Cargando" }) {
+export function AppLoading({ iconName = "Waves", color = TEAL, size = 40, label }) {
+  const { t } = useTranslation("common");
   const Icon = Icons[iconName] || Icons.Waves;
   return (
-    <div className="flex flex-col items-center gap-3" role="status" aria-label={label}>
+    <div className="flex flex-col items-center gap-3" role="status" aria-label={label || t("loading.defaultLabel")}>
       <div className="relative" style={{ width: size, height: size }}>
         <Icon size={size} style={{ color: "#E5E7EB" }} strokeWidth={2} aria-hidden="true" />
         <div className="absolute inset-0" style={{ animation: "oceanFill 1.6s ease-in-out infinite" }}>
@@ -181,7 +183,8 @@ export function Sheet({ open, onClose, children, className = "", zIndexClass = "
 // "¿Eliminar? Sí/No", que quedaba poco visible. Con estado de carga
 // mientras se ejecuta la acción.
 // =================================================================
-export function ConfirmDialog({ open, title, message, onConfirm, onCancel, loading, confirmLabel = "Eliminar", danger = true }) {
+export function ConfirmDialog({ open, title, message, onConfirm, onCancel, loading, confirmLabel, danger = true }) {
+  const { t } = useTranslation("common");
   useEscapeClose(open, loading ? () => {} : onCancel);
   useBodyScrollLock(open);
   if (!open) return null;
@@ -198,7 +201,7 @@ export function ConfirmDialog({ open, title, message, onConfirm, onCancel, loadi
         <p className="mb-4 text-sm text-gray-500">{message}</p>
         <div className="flex justify-end gap-2">
           <button onClick={onCancel} disabled={loading} className="min-h-11 rounded-md border border-gray-200 px-3.5 text-sm font-medium text-gray-600 disabled:opacity-50">
-            Cancelar
+            {t("confirmDialog.cancel")}
           </button>
           <button
             onClick={onConfirm}
@@ -207,7 +210,7 @@ export function ConfirmDialog({ open, title, message, onConfirm, onCancel, loadi
             style={{ backgroundColor: danger ? CORAL : TEAL }}
           >
             {loading && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}
-            {confirmLabel}
+            {confirmLabel || t("confirmDialog.defaultConfirmLabel")}
           </button>
         </div>
       </div>
@@ -217,14 +220,15 @@ export function ConfirmDialog({ open, title, message, onConfirm, onCancel, loadi
 
 // Botones "Guardar / Cancelar" unificados para cualquier formulario de
 // edición en línea (antes cada pantalla tenía su propio estilo).
-export function EditActions({ onSave, onCancel, saveLabel = "Guardar" }) {
+export function EditActions({ onSave, onCancel, saveLabel }) {
+  const { t } = useTranslation("common");
   return (
     <div className="flex justify-end gap-2">
       <button onClick={onSave} className="flex min-h-9 items-center gap-1 rounded-lg px-3 text-xs font-medium text-white" style={{ backgroundColor: TEAL }}>
-        <Check size={13} aria-hidden="true" /> {saveLabel}
+        <Check size={13} aria-hidden="true" /> {saveLabel || t("editActions.defaultSaveLabel")}
       </button>
       <button onClick={onCancel} className="min-h-9 rounded-lg border border-gray-200 px-3 text-xs font-medium text-gray-500">
-        Cancelar
+        {t("editActions.cancel")}
       </button>
     </div>
   );
@@ -288,6 +292,7 @@ export function Money({ amount, code, currencyRows, className = "", muted = fals
 // accesible por asociación); sin esto, el clic en el icono también
 // activaría/enfocaría el campo por delegación del <label>.
 export function Field({ label, hint, children }) {
+  const { t } = useTranslation("common");
   const [showHint, setShowHint] = useState(false);
   return (
     <label className="flex flex-col gap-1 text-sm">
@@ -298,7 +303,7 @@ export function Field({ label, hint, children }) {
             type="button"
             onClick={(e) => { e.preventDefault(); setShowHint((v) => !v); }}
             aria-expanded={showHint}
-            aria-label={showHint ? "Ocultar ayuda" : "Ayuda"}
+            aria-label={showHint ? t("field.hideHelp") : t("field.help")}
             className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-gray-400"
           >
             <HelpCircle size={13} aria-hidden="true" />
@@ -328,29 +333,32 @@ export function Field({ label, hint, children }) {
 // animación, esta transcurre oculta detrás y nunca se llega a ver). El
 // error, si lo hay, se sigue avisando por toast — solo cambia cuándo se
 // cierra el diálogo, no el manejo de errores.
-export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLabel = "este elemento", variant = "icon", optimistic = false }) {
+export function DeleteButton({ onConfirm, size = 15, label, itemLabel, variant = "icon", optimistic = false }) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const resolvedLabel = label || t("deleteButton.defaultLabel");
+  const resolvedItemLabel = itemLabel || t("deleteButton.defaultItemLabel");
 
   const handleConfirm = async () => {
     if (optimistic) {
       setOpen(false);
       try {
         await onConfirm();
-        toast?.success("Eliminado correctamente");
+        toast?.success(t("deleteButton.deletedToast"));
       } catch (e) {
-        toast?.error(e?.message || "No se pudo eliminar. Inténtalo de nuevo.");
+        toast?.error(e?.message || t("deleteButton.errorToast"));
       }
       return;
     }
     setLoading(true);
     try {
       await onConfirm();
-      toast?.success("Eliminado correctamente");
+      toast?.success(t("deleteButton.deletedToast"));
       setOpen(false);
     } catch (e) {
-      toast?.error(e?.message || "No se pudo eliminar. Inténtalo de nuevo.");
+      toast?.error(e?.message || t("deleteButton.errorToast"));
     } finally {
       setLoading(false);
     }
@@ -365,13 +373,13 @@ export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLab
           onClick={() => setOpen(true)}
           className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-red-500 hover:bg-red-50"
         >
-          <Trash2 size={14} aria-hidden="true" /> {label}
+          <Trash2 size={14} aria-hidden="true" /> {resolvedLabel}
         </button>
       ) : (
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label={label}
+          aria-label={resolvedLabel}
           className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded p-2 text-gray-300 hover:text-red-500"
         >
           <Trash2 size={size} aria-hidden="true" />
@@ -379,8 +387,8 @@ export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLab
       )}
       <ConfirmDialog
         open={open}
-        title="¿Eliminar este registro?"
-        message={`Vas a eliminar ${itemLabel}. Esta acción no se puede deshacer.`}
+        title={t("deleteButton.confirmTitle")}
+        message={t("deleteButton.confirmMessage", { item: resolvedItemLabel })}
         onConfirm={handleConfirm}
         onCancel={() => setOpen(false)}
         loading={loading}
@@ -391,8 +399,19 @@ export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLab
 
 // Selector de fecha propio — el <input type="date"> nativo no se cerraba
 // bien al elegir día y su diseño no se puede controlar entre navegadores.
-const MONTHS_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const WEEKDAYS_ES = ["L", "M", "X", "J", "V", "S", "D"];
+// Nombres de mes/día traducidos, compartidos por DatePicker, DateRangePicker
+// y MonthCalendar — returnObjects: true porque i18next normalmente
+// interpola a string, no array; useTranslation("common") ya suscribe al
+// componente llamador a cambios de idioma, así que no hace falta duplicar
+// esa suscripción aquí.
+function useCalendarLabels() {
+  const { t } = useTranslation("common");
+  return {
+    t,
+    months: t("calendar.months", { returnObjects: true }),
+    weekdays: t("calendar.weekdays", { returnObjects: true }),
+  };
+}
 const pad2 = (n) => String(n).padStart(2, "0");
 function parseDateStr(s) {
   if (!s) return null;
@@ -402,6 +421,7 @@ function parseDateStr(s) {
 }
 
 export function DatePicker({ value, onChange, placeholder }) {
+  const { t, months, weekdays } = useCalendarLabels();
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const parsed = parseDateStr(value);
   const today = new Date();
@@ -422,7 +442,7 @@ export function DatePicker({ value, onChange, placeholder }) {
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  const display = parsed ? `${pad2(parsed.d)}/${pad2(parsed.m + 1)}/${parsed.y}` : (placeholder || "Fecha");
+  const display = parsed ? `${pad2(parsed.d)}/${pad2(parsed.m + 1)}/${parsed.y}` : (placeholder || t("datePicker.defaultPlaceholder"));
 
   const selectDay = (d) => {
     onChange(`${viewY}-${pad2(viewM + 1)}-${pad2(d)}`);
@@ -439,20 +459,20 @@ export function DatePicker({ value, onChange, placeholder }) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={placeholder || "Elegir fecha"}
+        aria-label={placeholder || t("datePicker.defaultAriaLabel")}
         className={`${inputCls} flex min-h-11 w-full items-center gap-1.5 text-left`}
       >
         <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
         <span className={parsed ? "text-gray-800" : "text-gray-400"}>{display}</span>
       </button>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label="Selector de fecha" className="w-64 p-3">
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-64 p-3">
         <div className="mb-2 flex items-center justify-between">
-          <button type="button" onClick={goPrev} aria-label="Mes anterior" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
-          <span className="text-sm font-semibold text-gray-800">{MONTHS_ES[viewM]} {viewY}</span>
-          <button type="button" onClick={goNext} aria-label="Mes siguiente" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          <span className="text-sm font-semibold text-gray-800">{months[viewM]} {viewY}</span>
+          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
         </div>
         <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
-          {WEEKDAYS_ES.map((w) => <div key={w} className="py-1">{w}</div>)}
+          {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-0.5">
           {cells.map((d, i) => {
@@ -463,7 +483,7 @@ export function DatePicker({ value, onChange, placeholder }) {
                 type="button"
                 key={i}
                 disabled={!d}
-                aria-label={d ? `${d} de ${MONTHS_ES[viewM]}` : undefined}
+                aria-label={d ? t("datePicker.dayAriaLabel", { day: d, month: months[viewM] }) : undefined}
                 aria-selected={isSelected || undefined}
                 onClick={() => d && selectDay(d)}
                 className="flex h-9 items-center justify-center rounded-md text-xs transition-colors"
@@ -502,11 +522,13 @@ const formatDMY = (dateStr) => {
   return p ? `${pad2(p.d)}/${pad2(p.m + 1)}/${p.y}` : "";
 };
 
-const RANGE_PRESETS = [
-  { label: "Hoy", range: () => ({ from: todayStr(), to: todayStr() }) },
-  { label: "Esta semana", range: () => ({ from: startOfWeek(todayStr()), to: todayStr() }) },
-  { label: "Este mes", range: () => ({ from: startOfMonth(todayStr()), to: todayStr() }) },
-  { label: "Últimos 30 días", range: () => ({ from: addDays(todayStr(), -29), to: todayStr() }) },
+// label se resuelve en render vía t(`dateRangePicker.presets.${key}`) —
+// estas claves son las mismas del JSON, no solo identificadores internos.
+const RANGE_PRESET_DEFS = [
+  { key: "today", range: () => ({ from: todayStr(), to: todayStr() }) },
+  { key: "thisWeek", range: () => ({ from: startOfWeek(todayStr()), to: todayStr() }) },
+  { key: "thisMonth", range: () => ({ from: startOfMonth(todayStr()), to: todayStr() }) },
+  { key: "last30Days", range: () => ({ from: addDays(todayStr(), -29), to: todayStr() }) },
 ];
 
 // Selector de rango de fechas — un único calendario compartido para
@@ -522,6 +544,8 @@ const RANGE_PRESETS = [
 // independiente — una única fecha, se aplica y cierra al momento, sin
 // pasar por "Desde" primero.
 export function DateRangePicker({ from, to, onChange }) {
+  const { t, months, weekdays } = useCalendarLabels();
+  const presets = RANGE_PRESET_DEFS.map((p) => ({ ...p, label: t(`dateRangePicker.presets.${p.key}`) }));
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const [mode, setMode] = useState("range"); // "range" (vía Desde) | "end-only" (vía Hasta)
   const [step, setStep] = useState("from"); // "from" | "to"
@@ -571,24 +595,24 @@ export function DateRangePicker({ from, to, onChange }) {
   return (
     <div ref={anchorRef}>
       <div className={`${inputCls} flex min-h-11 w-full items-stretch gap-0 p-0`}>
-        <button type="button" onClick={openFrom} aria-label="Fecha desde" className="flex flex-1 items-center gap-1.5 truncate px-2.5 text-left">
+        <button type="button" onClick={openFrom} aria-label={t("dateRangePicker.fromAriaLabel")} className="flex flex-1 items-center gap-1.5 truncate px-2.5 text-left">
           <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
-          <span className={`truncate text-sm ${from ? "text-gray-800" : "text-gray-400"}`}>{from ? formatDMY(from) : "Desde"}</span>
+          <span className={`truncate text-sm ${from ? "text-gray-800" : "text-gray-400"}`}>{from ? formatDMY(from) : t("dateRangePicker.from")}</span>
         </button>
         <span className="flex items-center text-gray-300" aria-hidden="true"><ArrowRight size={13} /></span>
-        <button type="button" onClick={openTo} aria-label="Fecha hasta" className="flex flex-1 items-center truncate px-2.5 text-left">
-          <span className={`truncate text-sm ${to ? "text-gray-800" : "text-gray-400"}`}>{to ? formatDMY(to) : "Hasta"}</span>
+        <button type="button" onClick={openTo} aria-label={t("dateRangePicker.toAriaLabel")} className="flex flex-1 items-center truncate px-2.5 text-left">
+          <span className={`truncate text-sm ${to ? "text-gray-800" : "text-gray-400"}`}>{to ? formatDMY(to) : t("dateRangePicker.to")}</span>
         </button>
       </div>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label="Selector de rango de fechas" className="w-72 max-w-[90vw] p-3">
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("dateRangePicker.pickerAriaLabel")} className="w-72 max-w-[90vw] p-3">
         <p className="mb-2 text-xs font-medium text-gray-500">
-          {step === "from" ? "Elige la fecha de inicio" : mode === "range" ? "Elige la fecha de fin" : "Elige una fecha"}
+          {step === "from" ? t("dateRangePicker.chooseStart") : mode === "range" ? t("dateRangePicker.chooseEnd") : t("dateRangePicker.chooseDate")}
         </p>
         {mode === "range" && step === "from" && (
           <div className="mb-2 flex flex-wrap gap-1.5">
-            {RANGE_PRESETS.map((p) => (
+            {presets.map((p) => (
               <button
-                key={p.label} type="button" onClick={() => applyPreset(p)}
+                key={p.key} type="button" onClick={() => applyPreset(p)}
                 className="rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
               >
                 {p.label}
@@ -597,12 +621,12 @@ export function DateRangePicker({ from, to, onChange }) {
           </div>
         )}
         <div className="mb-2 flex items-center justify-between">
-          <button type="button" onClick={goPrev} aria-label="Mes anterior" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
-          <span className="text-sm font-semibold text-gray-800">{MONTHS_ES[viewM]} {viewY}</span>
-          <button type="button" onClick={goNext} aria-label="Mes siguiente" className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          <span className="text-sm font-semibold text-gray-800">{months[viewM]} {viewY}</span>
+          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
         </div>
         <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
-          {WEEKDAYS_ES.map((w) => <div key={w} className="py-1">{w}</div>)}
+          {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}
         </div>
         <div className="grid grid-cols-7 gap-0.5">
           {cells.map((d, i) => {
@@ -614,7 +638,7 @@ export function DateRangePicker({ from, to, onChange }) {
             return (
               <button
                 type="button" key={i} onClick={() => selectDay(dateStr)}
-                aria-label={`${d} de ${MONTHS_ES[viewM]}`}
+                aria-label={t("datePicker.dayAriaLabel", { day: d, month: months[viewM] })}
                 aria-selected={isEndpoint || undefined}
                 className="flex h-9 items-center justify-center text-xs transition-colors"
                 style={
@@ -635,7 +659,7 @@ export function DateRangePicker({ from, to, onChange }) {
             className="mt-2 w-full rounded-md py-2 text-xs font-semibold text-white"
             style={{ backgroundColor: TEAL }}
           >
-            OK — solo desde {formatDMY(from)}
+            {t("dateRangePicker.okFrom", { date: formatDMY(from) })}
           </button>
         )}
       </FloatingPanel>
@@ -689,9 +713,6 @@ export function MoneyLine({ totals, currencyRows }) {
   );
 }
 
-const CAL_MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const CAL_WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
-
 const CAL_NEUTRAL = "#94A3B8";
 
 // Vocabulario único de "tipo de movimiento" (Curso/Comisión/Ajuste),
@@ -736,6 +757,7 @@ export const MOVEMENT_TYPE_META = {
 // estos props (Resumen, que ya tiene su propio selector de periodo fuera
 // del calendario) el comportamiento visual es exactamente el de antes.
 export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, caption, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false, onCreateForDay, onPrevMonth, onNextMonth, onGoToday, isCurrentMonth = true }) {
+  const { t, months: CAL_MONTHS, weekdays: CAL_WEEKDAYS } = useCalendarLabels();
   const reducedMotion = usePrefersReducedMotion();
   // La selección se guarda junto con el mes al que pertenece (monthKey) en
   // vez de un simple número de día — necesario para navegación de meses
@@ -878,7 +900,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           <button
             type="button"
             onClick={onPrevMonth}
-            aria-label="Mes anterior"
+            aria-label={t("calendar.prevMonth")}
             className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
           >
             <ChevronLeft size={18} aria-hidden="true" />
@@ -891,14 +913,14 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
                 onClick={onGoToday}
                 className="min-h-7 rounded-full border border-gray-200 px-2 text-[11px] font-medium text-gray-500"
               >
-                Hoy
+                {t("calendar.today")}
               </button>
             )}
           </div>
           <button
             type="button"
             onClick={onNextMonth}
-            aria-label="Mes siguiente"
+            aria-label={t("calendar.nextMonth")}
             className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
           >
             <ChevronRight size={18} aria-hidden="true" />
@@ -909,7 +931,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
         <p className="mb-2 text-center text-[11px] text-gray-400">{caption}</p>
       )}
       <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-gray-400">
-        {CAL_WEEKDAYS.map((w) => <div key={w}>{w}</div>)}
+        {CAL_WEEKDAYS.map((w, i) => <div key={i}>{w}</div>)}
       </div>
       <div className="grid grid-cols-7 gap-1">
         {cells.map((d, i) => {
@@ -938,8 +960,8 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
               disabled={!d || (!hasActivity && !creatable)}
               onClick={handleClick}
               aria-label={
-                creatable ? `Añadir movimiento el ${d} de ${CAL_MONTHS[month]}${isToday ? " (hoy)" : ""}`
-                : isToday ? `${d} de ${CAL_MONTHS[month]} (hoy)`
+                creatable ? t(isToday ? "monthCalendar.addOnDayToday" : "monthCalendar.addOnDay", { day: d, month: CAL_MONTHS[month] })
+                : isToday ? t("monthCalendar.dayToday", { day: d, month: CAL_MONTHS[month] })
                 : undefined
               }
               className="flex h-11 flex-col items-center justify-center gap-0.5 transition-transform active:scale-90"
@@ -996,18 +1018,18 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
         <motion.div {...panelVariants(reducedMotion)} className="mt-3 overflow-hidden rounded-md bg-gray-50">
         <div className="p-3">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-600">Día {selectedDay} de {CAL_MONTHS[month]}</span>
+            <span className="text-xs font-semibold text-gray-600">{t("monthCalendar.dayHeading", { day: selectedDay, month: CAL_MONTHS[month] })}</span>
             <div className="flex items-center gap-1">
               {onCreateForDay && (
                 <button
                   onClick={() => onCreateForDay(`${year}-${pad2(month + 1)}-${pad2(selectedDay)}`)}
                   className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
-                  aria-label={`Añadir movimiento el ${selectedDay} de ${CAL_MONTHS[month]}`}
+                  aria-label={t("monthCalendar.addOnDay", { day: selectedDay, month: CAL_MONTHS[month] })}
                 >
                   <Plus size={16} aria-hidden="true" />
                 </button>
               )}
-              <button onClick={() => setSelectedDay(null)} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600" aria-label="Cerrar detalle del día"><X size={14} /></button>
+              <button onClick={() => setSelectedDay(null)} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600" aria-label={t("monthCalendar.closeDayDetail")}><X size={14} /></button>
             </div>
           </div>
 
@@ -1019,7 +1041,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
             // actividad, tabla) no lo necesitan porque agregan menos
             // información en primer lugar.
             <div className="mb-3 flex items-center justify-between border-b border-gray-200 pb-2">
-              <span className="text-xs font-medium text-gray-500">Generado el día</span>
+              <span className="text-xs font-medium text-gray-500">{t("monthCalendar.generatedOnDay")}</span>
               <span className="font-semibold" style={{ color: "#1F2937" }}>
                 <MoneyLine totals={dayTotals(dayList(selectedDay))} currencyRows={currencyRows} />
               </span>
@@ -1087,10 +1109,10 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-gray-400">
-                  <th className="pb-1.5 text-left font-medium">Curso</th>
-                  <th className="pb-1.5 text-left font-medium">Comentario</th>
-                  <th className="w-10 pb-1.5 text-center font-medium">Pers.</th>
-                  <th className="pb-1.5 text-right font-medium">Importe</th>
+                  <th className="pb-1.5 text-left font-medium">{t("monthCalendar.table.course")}</th>
+                  <th className="pb-1.5 text-left font-medium">{t("monthCalendar.table.comment")}</th>
+                  <th className="w-10 pb-1.5 text-center font-medium">{t("monthCalendar.table.people")}</th>
+                  <th className="pb-1.5 text-right font-medium">{t("monthCalendar.table.amount")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -1447,6 +1469,7 @@ export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }
 }
 
 export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, deleteDisabledReason }) {
+  const { t } = useTranslation("common");
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   // Cierra el menú "⋯" en el mismo instante en que se CONFIRMA el borrado
   // dentro del diálogo — no al pulsar "Eliminar" en el menú, porque eso
@@ -1467,7 +1490,7 @@ export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, d
         ref={anchorRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label="Más acciones"
+        aria-label={t("rowMenu.moreActions")}
         aria-haspopup="menu"
         aria-expanded={open}
         className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-gray-300 hover:text-gray-600"
@@ -1480,7 +1503,7 @@ export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, d
           onClick={() => { setOpen(false); onEdit(); }}
           className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-gray-700 hover:bg-gray-50"
         >
-          <Pencil size={14} aria-hidden="true" /> Editar
+          <Pencil size={14} aria-hidden="true" /> {t("rowMenu.edit")}
         </button>
         {/* optimistic: el diálogo cierra al instante en vez de esperar al
             borrado real — así una animación de salida de la fila (si la
@@ -1493,7 +1516,7 @@ export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, d
             title={deleteDisabledReason}
             className="flex min-h-11 w-full cursor-not-allowed items-center gap-2 px-3 text-left text-sm text-gray-300"
           >
-            <Trash2 size={14} aria-hidden="true" /> Eliminar
+            <Trash2 size={14} aria-hidden="true" /> {t("rowMenu.delete")}
           </div>
         ) : (
           <DeleteButton variant="menuItem" onConfirm={handleDeleteConfirmed} itemLabel={itemLabel} optimistic />
@@ -1511,6 +1534,7 @@ export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, d
 // panel ancho podía tapar el siguiente campo y el toque no llegaba a la
 // opción real.
 export function Select({ value, onChange, options, placeholder, label, className = "" }) {
+  const { t } = useTranslation("common");
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
 
   return (
@@ -1524,7 +1548,7 @@ export function Select({ value, onChange, options, placeholder, label, className
         aria-label={label || placeholder}
         className={`${inputCls} flex min-h-11 w-full items-center justify-between gap-2 text-left ${className}`}
       >
-        <span className={`truncate ${value ? "text-gray-800" : "text-gray-400"}`}>{value || placeholder || "Selecciona..."}</span>
+        <span className={`truncate ${value ? "text-gray-800" : "text-gray-400"}`}>{value || placeholder || t("select.placeholder")}</span>
         <ChevronDown size={15} className={`shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
       </button>
       <FloatingPanel open={open} pos={pos} panelRef={panelRef} role="listbox" className="max-h-60 min-w-max overflow-y-auto py-1">
@@ -1560,13 +1584,15 @@ export function Select({ value, onChange, options, placeholder, label, className
 
 // Selector de selección múltiple — para filtros de Actividad (puedes
 // querer ver varias a la vez). value es un array; [] = "todas".
-export function MultiSelect({ value = [], onChange, options, placeholder = "Todas" }) {
+export function MultiSelect({ value = [], onChange, options, placeholder }) {
+  const { t } = useTranslation("common");
+  const resolvedPlaceholder = placeholder || t("multiSelect.placeholder");
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
 
   const toggle = (o) => {
     onChange(value.includes(o) ? value.filter((v) => v !== o) : [...value, o]);
   };
-  const label = value.length === 0 ? placeholder : value.length === 1 ? value[0] : `${value.length} seleccionadas`;
+  const label = value.length === 0 ? resolvedPlaceholder : value.length === 1 ? value[0] : t("multiSelect.selectedCount", { count: value.length });
 
   return (
     <>
@@ -1576,7 +1602,7 @@ export function MultiSelect({ value = [], onChange, options, placeholder = "Toda
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={placeholder}
+        aria-label={resolvedPlaceholder}
         className={`${inputCls} flex min-h-11 w-full items-center justify-between gap-2 text-left`}
       >
         <span className={`truncate ${value.length ? "text-gray-800" : "text-gray-400"}`}>{label}</span>
@@ -1585,7 +1611,7 @@ export function MultiSelect({ value = [], onChange, options, placeholder = "Toda
       <FloatingPanel open={open} pos={pos} panelRef={panelRef} role="listbox" aria-multiselectable="true" className="max-h-64 min-w-max overflow-y-auto py-1">
         {value.length > 0 && (
           <button type="button" onClick={() => onChange([])} className="block min-h-9 w-full px-3 py-1.5 text-left text-xs font-medium text-gray-400 hover:bg-gray-50">
-            Limpiar selección
+            {t("multiSelect.clearSelection")}
           </button>
         )}
         {options.map((o) => {
@@ -1625,6 +1651,7 @@ function normalizeSearch(s) {
 // Combobox con buscador — listas largas (Moneda: 144 opciones).
 // options: [{ value, label }]
 export function SearchSelect({ value, onChange, options, placeholder }) {
+  const { t } = useTranslation("common");
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const [query, setQuery] = useState("");
   const selected = options.find((o) => o.value === value);
@@ -1639,14 +1666,14 @@ export function SearchSelect({ value, onChange, options, placeholder }) {
         value={open ? query : (selected ? selected.label : "")}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => { setQuery(""); setOpen(true); }}
-        placeholder={placeholder || "Buscar..."}
-        aria-label={placeholder || "Buscar"}
+        placeholder={placeholder || t("searchSelect.placeholder")}
+        aria-label={placeholder || t("searchSelect.ariaLabel")}
         aria-haspopup="listbox"
         aria-expanded={open}
         className={`${inputCls} min-h-11 w-full`}
       />
       <FloatingPanel open={open} pos={pos} panelRef={panelRef} role="listbox" className="max-h-60 overflow-y-auto py-1">
-        {filtered.length === 0 && <div className="px-3 py-2 text-sm text-gray-400">Sin resultados</div>}
+        {filtered.length === 0 && <div className="px-3 py-2 text-sm text-gray-400">{t("searchSelect.noResults")}</div>}
         {filtered.slice(0, 200).map((o) => (
           <button
             key={o.value}
@@ -1678,36 +1705,38 @@ export function SearchSelect({ value, onChange, options, placeholder }) {
 
 // Buscador de moneda listo para usar en cualquier formulario.
 export function CurrencySearchSelect({ value, onChange, currencyRows, placeholder }) {
+  const { t } = useTranslation("common");
   const choices = currencyRows.map((c) => ({ value: c.code, label: `${c.code} — ${c.name} (${c.symbol})` }));
-  return <SearchSelect value={value} onChange={onChange} options={choices} placeholder={placeholder || "Buscar moneda..."} />;
+  return <SearchSelect value={value} onChange={onChange} options={choices} placeholder={placeholder || t("currencySearchSelect.placeholder")} />;
 }
 
 // Barra de filtros reutilizable: fecha desde/hasta, escuela, y actividad
 // (opcional, selección múltiple). Grid fijo en móvil para que nunca
 // desborde ni empuje scroll lateral — nada de flex-wrap suelto.
 export function ListFilterBar({ filters, setFilters, schoolOptions, activityOptions }) {
+  const { t } = useTranslation("common");
   const hasFilters = filters.from || filters.to || filters.school || (filters.activity && filters.activity.length > 0);
   return (
     <div className="border-t border-gray-100 bg-gray-50/60 px-4 py-3">
       <div className="grid grid-cols-2 gap-2">
-        <Field label="Desde">
-          <DatePicker value={filters.from} onChange={(v) => setFilters({ ...filters, from: v })} placeholder="Sin límite" />
+        <Field label={t("listFilterBar.from")}>
+          <DatePicker value={filters.from} onChange={(v) => setFilters({ ...filters, from: v })} placeholder={t("listFilterBar.noLimit")} />
         </Field>
-        <Field label="Hasta">
-          <DatePicker value={filters.to} onChange={(v) => setFilters({ ...filters, to: v })} placeholder="Sin límite" />
+        <Field label={t("listFilterBar.to")}>
+          <DatePicker value={filters.to} onChange={(v) => setFilters({ ...filters, to: v })} placeholder={t("listFilterBar.noLimit")} />
         </Field>
-        <Field label="Escuela">
-          <Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={schoolOptions} placeholder="Todas" />
+        <Field label={t("listFilterBar.school")}>
+          <Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={schoolOptions} placeholder={t("listFilterBar.all")} />
         </Field>
         {activityOptions && (
-          <Field label="Actividad">
-            <MultiSelect value={filters.activity || []} onChange={(v) => setFilters({ ...filters, activity: v })} options={activityOptions} placeholder="Todas" />
+          <Field label={t("listFilterBar.activity")}>
+            <MultiSelect value={filters.activity || []} onChange={(v) => setFilters({ ...filters, activity: v })} options={activityOptions} placeholder={t("listFilterBar.all")} />
           </Field>
         )}
       </div>
       {hasFilters && (
         <button onClick={() => setFilters({ ...filters, from: "", to: "", school: "", activity: [] })} className="mt-2 min-h-9 text-xs font-medium text-gray-400 hover:text-gray-600">
-          Limpiar filtros
+          {t("listFilterBar.clearFilters")}
         </button>
       )}
     </div>
@@ -1799,6 +1828,7 @@ export function StatusPill({ status, paymentStatusRows }) {
 }
 
 export function StatusSwitch({ value, onChange, paymentStatusRows }) {
+  const { t } = useTranslation("common");
   const current = paymentStatusRows.find((s) => s.name === value);
   const color = current?.color || "#6B7280";
   const knobRight = current ? !current.is_default : false;
@@ -1808,9 +1838,9 @@ export function StatusSwitch({ value, onChange, paymentStatusRows }) {
       type="button"
       role="switch"
       aria-checked={knobRight}
-      aria-label={`Estado: ${value}. Pulsa para pasar a ${nextValue}`}
+      aria-label={t("statusSwitch.ariaLabel", { value, next: nextValue })}
       onClick={() => onChange(nextValue)}
-      title={`${value} — clic para pasar a "${nextValue}"`}
+      title={t("statusSwitch.title", { value, next: nextValue })}
       className="relative -m-2 flex shrink-0 items-center justify-center p-2"
       style={{ minHeight: 36, minWidth: 52 }}
     >

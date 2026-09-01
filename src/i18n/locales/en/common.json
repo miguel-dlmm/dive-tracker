@@ -1,1 +1,75 @@
-{}
+{
+  "loading": { "defaultLabel": "Loading" },
+  "movementTypes": {
+    "ganado": "Course",
+    "comision": "Commission",
+    "companeros": "Adjustment"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "Pending to collect",
+    "empty": "Nothing pending",
+    "count_one": "{{count}} pending payment",
+    "count_other": "{{count}} pending payments",
+    "addMovement": "Add entry"
+  },
+  "confirmDialog": { "cancel": "Cancel", "defaultConfirmLabel": "Delete" },
+  "editActions": { "defaultSaveLabel": "Save", "cancel": "Cancel" },
+  "deleteButton": {
+    "defaultLabel": "Delete",
+    "defaultItemLabel": "this item",
+    "deletedToast": "Deleted",
+    "errorToast": "Couldn't delete it. Please try again.",
+    "confirmTitle": "Delete this entry?",
+    "confirmMessage": "You're about to delete {{item}}. This can't be undone."
+  },
+  "field": { "hideHelp": "Hide help", "help": "Help" },
+  "calendar": {
+    "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+    "weekdays": ["M", "T", "W", "T", "F", "S", "S"],
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "today": "Today"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "Date",
+    "defaultAriaLabel": "Pick a date",
+    "pickerAriaLabel": "Date picker",
+    "dayAriaLabel": "{{month}} {{day}}"
+  },
+  "dateRangePicker": {
+    "from": "From",
+    "to": "To",
+    "fromAriaLabel": "From date",
+    "toAriaLabel": "To date",
+    "pickerAriaLabel": "Date range picker",
+    "chooseStart": "Choose the start date",
+    "chooseEnd": "Choose the end date",
+    "chooseDate": "Choose a date",
+    "okFrom": "OK — from {{date}} only",
+    "presets": { "today": "Today", "thisWeek": "This week", "thisMonth": "This month", "last30Days": "Last 30 days" }
+  },
+  "monthCalendar": {
+    "addOnDay": "Add an entry on {{month}} {{day}}",
+    "addOnDayToday": "Add an entry on {{month}} {{day}} (today)",
+    "dayToday": "{{month}} {{day}} (today)",
+    "closeDayDetail": "Close day detail",
+    "dayHeading": "{{month}} {{day}}",
+    "generatedOnDay": "Generated that day",
+    "table": { "course": "Course", "comment": "Note", "people": "People", "amount": "Amount" }
+  },
+  "select": { "placeholder": "Select..." },
+  "multiSelect": { "placeholder": "All", "clearSelection": "Clear selection", "selectedCount": "{{count}} selected" },
+  "searchSelect": { "placeholder": "Search...", "ariaLabel": "Search", "noResults": "No results" },
+  "currencySearchSelect": { "placeholder": "Search currency..." },
+  "listFilterBar": {
+    "from": "From",
+    "to": "To",
+    "school": "School",
+    "activity": "Activity",
+    "noLimit": "No limit",
+    "all": "All",
+    "clearFilters": "Clear filters"
+  },
+  "rowMenu": { "moreActions": "More actions", "edit": "Edit", "delete": "Delete" },
+  "statusSwitch": { "ariaLabel": "Status: {{value}}. Tap to switch to {{next}}", "title": "{{value}} — click to switch to \"{{next}}\"" }
+}
