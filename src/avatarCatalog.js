@@ -1,4 +1,4 @@
-import { Waves, Anchor, Sailboat, Fish, Turtle, Compass, Ship, Shell, LifeBuoy, Droplets } from "lucide-react";
+import { Anchor, Sailboat, Fish, Turtle, Compass, Ship, Shell, LifeBuoy, Droplets, Sunrise } from "lucide-react";
 import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN } from "./colors";
 
 // Catálogo cerrado de avatares (Bloque 5) — mismo criterio que el icono de
@@ -8,8 +8,15 @@ import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN } from "./colors";
 // una app de un único instructor por cuenta, no necesita ser una foto real.
 // Set de iconos DISTINTO del de "icono de carga" a propósito — que no se
 // confunda un avatar con el spinner de la app.
+//
+// Waves NO está en esta lista a propósito (corrección 2026-09-01): es el
+// icono de la propia app (favicon, login, spinner de carga — ver
+// EnvironmentIndicator.jsx/index.html) — un avatar de usuario con el mismo
+// icono se confundía visualmente con la identidad de la app. Sunrise lo
+// sustituye 1:1 (10 iconos, mismo tamaño de catálogo): salidas de barco al
+// amanecer es una imagen habitual del día a día de un instructor de buceo,
+// y no se solapa conceptualmente con ningún otro icono ya presente.
 export const AVATAR_ICONS = [
-  { name: "Waves", Icon: Waves },
   { name: "Anchor", Icon: Anchor },
   { name: "Sailboat", Icon: Sailboat },
   { name: "Fish", Icon: Fish },
@@ -19,6 +26,7 @@ export const AVATAR_ICONS = [
   { name: "Shell", Icon: Shell },
   { name: "LifeBuoy", Icon: LifeBuoy },
   { name: "Droplets", Icon: Droplets },
+  { name: "Sunrise", Icon: Sunrise },
 ];
 
 export const AVATAR_COLORS = [
