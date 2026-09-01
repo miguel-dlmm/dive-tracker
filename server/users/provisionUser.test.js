@@ -12,12 +12,21 @@ import { sendActivationEmail } from "../email/EmailService.js";
 
 const ARGS = { email: "diver@example.com", first_name: "Ada", last_name: "Lovelace", nickname: "ada", dataset_key: "ihasia" };
 
-function makeClient({ createUserResult = { data: { user: { id: "new-user-1" } }, error: null }, cloneResult = { error: null }, generateLinkResult = { data: { properties: { hashed_token: "hashed-token-abc" } }, error: null } } = {}) {
+function makeClient({
+  createUserResult = { data: { user: { id: "new-user-1" } }, error: null },
+  cloneResult = { error: null },
+  generateLinkResult = { data: { properties: { hashed_token: "hashed-token-abc" } }, error: null },
+  nicknameLookupResult = { data: null, error: null },
+} = {}) {
   const createUser = vi.fn().mockResolvedValue(createUserResult);
   const generateLink = vi.fn().mockResolvedValue(generateLinkResult);
   const deleteUser = vi.fn().mockResolvedValue({ error: null });
   const rpc = vi.fn().mockResolvedValue(cloneResult);
-  return { auth: { admin: { createUser, generateLink, deleteUser } }, rpc };
+  const maybeSingle = vi.fn().mockResolvedValue(nicknameLookupResult);
+  const ilike = vi.fn(() => ({ maybeSingle }));
+  const select = vi.fn(() => ({ ilike }));
+  const from = vi.fn(() => ({ select }));
+  return { auth: { admin: { createUser, generateLink, deleteUser } }, rpc, from, __mocks: { select, ilike, maybeSingle } };
 }
 
 beforeEach(() => {
@@ -101,4 +110,53 @@ it("email_sent:false con action_link cuando el envío falla — la cuenta ya est
   expect(result.email_sent).toBe(false);
   expect(result.email_error).toBe("Configuración de email incompleta.");
   expect(result.action_link).toContain("hashed-token-abc");
+});
+
+// GoTrue nunca propaga el texto real del error de Postgres cuando
+// handle_new_user() falla dentro de client.auth.admin.createUser() — solo
+// devuelve el genérico "Database error creating new user", sin el nombre
+// de la constraint. Confirmado en vivo probando el registro externo
+// (2026-09-01): friendlyError() nunca llegaba a ver
+// "profiles_nickname_no_at" en ese mensaje. Por eso provisionUser() valida
+// el nickname ANTES de llamar a Supabase Auth, sin depender de lo que
+// GoTrue decida devolver.
+describe("validación de nickname antes de tocar Supabase Auth", () => {
+  it("rechaza un nickname con '@' sin llegar a llamar a createUser", async () => {
+    const client = makeClient();
+    getServiceRoleClient.mockReturnValue(client);
+
+    const result = await provisionUser({ ...ARGS, nickname: "correo@example.com" });
+
+    expect(result).toEqual({ error: new Error('El nickname no puede contener "@".') });
+    expect(client.auth.admin.createUser).not.toHaveBeenCalled();
+  });
+
+  it("rechaza un nickname ya en uso (comprobación case-insensitive) sin llegar a llamar a createUser", async () => {
+    const client = makeClient({ nicknameLookupResult: { data: { user_id: "existing-user" }, error: null } });
+    getServiceRoleClient.mockReturnValue(client);
+
+    const result = await provisionUser({ ...ARGS, nickname: "ADA" });
+
+    expect(result).toEqual({ error: new Error("Ese nickname ya está en uso.") });
+    expect(client.__mocks.ilike).toHaveBeenCalledWith("nickname", "ADA");
+    expect(client.auth.admin.createUser).not.toHaveBeenCalled();
+  });
+
+  it("escapa comodines de ilike (%, _, \\) antes de comprobar el nickname", async () => {
+    const client = makeClient();
+    getServiceRoleClient.mockReturnValue(client);
+
+    await provisionUser({ ...ARGS, nickname: "a_b%c" });
+
+    expect(client.__mocks.ilike).toHaveBeenCalledWith("nickname", "a\\_b\\%c");
+  });
+
+  it("un fallo al comprobar disponibilidad no bloquea el alta — createUser() sigue como último recurso", async () => {
+    const client = makeClient({ nicknameLookupResult: { data: null, error: { message: "timeout" } } });
+    getServiceRoleClient.mockReturnValue(client);
+
+    await provisionUser(ARGS);
+
+    expect(client.auth.admin.createUser).toHaveBeenCalled();
+  });
 });

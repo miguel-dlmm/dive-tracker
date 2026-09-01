@@ -109,6 +109,14 @@ it("propaga el error de provisionUser traducido con friendlyError", async () => 
   expect(result).toEqual({ status: 400, payload: { error: "unknown setup dataset: x" } });
 });
 
+it("email ya registrado: responde igual que un alta con éxito, sin revelar que la cuenta ya existía (anti-enumeración, ADR-0022)", async () => {
+  provisionUser.mockResolvedValue({ error: { message: "A user with this email address has already been registered" } });
+
+  const result = await handleExternalRegister(request());
+
+  expect(result).toEqual({ status: 200, payload: { email_sent: true } });
+});
+
 it("incluye action_link en la respuesta si el email no se pudo enviar", async () => {
   provisionUser.mockResolvedValue({ user_id: "new-user-1", email_sent: false, email_error: "Configuración de email incompleta.", action_link: "https://app.example/activate?token=x" });
 

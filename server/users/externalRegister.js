@@ -18,6 +18,15 @@ import { provisionUser, friendlyError } from "./provisionUser.js";
 //    legales, todo vía activateAccount() ya existente), pero el email deja
 //    claro que la cuenta se autoregistró, no que un admin la dio de alta.
 
+// GoTrue devuelve este mensaje (en inglés, sin traducir) cuando el email ya
+// tiene cuenta — descubierto probando el flujo real en el navegador
+// (2026-09-01). Dejarlo pasar tal cual a la respuesta pública sería la
+// misma vulnerabilidad de enumeración de usuarios que ADR-0022 evitó a
+// propósito para "olvidé mi contraseña": cualquiera podría probar emails
+// uno a uno contra este formulario y saber, por la respuesta, cuáles ya
+// tienen cuenta en Ocean Flow.
+const EMAIL_ALREADY_REGISTERED = "already been registered";
+
 function parseBody(body) {
   if (body == null) return {};
   if (typeof body !== "string") return body;
@@ -82,6 +91,11 @@ export async function handleExternalRegister({ method, body }) {
     reason: "external_signup",
   });
   if (result.error) {
+    if (result.error.message?.includes(EMAIL_ALREADY_REGISTERED)) {
+      // Misma respuesta que un alta con éxito, sin crear nada nuevo ni
+      // reenviar ningún email — nunca revela que ese email ya existía.
+      return { status: 200, payload: { email_sent: true } };
+    }
     console.error(result.error);
     return { status: 400, payload: { error: friendlyError(result.error.message) } };
   }

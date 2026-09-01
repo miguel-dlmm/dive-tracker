@@ -140,7 +140,13 @@ describe("con permisos válidos", () => {
     });
     deleteUser = vi.fn().mockResolvedValue({ error: null });
     rpc = vi.fn().mockResolvedValue({ error: null });
-    getServiceRoleClient.mockReturnValue({ auth: { admin: { createUser, generateLink, deleteUser } }, rpc });
+    // .from("profiles")...maybeSingle(): comprobación de nickname
+    // disponible que provisionUser.js hace antes de llamar a createUser()
+    // (ver server/users/provisionUser.js) — sin existir para este test,
+    // se asume "nickname libre" (data: null) en todos los casos salvo que
+    // un test concreto la sobrescriba.
+    const from = vi.fn(() => ({ select: vi.fn(() => ({ ilike: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }) })) })) }));
+    getServiceRoleClient.mockReturnValue({ auth: { admin: { createUser, generateLink, deleteUser } }, rpc, from });
     sendActivationEmail.mockReset();
     sendActivationEmail.mockResolvedValue({ sent: true });
   });

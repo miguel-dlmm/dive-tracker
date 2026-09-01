@@ -52,6 +52,19 @@ it("si el servidor responde con error (p. ej. registro externo desactivado), lo 
   expect(screen.queryByText(/Te hemos enviado un email/)).not.toBeInTheDocument();
 });
 
+it("un nickname con '@' muestra el aviso, deshabilita el envío y no llama a fetch", async () => {
+  const user = userEvent.setup();
+  renderWithToast(<RegisterScreen onBack={vi.fn()} />);
+
+  await user.type(screen.getByLabelText("Email"), "diver@example.com");
+  await user.type(screen.getByLabelText("Nickname"), "diver@example.com");
+
+  expect(screen.getByText('El nickname no puede contener "@".')).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Registrarme" })).toBeDisabled();
+  await user.click(screen.getByRole("button", { name: "Registrarme" }));
+  expect(global.fetch).not.toHaveBeenCalled();
+});
+
 it("si el email no se pudo enviar (email_sent:false), avisa por toast y no pasa a la confirmación", async () => {
   global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ email_sent: false }) });
   const user = userEvent.setup();

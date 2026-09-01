@@ -14,6 +14,15 @@ const CONFIRMATION_MESSAGE = "Te hemos enviado un email para confirmar tu cuenta
 
 const emptyForm = { email: "", first_name: "", last_name: "", nickname: "" };
 
+// El servidor rechaza igual un nickname con "@" (profiles_nickname_no_at,
+// ver schema.sql) — esta validación es solo para dar feedback inmediato
+// antes de enviar, no la única barrera. Motivo real de tenerla aquí:
+// autoComplete="username" en el campo de abajo hace que Chrome sugiera a
+// veces un email guardado (mucha gente usa su email como "username" en
+// otros sitios) — sin este aviso, quien acepta esa sugerencia por error
+// solo se enteraría al fallar el envío.
+const NICKNAME_AT_ERROR = 'El nickname no puede contener "@".';
+
 export default function RegisterScreen({ onBack }) {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
@@ -22,10 +31,11 @@ export default function RegisterScreen({ onBack }) {
   const toast = useToast();
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const nicknameHasAt = form.nickname.includes("@");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.email || !form.nickname) return;
+    if (!form.email || !form.nickname || nicknameHasAt) return;
     setLoading(true);
     setError("");
     try {
@@ -103,12 +113,13 @@ export default function RegisterScreen({ onBack }) {
             <Field label="Nickname">
               <input type="text" value={form.nickname} onChange={set("nickname")} autoComplete="username" required className={`${inputCls} w-full`} />
             </Field>
+            {nicknameHasAt && <p role="alert" className="text-sm text-red-600">{NICKNAME_AT_ERROR}</p>}
 
             {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || nicknameHasAt}
               className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white disabled:opacity-70"
               style={{ backgroundColor: TEAL }}
             >

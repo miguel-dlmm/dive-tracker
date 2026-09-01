@@ -16,6 +16,37 @@ export function friendlyError(message) {
   return message;
 }
 
+// Valida el nickname ANTES de llamar a Supabase Auth — necesario porque
+// handle_new_user() (el trigger que crea la fila de profiles) corre dentro
+// de la transacción interna de client.auth.admin.createUser(), y GoTrue
+// nunca propaga el texto real del error de Postgres cuando ese trigger
+// falla: siempre lo envuelve en un "Database error creating new user"
+// genérico, sin el nombre de la constraint. friendlyError() de arriba
+// (pensada para traducir mensajes de Postgres reales) nunca llega a ver
+// "profiles_nickname_no_at" ni "profiles_nickname_lower_key" en ese caso —
+// confirmado en vivo probando el registro externo (2026-09-01). Por eso
+// estas dos reglas, que YA existen como constraints de base de datos, se
+// repiten aquí en JS: es la única forma de dar un mensaje útil en vez del
+// genérico de GoTrue. Devuelve un mensaje de error (ya en el formato de
+// friendlyError, listo para mostrar) o null si el nickname es válido.
+async function validateNickname(client, nickname) {
+  if (nickname.includes("@")) return 'El nickname no puede contener "@".';
+  // Escapa % / _ / \ antes de usarlos en ilike (si no, actuarían como
+  // comodines de LIKE en vez de caracteres literales del nickname) — el
+  // índice real (profiles_nickname_lower_key) es case-insensitive pero
+  // nunca de comodines, así que la comprobación debe ser exacta salvo
+  // mayúsculas/minúsculas.
+  const escaped = nickname.replace(/[\\%_]/g, (c) => `\\${c}`);
+  const { data: existing, error } = await client
+    .from("profiles")
+    .select("user_id")
+    .ilike("nickname", escaped)
+    .maybeSingle();
+  if (error) return null; // no bloquea el alta por un fallo al comprobar — createUser() lo detectaría igual como último recurso
+  if (existing) return "Ese nickname ya está en uso.";
+  return null;
+}
+
 // Núcleo compartido de "dar de alta un usuario nuevo": crea la cuenta en
 // Supabase Auth (sin contraseña — el acceso depende exclusivamente del
 // enlace de primer acceso, ver CreatePasswordScreen), clona el dataset
@@ -35,6 +66,11 @@ export function friendlyError(message) {
 // en false, sin importar el origen de la llamada.
 export async function provisionUser({ email, first_name, last_name, nickname, dataset_key, reason = "signup" }) {
   const client = getServiceRoleClient();
+
+  const nicknameError = await validateNickname(client, nickname);
+  if (nicknameError) {
+    return { error: new Error(nicknameError) };
+  }
 
   const { data: created, error: createError } = await client.auth.admin.createUser({
     email,
