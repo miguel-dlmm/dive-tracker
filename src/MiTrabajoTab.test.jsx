@@ -325,6 +325,32 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     expect(screen.queryByText(helpText)).not.toBeInTheDocument();
   });
 
+  // Bug real reportado por el usuario: en Safari iOS, el teclado numérico
+  // de inputMode="decimal" no tiene tecla de signo menos, así que era
+  // imposible escribir un importe negativo a mano en Ajuste de curso — el
+  // único movimiento donde un negativo tiene sentido (pagas tú al
+  // compañero). Botón +/- como camino alternativo que no depende de esa
+  // tecla (MoneyInput, shared.jsx, prop allowNegative).
+  it("el campo Importe de Ajuste de curso tiene un botón +/- para poner un importe negativo sin depender del teclado", async () => {
+    const user = userEvent.setup();
+    renderMiTrabajo({});
+
+    await user.click(screen.getByRole("button", { name: "Añadir" }));
+    await user.click(screen.getByRole("tab", { name: /Ajuste de curso/ }));
+
+    const importeInput = screen.getByPlaceholderText("90 ó -30");
+    await user.type(importeInput, "30");
+    expect(screen.getByRole("button", { name: "Cambiar a negativo" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cambiar a negativo" }));
+    expect(importeInput.value).toMatch(/^-30/); // formateado (2 decimales) al perder el foco al pulsar el botón
+    expect(screen.getByRole("button", { name: "Cambiar a positivo" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cambiar a positivo" }));
+    expect(importeInput.value).toMatch(/^30/);
+    expect(importeInput.value).not.toMatch(/^-/);
+  });
+
   it("añadir tarifa se expande dentro de la misma hoja (no abre un segundo modal) y guarda la tarifa nueva", async () => {
     const user = userEvent.setup();
     const { rates } = renderMiTrabajo({});
