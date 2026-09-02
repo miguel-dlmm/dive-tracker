@@ -47,7 +47,14 @@ export function computeConcatenatedLayout(pageSizes, gap = PAGE_GAP) {
  * @returns {Promise<Uint8Array>} bytes JPEG
  */
 export async function renderPdfToJpgBytes(pdfBytes, { scale = DEFAULT_SCALE } = {}) {
-  const doc = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+  // disableImageDecoder: pdfjs-dist 6.x usa por defecto la ImageDecoder de
+  // WebCodecs para decodificar imágenes — bug real reportado por el
+  // usuario en Safari real (preview de Vercel): "TypeError: undefined is
+  // not a constructor (evaluating 'new Rr')", porque WebCodecs no está
+  // soportado de forma fiable en Safari. Opción oficial de pdf.js (desde
+  // 4.9.124) para volver al decodificador JS interno, sin ese requisito —
+  // ver https://github.com/mozilla/pdf.js/issues/19060.
+  const doc = await pdfjsLib.getDocument({ data: pdfBytes, disableImageDecoder: true }).promise;
   const pageCanvases = [];
   for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
     // eslint-disable-next-line no-await-in-loop -- cada página depende del mismo PDFDocumentProxy, no son independientes

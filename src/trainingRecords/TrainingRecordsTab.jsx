@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, UserPlus, Pencil, FileText, ImageDown, AlertTriangle } from "lucide-react";
+import { Plus, UserPlus, Pencil, FileText, ImageDown, AlertTriangle, Share2 } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { useToast, Fab, RowMenu } from "../shared";
 import { TEAL } from "../App";
@@ -28,6 +28,24 @@ import { TEAL } from "../App";
 import StudentRecordSheet from "./StudentRecordSheet";
 
 const SESSION_KEY = "oceanpulse:trainingRecordsSession";
+
+// Orden de aparición pedido explícito del usuario (2026-09-02) — no
+// alfabético ni por código: el progreso natural de un instructor SSI
+// (Open Water primero, después Advanced, después las especialidades).
+// Vive aquí, no en la tabla de Supabase: soportar una plantilla nueva ya
+// exige tocar código (TEMPLATE_FIELD_MAPS, templateFieldMaps.js), así que
+// su orden de aparición es una decisión de código igual que el resto de
+// su configuración, no un dato de negocio editable desde Configuración.
+// Cualquier código no listado aquí aparece al final, en el orden en que
+// llegue de Supabase.
+const TEMPLATE_DISPLAY_ORDER = ["OWD", "AOWD", "SC-EAN", "SC-DD"];
+function sortTemplatesForDisplay(templates) {
+  return [...templates].sort((a, b) => {
+    const ia = TEMPLATE_DISPLAY_ORDER.indexOf(a.code);
+    const ib = TEMPLATE_DISPLAY_ORDER.indexOf(b.code);
+    return (ia === -1 ? TEMPLATE_DISPLAY_ORDER.length : ia) - (ib === -1 ? TEMPLATE_DISPLAY_ORDER.length : ib);
+  });
+}
 
 function bytesToBase64(bytes) {
   let binary = "";
@@ -82,6 +100,24 @@ function filenameFor(student, ext = "pdf") {
   return `${safeFilePart(student.firstName)}_${safeFilePart(student.lastName)}_${student.templateCode}.${ext}`;
 }
 
+// Compartir por WhatsApp/email, pedido explícito del usuario — un único
+// icono que abre la hoja de compartir NATIVA del móvil (Web Share API con
+// archivo adjunto) en vez de un botón por canal: WhatsApp Web no soporta
+// adjuntar un archivo desde un enlace (abriría un chat vacío, obligando a
+// adjuntar a mano igualmente), así que un botón "WhatsApp" aparte no
+// aportaría nada que la hoja nativa no dé ya, con menos botones y más
+// opciones (WhatsApp, email, AirDrop, Mensajes...). Solo se ofrece si el
+// navegador soporta compartir archivos — si no, el icono ni aparece
+// (el PDF/JPG ya se pueden descargar con los iconos de al lado).
+function canShareFiles() {
+  if (typeof navigator === "undefined" || !navigator.share || !navigator.canShare) return false;
+  try {
+    return navigator.canShare({ files: [new File([""], "test.pdf", { type: "application/pdf" })] });
+  } catch {
+    return false;
+  }
+}
+
 function formatGeneratedAt(timestamp, locale) {
   return new Date(timestamp).toLocaleString(locale === "en" ? "en-GB" : "es-ES", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
@@ -125,7 +161,7 @@ function InstructorMissingNotice({ onOpenProfile }) {
 // en un menú "⋯". PDF/JPG solo aparecen una vez generado el documento (no
 // hay nada que descargar antes); Editar siempre está disponible. La fecha
 // y hora de la última generación se muestra bajo el nombre.
-function RosterRow({ student, locale, onEdit, onDelete, onDownloadPdf, onDownloadJpg }) {
+function RosterRow({ student, locale, onEdit, onDelete, onDownloadPdf, onDownloadJpg, onShare }) {
   const { t } = useTranslation("trainingRecords");
   const hasGenerated = !!student.pdfBytes;
   return (
@@ -148,6 +184,11 @@ function RosterRow({ student, locale, onEdit, onDelete, onDownloadPdf, onDownloa
           <button onClick={() => onDownloadJpg(student)} aria-label={t("roster.descargarJpg")} title={t("roster.descargarJpg")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
             <ImageDown size={17} aria-hidden="true" />
           </button>
+          {onShare && (
+            <button onClick={() => onShare(student)} aria-label={t("roster.compartir")} title={t("roster.compartir")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
+              <Share2 size={17} aria-hidden="true" />
+            </button>
+          )}
         </>
       )}
       <RowMenu onEdit={() => onEdit(student)} onDelete={() => onDelete(student)} itemLabel={`"${student.firstName} ${student.lastName}"`} />
@@ -173,7 +214,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     ]).then(([templatesRes, adventuresRes]) => {
       if (!active) return;
       if (templatesRes.error) { console.error(templatesRes.error); toast?.error(t("noSePudieronCargarPlantillas")); }
-      else setTemplates(templatesRes.data || []);
+      else setTemplates(sortTemplatesForDisplay(templatesRes.data || []));
       if (adventuresRes.error) console.error(adventuresRes.error);
       else setAdventures(adventuresRes.data || []);
       setLoading(false);
@@ -229,6 +270,20 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     }
   };
 
+  const shareRecord = async (student) => {
+    if (!student.pdfBytes) return;
+    try {
+      const file = new File([student.pdfBytes], filenameFor(student), { type: "application/pdf" });
+      await navigator.share({ files: [file], title: `${student.firstName} ${student.lastName}` });
+    } catch (err) {
+      // AbortError: el usuario cerró la hoja de compartir sin elegir nada
+      // — no es un fallo, no hay nada que avisar.
+      if (err?.name === "AbortError") return;
+      console.error(err);
+      toast?.error(t("roster.noSePudoCompartir"));
+    }
+  };
+
   const instructor = {
     namePrinted: [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim(),
     initials: profile?.instructor_initials || "",
@@ -238,6 +293,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   const instructorComplete = Boolean(
     profile?.first_name?.trim() && profile?.last_name?.trim() && instructor.initials.trim() && instructor.number.trim() && instructor.signature
   );
+  const shareSupported = canShareFiles();
 
   if (loading) return <p className="text-sm text-gray-400">{t("cargandoPlantillas")}</p>;
 
@@ -276,6 +332,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                 onDelete={removeStudent}
                 onDownloadPdf={downloadPdf}
                 onDownloadJpg={downloadJpg}
+                onShare={shareSupported ? shareRecord : null}
               />
             ))}
           </ul>

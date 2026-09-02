@@ -168,7 +168,18 @@ export function Sheet({ open, onClose, children, className = "", zIndexClass = "
             >
               <span className="h-1.5 w-10 rounded-full bg-gray-300" />
             </div>
-            <div className="overflow-y-auto px-4 pt-1" style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}>
+            {/* overscroll-contain: mitigación para un bug reportado en
+                iOS Safari real ("al pintar la firma se me recarga la
+                página al menú de Configuración") — al arrastrar dentro de
+                un canvas de firma cerca del borde superior de esta hoja,
+                el rebote de scroll podía encadenarse hacia el documento y
+                disparar el pull-to-refresh nativo de Safari, que recarga
+                la página entera y pierde el estado de React (la hoja
+                abierta). No verificado en un iPhone físico real (límite
+                conocido de este entorno, ver CLAUDE.md "8. Verificación
+                UX/UI") — mitigación de mejor esfuerzo, pendiente de
+                confirmar que resuelve el bug del todo. */}
+            <div className="overflow-y-auto overscroll-contain px-4 pt-1" style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}>
               {children}
             </div>
           </motion.div>

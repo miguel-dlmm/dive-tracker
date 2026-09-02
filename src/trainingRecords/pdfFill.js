@@ -204,17 +204,19 @@ async function drawSignature(pdfDoc, page, form, fieldName, signaturePngDataUrl)
  *   Supabase Storage, sin modificar).
  * @param {object} templateMap - una entrada de TEMPLATE_FIELD_MAPS.
  * @param {object} data - ver forma esperada en TrainingRecordsTab.jsx.
- * @returns {Promise<Uint8Array>} PDF final, aplanado (ya no editable) —
- *   scope de campos: solo la página 1 (ver templateFieldMaps.js,
- *   "sourcePdfPage: 1"), por eso pdfDoc.getPages()[0] siempre es válido
- *   aquí sin necesitar resolver en qué página vive cada campo.
+ * @returns {Promise<Uint8Array>} PDF final, aplanado (ya no editable) y con
+ *   una única página — la de templateMap.sourcePdfPage, cualquier otra
+ *   página que trajera la plantilla original (p. ej. la página 2 de OWD,
+ *   finalización de Referral/Scuba/Indoor Diver, fuera de alcance) se
+ *   retira antes de guardar.
  */
 export async function fillTrainingRecordPdf(pdfBytes, templateMap, data) {
   const { texts, checkboxes, signatures } = buildFillOperations(templateMap, data);
 
   const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
   const form = pdfDoc.getForm();
-  const page = pdfDoc.getPages()[0];
+  const pageIndex = (templateMap.sourcePdfPage || 1) - 1;
+  const page = pdfDoc.getPages()[pageIndex];
   // Helvetica: fuente estándar de PDF (no hace falta incrustar un archivo
   // de fuente aparte), visualmente muy próxima a la fuente sans-serif que
   // ya usan estas plantillas — pedido explícito del usuario ("una fuente
@@ -235,5 +237,14 @@ export async function fillTrainingRecordPdf(pdfBytes, templateMap, data) {
 
   stripBrokenParentRefs(pdfDoc, form);
   form.flatten();
+  // Solo se genera/rellena la página con los campos del curso (ver
+  // sourcePdfPage) — OWD trae una página 2 adicional en la plantilla
+  // original (finalización de Referral/Scuba/Indoor Diver, fuera del
+  // camino principal, no mapeada) que antes se colaba entera y en blanco
+  // en el PDF final. Se retira cualquier otra página, de atrás hacia
+  // adelante para no desplazar los índices todavía por retirar.
+  for (let i = pdfDoc.getPageCount() - 1; i >= 0; i--) {
+    if (i !== pageIndex) pdfDoc.removePage(i);
+  }
   return pdfDoc.save();
 }

@@ -19,9 +19,11 @@
     "editar": "Edit",
     "descargarPdf": "Download PDF",
     "descargarJpg": "Download image (JPG)",
+    "compartir": "Share",
     "generadoEl": "Generated on {{date}}",
     "imagenDescargada": "Image downloaded.",
-    "noSePudoExportarImagen": "Couldn't export the image. Please try again."
+    "noSePudoExportarImagen": "Couldn't export the image. Please try again.",
+    "noSePudoCompartir": "Couldn't share the document. Please try again."
   },
   "studentForm": {
     "nuevoAlumno": "New student",
@@ -34,6 +36,11 @@
     "inicialesHint": "Calculated automatically — you can correct them if needed.",
     "plantilla": "Course to certify",
     "cambiarPlantilla": "Change template",
+    "confirmarCambioPlantilla": {
+      "titulo": "Change template?",
+      "mensaje": "You'll lose the progress, dates and signatures you've already filled in for this student.",
+      "confirmar": "Yes, change template"
+    },
     "errores": {
       "nombre": "First name is required.",
       "apellidos": "Last name is required.",

@@ -167,6 +167,24 @@ describe("fillTrainingRecordPdf", () => {
     ).resolves.toBeInstanceOf(Uint8Array);
   });
 
+  // Regresión (2026-09-02, reportado por el usuario): la plantilla OWD real
+  // trae una página 2 adicional (finalización de Referral/Scuba/Indoor
+  // Diver, fuera de alcance, no mapeada) — el PDF generado se colaba
+  // entero, con esa página 2 siempre en blanco. Solo debe quedar la página
+  // con los campos del curso (sourcePdfPage).
+  it("descarta cualquier página del PDF original que no sea la de sourcePdfPage", async () => {
+    const pdfDoc = await PDFDocument.load(await buildFixturePdf());
+    pdfDoc.addPage([300, 300]); // simula la página 2 de OWD, sin ningún campo mapeado
+    const twoPageBytes = await pdfDoc.save();
+
+    const filledBytes = await fillTrainingRecordPdf(twoPageBytes, { ...MINIMAL_TEMPLATE, sourcePdfPage: 1 }, {
+      firstName: "Ana", lastName: "Garcia",
+    });
+
+    const resultDoc = await PDFDocument.load(filledBytes);
+    expect(resultDoc.getPageCount()).toBe(1);
+  });
+
   // Regresión (2026-09-02, verificado con las 4 plantillas reales activas
   // vía Supabase Storage, no solo con este fixture): las plantillas SSI
   // reales tienen cada campo con un /Parent que apunta, por error del

@@ -19,9 +19,11 @@
     "editar": "Editar",
     "descargarPdf": "Descargar PDF",
     "descargarJpg": "Descargar imagen (JPG)",
+    "compartir": "Compartir",
     "generadoEl": "Generado el {{date}}",
     "imagenDescargada": "Imagen descargada.",
-    "noSePudoExportarImagen": "No se pudo exportar la imagen. Inténtalo de nuevo."
+    "noSePudoExportarImagen": "No se pudo exportar la imagen. Inténtalo de nuevo.",
+    "noSePudoCompartir": "No se pudo compartir el documento. Inténtalo de nuevo."
   },
   "studentForm": {
     "nuevoAlumno": "Nuevo alumno",
@@ -34,6 +36,11 @@
     "inicialesHint": "Se calculan solas — puedes corregirlas si hace falta.",
     "plantilla": "Curso a certificar",
     "cambiarPlantilla": "Cambiar plantilla",
+    "confirmarCambioPlantilla": {
+      "titulo": "¿Cambiar de plantilla?",
+      "mensaje": "Vas a perder el progreso, las fechas y las firmas que ya has rellenado para este alumno.",
+      "confirmar": "Sí, cambiar de plantilla"
+    },
     "errores": {
       "nombre": "El nombre es obligatorio.",
       "apellidos": "Los apellidos son obligatorios.",

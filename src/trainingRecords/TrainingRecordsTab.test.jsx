@@ -5,22 +5,29 @@
 // con los datos correctos y disparen la descarga, no repetir esa cobertura).
 // endStrokeHandlers guarda el callback "endStroke" de cada instancia en el
 // orden en que SignatureCapture las monta (alumno primero, tutor después)
-// — signStudent() más abajo lo usa para simular un trazo real sin depender
-// de eventos de canvas que jsdom no soporta.
+// — signStudent()/signTutor() más abajo lo usan para simular un trazo real
+// sin depender de eventos de canvas que jsdom no soporta. toDataURL
+// devuelve un valor distinto por instancia (no el mismo texto fijo para
+// las dos) para poder distinguir en los tests cuál firma llegó a cuál
+// campo — necesario para la regresión de "la firma del tutor no sale".
 let endStrokeHandlers = [];
 vi.mock("signature_pad", () => ({
   default: vi.fn().mockImplementation(function MockSignaturePad() {
+    const index = endStrokeHandlers.length;
     return {
       clear: vi.fn(),
       off: vi.fn(),
       isEmpty: vi.fn().mockReturnValue(false),
-      toDataURL: vi.fn().mockReturnValue("data:image/png;base64,SIGNATURE"),
+      toDataURL: vi.fn().mockReturnValue(`data:image/png;base64,SIGNATURE_${index}`),
       addEventListener: vi.fn((event, cb) => { if (event === "endStroke") endStrokeHandlers.push(cb); }),
     };
   }),
 }));
 function signStudent() {
   endStrokeHandlers[0]?.();
+}
+function signTutor() {
+  endStrokeHandlers[1]?.();
 }
 
 const fillTrainingRecordPdf = vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3]));
@@ -153,6 +160,34 @@ it("muestra un enlace para añadir el primer alumno cuando el roster está vací
   expect(await screen.findByText("Nuevo alumno")).toBeInTheDocument();
 });
 
+// Orden pedido explícito del usuario (2026-09-02): OW, Advanced, Enriched
+// Air Nitrox, Deep Diving — no alfabético (que pondría Advanced primero)
+// ni el orden en que responda Supabase.
+it("lista las plantillas en el orden pedido (OW, Advanced, EAN, Deep Diving), no alfabético ni el de Supabase", async () => {
+  const user = userEvent.setup();
+  templatesQuery.order.mockResolvedValue({
+    data: [
+      { code: "SC-DD", name: "Deep Diving", storage_path: "SC-DD/x.pdf" },
+      { code: "SC-EAN", name: "Enriched Air Nitrox", storage_path: "SC-EAN/x.pdf" },
+      { code: "AOWD", name: "Advanced Open Water Diver", storage_path: "AOWD/x.pdf" },
+      { code: "OWD", name: "Open Water Diver", storage_path: "OWD/x.pdf" },
+    ],
+    error: null,
+  });
+  renderTab();
+
+  await user.click(await screen.findByRole("button", { name: "Añadir alumno" }));
+  const buttons = await screen.findAllByRole("button", {
+    name: /^(Open Water Diver|Advanced Open Water Diver|Enriched Air Nitrox|Deep Diving)$/,
+  });
+  expect(buttons.map((b) => b.textContent)).toEqual([
+    "Open Water Diver",
+    "Advanced Open Water Diver",
+    "Enriched Air Nitrox",
+    "Deep Diving",
+  ]);
+});
+
 // fillAndGenerate hace un tap por cada fila de progreso (7 en total para
 // OWD, una por fila obligatoria + la confirmación de examen) — el timeout
 // por defecto (5000ms) queda justo bajo la carga de la suite completa en
@@ -171,6 +206,37 @@ it("genera y descarga el registro completo de un alumno, y lo refleja en el rost
   expect(await screen.findByText("Ana Garcia")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Descargar PDF" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Descargar imagen (JPG)" })).toBeInTheDocument();
+}, 15000);
+
+// Regresión (2026-09-02, reportado por el usuario: "la firma del padre
+// madre o tutor no sale cuando la relleno en ningún documento"). Firmar
+// ambas (tutor y alumno) usaba `config` del cierre de montaje de
+// SignatureCapture en vez del estado real al aplicar el cambio — firmar
+// la segunda pisaba la firma ya guardada de la primera. Firma el tutor
+// ANTES que el alumno (el orden que reproducía el bug: al firmar el
+// alumno el último, su `onChange` "stale" volvía a poner parentPng a
+// null) y comprueba que las dos llegan a buildFillData.
+it("guarda la firma del alumno y la del tutor a la vez, sin que una pise a la otra", async () => {
+  const user = userEvent.setup();
+  renderTab();
+
+  await user.click(await screen.findByRole("button", { name: "Añadir alumno" }));
+  await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ana");
+  await user.type(screen.getByRole("textbox", { name: "Apellidos" }), "Garcia");
+  await user.click(await screen.findByText("Open Water Diver"));
+  for (const label of OWD_MANDATORY_ROW_LABELS) await pickToday(user, `Fecha: ${label}`);
+  await user.click(screen.getByRole("checkbox", { name: "Confirmación de Examen Final" }));
+  await pickToday(user, "Fecha: Confirmación de Examen Final");
+
+  signTutor();
+  signStudent();
+
+  await user.click(screen.getByRole("button", { name: "Generar y descargar" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalled());
+
+  const [, , data] = fillTrainingRecordPdf.mock.calls[0];
+  expect(data.signatures.studentPng).toBe("data:image/png;base64,SIGNATURE_0");
+  expect(data.signatures.parentPng).toBe("data:image/png;base64,SIGNATURE_1");
 }, 15000);
 
 it("no genera si faltan campos obligatorios del documento (versión de examen, certificación, confirmación, firma o la fecha de una fila de progreso)", async () => {
@@ -199,6 +265,55 @@ it("no genera si faltan campos obligatorios del documento (versión de examen, c
   expect(screen.getByText("Falta la firma del alumno.")).toBeInTheDocument();
 });
 
+// Regresión (2026-09-02, "los mensajes de error del formulario... salen
+// raros"): antes, si faltaban datos del alumno (nombre) Y datos del
+// documento (fecha de una fila) a la vez, generate() cortaba en
+// validateStudent() y nunca llegaba a validar el documento — corregir el
+// nombre y volver a pulsar revelaba una tanda de avisos nueva que no
+// aparecía la primera vez. Las dos validaciones deben mostrarse juntas.
+it("muestra a la vez los avisos de datos del alumno y del documento, sin revelarlos en dos tandas", async () => {
+  const user = userEvent.setup();
+  renderTab();
+
+  await user.click(await screen.findByRole("button", { name: "Añadir alumno" }));
+  // Nombre/apellidos se dejan vacíos a propósito.
+  await user.click(await screen.findByText("Open Water Diver"));
+  await user.click(screen.getByRole("button", { name: "Generar y descargar" }));
+
+  expect(fillTrainingRecordPdf).not.toHaveBeenCalled();
+  expect(screen.getByText("El nombre es obligatorio.")).toBeInTheDocument();
+  expect(screen.getAllByText("Falta la fecha de esta fila.").length).toBe(6);
+});
+
+it("pide confirmación antes de cambiar de plantilla solo si ya hay progreso rellenado que se perdería", async () => {
+  const user = userEvent.setup();
+  renderTab();
+
+  await user.click(await screen.findByRole("button", { name: "Añadir alumno" }));
+  await user.click(await screen.findByText("Open Water Diver"));
+
+  // Sin nada más rellenado todavía — cambiar de plantilla no debe avisar,
+  // vuelve directo a la lista de plantillas.
+  await user.click(screen.getByRole("button", { name: "Cambiar plantilla" }));
+  expect(screen.queryByText("¿Cambiar de plantilla?")).not.toBeInTheDocument();
+  expect(await screen.findByRole("button", { name: "Open Water Diver" })).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Open Water Diver" }));
+  await pickToday(user, "Fecha: Sesiones Académicas");
+
+  // Con una fecha ya rellenada, pide confirmación antes de descartarla.
+  await user.click(screen.getByRole("button", { name: "Cambiar plantilla" }));
+  expect(await screen.findByText("¿Cambiar de plantilla?")).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Cancelar" }));
+  expect(screen.queryByText("¿Cambiar de plantilla?")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Cambiar plantilla" })).toBeInTheDocument(); // sigue con la plantilla elegida, nada se perdió
+
+  await user.click(screen.getByRole("button", { name: "Cambiar plantilla" }));
+  await user.click(await screen.findByRole("button", { name: "Sí, cambiar de plantilla" }));
+  expect(await screen.findByRole("button", { name: "Open Water Diver" })).toBeInTheDocument(); // vuelve a la lista de plantillas
+});
+
 it("exporta el registro ya generado como imagen JPG desde el icono de la fila", async () => {
   const user = userEvent.setup();
   renderTab();
@@ -209,6 +324,41 @@ it("exporta el registro ya generado como imagen JPG desde el icono de la fila", 
   await waitFor(() => expect(renderPdfToJpgBytes).toHaveBeenCalledWith(new Uint8Array([1, 2, 3])));
   expect(global.URL.createObjectURL).toHaveBeenCalledWith(expect.objectContaining({ type: "image/jpeg" }));
 }, 15000);
+
+describe("compartir el registro generado (Web Share API)", () => {
+  const originalShare = navigator.share;
+  const originalCanShare = navigator.canShare;
+
+  afterEach(() => {
+    navigator.share = originalShare;
+    navigator.canShare = originalCanShare;
+  });
+
+  it("muestra el icono de compartir solo si el navegador soporta compartir archivos, y llama a navigator.share con el PDF", async () => {
+    navigator.canShare = vi.fn().mockReturnValue(true);
+    navigator.share = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    renderTab();
+    await fillAndGenerate(user);
+
+    const shareBtn = await screen.findByRole("button", { name: "Compartir" });
+    await user.click(shareBtn);
+
+    expect(navigator.share).toHaveBeenCalledWith(
+      expect.objectContaining({ files: [expect.any(File)], title: "Ana Garcia" })
+    );
+  }, 15000);
+
+  it("no muestra el icono de compartir si el navegador no soporta compartir archivos", async () => {
+    navigator.canShare = undefined;
+    navigator.share = undefined;
+    const user = userEvent.setup();
+    renderTab();
+    await fillAndGenerate(user);
+
+    expect(screen.queryByRole("button", { name: "Compartir" })).not.toBeInTheDocument();
+  }, 15000);
+});
 
 it("al editar un alumno ya generado, reabre con su nombre, plantilla y configuración ya rellenos", async () => {
   const user = userEvent.setup();

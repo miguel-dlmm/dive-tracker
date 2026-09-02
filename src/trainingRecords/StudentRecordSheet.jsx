@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Loader2, Download, ChevronRight, Award } from "lucide-react";
-import { Sheet, Field, inputCls, DatePicker, Select, useToast } from "../shared";
+import { Sheet, Field, inputCls, DatePicker, Select, ConfirmDialog, useToast } from "../shared";
 import { TEAL } from "../App";
 import { computeInitials } from "../computeInitials";
 import SignatureCapture from "../SignatureCapture";
@@ -60,10 +60,26 @@ function RadioChoice({ options, value, onChange }) {
 
 function FieldError({ message }) {
   if (!message) return null;
-  return <p role="alert" className="-mt-1.5 text-xs text-red-600">{message}</p>;
+  return <p role="alert" className="mt-1 text-xs text-red-600">{message}</p>;
 }
 
 const emptyStudent = { firstName: "", lastName: "", guardianName: "", initials: "" };
+
+// Cambiar de plantilla descarta toda la configuración del documento
+// (fechas, progreso, firmas) — antes lo hacía sin avisar, un toque
+// accidental en "Cambiar plantilla" podía tirar minutos de trabajo ya
+// relleno sin posibilidad de deshacerlo (pedido explícito del usuario:
+// "el cambiar de plantilla me resulta raro de utilizar"). Solo pide
+// confirmación si de verdad hay algo que perder — si la plantilla se
+// acaba de elegir y no se ha tocado nada más, cambiarla es gratis.
+function configHasData(config) {
+  if (!config) return false;
+  if (Object.values(config.rowDates || {}).some(Boolean)) return true;
+  if (config.examConfirmed || config.examConfirmedDate) return true;
+  if (config.signatures?.studentPng || config.signatures?.parentPng) return true;
+  if ((config.specialtyDives || []).some((d) => d.adventureId)) return true;
+  return false;
+}
 
 export default function StudentRecordSheet({ open, onClose, mode, initial, templates, adventures, instructor, getTemplateBytes, onSaved }) {
   const { t } = useTranslation("trainingRecords");
@@ -80,6 +96,7 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
   const [config, setConfig] = useState(null);
   const [configErrors, setConfigErrors] = useState({});
   const [generating, setGenerating] = useState(false);
+  const [confirmingTemplateChange, setConfirmingTemplateChange] = useState(false);
 
   // Se reinicializa cada vez que se abre — esta hoja nunca se desmonta
   // entre aperturas (Sheet solo oculta su contenido), así que sin esto el
@@ -96,6 +113,7 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
     setTemplateCode(student.templateCode || null);
     setConfig(student.templateCode ? (student.config || buildDefaultConfig(TEMPLATE_FIELD_MAPS[student.templateCode])) : null);
     setConfigErrors({});
+    setConfirmingTemplateChange(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al abrir/cambiar de alumno
   }, [open, initial?.id, mode]);
 
@@ -111,10 +129,32 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
     setConfigErrors({});
   };
 
+  const clearTemplate = () => {
+    setTemplateCode(null);
+    setConfig(null);
+    setConfigErrors({});
+  };
+
+  const requestTemplateChange = () => {
+    if (configHasData(config)) setConfirmingTemplateChange(true);
+    else clearTemplate();
+  };
+
   const updateConfig = (patch) => setConfig((c) => ({ ...c, ...patch }));
   const toggleRow = (i, checked) => setConfig((c) => ({ ...c, includedRows: c.includedRows.map((v, idx) => (idx === i ? checked : v)) }));
   const setRowDate = (i, value) => setConfig((c) => ({ ...c, rowDates: { ...c.rowDates, [i]: value } }));
   const updateDive = (i, patch) => setConfig((c) => ({ ...c, specialtyDives: c.specialtyDives.map((d, idx) => (idx === i ? { ...d, ...patch } : d)) }));
+  // Forma funcional a propósito, nunca "{ ...config.signatures, [key]: v }"
+  // leyendo `config` del cierre externo: SignatureCapture solo suscribe su
+  // "endStroke" una vez al montar (ver SignatureCapture.jsx), así que su
+  // `onChange` queda fijado al `config` de ese primer render. Con dos
+  // instancias (alumno y tutor) en la misma hoja, firmar la segunda con un
+  // `onChange` que lea `config` del cierre pisaba la firma ya guardada de
+  // la primera con el `null` que tenía en el momento de montar — bug real
+  // reportado por el usuario ("la firma del tutor no sale"). Leer `c` (el
+  // estado real en el momento de aplicar el cambio) en vez de `config`
+  // evita el problema sea cual sea el orden en que se firme.
+  const setSignature = (key) => (v) => setConfig((c) => ({ ...c, signatures: { ...c.signatures, [key]: v } }));
 
   const validateStudent = () => {
     const errors = {};
@@ -126,11 +166,17 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
   };
 
   const generate = async () => {
-    if (!validateStudent()) return;
+    // Las dos validaciones se lanzan juntas, no en cascada — con
+    // validateStudent() cortando el paso antes de llegar a
+    // validateRecordConfig(), corregir el nombre y volver a pulsar
+    // "Generar" revelaba una tanda nueva de avisos que no se habían visto
+    // la primera vez ("los mensajes de error... salen raros", pedido
+    // explícito del usuario). Así se ven todos a la vez, de una sola vez.
+    const studentValid = validateStudent();
     if (!templateCode) return;
-    const { valid, errors } = validateRecordConfig(templateMap, config);
+    const { valid: configValid, errors } = validateRecordConfig(templateMap, config);
     setConfigErrors(errors);
-    if (!valid) {
+    if (!studentValid || !configValid) {
       toast?.error(t("studentSheet.faltanCampos"));
       return;
     }
@@ -161,6 +207,7 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
   };
 
   return (
+    <>
     <Sheet open={open} onClose={onClose}>
       <div className="mb-1 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-800">{mode === "edit" ? t("studentForm.editarAlumno") : t("studentForm.nuevoAlumno")}</h3>
@@ -201,7 +248,7 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
         <section>
           <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentForm.plantilla")}</h4>
           {templateCode && (
-            <button onClick={() => setTemplateCode(null)} className="mb-2 flex min-h-9 items-center gap-1 text-xs font-medium" style={{ color: TEAL }}>
+            <button onClick={requestTemplateChange} className="mb-2 flex min-h-9 items-center gap-1 text-xs font-medium" style={{ color: TEAL }}>
               {t("studentForm.cambiarPlantilla")}
             </button>
           )}
@@ -341,10 +388,10 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.firmas")}</h4>
               <div className="space-y-3">
                 <div>
-                  <SignatureCapture label={t("studentSheet.firmaAlumno")} value={config.signatures.studentPng} onChange={(v) => updateConfig({ signatures: { ...config.signatures, studentPng: v } })} />
+                  <SignatureCapture label={t("studentSheet.firmaAlumno")} value={config.signatures.studentPng} onChange={setSignature("studentPng")} />
                   <FieldError message={configErrors.studentSignature} />
                 </div>
-                <SignatureCapture label={t("studentSheet.firmaTutor")} value={config.signatures.parentPng} onChange={(v) => updateConfig({ signatures: { ...config.signatures, parentPng: v } })} optionalHint />
+                <SignatureCapture label={t("studentSheet.firmaTutor")} value={config.signatures.parentPng} onChange={setSignature("parentPng")} optionalHint />
               </div>
             </section>
 
@@ -361,5 +408,14 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
         )}
       </div>
     </Sheet>
+    <ConfirmDialog
+      open={confirmingTemplateChange}
+      title={t("studentForm.confirmarCambioPlantilla.titulo")}
+      message={t("studentForm.confirmarCambioPlantilla.mensaje")}
+      confirmLabel={t("studentForm.confirmarCambioPlantilla.confirmar")}
+      onCancel={() => setConfirmingTemplateChange(false)}
+      onConfirm={() => { setConfirmingTemplateChange(false); clearTemplate(); }}
+    />
+    </>
   );
 }
