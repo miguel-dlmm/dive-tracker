@@ -3,11 +3,10 @@ import userEvent from "@testing-library/user-event";
 import RatesTab from "./RatesTab";
 import { TEAL, SUN } from "./colors";
 
-// Regresión del incidente: una cuenta recién creada nace con payment_types
-// vacío (clone_setup_dataset no lo siembra — ver docs/ADR/0003) y hasta el
-// workaround de RatesTab.jsx/WorkLogTab.jsx/ComisionesTab.jsx, eso dejaba
-// form.payment_type en "" y bloqueaba el guardado de cualquier tarifa nueva,
-// aunque ningún formulario expone (ni expondrá) un selector para ese campo.
+// ADR-0003, pasos 1-2: payment_type ya no es un concepto del frontend —
+// nunca se elige en ningún formulario, se escribe siempre como el literal
+// fijo "Per Person" (la columna sigue existiendo en BD, NOT NULL, hasta que
+// los pasos 3-5 de la migración la eliminen).
 const rowsHook = (rows) => ({
   rows, loaded: true,
   insertRow: vi.fn().mockResolvedValue(rows[0]),
@@ -20,7 +19,6 @@ function renderRatesTab({ rates = rowsHook([]), commissionRates = emptyHook, act
     <RatesTab
       schools={schools || rowsHook([{ name: "PADI Cozumel" }])}
       activities={activities || rowsHook([{ name: "Open Water" }])}
-      paymentTypes={emptyHook}
       currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])}
       rates={rates}
       commissionRates={commissionRates}
@@ -31,8 +29,8 @@ function renderRatesTab({ rates = rowsHook([]), commissionRates = emptyHook, act
   return { rates, commissionRates };
 }
 
-describe("RatesTab — alta de tarifa con catálogo de tipos de pago vacío (cuenta nueva)", () => {
-  it("permite crear una tarifa aunque payment_types no tenga ninguna fila", async () => {
+describe("RatesTab — alta de tarifa sin ningún selector de tipo de pago", () => {
+  it("crea la tarifa con payment_type fijo 'Per Person', sin que el formulario lo pida", async () => {
     const user = userEvent.setup();
     const { rates } = renderRatesTab();
 

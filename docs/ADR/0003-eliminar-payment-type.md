@@ -1,7 +1,7 @@
 # ADR 0003 — Eliminar `payment_type`: modelo de tarifa único (tarifa × personas)
 
 **Fecha:** 2026-08-27
-**Estado:** Aprobado (concepto) · Implementación diferida a un bloque futuro
+**Estado:** Pasos 1-2 (frontend) ejecutados 2026-09-02 · Pasos 3-5 (BD) diferidos a un bloque futuro
 
 ## Contexto
 
@@ -81,6 +81,46 @@ solución alternativa a esta decisión.
 Cada paso se despliega y valida por separado — nada de este plan se hace
 en un único cambio, siguiendo la regla de migraciones incrementales del
 proyecto.
+
+## Addendum (2026-09-02) — pasos 1-2 ejecutados, sin tocar BD
+
+Ejecutados los pasos 1 y 2 del plan de arriba, procesando este ítem del
+backlog en rama aislada `backlog/eliminar-payment-type-frontend` (sin
+integrar contra ninguna otra rama, siguiendo la instrucción vigente de
+trabajo por backlog: cero migraciones de BD mientras se procesa backlog).
+
+- `rateCalc.js`: `computeRateTotal` ya no distingue por `payment_type` —
+  siempre `rate.rate * (Number(people) || 0)`. Si el objeto de tarifa aún
+  trae `payment_type` (la columna sigue en BD), se ignora por completo.
+- Quitado `payment_types`/`paymentTypes` de `App.jsx`, `RatesTab.jsx`,
+  `WorkLogTab.jsx`, `ComisionesTab.jsx` y `ConfigTab.jsx` (incluida la
+  sección "Tipos de pago" del menú de Configuración y su `CrudTable`).
+  Ningún formulario expone ya, ni ha expuesto nunca en producción, un
+  selector para este campo.
+- Las tres pantallas que dan de alta una tarifa al vuelo
+  (`RatesTab.jsx`, `WorkLogTab.jsx`, `ComisionesTab.jsx`,
+  `MovementSheet.jsx`) escriben ahora el literal fijo `payment_type:
+  "Per Person"` directamente, sin depender del catálogo `payment_types`
+  de la cuenta — elimina de raíz el workaround temporal de `"Estado de
+  la implementación"` de arriba (ya no hace falta: no hay ningún
+  fallback que mantener porque no hay ninguna elección que hacer) y,
+  de paso, el bug real descrito en el addendum de 2026-08-30 (una
+  cuenta con catálogo propio ya no puede "elegir sin querer" un
+  `payment_type` distinto de "Per Person").
+- Al editar una tarifa existente, el payload de `updateRow` ya no
+  incluye `payment_type` en absoluto (se confía en que
+  `JSON.stringify` descarta claves `undefined`), así que una edición
+  nunca toca esa columna.
+- Quitados los tests que distinguían Fixed/Per-Person en
+  `rateCalc.test.js`, y actualizados los tests de `RatesTab.jsx`,
+  `ConfigTab.jsx` y `MiTrabajoTab.jsx` a las nuevas firmas de props.
+  Quitadas las claves i18n huérfanas `sections.tiposPago.*` y
+  `crud.{nuevoTipoPago,editarTipoPago}` (`es`/`en`).
+- **No tocado a propósito, por ser BD:** la tabla `payment_types`, la
+  columna `payment_type` en `rates`/`commission_rates`/
+  `setup_dataset_rates`/`setup_dataset_commission_rates`, ni
+  `clone_setup_dataset`. Los pasos 3-5 de este documento siguen
+  pendientes, sin cambios respecto al plan original.
 
 ## Addendum (2026-08-30) — confirmado en datos reales, no solo en teoría
 

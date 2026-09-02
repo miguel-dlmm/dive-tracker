@@ -214,10 +214,6 @@
       "label": "Rates",
       "description": "What you charge by school and course"
     },
-    "tiposPago": {
-      "label": "Payment types",
-      "description": "Per person, per course..."
-    },
     "estadosPago": {
       "label": "Payment statuses",
       "description": "Pending, paid..."
@@ -255,8 +251,6 @@
     "colorCampo": "Color",
     "nuevoCurso": "New course",
     "editarCurso": "Edit course",
-    "nuevoTipoPago": "New payment type",
-    "editarTipoPago": "Edit payment type",
     "nuevoEstadoPago": "New payment status",
     "editarEstadoPago": "Edit payment status",
     "nuevaMoneda": "New currency",

@@ -1,11 +1,20 @@
 // rateCalc.js — única fuente de verdad para el importe de un registro
 // (Work Log / Comisiones) a partir de su tarifa y el nº de personas.
 // Antes duplicado en WorkLogTab, ComisionesTab, PaymentsTab, SummaryTab y HomeTab.
+//
+// Sin distinción por payment_type desde 2026-09-02 (ADR-0003, pasos 1-2 del
+// plan de migración — la columna payment_type sigue existiendo en BD por
+// ahora, solo el frontend deja de leerla/depender de ella): auditoría
+// completa confirmó que ningún formulario de la app expuso nunca un
+// selector real para elegir tarifa fija — "Per Person" era el único valor
+// que cualquier flujo llegaba a escribir a propósito. La excepción real
+// encontrada (ADR-0003, addendum 2026-08-30) no era una tarifa fija
+// intencional: una cuenta cuyo catálogo payment_types no incluía
+// exactamente "Per Person" obtenía tarifas fijas de forma silenciosa,
+// sin aviso — el propio bug que esta simplificación elimina de raíz.
 export function computeRateTotal(rate, people) {
   if (!rate) return 0;
-  return rate.payment_type === "Per Person"
-    ? rate.rate * (Number(people) || 0)
-    : rate.rate;
+  return rate.rate * (Number(people) || 0);
 }
 
 // Única fuente de verdad de toda la actividad económica del instructor —
