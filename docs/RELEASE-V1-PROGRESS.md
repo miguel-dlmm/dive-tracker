@@ -1394,17 +1394,65 @@ campos). Técnica desarrollada y validada con **SC-LV** como piloto:
   referencia.
 
 **Por qué no se ha hecho el wiring todavía** (`templateFieldMaps.js`
-con un tipo de campo "rect" en vez de nombre de campo AcroForm,
-soporte en `pdfFill.js` para dibujar checkboxes a mano cuando no hay
-`form.getCheckBox()` real, entrada completa en `StudentRecordSheet.jsx`
-+ tests): el Bloque 5 del encargo nocturno del mismo día reconstruye
-la pantalla del generador de arriba a abajo (config compartida por
-lote de alumnos, no por alumno) — conectar las 6 plantillas contra la
-pantalla actual, a punto de sustituirse, sería trabajo tirado. Los
-datos de coordenadas de SC-LV (`training-records-debug/SC-LV-rects.json`,
-no versionado) se conservan para reutilizarlos al hacer el wiring
-dentro del Bloque 5, junto con las 5 plantillas restantes usando la
-misma técnica ya validada.
+con un tipo de campo "rect" en vez de nombre de campo AcroForm, soporte
+en `pdfFill.js` para dibujar checkboxes a mano cuando no hay
+`form.getCheckBox()` real, entrada en la configuración compartida del
+Generador + tests): el Bloque 5 del mismo job nocturno reconstruyó la
+pantalla del generador de arriba a abajo justo después de esto (ver
+"Actualización 2026-09-03" más abajo) — conectar las 6 plantillas
+contra la pantalla vieja, ya sustituida, habría sido trabajo tirado.
+Los datos de coordenadas de SC-LV (`training-records-debug/SC-LV-rects.json`,
+no versionado) se conservan para reutilizarlos cuando se haga el
+wiring real, contra la pantalla NUEVA (configuración compartida por
+listado), con las 5 plantillas restantes y la misma técnica ya
+validada. Sigue sin abordar.
+
+### ✅ Actualización 2026-09-03 (job nocturno por lotes, Bloque 5 — rediseño de concepto)
+
+Cambio de arquitectura pedido explícitamente por el usuario, corrigiendo
+el diseño "una plantilla+configuración por alumno" del lote anterior
+(2026-09-02): **"no es una configuración de Training Record por
+alumno, es una configuración de Training Record para un listado de
+alumnos"**.
+
+- La configuración del documento (plantilla, filas de progreso con su
+  fecha cada una, versión de examen, certificación, confirmación de
+  examen, inmersiones de especialidad de AOWD) se rellena **una única
+  vez**, directamente en la pantalla del Generador — deja de vivir
+  dentro de la hoja de cada alumno.
+- `StudentRecordSheet.jsx` se retira; `StudentQuickEntrySheet.jsx`
+  (nuevo) es una hoja mínima con solo lo que varía de un alumno a
+  otro: nombre, apellidos, iniciales (calculadas) y firma (+ firma de
+  tutor, opcional, conservada del lote anterior — no explícitamente
+  mencionada en el encargo de este bloque, pero es un dato claramente
+  ligado al alumno, no a la configuración compartida, así que se
+  mantuvo ahí en vez de descartarla).
+- `recordConfig.js`: `validateRecordConfig()` deja de exigir firma
+  (era el único dato "por alumno" que quedaba mezclado en la
+  configuración compartida); `validateStudentFields()` (nueva) valida
+  cada alumno por separado. `buildFillData()` toma las firmas del
+  propio alumno, no de la configuración.
+- "Generar para todos los alumnos": un único botón rellena el
+  documento de TODOS los alumnos del listado de golpe, descargando la
+  plantilla una sola vez y reutilizándola para cada uno.
+- Descarga/compartir: se mantienen los iconos individuales por fila
+  (PDF/JPG/Compartir, ya construidos en el lote anterior) y se añade
+  una sección "Todo el listado" — descargar todo en PDF, todo en JPG
+  (secuencial con una pausa entre cada descarga; varios navegadores
+  bloquean descargas simultáneas disparadas de golpe), o compartir
+  todo a la vez vía Web Share API con varios ficheros adjuntos (si el
+  navegador lo soporta — mismo criterio de "el icono ni aparece si no
+  hay soporte" que ya regía el compartir individual).
+- Alumnos con datos incompletos (falta firma, nombre...) se marcan con
+  un aviso visual en la propia fila del listado, en vez de fallar en
+  silencio o bloquear sin explicación al pulsar "Generar".
+
+**Verificación:** `npm run test` (616/616) y `npm run build` en verde.
+`scripts/mobile-check-training-records.mjs` reescrito para el nuevo
+flujo (Chromium + iPhone 14 Pro Max): configurar una vez, añadir 2
+alumnos, generar los 2 de golpe, descargar PDF de uno y JPG de otro,
+recargar la página y comprobar que el listado completo (config +
+alumnos + documentos ya generados) sigue ahí.
 
 ## Fase 6 — Slides y avisos
 
