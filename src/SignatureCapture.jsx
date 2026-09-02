@@ -3,18 +3,21 @@ import SignaturePad from "signature_pad";
 import { useTranslation } from "react-i18next";
 import { RotateCcw } from "lucide-react";
 
-// Captura de firma táctil para el generador de Training Records — nada de
-// esto se persiste en ningún sitio (ni Supabase ni localStorage): la firma
-// solo vive en memoria mientras se rellena el PDF de un alumno concreto, y
-// desaparece al cerrar la hoja (ver docs/RELEASE-V1-PROGRESS.md, Fase 5,
-// decisión de arquitectura "enteramente en cliente").
+// Captura de firma táctil — usada tanto por el generador de Training
+// Records (firma del alumno, efímera, nunca se persiste — ver
+// docs/RELEASE-V1-PROGRESS.md, Fase 5) como por "Mi perfil" → "Datos de
+// instructor" (firma del instructor, esa sí persistida en
+// profiles.instructor_signature — se firma una vez y se reutiliza en cada
+// generación posterior, pedido explícito del usuario). Componente
+// compartido en la raíz de src/, no bajo trainingRecords/, precisamente
+// porque ya no es exclusivo de esa pantalla.
 //
 // El tamaño real del canvas se fija en píxeles de dispositivo
 // (devicePixelRatio) en vez de dejarlo al tamaño CSS — sin esto, signature_pad
 // dibuja a la resolución lógica del elemento y el trazo sale borroso en
 // cualquier pantalla de alta densidad (todos los iPhone actuales).
 export default function SignatureCapture({ label, value, onChange, optionalHint }) {
-  const { t } = useTranslation("trainingRecords");
+  const { t } = useTranslation("common");
   const canvasRef = useRef(null);
   const padRef = useRef(null);
 

@@ -34,7 +34,8 @@
     "defaultPlaceholder": "Date",
     "defaultAriaLabel": "Pick a date",
     "pickerAriaLabel": "Date picker",
-    "dayAriaLabel": "{{month}} {{day}}"
+    "dayAriaLabel": "{{month}} {{day}}",
+    "today": "Today"
   },
   "dateRangePicker": {
     "from": "From",
@@ -71,5 +72,11 @@
     "clearFilters": "Clear filters"
   },
   "rowMenu": { "moreActions": "More actions", "edit": "Edit", "delete": "Delete" },
-  "statusSwitch": { "ariaLabel": "Status: {{value}}. Tap to switch to {{next}}", "title": "{{value}} — click to switch to \"{{next}}\"" }
+  "statusSwitch": { "ariaLabel": "Status: {{value}}. Tap to switch to {{next}}", "title": "{{value}} — click to switch to \"{{next}}\"" },
+  "signature": {
+    "opcional": "optional",
+    "borrar": "Clear",
+    "firmadoAria": "{{label}}: signed",
+    "sinFirmarAria": "{{label}}: unsigned"
+  }
 }

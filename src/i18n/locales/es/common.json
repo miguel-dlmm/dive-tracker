@@ -34,7 +34,8 @@
     "defaultPlaceholder": "Fecha",
     "defaultAriaLabel": "Elegir fecha",
     "pickerAriaLabel": "Selector de fecha",
-    "dayAriaLabel": "{{day}} de {{month}}"
+    "dayAriaLabel": "{{day}} de {{month}}",
+    "today": "Hoy"
   },
   "dateRangePicker": {
     "from": "Desde",
@@ -71,5 +72,11 @@
     "clearFilters": "Limpiar filtros"
   },
   "rowMenu": { "moreActions": "Más acciones", "edit": "Editar", "delete": "Eliminar" },
-  "statusSwitch": { "ariaLabel": "Estado: {{value}}. Pulsa para pasar a {{next}}", "title": "{{value}} — clic para pasar a \"{{next}}\"" }
+  "statusSwitch": { "ariaLabel": "Estado: {{value}}. Pulsa para pasar a {{next}}", "title": "{{value}} — clic para pasar a \"{{next}}\"" },
+  "signature": {
+    "opcional": "opcional",
+    "borrar": "Borrar",
+    "firmadoAria": "{{label}}: firmado",
+    "sinFirmarAria": "{{label}}: sin firmar"
+  }
 }

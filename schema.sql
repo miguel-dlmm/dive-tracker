@@ -105,6 +105,10 @@ create table if not exists public.profiles (
   -- first_name + last_name, que ya existen.
   instructor_initials text,
   ssi_pro_number text,
+  -- Firma del instructor (PNG en base64) — se firma una vez aquí y se
+  -- reutiliza en cada Training Record generado, en vez de firmar
+  -- documento a documento (Release V1 Fase 5, 2026-09-02).
+  instructor_signature text,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
@@ -936,6 +940,35 @@ create policy "admin manage template files" on storage.objects
 -- el perfil) para instalaciones existentes —
 -- scripts/migrations/0009-datos-instructor-perfil.sql tiene el mismo DDL,
 -- aplicarlo con scripts/apply-migration.mjs.
+
+-- Catálogo de "aventuras" opcionales para el combo de Advanced Open Water
+-- Diver (Release V1, Fase 5, 2026-09-02) — nunca hardcodeadas en el código
+-- (convención 1 de CLAUDE.md), catálogo abierto editable por admin.
+create table if not exists public.training_record_adventures (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+alter table public.training_record_adventures enable row level security;
+create policy "read adventures" on public.training_record_adventures
+  for select using (auth.uid() is not null);
+create policy "admin write adventures" on public.training_record_adventures
+  for all using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+
+insert into public.training_record_adventures (name, sort_order) values
+  ('Flotabilidad perfecta', 1),
+  ('Buceo nocturno', 2),
+  ('Computador de buceo', 3),
+  ('Barco hundido', 4),
+  ('Identificación de peces', 5),
+  ('Corrientes', 6)
+on conflict (name) do nothing;
+
+-- Migración aditiva Release V1, Fase 5 (2026-09-02, firma de instructor +
+-- catálogo de aventuras) para instalaciones existentes —
+-- scripts/migrations/0010-firma-instructor-y-aventuras.sql tiene el mismo
+-- DDL, aplicarlo con scripts/apply-migration.mjs.
 
 -- ---------- Notas de diseño del esquema ----------
 -- - No existe tabla "activity_types" (Instructor/Comisión) — se eliminó al

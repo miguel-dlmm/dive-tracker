@@ -6,6 +6,8 @@ import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, 
 import { AVATAR_ICONS, AVATAR_COLORS, resolveAvatar } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
 import i18n, { setStoredLanguage } from "./i18n";
+import { computeInitials } from "./computeInitials";
+import SignatureCapture from "./SignatureCapture";
 
 // Pantalla "Mi perfil" (Bloque 5, 2026-09-01) — pantalla secundaria como
 // Configuración/Ayuda (ver App.jsx, SECONDARY_TITLES), no un modal Sheet:
@@ -166,6 +168,14 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
     setSaving(true);
     try {
       const patch = { first_name: firstName.trim() || null, last_name: lastName.trim() || null, nickname: nickname.trim() };
+      // Iniciales de instructor autogeneradas desde nombre/apellidos al
+      // guardar — pedido explícito del usuario, 2026-09-02 — pero solo si
+      // todavía no hay ninguna guardada: que ya tengan un valor es la
+      // señal de que el instructor las editó a mano, y esa edición nunca
+      // se sobrescribe sola.
+      if (!profile.instructor_initials && firstName.trim() && lastName.trim()) {
+        patch.instructor_initials = computeInitials(firstName, lastName);
+      }
       const { error } = await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
       if (error) throw error;
       onProfileUpdated?.(patch);
@@ -223,17 +233,19 @@ function InstructorSection({ profile, onProfileUpdated }) {
   const [saving, setSaving] = useState(false);
   const [initials, setInitials] = useState(profile.instructor_initials || "");
   const [ssiProNumber, setSsiProNumber] = useState(profile.ssi_pro_number || "");
+  const [signature, setSignature] = useState(profile.instructor_signature || null);
 
   const startEdit = () => {
     setInitials(profile.instructor_initials || "");
     setSsiProNumber(profile.ssi_pro_number || "");
+    setSignature(profile.instructor_signature || null);
     setEditing(true);
   };
 
   const save = async () => {
     setSaving(true);
     try {
-      const patch = { instructor_initials: initials.trim() || null, ssi_pro_number: ssiProNumber.trim() || null };
+      const patch = { instructor_initials: initials.trim() || null, ssi_pro_number: ssiProNumber.trim() || null, instructor_signature: signature };
       const { error } = await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
       if (error) throw error;
       onProfileUpdated?.(patch);
@@ -253,6 +265,7 @@ function InstructorSection({ profile, onProfileUpdated }) {
         <div className="space-y-2 text-sm">
           <p><span className="text-gray-400">{t("instructor.initialsLine")}</span> {profile.instructor_initials || "—"}</p>
           <p><span className="text-gray-400">{t("instructor.numberLine")}</span> {profile.ssi_pro_number || "—"}</p>
+          <p><span className="text-gray-400">{t("instructor.signatureLine")}</span> {profile.instructor_signature ? t("instructor.signatureSaved") : "—"}</p>
         </div>
         <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: TEAL }}>
           <Pencil size={14} aria-hidden="true" /> {t("instructor.edit")}
@@ -270,6 +283,14 @@ function InstructorSection({ profile, onProfileUpdated }) {
         <Field label={t("instructor.numberLabel")}>
           <input value={ssiProNumber} onChange={(e) => setSsiProNumber(e.target.value)} className={`${inputCls} w-full`} />
         </Field>
+      </div>
+      <div className="mt-2">
+        {/* Firma real del instructor — pedido explícito del usuario
+            2026-09-02: se firma una vez aquí y se reutiliza en cada
+            Training Record generado después, en vez de volver a firmar
+            documento a documento. Editable en cualquier momento; el
+            cambio se aplica a partir de la siguiente generación. */}
+        <SignatureCapture label={t("instructor.signatureLabel")} value={signature} onChange={setSignature} />
       </div>
       <div className="mt-3">
         <EditActions onSave={save} onCancel={() => setEditing(false)} saveLabel={saving ? t("instructor.saving") : t("instructor.save")} />
