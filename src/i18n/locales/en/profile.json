@@ -1,6 +1,7 @@
 {
   "sections": {
     "personalData": "Personal details",
+    "instructor": "Instructor details",
     "favoriteCurrency": "Favorite currency",
     "language": "Language",
     "security": "Security",
@@ -36,6 +37,18 @@
       "nicknameAt": "The nickname can't contain \"@\".",
       "generic": "Couldn't save. Please try again."
     }
+  },
+  "instructor": {
+    "hint": "Used to auto-fill your Training Records — saved here once, not per device.",
+    "initialsLine": "Initials:",
+    "numberLine": "SSI Pro number:",
+    "edit": "Edit",
+    "initialsLabel": "Initials",
+    "numberLabel": "SSI Pro number",
+    "save": "Save",
+    "saving": "Saving…",
+    "toastSuccess": "Instructor details updated",
+    "toastError": "Couldn't save your instructor details. Please try again."
   },
   "currency": {
     "hint": "Used as the default currency for a course adjustment when there's no rate to determine it. Every other movement always uses its own rate's currency.",

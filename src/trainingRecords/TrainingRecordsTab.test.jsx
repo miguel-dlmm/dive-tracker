@@ -31,16 +31,21 @@ import TrainingRecordsTab from "./TrainingRecordsTab";
 
 const TEMPLATE_ROW = { code: "OWD", name: "Open Water Diver", storage_path: "OWD/OWD_Spanish_Record.pdf" };
 
+// Perfil con los 4 datos de instructor completos (nombre, apellidos,
+// iniciales, número SSI Pro) — el caso "feliz" que usan la mayoría de los
+// tests. Los tests del aviso de datos incompletos parten de este objeto y
+// quitan un campo cada vez.
+const COMPLETE_PROFILE = { user_id: "u1", first_name: "Miguel", last_name: "Instructor", instructor_initials: "MI", ssi_pro_number: "12345" };
+
 function renderTab(props = {}) {
   return render(
     <ToastProvider>
-      <TrainingRecordsTab userId="u1" accentColor="#0E7C7B" {...props} />
+      <TrainingRecordsTab profile={COMPLETE_PROFILE} accentColor="#0E7C7B" {...props} />
     </ToastProvider>
   );
 }
 
 beforeEach(() => {
-  localStorage.clear();
   templatesQuery.order.mockResolvedValue({ data: [TEMPLATE_ROW], error: null });
   storageDownload.mockResolvedValue({ data: { arrayBuffer: async () => new Uint8Array([9, 9, 9]).buffer }, error: null });
   fillTrainingRecordPdf.mockClear();
@@ -98,14 +103,31 @@ it("genera y descarga el registro de un alumno del roster", async () => {
   expect(global.URL.createObjectURL).toHaveBeenCalled();
 });
 
-it("recuerda los datos del instructor entre aperturas (localStorage, no Supabase)", async () => {
+it("muestra con qué instructor se va a firmar cuando el perfil está completo", async () => {
   const user = userEvent.setup();
-  const { unmount } = renderTab();
-  await user.click(await screen.findByText("Open Water Diver"));
-  await user.type(screen.getByRole("textbox", { name: "Nombre completo" }), "Miguel Instructor");
-  unmount();
-
   renderTab();
   await user.click(await screen.findByText("Open Water Diver"));
-  expect(await screen.findByDisplayValue("Miguel Instructor")).toBeInTheDocument();
+
+  expect(await screen.findByText("Firmando como Miguel Instructor (MI) — SSI Pro 12345")).toBeInTheDocument();
+});
+
+it.each([
+  ["instructor_initials", "sin iniciales"],
+  ["ssi_pro_number", "sin número SSI Pro"],
+  ["first_name", "sin nombre"],
+  ["last_name", "sin apellidos"],
+])("bloquea el generador con un aviso si al perfil le falta %s (%s), con un botón que abre Mi perfil", async (missingField) => {
+  const user = userEvent.setup();
+  const onOpenProfile = vi.fn();
+  const incompleteProfile = { ...COMPLETE_PROFILE, [missingField]: "" };
+  renderTab({ profile: incompleteProfile, onOpenProfile });
+
+  await user.click(await screen.findByText("Open Water Diver"));
+
+  const notice = await screen.findByText("Antes de generar, completa tus datos de instructor (nombre, iniciales y número SSI Pro) en tu perfil.");
+  expect(notice).toBeInTheDocument();
+  expect(screen.queryByText("Alumnos de esta sesión")).not.toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Ir a mi perfil" }));
+  expect(onOpenProfile).toHaveBeenCalledTimes(1);
 });

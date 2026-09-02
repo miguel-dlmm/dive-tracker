@@ -105,16 +105,21 @@ describe("avatar", () => {
 });
 
 describe("datos personales", () => {
+  // Acotado con within(): InstructorSection (Fase 5, Training Records)
+  // también usa botones "Editar"/"Guardar" en su propia SectionCard, así
+  // que screen.getByRole sin acotar ya no es único.
+  const personalDataSection = () => screen.getByText("Datos personales").closest("div");
+
   it("edita nombre/apellidos/nickname y guarda", async () => {
     const user = userEvent.setup();
     const { update, eq } = mockUpdate();
     const { onProfileUpdated } = renderProfile();
 
-    await user.click(screen.getByRole("button", { name: "Editar" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
     const nickname = screen.getByDisplayValue("ada");
     await user.clear(nickname);
     await user.type(nickname, "adalovelace");
-    await user.click(screen.getByRole("button", { name: "Guardar" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
     await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace" }));
     expect(eq).toHaveBeenCalledWith("user_id", "u1");
@@ -125,7 +130,7 @@ describe("datos personales", () => {
     const user = userEvent.setup();
     renderProfile();
 
-    await user.click(screen.getByRole("button", { name: "Editar" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
     const nickname = screen.getByDisplayValue("ada");
     await user.clear(nickname);
     await user.type(nickname, "ada@x.com");
@@ -139,10 +144,36 @@ describe("datos personales", () => {
     mockUpdate({ error: { code: "23505", message: "duplicate key value violates unique constraint \"profiles_nickname_lower_key\"" } });
     renderProfile();
 
-    await user.click(screen.getByRole("button", { name: "Editar" }));
-    await user.click(screen.getByRole("button", { name: "Guardar" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
     expect(await screen.findByText("Ese nickname ya está en uso.")).toBeInTheDocument();
+  });
+});
+
+describe("datos de instructor", () => {
+  const instructorSection = () => document.getElementById("instructor-section");
+
+  it("muestra — por defecto cuando el perfil no tiene datos de instructor", () => {
+    renderProfile();
+    const section = within(instructorSection());
+    expect(section.getByText("Iniciales:")).toBeInTheDocument();
+    expect(section.getAllByText("—")).toHaveLength(2);
+  });
+
+  it("edita iniciales y número SSI Pro y guarda", async () => {
+    const user = userEvent.setup();
+    const { update, eq } = mockUpdate();
+    const { onProfileUpdated } = renderProfile();
+
+    await user.click(within(instructorSection()).getByRole("button", { name: "Editar" }));
+    await user.type(within(instructorSection()).getByRole("textbox", { name: "Iniciales" }), "al");
+    await user.type(within(instructorSection()).getByRole("textbox", { name: "Número SSI Pro" }), "98765");
+    await user.click(within(instructorSection()).getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ instructor_initials: "AL", ssi_pro_number: "98765" }));
+    expect(eq).toHaveBeenCalledWith("user_id", "u1");
+    expect(onProfileUpdated).toHaveBeenCalled();
   });
 });
 

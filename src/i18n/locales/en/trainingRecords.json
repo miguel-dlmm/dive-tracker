@@ -6,12 +6,12 @@
   "cargandoPlantillas": "Loading templates…",
   "descargandoPlantilla": "Downloading template…",
   "volverPlantillas": "Templates",
-  "instructorPrefs": {
-    "titulo": "Your instructor details",
-    "descripcion": "Filled in automatically on every record you generate — saved on this device only, not tied to any student.",
-    "nombre": "Full name",
-    "iniciales": "Initials",
-    "numero": "SSI Pro number"
+  "instructorMissing": {
+    "mensaje": "Before generating, complete your instructor details (name, initials and SSI Pro number) in your profile.",
+    "boton": "Go to my profile"
+  },
+  "instructorSummary": {
+    "firmandoComo": "Signing as {{name}} ({{initials}}) — SSI Pro {{number}}"
   },
   "roster": {
     "titulo": "Students in this session",

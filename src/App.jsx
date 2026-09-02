@@ -417,6 +417,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
             navSections={navSections} appConfig={appConfig} profile={profile} onClose={closeSecondary}
+            onOpenProfile={() => changeTab("perfil")}
           />
         )}
         {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} />}

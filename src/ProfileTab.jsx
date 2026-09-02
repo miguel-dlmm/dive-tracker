@@ -31,9 +31,9 @@ function friendlyProfileError(err, t) {
   return t("personalData.errors.generic");
 }
 
-function SectionCard({ title, children }) {
+function SectionCard({ title, children, id }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
+    <div id={id} className="rounded-lg border border-gray-200 bg-white p-4 scroll-mt-20">
       <h3 className="mb-3 text-sm font-semibold" style={{ color: NAVY }}>{title}</h3>
       {children}
     </div>
@@ -204,6 +204,75 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
       {nickname.includes("@") && <p role="alert" className="-mt-2 text-xs text-red-600">{t("personalData.nicknameAtError")}</p>}
       <div className="mt-3">
         <EditActions onSave={save} onCancel={() => setEditing(false)} saveLabel={saving ? t("personalData.saving") : t("personalData.save")} />
+      </div>
+    </SectionCard>
+  );
+}
+
+// Datos de instructor para el generador de Training Records (Release V1,
+// Fase 5, pedido explícito del usuario 2026-09-02): antes vivían en
+// localStorage dentro de la propia pantalla de Training Records (por
+// dispositivo); ahora viven en el perfil, mismo patrón de guardado que
+// PersonalDataSection. El nombre impreso no se pide aquí — se deriva de
+// first_name/last_name, que ya tiene su propia sección arriba, evita
+// pedir el mismo dato dos veces.
+function InstructorSection({ profile, onProfileUpdated }) {
+  const { t } = useTranslation("profile");
+  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [initials, setInitials] = useState(profile.instructor_initials || "");
+  const [ssiProNumber, setSsiProNumber] = useState(profile.ssi_pro_number || "");
+
+  const startEdit = () => {
+    setInitials(profile.instructor_initials || "");
+    setSsiProNumber(profile.ssi_pro_number || "");
+    setEditing(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const patch = { instructor_initials: initials.trim() || null, ssi_pro_number: ssiProNumber.trim() || null };
+      const { error } = await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
+      if (error) throw error;
+      onProfileUpdated?.(patch);
+      toast?.success(t("instructor.toastSuccess"));
+      setEditing(false);
+    } catch {
+      toast?.error(t("instructor.toastError"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <SectionCard id="instructor-section" title={t("sections.instructor")}>
+        <p className="mb-2 text-xs text-gray-400">{t("instructor.hint")}</p>
+        <div className="space-y-2 text-sm">
+          <p><span className="text-gray-400">{t("instructor.initialsLine")}</span> {profile.instructor_initials || "—"}</p>
+          <p><span className="text-gray-400">{t("instructor.numberLine")}</span> {profile.ssi_pro_number || "—"}</p>
+        </div>
+        <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: TEAL }}>
+          <Pencil size={14} aria-hidden="true" /> {t("instructor.edit")}
+        </button>
+      </SectionCard>
+    );
+  }
+
+  return (
+    <SectionCard id="instructor-section" title={t("sections.instructor")}>
+      <div className="grid grid-cols-2 gap-2">
+        <Field label={t("instructor.initialsLabel")}>
+          <input value={initials} onChange={(e) => setInitials(e.target.value.toUpperCase())} className={`${inputCls} w-full`} />
+        </Field>
+        <Field label={t("instructor.numberLabel")}>
+          <input value={ssiProNumber} onChange={(e) => setSsiProNumber(e.target.value)} className={`${inputCls} w-full`} />
+        </Field>
+      </div>
+      <div className="mt-3">
+        <EditActions onSave={save} onCancel={() => setEditing(false)} saveLabel={saving ? t("instructor.saving") : t("instructor.save")} />
       </div>
     </SectionCard>
   );
@@ -542,6 +611,7 @@ export default function ProfileTab({ profile, currencies, onProfileUpdated, onAc
     <div className="space-y-4 pb-16">
       <AvatarPicker profile={profile} onProfileUpdated={onProfileUpdated} />
       <PersonalDataSection profile={profile} onProfileUpdated={onProfileUpdated} />
+      <InstructorSection profile={profile} onProfileUpdated={onProfileUpdated} />
       <CurrencySection profile={profile} currencies={currencies} />
       <LanguageSection profile={profile} onProfileUpdated={onProfileUpdated} />
       <PasswordSection />

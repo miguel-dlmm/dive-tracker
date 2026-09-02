@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, ChevronLeft, Award, UserPlus, Download } from "lucide-react";
+import { ChevronRight, ChevronLeft, Award, UserPlus, Download, AlertTriangle } from "lucide-react";
 import { supabase } from "../supabaseClient";
-import { useToast, Fab, Field, RowMenu, inputCls } from "../shared";
+import { useToast, Fab, RowMenu } from "../shared";
 import { TEAL, NAVY } from "../App";
 import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
 import StudentFormSheet from "./StudentFormSheet";
@@ -13,11 +13,17 @@ import StudentRecordSheet from "./StudentRecordSheet";
 // este componente mientras dura la sesión de trabajo, nunca se persiste en
 // Supabase ni en localStorage (decisión de arquitectura ya documentada en
 // docs/RELEASE-V1-PROGRESS.md — evita cualquier riesgo de fuga de datos de
-// alumnos/firmas). Lo único que SÍ se recuerda entre sesiones son los datos
-// propios del instructor (nombre, iniciales, número SSI Pro), porque son
-// una preferencia personal que se repite en cada registro y no un dato de
-// un alumno concreto — mismo criterio que la moneda favorita, ver
-// docs/ADR/0007.
+// alumnos/firmas).
+//
+// Los datos del instructor (nombre, iniciales, número SSI Pro) YA NO se
+// piden ni se editan aquí — pedido explícito del usuario 2026-09-02: viven
+// en el perfil real (profiles.first_name/last_name/instructor_initials/
+// ssi_pro_number, ver ProfileTab.jsx → "Datos de instructor"), para que se
+// rellenen una vez y sirvan en cualquier dispositivo, no por
+// localStorage/sesión como antes. Si faltan al entrar en una plantilla, la
+// pantalla bloquea el generador con un aviso y un botón directo a "Mi
+// perfil" — generar un documento de certificación real sin nombre/iniciales
+// de instructor no es un estado válido, mejor no dejar ni empezar el roster.
 //
 // MVP explícito (pedido del usuario, 2026-09-02): solo se ofrecen las
 // plantillas que son de verdad formularios PDF rellenables (status=active
@@ -26,20 +32,6 @@ import StudentRecordSheet from "./StudentRecordSheet";
 // en coordenadas fijas) y quedan fuera de este generador por ahora. Tampoco
 // se rellena ninguna fecha todavía (pedido explícito, misma fecha) — se
 // decidirá más adelante de dónde sale cada una.
-
-const INSTRUCTOR_PREFS_KEY = (userId) => `oceanpulse:trainingRecordInstructor:${userId || "anon"}`;
-const emptyPrefs = { namePrinted: "", initials: "", number: "" };
-function loadInstructorPrefs(userId) {
-  try {
-    const raw = localStorage.getItem(INSTRUCTOR_PREFS_KEY(userId));
-    return raw ? { ...emptyPrefs, ...JSON.parse(raw) } : emptyPrefs;
-  } catch {
-    return emptyPrefs;
-  }
-}
-function saveInstructorPrefs(userId, prefs) {
-  try { localStorage.setItem(INSTRUCTOR_PREFS_KEY(userId), JSON.stringify(prefs)); } catch { /* preferencia de UI, no crítica */ }
-}
 
 function downloadBytes(bytes, filename) {
   const blob = new Blob([bytes], { type: "application/pdf" });
@@ -57,26 +49,37 @@ function safeFilePart(text) {
   return (text || "").trim().replace(/[^\p{L}\p{N}]+/gu, "_");
 }
 
-function InstructorPrefsPanel({ prefs, onChange }) {
+// Bloquea el generador cuando al perfil le falta cualquiera de los datos de
+// instructor (nombre/apellidos, iniciales, número SSI Pro) — pedido
+// explícito del usuario 2026-09-02: mejor no dejar ni empezar un roster que
+// llegar al final y no poder generar el documento.
+function InstructorMissingNotice({ onOpenProfile }) {
   const { t } = useTranslation("trainingRecords");
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <h3 className="mb-1 text-sm font-semibold text-gray-800">{t("instructorPrefs.titulo")}</h3>
-      <p className="mb-3 text-xs text-gray-400">{t("instructorPrefs.descripcion")}</p>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2">
-          <Field label={t("instructorPrefs.nombre")}>
-            <input value={prefs.namePrinted} onChange={(e) => onChange({ ...prefs, namePrinted: e.target.value })} className={`${inputCls} w-full`} />
-          </Field>
-        </div>
-        <Field label={t("instructorPrefs.iniciales")}>
-          <input value={prefs.initials} onChange={(e) => onChange({ ...prefs, initials: e.target.value.toUpperCase() })} className={`${inputCls} w-full`} />
-        </Field>
-        <Field label={t("instructorPrefs.numero")}>
-          <input value={prefs.number} onChange={(e) => onChange({ ...prefs, number: e.target.value })} className={`${inputCls} w-full`} />
-        </Field>
-      </div>
+    <div className="flex flex-col items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-5 text-center">
+      <AlertTriangle size={22} className="text-amber-500" aria-hidden="true" />
+      <p className="text-sm text-amber-800">{t("instructorMissing.mensaje")}</p>
+      <button
+        onClick={onOpenProfile}
+        className="flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-medium text-white"
+        style={{ backgroundColor: TEAL }}
+      >
+        {t("instructorMissing.boton")}
+      </button>
     </div>
+  );
+}
+
+// Recordatorio de solo lectura de con qué identidad de instructor se va a
+// firmar — un documento de certificación real no debe generarse "a
+// ciegas" sobre qué instructor queda impreso. Editar estos datos ya no se
+// hace aquí, ver "Mi perfil" → "Datos de instructor".
+function InstructorSummary({ instructor }) {
+  const { t } = useTranslation("trainingRecords");
+  return (
+    <p className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-xs text-gray-500">
+      {t("instructorSummary.firmandoComo", { name: instructor.namePrinted, initials: instructor.initials, number: instructor.number })}
+    </p>
   );
 }
 
@@ -118,7 +121,7 @@ function RosterRow({ student, hasGenerated, onOpenGenerate, onEdit, onDelete, on
   );
 }
 
-export default function TrainingRecordsTab({ userId, accentColor }) {
+export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile }) {
   const { t } = useTranslation("trainingRecords");
   const toast = useToast();
   const [templates, setTemplates] = useState([]);
@@ -126,7 +129,6 @@ export default function TrainingRecordsTab({ userId, accentColor }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [templateBytes, setTemplateBytes] = useState(null);
   const [loadingTemplateFile, setLoadingTemplateFile] = useState(false);
-  const [instructorPrefs, setInstructorPrefs] = useState(() => loadInstructorPrefs(userId));
   const [roster, setRoster] = useState([]);
   const [studentSheet, setStudentSheet] = useState(null);
   const [generateFor, setGenerateFor] = useState(null);
@@ -148,11 +150,6 @@ export default function TrainingRecordsTab({ userId, accentColor }) {
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const updateInstructorPrefs = (next) => {
-    setInstructorPrefs(next);
-    saveInstructorPrefs(userId, next);
-  };
 
   const selectTemplate = async (tpl) => {
     setSelectedTemplate(tpl);
@@ -222,6 +219,13 @@ export default function TrainingRecordsTab({ userId, accentColor }) {
   const templateMap = selectedTemplate ? TEMPLATE_FIELD_MAPS[selectedTemplate.code] : null;
   const anyGenerated = roster.some((s) => generatedByStudent[s.id]);
 
+  const instructor = {
+    namePrinted: [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim(),
+    initials: profile?.instructor_initials || "",
+    number: profile?.ssi_pro_number || "",
+  };
+  const instructorComplete = Boolean(profile?.first_name?.trim() && profile?.last_name?.trim() && instructor.initials.trim() && instructor.number.trim());
+
   if (loadingTemplates) return <p className="text-sm text-gray-400">{t("cargandoPlantillas")}</p>;
 
   if (!selectedTemplate) {
@@ -233,6 +237,18 @@ export default function TrainingRecordsTab({ userId, accentColor }) {
     );
   }
 
+  if (!instructorComplete) {
+    return (
+      <div className="space-y-4 pb-16">
+        <button onClick={backToTemplates} className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium" style={{ color: TEAL }}>
+          <ChevronLeft size={18} aria-hidden="true" /> {t("volverPlantillas")}
+        </button>
+        <h2 className="-mt-2 text-base font-semibold" style={{ color: NAVY }}>{selectedTemplate.name}</h2>
+        <InstructorMissingNotice onOpenProfile={onOpenProfile} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 pb-24">
       <button onClick={backToTemplates} className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium" style={{ color: TEAL }}>
@@ -240,7 +256,7 @@ export default function TrainingRecordsTab({ userId, accentColor }) {
       </button>
       <h2 className="-mt-2 text-base font-semibold" style={{ color: NAVY }}>{selectedTemplate.name}</h2>
 
-      <InstructorPrefsPanel prefs={instructorPrefs} onChange={updateInstructorPrefs} />
+      <InstructorSummary instructor={instructor} />
 
       {loadingTemplateFile ? (
         <p className="text-sm text-gray-400">{t("descargandoPlantilla")}</p>
@@ -295,7 +311,7 @@ export default function TrainingRecordsTab({ userId, accentColor }) {
         templateMap={templateMap}
         templateName={selectedTemplate.name}
         templateBytes={templateBytes}
-        instructor={instructorPrefs}
+        instructor={instructor}
         onGenerated={(bytes) => handleGenerated(generateFor, bytes)}
       />
     </div>

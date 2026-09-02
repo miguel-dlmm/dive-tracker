@@ -1,6 +1,7 @@
 {
   "sections": {
     "personalData": "Datos personales",
+    "instructor": "Datos de instructor",
     "favoriteCurrency": "Moneda favorita",
     "language": "Idioma",
     "security": "Seguridad",
@@ -36,6 +37,18 @@
       "nicknameAt": "El nickname no puede contener \"@\".",
       "generic": "No se pudo guardar. Inténtalo de nuevo."
     }
+  },
+  "instructor": {
+    "hint": "Se usan para rellenar tus Training Records automáticamente — se guardan aquí una sola vez, no por dispositivo.",
+    "initialsLine": "Iniciales:",
+    "numberLine": "Número SSI Pro:",
+    "edit": "Editar",
+    "initialsLabel": "Iniciales",
+    "numberLabel": "Número SSI Pro",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "toastSuccess": "Datos de instructor actualizados",
+    "toastError": "No se pudieron guardar los datos de instructor. Inténtalo de nuevo."
   },
   "currency": {
     "hint": "Se usa como moneda por defecto en Ajuste de curso, cuando no hay una tarifa que la determine. El resto de movimientos siempre usan la moneda de su tarifa.",

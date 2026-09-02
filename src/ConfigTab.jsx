@@ -1583,7 +1583,7 @@ function ConfigMenuGroup({ title, items, onSelect }) {
 // onClose (opcional): cierra Configuración entera (mismo handler que la "X"
 // de la cabecera, ver App.jsx) — lo dispara el gesto de "atrás" cuando ya
 // estamos en el menú principal, sin ninguna sección abierta (ver backProps).
-export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose }) {
+export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose, onOpenProfile }) {
   const { t } = useTranslation("config");
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
   const isSuperadmin = !!profile?.is_superadmin;
@@ -1641,7 +1641,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
           accentColor={sectionColor("rates")}
         />
       )}
-      {section === "training-records" && <TrainingRecordsTab userId={profile?.user_id} accentColor={sectionColor("trabajo")} />}
+      {section === "training-records" && <TrainingRecordsTab profile={profile} accentColor={sectionColor("trabajo")} onOpenProfile={onOpenProfile} />}
       {isAdmin && section === "tipos-pago" && (
         <CrudTable createLabel={t("crud.nuevoTipoPago")} editLabel={t("crud.editarTipoPago")} table={paymentTypes} hasDefault fields={[{ key: "name", label: t("crud.nombreCampo") }]} />
       )}

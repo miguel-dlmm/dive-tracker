@@ -98,6 +98,13 @@ create table if not exists public.profiles (
   -- idiomas soportados hoy; ampliar la lista es un check nuevo, no una
   -- migración de datos.
   language text not null default 'es' check (language in ('es', 'en')),
+  -- Datos de instructor para el generador de Training Records (Release V1
+  -- Fase 5, 2026-09-02) — viven en el perfil, no en localStorage por
+  -- dispositivo, para que se rellenen una vez y sirvan en cualquier sesión.
+  -- El nombre impreso no es una columna aparte: se deriva de
+  -- first_name + last_name, que ya existen.
+  instructor_initials text,
+  ssi_pro_number text,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
@@ -924,6 +931,11 @@ create policy "admin manage template files" on storage.objects
 -- Migración aditiva Release V1, Fase 5 (2026-09-02) para instalaciones
 -- existentes — scripts/migrations/0008-training-record-templates.sql
 -- tiene el mismo DDL, aplicarlo con scripts/apply-migration.mjs.
+
+-- Migración aditiva Release V1, Fase 5 (2026-09-02, datos de instructor en
+-- el perfil) para instalaciones existentes —
+-- scripts/migrations/0009-datos-instructor-perfil.sql tiene el mismo DDL,
+-- aplicarlo con scripts/apply-migration.mjs.
 
 -- ---------- Notas de diseño del esquema ----------
 -- - No existe tabla "activity_types" (Instructor/Comisión) — se eliminó al

@@ -6,12 +6,12 @@
   "cargandoPlantillas": "Cargando plantillas…",
   "descargandoPlantilla": "Descargando plantilla…",
   "volverPlantillas": "Plantillas",
-  "instructorPrefs": {
-    "titulo": "Tus datos de instructor",
-    "descripcion": "Se rellenan solos en cada registro que generes — se guardan en este dispositivo, no en un alumno concreto.",
-    "nombre": "Nombre completo",
-    "iniciales": "Iniciales",
-    "numero": "Número SSI Pro"
+  "instructorMissing": {
+    "mensaje": "Antes de generar, completa tus datos de instructor (nombre, iniciales y número SSI Pro) en tu perfil.",
+    "boton": "Ir a mi perfil"
+  },
+  "instructorSummary": {
+    "firmandoComo": "Firmando como {{name}} ({{initials}}) — SSI Pro {{number}}"
   },
   "roster": {
     "titulo": "Alumnos de esta sesión",
