@@ -20,7 +20,6 @@ ADR en `docs/ADR/` antes de implementarse, esté en "Ahora" o en "Después".
 
 | Ítem | Problema que resuelve | Valor | Esfuerzo | Riesgo | Dependencia |
 |---|---|---|---|---|---|
-| Sembrar `payment_statuses` (Pending/Paid) en el alta + autoservicio del instructor | Cuenta nueva nace sin estados de pago y hoy no puede gestionarlos ella misma. La cuenta demo (`dev-bypass`) se corrigió a mano el 2026-08-28 tras confirmar que este era exactamente el problema — el hueco de fondo (ninguna cuenta nueva nace con estos 2 estados) sigue sin resolverse | Medio-Alto | S | Bajo | Ninguna |
 | **Bug:** añadir tarifa inline bloquea el formulario de Mi trabajo | Ver nota de detalle debajo de la tabla — investigado a fondo el 2026-08-29 sin conseguir reproducirlo; sigue sin causa raíz confirmada | Alto (bloquea una acción frecuente; riesgo de pérdida de trabajo del usuario) | Necesita prueba en iPhone físico real — no reproducible con las herramientas disponibles en este entorno | Alto mientras no se reproduzca ni se confirme la causa, por tratarse de un flujo de uso diario | Prueba manual del usuario en su iPhone (ver nota) |
 
 **Nota de bug — añadir tarifa inline bloquea el formulario** (registrado el 2026-08-28; investigado a fondo el 2026-08-29, sin conseguir reproducirlo ni confirmar causa raíz):
