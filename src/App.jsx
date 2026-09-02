@@ -134,6 +134,28 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   const activities = useSupabaseTable("activities", "name");
   const paymentTypes = useSupabaseTable("payment_types", "name");
   const paymentStatuses = useSupabaseTable("payment_statuses", "name");
+  // Siembra los 2 estados de pago por defecto (Pendiente/Cobrado) la
+  // primera vez que una cuenta carga la app con el catálogo vacío —
+  // backlog: "cuenta nueva nace sin estados de pago y hoy no puede
+  // gestionarlos ella misma" (docs/BACKLOG.md). payment_statuses queda
+  // fuera de setup_datasets a propósito (ver schema.sql), así que
+  // ninguna cuenta nueva los recibía nunca; esto también corrige de paso
+  // cualquier cuenta ya existente que se haya quedado sin ninguno (antes
+  // solo se arregló a mano para la cuenta demo, 2026-08-28). Sin
+  // migración: son INSERT normales vía el cliente, ya permitidos por la
+  // RLS "own rows" que la tabla ya tiene.
+  useEffect(() => {
+    if (!paymentStatuses.loaded || paymentStatuses.rows.length > 0) return;
+    (async () => {
+      try {
+        await paymentStatuses.insertRow({ name: "Pendiente", is_default: true, color: "#D97706" });
+        await paymentStatuses.insertRow({ name: "Cobrado", color: "#10B981" });
+      } catch (err) {
+        console.error("No se pudieron sembrar los estados de pago por defecto", err);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe dispararse cuando loaded pasa a true con 0 filas, no en cada cambio de identidad de paymentStatuses
+  }, [paymentStatuses.loaded, paymentStatuses.rows.length]);
   const currencies = useSupabaseTable("currencies", "name", "code");
   const rates = useSupabaseTable("rates", "school");
   const commissionRates = useSupabaseTable("commission_rates", "school");
