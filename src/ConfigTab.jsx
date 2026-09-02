@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
 import {
@@ -15,6 +15,23 @@ import RatesTab from "./RatesTab";
 import DatasetsSection from "./DatasetsSection";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
+
+// Backlog: "Animación de salida completa en UserDetailSheet/CreateUserSheet/
+// ActivationLinkPanel" — las 3 hojas las MONTABA/DESMONTABA por completo su
+// padre ({cond && <Hoja/>}), así que Motion nunca llegaba a terminar la
+// transición de salida (React desmonta el árbol entero antes de que
+// AnimatePresence pueda animar el cierre). El patrón correcto (ya probado en
+// MovementSheet.jsx) es mantener la hoja siempre montada y pasarle `open`
+// como prop — pero eso significa que, en el instante de cerrar, el propio
+// padre ya ha puesto a null el dato real (el usuario, el enlace) mientras
+// la animación de salida SIGUE en pantalla un momento más. useRetained
+// recuerda el último valor no-nulo para que la hoja no se quede en blanco
+// a mitad de esa animación.
+function useRetained(value) {
+  const ref = useRef(value);
+  if (value != null) ref.current = value;
+  return ref.current;
+}
 
 // Mensaje determinista para las 4 acciones de gestión de usuarios: cada
 // handler (server/users/*.js) usa 403 EXCLUSIVAMENTE para "quien llama no
@@ -554,16 +571,38 @@ function UserListRow({ user, status, deactivatedAt, onOpen }) {
 // de interacción (EditActions, Field, feedback por toast) sin forzar una
 // estructura de pantalla que no pinta nada en este caso.
 function UserDetailSheet({
-  user, status, lastSignInAt, deactivatedAt, currentUserId, viewerIsSuperadmin, actionBusy,
+  open, user: userProp, status: statusProp, lastSignInAt: lastSignInAtProp, deactivatedAt: deactivatedAtProp,
+  currentUserId, viewerIsSuperadmin, actionBusy,
   onClose, onRequestToggleAdmin, onRequestToggleActive, onRequestRegenerateLink,
   onRequestRegeneratePassword, onRequestDelete, onSaveProfile,
 }) {
   const { t } = useTranslation("config");
+  // Retenidos juntos (mismo snapshot) porque están relacionados entre sí —
+  // ver useRetained arriba. Antes de la primera apertura no hay nada que
+  // retener todavía, la hoja no debe montar ningún contenido real. Los
+  // props llegan con sufijo *Prop porque el resto del render de abajo
+  // sigue usando los nombres cortos (user/status/...) tal cual, ahora
+  // apuntando al snapshot retenido — ver el shadowing explícito más abajo.
+  const snapshot = useRetained(userProp ? { user: userProp, status: statusProp, lastSignInAt: lastSignInAtProp, deactivatedAt: deactivatedAtProp } : null);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ first_name: "", last_name: "", nickname: "" });
+  // Cierra siempre sin edición pendiente — reabrir (el mismo usuario u
+  // otro distinto) debe partir en blanco, igual que antes cuando cada
+  // apertura remontaba el componente desde cero. Todos los hooks van ANTES
+  // del "return null" de abajo (nunca condicionales) — reglas de hooks.
+  useEffect(() => {
+    if (!open) setEditingProfile(false);
+  }, [open]);
+
+  if (!snapshot) return null;
+  // Shadowing intencionado: el resto del render de abajo ya usa
+  // user/status/lastSignInAt/deactivatedAt tal cual (sin tocar), ahora
+  // apuntando al snapshot retenido en vez de a los props crudos — así no
+  // hace falta renombrar cada referencia en todo el cuerpo del componente.
+  const { user, status, lastSignInAt, deactivatedAt } = snapshot;
   const editable = viewerIsSuperadmin && user.user_id !== currentUserId && !user.is_superadmin;
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "—";
 
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({ first_name: user.first_name || "", last_name: user.last_name || "", nickname: user.nickname || "" });
   const startEditProfile = () => {
     setProfileForm({ first_name: user.first_name || "", last_name: user.last_name || "", nickname: user.nickname || "" });
     setEditingProfile(true);
@@ -574,7 +613,7 @@ function UserDetailSheet({
   };
 
   return (
-    <Sheet open onClose={onClose}>
+    <Sheet open={open} onClose={onClose}>
       <div className="mb-1 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-800">{user.nickname}</h3>
         <button onClick={onClose} aria-label={t("userDetailSheet.cerrar")} className="text-gray-400"><X size={19} /></button>
@@ -694,22 +733,30 @@ function UserDetailSheet({
 // intento real de enviar un email (alta, regenerar enlace/contraseña) —
 // generar un enlace de invitación nunca intenta enviar ningún email, así
 // que mostrarlo ahí sería confuso, no solo temporalmente irrelevante.
-function ActivationLinkPanel({ title, description, link, onClose, hideMockEmailButton = false }) {
+function ActivationLinkPanel({ open, title: titleProp, description: descriptionProp, link: linkProp, onClose, hideMockEmailButton: hideMockEmailButtonProp = false }) {
   const { t } = useTranslation("config");
   const toast = useToast();
+  // Ver useRetained arriba — sin esto, el panel se quedaría en blanco a
+  // mitad de la animación de cierre (el padre ya pone `linkPanel` a null
+  // en el instante de cerrar). El resto del render sigue usando los
+  // nombres cortos (title/description/link/hideMockEmailButton), ahora
+  // apuntando al snapshot retenido — ver el shadowing explícito abajo.
+  const snapshot = useRetained(linkProp ? { title: titleProp, description: descriptionProp, link: linkProp, hideMockEmailButton: hideMockEmailButtonProp } : null);
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(link);
+      await navigator.clipboard.writeText(snapshot.link);
       toast?.success(t("activationLinkPanel.enlaceCopiado"));
     } catch {
       toast?.error(t("activationLinkPanel.noSePudoCopiar"));
     }
   };
+  if (!snapshot) return null;
+  const { title, description, link, hideMockEmailButton } = snapshot;
   return (
     // z-50: puede convivir con UserDetailSheet (z-40) todavía abierta detrás
     // (p. ej. tras "Regenerar enlace" desde el propio detalle) — debe
     // quedar por encima, no reemplazarla.
-    <Sheet open onClose={onClose} zIndexClass="z-50">
+    <Sheet open={open} onClose={onClose} zIndexClass="z-50">
       <div className="mb-1 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
         <button onClick={onClose} aria-label={t("activationLinkPanel.cerrar")} className="text-gray-400"><X size={19} /></button>
@@ -770,7 +817,7 @@ const LANGUAGE_OPTIONS = [
 // Hoja de creación de usuario — solo visible/usable para superadmin (ver
 // UsersDirectory). Llama a la función serverless create-user, que es la
 // única pieza con permiso para invocar el Admin API de Supabase Auth.
-function CreateUserSheet({ onClose, onCreated }) {
+function CreateUserSheet({ open, onClose, onCreated }) {
   const { t } = useTranslation("config");
   const [form, setForm] = useState(emptyUserForm);
   const [datasetLabel, setDatasetLabel] = useState("");
@@ -788,12 +835,32 @@ function CreateUserSheet({ onClose, onCreated }) {
   const [emailFailure, setEmailFailure] = useState(null);
   const toast = useToast();
 
+  // La hoja ahora se queda siempre montada (ver useRetained arriba y el
+  // punto de montaje más abajo, "Animación de salida completa") — sin
+  // este reset, reabrirla tras cancelar/completar un alta anterior
+  // mostraría el formulario a medio rellenar de la vez anterior, en vez
+  // de partir en blanco como pasaba antes (remontaje completo cada vez).
+  useEffect(() => {
+    if (!open) return;
+    setForm(emptyUserForm);
+    setDatasetLabel("");
+    setLanguageLabel(LANGUAGE_OPTIONS.find((l) => l.code === i18n.language)?.label || LANGUAGE_OPTIONS[0].label);
+    setEmailFailure(null);
+  }, [open]);
+
   // setup_datasets tiene una policy propia de solo-lectura para admins
   // (ver schema.sql) pensada exactamente para este desplegable — nunca se
   // lee aquí setup_dataset_schools/activities/rates/..., esas siguen
   // cerradas y solo accesibles vía clone_setup_dataset() en el servidor.
+  // Condicionado a `open` (antes bastaba con montar el componente, porque
+  // el padre solo lo montaba al abrir la hoja): al quedarse siempre
+  // montada para animar bien el cierre, sin este guard se pediría el
+  // listado de datasets en cuanto se abre "Usuarios", aunque nunca se
+  // llegue a pulsar "Crear usuario".
   useEffect(() => {
+    if (!open) return;
     let active = true;
+    setDatasetsLoading(true);
     supabase.from("setup_datasets").select("key, label").order("label").then(({ data, error }) => {
       if (!active) return;
       if (error) {
@@ -805,8 +872,8 @@ function CreateUserSheet({ onClose, onCreated }) {
       setDatasetsLoading(false);
     });
     return () => { active = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast/t no deben re-disparar el fetch
+  }, [open]);
 
   const submit = async () => {
     const dataset = datasets.find((d) => d.label === datasetLabel);
@@ -853,7 +920,7 @@ function CreateUserSheet({ onClose, onCreated }) {
   // proveedor de email falla. Revisar/eliminar antes de producción pública.
   if (emailFailure) {
     return (
-      <Sheet open onClose={onCreated}>
+      <Sheet open={open} onClose={onCreated}>
         <div className="mb-1 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-amber-700">{t("createUserSheet.noSePudoEnviarEmailTitulo")}</h3>
           <button onClick={onCreated} aria-label={t("createUserSheet.cerrar")} className="text-gray-400"><X size={19} /></button>
@@ -893,7 +960,7 @@ function CreateUserSheet({ onClose, onCreated }) {
   }
 
   return (
-    <Sheet open onClose={() => !submitting && onClose()}>
+    <Sheet open={open} onClose={() => !submitting && onClose()}>
       <div className="mb-1 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-800">{t("createUserSheet.titulo")}</h3>
         <button onClick={() => !submitting && onClose()} aria-label={t("createUserSheet.cerrar")} className="text-gray-400"><X size={19} /></button>
@@ -1403,41 +1470,45 @@ function UsersDirectory({ profile }) {
         </div>
       )}
 
-      {sheetOpen && (
-        <CreateUserSheet
-          onClose={() => setSheetOpen(false)}
-          onCreated={() => { setSheetOpen(false); reload(); }}
-        />
-      )}
+      {/* Backlog: "Animación de salida completa" — las 3 hojas de abajo se
+          quedan SIEMPRE montadas (nunca `{cond && <Hoja/>}`) y reciben
+          `open` como prop, para que Motion pueda terminar la animación de
+          cierre en vez de que React desmonte el árbol de golpe. Cada hoja
+          retiene su último contenido no-nulo mientras `open` es false
+          (ver useRetained), así que sigue siendo seguro pasarle un
+          `openUser`/`linkPanel` ya a null en ese instante. */}
+      <CreateUserSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onCreated={() => { setSheetOpen(false); reload(); }}
+      />
 
-      {openUser && (
-        <UserDetailSheet
-          user={openUser}
-          status={userStatus(activeByUser[openUser.user_id] ?? true, activatedAtByUser[openUser.user_id])}
-          lastSignInAt={lastSignInByUser[openUser.user_id] ?? null}
-          deactivatedAt={deactivatedAtByUser[openUser.user_id]}
-          currentUserId={profile?.user_id}
-          viewerIsSuperadmin={!!profile?.is_superadmin}
-          actionBusy={submitting}
-          onClose={() => setOpenUserId(null)}
-          onRequestToggleAdmin={requestAdminToggle}
-          onRequestToggleActive={requestToggleActive}
-          onRequestRegenerateLink={requestRegenerateLink}
-          onRequestRegeneratePassword={requestRegeneratePassword}
-          onRequestDelete={requestDelete}
-          onSaveProfile={saveProfile}
-        />
-      )}
+      <UserDetailSheet
+        open={!!openUser}
+        user={openUser}
+        status={openUser ? userStatus(activeByUser[openUser.user_id] ?? true, activatedAtByUser[openUser.user_id]) : null}
+        lastSignInAt={openUser ? (lastSignInByUser[openUser.user_id] ?? null) : null}
+        deactivatedAt={openUser ? deactivatedAtByUser[openUser.user_id] : null}
+        currentUserId={profile?.user_id}
+        viewerIsSuperadmin={!!profile?.is_superadmin}
+        actionBusy={submitting}
+        onClose={() => setOpenUserId(null)}
+        onRequestToggleAdmin={requestAdminToggle}
+        onRequestToggleActive={requestToggleActive}
+        onRequestRegenerateLink={requestRegenerateLink}
+        onRequestRegeneratePassword={requestRegeneratePassword}
+        onRequestDelete={requestDelete}
+        onSaveProfile={saveProfile}
+      />
 
-      {linkPanel && (
-        <ActivationLinkPanel
-          title={linkPanel.title}
-          description={linkPanel.description}
-          link={linkPanel.link}
-          onClose={() => setLinkPanel(null)}
-          hideMockEmailButton={linkPanel.hideMockEmailButton}
-        />
-      )}
+      <ActivationLinkPanel
+        open={!!linkPanel}
+        title={linkPanel?.title}
+        description={linkPanel?.description}
+        link={linkPanel?.link}
+        onClose={() => setLinkPanel(null)}
+        hideMockEmailButton={linkPanel?.hideMockEmailButton}
+      />
 
       <ConfirmDialog
         open={!!pendingToggle}

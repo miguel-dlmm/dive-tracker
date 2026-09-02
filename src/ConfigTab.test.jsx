@@ -519,6 +519,62 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await waitFor(() => expect(screen.queryByRole("button", { name: "Eliminar usuario" })).not.toBeInTheDocument());
   });
 
+  // Backlog: "Animación de salida completa en UserDetailSheet/
+  // CreateUserSheet/ActivationLinkPanel" — las 3 hojas pasaron a quedarse
+  // siempre montadas (con `open` como prop) para que Motion pueda animar
+  // el cierre. Riesgo real de ese cambio: como la hoja YA NO se remonta
+  // desde cero cada vez que se abre, cualquier estado interno (edición en
+  // curso, formulario a medio rellenar) podría quedarse "pegado" de una
+  // apertura a la siguiente si no se resetea explícitamente al cerrar —
+  // estos tests cubren justo eso, no la animación en sí (Motion/jsdom no
+  // se puede verificar aquí, solo a mano/mobile-check).
+  it("cerrar la hoja de detalle mientras se edita, y reabrirla, no deja la edición a medias", async () => {
+    const user = userEvent.setup();
+    mockProfilesFrom(null);
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+
+    await openUsuarios(user);
+    await user.click(screen.getByRole("button", { name: /ana/ }));
+    await user.click(screen.getByRole("button", { name: "Editar datos" }));
+    await user.clear(screen.getByLabelText("Nickname"));
+    await user.type(screen.getByLabelText("Nickname"), "borrador-sin-guardar");
+    await user.click(screen.getByRole("button", { name: "Cerrar" }));
+
+    await user.click(screen.getByRole("button", { name: /ana/ }));
+
+    expect(screen.queryByLabelText("Nickname")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Editar datos" })).toBeInTheDocument();
+  });
+
+  it("cerrar 'Crear usuario' con datos a medio rellenar, y reabrir, muestra el formulario en blanco", async () => {
+    const user = userEvent.setup();
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+    // CreateUserSheet ahora se queda siempre montada (ver backlog más
+    // arriba) y pide setup_datasets en cuanto se abre — mockProfilesFrom
+    // (beforeEach) solo conocía la tabla "profiles", hace falta ampliarla.
+    supabase.from.mockImplementation((table) => {
+      if (table === "setup_datasets") return { select: () => ({ order: () => Promise.resolve({ data: [{ key: "ihasia", label: "Ihasia" }], error: null }) }) };
+      if (table === "profiles") return { select: () => Promise.resolve({ data: [], error: null }) };
+      throw new Error(`tabla inesperada en el mock: ${table}`);
+    });
+    render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
+    await user.click(screen.getByText("Usuarios"));
+
+    await user.click(screen.getByRole("button", { name: "Crear usuario" }));
+    await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Borrador sin guardar");
+    await user.click(screen.getByRole("button", { name: "Cerrar" }));
+
+    // El botón de abrir y el "Crear usuario" de dentro de la propia hoja
+    // comparten el mismo texto — con la hoja siempre montada (para poder
+    // animar el cierre), justo tras cerrar puede seguir en el DOM a medio
+    // animar; getAllByRole()[0] es siempre el botón de abrir (primero en
+    // el orden del DOM, fuera de la hoja).
+    const [openTrigger] = screen.getAllByRole("button", { name: "Crear usuario" });
+    await user.click(openTrigger);
+
+    expect(screen.getByRole("textbox", { name: "Nombre" })).toHaveValue("");
+  });
+
   // Antes admin_list_profiles() devolvía las filas en orden de alta, sin
   // ordenar — con varios usuarios, encontrar uno concreto obligaba a leer
   // toda la lista.
