@@ -17,18 +17,32 @@ export function computeRateTotal(rate, people) {
   return rate.rate * (Number(people) || 0);
 }
 
-// Única fuente de verdad de toda la actividad económica del instructor —
-// Registro + Comisiones + TODOS los pagos de compañeros, incluidos los
-// negativos (lo que tú debes, no solo lo que te deben). Es la base de "Mi
-// trabajo" — ver docs/ADR/0005-mi-trabajo-unificacion-economica.md.
-export function buildActivityEntries({ worklog, rates, comisiones, commissionRates, colleaguePayments, fallbackCurrency }) {
+// Las 3 fuentes de actividad económica, SIN fusionar — HomeTab y
+// SummaryTab necesitan tanto el array combinado (calendario, "total")
+// como cada fuente por separado (calendario agrupado por tipo,
+// KPIs/desgloses que solo miran una fuente concreta). Antes cada pantalla
+// duplicaba byte a byte este mismo `rateTotal` + los 3 `.map()` — ver
+// docs/BACKLOG.md, "Reutilizar componente entre Home y Resumen"
+// (extraído aquí 2026-09-02, sin cambiar ningún cálculo, solo el sitio
+// donde vive).
+export function buildEntriesBySource({ worklog, rates, comisiones, commissionRates, colleaguePayments, fallbackCurrency }) {
   const rateTotal = (e, ratesTable) => {
     const r = ratesTable.find((r) => r.school === e.school && r.activity === e.activity);
     return { total: computeRateTotal(r, e.people), currency: r?.currency || e.currency || fallbackCurrency };
   };
-  const ganado = worklog.map((e) => ({ ...e, ...rateTotal(e, rates), _source: "ganado" }));
-  const comision = comisiones.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" }));
-  const companeros = colleaguePayments.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" }));
+  return {
+    ganado: worklog.map((e) => ({ ...e, ...rateTotal(e, rates), _source: "ganado" })),
+    comision: comisiones.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" })),
+    companeros: colleaguePayments.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" })),
+  };
+}
+
+// Única fuente de verdad de toda la actividad económica del instructor —
+// Registro + Comisiones + TODOS los pagos de compañeros, incluidos los
+// negativos (lo que tú debes, no solo lo que te deben). Es la base de "Mi
+// trabajo" — ver docs/ADR/0005-mi-trabajo-unificacion-economica.md.
+export function buildActivityEntries(args) {
+  const { ganado, comision, companeros } = buildEntriesBySource(args);
   return [...ganado, ...comision, ...companeros];
 }
 

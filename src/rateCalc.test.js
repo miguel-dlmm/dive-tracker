@@ -1,4 +1,4 @@
-import { computeRateTotal, buildActivityEntries } from "./rateCalc";
+import { computeRateTotal, buildEntriesBySource, buildActivityEntries } from "./rateCalc";
 
 // computeRateTotal — desde 2026-09-02 (ADR-0003, pasos 1-2) siempre
 // multiplica tarifa × personas, sin distinguir por payment_type — ver el
@@ -75,5 +75,38 @@ describe("buildActivityEntries", () => {
   it("sin tarifa que coincida, usa fallbackCurrency y total 0", () => {
     const [ganado] = buildActivityEntries({ ...args, rates: [] });
     expect(ganado).toMatchObject({ total: 0, currency: "EUR" });
+  });
+});
+
+// buildEntriesBySource — extraída de HomeTab.jsx/SummaryTab.jsx
+// (docs/BACKLOG.md, "Reutilizar componente entre Home y Resumen") al
+// duplicar ambas pantallas byte a byte el mismo cálculo. buildActivityEntries
+// ya se probaba solo indirectamente (a través de HomeTab/PaymentsTab); estos
+// tests cubren las dos funciones directamente.
+describe("buildEntriesBySource / buildActivityEntries", () => {
+  const RATES = [{ school: "PADI Cozumel", activity: "Open Water", rate: 20, currency: "USD" }];
+  const COMMISSION_RATES = [{ school: "PADI Cozumel", activity: "Open Water", rate: 15, currency: "EUR" }];
+  const WORKLOG = [{ id: "w1", date: "2026-09-01", school: "PADI Cozumel", activity: "Open Water", people: 2 }];
+  const COMISIONES = [{ id: "c1", date: "2026-09-01", school: "PADI Cozumel", activity: "Open Water", people: 1 }];
+  const COLLEAGUE_PAYMENTS = [{ id: "p1", date: "2026-09-01", amount: -30 }];
+
+  const args = { worklog: WORKLOG, rates: RATES, comisiones: COMISIONES, commissionRates: COMMISSION_RATES, colleaguePayments: COLLEAGUE_PAYMENTS, fallbackCurrency: "EUR" };
+
+  it("separa las 3 fuentes, cada una con su total resuelto por tarifa y _source marcado", () => {
+    const { ganado, comision, companeros } = buildEntriesBySource(args);
+
+    expect(ganado).toEqual([{ ...WORKLOG[0], total: 40, currency: "USD", _source: "ganado" }]);
+    expect(comision).toEqual([{ ...COMISIONES[0], total: 15, currency: "EUR", _source: "comision" }]);
+    expect(companeros).toEqual([{ ...COLLEAGUE_PAYMENTS[0], total: -30, people: 0, _source: "companeros" }]);
+  });
+
+  it("sin tarifa que coincida, usa fallbackCurrency y total 0", () => {
+    const { ganado } = buildEntriesBySource({ ...args, rates: [] });
+    expect(ganado[0]).toMatchObject({ total: 0, currency: "EUR" });
+  });
+
+  it("buildActivityEntries devuelve las 3 fuentes ya fusionadas en un único array, mismo contenido que buildEntriesBySource", () => {
+    const { ganado, comision, companeros } = buildEntriesBySource(args);
+    expect(buildActivityEntries(args)).toEqual([...ganado, ...comision, ...companeros]);
   });
 });

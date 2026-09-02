@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { TrendingUp, TrendingDown, Minus, GraduationCap, Award, Handshake } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { Money, formatMoney, MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
-import { computeRateTotal, buildIncomeEntries, comparePeriods } from "./rateCalc";
+import { buildEntriesBySource, buildIncomeEntries, comparePeriods } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import PendingCollectionCard from "./PendingCollectionCard";
 
@@ -95,17 +95,18 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const goToCurrentMonth = () => setCalendarCursor({ year: now.getFullYear(), month: now.getMonth() });
 
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
-  const rateTotal = (e, ratesTable) => {
-    const r = ratesTable.rows.find((r) => r.school === e.school && r.activity === e.activity);
-    return { total: computeRateTotal(r, e.people), currency: r?.currency || e.currency || fallbackCurrency };
-  };
 
   // ganado/comision/companeros: se mantienen separadas porque el calendario
   // de abajo necesita distinguir la fuente de cada apunte del día (incluye
   // pagos de compañeros en cualquier sentido, también los que tú pagas).
-  const ganadoEntries = useMemo(() => worklog.rows.map((e) => ({ ...e, ...rateTotal(e, rates), _source: "ganado" })), [worklog.rows, rates.rows, fallbackCurrency]);
-  const comisionEntries = useMemo(() => comisiones.rows.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" })), [comisiones.rows, commissionRates.rows, fallbackCurrency]);
-  const companerosEntries = useMemo(() => colleaguePayments.rows.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" })), [colleaguePayments.rows]);
+  // buildEntriesBySource (rateCalc.js): antes duplicado byte a byte aquí y
+  // en SummaryTab.jsx — ver docs/BACKLOG.md, "Reutilizar componente entre
+  // Home y Resumen".
+  const entriesBySource = useMemo(
+    () => buildEntriesBySource({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
+  );
+  const { ganado: ganadoEntries, comision: comisionEntries, companeros: companerosEntries } = entriesBySource;
 
   // Sin filtrar por mes aquí: MonthCalendar (shared.jsx) ya filtra por su
   // propio year/month internamente (byDay) — pre-filtrar al mes actual
