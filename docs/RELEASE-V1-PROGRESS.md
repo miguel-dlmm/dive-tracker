@@ -1108,23 +1108,38 @@ lo actualiza solo).
 El generador (roster, iniciales autogeneradas, formulario dinámico por
 plantilla, firma táctil, relleno de PDF con `pdf-lib`, exportación a
 PDF y a JPG) está construido y verificado en dispositivo real para las
-4 plantillas activas. Queda:
+4 plantillas activas.
 
-1. Decidir de dónde sale cada fecha (petición explícita del usuario:
-   no rellenar ninguna por ahora) y activarlas en `pdfFill.js` una vez
-   decidido — un único punto de cambio, ya señalado con comentario ahí.
-2. Decidir el enfoque para las 6 plantillas sin campos de formulario
-   (mapear coordenadas a mano tiene coste y fragilidad altos; también
-   cabe dejarlas fuera del generador y ofrecer solo las 4 activas,
-   revisando esta decisión más adelante si hace falta).
-3. Validar con el usuario si "Training Records" merece un acceso más
-   directo que dentro de Configuración (decisión tomada por
-   consistencia con Escuelas/Cursos/Tarifas, no confirmada con él).
-4. El pipeline de análisis automático de plantillas nuevas (lo que
+**Decisiones cerradas con el usuario 2026-09-02 (mismo bloque de
+sesión):**
+- **Fechas:** se queda como está — ninguna fecha se rellena todavía,
+  sin decidir de dónde saldría. No se replantea salvo que el usuario lo
+  pida explícitamente.
+- **Acceso en la navegación:** se queda dentro de Configuración, mismo
+  patrón que Escuelas/Cursos/Tarifas — confirmado, no se cambia nada.
+- **Las 6 plantillas sin campos de formulario rellenables** (BD, SC-LV,
+  SC-NV, SC-PB, SC-RR, SC-SR): quedan fuera del generador (no se
+  construye el enfoque de superponer texto por coordenadas). Pedido
+  explícito del usuario: movidas a un directorio separado dentro del
+  mismo bucket de Storage para que las revise aparte —
+  `pending-review/<CÓDIGO>/...` dentro de `training-record-templates`
+  (antes vivían junto a las 4 activas, cada una en su propia carpeta
+  `<CÓDIGO>/`). `training_record_templates.storage_path` actualizado a
+  la ruta nueva para las 6 filas; `status` sigue en
+  `pending_validation` sin cambios — es un reordenamiento físico en
+  Storage para revisión humana, no un cambio de comportamiento de la
+  app (ya filtraba por `status = 'active'`, así que estas 6 nunca se
+  ofrecían de todos modos). Nada de código tocado: todo el código que
+  lee `storage_path` lo hace dinámicamente desde la fila de la tabla,
+  no con una ruta hardcodeada.
+
+**Queda pendiente:**
+
+1. El pipeline de análisis automático de plantillas nuevas (lo que
    subiría un admin en el futuro) sigue explícitamente fuera de
    alcance hasta que la interfaz de generación esté terminada, tal
    como pedía el encargo original.
-5. Fusión a `develop`: sigue pendiente de revisión y aprobación
+2. Fusión a `develop`: sigue pendiente de revisión y aprobación
    explícita del usuario, como el resto de esta rama.
 
 ## Fase 6 — Slides y avisos
