@@ -1468,7 +1468,14 @@ export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }
   );
 }
 
-export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, deleteDisabledReason }) {
+// extraActions (opcional): acciones propias de una pantalla concreta que no
+// encajan en Editar/Eliminar (p. ej. "Descargar de nuevo" en Training
+// Records) — cada una {label, icon, onClick, disabled?}. Se listan ANTES de
+// Editar/Eliminar (orden de menú estándar: lo más usado/positivo arriba, lo
+// destructivo abajo). Evita que cada pantalla con una necesidad extra tenga
+// que inventar su propio menú de "⋯" desde cero — RowMenu ya es el patrón
+// compartido de "más opciones" en Mi trabajo/Configuración/Tarifas.
+export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, deleteDisabledReason, extraActions = [] }) {
   const { t } = useTranslation("common");
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   // Cierra el menú "⋯" en el mismo instante en que se CONFIRMA el borrado
@@ -1497,7 +1504,18 @@ export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, d
       >
         <MoreVertical size={17} aria-hidden="true" />
       </button>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align="right" role="menu" className="w-36 overflow-hidden py-1">
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align="right" role="menu" className="w-44 overflow-hidden py-1">
+        {extraActions.map(({ label, icon, onClick, disabled }) => (
+          <button
+            key={label}
+            type="button" role="menuitem"
+            disabled={disabled}
+            onClick={() => { setOpen(false); onClick(); }}
+            className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {icon} {label}
+          </button>
+        ))}
         <button
           type="button" role="menuitem"
           onClick={() => { setOpen(false); onEdit(); }}

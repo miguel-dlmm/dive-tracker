@@ -258,35 +258,65 @@ async function main() {
         consoleIssues.push("[training-records] Tras generar, la hoja no volvió sola al roster");
       }
 
-      console.log("→ 'Descargar de nuevo' debe estar disponible tras generar");
-      const redownloadBtn = page.locator('button[aria-label="Descargar de nuevo"]');
-      if (!(await redownloadBtn.isVisible().catch(() => false))) {
-        consoleIssues.push("[training-records] Tras generar, no aparece el botón 'Descargar de nuevo' en la fila del alumno");
+      console.log("→ Tras generar: check verde junto al nombre + chevron sigue ahí (fila siempre reabrible, mismo modelo que antes de generar)");
+      const generatedCheck = page.locator('[aria-label="Registro ya generado"]');
+      if (!(await generatedCheck.isVisible().catch(() => false))) {
+        consoleIssues.push("[training-records] Tras generar, no aparece el indicador 'Registro ya generado' junto al nombre");
+      }
+      const rosterRow = page.getByRole("main").locator("ul.divide-y").first();
+      if (!(await rosterRow.locator("svg.lucide-chevron-right").first().isVisible().catch(() => false))) {
+        consoleIssues.push("[training-records] Tras generar, el chevron de la fila desapareció — debe seguir invitando a reabrirla");
+      }
+
+      console.log("→ 'Descargar de nuevo' y 'Descargar imagen (JPG)' ahora viven en el menú '⋯' de la fila, no como iconos sueltos");
+      await page.getByRole("button", { name: "Más acciones" }).tap();
+      await page.waitForTimeout(200);
+      await shot(page, "menu-fila-alumno-generado");
+
+      const redownloadItem = page.getByRole("menuitem", { name: "Descargar de nuevo" });
+      if (!(await redownloadItem.isVisible().catch(() => false))) {
+        consoleIssues.push("[training-records] Tras generar, no aparece 'Descargar de nuevo' en el menú de la fila");
       } else {
         const [redownload] = await Promise.all([
           page.waitForEvent("download", { timeout: 8000 }).catch(() => null),
-          redownloadBtn.tap(),
+          redownloadItem.tap(),
         ]);
         if (!redownload) consoleIssues.push("[training-records] 'Descargar de nuevo' no disparó ninguna descarga");
       }
 
-      console.log("→ 'Descargar como imagen (JPG)' debe convertir el PDF ya generado y descargar un JPG (pdfjs-dist + worker)");
-      const jpgBtn = page.locator('button[aria-label="Descargar como imagen (JPG)"]');
-      if (!(await jpgBtn.isVisible().catch(() => false))) {
-        consoleIssues.push("[training-records] Tras generar, no aparece el botón 'Descargar como imagen (JPG)' en la fila del alumno");
+      console.log("→ 'Descargar imagen (JPG)' debe convertir el PDF ya generado y descargar un JPG (pdfjs-dist + worker)");
+      await page.getByRole("button", { name: "Más acciones" }).tap();
+      await page.waitForTimeout(200);
+      const jpgItem = page.getByRole("menuitem", { name: "Descargar imagen (JPG)" });
+      if (!(await jpgItem.isVisible().catch(() => false))) {
+        consoleIssues.push("[training-records] Tras generar, no aparece 'Descargar imagen (JPG)' en el menú de la fila");
       } else {
         const [jpgDownload] = await Promise.all([
           page.waitForEvent("download", { timeout: 15000 }).catch(() => null),
-          jpgBtn.tap(),
+          jpgItem.tap(),
         ]);
         if (!jpgDownload) {
-          consoleIssues.push("[training-records] 'Descargar como imagen (JPG)' no disparó ninguna descarga (¿falló el worker de pdfjs-dist?)");
+          consoleIssues.push("[training-records] 'Descargar imagen (JPG)' no disparó ninguna descarga (¿falló el worker de pdfjs-dist?)");
         } else {
           const jpgPath = path.join(OUT_DIR, `tr-generado-${jpgDownload.suggestedFilename()}`);
           await jpgDownload.saveAs(jpgPath);
           console.log(`  🖼️ JPG descargado -> ${path.relative(process.cwd(), jpgPath)}`);
         }
       }
+
+      console.log("→ Reabrir la fila del alumno ya generado debe volver a mostrar la hoja de configuración (no quedarse sin acción)");
+      await page.getByText("Marta Test Apellido").first().tap();
+      await page.waitForTimeout(300);
+      const reopenedSheetVisible = await page.getByText("Generar y descargar", { exact: false }).isVisible().catch(() => false);
+      if (!reopenedSheetVisible) {
+        consoleIssues.push("[training-records] Reabrir un alumno ya generado no vuelve a mostrar la hoja de configuración");
+      }
+      await shot(page, "reabierto-tras-generar");
+      // Acotado a "main": la cabecera de Configuración también tiene un
+      // "Cerrar" propio (el X de arriba del todo) visible a la vez que la
+      // hoja de StudentRecordSheet — sin acotar, ambigüedad de strict mode.
+      await page.getByRole("main").getByRole("button", { name: "Cerrar" }).tap();
+      await page.waitForTimeout(200);
 
       console.log("→ 'Descargar todos los generados' debe estar visible con al menos un PDF generado");
       const downloadAllBtn = page.getByRole("button", { name: "Descargar todos los generados" });

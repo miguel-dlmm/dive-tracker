@@ -153,13 +153,82 @@ it.each([
   expect(onOpenProfile).toHaveBeenCalledTimes(1);
 });
 
-it("exporta el registro ya generado como imagen JPG", async () => {
+it("exporta el registro ya generado como imagen JPG desde el menú de la fila", async () => {
   const user = userEvent.setup();
   renderTab();
   await generateForAna(user);
 
-  await user.click(screen.getByRole("button", { name: "Descargar como imagen (JPG)" }));
+  await user.click(screen.getByRole("button", { name: "Más acciones" }));
+  await user.click(screen.getByRole("menuitem", { name: "Descargar imagen (JPG)" }));
 
   await waitFor(() => expect(renderPdfToJpgBytes).toHaveBeenCalledWith(new Uint8Array([1, 2, 3])));
   expect(global.URL.createObjectURL).toHaveBeenCalledWith(expect.objectContaining({ type: "image/jpeg" }));
+});
+
+it("marca la fila con un check una vez generado el registro, sin ocultar el acceso a reabrirla", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await generateForAna(user);
+
+  expect(screen.getByLabelText("Registro ya generado")).toBeInTheDocument();
+  // El chevron sigue ahí (no es un estado que "desaparece" al generar) — la
+  // fila se puede volver a tocar para revisar/editar la configuración.
+  await user.click(screen.getByText("Ana Garcia"));
+  expect(await screen.findByText("Generar y descargar")).toBeInTheDocument();
+});
+
+it("abre sin reventar la hoja de una plantilla con inmersiones de especialidad (AOWD)", async () => {
+  // Regresión: specialtyDives se sembraba vacío hasta que un useEffect lo
+  // rellenaba DESPUÉS del primer render, pero el JSX de esta sección de
+  // AOWD ya lee specialtyDives[i].specialtyName en ese primer render —
+  // con el array todavía vacío, "Cannot read properties of undefined"
+  // tumbaba toda la pantalla (sin error visible, pantalla en blanco,
+  // encontrado con mobile-check-training-records.mjs). OWD (usado en el
+  // resto de tests de este fichero) no tiene inmersiones de especialidad,
+  // así que nunca ejercitaba esta ruta — de ahí este test aparte, con la
+  // plantilla real (no mockeada) que sí las tiene.
+  const user = userEvent.setup();
+  templatesQuery.order.mockResolvedValue({ data: [{ code: "AOWD", name: "Advanced Open Water Diver", storage_path: "AOWD/AOWD_Spanish_Record.pdf" }], error: null });
+  renderTab();
+
+  await user.click(await screen.findByText("Advanced Open Water Diver"));
+  await screen.findByText("Alumnos de esta sesión");
+  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
+  await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ana");
+  await user.type(screen.getByRole("textbox", { name: "Apellidos" }), "Garcia");
+  await user.click(screen.getByRole("button", { name: "Guardar" }));
+
+  await user.click(screen.getByText("Ana Garcia"));
+  expect(await screen.findByText("Inmersiones de especialidad")).toBeInTheDocument();
+  expect(screen.getAllByPlaceholderText("Nombre de la especialidad").length).toBeGreaterThan(0);
+});
+
+it("al reabrir un alumno ya generado, conserva su configuración anterior en vez de resetearla o mezclarla con la de otro alumno", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await user.click(await screen.findByText("Open Water Diver"));
+  await screen.findByText("Alumnos de esta sesión");
+
+  // Ana: desmarca "Sesiones Académicas" (obligatoria, empieza marcada) antes de generar.
+  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
+  await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ana");
+  await user.type(screen.getByRole("textbox", { name: "Apellidos" }), "Garcia");
+  await user.click(screen.getByRole("button", { name: "Guardar" }));
+  await user.click(screen.getByText("Ana Garcia"));
+  await user.click(await screen.findByRole("checkbox", { name: "Sesiones Académicas" }));
+  await user.click(screen.getByRole("button", { name: "Generar y descargar" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+
+  // Reabrir a Ana: debe seguir desmarcada, no volver al valor por defecto.
+  await user.click(screen.getByText("Ana Garcia"));
+  expect(await screen.findByRole("checkbox", { name: "Sesiones Académicas" })).not.toBeChecked();
+  await user.click(screen.getByRole("button", { name: "Cerrar" }));
+
+  // Un alumno nuevo, Marta, no debe heredar el desmarcado de Ana.
+  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
+  await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Marta");
+  await user.type(screen.getByRole("textbox", { name: "Apellidos" }), "Ruiz");
+  await user.click(screen.getByRole("button", { name: "Guardar" }));
+  await user.click(screen.getByText("Marta Ruiz"));
+  expect(await screen.findByRole("checkbox", { name: "Sesiones Académicas" })).toBeChecked();
 });

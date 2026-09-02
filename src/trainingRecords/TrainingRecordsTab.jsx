@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, ChevronLeft, Award, UserPlus, Download, ImageDown, Loader2, AlertTriangle } from "lucide-react";
+import { ChevronRight, ChevronLeft, Award, UserPlus, Download, ImageDown, CheckCircle2, AlertTriangle } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { useToast, Fab, RowMenu } from "../shared";
 import { TEAL, NAVY } from "../App";
@@ -103,39 +103,43 @@ function TemplatePicker({ templates, onSelect }) {
   );
 }
 
-function RosterRow({ student, hasGenerated, exportingJpg, onOpenGenerate, onEdit, onDelete, onRedownload, onDownloadJpg }) {
+// Un único modelo de interacción, siempre igual: tocar la fila (avatar +
+// nombre) SIEMPRE abre la configuración del documento de ese alumno —
+// primera vez para rellenarla, cualquier vez después para revisarla/
+// editarla y volver a generar (StudentRecordSheet ya restaura lo que se
+// guardó la última vez, ver initialConfig en TrainingRecordsTab). El
+// chevron es constante, no aparece/desaparece según el estado — antes
+// cambiaba de significado según si ya se había generado o no, y eso es
+// justo lo que hacía confusa la pantalla (reportado en vivo, 2026-09-02:
+// "ya no hay más botones de acción" tras generar). El único indicador que
+// SÍ cambia es el check verde junto al nombre, puramente informativo (no
+// es un botón) — dice "ya generado", nada más.
+//
+// Las acciones secundarias (descargar de nuevo el PDF, exportar a JPG)
+// viven en el menú "⋯" en vez de como iconos sueltos en la fila: con 2-3
+// iconos sin etiqueta apretados junto al chevron y al propio menú, la fila
+// se volvía difícil de leer rápido con el móvil en la mano — el menú ya es
+// el sitio que el usuario reconoce de Mi trabajo/Tarifas para "más
+// opciones sobre este elemento", así que no hace falta inventar nada.
+function RosterRow({ student, hasGenerated, onOpenGenerate, onEdit, onDelete, onRedownload, onDownloadJpg }) {
   const { t } = useTranslation("trainingRecords");
+  const extraActions = hasGenerated
+    ? [
+        { label: t("roster.descargarDeNuevo"), icon: <Download size={14} aria-hidden="true" />, onClick: () => onRedownload(student) },
+        { label: t("roster.descargarComoImagen"), icon: <ImageDown size={14} aria-hidden="true" />, onClick: () => onDownloadJpg(student) },
+      ]
+    : [];
   return (
     <li className="flex items-center gap-2 px-4 py-2.5 text-sm">
       <button onClick={() => onOpenGenerate(student)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">{student.initials}</span>
         <span className="min-w-0 flex-1 truncate font-medium text-gray-800">{student.firstName} {student.lastName}</span>
-        {/* Sin esto, la fila no daba ninguna pista visual de que se podía
-            tocar para generar el registro — reportado en vivo (2026-09-02):
-            tras añadir un alumno, "ya no hay más botones de acción en la
-            interfaz". Mismo chevron que ya usa TemplatePicker justo arriba
-            en esta misma pantalla, para reutilizar una señal que el usuario
-            acaba de aprender a reconocer, no inventar una nueva. */}
-        {!hasGenerated && <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />}
+        {hasGenerated && (
+          <CheckCircle2 size={15} className="shrink-0 text-teal-600" role="img" aria-label={t("roster.yaGenerado")} />
+        )}
+        <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />
       </button>
-      {hasGenerated && (
-        <>
-          <button onClick={() => onRedownload(student)} aria-label={t("roster.descargarDeNuevo")} title={t("roster.descargarDeNuevo")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
-            <Download size={16} aria-hidden="true" />
-          </button>
-          <button
-            onClick={() => onDownloadJpg(student)}
-            disabled={exportingJpg}
-            aria-label={t("roster.descargarComoImagen")}
-            title={t("roster.descargarComoImagen")}
-            className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 disabled:opacity-50"
-            style={{ color: TEAL }}
-          >
-            {exportingJpg ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <ImageDown size={16} aria-hidden="true" />}
-          </button>
-        </>
-      )}
-      <RowMenu onEdit={() => onEdit(student)} onDelete={() => onDelete(student)} itemLabel={`"${student.firstName} ${student.lastName}"`} />
+      <RowMenu onEdit={() => onEdit(student)} onDelete={() => onDelete(student)} itemLabel={`"${student.firstName} ${student.lastName}"`} extraActions={extraActions} />
     </li>
   );
 }
@@ -152,7 +156,10 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   const [studentSheet, setStudentSheet] = useState(null);
   const [generateFor, setGenerateFor] = useState(null);
   const [generatedByStudent, setGeneratedByStudent] = useState({});
-  const [exportingJpgFor, setExportingJpgFor] = useState(null);
+  // Lo que ya se marcó/firmó la última vez que se generó el registro de
+  // cada alumno — permite reabrir StudentRecordSheet y seguir editando
+  // desde ahí en vez de encontrarla en blanco (ver initialConfig más abajo).
+  const [recordConfigByStudent, setRecordConfigByStudent] = useState({});
 
   useEffect(() => {
     let active = true;
@@ -175,6 +182,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     setSelectedTemplate(tpl);
     setRoster([]);
     setGeneratedByStudent({});
+    setRecordConfigByStudent({});
     setLoadingTemplateFile(true);
     try {
       const { data, error } = await supabase.storage.from("training-record-templates").download(tpl.storage_path);
@@ -194,6 +202,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     setTemplateBytes(null);
     setRoster([]);
     setGeneratedByStudent({});
+    setRecordConfigByStudent({});
   };
 
   const addStudent = (values) => setRoster((r) => [...r, { id: crypto.randomUUID(), ...values }]);
@@ -206,12 +215,19 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
       delete next[student.id];
       return next;
     });
+    setRecordConfigByStudent((c) => {
+      if (!(student.id in c)) return c;
+      const next = { ...c };
+      delete next[student.id];
+      return next;
+    });
   };
 
   const filenameFor = (student, ext = "pdf") => `${safeFilePart(student.firstName)}_${safeFilePart(student.lastName)}_${selectedTemplate.code}.${ext}`;
 
-  const handleGenerated = (student, bytes) => {
+  const handleGenerated = (student, bytes, config) => {
     setGeneratedByStudent((g) => ({ ...g, [student.id]: bytes }));
+    setRecordConfigByStudent((c) => ({ ...c, [student.id]: config }));
     downloadBytes(bytes, filenameFor(student));
     setGenerateFor(null);
   };
@@ -229,19 +245,21 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   // Training Records. Cargarlo solo al pulsar este botón aísla el riesgo a
   // quien de verdad usa la exportación a JPG, sin arrastrar al resto de la
   // app ni a un visitante que ni siquiera ha iniciado sesión.
+  // El botón que dispara esto vive dentro del menú "⋯" (RowMenu), que se
+  // cierra en cuanto se pulsa — sin un toast de éxito aquí, la conversión
+  // (que tarda un momento, sobre todo la primera vez que carga pdfjs-dist)
+  // no daba ninguna confirmación visible de que había terminado.
   const downloadAsJpg = async (student) => {
     const bytes = generatedByStudent[student.id];
     if (!bytes) return;
-    setExportingJpgFor(student.id);
     try {
       const { renderPdfToJpgBytes } = await import("./pdfToJpg");
       const jpgBytes = await renderPdfToJpgBytes(bytes);
       downloadBytes(jpgBytes, filenameFor(student, "jpg"), "image/jpeg");
+      toast?.success(t("roster.imagenDescargada"));
     } catch (err) {
       console.error(err);
       toast?.error(t("roster.noSePudoExportarImagen"));
-    } finally {
-      setExportingJpgFor(null);
     }
   };
 
@@ -317,7 +335,6 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                     key={student.id}
                     student={student}
                     hasGenerated={!!generatedByStudent[student.id]}
-                    exportingJpg={exportingJpgFor === student.id}
                     onOpenGenerate={setGenerateFor}
                     onEdit={(s) => setStudentSheet({ mode: "edit", student: s })}
                     onDelete={removeStudent}
@@ -358,7 +375,8 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
         templateName={selectedTemplate.name}
         templateBytes={templateBytes}
         instructor={instructor}
-        onGenerated={(bytes) => handleGenerated(generateFor, bytes)}
+        initialConfig={generateFor ? recordConfigByStudent[generateFor.id] : undefined}
+        onGenerated={(bytes, config) => handleGenerated(generateFor, bytes, config)}
       />
     </div>
   );

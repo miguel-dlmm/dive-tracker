@@ -17,8 +17,10 @@
     "titulo": "Students in this session",
     "vacio": "Add the students you're generating the record for.",
     "anadirAlumno": "Add student",
+    "yaGenerado": "Record already generated",
     "descargarDeNuevo": "Download again",
-    "descargarComoImagen": "Download as image (JPG)",
+    "descargarComoImagen": "Download image (JPG)",
+    "imagenDescargada": "Image downloaded.",
     "noSePudoExportarImagen": "Couldn't export the image. Please try again.",
     "descargarTodosGenerados": "Download all generated"
   },

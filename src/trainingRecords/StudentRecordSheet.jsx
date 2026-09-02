@@ -1,10 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Loader2, Download } from "lucide-react";
 import { Sheet, useToast } from "../shared";
 import { TEAL } from "../App";
 import { fillTrainingRecordPdf } from "./pdfFill";
 import SignatureCapture from "./SignatureCapture";
+
+// Valores por defecto de un registro nuevo, sin nada rellenado todavía —
+// separado en su propia función porque hace falta tanto al montar (primera
+// vez que se abre para este alumno) como para "olvidar" el estado del
+// alumno anterior al reabrir la hoja para uno distinto (ver el useEffect
+// más abajo).
+function buildDefaultConfig(templateMap) {
+  return {
+    includedRows: (templateMap?.sessionRows || []).map((row) => !row.optional),
+    examVersion: null,
+    upgrade: templateMap?.upgradeCheckboxes ? "openWaterDiver" : null,
+    courseVariant: null,
+    examConfirmed: false,
+    specialtyDives: (templateMap?.optionalSpecialtyDives || []).map(() => ({ specialtyName: "", poolNeeded: false, completed: false })),
+    signatures: { studentPng: null, parentPng: null, instructorPng: null },
+  };
+}
 
 // Fila de progreso genérica (Sesiones Académicas, Inmersión de Formación en
 // Aguas Abiertas 1, Confirmación de Examen Final...) — en vez de pedir
@@ -41,17 +58,54 @@ function RadioChoice({ options, value, onChange }) {
   );
 }
 
-export default function StudentRecordSheet({ open, onClose, student, templateMap, templateName, templateBytes, instructor, onGenerated }) {
+// initialConfig (opcional): la configuración que ya se guardó la última vez
+// que se generó el registro de ESTE alumno (ver recordConfigByStudent en
+// TrainingRecordsTab.jsx) — permite reabrir la hoja para editarla y
+// regenerar, en vez de perder todo lo ya marcado/firmado. Sin esto, esta
+// hoja nunca se desmonta al cerrarla (Sheet solo oculta su contenido, ver
+// shared.jsx), así que su estado local sobrevivía de un alumno al
+// siguiente si no se reinicializaba explícitamente al abrir — pedido
+// explícito del usuario 2026-09-02, tras encontrarlo confuso en el Preview
+// real: "cuando edito, debería poder editar... la configuración del
+// documento que me ofreciste justo antes de generar".
+export default function StudentRecordSheet({ open, onClose, student, templateMap, templateName, templateBytes, instructor, initialConfig, onGenerated }) {
   const { t } = useTranslation("trainingRecords");
   const toast = useToast();
-  const [includedRows, setIncludedRows] = useState(() => (templateMap?.sessionRows || []).map((row) => !row.optional));
-  const [examVersion, setExamVersion] = useState(null);
-  const [upgrade, setUpgrade] = useState(templateMap?.upgradeCheckboxes ? "openWaterDiver" : null);
-  const [courseVariant, setCourseVariant] = useState(null);
-  const [examConfirmed, setExamConfirmed] = useState(false);
-  const [specialtyDives, setSpecialtyDives] = useState(() => (templateMap?.optionalSpecialtyDives || []).map(() => ({ specialtyName: "", poolNeeded: false, completed: false })));
-  const [signatures, setSignatures] = useState({ studentPng: null, parentPng: null, instructorPng: null });
+  // Inicializadores perezosos, no arrays/null vacíos: el useEffect de abajo
+  // solo corre DESPUÉS del primer render, pero el JSX de plantillas con
+  // inmersiones de especialidad (AOWD) ya lee specialtyDives[i].specialtyName
+  // en ese primer render — con un array vacío de partida, eso revienta con
+  // "Cannot read properties of undefined" antes de que el efecto llegue a
+  // ejecutarse (pantalla en blanco total, sin ningún error visible en UI,
+  // detectado con mobile-check-training-records.mjs). Sembrar aquí, en vez
+  // de solo en el efecto, cubre ese primer render; el efecto sigue
+  // haciendo falta para cuando esta misma instancia (nunca se desmonta al
+  // cerrar, ver Sheet en shared.jsx) se reabre para un alumno distinto.
+  const [includedRows, setIncludedRows] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).includedRows);
+  const [examVersion, setExamVersion] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).examVersion);
+  const [upgrade, setUpgrade] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).upgrade);
+  const [courseVariant, setCourseVariant] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).courseVariant);
+  const [examConfirmed, setExamConfirmed] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).examConfirmed);
+  const [specialtyDives, setSpecialtyDives] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).specialtyDives);
+  const [signatures, setSignatures] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).signatures);
   const [generating, setGenerating] = useState(false);
+
+  // Se reinicializa cada vez que se abre (y cada vez que cambia el alumno,
+  // por si algún día se reabriera sin pasar por "cerrado" de por medio) —
+  // desde su configuración ya guardada si existe, o desde los valores por
+  // defecto de esta plantilla si es la primera vez para este alumno.
+  useEffect(() => {
+    if (!open || !templateMap) return;
+    const cfg = initialConfig || buildDefaultConfig(templateMap);
+    setIncludedRows(cfg.includedRows);
+    setExamVersion(cfg.examVersion);
+    setUpgrade(cfg.upgrade);
+    setCourseVariant(cfg.courseVariant);
+    setExamConfirmed(cfg.examConfirmed);
+    setSpecialtyDives(cfg.specialtyDives);
+    setSignatures(cfg.signatures);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe reinicializar al abrir/cambiar de alumno, no en cada tecleo (initialConfig cambiaría de identidad en cada generate())
+  }, [open, student?.id]);
 
   if (!templateMap || !student) return null;
 
@@ -85,7 +139,11 @@ export default function StudentRecordSheet({ open, onClose, student, templateMap
         signatures,
       };
       const filledBytes = await fillTrainingRecordPdf(templateBytes, templateMap, data);
-      onGenerated(filledBytes);
+      // Config "cruda" tal como está en pantalla (distinta de `data`, que ya
+      // trae filas/firmas traducidas al formato que espera pdfFill.js) — es
+      // lo que se guarda para poder reabrir esta misma hoja más tarde y
+      // seguir editando desde donde se dejó, en vez de perderlo al cerrar.
+      onGenerated(filledBytes, { includedRows, examVersion, upgrade, courseVariant, examConfirmed, specialtyDives, signatures });
       toast?.success(t("studentSheet.generadoCorrectamente"));
     } catch (err) {
       console.error(err);
