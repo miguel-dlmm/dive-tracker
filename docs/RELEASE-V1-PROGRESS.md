@@ -1094,9 +1094,49 @@ de los dos casos.
 **Commits** (rama `feature/training-records`, empujada a `origin` —
 genera Preview Deployment nuevo, ver más abajo): `106c3ab` (fix del
 bug de pdf-lib + herramientas de verificación), `e9347d6` (datos de
-instructor al perfil), `4dffa38` (este documento) y `b14dc05`
-(exportación a JPG). `npm run test` (595/595) y `npm run build` en
-verde tras todos.
+instructor al perfil), `4dffa38` (este documento), `b14dc05`
+(exportación a JPG), `bd418c5` (documentación), `de20eae` (fix
+crítico, ver abajo) y `f2d5bdf` (rediseño de la fila de alumno + fix
+de un crash real, ver abajo). `npm run test` (598/598) y
+`npm run build` en verde tras todos.
+
+**⚠️ Bug crítico encontrado y corregido en el Preview real, reportado
+en vivo por el usuario 2026-09-02: pantalla en blanco en Safari
+(escritorio y móvil), Chrome no se veía afectado.** Causa raíz:
+`pdfjs-dist` (añadido para la exportación a JPG) comprueba
+`Iterator.prototype.join` al cargar el módulo, sin proteger que
+`Iterator` (Iterator Helpers) exista siquiera — con el `import`
+estático de esa sesión, ese código entraba en el bundle principal y se
+ejecutaba en CUALQUIER pantalla, incluido el login, antes de que
+hubiera sesión. Corregido cambiando el import de `pdfToJpg.js` a
+`import()` dinámico dentro del propio botón de exportar — pdfjs-dist
+pasa a su propio chunk aparte, confirmado con `grep` que
+`Iterator.prototype.join` ya no aparece en `dist/assets/index-*.js`,
+solo en el chunk que carga bajo demanda. Verificado en vivo contra el
+Preview real tras el fix (confirmación del usuario).
+
+**Rediseño de la fila de alumno del roster, pedido explícito del
+usuario tras usar el Preview real** ("cuando edito, debería poder
+editar el alumno o la configuración del documento"; "repiensa bien la
+usabilidad de estos menús... piensa en la usabilidad de la página,
+fácil e intuitiva"): antes, el chevron de la fila aparecía/desaparecía
+según si ya se había generado el registro, y "Descargar de nuevo"/
+"Descargar imagen" eran iconos sueltos sin etiqueta apretados junto al
+menú "⋯" — confuso en la práctica ("ya no hay más botones de acción en
+la interfaz", reportado en vivo tras generar). Ahora: un único modelo
+de interacción (tocar la fila siempre abre la configuración del
+documento, generado o no), un check verde puramente informativo indica
+"ya generado", y las descargas se movieron al menú "⋯" ya existente
+(`RowMenu`, ahora con `extraActions`, reutilizable por cualquier otra
+pantalla). De paso, `StudentRecordSheet` pasó a restaurar de verdad la
+configuración ya guardada de cada alumno al reabrirlo (antes se podía
+perder o mezclar con la de otro alumno, porque esa hoja nunca se
+desmonta entre aperturas). Construyendo esto se encontró y corrigió un
+crash real (no reportado por el usuario, encontrado en desarrollo):
+sembrar la config del alumno solo en un `useEffect` reventaba la
+pantalla entera en plantillas con inmersiones de especialidad (AOWD) —
+test de regresión añadido con la plantilla real, confirmado que falla
+sin el fix.
 
 **Preview Deployment de esta sesión:**
 `https://dive-tracker-git-feature-training-records-ocean-pulse1.vercel.app`
