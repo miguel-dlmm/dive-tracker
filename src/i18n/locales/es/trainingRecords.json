@@ -21,9 +21,14 @@
     "descargarJpg": "Descargar imagen (JPG)",
     "compartir": "Compartir",
     "generadoEl": "Generado el {{date}}",
+    "faltanDatos": "Faltan datos de este alumno",
     "imagenDescargada": "Imagen descargada.",
     "noSePudoExportarImagen": "No se pudo exportar la imagen. Inténtalo de nuevo.",
-    "noSePudoCompartir": "No se pudo compartir el documento. Inténtalo de nuevo."
+    "noSePudoCompartir": "No se pudo compartir el documento. Inténtalo de nuevo.",
+    "enLote": "Todo el listado",
+    "descargarTodoPdf": "Descargar todo en PDF",
+    "descargarTodoJpg": "Descargar todo en JPG",
+    "compartirTodo": "Compartir todo"
   },
   "studentForm": {
     "nuevoAlumno": "Nuevo alumno",
@@ -45,7 +50,8 @@
       "nombre": "El nombre es obligatorio.",
       "apellidos": "Los apellidos son obligatorios.",
       "iniciales": "Las iniciales son obligatorias."
-    }
+    },
+    "guardarAlumno": "Guardar alumno"
   },
   "studentSheet": {
     "cerrar": "Cerrar",
@@ -66,9 +72,11 @@
     "firmaAlumno": "Firma del alumno",
     "firmaTutor": "Firma del tutor",
     "generarYDescargar": "Generar y descargar",
+    "generarTodos": "Generar para todos los alumnos",
     "generando": "Generando…",
-    "generadoCorrectamente": "Registro generado y descargado.",
+    "generadoCorrectamente": "Registros generados correctamente.",
     "noSePudoGenerar": "No se pudo generar el registro.",
-    "faltanCampos": "Faltan campos obligatorios — revisa los avisos en rojo."
+    "faltanCampos": "Faltan campos obligatorios — revisa los avisos en rojo.",
+    "sinAlumnos": "Añade al menos un alumno antes de generar."
   }
 }

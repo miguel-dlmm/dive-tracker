@@ -21,9 +21,14 @@
     "descargarJpg": "Download image (JPG)",
     "compartir": "Share",
     "generadoEl": "Generated on {{date}}",
+    "faltanDatos": "This student is missing some data",
     "imagenDescargada": "Image downloaded.",
     "noSePudoExportarImagen": "Couldn't export the image. Please try again.",
-    "noSePudoCompartir": "Couldn't share the document. Please try again."
+    "noSePudoCompartir": "Couldn't share the document. Please try again.",
+    "enLote": "Whole roster",
+    "descargarTodoPdf": "Download all as PDF",
+    "descargarTodoJpg": "Download all as JPG",
+    "compartirTodo": "Share all"
   },
   "studentForm": {
     "nuevoAlumno": "New student",
@@ -45,7 +50,8 @@
       "nombre": "First name is required.",
       "apellidos": "Last name is required.",
       "iniciales": "Initials are required."
-    }
+    },
+    "guardarAlumno": "Save student"
   },
   "studentSheet": {
     "cerrar": "Close",
@@ -66,9 +72,11 @@
     "firmaAlumno": "Student signature",
     "firmaTutor": "Parent/guardian signature",
     "generarYDescargar": "Generate and download",
+    "generarTodos": "Generate for all students",
     "generando": "Generating…",
-    "generadoCorrectamente": "Record generated and downloaded.",
+    "generadoCorrectamente": "Records generated successfully.",
     "noSePudoGenerar": "Couldn't generate the record.",
-    "faltanCampos": "Some required fields are missing — check the messages in red."
+    "faltanCampos": "Some required fields are missing — check the messages in red.",
+    "sinAlumnos": "Add at least one student before generating."
   }
 }

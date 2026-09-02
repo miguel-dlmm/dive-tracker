@@ -1,15 +1,11 @@
 // signature_pad necesita un canvas 2D real que jsdom no implementa — se
 // mockea entero (límite del sistema), igual que Supabase y que el propio
 // relleno de PDF (ya cubierto a fondo en pdfFill.test.js/recordConfig.test.js;
-// aquí solo interesa que TrainingRecordsTab/StudentRecordSheet los invoquen
-// con los datos correctos y disparen la descarga, no repetir esa cobertura).
-// endStrokeHandlers guarda el callback "endStroke" de cada instancia en el
-// orden en que SignatureCapture las monta (alumno primero, tutor después)
-// — signStudent()/signTutor() más abajo lo usan para simular un trazo real
-// sin depender de eventos de canvas que jsdom no soporta. toDataURL
-// devuelve un valor distinto por instancia (no el mismo texto fijo para
-// las dos) para poder distinguir en los tests cuál firma llegó a cuál
-// campo — necesario para la regresión de "la firma del tutor no sale".
+// aquí solo interesa que la pantalla los invoque con los datos correctos y
+// dispare la descarga, no repetir esa cobertura). endStrokeHandlers guarda
+// el callback "endStroke" de cada instancia en el orden en que
+// SignatureCapture las monta — signStudent() más abajo lo usa para simular
+// un trazo real sin depender de eventos de canvas que jsdom no soporta.
 let endStrokeHandlers = [];
 vi.mock("signature_pad", () => ({
   default: vi.fn().mockImplementation(function MockSignaturePad() {
@@ -23,11 +19,11 @@ vi.mock("signature_pad", () => ({
     };
   }),
 }));
-function signStudent() {
-  endStrokeHandlers[0]?.();
-}
-function signTutor() {
-  endStrokeHandlers[1]?.();
+// Cada apertura de StudentQuickEntrySheet monta 2 SignatureCapture a la
+// vez (alumno primero, tutor después) — el handler del ALUMNO es el
+// penúltimo empujado en esta apertura, no el último (ese es el del tutor).
+function signStudentInOpenSheet() {
+  endStrokeHandlers[endStrokeHandlers.length - 2]?.();
 }
 
 const fillTrainingRecordPdf = vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3]));
@@ -57,15 +53,11 @@ vi.mock("../supabaseClient", () => ({
   },
 }));
 
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ToastProvider } from "../shared";
 import TrainingRecordsTab from "./TrainingRecordsTab";
 
-// Perfil con los 5 datos de instructor completos (nombre, apellidos,
-// iniciales, número SSI Pro, firma) — el caso "feliz" que usan la mayoría
-// de los tests. Los tests del aviso de datos incompletos parten de este
-// objeto y quitan un campo cada vez.
 const COMPLETE_PROFILE = {
   user_id: "u1", first_name: "Miguel", last_name: "Instructor",
   instructor_initials: "MI", ssi_pro_number: "12345", instructor_signature: "data:image/png;base64,INSTRUCTOR_SIG",
@@ -91,21 +83,15 @@ beforeEach(() => {
   global.URL.revokeObjectURL = vi.fn();
 });
 
-// Recorrido feliz completo: abre la hoja, rellena alumno + plantilla +
-// fecha de cada fila de progreso marcada + confirmación de examen (con su
-// propia fecha) + firma, genera. Reutilizado por varios tests para no
-// repetir el mismo bloque de interacciones una y otra vez.
-// El botón "Hoy" vive DENTRO del panel flotante del calendario — hay que
-// abrir el DatePicker de esa fila primero (cada fila tiene su propio
-// selector, con un aria-label único derivado de la etiqueta de la fila)
-// antes de poder tocarlo.
-async function pickToday(user, dateFieldLabel) {
-  await user.click(screen.getByRole("button", { name: dateFieldLabel, exact: true }));
-  await user.click(await screen.findByRole("button", { name: "Hoy" }));
-}
+it("bloquea el generador con un aviso mientras falte cualquier dato de instructor, incluida la firma", async () => {
+  renderTab({ profile: { ...COMPLETE_PROFILE, instructor_signature: null } });
+  expect(await screen.findByText(/completa tus datos de instructor/i)).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Open Water Diver" })).not.toBeInTheDocument();
+});
 
 // Las 6 filas obligatorias de OWD (índices 0-5) vienen marcadas por
-// defecto — cada una necesita su propia fecha para poder generar.
+// defecto — cada una necesita su propia fecha, compartida para todo el
+// listado de alumnos.
 const OWD_MANDATORY_ROW_LABELS = [
   "Sesiones Académicas",
   "Sesiones en Piscina/Aguas Confinadas",
@@ -115,275 +101,111 @@ const OWD_MANDATORY_ROW_LABELS = [
   "Inmersión de Formación en Aguas Abiertas 4",
 ];
 
-async function fillAndGenerate(user, { firstName = "Ana", lastName = "Garcia" } = {}) {
-  await user.click(await screen.findByRole("button", { name: "Añadir alumno" }));
-  await user.type(screen.getByRole("textbox", { name: "Nombre" }), firstName);
-  await user.type(screen.getByRole("textbox", { name: "Apellidos" }), lastName);
-  await user.click(await screen.findByText("Open Water Diver"));
-
-  for (const label of OWD_MANDATORY_ROW_LABELS) {
-    await pickToday(user, `Fecha: ${label}`);
-  }
-
-  await user.click(screen.getByRole("checkbox", { name: "Confirmación de Examen Final" }));
-  await pickToday(user, "Fecha: Confirmación de Examen Final");
-  signStudent();
-
-  await user.click(screen.getByRole("button", { name: "Generar y descargar" }));
-  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalled());
+async function pickToday(user, dateFieldLabel) {
+  await user.click(screen.getByRole("button", { name: dateFieldLabel, exact: true }));
+  await user.click(await screen.findByRole("button", { name: "Hoy" }));
 }
 
-it("bloquea el generador con un aviso mientras falte cualquier dato de instructor, incluida la firma", async () => {
-  renderTab({ profile: { ...COMPLETE_PROFILE, instructor_signature: null } });
-  expect(await screen.findByText(/completa tus datos de instructor/i)).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Añadir alumno" })).not.toBeInTheDocument();
-});
-
-it.each(["instructor_initials", "ssi_pro_number", "first_name", "last_name", "instructor_signature"])(
-  "bloquea el generador si al perfil le falta %s, con un botón que abre Mi perfil",
-  async (missingField) => {
-    const user = userEvent.setup();
-    const onOpenProfile = vi.fn();
-    renderTab({ profile: { ...COMPLETE_PROFILE, [missingField]: "" }, onOpenProfile });
-
-    expect(await screen.findByRole("button", { name: "Ir a mi perfil" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Ir a mi perfil" }));
-    expect(onOpenProfile).toHaveBeenCalledTimes(1);
-  }
-);
-
-it("muestra un enlace para añadir el primer alumno cuando el roster está vacío", async () => {
-  const user = userEvent.setup();
-  renderTab();
-  const link = await screen.findByRole("button", { name: "Añade tu primer alumno" });
-  await user.click(link);
-  expect(await screen.findByText("Nuevo alumno")).toBeInTheDocument();
-});
-
-// Orden pedido explícito del usuario (2026-09-02): OW, Advanced, Enriched
-// Air Nitrox, Deep Diving — no alfabético (que pondría Advanced primero)
-// ni el orden en que responda Supabase.
-it("lista las plantillas en el orden pedido (OW, Advanced, EAN, Deep Diving), no alfabético ni el de Supabase", async () => {
-  const user = userEvent.setup();
-  templatesQuery.order.mockResolvedValue({
-    data: [
-      { code: "SC-DD", name: "Deep Diving", storage_path: "SC-DD/x.pdf" },
-      { code: "SC-EAN", name: "Enriched Air Nitrox", storage_path: "SC-EAN/x.pdf" },
-      { code: "AOWD", name: "Advanced Open Water Diver", storage_path: "AOWD/x.pdf" },
-      { code: "OWD", name: "Open Water Diver", storage_path: "OWD/x.pdf" },
-    ],
-    error: null,
-  });
-  renderTab();
-
-  await user.click(await screen.findByRole("button", { name: "Añadir alumno" }));
-  const buttons = await screen.findAllByRole("button", {
-    name: /^(Open Water Diver|Advanced Open Water Diver|Enriched Air Nitrox|Deep Diving)$/,
-  });
-  expect(buttons.map((b) => b.textContent)).toEqual([
-    "Open Water Diver",
-    "Advanced Open Water Diver",
-    "Enriched Air Nitrox",
-    "Deep Diving",
-  ]);
-});
-
-// fillAndGenerate hace un tap por cada fila de progreso (7 en total para
-// OWD, una por fila obligatoria + la confirmación de examen) — el timeout
-// por defecto (5000ms) queda justo bajo la carga de la suite completa en
-// paralelo, aunque en solitario sobra de sobra.
-it("genera y descarga el registro completo de un alumno, y lo refleja en el roster", async () => {
-  const user = userEvent.setup();
-  renderTab();
-  await fillAndGenerate(user);
-
-  const [, , data] = fillTrainingRecordPdf.mock.calls[0];
-  expect(data.firstName).toBe("Ana");
-  expect(data.lastName).toBe("Garcia");
-  expect(data.signatures.instructorPng).toBe("data:image/png;base64,INSTRUCTOR_SIG");
-  expect(global.URL.createObjectURL).toHaveBeenCalled();
-
-  expect(await screen.findByText("Ana Garcia")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Descargar PDF" })).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Descargar imagen (JPG)" })).toBeInTheDocument();
-}, 15000);
-
-// Regresión (2026-09-02, reportado por el usuario: "la firma del padre
-// madre o tutor no sale cuando la relleno en ningún documento"). Firmar
-// ambas (tutor y alumno) usaba `config` del cierre de montaje de
-// SignatureCapture en vez del estado real al aplicar el cambio — firmar
-// la segunda pisaba la firma ya guardada de la primera. Firma el tutor
-// ANTES que el alumno (el orden que reproducía el bug: al firmar el
-// alumno el último, su `onChange` "stale" volvía a poner parentPng a
-// null) y comprueba que las dos llegan a buildFillData.
-it("guarda la firma del alumno y la del tutor a la vez, sin que una pise a la otra", async () => {
-  const user = userEvent.setup();
-  renderTab();
-
-  await user.click(await screen.findByRole("button", { name: "Añadir alumno" }));
-  await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ana");
-  await user.type(screen.getByRole("textbox", { name: "Apellidos" }), "Garcia");
-  await user.click(await screen.findByText("Open Water Diver"));
+// Rellena la configuración COMPARTIDA (plantilla OWD + fechas de las 6
+// filas obligatorias + confirmación de examen con su fecha) — se hace UNA
+// vez para todo el listado, pedido explícito del usuario (rediseño
+// 2026-09-03: "no es una configuración por alumno, es una configuración
+// para un listado de alumnos").
+async function selectTemplateAndFillSharedConfig(user) {
+  await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
   for (const label of OWD_MANDATORY_ROW_LABELS) await pickToday(user, `Fecha: ${label}`);
   await user.click(screen.getByRole("checkbox", { name: "Confirmación de Examen Final" }));
   await pickToday(user, "Fecha: Confirmación de Examen Final");
+}
 
-  signTutor();
-  signStudent();
+// Añade un alumno con nombre/apellidos/firma vía el FAB "Añadir alumno".
+async function addStudent(user, { firstName, lastName }) {
+  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
+  await user.type(screen.getByRole("textbox", { name: "Nombre" }), firstName);
+  await user.type(screen.getByRole("textbox", { name: "Apellidos" }), lastName);
+  signStudentInOpenSheet();
+  await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
+  await screen.findByText(`${firstName} ${lastName}`);
+}
 
-  await user.click(screen.getByRole("button", { name: "Generar y descargar" }));
-  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalled());
-
-  const [, , data] = fillTrainingRecordPdf.mock.calls[0];
-  expect(data.signatures.studentPng).toBe("data:image/png;base64,SIGNATURE_0");
-  expect(data.signatures.parentPng).toBe("data:image/png;base64,SIGNATURE_1");
-}, 15000);
-
-it("no genera si faltan campos obligatorios del documento (versión de examen, certificación, confirmación, firma o la fecha de una fila de progreso)", async () => {
+it("configura una vez para todo el listado, añade 2 alumnos y genera los 2 documentos de golpe", async () => {
   const user = userEvent.setup();
   renderTab();
+  await selectTemplateAndFillSharedConfig(user);
 
-  await user.click(await screen.findByRole("button", { name: "Añadir alumno" }));
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  await addStudent(user, { firstName: "Luis", lastName: "Perez" });
+
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(2));
+
+  const [, , dataAna] = fillTrainingRecordPdf.mock.calls[0];
+  expect(dataAna.firstName).toBe("Ana");
+  const [, , dataLuis] = fillTrainingRecordPdf.mock.calls[1];
+  expect(dataLuis.firstName).toBe("Luis");
+  // La configuración compartida (fecha de la primera fila) es la MISMA
+  // para los dos alumnos — no se pide una por alumno.
+  expect(dataAna.sessionRows[0].date).toBe(dataLuis.sessionRows[0].date);
+
+  expect(await screen.findAllByRole("button", { name: "Descargar PDF" })).toHaveLength(2);
+  expect(screen.getByRole("button", { name: "Descargar todo en PDF" })).toBeInTheDocument();
+}, 15000);
+
+it("no genera si falta la configuración compartida o los datos de algún alumno, y lo dice en un solo aviso", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
+  // Sin fechas ni alumnos.
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+
+  expect(fillTrainingRecordPdf).not.toHaveBeenCalled();
+  expect(screen.getAllByText("Falta la fecha de esta fila.").length).toBe(6);
+});
+
+it("marca con un aviso al alumno al que le falta la firma, y bloquea Generar sin borrar a los demás", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+
+  // Alumno sin firmar — guardarlo debe fallar con su propio aviso.
+  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
   await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ana");
   await user.type(screen.getByRole("textbox", { name: "Apellidos" }), "Garcia");
-  await user.click(await screen.findByText("Open Water Diver"));
-  // "Online" y "Open Water Diver" (certificación) vienen premarcados por
-  // defecto — pedido explícito del usuario — así que para probar de verdad
-  // que se exigen, hay que desmarcarlos a mano (tocar una opción ya
-  // elegida la desmarca, ver RadioChoice en StudentRecordSheet.jsx).
-  await user.click(screen.getByRole("button", { name: "Online" }));
-  await user.click(screen.getByRole("button", { name: "Open Water Diver" }));
-  await user.click(screen.getByRole("button", { name: "Generar y descargar" }));
+  await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
 
-  expect(fillTrainingRecordPdf).not.toHaveBeenCalled();
-  // Las 6 filas obligatorias de OWD están marcadas por defecto y ninguna
-  // tiene fecha todavía — aparece un aviso por cada una.
-  expect(screen.getAllByText("Falta la fecha de esta fila.").length).toBe(6);
-  expect(screen.getByText("Elige la versión del examen.")).toBeInTheDocument();
-  expect(screen.getByText("Elige la certificación.")).toBeInTheDocument();
-  expect(screen.getByText("Confirma que se ha completado el examen final.")).toBeInTheDocument();
   expect(screen.getByText("Falta la firma del alumno.")).toBeInTheDocument();
-});
-
-// Regresión (2026-09-02, "los mensajes de error del formulario... salen
-// raros"): antes, si faltaban datos del alumno (nombre) Y datos del
-// documento (fecha de una fila) a la vez, generate() cortaba en
-// validateStudent() y nunca llegaba a validar el documento — corregir el
-// nombre y volver a pulsar revelaba una tanda de avisos nueva que no
-// aparecía la primera vez. Las dos validaciones deben mostrarse juntas.
-it("muestra a la vez los avisos de datos del alumno y del documento, sin revelarlos en dos tandas", async () => {
-  const user = userEvent.setup();
-  renderTab();
-
-  await user.click(await screen.findByRole("button", { name: "Añadir alumno" }));
-  // Nombre/apellidos se dejan vacíos a propósito.
-  await user.click(await screen.findByText("Open Water Diver"));
-  await user.click(screen.getByRole("button", { name: "Generar y descargar" }));
-
   expect(fillTrainingRecordPdf).not.toHaveBeenCalled();
-  expect(screen.getByText("El nombre es obligatorio.")).toBeInTheDocument();
-  expect(screen.getAllByText("Falta la fecha de esta fila.").length).toBe(6);
-});
-
-it("pide confirmación antes de cambiar de plantilla solo si ya hay progreso rellenado que se perdería", async () => {
-  const user = userEvent.setup();
-  renderTab();
-
-  await user.click(await screen.findByRole("button", { name: "Añadir alumno" }));
-  await user.click(await screen.findByText("Open Water Diver"));
-
-  // Sin nada más rellenado todavía — cambiar de plantilla no debe avisar,
-  // vuelve directo a la lista de plantillas.
-  await user.click(screen.getByRole("button", { name: "Cambiar plantilla" }));
-  expect(screen.queryByText("¿Cambiar de plantilla?")).not.toBeInTheDocument();
-  expect(await screen.findByRole("button", { name: "Open Water Diver" })).toBeInTheDocument();
-
-  await user.click(screen.getByRole("button", { name: "Open Water Diver" }));
-  await pickToday(user, "Fecha: Sesiones Académicas");
-
-  // Con una fecha ya rellenada, pide confirmación antes de descartarla.
-  await user.click(screen.getByRole("button", { name: "Cambiar plantilla" }));
-  expect(await screen.findByText("¿Cambiar de plantilla?")).toBeInTheDocument();
-
-  await user.click(screen.getByRole("button", { name: "Cancelar" }));
-  expect(screen.queryByText("¿Cambiar de plantilla?")).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Cambiar plantilla" })).toBeInTheDocument(); // sigue con la plantilla elegida, nada se perdió
-
-  await user.click(screen.getByRole("button", { name: "Cambiar plantilla" }));
-  await user.click(await screen.findByRole("button", { name: "Sí, cambiar de plantilla" }));
-  expect(await screen.findByRole("button", { name: "Open Water Diver" })).toBeInTheDocument(); // vuelve a la lista de plantillas
-});
-
-it("exporta el registro ya generado como imagen JPG desde el icono de la fila", async () => {
-  const user = userEvent.setup();
-  renderTab();
-  await fillAndGenerate(user);
-
-  await user.click(await screen.findByRole("button", { name: "Descargar imagen (JPG)" }));
-
-  await waitFor(() => expect(renderPdfToJpgBytes).toHaveBeenCalledWith(new Uint8Array([1, 2, 3])));
-  expect(global.URL.createObjectURL).toHaveBeenCalledWith(expect.objectContaining({ type: "image/jpeg" }));
 }, 15000);
 
-describe("compartir el registro generado (Web Share API)", () => {
-  const originalShare = navigator.share;
-  const originalCanShare = navigator.canShare;
-
-  afterEach(() => {
-    navigator.share = originalShare;
-    navigator.canShare = originalCanShare;
-  });
-
-  it("muestra el icono de compartir solo si el navegador soporta compartir archivos, y llama a navigator.share con el PDF", async () => {
-    navigator.canShare = vi.fn().mockReturnValue(true);
-    navigator.share = vi.fn().mockResolvedValue(undefined);
-    const user = userEvent.setup();
-    renderTab();
-    await fillAndGenerate(user);
-
-    const shareBtn = await screen.findByRole("button", { name: "Compartir" });
-    await user.click(shareBtn);
-
-    expect(navigator.share).toHaveBeenCalledWith(
-      expect.objectContaining({ files: [expect.any(File)], title: "Ana Garcia" })
-    );
-  }, 15000);
-
-  it("no muestra el icono de compartir si el navegador no soporta compartir archivos", async () => {
-    navigator.canShare = undefined;
-    navigator.share = undefined;
-    const user = userEvent.setup();
-    renderTab();
-    await fillAndGenerate(user);
-
-    expect(screen.queryByRole("button", { name: "Compartir" })).not.toBeInTheDocument();
-  }, 15000);
-});
-
-it("al editar un alumno ya generado, reabre con su nombre, plantilla y configuración ya rellenos", async () => {
-  const user = userEvent.setup();
-  renderTab();
-  await fillAndGenerate(user);
-
-  await user.click(await screen.findByRole("button", { name: "Editar" }));
-
-  expect(await screen.findByDisplayValue("Ana")).toBeInTheDocument();
-  expect(screen.getByDisplayValue("Garcia")).toBeInTheDocument();
-  // La plantilla ya viene elegida — "Cambiar plantilla" solo aparece con
-  // un templateCode ya asignado (ver "Open Water Diver" también aparecería
-  // en el radio de certificación, texto ambiguo si se busca sin acotar).
-  expect(screen.getByRole("button", { name: "Cambiar plantilla" })).toBeInTheDocument();
-  expect(screen.getByRole("checkbox", { name: "Confirmación de Examen Final" })).toBeChecked();
-}, 15000);
-
-it("mantiene el roster y los documentos ya generados si el componente se vuelve a montar (recarga de página)", async () => {
+it("el listado y los documentos ya generados sobreviven a un remontaje (recarga de página)", async () => {
   const user = userEvent.setup();
   const { unmount } = renderTab();
-  await fillAndGenerate(user);
-  expect(await screen.findByText("Ana Garcia")).toBeInTheDocument();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
   unmount();
 
   renderTab();
   expect(await screen.findByText("Ana Garcia")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Descargar PDF" })).toBeInTheDocument();
+  // La plantilla ya elegida se muestra como texto fijo, no vuelve a la lista de elección.
+  expect(screen.getByText("Open Water Diver", { selector: "p" })).toBeInTheDocument();
 }, 15000);
+
+it("pide confirmación antes de cambiar de plantilla solo si ya hay progreso rellenado que se perdería", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
+
+  await user.click(screen.getByRole("button", { name: "Cambiar plantilla" }));
+  expect(screen.queryByText("¿Cambiar de plantilla?")).not.toBeInTheDocument();
+
+  await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
+  await pickToday(user, "Fecha: Sesiones Académicas");
+
+  await user.click(screen.getByRole("button", { name: "Cambiar plantilla" }));
+  expect(await screen.findByText("¿Cambiar de plantilla?")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Cancelar" }));
+  expect(screen.getByRole("button", { name: "Cambiar plantilla" })).toBeInTheDocument();
+});

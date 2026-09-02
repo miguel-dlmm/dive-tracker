@@ -5,15 +5,14 @@
 // entorno), en un script aparte porque cubre un módulo distinto (Mi perfil
 // → Datos de instructor, y Configuración → Training Records).
 //
-// Reescrito de arriba a abajo (2026-09-02, lote "pestaña única de
-// creación") para el rediseño pedido por el usuario: firma del instructor
-// en el perfil, alumno+plantilla+configuración en una sola hoja, fechas
-// por día con selector "Hoy", validación de campos obligatorios, roster
-// con iconos Editar/PDF/JPG + fecha de generación, y persistencia en
-// sessionStorage entre recargas. Recorre el camino feliz completo: rellena
-// el perfil del instructor (incluida la firma), genera un Training Record
-// real (OWD) con firma del alumno y fechas de hoy, descarga PDF y JPG, y
-// comprueba que sobrevive a una recarga de página.
+// Reescrito de arriba a abajo (2026-09-03, Bloque 5 del job nocturno) para
+// el rediseño pedido por el usuario: la configuración del documento
+// (plantilla, progreso, fechas, examen) pasa a ser COMPARTIDA para todo un
+// listado de alumnos, no por alumno — cada alumno solo aporta nombre,
+// apellidos, iniciales y firma. Recorre el camino feliz completo: rellena
+// el perfil del instructor (incluida la firma), configura el documento una
+// vez, añade 2 alumnos, genera los 2 de golpe, descarga PDF/JPG
+// individuales, y comprueba que sobrevive a una recarga de página.
 //
 // Requiere `npm run dev` arrancado aparte (con VITE_DEV_AUTH_BYPASS activo)
 // y el motor Chromium de Playwright instalado una vez
@@ -158,11 +157,7 @@ async function main() {
     issues.push("[training-records] Sigue pidiendo datos de instructor pese a haberlos rellenado en el perfil");
   }
 
-  console.log("→ Añadir alumno: nombre, apellidos, plantilla OWD");
-  await page.getByRole("button", { name: "Añadir alumno" }).tap();
-  await page.waitForTimeout(300);
-  await page.getByLabel("Nombre", { exact: true }).fill("Marta");
-  await page.getByLabel("Apellidos", { exact: true }).fill("Test Apellido");
+  console.log("→ Elegir plantilla OWD (configuración COMPARTIDA para todo el listado, rediseño 2026-09-03)");
   await page.getByText("Open Water Diver", { exact: true }).tap();
   await page.waitForTimeout(300);
   await shot(page, "plantilla-elegida");
@@ -172,36 +167,55 @@ async function main() {
     await pickToday(page, `Fecha: ${label}`);
   }
 
-  console.log("→ Confirmación de examen (con su propia fecha) + firma del alumno");
+  console.log("→ Confirmación de examen (con su propia fecha)");
   await page.getByRole("checkbox", { name: "Confirmación de Examen Final" }).tap();
   await page.waitForTimeout(200);
   await pickToday(page, "Fecha: Confirmación de Examen Final");
-  await drawSignature(page, page.locator('canvas[aria-label*="Firma del alumno"]'));
-  await shot(page, "formulario-completo");
+  await shot(page, "configuracion-compartida-completa");
 
-  console.log("→ Generar y descargar el PDF relleno");
+  console.log("→ Añadir 2 alumnos (solo nombre, apellidos, iniciales y firma cada uno)");
+  for (const [firstName, lastName] of [["Marta", "Test Apellido"], ["Diego", "Otro Alumno"]]) {
+    await page.getByRole("button", { name: "Añadir alumno" }).tap();
+    await page.waitForTimeout(300);
+    await page.getByLabel("Nombre", { exact: true }).fill(firstName);
+    await page.getByLabel("Apellidos", { exact: true }).fill(lastName);
+    await drawSignature(page, page.locator('canvas[aria-label*="Firma del alumno"]'));
+    await page.getByRole("button", { name: "Guardar alumno" }).tap();
+    await page.waitForTimeout(300);
+  }
+  await shot(page, "dos-alumnos-anadidos");
+
+  console.log("→ Generar para todos los alumnos de golpe (2 PDF reales, descarga y relleno tardan unos segundos)");
+  await page.getByRole("button", { name: "Generar para todos los alumnos" }).tap();
+  await page.getByRole("button", { name: "Descargar todo en PDF" }).waitFor({ timeout: 15000 }).catch(() => {
+    issues.push("[training-records] No aparecen las acciones en lote (Descargar todo) tras generar");
+  });
+  await shot(page, "tras-generar");
+
+  console.log("→ Descargar el PDF de un alumno concreto desde su icono de fila");
   const [download] = await Promise.all([
     page.waitForEvent("download", { timeout: 15000 }).catch(() => null),
-    page.getByRole("button", { name: "Generar y descargar" }).tap(),
+    page.getByRole("button", { name: "Descargar PDF" }).first().tap(),
   ]);
   if (!download) {
-    issues.push("[training-records] No se disparó ninguna descarga al pulsar 'Generar y descargar'");
+    issues.push("[training-records] No se disparó ninguna descarga al pulsar 'Descargar PDF'");
   } else {
     const savedPath = path.join(OUT_DIR, `tr-generado-${download.suggestedFilename()}`);
     await download.saveAs(savedPath);
     console.log(`  📄 PDF descargado -> ${path.relative(process.cwd(), savedPath)}`);
   }
-  await page.waitForTimeout(500);
-  await shot(page, "tras-generar");
 
-  console.log("→ Fila del roster: iconos Editar/PDF/JPG + fecha de generación");
-  const editIcon = page.getByRole("button", { name: "Editar" });
-  const pdfIcon = page.getByRole("button", { name: "Descargar PDF" });
-  const jpgIcon = page.getByRole("button", { name: "Descargar imagen (JPG)" });
+  console.log("→ Fila del roster: iconos Editar/PDF/JPG + fecha de generación (para los 2 alumnos)");
+  const editIcon = page.getByRole("button", { name: "Editar" }).first();
+  const pdfIcon = page.getByRole("button", { name: "Descargar PDF" }).first();
+  const jpgIcon = page.getByRole("button", { name: "Descargar imagen (JPG)" }).first();
   for (const [name, loc] of [["Editar", editIcon], ["Descargar PDF", pdfIcon], ["Descargar imagen (JPG)", jpgIcon]]) {
     if (!(await loc.isVisible().catch(() => false))) issues.push(`[training-records] Falta el icono "${name}" en la fila tras generar`);
   }
-  if (!(await page.getByText(/Generado el/).isVisible().catch(() => false))) {
+  if ((await page.getByRole("button", { name: "Descargar PDF" }).count()) !== 2) {
+    issues.push("[training-records] No hay 2 iconos 'Descargar PDF' tras generar para 2 alumnos");
+  }
+  if (!(await page.getByText(/Generado el/).first().isVisible().catch(() => false))) {
     issues.push("[training-records] No aparece la fecha/hora de generación bajo el nombre del alumno");
   }
 
