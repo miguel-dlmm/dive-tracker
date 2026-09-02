@@ -29,6 +29,8 @@ function mockUseSession(overrides) {
     resetPassword: vi.fn(),
     pendingLegalConsents: [],
     acceptLegalConsents: vi.fn(),
+    forcedPasswordUpdate: false,
+    updateForcedPassword: vi.fn(),
     ...overrides,
   });
 }
@@ -118,6 +120,37 @@ describe("AuthGate", () => {
 
     await user.click(screen.getByRole("button", { name: /Volver a entrar/ }));
     expect(screen.getByLabelText("Email o nickname")).toBeInTheDocument();
+  });
+
+  // Enlace de invitación (Release V1, 2026-09-02) — ver
+  // server/users/generateInvitationLink.js/externalRegister.js. A
+  // diferencia de "Regístrate" de arriba, esto NO depende de
+  // external_registration_enabled: el control real vive en el servidor.
+  describe("enlace de invitación (?invite=)", () => {
+    it("con ?invite= en la URL, muestra RegisterScreen directamente aunque el registro externo esté desactivado", async () => {
+      window.history.pushState({}, "", "/?invite=abc-123");
+      supabase.rpc.mockResolvedValue({ data: false, error: null });
+      mockUseSession({ session: null, profile: null });
+
+      render(<App />);
+
+      expect(await screen.findByLabelText("Nickname")).toBeInTheDocument();
+      expect(screen.queryByText("Regístrate")).not.toBeInTheDocument();
+    });
+
+    it("al volver al login, limpia el parámetro invite de la URL", async () => {
+      window.history.pushState({}, "", "/?invite=abc-123");
+      mockUseSession({ session: null, profile: null });
+      const user = userEvent.setup();
+
+      render(<App />);
+      await screen.findByLabelText("Nickname");
+
+      await user.click(screen.getByRole("button", { name: /Volver a entrar/ }));
+
+      expect(screen.getByLabelText("Email o nickname")).toBeInTheDocument();
+      expect(window.location.search).toBe("");
+    });
   });
 
   it("Caso B — sesión existente con activated_at sin fijar, reanuda mostrando la pantalla de activación sin pedir login", () => {
@@ -225,8 +258,8 @@ describe("AuthGate", () => {
 
     render(<App />);
 
-    await user.type(screen.getByLabelText("Nueva contraseña"), "password123");
-    await user.type(screen.getByLabelText("Confirmar contraseña"), "password123");
+    await user.type(screen.getByLabelText("Nueva contraseña"), "Password123!");
+    await user.type(screen.getByLabelText("Confirmar contraseña"), "Password123!");
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: /crear contraseña/i }));
 
@@ -235,7 +268,7 @@ describe("AuthGate", () => {
         tokenHash: "hash-1",
         type: "recovery",
         expectedEmail: "diver@example.com",
-        password: "password123",
+        password: "Password123!",
       })
     );
   });
@@ -287,8 +320,8 @@ describe("AuthGate", () => {
 
       render(<App />);
 
-      await user.type(screen.getByLabelText("Nueva contraseña"), "password123");
-      await user.type(screen.getByLabelText("Confirmar contraseña"), "password123");
+      await user.type(screen.getByLabelText("Nueva contraseña"), "Password123!");
+      await user.type(screen.getByLabelText("Confirmar contraseña"), "Password123!");
       await user.click(screen.getByRole("button", { name: /guardar nueva contraseña/i }));
 
       await waitFor(() =>
@@ -296,7 +329,7 @@ describe("AuthGate", () => {
           tokenHash: "hash-1",
           type: "recovery",
           expectedEmail: "diver@example.com",
-          password: "password123",
+          password: "Password123!",
         })
       );
       expect(activateAccount).not.toHaveBeenCalled();
@@ -311,5 +344,56 @@ describe("AuthGate", () => {
       expect(screen.getByLabelText("Email o nickname")).toBeInTheDocument();
       expect(screen.queryByLabelText("Nueva contraseña")).not.toBeInTheDocument();
     });
+  });
+});
+
+// forcedPasswordUpdate (Release V1, 2026-09-02) — cuenta ya activada, con
+// sesión válida, cuya contraseña actual no cumple la política reforzada.
+// Ver useSession.test.js para cuándo se marca este estado; aquí solo
+// importa que AuthGate lo anteponga a la app normal y a los
+// consentimientos legales pendientes.
+describe("AuthGate — forcedPasswordUpdate", () => {
+  const ACTIVATED_PROFILE = { user_id: "u1", activated_at: "2026-01-01T00:00:00Z", nickname: "ada" };
+
+  it("con forcedPasswordUpdate, muestra la pantalla de actualizar contraseña en vez de la app normal", () => {
+    mockUseSession({ session: SESSION, profile: ACTIVATED_PROFILE, forcedPasswordUpdate: true });
+
+    render(<App />);
+
+    expect(screen.getByText(/reforzado la seguridad de ocean flow/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Email o nickname")).not.toBeInTheDocument();
+  });
+
+  it("prevalece sobre los consentimientos legales pendientes", () => {
+    mockUseSession({
+      session: SESSION, profile: ACTIVATED_PROFILE, forcedPasswordUpdate: true,
+      pendingLegalConsents: [{ document_type: "privacy_policy" }],
+    });
+
+    render(<App />);
+
+    expect(screen.getByText(/reforzado la seguridad de ocean flow/i)).toBeInTheDocument();
+  });
+
+  it("al enviar la contraseña nueva, llama a updateForcedPassword", async () => {
+    const updateForcedPassword = vi.fn().mockResolvedValue();
+    mockUseSession({ session: SESSION, profile: ACTIVATED_PROFILE, forcedPasswordUpdate: true, updateForcedPassword });
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    await user.type(screen.getByLabelText("Nueva contraseña"), "Password123!");
+    await user.type(screen.getByLabelText("Confirmar contraseña"), "Password123!");
+    await user.click(screen.getByRole("button", { name: /guardar y continuar/i }));
+
+    await waitFor(() => expect(updateForcedPassword).toHaveBeenCalledWith("Password123!"));
+  });
+
+  it("sin forcedPasswordUpdate, una cuenta activada entra directamente en la app normal", () => {
+    mockUseSession({ session: SESSION, profile: ACTIVATED_PROFILE, forcedPasswordUpdate: false });
+
+    render(<App />);
+
+    expect(screen.queryByText(/reforzado la seguridad de ocean flow/i)).not.toBeInTheDocument();
   });
 });

@@ -15,6 +15,7 @@ import ForgotPasswordScreen from "./ForgotPasswordScreen";
 import ResetPasswordScreen from "./ResetPasswordScreen";
 import RegisterScreen from "./RegisterScreen";
 import CreatePasswordScreen from "./CreatePasswordScreen";
+import ForcedPasswordUpdateScreen from "./ForcedPasswordUpdateScreen";
 import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
@@ -559,7 +560,10 @@ function disableDevBypass() {
 }
 
 function AuthGate() {
-  const { session, profile, loading, accountBanned, signIn, signOut, activateAccount, resetPassword, pendingLegalConsents, acceptLegalConsents, updateProfile } = useSession();
+  const {
+    session, profile, loading, accountBanned, signIn, signOut, activateAccount, resetPassword,
+    pendingLegalConsents, acceptLegalConsents, updateProfile, forcedPasswordUpdate, updateForcedPassword,
+  } = useSession();
   const [bypassAttempted, setBypassAttempted] = useState(false);
   // Mientras esté en true, se muestra el mismo loading que "loading" en vez
   // de dejar parpadear LoginScreen durante el auto-signIn. Si falla o
@@ -654,6 +658,31 @@ function AuthGate() {
   // enlaces de alta/reactivación/regenerar-contraseña-por-admin no llevan
   // este parámetro, así que siguen exactamente igual que antes.
   const isRecoveryFlow = params.get("flow") === "recovery";
+  // Enlace de invitación (Release V1, 2026-09-02, ver
+  // server/users/generateInvitationLink.js/externalRegister.js) — muestra
+  // RegisterScreen directamente, sin pasar por el botón "Regístrate" ni su
+  // gate de externalRegistrationEnabled (eso es solo UX; el control de
+  // acceso real vive en el servidor, que valida el token). inviteToken se
+  // pasa tal cual a RegisterScreen para que lo mande en la petición.
+  const inviteToken = params.get("invite");
+  // inviteDismissed, no solo leer la URL en cada render: "‹ Volver al
+  // login" limpia el parámetro con replaceState (efecto en el DOM, no en
+  // el estado de React) y llama a setShowRegister(false) — pero
+  // showRegister YA estaba en false en este camino (se llegó aquí por
+  // hasInviteLink, no por el botón "Regístrate"), así que ese setState no
+  // cambia de valor y React no vuelve a renderizar (bailout de React en
+  // updates a un valor idéntico) — la pantalla se quedaba congelada en
+  // RegisterScreen aunque la URL ya estuviera limpia. Un estado propio que
+  // sí cambia de valor (false -> true) fuerza el re-render real.
+  const [inviteDismissed, setInviteDismissed] = useState(false);
+  const hasInviteLink = Boolean(inviteToken) && !inviteDismissed;
+  const handleBackFromRegister = () => {
+    if (hasInviteLink) {
+      window.history.replaceState(null, "", window.location.pathname);
+      setInviteDismissed(true);
+    }
+    setShowRegister(false);
+  };
 
   const handleActivate = async (password) => {
     setActivating(true);
@@ -704,7 +733,7 @@ function AuthGate() {
         : <CreatePasswordScreen onSubmit={handleActivate} />;
     }
     if (showForgotPassword) return <ForgotPasswordScreen onBack={() => setShowForgotPassword(false)} />;
-    if (showRegister) return <RegisterScreen onBack={() => setShowRegister(false)} />;
+    if (showRegister || hasInviteLink) return <RegisterScreen onBack={handleBackFromRegister} inviteToken={inviteToken} />;
     return (
       <LoginScreen
         signIn={signIn}
@@ -718,6 +747,15 @@ function AuthGate() {
     return isRecoveryFlow
       ? <ResetPasswordScreen onSubmit={handleResetPassword} />
       : <CreatePasswordScreen onSubmit={handleActivate} />;
+  }
+
+  // Cuenta ya activada, con sesión válida, pero cuya contraseña actual no
+  // cumple la política reforzada (ver passwordPolicy.js/useSession.js) —
+  // se comprueba ANTES que los consentimientos legales a propósito: es la
+  // condición más urgente ("se ha reforzado la seguridad de la app"), y no
+  // depende de si hay o no un documento legal nuevo pendiente.
+  if (forcedPasswordUpdate) {
+    return <ForcedPasswordUpdateScreen onSubmit={updateForcedPassword} />;
   }
 
   if (pendingLegalConsents.length > 0) {
