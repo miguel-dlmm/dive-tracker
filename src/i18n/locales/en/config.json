@@ -197,16 +197,50 @@
     "regenerar": "Reset"
   },
   "sections": {
-    "escuelas": { "label": "Schools", "description": "Where you teach, with its color" },
-    "cursos": { "label": "Courses", "description": "What you teach, with its color" },
-    "tarifas": { "label": "Rates", "description": "What you charge by school and course" },
-    "tiposPago": { "label": "Payment types", "description": "Per person, per course..." },
-    "estadosPago": { "label": "Payment statuses", "description": "Pending, paid..." },
-    "monedas": { "label": "Currencies", "description": "Catalog available across the app" },
-    "navegacion": { "label": "Navigation colors", "description": "Visual identity for each area" },
-    "ajustes": { "label": "General settings", "description": "The app's loading icon" },
-    "usuarios": { "label": "Users", "description": "Accounts with access to the app" },
-    "datasets": { "label": "Starting datasets", "description": "Configuration cloned when creating an account" }
+    "escuelas": {
+      "label": "Schools",
+      "description": "Where you teach, with its color"
+    },
+    "cursos": {
+      "label": "Courses",
+      "description": "What you teach, with its color"
+    },
+    "tarifas": {
+      "label": "Rates",
+      "description": "What you charge by school and course"
+    },
+    "tiposPago": {
+      "label": "Payment types",
+      "description": "Per person, per course..."
+    },
+    "estadosPago": {
+      "label": "Payment statuses",
+      "description": "Pending, paid..."
+    },
+    "monedas": {
+      "label": "Currencies",
+      "description": "Catalog available across the app"
+    },
+    "navegacion": {
+      "label": "Navigation colors",
+      "description": "Visual identity for each area"
+    },
+    "ajustes": {
+      "label": "General settings",
+      "description": "The app's loading icon"
+    },
+    "usuarios": {
+      "label": "Users",
+      "description": "Accounts with access to the app"
+    },
+    "datasets": {
+      "label": "Starting datasets",
+      "description": "Configuration cloned when creating an account"
+    },
+    "trainingRecords": {
+      "label": "Training Records",
+      "description": "Generate signed SSI training progress records per student"
+    }
   },
   "menu": {
     "administracion": "Administration",

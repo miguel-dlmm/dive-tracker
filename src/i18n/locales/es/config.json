@@ -197,16 +197,50 @@
     "regenerar": "Regenerar"
   },
   "sections": {
-    "escuelas": { "label": "Escuelas", "description": "Dónde impartes, con su color" },
-    "cursos": { "label": "Cursos", "description": "Qué impartes, con su color" },
-    "tarifas": { "label": "Tarifas", "description": "Cuánto cobras por escuela y curso" },
-    "tiposPago": { "label": "Tipos de pago", "description": "Por persona, por curso..." },
-    "estadosPago": { "label": "Estados de pago", "description": "Pendiente, cobrado..." },
-    "monedas": { "label": "Monedas", "description": "Catálogo disponible en toda la app" },
-    "navegacion": { "label": "Colores de navegación", "description": "Identidad visual de cada área" },
-    "ajustes": { "label": "Ajustes generales", "description": "Icono de carga de la app" },
-    "usuarios": { "label": "Usuarios", "description": "Cuentas con acceso a la app" },
-    "datasets": { "label": "Datasets iniciales", "description": "Configuración clonada al crear una cuenta" }
+    "escuelas": {
+      "label": "Escuelas",
+      "description": "Dónde impartes, con su color"
+    },
+    "cursos": {
+      "label": "Cursos",
+      "description": "Qué impartes, con su color"
+    },
+    "tarifas": {
+      "label": "Tarifas",
+      "description": "Cuánto cobras por escuela y curso"
+    },
+    "tiposPago": {
+      "label": "Tipos de pago",
+      "description": "Por persona, por curso..."
+    },
+    "estadosPago": {
+      "label": "Estados de pago",
+      "description": "Pendiente, cobrado..."
+    },
+    "monedas": {
+      "label": "Monedas",
+      "description": "Catálogo disponible en toda la app"
+    },
+    "navegacion": {
+      "label": "Colores de navegación",
+      "description": "Identidad visual de cada área"
+    },
+    "ajustes": {
+      "label": "Ajustes generales",
+      "description": "Icono de carga de la app"
+    },
+    "usuarios": {
+      "label": "Usuarios",
+      "description": "Cuentas con acceso a la app"
+    },
+    "datasets": {
+      "label": "Datasets iniciales",
+      "description": "Configuración clonada al crear una cuenta"
+    },
+    "trainingRecords": {
+      "label": "Training Records",
+      "description": "Genera registros de progreso SSI firmados por alumno"
+    }
   },
   "menu": {
     "administracion": "Administración",

@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
-  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database,
+  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Award,
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
 import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle } from "./shared";
@@ -13,6 +13,7 @@ import { supabase } from "./supabaseClient";
 import i18n from "./i18n";
 import RatesTab from "./RatesTab";
 import DatasetsSection from "./DatasetsSection";
+import TrainingRecordsTab from "./trainingRecords/TrainingRecordsTab";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
 
@@ -1509,6 +1510,11 @@ const BUSINESS_SECTIONS = [
   { key: "escuelas", i18nKey: "escuelas", icon: Building2 },
   { key: "cursos", i18nKey: "cursos", icon: GraduationCap },
   { key: "tarifas", i18nKey: "tarifas", icon: Coins },
+  // Disponible para cualquier usuario, no solo admin (igual que Escuelas/
+  // Cursos/Tarifas) — cualquier instructor puede necesitar generar el
+  // registro de progreso de sus propios alumnos, no es una tarea de
+  // gestión de la instalación. Ver docs/RELEASE-V1-PROGRESS.md, Fase 5.
+  { key: "training-records", i18nKey: "trainingRecords", icon: Award },
 ];
 const ADMIN_SECTIONS = [
   { key: "tipos-pago", i18nKey: "tiposPago", icon: CreditCard },
@@ -1635,6 +1641,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
           accentColor={sectionColor("rates")}
         />
       )}
+      {section === "training-records" && <TrainingRecordsTab userId={profile?.user_id} accentColor={sectionColor("trabajo")} />}
       {isAdmin && section === "tipos-pago" && (
         <CrudTable createLabel={t("crud.nuevoTipoPago")} editLabel={t("crud.editarTipoPago")} table={paymentTypes} hasDefault fields={[{ key: "name", label: t("crud.nombreCampo") }]} />
       )}

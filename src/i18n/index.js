@@ -12,6 +12,7 @@ import esProfile from "./locales/es/profile.json";
 import esHelp from "./locales/es/help.json";
 import esNotices from "./locales/es/notices.json";
 import esRates from "./locales/es/rates.json";
+import esTrainingRecords from "./locales/es/trainingRecords.json";
 
 import enCommon from "./locales/en/common.json";
 import enAuth from "./locales/en/auth.json";
@@ -24,6 +25,7 @@ import enProfile from "./locales/en/profile.json";
 import enHelp from "./locales/en/help.json";
 import enNotices from "./locales/en/notices.json";
 import enRates from "./locales/en/rates.json";
+import enTrainingRecords from "./locales/en/trainingRecords.json";
 
 // Idioma preferido — Release V1 Fase 2. Fuente de verdad real: la columna
 // profiles.language (se sincroniza tras cargar sesión, ver useSession.js/
@@ -59,12 +61,12 @@ export function setStoredLanguage(lang) {
 // complejidad sin beneficio real todavía.
 i18n.use(initReactI18next).init({
   resources: {
-    es: { common: esCommon, auth: esAuth, app: esApp, home: esHome, trabajo: esTrabajo, summary: esSummary, config: esConfig, profile: esProfile, help: esHelp, notices: esNotices, rates: esRates },
-    en: { common: enCommon, auth: enAuth, app: enApp, home: enHome, trabajo: enTrabajo, summary: enSummary, config: enConfig, profile: enProfile, help: enHelp, notices: enNotices, rates: enRates },
+    es: { common: esCommon, auth: esAuth, app: esApp, home: esHome, trabajo: esTrabajo, summary: esSummary, config: esConfig, profile: esProfile, help: esHelp, notices: esNotices, rates: esRates, trainingRecords: esTrainingRecords },
+    en: { common: enCommon, auth: enAuth, app: enApp, home: enHome, trabajo: enTrabajo, summary: enSummary, config: enConfig, profile: enProfile, help: enHelp, notices: enNotices, rates: enRates, trainingRecords: enTrainingRecords },
   },
   lng: getStoredLanguage(),
   fallbackLng: "es",
-  ns: ["common", "auth", "app", "home", "trabajo", "summary", "config", "profile", "help", "notices", "rates"],
+  ns: ["common", "auth", "app", "home", "trabajo", "summary", "config", "profile", "help", "notices", "rates", "trainingRecords"],
   defaultNS: "common",
   interpolation: { escapeValue: false }, // React ya escapa — evita doble escape de acentos/símbolos
   returnNull: false,

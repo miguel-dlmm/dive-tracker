@@ -1,0 +1,64 @@
+{
+  "intro": "Genera un Training Record oficial (registro de progreso SSI) para cada alumno, con firma incluida — nada de lo que rellenes aquí se guarda, solo se descarga.",
+  "sinPlantillas": "Todavía no hay ninguna plantilla lista para usar.",
+  "noSePudieronCargarPlantillas": "No se pudieron cargar las plantillas.",
+  "noSePudoDescargarPlantilla": "No se pudo descargar esta plantilla.",
+  "cargandoPlantillas": "Cargando plantillas…",
+  "descargandoPlantilla": "Descargando plantilla…",
+  "volverPlantillas": "Plantillas",
+  "instructorPrefs": {
+    "titulo": "Tus datos de instructor",
+    "descripcion": "Se rellenan solos en cada registro que generes — se guardan en este dispositivo, no en un alumno concreto.",
+    "nombre": "Nombre completo",
+    "iniciales": "Iniciales",
+    "numero": "Número SSI Pro"
+  },
+  "roster": {
+    "titulo": "Alumnos de esta sesión",
+    "vacio": "Añade a los alumnos a los que vas a generar el registro.",
+    "anadirAlumno": "Añadir alumno",
+    "descargarDeNuevo": "Descargar de nuevo",
+    "descargarTodosGenerados": "Descargar todos los generados"
+  },
+  "studentForm": {
+    "nuevoAlumno": "Nuevo alumno",
+    "editarAlumno": "Editar alumno",
+    "cerrar": "Cerrar",
+    "nombre": "Nombre",
+    "apellidos": "Apellidos",
+    "iniciales": "Iniciales",
+    "inicialesHint": "Se calculan solas — puedes corregirlas si hace falta.",
+    "guardar": "Guardar"
+  },
+  "studentSheet": {
+    "cerrar": "Cerrar",
+    "progreso": "Progreso del curso",
+    "inmersionesEspecialidad": "Inmersiones de especialidad",
+    "nombreEspecialidadPlaceholder": "Nombre de la especialidad",
+    "sesionPiscinaNecesaria": "Sesión de piscina necesaria",
+    "inmersionCompletada": "Inmersión completada",
+    "versionExamen": "Versión del examen",
+    "examenImpreso": "Impreso",
+    "examenOnline": "Online",
+    "certificacion": "Certificación",
+    "openWaterDiver": "Open Water Diver",
+    "scubaDiver": "Scuba Diver",
+    "varianteCurso": "Variante del curso",
+    "ean32": "EAN32",
+    "ean40": "EAN40",
+    "firmas": "Firmas",
+    "firmaAlumno": "Firma del alumno",
+    "firmaTutor": "Firma del tutor",
+    "firmaInstructor": "Firma del instructor",
+    "generarYDescargar": "Generar y descargar",
+    "generando": "Generando…",
+    "generadoCorrectamente": "Registro generado y descargado.",
+    "noSePudoGenerar": "No se pudo generar el registro."
+  },
+  "signature": {
+    "opcional": "opcional",
+    "borrar": "Borrar",
+    "firmadoAria": "{{label}}: firmado",
+    "sinFirmarAria": "{{label}}: sin firmar"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "intro": "Generate an official Training Record (SSI progress log) for each student, signature included — nothing you fill in here is saved, it's only downloaded.",
+  "sinPlantillas": "There are no templates ready to use yet.",
+  "noSePudieronCargarPlantillas": "Couldn't load the templates.",
+  "noSePudoDescargarPlantilla": "Couldn't download this template.",
+  "cargandoPlantillas": "Loading templates…",
+  "descargandoPlantilla": "Downloading template…",
+  "volverPlantillas": "Templates",
+  "instructorPrefs": {
+    "titulo": "Your instructor details",
+    "descripcion": "Filled in automatically on every record you generate — saved on this device only, not tied to any student.",
+    "nombre": "Full name",
+    "iniciales": "Initials",
+    "numero": "SSI Pro number"
+  },
+  "roster": {
+    "titulo": "Students in this session",
+    "vacio": "Add the students you're generating the record for.",
+    "anadirAlumno": "Add student",
+    "descargarDeNuevo": "Download again",
+    "descargarTodosGenerados": "Download all generated"
+  },
+  "studentForm": {
+    "nuevoAlumno": "New student",
+    "editarAlumno": "Edit student",
+    "cerrar": "Close",
+    "nombre": "First name",
+    "apellidos": "Last name",
+    "iniciales": "Initials",
+    "inicialesHint": "Calculated automatically — you can correct them if needed.",
+    "guardar": "Save"
+  },
+  "studentSheet": {
+    "cerrar": "Close",
+    "progreso": "Course progress",
+    "inmersionesEspecialidad": "Specialty dives",
+    "nombreEspecialidadPlaceholder": "Specialty name",
+    "sesionPiscinaNecesaria": "Pool session needed",
+    "inmersionCompletada": "Dive completed",
+    "versionExamen": "Exam version",
+    "examenImpreso": "Printed",
+    "examenOnline": "Online",
+    "certificacion": "Certification",
+    "openWaterDiver": "Open Water Diver",
+    "scubaDiver": "Scuba Diver",
+    "varianteCurso": "Course variant",
+    "ean32": "EAN32",
+    "ean40": "EAN40",
+    "firmas": "Signatures",
+    "firmaAlumno": "Student signature",
+    "firmaTutor": "Parent/guardian signature",
+    "firmaInstructor": "Instructor signature",
+    "generarYDescargar": "Generate and download",
+    "generando": "Generating…",
+    "generadoCorrectamente": "Record generated and downloaded.",
+    "noSePudoGenerar": "Couldn't generate the record."
+  },
+  "signature": {
+    "opcional": "optional",
+    "borrar": "Clear",
+    "firmadoAria": "{{label}}: signed",
+    "sinFirmarAria": "{{label}}: unsigned"
+  }
+}
