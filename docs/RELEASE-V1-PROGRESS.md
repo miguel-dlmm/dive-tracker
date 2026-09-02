@@ -334,8 +334,13 @@ revise y apruebe.
 de `EMAIL_FROM` en las variables de entorno de `dive-tracker-exgg`
 (producción). No se ha tocado esta noche — el permiso que diste fue
 para TEST, mientras probabas el registro ahí. Bloquea el registro
-público real en producción hasta que se haga; revisar mañana antes de
-abrir el registro a desconocidos.
+público real en producción hasta que se haga.
+
+**Decisión confirmada 2026-09-02 (09:20, ventana rápida antes de que el
+usuario se desconectara hasta las 18h):** NO aplicarlo ahora — queda
+anotado para hacerse junto con el próximo despliegue real a PROD, como
+parte de esa migración de código, no como un cambio de configuración
+suelto. No tocar `dive-tracker-exgg` hasta ese momento.
 
 ### Fase 8 — Revisión visual y libro de estilo
 
@@ -1076,14 +1081,14 @@ tocar, `DeploymentNotice.jsx` generalizado a las dos audiencias como
 mecanismo aparte. Nada se ha roto ni se ha perdido; solo falta decidir
 si de verdad deben fusionarse y, si es que sí, con qué contenido.
 
-**Pregunta concreta para la próxima revisión:** cuando redacte un
-aviso `audience='all'` (una "novedad" para cualquier usuario, no solo
-un resumen técnico para superadmin), ¿debería seguir usando el mismo
-formato técnico de `DeploymentNotice.jsx` con copy más cercano en
-`summary`/`functional_changes`, o merece su propio componente con el
-lenguaje visual de `WhatsNew.jsx` (diapositivas)? Y en cualquier caso,
-¿sigue teniendo sentido "Ver qué hay de nuevo" en Ayuda como una
-pieza aparte, o pasa a reabrir el aviso `all` más reciente?
+**Decisión confirmada 2026-09-02 (09:20, ventana rápida antes de que el
+usuario se desconectara hasta las 18h):** dejarlos separados por ahora.
+`WhatsNew.jsx` sigue siendo el tour de producto por versión, con su
+propio gate en `localStorage`, sin tocar. `deployment_notices`
+`audience='all'` queda como mecanismo aparte, para cuando en el futuro
+haga falta redactar un aviso puntual dirigido a cualquier usuario (no
+un resumen técnico) — sin fusionar contenido ni gate con WhatsNew. No
+se replantea esto salvo que surja una razón concreta más adelante.
 
 ### Verificación
 
