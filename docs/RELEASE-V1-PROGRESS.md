@@ -29,7 +29,7 @@
 | 3 | KPIs en la home | ✅ Hecho (2026-09-01, noche) |
 | 4 | Cabecera y notificaciones | ✅ Hecho (2026-09-01/02, noche) |
 | 5 | Sistema de Training Records | 🟡 En curso — generador MVP construido, sin verificar en dispositivo real (ver detalle) |
-| 6 | Slides y avisos | ⬜ Pendiente |
+| 6 | Slides y avisos | 🟡 En curso — avisos generalizados, WhatsNew sin tocar (ver detalle) |
 | 7 | Usabilidad, carga y escalabilidad | ⬜ Pendiente |
 | 8 | Revisión visual y libro de estilo | ⬜ Pendiente |
 
@@ -230,7 +230,10 @@ mecanismo basado en BD, porque el encargo pide comportamientos
 sesión después del deploy lo ven tras el login y vuelven a home) que
 requieren comparar `created_at` del aviso con la fecha de alta del
 usuario — imposible de garantizar solo con `localStorage`.
-**Migración aprobada — `0009-avisos-generalizados.sql`:**
+**Migración aprobada — `0010-avisos-generalizados.sql`** (renumerada de
+0009 a 0010 al ejecutarla: 0009 ya se usó esta misma noche para
+`invitation_links`, ver "Cola de tareas adicionales" — 0008 vive en
+`feature/training-records`, sin fusionar todavía):
 
 ```sql
 alter table public.deployment_notices
@@ -1011,9 +1014,82 @@ construido para las 4 plantillas activas — ver "✅ Actualización
    alcance hasta que la interfaz de generación esté terminada, tal
    como pedía el encargo original.
 
-## Fase 6 — Slides y avisos
+## Fase 6 — Slides y avisos (🟡 en curso)
 
-⬜ Pendiente — no iniciada.
+### Lo hecho
+
+- Migración aditiva `0010-avisos-generalizados.sql` aplicada a TEST
+  (rollback documentado en el propio fichero antes de ejecutar):
+  columna `deployment_notices.audience` (`'all'`/`'superadmin'`,
+  default `'superadmin'` — ninguna fila existente cambia de
+  comportamiento) + policy de lectura generalizada.
+- `server/notifications/notifyDeployment.js` acepta `audience` en el
+  body (default `'superadmin'`, compatible con todas las llamadas que
+  ya existían) y lo guarda en la fila — pero el EMAIL sigue yendo
+  exclusivamente a superadmins, sea cual sea `audience`. La plantilla
+  actual (`deploymentNoticeEmailTemplate.js`: "nuevo despliegue", hash
+  de commit, botones de Preview Deployment) es contenido de
+  desarrollo — enviárselo por email a un usuario normal con el tono
+  actual sería justo el "mensaje de máquina" que la regla 2 de Release
+  V1 prohíbe. `audience='all'` hoy solo controla quién puede VER el
+  aviso dentro de la app (RLS + `DeploymentNotice.jsx`), no a quién se
+  le manda un email. Generalizar el email necesitaría su propia
+  plantilla con copy cercano — deliberadamente no construida esta
+  noche.
+- `src/DeploymentNotice.jsx` generalizado: ya no se monta solo para
+  `profile.is_superadmin` (ver `App.jsx`) — se monta para cualquier
+  usuario con sesión, y la consulta trae avisos de `audience='all'`
+  (para cualquiera) o `audience='superadmin'` (solo si
+  `profile.is_superadmin`). Regla añadida que no estaba en el
+  mecanismo original: un aviso con `created_at` anterior a la fecha de
+  alta del usuario (`profiles.created_at`) nunca se le muestra — sin
+  esto, una cuenta nueva vería como "novedad" un aviso de antes de que
+  existiera, el comportamiento explícito que pedía el encargo
+  ("usuarios creados después del deploy nunca lo ven").
+
+### ⚠️ Deliberadamente NO hecho — necesita una decisión del usuario
+
+El encargo original pedía sustituir también el gate de `WhatsNew.jsx`
+(hoy por versión de app en `localStorage`) por este mismo mecanismo de
+BD. **No lo he hecho** porque hay una tensión real, no solo un detalle
+de implementación:
+
+- `WhatsNew.jsx` es un tour de producto con contenido curado a mano (5
+  diapositivas, icono+título+frase por diapositiva, tono cercano —
+  ver el propio archivo) que además construí en la Fase 4 de esta
+  misma noche como destino de "Ver qué hay de nuevo" en Ayuda.
+- `deployment_notices` es un aviso por sesión/commit de trabajo, con
+  el formato técnico que ya usa `DeploymentNotice.jsx`
+  (`summary`/`technical_changes`/`functional_changes`, pensado para
+  que YO (Claude) lo redacte al cerrar un bloque de trabajo).
+- Fusionar los dos gates sin fusionar el contenido dejaría "Ver qué
+  hay de nuevo" sin nada que mostrar, o mostraría el resumen técnico
+  de un commit cualquiera como si fuera el tour de producto — ninguna
+  de las dos cosas parece lo que se pidió, y no tengo el texto
+  original completo del encargo (la sesión llevaba muchas horas y este
+  detalle se resumió, no se guardó literal) para estar seguro de cuál
+  de las dos interpretaciones es la correcta.
+
+**Lo que hay ahora mismo:** las dos siguen coexistiendo tal cual
+estaban — `WhatsNew.jsx` con su gate de versión en `localStorage` sin
+tocar, `DeploymentNotice.jsx` generalizado a las dos audiencias como
+mecanismo aparte. Nada se ha roto ni se ha perdido; solo falta decidir
+si de verdad deben fusionarse y, si es que sí, con qué contenido.
+
+**Pregunta concreta para la próxima revisión:** cuando redacte un
+aviso `audience='all'` (una "novedad" para cualquier usuario, no solo
+un resumen técnico para superadmin), ¿debería seguir usando el mismo
+formato técnico de `DeploymentNotice.jsx` con copy más cercano en
+`summary`/`functional_changes`, o merece su propio componente con el
+lenguaje visual de `WhatsNew.jsx` (diapositivas)? Y en cualquier caso,
+¿sigue teniendo sentido "Ver qué hay de nuevo" en Ayuda como una
+pieza aparte, o pasa a reabrir el aviso `all` más reciente?
+
+### Verificación
+
+`npm run test`/`npm run build` en verde (ver commit). Pendiente de
+`mobile-check`/navegador real, igual que el resto de piezas de esta
+noche.
 
 ## Fase 7 — Usabilidad, carga y escalabilidad
 
