@@ -1,36 +1,23 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { X, Loader2, Download } from "lucide-react";
-import { Sheet, useToast } from "../shared";
+import { X, Loader2, Download, ChevronRight, Award } from "lucide-react";
+import { Sheet, Field, inputCls, DatePicker, Select, useToast } from "../shared";
 import { TEAL } from "../App";
+import { computeInitials } from "../computeInitials";
+import SignatureCapture from "../SignatureCapture";
 import { fillTrainingRecordPdf } from "./pdfFill";
-import SignatureCapture from "./SignatureCapture";
+import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
+import { buildDefaultConfig, activeDayGroups, dayGroupLabels, validateRecordConfig, buildFillData } from "./recordConfig";
 
-// Valores por defecto de un registro nuevo, sin nada rellenado todavía —
-// separado en su propia función porque hace falta tanto al montar (primera
-// vez que se abre para este alumno) como para "olvidar" el estado del
-// alumno anterior al reabrir la hoja para uno distinto (ver el useEffect
-// más abajo).
-function buildDefaultConfig(templateMap) {
-  return {
-    includedRows: (templateMap?.sessionRows || []).map((row) => !row.optional),
-    examVersion: null,
-    upgrade: templateMap?.upgradeCheckboxes ? "openWaterDiver" : null,
-    courseVariant: null,
-    examConfirmed: false,
-    specialtyDives: (templateMap?.optionalSpecialtyDives || []).map(() => ({ specialtyName: "", poolNeeded: false, completed: false })),
-    signatures: { studentPng: null, parentPng: null, instructorPng: null },
-  };
-}
-
-// Fila de progreso genérica (Sesiones Académicas, Inmersión de Formación en
-// Aguas Abiertas 1, Confirmación de Examen Final...) — en vez de pedir
-// fecha/iniciales sueltas por fila (no hay fecha todavía, ver pdfFill.js),
-// el instructor solo marca "completada": si lo está, la fila se rellena con
-// las iniciales del alumno (autogeneradas del roster) y los datos del
-// instructor ya configurados arriba, sin tener que volver a teclearlos fila
-// a fila. Una fila opcional (curso hecho en menos sesiones de las
-// habituales) empieza sin marcar; una obligatoria empieza marcada.
+// Pestaña única de creación/edición (Release V1, Fase 5, lote 2026-09-02,
+// pedido explícito del usuario: "me gusta el modelo planteado con el de
+// cómo configurar el PDF") — sustituye a los dos pasos que había antes
+// (StudentFormSheet + StudentRecordSheet, ahora fusionados aquí): datos del
+// alumno, plantilla y configuración del documento son un único recorrido
+// continuo dentro de la misma hoja, no dos hojas separadas. Se reutiliza
+// para crear (mode="add") y para editar (mode="edit", initial=entrada del
+// roster) — reabrir para editar restaura de verdad lo que ya había,
+// alumno + plantilla + configuración completos, no solo el documento.
 function ProgressRowToggle({ label, checked, onChange }) {
   return (
     <label className="flex min-h-11 items-center gap-2.5 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-700">
@@ -58,92 +45,99 @@ function RadioChoice({ options, value, onChange }) {
   );
 }
 
-// initialConfig (opcional): la configuración que ya se guardó la última vez
-// que se generó el registro de ESTE alumno (ver recordConfigByStudent en
-// TrainingRecordsTab.jsx) — permite reabrir la hoja para editarla y
-// regenerar, en vez de perder todo lo ya marcado/firmado. Sin esto, esta
-// hoja nunca se desmonta al cerrarla (Sheet solo oculta su contenido, ver
-// shared.jsx), así que su estado local sobrevivía de un alumno al
-// siguiente si no se reinicializaba explícitamente al abrir — pedido
-// explícito del usuario 2026-09-02, tras encontrarlo confuso en el Preview
-// real: "cuando edito, debería poder editar... la configuración del
-// documento que me ofreciste justo antes de generar".
-export default function StudentRecordSheet({ open, onClose, student, templateMap, templateName, templateBytes, instructor, initialConfig, onGenerated }) {
+function FieldError({ message }) {
+  if (!message) return null;
+  return <p role="alert" className="-mt-1.5 text-xs text-red-600">{message}</p>;
+}
+
+const emptyStudent = { firstName: "", lastName: "", guardianName: "", initials: "" };
+
+export default function StudentRecordSheet({ open, onClose, mode, initial, templates, adventures, instructor, getTemplateBytes, onSaved }) {
   const { t } = useTranslation("trainingRecords");
   const toast = useToast();
-  // Inicializadores perezosos, no arrays/null vacíos: el useEffect de abajo
-  // solo corre DESPUÉS del primer render, pero el JSX de plantillas con
-  // inmersiones de especialidad (AOWD) ya lee specialtyDives[i].specialtyName
-  // en ese primer render — con un array vacío de partida, eso revienta con
-  // "Cannot read properties of undefined" antes de que el efecto llegue a
-  // ejecutarse (pantalla en blanco total, sin ningún error visible en UI,
-  // detectado con mobile-check-training-records.mjs). Sembrar aquí, en vez
-  // de solo en el efecto, cubre ese primer render; el efecto sigue
-  // haciendo falta para cuando esta misma instancia (nunca se desmonta al
-  // cerrar, ver Sheet en shared.jsx) se reabre para un alumno distinto.
-  const [includedRows, setIncludedRows] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).includedRows);
-  const [examVersion, setExamVersion] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).examVersion);
-  const [upgrade, setUpgrade] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).upgrade);
-  const [courseVariant, setCourseVariant] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).courseVariant);
-  const [examConfirmed, setExamConfirmed] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).examConfirmed);
-  const [specialtyDives, setSpecialtyDives] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).specialtyDives);
-  const [signatures, setSignatures] = useState(() => (initialConfig || buildDefaultConfig(templateMap)).signatures);
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [guardianName, setGuardianName] = useState("");
+  const [initials, setInitials] = useState("");
+  const [initialsTouched, setInitialsTouched] = useState(false);
+  const [studentErrors, setStudentErrors] = useState({});
+
+  const [templateCode, setTemplateCode] = useState(null);
+  const [config, setConfig] = useState(null);
+  const [configErrors, setConfigErrors] = useState({});
   const [generating, setGenerating] = useState(false);
 
-  // Se reinicializa cada vez que se abre (y cada vez que cambia el alumno,
-  // por si algún día se reabriera sin pasar por "cerrado" de por medio) —
-  // desde su configuración ya guardada si existe, o desde los valores por
-  // defecto de esta plantilla si es la primera vez para este alumno.
+  // Se reinicializa cada vez que se abre — esta hoja nunca se desmonta
+  // entre aperturas (Sheet solo oculta su contenido), así que sin esto el
+  // estado de un alumno sobreviviría al siguiente.
   useEffect(() => {
-    if (!open || !templateMap) return;
-    const cfg = initialConfig || buildDefaultConfig(templateMap);
-    setIncludedRows(cfg.includedRows);
-    setExamVersion(cfg.examVersion);
-    setUpgrade(cfg.upgrade);
-    setCourseVariant(cfg.courseVariant);
-    setExamConfirmed(cfg.examConfirmed);
-    setSpecialtyDives(cfg.specialtyDives);
-    setSignatures(cfg.signatures);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe reinicializar al abrir/cambiar de alumno, no en cada tecleo (initialConfig cambiaría de identidad en cada generate())
-  }, [open, student?.id]);
+    if (!open) return;
+    const student = mode === "edit" && initial ? initial : emptyStudent;
+    setFirstName(student.firstName || "");
+    setLastName(student.lastName || "");
+    setGuardianName(student.guardianName || "");
+    setInitials(student.initials || "");
+    setInitialsTouched(mode === "edit" && !!student.initials);
+    setStudentErrors({});
+    setTemplateCode(student.templateCode || null);
+    setConfig(student.templateCode ? (student.config || buildDefaultConfig(TEMPLATE_FIELD_MAPS[student.templateCode])) : null);
+    setConfigErrors({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al abrir/cambiar de alumno
+  }, [open, initial?.id, mode]);
 
-  if (!templateMap || !student) return null;
+  useEffect(() => {
+    if (!initialsTouched) setInitials(computeInitials(firstName, lastName));
+  }, [firstName, lastName, initialsTouched]);
 
-  const toggleRow = (i, checked) => setIncludedRows((rows) => rows.map((v, idx) => (idx === i ? checked : v)));
-  const updateDive = (i, patch) => setSpecialtyDives((dives) => dives.map((d, idx) => (idx === i ? { ...d, ...patch } : d)));
+  const templateMap = templateCode ? TEMPLATE_FIELD_MAPS[templateCode] : null;
 
-  const row = (studentInitials = true) => (studentInitials
-    ? { studentInitials: student.initials, instructorInitials: instructor.initials, instructorNumber: instructor.number }
-    : null);
+  const selectTemplate = (code) => {
+    setTemplateCode(code);
+    setConfig(buildDefaultConfig(TEMPLATE_FIELD_MAPS[code]));
+    setConfigErrors({});
+  };
+
+  const updateConfig = (patch) => setConfig((c) => ({ ...c, ...patch }));
+  const toggleRow = (i, checked) => setConfig((c) => ({ ...c, includedRows: c.includedRows.map((v, idx) => (idx === i ? checked : v)) }));
+  const setDayDate = (day, value) => setConfig((c) => ({ ...c, dayDates: { ...c.dayDates, [day]: value } }));
+  const updateDive = (i, patch) => setConfig((c) => ({ ...c, specialtyDives: c.specialtyDives.map((d, idx) => (idx === i ? { ...d, ...patch } : d)) }));
+
+  const validateStudent = () => {
+    const errors = {};
+    if (!firstName.trim()) errors.firstName = t("studentForm.errores.nombre");
+    if (!lastName.trim()) errors.lastName = t("studentForm.errores.apellidos");
+    if (!initials.trim()) errors.initials = t("studentForm.errores.iniciales");
+    setStudentErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const generate = async () => {
+    if (!validateStudent()) return;
+    if (!templateCode) return;
+    const { valid, errors } = validateRecordConfig(templateMap, config);
+    setConfigErrors(errors);
+    if (!valid) {
+      toast?.error(t("studentSheet.faltanCampos"));
+      return;
+    }
     setGenerating(true);
     try {
-      const data = {
+      const templateBytes = await getTemplateBytes(templateCode);
+      const student = { firstName: firstName.trim(), lastName: lastName.trim(), initials: initials.trim() };
+      const data = buildFillData(templateMap, student, config, instructor);
+      const pdfBytes = await fillTrainingRecordPdf(templateBytes, templateMap, data);
+      onSaved({
+        id: mode === "edit" ? initial.id : crypto.randomUUID(),
         firstName: student.firstName,
         lastName: student.lastName,
-        sessionRows: includedRows.map((included) => (included ? row() : null)),
-        examVersion,
-        upgrade,
-        courseVariant,
-        examConfirmation: templateMap.examConfirmation && examConfirmed ? row() : null,
-        specialtyDives: specialtyDives.map((d) => {
-          if (!d.specialtyName && !d.poolNeeded && !d.completed) return null;
-          return {
-            specialtyName: d.specialtyName,
-            poolSession: d.poolNeeded ? row() : null,
-            completed: d.completed ? row() : null,
-          };
-        }),
-        instructor: { namePrinted: instructor.namePrinted, number: instructor.number },
-        signatures,
-      };
-      const filledBytes = await fillTrainingRecordPdf(templateBytes, templateMap, data);
-      // Config "cruda" tal como está en pantalla (distinta de `data`, que ya
-      // trae filas/firmas traducidas al formato que espera pdfFill.js) — es
-      // lo que se guarda para poder reabrir esta misma hoja más tarde y
-      // seguir editando desde donde se dejó, en vez de perderlo al cerrar.
-      onGenerated(filledBytes, { includedRows, examVersion, upgrade, courseVariant, examConfirmed, specialtyDives, signatures });
+        guardianName: guardianName.trim(),
+        initials: student.initials,
+        templateCode,
+        config,
+        pdfBytes,
+        generatedAt: Date.now(),
+      });
       toast?.success(t("studentSheet.generadoCorrectamente"));
     } catch (err) {
       console.error(err);
@@ -153,113 +147,199 @@ export default function StudentRecordSheet({ open, onClose, student, templateMap
     }
   };
 
+  const activeDays = templateMap && config ? activeDayGroups(templateMap, config) : [];
+  const dayLabels = templateMap ? dayGroupLabels(templateMap) : {};
+
   return (
     <Sheet open={open} onClose={onClose}>
       <div className="mb-1 flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-800">{student.firstName} {student.lastName}</h3>
-          <p className="text-xs text-gray-400">{templateName}</p>
-        </div>
+        <h3 className="text-sm font-semibold text-gray-800">{mode === "edit" ? t("studentForm.editarAlumno") : t("studentForm.nuevoAlumno")}</h3>
         <button onClick={onClose} aria-label={t("studentSheet.cerrar")} className="text-gray-400"><X size={19} /></button>
       </div>
 
-      <div className="space-y-4">
-        <section>
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.progreso")}</h4>
-          <div className="space-y-1.5">
-            {templateMap.sessionRows.map((r, i) => (
-              <ProgressRowToggle key={i} label={r.label} checked={includedRows[i]} onChange={(checked) => toggleRow(i, checked)} />
-            ))}
-          </div>
-        </section>
-
-        {templateMap.optionalSpecialtyDives && (
-          <section>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.inmersionesEspecialidad")}</h4>
-            <div className="space-y-3">
-              {templateMap.optionalSpecialtyDives.map((dive, i) => (
-                <div key={i} className="space-y-1.5 rounded-md border border-gray-200 p-2.5">
-                  <p className="text-xs font-medium text-gray-500">{dive.label}</p>
-                  <input
-                    value={specialtyDives[i].specialtyName}
-                    onChange={(e) => updateDive(i, { specialtyName: e.target.value })}
-                    placeholder={t("studentSheet.nombreEspecialidadPlaceholder")}
-                    className="min-h-11 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-400"
-                  />
-                  <ProgressRowToggle label={t("studentSheet.sesionPiscinaNecesaria")} checked={specialtyDives[i].poolNeeded} onChange={(checked) => updateDive(i, { poolNeeded: checked })} />
-                  <ProgressRowToggle label={t("studentSheet.inmersionCompletada")} checked={specialtyDives[i].completed} onChange={(checked) => updateDive(i, { completed: checked })} />
-                </div>
-              ))}
+      <div className="space-y-5">
+        <section className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Field label={t("studentForm.nombre")}>
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className={`${inputCls} w-full`} />
+              </Field>
+              <FieldError message={studentErrors.firstName} />
             </div>
-          </section>
-        )}
-
-        {templateMap.examVersion && (
-          <section>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.versionExamen")}</h4>
-            <RadioChoice
-              value={examVersion}
-              onChange={setExamVersion}
-              options={[
-                { value: "printed", label: t("studentSheet.examenImpreso") },
-                { value: "online", label: t("studentSheet.examenOnline") },
-              ]}
-            />
-          </section>
-        )}
-
-        {templateMap.upgradeCheckboxes && (
-          <section>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.certificacion")}</h4>
-            <RadioChoice
-              value={upgrade}
-              onChange={setUpgrade}
-              options={[
-                { value: "openWaterDiver", label: t("studentSheet.openWaterDiver") },
-                { value: "scubaDiver", label: t("studentSheet.scubaDiver") },
-              ]}
-            />
-          </section>
-        )}
-
-        {templateMap.courseVariant && (
-          <section>
-            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.varianteCurso")}</h4>
-            <RadioChoice
-              value={courseVariant}
-              onChange={setCourseVariant}
-              options={[
-                { value: "ean32", label: t("studentSheet.ean32") },
-                { value: "ean40", label: t("studentSheet.ean40") },
-              ]}
-            />
-          </section>
-        )}
-
-        {templateMap.examConfirmation && (
-          <section>
-            <ProgressRowToggle label={templateMap.examConfirmation.label} checked={examConfirmed} onChange={setExamConfirmed} />
-          </section>
-        )}
-
-        <section>
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.firmas")}</h4>
-          <div className="space-y-3">
-            <SignatureCapture label={t("studentSheet.firmaAlumno")} value={signatures.studentPng} onChange={(v) => setSignatures((s) => ({ ...s, studentPng: v }))} />
-            <SignatureCapture label={t("studentSheet.firmaTutor")} value={signatures.parentPng} onChange={(v) => setSignatures((s) => ({ ...s, parentPng: v }))} optionalHint />
-            <SignatureCapture label={t("studentSheet.firmaInstructor")} value={signatures.instructorPng} onChange={(v) => setSignatures((s) => ({ ...s, instructorPng: v }))} />
+            <div>
+              <Field label={t("studentForm.apellidos")}>
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} className={`${inputCls} w-full`} />
+              </Field>
+              <FieldError message={studentErrors.lastName} />
+            </div>
+          </div>
+          <Field label={t("studentForm.tutor")} hint={t("studentForm.tutorHint")}>
+            <input value={guardianName} onChange={(e) => setGuardianName(e.target.value)} className={`${inputCls} w-full`} />
+          </Field>
+          <div>
+            <Field label={t("studentForm.iniciales")} hint={t("studentForm.inicialesHint")}>
+              <input
+                value={initials}
+                onChange={(e) => { setInitialsTouched(true); setInitials(e.target.value.toUpperCase()); }}
+                className={`${inputCls} w-full`}
+              />
+            </Field>
+            <FieldError message={studentErrors.initials} />
           </div>
         </section>
 
-        <button
-          onClick={generate}
-          disabled={generating}
-          className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
-          style={{ backgroundColor: TEAL }}
-        >
-          {generating ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Download size={16} aria-hidden="true" />}
-          {generating ? t("studentSheet.generando") : t("studentSheet.generarYDescargar")}
-        </button>
+        <section>
+          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentForm.plantilla")}</h4>
+          {templateCode && (
+            <button onClick={() => setTemplateCode(null)} className="mb-2 flex min-h-9 items-center gap-1 text-xs font-medium" style={{ color: TEAL }}>
+              {t("studentForm.cambiarPlantilla")}
+            </button>
+          )}
+          {!templateCode ? (
+            templates.length === 0 ? (
+              <p className="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-gray-400">{t("sinPlantillas")}</p>
+            ) : (
+              <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                {templates.map((tpl) => (
+                  <button key={tpl.code} onClick={() => selectTemplate(tpl.code)} className="flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: "#F0FDFA", color: TEAL }}>
+                      <Award size={18} aria-hidden="true" />
+                    </span>
+                    <span className="flex-1 text-sm font-medium text-gray-800">{tpl.name}</span>
+                    <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            )
+          ) : (
+            <p className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-800">{templateMap.name}</p>
+          )}
+        </section>
+
+        {templateMap && config && (
+          <>
+            <section className="space-y-2">
+              <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.fechas")}</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {activeDays.map((day) => (
+                  <div key={day} className={activeDays.length === 1 ? "col-span-2" : ""}>
+                    <Field label={dayLabels[day]}>
+                      <DatePicker value={config.dayDates[day]} onChange={(v) => setDayDate(day, v)} placeholder={dayLabels[day]} />
+                    </Field>
+                    {day === 1 && <FieldError message={configErrors.day1} />}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.progreso")}</h4>
+              <div className="space-y-1.5">
+                {templateMap.sessionRows.map((r, i) => (
+                  <ProgressRowToggle key={i} label={r.label} checked={config.includedRows[i]} onChange={(checked) => toggleRow(i, checked)} />
+                ))}
+              </div>
+              <FieldError message={configErrors.rows} />
+            </section>
+
+            {templateMap.optionalSpecialtyDives && (
+              <section>
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.inmersionesEspecialidad")}</h4>
+                <div className="space-y-2">
+                  {templateMap.optionalSpecialtyDives.map((dive, i) => {
+                    const current = config.specialtyDives[i];
+                    return (
+                      <div key={i} className="rounded-md border border-gray-200 p-2.5">
+                        <p className="mb-1.5 text-xs font-medium text-gray-500">{dive.label}</p>
+                        <Select
+                          value={current.adventureName || ""}
+                          onChange={(name) => {
+                            const found = adventures.find((a) => a.name === name);
+                            updateDive(i, { adventureId: found?.id || null, adventureName: name || "", completed: !!found });
+                          }}
+                          options={adventures.map((a) => a.name)}
+                          placeholder={t("studentSheet.elegirAventura")}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {templateMap.examVersion && (
+              <section>
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.versionExamen")}</h4>
+                <RadioChoice
+                  value={config.examVersion}
+                  onChange={(v) => updateConfig({ examVersion: v })}
+                  options={[
+                    { value: "printed", label: t("studentSheet.examenImpreso") },
+                    { value: "online", label: t("studentSheet.examenOnline") },
+                  ]}
+                />
+                <FieldError message={configErrors.examVersion} />
+              </section>
+            )}
+
+            {templateMap.upgradeCheckboxes && (
+              <section>
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.certificacion")}</h4>
+                <RadioChoice
+                  value={config.upgrade}
+                  onChange={(v) => updateConfig({ upgrade: v })}
+                  options={[
+                    { value: "openWaterDiver", label: t("studentSheet.openWaterDiver") },
+                    { value: "scubaDiver", label: t("studentSheet.scubaDiver") },
+                  ]}
+                />
+                <FieldError message={configErrors.upgrade} />
+              </section>
+            )}
+
+            {templateMap.courseVariant && (
+              <section>
+                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.varianteCurso")}</h4>
+                <RadioChoice
+                  value={config.courseVariant}
+                  onChange={(v) => updateConfig({ courseVariant: v })}
+                  options={[
+                    { value: "ean32", label: t("studentSheet.ean32") },
+                    { value: "ean40", label: t("studentSheet.ean40") },
+                  ]}
+                />
+              </section>
+            )}
+
+            {templateMap.examConfirmation && (
+              <section>
+                <ProgressRowToggle label={templateMap.examConfirmation.label} checked={config.examConfirmed} onChange={(v) => updateConfig({ examConfirmed: v })} />
+                <FieldError message={configErrors.examConfirmation} />
+              </section>
+            )}
+
+            <section>
+              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.firmas")}</h4>
+              <div className="space-y-3">
+                <div>
+                  <SignatureCapture label={t("studentSheet.firmaAlumno")} value={config.signatures.studentPng} onChange={(v) => updateConfig({ signatures: { ...config.signatures, studentPng: v } })} />
+                  <FieldError message={configErrors.studentSignature} />
+                </div>
+                <SignatureCapture label={t("studentSheet.firmaTutor")} value={config.signatures.parentPng} onChange={(v) => updateConfig({ signatures: { ...config.signatures, parentPng: v } })} optionalHint />
+              </div>
+            </section>
+
+            <button
+              onClick={generate}
+              disabled={generating}
+              className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ backgroundColor: TEAL }}
+            >
+              {generating ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Download size={16} aria-hidden="true" />}
+              {generating ? t("studentSheet.generando") : t("studentSheet.generarYDescargar")}
+            </button>
+          </>
+        )}
       </div>
     </Sheet>
   );

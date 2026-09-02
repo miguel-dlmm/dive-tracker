@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "backup:db": "node scripts/backup-db.mjs",
     "mobile-check": "node scripts/mobile-check.mjs",
+    "mobile-check:training-records": "node scripts/mobile-check-training-records.mjs",
     "verify-deployment-notice": "node scripts/verify-deployment-notice.mjs",
     "send-deployment-notice": "node scripts/send-deployment-notice.mjs",
     "verify-training-record-fields": "node scripts/verify-training-record-field-maps.mjs",

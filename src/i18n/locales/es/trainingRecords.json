@@ -1,46 +1,51 @@
 {
-  "intro": "Genera un Training Record oficial (registro de progreso SSI) para cada alumno, con firma incluida — nada de lo que rellenes aquí se guarda, solo se descarga.",
+  "intro": "Genera un Training Record oficial (registro de progreso SSI) para cada alumno, con firma incluida — nada de lo que rellenes aquí se guarda en la nube, solo se descarga.",
   "sinPlantillas": "Todavía no hay ninguna plantilla lista para usar.",
   "noSePudieronCargarPlantillas": "No se pudieron cargar las plantillas.",
   "noSePudoDescargarPlantilla": "No se pudo descargar esta plantilla.",
-  "cargandoPlantillas": "Cargando plantillas…",
-  "descargandoPlantilla": "Descargando plantilla…",
-  "volverPlantillas": "Plantillas",
+  "cargandoPlantillas": "Cargando…",
   "instructorMissing": {
-    "mensaje": "Antes de generar, completa tus datos de instructor (nombre, iniciales y número SSI Pro) en tu perfil.",
+    "mensaje": "Antes de generar, completa tus datos de instructor (nombre, iniciales, número SSI Pro y firma) en tu perfil.",
     "boton": "Ir a mi perfil"
   },
   "instructorSummary": {
     "firmandoComo": "Firmando como {{name}} ({{initials}}) — SSI Pro {{number}}"
   },
   "roster": {
-    "titulo": "Alumnos de esta sesión",
-    "vacio": "Añade a los alumnos a los que vas a generar el registro.",
+    "titulo": "Alumnos",
+    "vacio": "Todavía no has añadido ningún alumno.",
+    "anadirPrimerAlumno": "Añade tu primer alumno",
     "anadirAlumno": "Añadir alumno",
-    "yaGenerado": "Registro ya generado",
-    "descargarDeNuevo": "Descargar de nuevo",
-    "descargarComoImagen": "Descargar imagen (JPG)",
+    "editar": "Editar",
+    "descargarPdf": "Descargar PDF",
+    "descargarJpg": "Descargar imagen (JPG)",
+    "generadoEl": "Generado el {{date}}",
     "imagenDescargada": "Imagen descargada.",
-    "noSePudoExportarImagen": "No se pudo exportar la imagen. Inténtalo de nuevo.",
-    "descargarTodosGenerados": "Descargar todos los generados"
+    "noSePudoExportarImagen": "No se pudo exportar la imagen. Inténtalo de nuevo."
   },
   "studentForm": {
     "nuevoAlumno": "Nuevo alumno",
     "editarAlumno": "Editar alumno",
-    "cerrar": "Cerrar",
     "nombre": "Nombre",
     "apellidos": "Apellidos",
+    "tutor": "Nombre del padre/madre/tutor",
+    "tutorHint": "Opcional — solo si aplica para este alumno.",
     "iniciales": "Iniciales",
     "inicialesHint": "Se calculan solas — puedes corregirlas si hace falta.",
-    "guardar": "Guardar"
+    "plantilla": "Curso a certificar",
+    "cambiarPlantilla": "Cambiar plantilla",
+    "errores": {
+      "nombre": "El nombre es obligatorio.",
+      "apellidos": "Los apellidos son obligatorios.",
+      "iniciales": "Las iniciales son obligatorias."
+    }
   },
   "studentSheet": {
     "cerrar": "Cerrar",
+    "fechas": "Fechas",
     "progreso": "Progreso del curso",
     "inmersionesEspecialidad": "Inmersiones de especialidad",
-    "nombreEspecialidadPlaceholder": "Nombre de la especialidad",
-    "sesionPiscinaNecesaria": "Sesión de piscina necesaria",
-    "inmersionCompletada": "Inmersión completada",
+    "elegirAventura": "Elige una aventura",
     "versionExamen": "Versión del examen",
     "examenImpreso": "Impreso",
     "examenOnline": "Online",
@@ -53,16 +58,10 @@
     "firmas": "Firmas",
     "firmaAlumno": "Firma del alumno",
     "firmaTutor": "Firma del tutor",
-    "firmaInstructor": "Firma del instructor",
     "generarYDescargar": "Generar y descargar",
     "generando": "Generando…",
     "generadoCorrectamente": "Registro generado y descargado.",
-    "noSePudoGenerar": "No se pudo generar el registro."
-  },
-  "signature": {
-    "opcional": "opcional",
-    "borrar": "Borrar",
-    "firmadoAria": "{{label}}: firmado",
-    "sinFirmarAria": "{{label}}: sin firmar"
+    "noSePudoGenerar": "No se pudo generar el registro.",
+    "faltanCampos": "Faltan campos obligatorios — revisa los avisos en rojo."
   }
 }

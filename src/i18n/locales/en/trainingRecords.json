@@ -1,46 +1,51 @@
 {
-  "intro": "Generate an official Training Record (SSI progress log) for each student, signature included — nothing you fill in here is saved, it's only downloaded.",
+  "intro": "Generate an official Training Record (SSI progress log) for each student, signature included — nothing you fill in here is saved to the cloud, it's only downloaded.",
   "sinPlantillas": "There are no templates ready to use yet.",
   "noSePudieronCargarPlantillas": "Couldn't load the templates.",
   "noSePudoDescargarPlantilla": "Couldn't download this template.",
-  "cargandoPlantillas": "Loading templates…",
-  "descargandoPlantilla": "Downloading template…",
-  "volverPlantillas": "Templates",
+  "cargandoPlantillas": "Loading…",
   "instructorMissing": {
-    "mensaje": "Before generating, complete your instructor details (name, initials and SSI Pro number) in your profile.",
+    "mensaje": "Before generating, complete your instructor details (name, initials, SSI Pro number and signature) in your profile.",
     "boton": "Go to my profile"
   },
   "instructorSummary": {
     "firmandoComo": "Signing as {{name}} ({{initials}}) — SSI Pro {{number}}"
   },
   "roster": {
-    "titulo": "Students in this session",
-    "vacio": "Add the students you're generating the record for.",
+    "titulo": "Students",
+    "vacio": "You haven't added any student yet.",
+    "anadirPrimerAlumno": "Add your first student",
     "anadirAlumno": "Add student",
-    "yaGenerado": "Record already generated",
-    "descargarDeNuevo": "Download again",
-    "descargarComoImagen": "Download image (JPG)",
+    "editar": "Edit",
+    "descargarPdf": "Download PDF",
+    "descargarJpg": "Download image (JPG)",
+    "generadoEl": "Generated on {{date}}",
     "imagenDescargada": "Image downloaded.",
-    "noSePudoExportarImagen": "Couldn't export the image. Please try again.",
-    "descargarTodosGenerados": "Download all generated"
+    "noSePudoExportarImagen": "Couldn't export the image. Please try again."
   },
   "studentForm": {
     "nuevoAlumno": "New student",
     "editarAlumno": "Edit student",
-    "cerrar": "Close",
     "nombre": "First name",
     "apellidos": "Last name",
+    "tutor": "Parent/guardian's full name",
+    "tutorHint": "Optional — only if it applies to this student.",
     "iniciales": "Initials",
     "inicialesHint": "Calculated automatically — you can correct them if needed.",
-    "guardar": "Save"
+    "plantilla": "Course to certify",
+    "cambiarPlantilla": "Change template",
+    "errores": {
+      "nombre": "First name is required.",
+      "apellidos": "Last name is required.",
+      "iniciales": "Initials are required."
+    }
   },
   "studentSheet": {
     "cerrar": "Close",
+    "fechas": "Dates",
     "progreso": "Course progress",
     "inmersionesEspecialidad": "Specialty dives",
-    "nombreEspecialidadPlaceholder": "Specialty name",
-    "sesionPiscinaNecesaria": "Pool session needed",
-    "inmersionCompletada": "Dive completed",
+    "elegirAventura": "Choose an adventure",
     "versionExamen": "Exam version",
     "examenImpreso": "Printed",
     "examenOnline": "Online",
@@ -53,16 +58,10 @@
     "firmas": "Signatures",
     "firmaAlumno": "Student signature",
     "firmaTutor": "Parent/guardian signature",
-    "firmaInstructor": "Instructor signature",
     "generarYDescargar": "Generate and download",
     "generando": "Generating…",
     "generadoCorrectamente": "Record generated and downloaded.",
-    "noSePudoGenerar": "Couldn't generate the record."
-  },
-  "signature": {
-    "opcional": "optional",
-    "borrar": "Clear",
-    "firmadoAria": "{{label}}: signed",
-    "sinFirmarAria": "{{label}}: unsigned"
+    "noSePudoGenerar": "Couldn't generate the record.",
+    "faltanCampos": "Some required fields are missing — check the messages in red."
   }
 }

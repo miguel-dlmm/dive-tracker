@@ -2,38 +2,45 @@
 // V1, Fase 5) — mismo enfoque que scripts/mobile-check.mjs (Chromium +
 // emulación iPhone 14 Pro Max, ver CLAUDE.md "8. Verificación UX/UI
 // (mobile-check)" para el porqué de Chromium en vez de WebKit en este
-// entorno), en un script aparte porque cubre un módulo distinto
-// (Configuración → Training Records) al que ya cubre mobile-check.mjs
-// (Mi trabajo/Movimientos).
+// entorno), en un script aparte porque cubre un módulo distinto (Mi perfil
+// → Datos de instructor, y Configuración → Training Records).
 //
-// Recorre el flujo real pedido por el encargo: elegir plantilla activa,
-// añadir un alumno al roster, firmar (alumno + instructor) con eventos
-// táctiles reales, generar y descargar el PDF, y "Descargar todos los
-// generados". Falla (código de salida != 0) si aparece cualquier error/aviso
-// de consola durante el recorrido, igual que mobile-check.mjs.
+// Reescrito de arriba a abajo (2026-09-02, lote "pestaña única de
+// creación") para el rediseño pedido por el usuario: firma del instructor
+// en el perfil, alumno+plantilla+configuración en una sola hoja, fechas
+// por día con selector "Hoy", validación de campos obligatorios, roster
+// con iconos Editar/PDF/JPG + fecha de generación, y persistencia en
+// sessionStorage entre recargas. Recorre el camino feliz completo: rellena
+// el perfil del instructor (incluida la firma), genera un Training Record
+// real (OWD) con firma del alumno y fechas de hoy, descarga PDF y JPG, y
+// comprueba que sobrevive a una recarga de página.
 //
 // Requiere `npm run dev` arrancado aparte (con VITE_DEV_AUTH_BYPASS activo)
 // y el motor Chromium de Playwright instalado una vez
 // (`npx playwright install chromium`).
 //
 // Uso:
-//   npm run dev                                   # en una terminal
-//   npm run mobile-check:training-records          # en otra
+//   npm run dev                              # en una terminal
+//   npm run mobile-check:training-records      # en otra
 //   npm run mobile-check:training-records -- --headed
+//
+// Nota: este script rellena de verdad "Mi perfil" de la cuenta demo (deja
+// nombre "Ana Ejemplo Instructora" + datos de instructor) — quien lo
+// ejecute contra una cuenta real debe restaurarlos a mano después si
+// quiere dejar la cuenta como estaba, igual que ya se documenta para otros
+// scripts de verificación de esta fase.
 
 import { chromium, devices } from "playwright";
 import { mkdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OUT_DIR = path.join(__dirname, "mobile-check-output");
+const OUT_DIR = "scripts/mobile-check-output";
 mkdirSync(OUT_DIR, { recursive: true });
 
 const headed = process.argv.includes("--headed");
 const BASE_URL = process.env.MOBILE_CHECK_URL || "http://localhost:5173";
 
-const consoleIssues = [];
+const issues = [];
 let shotCount = 0;
 async function shot(page, label) {
   shotCount += 1;
@@ -42,20 +49,17 @@ async function shot(page, label) {
   console.log(`  📸 ${label} -> ${path.relative(process.cwd(), file)}`);
 }
 
-// Dibuja un trazo simple dentro del canvas de firma — suficiente para que
-// signature_pad lo registre como "no vacío" (endStroke dispara onChange).
-// scrollIntoViewIfNeeded() es imprescindible: la hoja (`Sheet`) es más alta
-// que el viewport y desplaza su contenido en un contenedor interno — sin
-// desplazar antes, boundingBox() devuelve coordenadas reales pero FUERA del
-// viewport visible, y page.mouse.move/down/up (a diferencia de un
-// locator.click()) no valida visibilidad: el "trazo" no llega a ningún
-// elemento y signature_pad nunca ve el evento, sin lanzar ningún error.
+// Dibuja un trazo simple dentro de un <canvas> de firma — suficiente para
+// que signature_pad lo registre como "no vacío" (endStroke dispara
+// onChange). scrollIntoViewIfNeeded() es imprescindible: page.mouse no
+// valida visibilidad como sí hace un locator.click(), así que sin
+// desplazar antes un canvas fuera del viewport, el "trazo" no llega a
+// ningún elemento real.
 async function drawSignature(page, canvasLocator) {
   await canvasLocator.scrollIntoViewIfNeeded();
   await page.waitForTimeout(150);
   const box = await canvasLocator.boundingBox();
-  const x = box.x + box.width * 0.2;
-  const y = box.y + box.height * 0.5;
+  const x = box.x + box.width * 0.2, y = box.y + box.height * 0.5;
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x + box.width * 0.3, y - box.height * 0.2, { steps: 5 });
@@ -64,280 +68,165 @@ async function drawSignature(page, canvasLocator) {
   await page.waitForTimeout(100);
 }
 
+// El botón "Hoy" vive DENTRO del panel flotante del calendario — hay que
+// abrir el DatePicker de ese día primero (cada uno tiene su propio
+// aria-label, "Día 1"/"Día 2"/"Fecha del curso"...) antes de poder
+// tocarlo.
+async function pickToday(page, dayLabel) {
+  await page.getByRole("button", { name: dayLabel, exact: true }).tap();
+  await page.waitForTimeout(200);
+  await page.getByRole("button", { name: "Hoy" }).tap();
+  await page.waitForTimeout(200);
+}
+
+async function dismissWhatsNewIfPresent(page) {
+  if (!(await page.getByRole("dialog").isVisible().catch(() => false))) return;
+  const dialog = page.getByRole("dialog");
+  let guard = 0;
+  // Acotado al diálogo, con exact:true: sin esto, "Siguiente" también
+  // matchea "Mes siguiente" del calendario de Home montado detrás.
+  while (await dialog.getByRole("button", { name: "Siguiente", exact: true }).isVisible().catch(() => false) && guard < 10) {
+    await dialog.getByRole("button", { name: "Siguiente", exact: true }).tap();
+    await page.waitForTimeout(150);
+    guard += 1;
+  }
+  await dialog.getByRole("button", { name: "Empezar", exact: true }).tap();
+  await page.waitForTimeout(200);
+}
+
 async function main() {
   const browser = await chromium.launch({ headless: !headed });
   const context = await browser.newContext({ ...devices["iPhone 14 Pro Max"], acceptDownloads: true });
   const page = await context.newPage();
 
   page.on("console", (msg) => {
-    if (["error", "warning"].includes(msg.type())) {
-      consoleIssues.push(`[${msg.type()}] ${msg.text()}`);
-    }
+    if (["error", "warning"].includes(msg.type())) issues.push(`[${msg.type()}] ${msg.text()}`);
   });
-  page.on("pageerror", (err) => consoleIssues.push(`[pageerror] ${err.message}`));
+  page.on("pageerror", (err) => issues.push(`[pageerror] ${err.message}`));
 
   console.log(`\nChromium (emulación iPhone 14 Pro Max) · Training Records · ${BASE_URL}\n`);
 
   await page.goto(BASE_URL);
-  await Promise.race([
-    page.waitForSelector("text=Mi trabajo", { timeout: 15000 }),
-    page.waitForSelector("text=Privacidad y condiciones de uso", { timeout: 15000 }),
-  ]);
+  await page.waitForSelector("text=Mi trabajo", { timeout: 15000 });
+  await dismissWhatsNewIfPresent(page);
 
-  if (await page.getByText("Privacidad y condiciones de uso").isVisible().catch(() => false)) {
-    console.log("→ Reaceptación legal pendiente — aceptar y continuar");
-    await page.getByRole("checkbox").tap();
-    await page.getByRole("button", { name: "Continuar" }).tap();
-    await page.waitForSelector("text=Mi trabajo", { timeout: 15000 });
-  }
+  console.log("→ Mi perfil: nombre/apellidos + datos de instructor (iniciales, número, firma)");
+  await page.locator('button:has-text("demo")').first().tap();
+  await page.waitForTimeout(300);
+  await shot(page, "mi-perfil");
 
-  if (await page.getByRole("dialog").isVisible().catch(() => false)) {
-    console.log("→ Cerrar 'Qué hay de nuevo' (no es el foco de este recorrido)");
-    const whatsNewDialog = page.getByRole("dialog");
-    // Sin exact:true ni acotar al diálogo, "Siguiente" también matchea el
-    // botón "Mes siguiente" del calendario de Home montado detrás — el
-    // strict-mode error resultante quedaba silenciado por .catch(() => false)
-    // y el bucle nunca llegaba a ejecutarse.
-    let guard = 0;
-    while (await whatsNewDialog.getByRole("button", { name: "Siguiente", exact: true }).isVisible().catch(() => false) && guard < 10) {
-      await whatsNewDialog.getByRole("button", { name: "Siguiente", exact: true }).tap();
-      await page.waitForTimeout(150);
-      guard += 1;
-    }
-    await whatsNewDialog.getByRole("button", { name: "Empezar", exact: true }).tap();
-    await page.waitForTimeout(200);
-  }
+  await page.getByRole("button", { name: "Editar" }).first().tap();
+  await page.waitForTimeout(200);
+  await page.getByLabel("Nombre", { exact: true }).fill("Ana");
+  await page.getByLabel("Apellidos", { exact: true }).fill("Ejemplo Instructora");
+  await page.getByRole("button", { name: "Guardar" }).first().tap();
+  await page.waitForTimeout(400);
 
-  console.log("→ Abrir Configuración → Training Records");
+  const instructorSection = page.locator("#instructor-section");
+  await instructorSection.getByRole("button", { name: "Editar" }).tap();
+  await page.waitForTimeout(200);
+  await instructorSection.getByLabel("Iniciales", { exact: true }).fill("AEI");
+  await instructorSection.getByLabel("Número SSI Pro", { exact: true }).fill("12345");
+  await drawSignature(page, instructorSection.locator("canvas"));
+  await shot(page, "firma-instructor-capturada");
+  await instructorSection.getByRole("button", { name: "Guardar" }).tap();
+  await page.waitForTimeout(400);
+  await shot(page, "instructor-guardado");
+
+  console.log("→ Configuración → Training Records");
+  await page.locator('button[aria-label="Cerrar"]').tap();
+  await page.waitForTimeout(300);
   await page.locator('button[aria-label="Configuración"]').tap();
   await page.waitForTimeout(250);
-  await page.getByRole("button", { name: "Training Records" }).tap();
-  await page.waitForTimeout(300);
-  await shot(page, "lista-plantillas");
+  const trMenuBtn = page.getByRole("button", { name: "Training Records" });
+  if (await trMenuBtn.isVisible().catch(() => false)) { await trMenuBtn.tap(); await page.waitForTimeout(300); }
+  await shot(page, "training-records-vacio");
 
-  const noTemplates = await page.getByText("Todavía no hay ninguna plantilla lista para usar.").isVisible().catch(() => false);
-  if (noTemplates) {
-    consoleIssues.push("[training-records] No hay ninguna plantilla activa disponible — no se pudo verificar el flujo de generación");
-  } else {
-    console.log("→ Elegir la primera plantilla activa");
-    const firstTemplate = page.getByRole("main").locator(".divide-y.divide-gray-100.overflow-hidden.rounded-lg").first().getByRole("button").first();
-    const templateName = await firstTemplate.textContent();
-    console.log(`  (plantilla: "${templateName?.trim()}")`);
-    await firstTemplate.tap();
-    await page.waitForTimeout(600); // descarga + parseo del PDF real desde Storage
-    await shot(page, "plantilla-seleccionada");
-
-    const stuckDownloading = await page.getByText("Descargando plantilla…").isVisible().catch(() => false);
-    if (stuckDownloading) {
-      await page.waitForTimeout(2000);
-      await shot(page, "plantilla-tras-espera");
-    }
-
-    // Fase 5 (2026-09-02, pedido explícito del usuario): los datos de
-    // instructor ya no se editan en esta pantalla — viven en el perfil, y
-    // si faltan, TrainingRecordsTab bloquea con un aviso + botón "Ir a mi
-    // perfil" en vez de dejar avanzar (ver InstructorMissingNotice).
-    const instructorMissing = await page.getByText("Antes de generar, completa tus datos de instructor", { exact: false }).isVisible().catch(() => false);
-    if (instructorMissing) {
-      console.log("→ Datos de instructor incompletos en el perfil (esperado en la cuenta demo) — rellenarlos vía 'Ir a mi perfil'");
-      await shot(page, "aviso-datos-instructor-incompletos");
-      await page.getByRole("button", { name: "Ir a mi perfil" }).tap();
-      await page.waitForTimeout(400);
-      await shot(page, "mi-perfil-abierto");
-
-      const personalDataEditar = page.getByRole("button", { name: "Editar" }).first();
-      if (await personalDataEditar.isVisible().catch(() => false)) {
-        await personalDataEditar.tap();
-        await page.waitForTimeout(200);
-        await page.getByLabel("Nombre", { exact: true }).fill("Ana");
-        await page.getByLabel("Apellidos", { exact: true }).fill("Ejemplo Instructora");
-        await page.getByRole("button", { name: "Guardar" }).first().tap();
-        await page.waitForTimeout(400);
-      }
-
-      const instructorSection = page.locator("#instructor-section");
-      await instructorSection.getByRole("button", { name: "Editar" }).tap();
-      await page.waitForTimeout(200);
-      await instructorSection.getByLabel("Iniciales", { exact: true }).fill("AEI");
-      await instructorSection.getByLabel("Número SSI Pro", { exact: true }).fill("12345");
-      await instructorSection.getByRole("button", { name: "Guardar" }).tap();
-      await page.waitForTimeout(400);
-      await shot(page, "datos-instructor-guardados");
-
-      console.log("→ Volver a Configuración → Training Records con los datos ya completos");
-      await page.locator('button[aria-label="Cerrar"]').tap();
-      await page.waitForTimeout(300);
-      await shot(page, "tras-cerrar-mi-perfil");
-      await page.locator('button[aria-label="Configuración"]').tap();
-      await page.waitForTimeout(250);
-      await shot(page, "config-reabierta");
-      // ConfigTab recuerda la última sección abierta (ver clearStoredSection
-      // en ConfigTab.jsx) — puede reabrir directo en Training Records en vez
-      // de en el menú principal, así que el botón "Training Records" no
-      // siempre está presente para pulsarlo.
-      const trainingRecordsMenuButton = page.getByRole("button", { name: "Training Records" });
-      if (await trainingRecordsMenuButton.isVisible().catch(() => false)) {
-        await trainingRecordsMenuButton.tap();
-        await page.waitForTimeout(300);
-      }
-      await firstTemplate.tap();
-      await page.waitForTimeout(600);
-      await shot(page, "plantilla-tras-completar-instructor");
-
-      const stillMissing = await page.getByText("Antes de generar, completa tus datos de instructor", { exact: false }).isVisible().catch(() => false);
-      if (stillMissing) {
-        consoleIssues.push("[training-records] Tras completar los datos de instructor en el perfil, la plantilla sigue mostrando el aviso de datos incompletos");
-      }
-    } else {
-      console.log("→ Datos de instructor ya completos en el perfil — 'Firmando como...' visible");
-      const summaryVisible = await page.getByText("Firmando como", { exact: false }).isVisible().catch(() => false);
-      if (!summaryVisible) consoleIssues.push("[training-records] Con datos de instructor completos, no aparece el resumen 'Firmando como...'");
-    }
-
-    console.log("→ Añadir un alumno al roster");
-    await page.locator('button[aria-label="Añadir alumno"]').tap();
-    await page.waitForTimeout(250);
-    await shot(page, "formulario-alumno");
-    // exact:true: la instrucción de instructor "Nombre completo" también sigue
-    // montada detrás de la hoja (Sheet es un overlay, no desmonta el fondo) y
-    // "Nombre" es substring de "Nombre completo" — sin exact, ambigüedad.
-    await page.getByLabel("Nombre", { exact: true }).fill("Marta");
-    await page.getByLabel("Apellidos", { exact: true }).fill("Test Apellido");
-    await page.waitForTimeout(100);
-    await page.getByRole("button", { name: "Guardar" }).tap();
-    await page.waitForTimeout(300);
-    await shot(page, "roster-con-alumno");
-
-    const rosterEmpty = await page.getByText("Añade a los alumnos a los que vas a generar el registro.").isVisible().catch(() => false);
-    if (rosterEmpty) {
-      consoleIssues.push("[training-records] Tras guardar el alumno, el roster sigue mostrándose vacío");
-    } else {
-      console.log("→ Abrir el alumno para firmar y generar su Training Record");
-      await page.getByText("Marta Test Apellido").first().tap();
-      await page.waitForTimeout(300);
-      await shot(page, "hoja-generar-abierta");
-
-      const canvases = await page.locator("canvas").all();
-      console.log(`  (${canvases.length} campo(s) de firma encontrados — firmando alumno e instructor)`);
-      if (canvases[0]) await drawSignature(page, page.locator("canvas").nth(0));
-      if (canvases[2]) await drawSignature(page, page.locator("canvas").nth(2));
-      await shot(page, "firmas-capturadas");
-
-      const studentSigLabel = canvases[0] ? await page.locator("canvas").nth(0).getAttribute("aria-label") : null;
-      const instructorSigLabel = canvases[2] ? await page.locator("canvas").nth(2).getAttribute("aria-label") : null;
-      if (studentSigLabel && !/^Firma del alumno: firmado/.test(studentSigLabel)) {
-        consoleIssues.push(`[training-records] El trazo sobre el canvas del alumno no quedó registrado (aria-label: "${studentSigLabel}")`);
-      }
-      if (instructorSigLabel && !/^Firma del instructor: firmado/.test(instructorSigLabel)) {
-        consoleIssues.push(`[training-records] El trazo sobre el canvas del instructor no quedó registrado (aria-label: "${instructorSigLabel}")`);
-      }
-
-      console.log("→ Generar y descargar el PDF relleno");
-      const [download] = await Promise.all([
-        page.waitForEvent("download", { timeout: 15000 }).catch(() => null),
-        page.getByRole("button", { name: "Generar y descargar" }).tap(),
-      ]);
-      await page.waitForTimeout(500);
-      if (!download) {
-        consoleIssues.push("[training-records] No se disparó ninguna descarga al pulsar 'Generar y descargar'");
-      } else {
-        const savedPath = path.join(OUT_DIR, `tr-generado-${download.suggestedFilename()}`);
-        await download.saveAs(savedPath);
-        console.log(`  📄 PDF descargado -> ${path.relative(process.cwd(), savedPath)}`);
-      }
-      await shot(page, "tras-generar");
-
-      // La hoja se cierra sola tras generar con éxito (TrainingRecordsTab
-      // hace setGenerateFor(null) en handleGenerated) — no hace falta
-      // cerrarla a mano. Un intento anterior de este script cerraba "por si
-      // acaso" con getByRole("button", { name: "Cerrar" }), pero sin
-      // exact:true esa consulta también matchea el botón "Cerrar
-      // Configuración" de la cabecera y navegaba fuera de la pantalla.
-      const rosterVisibleAfterGenerate = await page.getByText("Alumnos de esta sesión", { exact: false }).isVisible().catch(() => false);
-      if (!rosterVisibleAfterGenerate) {
-        consoleIssues.push("[training-records] Tras generar, la hoja no volvió sola al roster");
-      }
-
-      console.log("→ Tras generar: check verde junto al nombre + chevron sigue ahí (fila siempre reabrible, mismo modelo que antes de generar)");
-      const generatedCheck = page.locator('[aria-label="Registro ya generado"]');
-      if (!(await generatedCheck.isVisible().catch(() => false))) {
-        consoleIssues.push("[training-records] Tras generar, no aparece el indicador 'Registro ya generado' junto al nombre");
-      }
-      const rosterRow = page.getByRole("main").locator("ul.divide-y").first();
-      if (!(await rosterRow.locator("svg.lucide-chevron-right").first().isVisible().catch(() => false))) {
-        consoleIssues.push("[training-records] Tras generar, el chevron de la fila desapareció — debe seguir invitando a reabrirla");
-      }
-
-      console.log("→ 'Descargar de nuevo' y 'Descargar imagen (JPG)' ahora viven en el menú '⋯' de la fila, no como iconos sueltos");
-      await page.getByRole("button", { name: "Más acciones" }).tap();
-      await page.waitForTimeout(200);
-      await shot(page, "menu-fila-alumno-generado");
-
-      const redownloadItem = page.getByRole("menuitem", { name: "Descargar de nuevo" });
-      if (!(await redownloadItem.isVisible().catch(() => false))) {
-        consoleIssues.push("[training-records] Tras generar, no aparece 'Descargar de nuevo' en el menú de la fila");
-      } else {
-        const [redownload] = await Promise.all([
-          page.waitForEvent("download", { timeout: 8000 }).catch(() => null),
-          redownloadItem.tap(),
-        ]);
-        if (!redownload) consoleIssues.push("[training-records] 'Descargar de nuevo' no disparó ninguna descarga");
-      }
-
-      console.log("→ 'Descargar imagen (JPG)' debe convertir el PDF ya generado y descargar un JPG (pdfjs-dist + worker)");
-      await page.getByRole("button", { name: "Más acciones" }).tap();
-      await page.waitForTimeout(200);
-      const jpgItem = page.getByRole("menuitem", { name: "Descargar imagen (JPG)" });
-      if (!(await jpgItem.isVisible().catch(() => false))) {
-        consoleIssues.push("[training-records] Tras generar, no aparece 'Descargar imagen (JPG)' en el menú de la fila");
-      } else {
-        const [jpgDownload] = await Promise.all([
-          page.waitForEvent("download", { timeout: 15000 }).catch(() => null),
-          jpgItem.tap(),
-        ]);
-        if (!jpgDownload) {
-          consoleIssues.push("[training-records] 'Descargar imagen (JPG)' no disparó ninguna descarga (¿falló el worker de pdfjs-dist?)");
-        } else {
-          const jpgPath = path.join(OUT_DIR, `tr-generado-${jpgDownload.suggestedFilename()}`);
-          await jpgDownload.saveAs(jpgPath);
-          console.log(`  🖼️ JPG descargado -> ${path.relative(process.cwd(), jpgPath)}`);
-        }
-      }
-
-      console.log("→ Reabrir la fila del alumno ya generado debe volver a mostrar la hoja de configuración (no quedarse sin acción)");
-      await page.getByText("Marta Test Apellido").first().tap();
-      await page.waitForTimeout(300);
-      const reopenedSheetVisible = await page.getByText("Generar y descargar", { exact: false }).isVisible().catch(() => false);
-      if (!reopenedSheetVisible) {
-        consoleIssues.push("[training-records] Reabrir un alumno ya generado no vuelve a mostrar la hoja de configuración");
-      }
-      await shot(page, "reabierto-tras-generar");
-      // Acotado a "main": la cabecera de Configuración también tiene un
-      // "Cerrar" propio (el X de arriba del todo) visible a la vez que la
-      // hoja de StudentRecordSheet — sin acotar, ambigüedad de strict mode.
-      await page.getByRole("main").getByRole("button", { name: "Cerrar" }).tap();
-      await page.waitForTimeout(200);
-
-      console.log("→ 'Descargar todos los generados' debe estar visible con al menos un PDF generado");
-      const downloadAllBtn = page.getByRole("button", { name: "Descargar todos los generados" });
-      if (!(await downloadAllBtn.isVisible().catch(() => false))) {
-        consoleIssues.push("[training-records] No aparece 'Descargar todos los generados' tras generar al menos un PDF");
-      }
-      await shot(page, "roster-final");
-    }
-
-    console.log("→ Volver a la lista de plantillas");
-    await page.getByRole("button", { name: "Plantillas" }).tap();
-    await page.waitForTimeout(200);
-    await shot(page, "vuelta-a-plantillas");
+  if (await page.getByText(/completa tus datos de instructor/i).isVisible().catch(() => false)) {
+    issues.push("[training-records] Sigue pidiendo datos de instructor pese a haberlos rellenado en el perfil");
   }
+
+  console.log("→ Añadir alumno: nombre, apellidos, plantilla OWD");
+  await page.getByRole("button", { name: "Añadir alumno" }).tap();
+  await page.waitForTimeout(300);
+  await page.getByLabel("Nombre", { exact: true }).fill("Marta");
+  await page.getByLabel("Apellidos", { exact: true }).fill("Test Apellido");
+  await page.getByText("Open Water Diver", { exact: true }).tap();
+  await page.waitForTimeout(300);
+  await shot(page, "plantilla-elegida");
+
+  console.log("→ Fechas Día 1 y Día 2 (botón 'Hoy' del selector de fecha)");
+  await pickToday(page, "Día 1");
+  await pickToday(page, "Día 2");
+
+  console.log("→ Confirmación de examen + firma del alumno");
+  await page.getByRole("checkbox", { name: "Confirmación de Examen Final" }).tap();
+  await drawSignature(page, page.locator('canvas[aria-label*="Firma del alumno"]'));
+  await shot(page, "formulario-completo");
+
+  console.log("→ Generar y descargar el PDF relleno");
+  const [download] = await Promise.all([
+    page.waitForEvent("download", { timeout: 15000 }).catch(() => null),
+    page.getByRole("button", { name: "Generar y descargar" }).tap(),
+  ]);
+  if (!download) {
+    issues.push("[training-records] No se disparó ninguna descarga al pulsar 'Generar y descargar'");
+  } else {
+    const savedPath = path.join(OUT_DIR, `tr-generado-${download.suggestedFilename()}`);
+    await download.saveAs(savedPath);
+    console.log(`  📄 PDF descargado -> ${path.relative(process.cwd(), savedPath)}`);
+  }
+  await page.waitForTimeout(500);
+  await shot(page, "tras-generar");
+
+  console.log("→ Fila del roster: iconos Editar/PDF/JPG + fecha de generación");
+  const editIcon = page.getByRole("button", { name: "Editar" });
+  const pdfIcon = page.getByRole("button", { name: "Descargar PDF" });
+  const jpgIcon = page.getByRole("button", { name: "Descargar imagen (JPG)" });
+  for (const [name, loc] of [["Editar", editIcon], ["Descargar PDF", pdfIcon], ["Descargar imagen (JPG)", jpgIcon]]) {
+    if (!(await loc.isVisible().catch(() => false))) issues.push(`[training-records] Falta el icono "${name}" en la fila tras generar`);
+  }
+  if (!(await page.getByText(/Generado el/).isVisible().catch(() => false))) {
+    issues.push("[training-records] No aparece la fecha/hora de generación bajo el nombre del alumno");
+  }
+
+  console.log("→ Exportar a JPG desde el icono de la fila (pdfjs-dist + worker, carga bajo demanda)");
+  const [jpgDownload] = await Promise.all([
+    page.waitForEvent("download", { timeout: 15000 }).catch(() => null),
+    jpgIcon.tap(),
+  ]);
+  if (!jpgDownload) {
+    issues.push("[training-records] El icono JPG no disparó ninguna descarga (¿falló el worker de pdfjs-dist?)");
+  } else {
+    const jpgPath = path.join(OUT_DIR, `tr-generado-${jpgDownload.suggestedFilename()}`);
+    await jpgDownload.saveAs(jpgPath);
+    console.log(`  🖼️ JPG descargado -> ${path.relative(process.cwd(), jpgPath)}`);
+  }
+
+  console.log("→ Recargar la página: el roster y los documentos generados deben seguir ahí (sessionStorage)");
+  await page.reload();
+  await page.waitForSelector("text=Mi trabajo", { timeout: 15000 });
+  await dismissWhatsNewIfPresent(page);
+  await page.waitForTimeout(300);
+  // ConfigTab recuerda la última sección abierta — tras recargar puede
+  // reabrir directo en Training Records, sin pasar por el menú de nuevo.
+  if (!(await page.getByText("Marta Test Apellido").isVisible().catch(() => false))) {
+    await page.locator('button[aria-label="Configuración"]').tap();
+    await page.waitForTimeout(250);
+    const trMenuBtn2 = page.getByRole("button", { name: "Training Records" });
+    if (await trMenuBtn2.isVisible().catch(() => false)) { await trMenuBtn2.tap(); await page.waitForTimeout(300); }
+  }
+  if (!(await page.getByText("Marta Test Apellido").isVisible().catch(() => false))) {
+    issues.push("[training-records] Tras recargar, el alumno generado ya no aparece en el roster");
+  }
+  await shot(page, "tras-recargar");
 
   await browser.close();
 
   console.log(`\n${shotCount} capturas en scripts/mobile-check-output/`);
-  if (consoleIssues.length > 0) {
-    console.log(`\n⚠ ${consoleIssues.length} aviso(s)/error(es) de consola:`);
-    consoleIssues.forEach((m) => console.log("  " + m));
+  if (issues.length > 0) {
+    console.log(`\n⚠ ${issues.length} aviso(s)/error(es) de consola:`);
+    issues.forEach((m) => console.log("  " + m));
     process.exitCode = 1;
   } else {
     console.log("\n✓ Sin errores ni avisos en consola durante el recorrido.");

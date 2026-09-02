@@ -32,27 +32,36 @@ const TEMPLATE = {
 };
 
 describe("buildFillOperations", () => {
-  it("rellena nombre, apellidos y la primera fila de sesión", () => {
+  it("rellena nombre, apellidos y la primera fila de sesión, con su fecha", () => {
     const { texts } = buildFillOperations(TEMPLATE, {
       firstName: "Ana", lastName: "Garcia",
-      sessionRows: [{ studentInitials: "AG", date: "2026-09-01", instructorInitials: "JD", instructorNumber: "12345" }],
+      sessionRows: [{ studentInitials: "AG", date: "01/09/26", instructorInitials: "JD", instructorNumber: "12345" }],
     });
     expect(texts).toEqual(expect.arrayContaining([
       { field: "f.first", value: "Ana" },
       { field: "f.last", value: "Garcia" },
       { field: "row0.si", value: "AG" },
+      { field: "row0.date", value: "01/09/26" },
       { field: "row0.ii", value: "JD" },
       { field: "row0.in", value: "12345" },
     ]));
   });
 
-  it("nunca rellena ningún campo de fecha, aunque se le pase una (pendiente de decidir, 2026-09-02)", () => {
+  // Pedido explícito del usuario (2026-09-02, cierra la decisión que había
+  // quedado pendiente en la sesión anterior): la fecha de cada fila de
+  // progreso SÍ se rellena ahora (llega ya calculada desde fuera, ver
+  // TrainingRecordsTab.jsx) — buildFillOperations solo la traslada, no
+  // decide de dónde sale.
+  it("rellena la fecha de las 3 firmas con generatedAtLabel, igual para las 3", () => {
     const { texts } = buildFillOperations(TEMPLATE, {
       firstName: "Ana", lastName: "Garcia",
-      sessionRows: [{ studentInitials: "AG", date: "2026-09-01", instructorInitials: "JD", instructorNumber: "12345" }],
-      student: { date: "2026-09-01" }, parent: { date: "2026-09-01" }, instructor: { date: "2026-09-01" },
+      generatedAtLabel: "02/09/26",
     });
-    expect(texts.some((t) => /date/i.test(t.field))).toBe(false);
+    expect(texts).toEqual(expect.arrayContaining([
+      { field: "sig.studentDate", value: "02/09/26" },
+      { field: "sig.parentDate", value: "02/09/26" },
+      { field: "sig.instructorDate", value: "02/09/26" },
+    ]));
   });
 
   it("omite una fila de sesión opcional sin datos, sin fallar", () => {
@@ -139,9 +148,9 @@ describe("fillTrainingRecordPdf", () => {
     const fixtureBytes = await buildFixturePdf();
     const filledBytes = await fillTrainingRecordPdf(fixtureBytes, MINIMAL_TEMPLATE, {
       firstName: "Ana", lastName: "Garcia",
-      sessionRows: [{ studentInitials: "AG", date: "2026-09-01", instructorInitials: "JD", instructorNumber: "12345" }],
+      sessionRows: [{ studentInitials: "AG", date: "01/09/26", instructorInitials: "JD", instructorNumber: "12345" }],
       examVersion: "online",
-      student: { date: "2026-09-01" },
+      generatedAtLabel: "02/09/26",
       signatures: { studentPng: TINY_PNG },
     });
 

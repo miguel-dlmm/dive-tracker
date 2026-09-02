@@ -1,37 +1,66 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, ChevronLeft, Award, UserPlus, Download, ImageDown, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Plus, UserPlus, Pencil, FileText, ImageDown, AlertTriangle } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { useToast, Fab, RowMenu } from "../shared";
-import { TEAL, NAVY } from "../App";
-import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
-import StudentFormSheet from "./StudentFormSheet";
+import { TEAL } from "../App";
+
+// Generador de Training Records (Release V1, Fase 5). El roster de
+// alumnos, su configuración y los documentos ya generados se guardan en
+// sessionStorage (ver serializeRoster/loadStoredRoster) — sobreviven a
+// recargar la página (pedido explícito del usuario 2026-09-02: "cuando
+// recargo la página... si tengo alumnos y/o documentos generados,
+// mantenerlos"), pero no a cerrar la pestaña ni la sesión, mismo criterio
+// de "efímero, nunca en Supabase ni permanente" que ya regía este módulo —
+// solo se amplía de "mientras dure la instancia de React" a "mientras dure
+// la pestaña del navegador".
+//
+// Los datos del instructor (nombre, iniciales, número SSI Pro, firma) YA NO
+// se piden ni se editan aquí — viven en el perfil real (ver ProfileTab.jsx
+// → "Datos de instructor"). Si faltan al entrar, la pantalla bloquea el
+// generador con un aviso y un botón directo a "Mi perfil".
+//
+// Pestaña única de creación (pedido explícito 2026-09-02): la plantilla ya
+// no se elige una vez para toda la sesión — se elige por alumno, dentro de
+// la misma hoja donde se rellenan sus datos y la configuración del
+// documento (ver StudentRecordSheet.jsx). El roster de esta pantalla puede
+// tener alumnos de varias plantillas distintas a la vez.
 import StudentRecordSheet from "./StudentRecordSheet";
 
-// Generador de Training Records (Release V1, Fase 5). Todo lo que entra
-// aquí — roster de alumnos, firmas — es efímero: vive solo en el estado de
-// este componente mientras dura la sesión de trabajo, nunca se persiste en
-// Supabase ni en localStorage (decisión de arquitectura ya documentada en
-// docs/RELEASE-V1-PROGRESS.md — evita cualquier riesgo de fuga de datos de
-// alumnos/firmas).
-//
-// Los datos del instructor (nombre, iniciales, número SSI Pro) YA NO se
-// piden ni se editan aquí — pedido explícito del usuario 2026-09-02: viven
-// en el perfil real (profiles.first_name/last_name/instructor_initials/
-// ssi_pro_number, ver ProfileTab.jsx → "Datos de instructor"), para que se
-// rellenen una vez y sirvan en cualquier dispositivo, no por
-// localStorage/sesión como antes. Si faltan al entrar en una plantilla, la
-// pantalla bloquea el generador con un aviso y un botón directo a "Mi
-// perfil" — generar un documento de certificación real sin nombre/iniciales
-// de instructor no es un estado válido, mejor no dejar ni empezar el roster.
-//
-// MVP explícito (pedido del usuario, 2026-09-02): solo se ofrecen las
-// plantillas que son de verdad formularios PDF rellenables (status=active
-// en training_record_templates — hoy OWD/AOWD/SC-DD/SC-EAN). Las plantillas
-// sin campos de formulario necesitan otro enfoque técnico (superponer texto
-// en coordenadas fijas) y quedan fuera de este generador por ahora. Tampoco
-// se rellena ninguna fecha todavía (pedido explícito, misma fecha) — se
-// decidirá más adelante de dónde sale cada una.
+const SESSION_KEY = "oceanpulse:trainingRecordsSession";
+
+function bytesToBase64(bytes) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+function base64ToBytes(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function loadStoredRoster() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return parsed.map((s) => ({ ...s, pdfBytes: s.pdfBytes ? base64ToBytes(s.pdfBytes) : null }));
+  } catch {
+    return [];
+  }
+}
+function persistRoster(roster) {
+  try {
+    const serializable = roster.map((s) => ({ ...s, pdfBytes: s.pdfBytes ? bytesToBase64(s.pdfBytes) : null }));
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(serializable));
+  } catch {
+    // sessionStorage lleno o no disponible (navegación privada) — la
+    // persistencia entre recargas es una comodidad, no algo crítico; se
+    // sigue funcionando con normalidad dentro de la misma sesión de React.
+  }
+}
 
 function downloadBytes(bytes, filename, mimeType = "application/pdf") {
   const blob = new Blob([bytes], { type: mimeType });
@@ -49,10 +78,31 @@ function safeFilePart(text) {
   return (text || "").trim().replace(/[^\p{L}\p{N}]+/gu, "_");
 }
 
+function filenameFor(student, ext = "pdf") {
+  return `${safeFilePart(student.firstName)}_${safeFilePart(student.lastName)}_${student.templateCode}.${ext}`;
+}
+
+function formatGeneratedAt(timestamp, locale) {
+  return new Date(timestamp).toLocaleString(locale === "en" ? "en-GB" : "es-ES", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+// Recordatorio de solo lectura de con qué identidad de instructor se va a
+// firmar — un documento de certificación real no debe generarse "a
+// ciegas" sobre qué instructor queda impreso. Editar estos datos ya no se
+// hace aquí, ver "Mi perfil" → "Datos de instructor".
+function InstructorSummary({ instructor }) {
+  const { t } = useTranslation("trainingRecords");
+  return (
+    <p className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-xs text-gray-500">
+      {t("instructorSummary.firmandoComo", { name: instructor.namePrinted, initials: instructor.initials, number: instructor.number })}
+    </p>
+  );
+}
+
 // Bloquea el generador cuando al perfil le falta cualquiera de los datos de
-// instructor (nombre/apellidos, iniciales, número SSI Pro) — pedido
-// explícito del usuario 2026-09-02: mejor no dejar ni empezar un roster que
-// llegar al final y no poder generar el documento.
+// instructor (nombre/apellidos, iniciales, número SSI Pro, firma) — pedido
+// explícito del usuario: mejor no dejar ni empezar un roster que llegar al
+// final y no poder generar el documento.
 function InstructorMissingNotice({ onOpenProfile }) {
   const { t } = useTranslation("trainingRecords");
   return (
@@ -70,191 +120,107 @@ function InstructorMissingNotice({ onOpenProfile }) {
   );
 }
 
-// Recordatorio de solo lectura de con qué identidad de instructor se va a
-// firmar — un documento de certificación real no debe generarse "a
-// ciegas" sobre qué instructor queda impreso. Editar estos datos ya no se
-// hace aquí, ver "Mi perfil" → "Datos de instructor".
-function InstructorSummary({ instructor }) {
+// Fila de alumno — pedido explícito del usuario (2026-09-02): 3 iconos
+// siempre reconocibles (Editar, PDF, JPG) en vez de esconder las descargas
+// en un menú "⋯". PDF/JPG solo aparecen una vez generado el documento (no
+// hay nada que descargar antes); Editar siempre está disponible. La fecha
+// y hora de la última generación se muestra bajo el nombre.
+function RosterRow({ student, locale, onEdit, onDelete, onDownloadPdf, onDownloadJpg }) {
   const { t } = useTranslation("trainingRecords");
+  const hasGenerated = !!student.pdfBytes;
   return (
-    <p className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-xs text-gray-500">
-      {t("instructorSummary.firmandoComo", { name: instructor.namePrinted, initials: instructor.initials, number: instructor.number })}
-    </p>
-  );
-}
-
-function TemplatePicker({ templates, onSelect }) {
-  const { t } = useTranslation("trainingRecords");
-  if (!templates.length) {
-    return <p className="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-gray-400">{t("sinPlantillas")}</p>;
-  }
-  return (
-    <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
-      {templates.map((tpl) => (
-        <button key={tpl.code} onClick={() => onSelect(tpl)} className="flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: "#F0FDFA", color: TEAL }}>
-            <Award size={18} aria-hidden="true" />
-          </span>
-          <span className="flex-1 text-sm font-medium text-gray-800">{tpl.name}</span>
-          <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// Un único modelo de interacción, siempre igual: tocar la fila (avatar +
-// nombre) SIEMPRE abre la configuración del documento de ese alumno —
-// primera vez para rellenarla, cualquier vez después para revisarla/
-// editarla y volver a generar (StudentRecordSheet ya restaura lo que se
-// guardó la última vez, ver initialConfig en TrainingRecordsTab). El
-// chevron es constante, no aparece/desaparece según el estado — antes
-// cambiaba de significado según si ya se había generado o no, y eso es
-// justo lo que hacía confusa la pantalla (reportado en vivo, 2026-09-02:
-// "ya no hay más botones de acción" tras generar). El único indicador que
-// SÍ cambia es el check verde junto al nombre, puramente informativo (no
-// es un botón) — dice "ya generado", nada más.
-//
-// Las acciones secundarias (descargar de nuevo el PDF, exportar a JPG)
-// viven en el menú "⋯" en vez de como iconos sueltos en la fila: con 2-3
-// iconos sin etiqueta apretados junto al chevron y al propio menú, la fila
-// se volvía difícil de leer rápido con el móvil en la mano — el menú ya es
-// el sitio que el usuario reconoce de Mi trabajo/Tarifas para "más
-// opciones sobre este elemento", así que no hace falta inventar nada.
-function RosterRow({ student, hasGenerated, onOpenGenerate, onEdit, onDelete, onRedownload, onDownloadJpg }) {
-  const { t } = useTranslation("trainingRecords");
-  const extraActions = hasGenerated
-    ? [
-        { label: t("roster.descargarDeNuevo"), icon: <Download size={14} aria-hidden="true" />, onClick: () => onRedownload(student) },
-        { label: t("roster.descargarComoImagen"), icon: <ImageDown size={14} aria-hidden="true" />, onClick: () => onDownloadJpg(student) },
-      ]
-    : [];
-  return (
-    <li className="flex items-center gap-2 px-4 py-2.5 text-sm">
-      <button onClick={() => onOpenGenerate(student)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+    <li className="flex items-center gap-1.5 px-4 py-2.5 text-sm">
+      <button onClick={() => onEdit(student)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">{student.initials}</span>
-        <span className="min-w-0 flex-1 truncate font-medium text-gray-800">{student.firstName} {student.lastName}</span>
-        {hasGenerated && (
-          <CheckCircle2 size={15} className="shrink-0 text-teal-600" role="img" aria-label={t("roster.yaGenerado")} />
-        )}
-        <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-medium text-gray-800">{student.firstName} {student.lastName}</span>
+          {hasGenerated && <span className="block text-xs text-gray-400">{t("roster.generadoEl", { date: formatGeneratedAt(student.generatedAt, locale) })}</span>}
+        </span>
       </button>
-      <RowMenu onEdit={() => onEdit(student)} onDelete={() => onDelete(student)} itemLabel={`"${student.firstName} ${student.lastName}"`} extraActions={extraActions} />
+      <button onClick={() => onEdit(student)} aria-label={t("roster.editar")} title={t("roster.editar")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-gray-400">
+        <Pencil size={16} aria-hidden="true" />
+      </button>
+      {hasGenerated && (
+        <>
+          <button onClick={() => onDownloadPdf(student)} aria-label={t("roster.descargarPdf")} title={t("roster.descargarPdf")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
+            <FileText size={17} aria-hidden="true" />
+          </button>
+          <button onClick={() => onDownloadJpg(student)} aria-label={t("roster.descargarJpg")} title={t("roster.descargarJpg")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
+            <ImageDown size={17} aria-hidden="true" />
+          </button>
+        </>
+      )}
+      <RowMenu onEdit={() => onEdit(student)} onDelete={() => onDelete(student)} itemLabel={`"${student.firstName} ${student.lastName}"`} />
     </li>
   );
 }
 
 export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile }) {
-  const { t } = useTranslation("trainingRecords");
+  const { t, i18n } = useTranslation("trainingRecords");
   const toast = useToast();
   const [templates, setTemplates] = useState([]);
-  const [loadingTemplates, setLoadingTemplates] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [templateBytes, setTemplateBytes] = useState(null);
-  const [loadingTemplateFile, setLoadingTemplateFile] = useState(false);
-  const [roster, setRoster] = useState([]);
-  const [studentSheet, setStudentSheet] = useState(null);
-  const [generateFor, setGenerateFor] = useState(null);
-  const [generatedByStudent, setGeneratedByStudent] = useState({});
-  // Lo que ya se marcó/firmó la última vez que se generó el registro de
-  // cada alumno — permite reabrir StudentRecordSheet y seguir editando
-  // desde ahí en vez de encontrarla en blanco (ver initialConfig más abajo).
-  const [recordConfigByStudent, setRecordConfigByStudent] = useState({});
+  const [adventures, setAdventures] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [roster, setRoster] = useState(loadStoredRoster);
+  const [entrySheet, setEntrySheet] = useState(null); // null | {mode:"add"} | {mode:"edit", id}
+  const [templateBytesCache, setTemplateBytesCache] = useState({});
 
   useEffect(() => {
     let active = true;
-    supabase.from("training_record_templates").select("code, name, storage_path").eq("status", "active").order("name")
-      .then(({ data, error }) => {
-        if (!active) return;
-        if (error) {
-          console.error(error);
-          toast?.error(t("noSePudieronCargarPlantillas"));
-        } else {
-          setTemplates(data || []);
-        }
-        setLoadingTemplates(false);
-      });
+    Promise.all([
+      supabase.from("training_record_templates").select("code, name, storage_path").eq("status", "active").order("name"),
+      supabase.from("training_record_adventures").select("id, name").order("sort_order"),
+    ]).then(([templatesRes, adventuresRes]) => {
+      if (!active) return;
+      if (templatesRes.error) { console.error(templatesRes.error); toast?.error(t("noSePudieronCargarPlantillas")); }
+      else setTemplates(templatesRes.data || []);
+      if (adventuresRes.error) console.error(adventuresRes.error);
+      else setAdventures(adventuresRes.data || []);
+      setLoading(false);
+    });
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const selectTemplate = async (tpl) => {
-    setSelectedTemplate(tpl);
-    setRoster([]);
-    setGeneratedByStudent({});
-    setRecordConfigByStudent({});
-    setLoadingTemplateFile(true);
-    try {
-      const { data, error } = await supabase.storage.from("training-record-templates").download(tpl.storage_path);
-      if (error) throw error;
-      setTemplateBytes(new Uint8Array(await data.arrayBuffer()));
-    } catch (err) {
-      console.error(err);
-      toast?.error(t("noSePudoDescargarPlantilla"));
-      setSelectedTemplate(null);
-    } finally {
-      setLoadingTemplateFile(false);
-    }
+  useEffect(() => { persistRoster(roster); }, [roster]);
+
+  const getTemplateBytes = async (code) => {
+    if (templateBytesCache[code]) return templateBytesCache[code];
+    const tpl = templates.find((tp) => tp.code === code);
+    const { data, error } = await supabase.storage.from("training-record-templates").download(tpl.storage_path);
+    if (error) throw error;
+    const bytes = new Uint8Array(await data.arrayBuffer());
+    setTemplateBytesCache((c) => ({ ...c, [code]: bytes }));
+    return bytes;
   };
 
-  const backToTemplates = () => {
-    setSelectedTemplate(null);
-    setTemplateBytes(null);
-    setRoster([]);
-    setGeneratedByStudent({});
-    setRecordConfigByStudent({});
-  };
+  const removeStudent = (student) => setRoster((r) => r.filter((s) => s.id !== student.id));
 
-  const addStudent = (values) => setRoster((r) => [...r, { id: crypto.randomUUID(), ...values }]);
-  const editStudent = (id, values) => setRoster((r) => r.map((s) => (s.id === id ? { ...s, ...values } : s)));
-  const removeStudent = (student) => {
-    setRoster((r) => r.filter((s) => s.id !== student.id));
-    setGeneratedByStudent((g) => {
-      if (!(student.id in g)) return g;
-      const next = { ...g };
-      delete next[student.id];
-      return next;
+  const handleSaved = (entry) => {
+    setRoster((r) => {
+      const exists = r.some((s) => s.id === entry.id);
+      return exists ? r.map((s) => (s.id === entry.id ? entry : s)) : [...r, entry];
     });
-    setRecordConfigByStudent((c) => {
-      if (!(student.id in c)) return c;
-      const next = { ...c };
-      delete next[student.id];
-      return next;
-    });
+    downloadBytes(entry.pdfBytes, filenameFor(entry));
+    setEntrySheet(null);
   };
 
-  const filenameFor = (student, ext = "pdf") => `${safeFilePart(student.firstName)}_${safeFilePart(student.lastName)}_${selectedTemplate.code}.${ext}`;
-
-  const handleGenerated = (student, bytes, config) => {
-    setGeneratedByStudent((g) => ({ ...g, [student.id]: bytes }));
-    setRecordConfigByStudent((c) => ({ ...c, [student.id]: config }));
-    downloadBytes(bytes, filenameFor(student));
-    setGenerateFor(null);
+  const downloadPdf = (student) => {
+    if (student.pdfBytes) downloadBytes(student.pdfBytes, filenameFor(student));
   };
 
-  const redownload = (student) => {
-    const bytes = generatedByStudent[student.id];
-    if (bytes) downloadBytes(bytes, filenameFor(student));
-  };
-
-  // import() dinámico, no estático: pdfjs-dist (~2MB) usa Promise.withResolvers
-  // internamente, disponible solo desde Safari 17.4 (marzo 2024) — con un
-  // import estático, ese código se ejecuta al cargar CUALQUIER pantalla de la
-  // app (hasta el login) en cuanto entra en el bundle principal, y revienta
-  // en Safari más antiguo con una pantalla en blanco total, no solo en
-  // Training Records. Cargarlo solo al pulsar este botón aísla el riesgo a
-  // quien de verdad usa la exportación a JPG, sin arrastrar al resto de la
-  // app ni a un visitante que ni siquiera ha iniciado sesión.
-  // El botón que dispara esto vive dentro del menú "⋯" (RowMenu), que se
-  // cierra en cuanto se pulsa — sin un toast de éxito aquí, la conversión
-  // (que tarda un momento, sobre todo la primera vez que carga pdfjs-dist)
-  // no daba ninguna confirmación visible de que había terminado.
-  const downloadAsJpg = async (student) => {
-    const bytes = generatedByStudent[student.id];
-    if (!bytes) return;
+  // import() dinámico, no estático: pdfjs-dist (~2MB) usa
+  // Promise.withResolvers internamente, disponible solo desde Safari 17.4
+  // (marzo 2024) — con un import estático, ese código se ejecuta en
+  // CUALQUIER pantalla de la app (hasta el login) en cuanto entra en el
+  // bundle principal, y revienta en Safari más antiguo con una pantalla en
+  // blanco total, no solo en Training Records (bug real encontrado en el
+  // Preview, ver docs/RELEASE-V1-PROGRESS.md).
+  const downloadJpg = async (student) => {
+    if (!student.pdfBytes) return;
     try {
       const { renderPdfToJpgBytes } = await import("./pdfToJpg");
-      const jpgBytes = await renderPdfToJpgBytes(bytes);
+      const jpgBytes = await renderPdfToJpgBytes(student.pdfBytes);
       downloadBytes(jpgBytes, filenameFor(student, "jpg"), "image/jpeg");
       toast?.success(t("roster.imagenDescargada"));
     } catch (err) {
@@ -263,120 +229,71 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     }
   };
 
-  // Descargas secuenciales con una pequeña pausa entre cada una — varios
-  // navegadores (Chrome/Safari incluidos) bloquean o preguntan al usuario
-  // si una página dispara muchas descargas de golpe sin ninguna interacción
-  // de por medio; separar en el tiempo evita ese bloqueo sin necesitar
-  // empaquetar todo en un .zip (habría que añadir una librería nueva solo
-  // para esto — no compensa para un roster típico de una clase).
-  const downloadAllGenerated = async () => {
-    const pending = roster.filter((s) => generatedByStudent[s.id]);
-    for (const student of pending) {
-      downloadBytes(generatedByStudent[student.id], filenameFor(student));
-      // eslint-disable-next-line no-await-in-loop
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
-  };
-
-  const templateMap = selectedTemplate ? TEMPLATE_FIELD_MAPS[selectedTemplate.code] : null;
-  const anyGenerated = roster.some((s) => generatedByStudent[s.id]);
-
   const instructor = {
     namePrinted: [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim(),
     initials: profile?.instructor_initials || "",
     number: profile?.ssi_pro_number || "",
+    signature: profile?.instructor_signature || null,
   };
-  const instructorComplete = Boolean(profile?.first_name?.trim() && profile?.last_name?.trim() && instructor.initials.trim() && instructor.number.trim());
+  const instructorComplete = Boolean(
+    profile?.first_name?.trim() && profile?.last_name?.trim() && instructor.initials.trim() && instructor.number.trim() && instructor.signature
+  );
 
-  if (loadingTemplates) return <p className="text-sm text-gray-400">{t("cargandoPlantillas")}</p>;
-
-  if (!selectedTemplate) {
-    return (
-      <div className="space-y-4 pb-16">
-        <p className="text-sm text-gray-500">{t("intro")}</p>
-        <TemplatePicker templates={templates} onSelect={selectTemplate} />
-      </div>
-    );
-  }
+  if (loading) return <p className="text-sm text-gray-400">{t("cargandoPlantillas")}</p>;
 
   if (!instructorComplete) {
     return (
       <div className="space-y-4 pb-16">
-        <button onClick={backToTemplates} className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium" style={{ color: TEAL }}>
-          <ChevronLeft size={18} aria-hidden="true" /> {t("volverPlantillas")}
-        </button>
-        <h2 className="-mt-2 text-base font-semibold" style={{ color: NAVY }}>{selectedTemplate.name}</h2>
         <InstructorMissingNotice onOpenProfile={onOpenProfile} />
       </div>
     );
   }
 
+  const editingEntry = entrySheet?.mode === "edit" ? roster.find((s) => s.id === entrySheet.id) : null;
+
   return (
     <div className="space-y-4 pb-24">
-      <button onClick={backToTemplates} className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium" style={{ color: TEAL }}>
-        <ChevronLeft size={18} aria-hidden="true" /> {t("volverPlantillas")}
-      </button>
-      <h2 className="-mt-2 text-base font-semibold" style={{ color: NAVY }}>{selectedTemplate.name}</h2>
-
+      <p className="text-sm text-gray-500">{t("intro")}</p>
       <InstructorSummary instructor={instructor} />
 
-      {loadingTemplateFile ? (
-        <p className="text-sm text-gray-400">{t("descargandoPlantilla")}</p>
-      ) : (
-        <>
-          <div>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("roster.titulo")}</h3>
-            {roster.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-gray-400">{t("roster.vacio")}</p>
-            ) : (
-              <ul className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
-                {roster.map((student) => (
-                  <RosterRow
-                    key={student.id}
-                    student={student}
-                    hasGenerated={!!generatedByStudent[student.id]}
-                    onOpenGenerate={setGenerateFor}
-                    onEdit={(s) => setStudentSheet({ mode: "edit", student: s })}
-                    onDelete={removeStudent}
-                    onRedownload={redownload}
-                    onDownloadJpg={downloadAsJpg}
-                  />
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {anyGenerated && (
-            <button onClick={downloadAllGenerated} className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 text-sm font-medium text-gray-600">
-              <Download size={15} aria-hidden="true" /> {t("roster.descargarTodosGenerados")}
+      <div>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("roster.titulo")}</h3>
+        {roster.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-gray-400">
+            <p className="mb-2">{t("roster.vacio")}</p>
+            <button onClick={() => setEntrySheet({ mode: "add" })} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium" style={{ color: TEAL }}>
+              <Plus size={15} aria-hidden="true" /> {t("roster.anadirPrimerAlumno")}
             </button>
-          )}
-        </>
-      )}
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
+            {roster.map((student) => (
+              <RosterRow
+                key={student.id}
+                student={student}
+                locale={i18n.language}
+                onEdit={(s) => setEntrySheet({ mode: "edit", id: s.id })}
+                onDelete={removeStudent}
+                onDownloadPdf={downloadPdf}
+                onDownloadJpg={downloadJpg}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
 
-      <Fab onClick={() => setStudentSheet({ mode: "add", student: null })} label={t("roster.anadirAlumno")} color={accentColor || TEAL} icon={UserPlus} />
-
-      <StudentFormSheet
-        open={!!studentSheet}
-        onClose={() => setStudentSheet(null)}
-        initial={studentSheet?.student}
-        onSave={(values) => {
-          if (studentSheet?.mode === "edit") editStudent(studentSheet.student.id, values);
-          else addStudent(values);
-          setStudentSheet(null);
-        }}
-      />
+      <Fab onClick={() => setEntrySheet({ mode: "add" })} label={t("roster.anadirAlumno")} color={accentColor || TEAL} icon={UserPlus} />
 
       <StudentRecordSheet
-        open={!!generateFor}
-        onClose={() => setGenerateFor(null)}
-        student={generateFor}
-        templateMap={templateMap}
-        templateName={selectedTemplate.name}
-        templateBytes={templateBytes}
+        open={!!entrySheet}
+        onClose={() => setEntrySheet(null)}
+        mode={entrySheet?.mode}
+        initial={editingEntry}
+        templates={templates}
+        adventures={adventures}
         instructor={instructor}
-        initialConfig={generateFor ? recordConfigByStudent[generateFor.id] : undefined}
-        onGenerated={(bytes, config) => handleGenerated(generateFor, bytes, config)}
+        getTemplateBytes={getTemplateBytes}
+        onSaved={handleSaved}
       />
     </div>
   );
