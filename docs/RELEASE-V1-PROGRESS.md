@@ -28,7 +28,7 @@
 | 2 | Multidioma | ✅ Hecho (2026-09-01, noche) |
 | 3 | KPIs en la home | ✅ Hecho (2026-09-01, noche) |
 | 4 | Cabecera y notificaciones | ✅ Hecho (2026-09-01/02, noche) |
-| 5 | Sistema de Training Records | 🟡 En curso — generador MVP construido, sin verificar en dispositivo real (ver detalle) |
+| 5 | Sistema de Training Records | 🟡 En curso — generador verificado en dispositivo real y bug crítico de generación corregido; quedan fechas/JPG/6 plantillas sin campos (ver detalle) |
 | 6 | Slides y avisos | ⬜ Pendiente |
 | 7 | Usabilidad, carga y escalabilidad | ⬜ Pendiente |
 | 8 | Revisión visual y libro de estilo | ⬜ Pendiente |
@@ -770,7 +770,7 @@ iconos en vez de 4, "Cerrar sesión" funciona desde Mi perfil, "Ver
 qué hay de nuevo" reabre el slide correctamente, ambos en español e
 inglés, sin errores de consola.
 
-## Fase 5 — Sistema de generación de Training Records (🟡 en curso — generador MVP construido para las 4 plantillas activas)
+## Fase 5 — Sistema de generación de Training Records (🟡 en curso — verificado en dispositivo real, bug crítico de generación corregido)
 
 **Rama:** `feature/training-records` (creada desde `Release-V1`, tal como
 pedía el encargo — no se ha fusionado todavía).
@@ -982,34 +982,133 @@ drop policy if exists "read active templates" on public.training_record_template
 drop table if exists public.training_record_templates;
 ```
 
+### ✅ Actualización 2026-09-02 (sesión de continuación) — verificación en dispositivo real, bug crítico corregido, datos de instructor movidos al perfil
+
+Sesión dedicada al punto 1 pendiente ("validación humana en dispositivo
+real"), en rama `feature/training-records` (`npm run dev` + bypass de
+desarrollo). Resultado: **un bug real que rompía la generación para
+cualquier alumno, en las 4 plantillas activas, sin excepción** — no
+detectable por los tests unitarios existentes porque construyen su PDF
+de prueba con `pdf-lib` desde cero (estructura de campos "limpia"), no
+descargando la plantilla real de Storage.
+
+**Bug encontrado y corregido — `form.flatten()` fallaba siempre:**
+`scripts/mobile-check-training-records.mjs` (script nuevo, mismo enfoque
+que `mobile-check.mjs` pero para este módulo — Chromium + emulación
+iPhone 14 Pro Max) reprodujo en el primer intento un error real al pulsar
+"Generar y descargar": `Error: Tried to remove inexistent field
+undefined.tr-input-XXXXXXXX-N`, lanzado por pdf-lib dentro de
+`form.flatten()`. Diagnosticado con un script de depuración puntual
+contra las 4 plantillas reales (descargadas de Supabase Storage): cada
+campo de cada una de las 4 plantillas tiene un `/Parent` que apunta, por
+error del generador original del PDF, al propio diccionario `/AcroForm`
+(que tiene `/Fields`, no `/Kids`) en vez de a un campo padre real o no
+tener `/Parent` en absoluto. pdf-lib sigue ese `/Parent` roto al
+aplanar, no encuentra el campo en los (inexistentes) `/Kids` de ese
+"padre", y lanza el error — **para el primer campo de cualquier
+plantilla, siempre**, sin relación con qué datos se rellenen. Sin este
+fix, el generador nunca había funcionado de verdad para ningún alumno,
+pese a que el mapeo de campos (verificado visualmente semanas atrás) sí
+era correcto.
+
+**Fix** (`src/trainingRecords/pdfFill.js`): `stripBrokenParentRefs()`
+recorre los campos del formulario justo antes de `form.flatten()` y
+quita el `/Parent` cuando el diccionario al que apunta no tiene
+`/Kids` (es decir, cuando no es un campo padre real) — verificado
+manualmente contra las 4 plantillas activas (AOWD, OWD, SC-DD, SC-EAN),
+las 4 flateaban correctamente tras el fix. Test de regresión en
+`pdfFill.test.js` que fabrica un PDF con esa misma corrupción a
+propósito (confirmado que falla sin el fix y pasa con él — no basta con
+que el test pase, hay que comprobar que también sabe fallar).
+
+**Segundo hallazgo, en el propio script de verificación** (no en la
+app): las firmas dibujadas con el ratón de Playwright no llegaban al
+`<canvas>` de `signature_pad` — el PDF se generaba igualmente (las
+firmas son opcionales en `pdfFill.js`) pero salían en blanco. Causa:
+el canvas de firma vive más abajo del viewport dentro de la hoja
+(`Sheet`, con scroll interno), y `page.mouse.move/down/up` no valida
+visibilidad como sí hace un `locator.click()` — el "trazo" no llegaba a
+ningún elemento real. Corregido con `scrollIntoViewIfNeeded()` antes de
+calcular las coordenadas del canvas. De paso, se encontró y corrigió el
+mismo tipo de bug (ambigüedad `getByRole` sin `exact:true`) en el propio
+`scripts/mobile-check.mjs` compartido — ver el commit
+`fix(training-records): sanea /Parent roto antes de aplanar el PDF`.
+
+**Verificado end-to-end con el PDF real generado** (renderizado a PNG
+con `pdftoppm` para revisión visual): nombre, apellidos, iniciales del
+alumno en cada fila de progreso, nombre del instructor y ambas firmas
+(alumno + instructor) aparecen en el sitio correcto de la página 1 de
+AOWD.
+
+**Cambio de arquitectura pedido explícitamente por el usuario mid-sesión
+— datos de instructor al perfil, no al dispositivo:** hasta ahora
+`InstructorPrefsPanel` guardaba nombre/iniciales/número SSI Pro en
+`localStorage`, editable directamente dentro de Training Records. El
+usuario pidió moverlos al perfil real (para que se rellenen una vez y
+sirvan en cualquier dispositivo) y que, si faltan, el generador lo
+bloquee con un aviso y un botón directo a "Mi perfil".
+**Implementado:**
+- Migración aditiva `0009-datos-instructor-perfil.sql` aplicada a TEST
+  (columnas `profiles.instructor_initials`/`ssi_pro_number`, nullable,
+  rollback documentado en el propio fichero) — el nombre impreso no es
+  una columna nueva, se deriva de `first_name`/`last_name`, que ya
+  existían.
+- `ProfileTab.jsx`: sección nueva "Datos de instructor" (mismo patrón de
+  edición que "Datos personales" ya existente).
+- `TrainingRecordsTab.jsx`: `InstructorPrefsPanel` (editable, localStorage)
+  retirado por completo. Si al perfil le falta cualquiera de los 4 datos,
+  la pantalla bloquea con `InstructorMissingNotice` (aviso + botón "Ir a
+  mi perfil", enhebrado `App.jsx` → `ConfigTab` → `TrainingRecordsTab`
+  vía `onOpenProfile={() => changeTab("perfil")}`) en vez de dejar
+  empezar un roster que no se podría terminar. Con los datos completos,
+  `InstructorSummary` (solo lectura) recuerda "Firmando como Nombre
+  (iniciales) — SSI Pro número" antes de generar — un documento de
+  certificación real no debe generarse sin que quede claro con qué
+  identidad se firma.
+- Verificado en navegador real con la cuenta demo (que no tenía ningún
+  dato de instructor): aparece el aviso → "Ir a mi perfil" → rellenar
+  nombre/apellidos + iniciales/número → volver a Training Records → el
+  aviso ya no aparece, "Firmando como..." visible, generación correcta.
+  Cuenta demo restaurada a su estado original (todos los campos a null)
+  tras la comprobación, para no dejar datos de prueba reales en TEST.
+
+**Commits** (rama `feature/training-records`, empujada a `origin` —
+genera Preview Deployment nuevo, ver más abajo): `106c3ab` (fix del
+bug de pdf-lib + herramientas de verificación) y `e9347d6` (datos de
+instructor al perfil). `npm run test` (590/590) y `npm run build` en
+verde tras ambos.
+
+**Preview Deployment de esta sesión:**
+`https://dive-tracker-git-feature-training-records-ocean-pulse1.vercel.app`
+(alias estable de la rama — cada push nuevo a `feature/training-records`
+lo actualiza solo).
+
 ### Próximos pasos
 
-El generador en sí (roster, iniciales autogeneradas, formulario dinámico
-por plantilla, firma táctil, relleno de PDF con `pdf-lib`) ya está
-construido para las 4 plantillas activas — ver "✅ Actualización
-2026-09-02" arriba. Queda:
+El generador (roster, iniciales autogeneradas, formulario dinámico por
+plantilla, firma táctil, relleno de PDF con `pdf-lib`) está construido,
+verificado en dispositivo real y genera un PDF correcto de verdad para
+las 4 plantillas activas. Queda:
 
-1. **Validación humana en dispositivo real / `mobile-check`** — el flujo
-   completo no se ha probado en un navegador de verdad ni con
-   Playwright esta noche, solo `npm run test`/`npm run build`.
-2. Decidir de dónde sale cada fecha (petición explícita del usuario:
+1. Decidir de dónde sale cada fecha (petición explícita del usuario:
    no rellenar ninguna por ahora) y activarlas en `pdfFill.js` una vez
    decidido — un único punto de cambio, ya señalado con comentario ahí.
-3. Exportación a JPG (página larga concatenada con `pdfjs-dist`) —
-   deferida por no poder verificar en un navegador real el
-   *worker* de `pdfjs-dist` en el build de Vite esta noche (ver
-   "Explícitamente NO construido todavía" arriba).
-4. Decidir el enfoque para las 6 plantillas sin campos de formulario
+2. Exportación a JPG (página larga concatenada con `pdfjs-dist`) —
+   sigue sin construirse, mismo motivo que antes (verificar el *worker*
+   de `pdfjs-dist` en el build de Vite necesita un navegador real).
+3. Decidir el enfoque para las 6 plantillas sin campos de formulario
    (mapear coordenadas a mano tiene coste y fragilidad altos; también
    cabe dejarlas fuera del generador y ofrecer solo las 4 activas,
    revisando esta decisión más adelante si hace falta).
-5. Validar con el usuario si "Training Records" merece un acceso más
+4. Validar con el usuario si "Training Records" merece un acceso más
    directo que dentro de Configuración (decisión tomada por
    consistencia con Escuelas/Cursos/Tarifas, no confirmada con él).
-6. El pipeline de análisis automático de plantillas nuevas (lo que
+5. El pipeline de análisis automático de plantillas nuevas (lo que
    subiría un admin en el futuro) sigue explícitamente fuera de
    alcance hasta que la interfaz de generación esté terminada, tal
    como pedía el encargo original.
+6. Fusión a `develop`: sigue pendiente de revisión y aprobación
+   explícita del usuario, como el resto de esta rama.
 
 ## Fase 6 — Slides y avisos
 
