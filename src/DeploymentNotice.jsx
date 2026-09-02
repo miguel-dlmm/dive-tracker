@@ -7,20 +7,29 @@ import { supabase } from "./supabaseClient";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 
-// Slide de "nuevo despliegue" — mismo lenguaje visual que WhatsNew.jsx
+// Slide de "aviso de despliegue" — mismo lenguaje visual que WhatsNew.jsx
 // (modal centrado, icono redondo, título+cuerpo, franja de acciones), pero
 // mecanismo de datos distinto a propósito: WhatsNew es contenido editorial
 // fijo en código, gateado por versión (localStorage); esto lee la fila más
-// reciente de `deployment_notices` que el superadmin actual no haya visto
+// reciente de `deployment_notices` que la cuenta actual no haya visto
 // todavía (tabla `deployment_notice_views`), así que el contenido cambia
 // con cada commit notificado, no con cada release de producto.
 // Ver docs/ADR/0024-propuesta-avisos-despliegue-develop.md (implementado
-// 2026-09-01) — diseño completo y el motivo de RLS solo-superadmin.
+// 2026-09-01) y docs/RELEASE-V1-PROGRESS.md Fase 6 (generalizado a dos
+// audiencias, 2026-09-02) — diseño completo.
 //
-// Solo se monta si profile.is_superadmin (ver App.jsx) — nunca se renderiza
-// ni se hace la consulta para un admin normal o un usuario sin rol, doble
-// garantía junto con la policy RLS "superadmin read" de la propia tabla.
-export default function DeploymentNotice({ userId }) {
+// Generalizado (Fase 6): se monta para CUALQUIER cuenta con sesión (ver
+// App.jsx), ya no solo profile.is_superadmin. RLS de deployment_notices
+// filtra sola qué filas puede ver cada quien según su columna `audience`
+// ('all' para cualquiera, 'superadmin' solo si is_superadmin) — este
+// componente no necesita repetir esa lógica, solo pedir todas las filas
+// visibles y quedarse con la más reciente sin ver.
+//
+// profileCreatedAt (Fase 6): un aviso con created_at anterior al alta del
+// usuario nunca se le muestra — sin este filtro, una cuenta creada
+// después de un despliegue vería como "novedad" un aviso de antes de que
+// existiera, justo el comportamiento que el encargo pedía evitar.
+export default function DeploymentNotice({ userId, profileCreatedAt }) {
   const { t } = useTranslation("notices");
   const [notice, setNotice] = useState(null);
   const [loaded, setLoaded] = useState(false);
@@ -29,11 +38,11 @@ export default function DeploymentNotice({ userId }) {
   useEffect(() => {
     let active = true;
     (async () => {
-      // RLS ya restringe ambas tablas a is_superadmin(auth.uid()) — este
-      // componente solo se monta para superadmin, pero aunque no lo fuera,
-      // el servidor no devolvería filas de otra cuenta.
+      let noticesQuery = supabase.from("deployment_notices").select("*");
+      if (profileCreatedAt) noticesQuery = noticesQuery.gte("created_at", profileCreatedAt);
+      noticesQuery = noticesQuery.order("created_at", { ascending: false }).limit(10);
       const [{ data: notices, error: noticesError }, { data: views, error: viewsError }] = await Promise.all([
-        supabase.from("deployment_notices").select("*").order("created_at", { ascending: false }).limit(10),
+        noticesQuery,
         supabase.from("deployment_notice_views").select("notice_id").eq("user_id", userId),
       ]);
       if (!active) return;
@@ -48,7 +57,7 @@ export default function DeploymentNotice({ userId }) {
       setLoaded(true);
     })();
     return () => { active = false; };
-  }, [userId]);
+  }, [userId, profileCreatedAt]);
 
   useEscapeClose(Boolean(notice), () => setNotice(null));
   useBodyScrollLock(Boolean(notice));

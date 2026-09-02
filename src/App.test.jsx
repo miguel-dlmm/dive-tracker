@@ -4,8 +4,25 @@ vi.mock("./useSupabaseTable", () => ({ useSupabaseTable: vi.fn() }));
 // (no vía useSession/useSupabaseTable, ambos ya mockeados arriba) para saber
 // si mostrar "Regístrate" en el login — sin este mock haría una llamada de
 // red real durante los tests. Mismo patrón que ConfigTab.test.jsx.
+// from(): DeploymentNotice.jsx (Fase 6, Release V1) ya se monta para
+// cualquier cuenta con sesión, no solo superadmin — sin este stub, sus
+// consultas revientan con "supabase.from is not a function" en cualquier
+// test que llegue a AppShell (rechazo no gestionado, ver vitest
+// "Unhandled Errors"). Encadenable mínimo que siempre resuelve vacío: a
+// estos tests de AuthGate no les importa el contenido de ese modal.
+function emptyQuery() {
+  const query = {
+    select: vi.fn(() => query),
+    eq: vi.fn(() => query),
+    gte: vi.fn(() => query),
+    order: vi.fn(() => query),
+    limit: vi.fn(() => Promise.resolve({ data: [], error: null })),
+    then: (resolve) => Promise.resolve({ data: [], error: null }).then(resolve),
+  };
+  return query;
+}
 vi.mock("./supabaseClient", () => ({
-  supabase: { rpc: vi.fn() },
+  supabase: { rpc: vi.fn(), from: vi.fn(() => emptyQuery()) },
 }));
 
 import { render, screen, waitFor } from "@testing-library/react";

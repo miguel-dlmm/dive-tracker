@@ -20,7 +20,13 @@ import { handleNotifyDeployment } from "../server/notifications/notifyDeployment
 //   "technical_changes": ["..."], "functional_changes": ["..."],
 //   "has_ui_changes": true, "ui_changes_note": "...",
 //   "steps": ["..."], "tests_status": "468 passed (468)", "build_status": "ok",
-//   "preview_url": "https://...", "integration_preview_url": "https://..."
+//   "preview_url": "https://...", "integration_preview_url": "https://...",
+//   "audience": "superadmin"  // o "all" — Fase 6, Release V1. Por defecto
+//     "superadmin" (comportamiento de siempre). "all" solo cambia quién
+//     puede VER el aviso dentro de la app (RLS + DeploymentNotice.jsx) —
+//     el email sigue yendo exclusivamente a superadmins en los dos casos,
+//     la plantilla actual es contenido de desarrollo, no algo que enviar
+//     a un usuario normal (ver notifyDeployment.js).
 // }
 
 const file = process.argv[2];

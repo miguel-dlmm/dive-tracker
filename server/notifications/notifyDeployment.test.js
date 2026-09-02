@@ -150,6 +150,55 @@ describe("con permisos válidos", () => {
     });
   });
 
+  // Fase 6, Release V1 (2026-09-02): audience se guarda en la fila, pero
+  // el email sigue yendo SOLO a superadmins sea cual sea su valor — la
+  // plantilla actual es contenido de desarrollo, no algo que enviar a un
+  // usuario normal (ver comentario en notifyDeployment.js).
+  it("guarda audience='all' en la fila, pero sigue enviando el email solo a superadmins", async () => {
+    const client = buildClient({
+      insertResult: { data: { ...NOTICE_ROW, audience: "all" }, error: null },
+      profilesResult: { data: [{ user_id: "super-1" }], error: null },
+      listUsersResult: {
+        data: { users: [{ id: "super-1", email: "admin@ocean.flow" }, { id: "user-sin-rol", email: "diver@ocean.flow" }] },
+        error: null,
+      },
+    });
+    getServiceRoleClient.mockReturnValue(client);
+
+    const result = await handleNotifyDeployment(request({ body: JSON.stringify({ ...VALID_BODY, audience: "all" }) }));
+
+    expect(client.__mocks.insert).toHaveBeenCalledWith(expect.objectContaining({ audience: "all" }));
+    expect(sendDeploymentNoticeEmail).toHaveBeenCalledTimes(1);
+    expect(sendDeploymentNoticeEmail).toHaveBeenCalledWith({ email: "admin@ocean.flow", notice: { ...NOTICE_ROW, audience: "all" } });
+    expect(result.payload.recipients).toEqual([{ email: "admin@ocean.flow", sent: true, error: null }]);
+  });
+
+  it("sin audience en el body, guarda 'superadmin' por defecto (compatibilidad con llamadas ya existentes)", async () => {
+    const client = buildClient({
+      insertResult: { data: NOTICE_ROW, error: null },
+      profilesResult: { data: [], error: null },
+      listUsersResult: { data: { users: [] }, error: null },
+    });
+    getServiceRoleClient.mockReturnValue(client);
+
+    await handleNotifyDeployment(request());
+
+    expect(client.__mocks.insert).toHaveBeenCalledWith(expect.objectContaining({ audience: "superadmin" }));
+  });
+
+  it("un audience no reconocido cae a 'superadmin', nunca se propaga sin validar", async () => {
+    const client = buildClient({
+      insertResult: { data: NOTICE_ROW, error: null },
+      profilesResult: { data: [], error: null },
+      listUsersResult: { data: { users: [] }, error: null },
+    });
+    getServiceRoleClient.mockReturnValue(client);
+
+    await handleNotifyDeployment(request({ body: JSON.stringify({ ...VALID_BODY, audience: "everyone-please" }) }));
+
+    expect(client.__mocks.insert).toHaveBeenCalledWith(expect.objectContaining({ audience: "superadmin" }));
+  });
+
   it("es idempotente — un commit_hash duplicado no crea una fila nueva ni reenvía el email", async () => {
     const client = buildClient({
       insertResult: { data: null, error: { code: "23505", message: "duplicate key value violates unique constraint" } },

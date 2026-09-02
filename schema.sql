@@ -828,7 +828,11 @@ create table if not exists public.deployment_notices (
   has_ui_changes boolean not null default false,
   ui_changes_note text,          -- qué cambió visualmente, si has_ui_changes es true
   steps jsonb not null default '[]', -- array de strings — paso a paso de qué probar o hacer
-  integration_preview_url text   -- Preview Deployment de nightjob-2026.08.31 YA con este commit integrado — null si aún no se ha empujado
+  integration_preview_url text,   -- Preview Deployment de nightjob-2026.08.31 YA con este commit integrado — null si aún no se ha empujado
+  -- Release V1, Fase 6 (migración 0010-avisos-generalizados.sql): 'all'
+  -- (cualquier usuario autenticado) o 'superadmin' (comportamiento
+  -- original, sigue siendo el default para no cambiar nada existente).
+  audience text not null default 'superadmin' check (audience in ('all', 'superadmin'))
 );
 
 -- Quién (qué superadmin) ya vio cada aviso en el slide in-app. Tabla puente
@@ -856,30 +860,42 @@ create table if not exists public.deployment_notice_views (
 --   create table if not exists public.deployment_notice_views (...);
 --   (mismo DDL de arriba — no repetido aquí para no divergir en dos sitios)
 
--- RLS: exclusivamente superadmin, tanto lectura como escritura — nunca
--- is_admin(), que también es true para un admin normal (ver definición de
--- is_admin(uid) al principio del fichero). El encargo original pedía
--- "solo ADMIN [superadmin] verá"; una policy con is_admin() dejaría a un
--- admin normal leer estos avisos directamente vía el cliente de Supabase
--- aunque la UI nunca se los muestre — el control real tiene que vivir aquí,
--- no solo en que el componente esté gateado por profile.is_superadmin.
+-- RLS: lectura según `audience` (ver Fase 6 más abajo — 'superadmin'
+-- exige is_superadmin(), 'all' solo exige sesión), escritura sigue
+-- exclusiva de superadmin — nunca is_admin(), que también es true para un
+-- admin normal (ver definición de is_admin(uid) al principio del
+-- fichero). El encargo original pedía "solo ADMIN [superadmin] verá" para
+-- los avisos técnicos; un aviso 'all' es la excepción explícita a eso,
+-- nunca is_admin() como atajo — el control real tiene que vivir aquí, no
+-- solo en que el componente esté gateado por profile.is_superadmin.
 alter table public.deployment_notices enable row level security;
 drop policy if exists "superadmin read" on public.deployment_notices;
-create policy "superadmin read" on public.deployment_notices
-  for select using (public.is_superadmin(auth.uid()));
+drop policy if exists "read own audience" on public.deployment_notices;
+create policy "read own audience" on public.deployment_notices
+  for select using (
+    (audience = 'superadmin' and public.is_superadmin(auth.uid()))
+    or (audience = 'all' and auth.uid() is not null)
+  );
 drop policy if exists "superadmin write" on public.deployment_notices;
 create policy "superadmin write" on public.deployment_notices
   for all using (public.is_superadmin(auth.uid())) with check (public.is_superadmin(auth.uid()));
 
+-- Fase 6: generalizada igual que deployment_notices de arriba — lectura y
+-- escritura restringidas a "mis propias filas" (user_id = auth.uid()),
+-- para cualquier usuario con sesión, no solo superadmin. Antes ambas
+-- policies exigían is_superadmin(); sin generalizarlas también, un
+-- usuario normal con un aviso audience='all' no podría ni leer qué ha
+-- visto ya ni marcarlo como visto, aunque la policy de deployment_notices
+-- de arriba ya le dejara leer el aviso en sí.
 alter table public.deployment_notice_views enable row level security;
 drop policy if exists "superadmin read views" on public.deployment_notice_views;
-create policy "superadmin read views" on public.deployment_notice_views
-  for select using (public.is_superadmin(auth.uid()));
--- insert restringido a "marcar mi propio visto" — un superadmin nunca
--- marca un aviso como visto en nombre de otro.
+drop policy if exists "read own views" on public.deployment_notice_views;
+create policy "read own views" on public.deployment_notice_views
+  for select using (auth.uid() is not null and user_id = auth.uid());
 drop policy if exists "superadmin insert own view" on public.deployment_notice_views;
-create policy "superadmin insert own view" on public.deployment_notice_views
-  for insert with check (public.is_superadmin(auth.uid()) and user_id = auth.uid());
+drop policy if exists "insert own view" on public.deployment_notice_views;
+create policy "insert own view" on public.deployment_notice_views
+  for insert with check (auth.uid() is not null and user_id = auth.uid());
 
 -- ---------- Enlaces de invitación (Release V1) ----------
 -- Enlaces de un solo uso (24h) generados por un superadmin (Configuración →

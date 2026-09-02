@@ -62,6 +62,11 @@ export async function handleNotifyDeployment({ method, headers, body }) {
   if (!commit_hash || !branch || !summary) {
     return { status: 400, payload: { error: "commit_hash, branch y summary son obligatorios." } };
   }
+  // Fase 6, Release V1: 'superadmin' (default, comportamiento original) o
+  // 'all' — cualquier otro valor cae también a 'superadmin', nunca se deja
+  // pasar algo sin validar a una columna con check constraint (fallaría el
+  // insert de todas formas, pero mejor no depender de eso).
+  const audience = input.audience === "all" ? "all" : "superadmin";
 
   const caller = await verifyCaller(token);
   if (!caller) {
@@ -79,6 +84,7 @@ export async function handleNotifyDeployment({ method, headers, body }) {
       commit_hash,
       branch,
       summary,
+      audience,
       changes: asStringArray(input.changes),
       suggested_tests: asStringArray(input.suggested_tests),
       technical_changes: asStringArray(input.technical_changes),
@@ -105,6 +111,15 @@ export async function handleNotifyDeployment({ method, headers, body }) {
     return { status: 500, payload: { error: "No se pudo registrar el aviso de despliegue." } };
   }
 
+  // Fase 6: `audience` solo decide quién puede VER el aviso in-app (RLS de
+  // deployment_notices/deployment_notice_views) — el EMAIL sigue yendo
+  // exclusivamente a superadmins, sea cual sea audience. Motivo: la
+  // plantilla actual (deploymentNoticeEmailTemplate.js — "nuevo
+  // despliegue", hash de commit, botones de Preview Deployment) es
+  // contenido de desarrollo, no algo que un usuario normal deba recibir
+  // por email con el tono actual. Generalizar el email a 'all' necesita
+  // su propia plantilla con copy cercano — deliberadamente NO construida
+  // esta noche, ver docs/RELEASE-V1-PROGRESS.md, Fase 6.
   const { data: superadminProfiles, error: profilesError } = await client
     .from("profiles")
     .select("user_id")
@@ -115,8 +130,8 @@ export async function handleNotifyDeployment({ method, headers, body }) {
     return { status: 200, payload: { ok: true, notice_id: notice.id, recipients: [], recipients_error: "No se pudo listar superadmins." } };
   }
 
-  const superadminIds = new Set(superadminProfiles.map((p) => p.user_id));
-  if (superadminIds.size === 0) {
+  const targetIds = new Set(superadminProfiles.map((p) => p.user_id));
+  if (targetIds.size === 0) {
     return { status: 200, payload: { ok: true, notice_id: notice.id, recipients: [] } };
   }
 
@@ -129,7 +144,7 @@ export async function handleNotifyDeployment({ method, headers, body }) {
     return { status: 200, payload: { ok: true, notice_id: notice.id, recipients: [], recipients_error: "No se pudo listar usuarios." } };
   }
 
-  const recipients = listData.users.filter((u) => superadminIds.has(u.id) && u.email);
+  const recipients = listData.users.filter((u) => targetIds.has(u.id) && u.email);
 
   const results = [];
   for (const user of recipients) {

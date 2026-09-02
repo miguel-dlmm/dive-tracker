@@ -22,6 +22,7 @@ const NOTICE_B = {
 function mockSupabase({ notices, views, insertResult = { error: null } }) {
   const noticesTable = {
     select: vi.fn(() => noticesTable),
+    gte: vi.fn(() => noticesTable),
     order: vi.fn(() => noticesTable),
     limit: vi.fn(() => Promise.resolve({ data: notices, error: null })),
   };
@@ -83,6 +84,24 @@ it("al pulsar 'Entendido', marca el aviso como visto para este usuario y lo cier
 
   expect(viewsTable.insert).toHaveBeenCalledWith({ notice_id: "notice-a", user_id: USER_ID });
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+});
+
+// Fase 6, Release V1 (2026-09-02): un aviso de antes del alta del usuario
+// nunca debe llegar a mostrarse — evita que una cuenta nueva vea como
+// "novedad" algo de antes de que existiera.
+it("con profileCreatedAt, filtra los avisos por created_at >= esa fecha", async () => {
+  const { noticesTable } = mockSupabase({ notices: [NOTICE_A], views: [] });
+  render(<DeploymentNotice userId={USER_ID} profileCreatedAt="2026-08-15T00:00:00Z" />);
+
+  await waitFor(() => expect(noticesTable.gte).toHaveBeenCalledWith("created_at", "2026-08-15T00:00:00Z"));
+});
+
+it("sin profileCreatedAt, no aplica ningún filtro de fecha (compatibilidad hacia atrás)", async () => {
+  const { noticesTable } = mockSupabase({ notices: [NOTICE_A], views: [] });
+  render(<DeploymentNotice userId={USER_ID} />);
+
+  await screen.findByText("Resumen del aviso A");
+  expect(noticesTable.gte).not.toHaveBeenCalled();
 });
 
 it("un 23505 (otra pestaña ya lo marcó como visto) se trata como éxito, sin relanzar ni bloquear el cierre", async () => {

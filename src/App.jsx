@@ -489,11 +489,12 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
       />
 
       {whatsNewOpen && <WhatsNew onClose={closeWhatsNew} />}
-      {/* Solo superadmin, y solo tras cerrar "Qué hay de nuevo" — evita dos
-          modales fixed inset-0 apilados a la vez. Gate real de acceso vive
-          en RLS (ver schema.sql, "superadmin read"), esto es solo para no
-          hacer la consulta ni renderizar nada a quien nunca podría verlo. */}
-      {!whatsNewOpen && profile?.is_superadmin && <DeploymentNotice userId={profile.user_id} />}
+      {/* Fase 6, Release V1 (2026-09-02): generalizado a cualquier cuenta,
+          ya no solo superadmin — el gate real de qué fila puede ver cada
+          quien vive en RLS (ver schema.sql, "read own audience"), esto
+          solo evita renderizar dos modales fixed inset-0 apilados a la
+          vez sobre "Qué hay de nuevo". */}
+      {!whatsNewOpen && <DeploymentNotice userId={profile.user_id} profileCreatedAt={profile.created_at} />}
     </div>
   );
 }
