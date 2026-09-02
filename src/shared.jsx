@@ -448,6 +448,13 @@ export function DatePicker({ value, onChange, placeholder }) {
     onChange(`${viewY}-${pad2(viewM + 1)}-${pad2(d)}`);
     setOpen(false);
   };
+  // Aparte de selectDay: usa el año/mes REALES de hoy, no viewY/viewM —
+  // si el usuario ya navegó a otro mes, selectDay(today.getDate())
+  // seleccionaría ese día en el mes que se está viendo, no en el de hoy.
+  const selectToday = () => {
+    onChange(`${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`);
+    setOpen(false);
+  };
   const goPrev = () => { if (viewM === 0) { setViewM(11); setViewY(viewY - 1); } else setViewM(viewM - 1); };
   const goNext = () => { if (viewM === 11) { setViewM(0); setViewY(viewY + 1); } else setViewM(viewM + 1); };
 
@@ -465,11 +472,23 @@ export function DatePicker({ value, onChange, placeholder }) {
         <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
         <span className={parsed ? "text-gray-800" : "text-gray-400"}>{display}</span>
       </button>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-64 p-3">
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-72 p-3">
+        {/* Acceso directo a "Hoy" — el caso más común con diferencia (una
+            fecha de curso casi siempre es la de hoy o un día muy reciente),
+            un toque en vez de navegar el calendario. Vive en el componente
+            compartido, no en cada pantalla que lo usa. */}
+        <button
+          type="button"
+          onClick={selectToday}
+          className="mb-2 flex min-h-9 w-full items-center justify-center gap-1.5 rounded-md text-xs font-medium"
+          style={{ backgroundColor: "#F0FDFA", color: TEAL }}
+        >
+          {t("datePicker.today")}
+        </button>
         <div className="mb-2 flex items-center justify-between">
-          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
           <span className="text-sm font-semibold text-gray-800">{months[viewM]} {viewY}</span>
-          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
         </div>
         <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
           {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}
@@ -486,7 +505,7 @@ export function DatePicker({ value, onChange, placeholder }) {
                 aria-label={d ? t("datePicker.dayAriaLabel", { day: d, month: months[viewM] }) : undefined}
                 aria-selected={isSelected || undefined}
                 onClick={() => d && selectDay(d)}
-                className="flex h-9 items-center justify-center rounded-md text-xs transition-colors"
+                className="flex h-10 items-center justify-center rounded-md text-xs transition-colors"
                 style={isSelected ? { backgroundColor: TEAL, color: "white", fontWeight: 600 } : isToday ? { color: TEAL, fontWeight: 600 } : { color: d ? "#374151" : "transparent" }}
               >
                 {d || ""}
