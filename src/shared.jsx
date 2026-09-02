@@ -299,15 +299,29 @@ export function Field({ label, hint, children }) {
       <span className="flex items-center gap-0.5 text-xs font-medium text-gray-500">
         {label}
         {hint && (
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); setShowHint((v) => !v); }}
-            aria-expanded={showHint}
-            aria-label={showHint ? t("field.hideHelp") : t("field.help")}
-            className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-gray-400"
-          >
-            <HelpCircle size={13} aria-hidden="true" />
-          </button>
+          // El objetivo táctil de 44×44 (convención #7, CLAUDE.md) se logra
+          // con un botón ABSOLUTO superpuesto a un icono de 14×14 en vez de
+          // un botón de 44×44 dentro del propio flujo de la fila — con
+          // min-h-11 en flujo normal, esta fila de etiqueta se volvía más
+          // alta que la de cualquier campo vecino sin hint (mismo grid de 2
+          // columnas), lo que descuadraba visualmente el formulario y
+          // provocaba un salto real al cambiar de tipo de movimiento en
+          // MovementSheet.jsx (bug reportado 2026-09-02: el campo "Importe"
+          // de Ajuste de compañeros, el único con hint en toda la app). El
+          // icono sigue teniendo su tamaño visual normal; el área
+          // pulsable real sigue siendo 44×44, solo que ya no participa en
+          // el alto de la fila.
+          <span className="relative inline-flex h-3.5 w-3.5 shrink-0">
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); setShowHint((v) => !v); }}
+              aria-expanded={showHint}
+              aria-label={showHint ? t("field.hideHelp") : t("field.help")}
+              className="absolute -inset-[15px] flex items-center justify-center text-gray-400"
+            >
+              <HelpCircle size={13} aria-hidden="true" />
+            </button>
+          </span>
         )}
       </span>
       {hint && showHint && <span className="-mt-0.5 text-[11px] italic text-gray-400">{hint}</span>}
