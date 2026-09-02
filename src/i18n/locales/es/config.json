@@ -194,19 +194,54 @@
     "generarEnlace": "Generar enlace",
     "regenerarContrasenaTitulo": "Regenerar contraseña",
     "regenerarContrasenaMensaje": "La contraseña actual de <strong>{{nickname}}</strong> dejará de funcionar de inmediato. Deberá crear una nueva desde un enlace de activación nuevo — sus datos no se ven afectados.",
-    "regenerar": "Regenerar"
+    "regenerar": "Regenerar",
+    "generarInvitacion": "Generar enlace de invitación",
+    "soloSuperadminInvitacion": "Solo un superadmin puede generar enlaces de invitación.",
+    "noSePudoGenerarInvitacion": "No se pudo generar el enlace de invitación.",
+    "enlaceInvitacionTitulo": "Enlace de invitación",
+    "enlaceInvitacionDescripcion": "Válido 24 horas y de un solo uso. Compártelo con la persona que quieres invitar — podrá registrarse aunque el registro externo esté cerrado."
   },
   "sections": {
-    "escuelas": { "label": "Escuelas", "description": "Dónde impartes, con su color" },
-    "cursos": { "label": "Cursos", "description": "Qué impartes, con su color" },
-    "tarifas": { "label": "Tarifas", "description": "Cuánto cobras por escuela y curso" },
-    "tiposPago": { "label": "Tipos de pago", "description": "Por persona, por curso..." },
-    "estadosPago": { "label": "Estados de pago", "description": "Pendiente, cobrado..." },
-    "monedas": { "label": "Monedas", "description": "Catálogo disponible en toda la app" },
-    "navegacion": { "label": "Colores de navegación", "description": "Identidad visual de cada área" },
-    "ajustes": { "label": "Ajustes generales", "description": "Icono de carga de la app" },
-    "usuarios": { "label": "Usuarios", "description": "Cuentas con acceso a la app" },
-    "datasets": { "label": "Datasets iniciales", "description": "Configuración clonada al crear una cuenta" }
+    "escuelas": {
+      "label": "Escuelas",
+      "description": "Dónde impartes, con su color"
+    },
+    "cursos": {
+      "label": "Cursos",
+      "description": "Qué impartes, con su color"
+    },
+    "tarifas": {
+      "label": "Tarifas",
+      "description": "Cuánto cobras por escuela y curso"
+    },
+    "tiposPago": {
+      "label": "Tipos de pago",
+      "description": "Por persona, por curso..."
+    },
+    "estadosPago": {
+      "label": "Estados de pago",
+      "description": "Pendiente, cobrado..."
+    },
+    "monedas": {
+      "label": "Monedas",
+      "description": "Catálogo disponible en toda la app"
+    },
+    "navegacion": {
+      "label": "Colores de navegación",
+      "description": "Identidad visual de cada área"
+    },
+    "ajustes": {
+      "label": "Ajustes generales",
+      "description": "Icono de carga de la app"
+    },
+    "usuarios": {
+      "label": "Usuarios",
+      "description": "Cuentas con acceso a la app"
+    },
+    "datasets": {
+      "label": "Datasets iniciales",
+      "description": "Configuración clonada al crear una cuenta"
+    }
   },
   "menu": {
     "administracion": "Administración",

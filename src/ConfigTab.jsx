@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
-  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database,
+  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2,
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
 import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle } from "./shared";
@@ -689,7 +689,12 @@ function UserDetailSheet({
 // enlace de un solo uso que copiar/compartir). Mismo patrón visual que el
 // fallback de email de CreateUserSheet (justo abajo), extraído aquí porque
 // ahora lo usan varias acciones, no solo el alta.
-function ActivationLinkPanel({ title, description, link, onClose }) {
+// hideMockEmailButton (Release V1, 2026-09-02): el botón "simular envío"
+// de más abajo solo tiene sentido cuando ESTE panel es el fallback de un
+// intento real de enviar un email (alta, regenerar enlace/contraseña) —
+// generar un enlace de invitación nunca intenta enviar ningún email, así
+// que mostrarlo ahí sería confuso, no solo temporalmente irrelevante.
+function ActivationLinkPanel({ title, description, link, onClose, hideMockEmailButton = false }) {
   const { t } = useTranslation("config");
   const toast = useToast();
   const copyLink = async () => {
@@ -728,12 +733,14 @@ function ActivationLinkPanel({ title, description, link, onClose }) {
           envió, sin llamar a Resend — solo para probar visualmente ese
           camino mientras el dominio sigue sin verificar. No toca ningún
           estado real del backend. */}
-      <button
-        onClick={() => { toast?.success(t("activationLinkPanel.mockEmailEnviado")); onClose(); }}
-        className="mt-2 flex min-h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 text-xs font-medium text-amber-700"
-      >
-        {t("activationLinkPanel.simularEnvioMock")}
-      </button>
+      {!hideMockEmailButton && (
+        <button
+          onClick={() => { toast?.success(t("activationLinkPanel.mockEmailEnviado")); onClose(); }}
+          className="mt-2 flex min-h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 text-xs font-medium text-amber-700"
+        >
+          {t("activationLinkPanel.simularEnvioMock")}
+        </button>
+      )}
     </Sheet>
   );
 }
@@ -970,6 +977,7 @@ function UsersDirectory({ profile }) {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [linkPanel, setLinkPanel] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [generatingInvitation, setGeneratingInvitation] = useState(false);
   const toast = useToast();
 
   const applyResult = ({ data, error }) => {
@@ -1271,6 +1279,35 @@ function UsersDirectory({ profile }) {
     }
   };
 
+  // Enlace de invitación (Release V1, 2026-09-02) — permite autoregistrarse
+  // aunque app_config.allow_external_registration esté desactivado, sin
+  // dar de alta la cuenta directamente (a diferencia de "Crear usuario", el
+  // superadmin no elige nombre/email/dataset aquí; el resultado se muestra
+  // en el mismo ActivationLinkPanel que ya usan regenerar enlace/contraseña).
+  const generateInvitationLink = async () => {
+    setGeneratingInvitation(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const res = await fetch("/api/generate-invitation-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminInvitacion"), fallback: t("usersDirectory.noSePudoGenerarInvitacion") }));
+      setLinkPanel({
+        title: t("usersDirectory.enlaceInvitacionTitulo"),
+        description: t("usersDirectory.enlaceInvitacionDescripcion"),
+        link: payload.invitation_link,
+        hideMockEmailButton: true,
+      });
+    } catch (err) {
+      toast?.error(err.message || t("usersDirectory.noSePudoGenerarInvitacion"));
+    } finally {
+      setGeneratingInvitation(false);
+    }
+  };
+
   // RLS de profiles ya permite a un admin actualizar cualquier fila salvo
   // is_admin/is_superadmin (protegidos aparte por trigger) — no hace falta
   // ningún endpoint de servidor nuevo para nombre/apellidos/nickname.
@@ -1317,6 +1354,20 @@ function UsersDirectory({ profile }) {
             style={{ backgroundColor: TEAL }}
           >
             <UserPlus size={15} aria-hidden="true" /> {t("usersDirectory.crearUsuario")}
+          </button>
+        )}
+        {/* Enlace de invitación (Release V1, 2026-09-02) — junto a "Crear
+            usuario", mismo nivel de permiso. Deja autoregistrarse a quien lo
+            reciba aunque el registro externo general esté cerrado, sin que
+            el superadmin tenga que rellenar los datos de la cuenta a mano. */}
+        {profile?.is_superadmin && (
+          <button
+            onClick={generateInvitationLink}
+            disabled={generatingInvitation}
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-gray-200 px-3 text-sm font-medium text-gray-600 disabled:opacity-50"
+          >
+            {generatingInvitation ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Link2 size={15} aria-hidden="true" />}
+            {t("usersDirectory.generarInvitacion")}
           </button>
         )}
       </div>
@@ -1384,6 +1435,7 @@ function UsersDirectory({ profile }) {
           description={linkPanel.description}
           link={linkPanel.link}
           onClose={() => setLinkPanel(null)}
+          hideMockEmailButton={linkPanel.hideMockEmailButton}
         />
       )}
 

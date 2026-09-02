@@ -28,6 +28,8 @@ function makeClient({
   configResult = { data: { allow_external_registration: true }, error: null },
   defaultDatasetResult = { data: null, error: null },
   fallbackDatasetResult = { data: [{ key: "ihasia" }], error: null },
+  invitationLookupResult = { data: null, error: null },
+  invitationUpdateResult = { error: null },
 } = {}) {
   const configMaybeSingle = vi.fn().mockResolvedValue(configResult);
   const configEq = vi.fn().mockReturnValue({ maybeSingle: configMaybeSingle });
@@ -40,12 +42,19 @@ function makeClient({
   const datasetsEq = vi.fn(() => afterActiveEq);
   const datasetsSelect = vi.fn(() => ({ eq: datasetsEq }));
 
+  const invitationMaybeSingle = vi.fn().mockResolvedValue(invitationLookupResult);
+  const invitationSelectEq = vi.fn(() => ({ maybeSingle: invitationMaybeSingle }));
+  const invitationSelect = vi.fn(() => ({ eq: invitationSelectEq }));
+  const invitationUpdateEq = vi.fn().mockResolvedValue(invitationUpdateResult);
+  const invitationUpdate = vi.fn(() => ({ eq: invitationUpdateEq }));
+
   const from = vi.fn((table) => {
     if (table === "app_config") return { select: configSelect };
     if (table === "setup_datasets") return { select: datasetsSelect };
+    if (table === "invitation_links") return { select: invitationSelect, update: invitationUpdate };
     throw new Error(`tabla inesperada en el mock: ${table}`);
   });
-  return { from };
+  return { from, invitationUpdate, invitationUpdateEq };
 }
 
 beforeEach(() => {
@@ -165,5 +174,90 @@ it("incluye action_link en la respuesta si el email no se pudo enviar", async ()
   expect(result).toEqual({
     status: 200,
     payload: { email_sent: false, email_error: "Configuración de email incompleta.", action_link: "https://app.example/activate?token=x" },
+  });
+});
+
+// Release V1, 2026-09-02 — enlace de invitación: permite registrarse
+// aunque allow_external_registration esté desactivado, con prioridad
+// total sobre ese criterio general.
+describe("invite_token (enlace de invitación)", () => {
+  const FUTURE = new Date(Date.now() + 60_000).toISOString();
+  const PAST = new Date(Date.now() - 60_000).toISOString();
+  const TOKEN = "11111111-1111-1111-1111-111111111111";
+
+  function requestWithInvite(overrides = {}) {
+    return request({ body: JSON.stringify({ ...VALID_BODY, invite_token: TOKEN, ...overrides }) });
+  }
+
+  it("token válido: provisiona aunque el registro externo esté desactivado, sin comprobar allow_external_registration", async () => {
+    const client = makeClient({
+      configResult: { data: { allow_external_registration: false }, error: null },
+      invitationLookupResult: { data: { token: TOKEN, expires_at: FUTURE, used_at: null }, error: null },
+    });
+    getServiceRoleClient.mockReturnValue(client);
+
+    const result = await handleExternalRegister(requestWithInvite());
+
+    expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ reason: "external_signup" }));
+    expect(result).toEqual({ status: 200, payload: { email_sent: true } });
+  });
+
+  it("marca la invitación como usada tras un alta con éxito", async () => {
+    const client = makeClient({
+      invitationLookupResult: { data: { token: TOKEN, expires_at: FUTURE, used_at: null }, error: null },
+    });
+    getServiceRoleClient.mockReturnValue(client);
+
+    await handleExternalRegister(requestWithInvite());
+
+    expect(client.invitationUpdate).toHaveBeenCalledWith({ used_at: expect.any(String) });
+    expect(client.invitationUpdateEq).toHaveBeenCalledWith("token", TOKEN);
+  });
+
+  it("token inexistente: 403 con el mensaje de enlace de invitación inválido, sin llamar a provisionUser", async () => {
+    getServiceRoleClient.mockReturnValue(makeClient({ invitationLookupResult: { data: null, error: null } }));
+
+    const result = await handleExternalRegister(requestWithInvite());
+
+    expect(provisionUser).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      status: 403,
+      payload: { error: "Este enlace de invitación ya no es válido. Puede que haya caducado o que ya se haya usado. Pide uno nuevo a quien te invitó." },
+    });
+  });
+
+  it("token caducado: 403, sin llamar a provisionUser", async () => {
+    getServiceRoleClient.mockReturnValue(makeClient({
+      invitationLookupResult: { data: { token: TOKEN, expires_at: PAST, used_at: null }, error: null },
+    }));
+
+    const result = await handleExternalRegister(requestWithInvite());
+
+    expect(provisionUser).not.toHaveBeenCalled();
+    expect(result.status).toBe(403);
+  });
+
+  it("token ya usado: 403, sin llamar a provisionUser", async () => {
+    getServiceRoleClient.mockReturnValue(makeClient({
+      invitationLookupResult: { data: { token: TOKEN, expires_at: FUTURE, used_at: "2026-09-01T00:00:00Z" }, error: null },
+    }));
+
+    const result = await handleExternalRegister(requestWithInvite());
+
+    expect(provisionUser).not.toHaveBeenCalled();
+    expect(result.status).toBe(403);
+  });
+
+  it("email ya registrado con invite_token: no marca la invitación como usada (nada nuevo se creó)", async () => {
+    const client = makeClient({
+      invitationLookupResult: { data: { token: TOKEN, expires_at: FUTURE, used_at: null }, error: null },
+    });
+    getServiceRoleClient.mockReturnValue(client);
+    provisionUser.mockResolvedValue({ error: { message: "A user with this email address has already been registered" } });
+
+    const result = await handleExternalRegister(requestWithInvite());
+
+    expect(result).toEqual({ status: 200, payload: { email_sent: true } });
+    expect(client.invitationUpdate).not.toHaveBeenCalled();
   });
 });

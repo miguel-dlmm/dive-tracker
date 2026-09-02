@@ -402,6 +402,24 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     expect(await screen.findByText(/https:\/\/app\.example\/activate/)).toBeInTheDocument();
   });
 
+  it("genera un enlace de invitación (superadmin) y lo muestra en el panel, sin el botón de simular envío", async () => {
+    const user = userEvent.setup();
+    mockProfilesFrom(null);
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) }) // list-user-status inicial
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ invitation_link: "https://app.example/?invite=abc-123", expires_at: "2026-09-03T00:00:00Z" }) });
+
+    await openUsuarios(user);
+    await user.click(screen.getByRole("button", { name: "Generar enlace de invitación" }));
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/generate-invitation-link", expect.objectContaining({
+      method: "POST",
+      headers: expect.objectContaining({ Authorization: "Bearer tok" }),
+    })));
+    expect(await screen.findByText(/invite=abc-123/)).toBeInTheDocument();
+    expect(screen.queryByText(/simular/i)).not.toBeInTheDocument();
+  });
+
   it("regenerar enlace no muestra el panel manual cuando el email se envía correctamente", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);

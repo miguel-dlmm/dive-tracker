@@ -194,19 +194,54 @@
     "generarEnlace": "Generate link",
     "regenerarContrasenaTitulo": "Reset password",
     "regenerarContrasenaMensaje": "{{nickname}}'s current password will stop working immediately. They'll need to set a new one from a new activation link — their data isn't affected.",
-    "regenerar": "Reset"
+    "regenerar": "Reset",
+    "generarInvitacion": "Generate invitation link",
+    "soloSuperadminInvitacion": "Only a superadmin can generate invitation links.",
+    "noSePudoGenerarInvitacion": "Couldn't generate the invitation link.",
+    "enlaceInvitacionTitulo": "Invitation link",
+    "enlaceInvitacionDescripcion": "Valid for 24 hours, single use. Share it with the person you want to invite — they'll be able to register even if external registration is closed."
   },
   "sections": {
-    "escuelas": { "label": "Schools", "description": "Where you teach, with its color" },
-    "cursos": { "label": "Courses", "description": "What you teach, with its color" },
-    "tarifas": { "label": "Rates", "description": "What you charge by school and course" },
-    "tiposPago": { "label": "Payment types", "description": "Per person, per course..." },
-    "estadosPago": { "label": "Payment statuses", "description": "Pending, paid..." },
-    "monedas": { "label": "Currencies", "description": "Catalog available across the app" },
-    "navegacion": { "label": "Navigation colors", "description": "Visual identity for each area" },
-    "ajustes": { "label": "General settings", "description": "The app's loading icon" },
-    "usuarios": { "label": "Users", "description": "Accounts with access to the app" },
-    "datasets": { "label": "Starting datasets", "description": "Configuration cloned when creating an account" }
+    "escuelas": {
+      "label": "Schools",
+      "description": "Where you teach, with its color"
+    },
+    "cursos": {
+      "label": "Courses",
+      "description": "What you teach, with its color"
+    },
+    "tarifas": {
+      "label": "Rates",
+      "description": "What you charge by school and course"
+    },
+    "tiposPago": {
+      "label": "Payment types",
+      "description": "Per person, per course..."
+    },
+    "estadosPago": {
+      "label": "Payment statuses",
+      "description": "Pending, paid..."
+    },
+    "monedas": {
+      "label": "Currencies",
+      "description": "Catalog available across the app"
+    },
+    "navegacion": {
+      "label": "Navigation colors",
+      "description": "Visual identity for each area"
+    },
+    "ajustes": {
+      "label": "General settings",
+      "description": "The app's loading icon"
+    },
+    "usuarios": {
+      "label": "Users",
+      "description": "Accounts with access to the app"
+    },
+    "datasets": {
+      "label": "Starting datasets",
+      "description": "Configuration cloned when creating an account"
+    }
   },
   "menu": {
     "administracion": "Administration",

@@ -48,6 +48,36 @@ it("enviar el formulario llama a /api/external-register con los datos y muestra 
   expect(await screen.findByText(/Te hemos enviado un email para confirmar tu cuenta/)).toBeInTheDocument();
 });
 
+// Release V1, 2026-09-02 (enlace de invitación): cuando AuthGate detecta
+// ?invite=... en la URL, pasa ese token a RegisterScreen — se manda tal
+// cual en el body para que el servidor pueda saltarse
+// allow_external_registration si es válido (ver externalRegister.js).
+it("con inviteToken, lo incluye en el body como invite_token", async () => {
+  const user = userEvent.setup();
+  renderWithToast(<RegisterScreen onBack={vi.fn()} inviteToken="abc-123" />);
+
+  await user.type(screen.getByLabelText("Email"), "diver@example.com");
+  await user.type(screen.getByLabelText("Nickname"), "ada");
+  await user.click(screen.getByRole("button", { name: "Registrarme" }));
+
+  await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
+    body: JSON.stringify({ email: "diver@example.com", first_name: "", last_name: "", nickname: "ada", language: "es", invite_token: "abc-123" }),
+  })));
+});
+
+it("sin inviteToken, no incluye invite_token en el body (comportamiento normal)", async () => {
+  const user = userEvent.setup();
+  renderWithToast(<RegisterScreen onBack={vi.fn()} />);
+
+  await user.type(screen.getByLabelText("Email"), "diver@example.com");
+  await user.type(screen.getByLabelText("Nickname"), "ada");
+  await user.click(screen.getByRole("button", { name: "Registrarme" }));
+
+  await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+  const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+  expect(body.invite_token).toBeUndefined();
+});
+
 // Release V1, Fase 2 (multidioma): el idioma se elige en el propio
 // formulario de registro y se envía junto al resto de datos del alta.
 it("cambiar el idioma en el selector se envía en el registro", async () => {

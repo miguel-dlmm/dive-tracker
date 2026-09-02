@@ -881,6 +881,26 @@ drop policy if exists "superadmin insert own view" on public.deployment_notice_v
 create policy "superadmin insert own view" on public.deployment_notice_views
   for insert with check (public.is_superadmin(auth.uid()) and user_id = auth.uid());
 
+-- ---------- Enlaces de invitación (Release V1) ----------
+-- Enlaces de un solo uso (24h) generados por un superadmin (Configuración →
+-- Usuarios) que permiten autoregistrarse aunque
+-- app_config.allow_external_registration esté desactivado — ver
+-- server/users/generateInvitationLink.js / externalRegister.js. Migración
+-- 0009-invitation-links.sql.
+create table if not exists public.invitation_links (
+  token uuid primary key default gen_random_uuid(),
+  created_by uuid references auth.users(id),
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null,
+  used_at timestamptz
+);
+comment on table public.invitation_links is 'Enlaces de invitación de un solo uso (24h) — Release V1. Permiten autoregistrarse aunque app_config.allow_external_registration esté desactivado.';
+
+alter table public.invitation_links enable row level security;
+-- Sin ninguna policy, a propósito: todo el acceso real pasa por endpoints
+-- de servidor con service role (ignora RLS) — ver 0009-invitation-links.sql
+-- para el razonamiento completo.
+
 -- ---------- Notas de diseño del esquema ----------
 -- - No existe tabla "activity_types" (Instructor/Comisión) — se eliminó al
 --   separar Work Log y Comisiones en flujos independientes.

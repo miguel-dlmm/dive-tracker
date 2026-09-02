@@ -32,7 +32,13 @@ const emptyForm = { email: "", first_name: "", last_name: "", nickname: "" };
 // etiqueta visual.
 const LANGUAGE_NATIVE_NAME = { es: "Español", en: "English" };
 
-export default function RegisterScreen({ onBack }) {
+// inviteToken (opcional, Release V1 2026-09-02): presente cuando se llega
+// aquí desde un enlace de invitación de un solo uso (?invite=... en la
+// URL, ver AuthGate en App.jsx) — se manda tal cual en la petición para
+// que el servidor pueda saltarse allow_external_registration si el token
+// es válido (ver externalRegister.js). Sin inviteToken, comportamiento
+// idéntico al registro externo normal de siempre.
+export default function RegisterScreen({ onBack, inviteToken }) {
   const { t } = useTranslation("auth");
   const [form, setForm] = useState(emptyForm);
   const [language, setLanguage] = useState(() => (SUPPORTED_LANGUAGES.includes(i18n.language) ? i18n.language : "es"));
@@ -64,7 +70,7 @@ export default function RegisterScreen({ onBack }) {
       const res = await fetch("/api/external-register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, language }),
+        body: JSON.stringify({ ...form, language, ...(inviteToken ? { invite_token: inviteToken } : {}) }),
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) {

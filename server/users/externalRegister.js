@@ -30,6 +30,33 @@ import { provisionUser, friendlyError } from "./provisionUser.js";
 // tienen cuenta en Ocean Flow.
 const EMAIL_ALREADY_REGISTERED = "already been registered";
 
+// Mensaje de un enlace de invitación (Release V1, 2026-09-02) inválido,
+// caducado o ya usado — mismo tono cercano que el resto de mensajes de
+// enlaces inválidos de la app (ver ACTIVATION_LINK_INVALID en
+// useSession.js). Un token roto siempre falla explícitamente: nunca cae en
+// silencio al criterio general de allow_external_registration, aunque este
+// esté activado — quien llega por un enlace de invitación espera que ESE
+// enlace funcione, no una coincidencia con la configuración general.
+const INVITATION_LINK_INVALID =
+  "Este enlace de invitación ya no es válido. Puede que haya caducado o " +
+  "que ya se haya usado. Pide uno nuevo a quien te invitó.";
+
+// Comprueba un invitation_links.token: debe existir, no estar caducado y
+// no haber sido usado ya. Devuelve la fila si es válido, o null si no —
+// nunca lanza, un token roto es un caso esperado, no un error de
+// infraestructura.
+async function validateInvitationToken(client, inviteToken) {
+  const { data, error } = await client
+    .from("invitation_links")
+    .select("token, expires_at, used_at")
+    .eq("token", inviteToken)
+    .maybeSingle();
+  if (error || !data) return null;
+  if (data.used_at) return null;
+  if (new Date(data.expires_at).getTime() <= Date.now()) return null;
+  return data;
+}
+
 // Dataset a usar para un registro externo: el activo marcado is_default,
 // o si ningún admin lo ha marcado todavía (instalación recién migrada,
 // antes de que el superadmin abra el editor de datasets por primera vez),
@@ -80,7 +107,7 @@ export async function handleExternalRegister({ method, body }) {
     return { status: 400, payload: { error: "Cuerpo de la petición inválido." } };
   }
 
-  const { email, first_name, last_name, nickname, language } = input;
+  const { email, first_name, last_name, nickname, language, invite_token } = input;
   if (!email || !nickname) {
     return { status: 400, payload: { error: "Email y nickname son obligatorios." } };
   }
@@ -91,17 +118,30 @@ export async function handleExternalRegister({ method, body }) {
 
   const client = getServiceRoleClient();
 
-  const { data: configRow, error: configError } = await client
-    .from("app_config")
-    .select("allow_external_registration")
-    .eq("id", true)
-    .maybeSingle();
-  if (configError) {
-    console.error("external-register: no se pudo comprobar app_config", configError);
-    return { status: 500, payload: { error: "No se pudo comprobar la configuración del servidor." } };
-  }
-  if (!configRow?.allow_external_registration) {
-    return { status: 403, payload: { error: "El registro externo no está habilitado." } };
+  // Un enlace de invitación (Release V1, 2026-09-02) se comprueba ANTES que
+  // allow_external_registration y con prioridad total sobre él — un token
+  // roto siempre falla explícitamente, nunca cae en silencio al criterio
+  // general (ver INVITATION_LINK_INVALID arriba). Sin invite_token, el
+  // comportamiento es exactamente el de antes.
+  let invitation = null;
+  if (invite_token) {
+    invitation = await validateInvitationToken(client, invite_token);
+    if (!invitation) {
+      return { status: 403, payload: { error: INVITATION_LINK_INVALID } };
+    }
+  } else {
+    const { data: configRow, error: configError } = await client
+      .from("app_config")
+      .select("allow_external_registration")
+      .eq("id", true)
+      .maybeSingle();
+    if (configError) {
+      console.error("external-register: no se pudo comprobar app_config", configError);
+      return { status: 500, payload: { error: "No se pudo comprobar la configuración del servidor." } };
+    }
+    if (!configRow?.allow_external_registration) {
+      return { status: 403, payload: { error: "El registro externo no está habilitado." } };
+    }
   }
 
   const datasetKey = await pickDatasetKey(client);
@@ -123,10 +163,25 @@ export async function handleExternalRegister({ method, body }) {
     if (result.error.message?.includes(EMAIL_ALREADY_REGISTERED)) {
       // Misma respuesta que un alta con éxito, sin crear nada nuevo ni
       // reenviar ningún email — nunca revela que ese email ya existía.
+      // La invitación (si la hay) NO se marca usada aquí a propósito: no
+      // se ha creado ninguna cuenta nueva, así que quien se equivocó de
+      // email puede reintentar con el mismo enlace mientras siga vigente.
       return { status: 200, payload: { email_sent: true } };
     }
     console.error(result.error);
     return { status: 400, payload: { error: friendlyError(result.error.message) } };
+  }
+
+  // Alta real completada — consume la invitación (un solo uso de verdad,
+  // no solo por convención de cliente). Un fallo aquí no debe bloquear la
+  // respuesta de éxito: la cuenta ya existe, es preferible un enlace que
+  // en teoría se pudiera reintentar a perder un alta ya hecha.
+  if (invitation) {
+    const { error: consumeError } = await client
+      .from("invitation_links")
+      .update({ used_at: new Date().toISOString() })
+      .eq("token", invitation.token);
+    if (consumeError) console.error("external-register: no se pudo marcar la invitación como usada", consumeError);
   }
 
   return {
