@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabaseClient";
 import { DOCUMENT_TYPE as PRIVACY_TYPE, VERSION as PRIVACY_VERSION } from "./legal/privacyPolicy";
 import { DOCUMENT_TYPE as TERMS_TYPE, VERSION as TERMS_VERSION } from "./legal/termsOfUse";
+import { meetsPasswordPolicy } from "./passwordPolicy";
 
 // Documentos legales vigentes — la versión es una constante de código (ver
 // legal/privacyPolicy.js), no hay tabla legal_documents todavía (MVP).
@@ -113,6 +114,14 @@ export function useSession() {
   // aviso justo después de mostrarlo. Solo signIn() lo reinicia, al empezar
   // un intento nuevo.
   const [accountBanned, setAccountBanned] = useState(false);
+  // Cuenta ya existente cuya contraseña actual no cumple la política
+  // reforzada (1 mayúscula + 1 símbolo, ver passwordPolicy.js) — se
+  // detecta en signIn(), es la única vez que este hook tiene la
+  // contraseña en texto plano. Igual que accountBanned, solo signIn()
+  // decide su valor: una recarga que restaura una sesión ya existente
+  // (resolveSessionState, más abajo) no puede volver a comprobar esto, no
+  // hay contraseña en texto plano disponible fuera de un login explícito.
+  const [forcedPasswordUpdate, setForcedPasswordUpdate] = useState(false);
 
   useEffect(() => {
     // setSession/setProfile/setConsents se llaman siempre juntos, DESPUÉS de
@@ -173,6 +182,9 @@ export function useSession() {
       if (isBannedError(error)) setAccountBanned(true);
       throw error;
     }
+    // Única oportunidad de comprobar la política reforzada contra una
+    // cuenta ya existente — ver comentario del useState de arriba.
+    setForcedPasswordUpdate(!meetsPasswordPolicy(password));
   }, []);
 
   const signOut = useCallback(() => supabase.auth.signOut(), []);
@@ -193,6 +205,14 @@ export function useSession() {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error && error.code !== "same_password") throw error;
   }, []);
+
+  // Guarda la contraseña nueva para una cuenta con forcedPasswordUpdate en
+  // curso y cierra ese gate — reutiliza completePasswordChange de arriba en
+  // vez de duplicar la llamada a supabase.auth.updateUser.
+  const updateForcedPassword = useCallback(async (newPassword) => {
+    await completePasswordChange(newPassword);
+    setForcedPasswordUpdate(false);
+  }, [completePasswordChange]);
 
   // Marca que la fase de contraseña de la activación ha terminado — NO
   // significa que se haya completado todo el onboarding, ver
@@ -376,6 +396,8 @@ export function useSession() {
     profile,
     loading,
     accountBanned,
+    forcedPasswordUpdate,
+    updateForcedPassword,
     signIn,
     signOut,
     completePasswordChange,

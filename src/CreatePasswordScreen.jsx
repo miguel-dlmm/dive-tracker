@@ -1,57 +1,10 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Waves, Loader2, Eye, EyeOff, Check } from "lucide-react";
+import { Waves, Loader2 } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
-import { inputCls, Field } from "./shared";
 import LegalConsentFields from "./legal/LegalConsentFields";
-
-const MIN_LENGTH = 8;
-
-// Fila de un requisito de contraseña con feedback en vivo: círculo relleno
-// con check cuando se cumple, anillo vacío cuando no.
-function RequirementRow({ met, children }) {
-  return (
-    <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: met ? TEAL : "#9CA3AF" }}>
-      <span
-        className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full ${met ? "" : "border border-gray-300"}`}
-        style={met ? { backgroundColor: TEAL } : undefined}
-        aria-hidden="true"
-      >
-        {met && <Check size={9} className="text-white" strokeWidth={3} />}
-      </span>
-      {children}
-    </div>
-  );
-}
-
-// Campo de contraseña con botón de mostrar/ocultar (reduce la ansiedad de
-// "¿lo he escrito bien?" sin depender solo del campo de confirmación — ver
-// recomendación de NN/g sobre creación de contraseñas).
-function PasswordField({ label, value, onChange, autoComplete, autoFocus, visible, onToggleVisible }) {
-  const { t } = useTranslation("auth");
-  return (
-    <Field label={label}>
-      <div className="relative">
-        <input
-          type={visible ? "text" : "password"}
-          value={value}
-          onChange={onChange}
-          autoComplete={autoComplete}
-          autoFocus={autoFocus}
-          className={`${inputCls} w-full pr-11`}
-        />
-        <button
-          type="button"
-          onClick={onToggleVisible}
-          aria-label={visible ? t("password.hidePassword") : t("password.showPassword")}
-          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-gray-400 hover:text-gray-600"
-        >
-          {visible ? <EyeOff size={17} aria-hidden="true" /> : <Eye size={17} aria-hidden="true" />}
-        </button>
-      </div>
-    </Field>
-  );
-}
+import { PasswordField, RequirementRow } from "./auth/PasswordFields";
+import { PASSWORD_MIN_LENGTH, hasUppercase, hasSymbol } from "./passwordPolicy";
 
 // onSubmit: (newPassword) => Promise — en AuthGate es activateAccount() de
 // useSession con tokenHash/type/expectedEmail ya aplicados (ver App.jsx).
@@ -71,9 +24,11 @@ export default function CreatePasswordScreen({ onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const lengthOk = password.length >= MIN_LENGTH;
+  const lengthOk = password.length >= PASSWORD_MIN_LENGTH;
+  const uppercaseOk = hasUppercase(password);
+  const symbolOk = hasSymbol(password);
   const matchOk = confirm.length > 0 && password === confirm;
-  const canSubmit = lengthOk && matchOk && legalAccepted && !loading;
+  const canSubmit = lengthOk && uppercaseOk && symbolOk && matchOk && legalAccepted && !loading;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -118,6 +73,8 @@ export default function CreatePasswordScreen({ onSubmit }) {
 
           <div className="space-y-1 rounded-md bg-gray-50 px-3 py-2.5">
             <RequirementRow met={lengthOk}>{t("password.lengthRequirement")}</RequirementRow>
+            <RequirementRow met={uppercaseOk}>{t("password.uppercaseRequirement")}</RequirementRow>
+            <RequirementRow met={symbolOk}>{t("password.symbolRequirement")}</RequirementRow>
             <RequirementRow met={matchOk}>{t("password.matchRequirement")}</RequirementRow>
           </div>
 

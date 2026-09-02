@@ -5,23 +5,32 @@ import { NAVY, TEAL, BG, BODY_FONT } from "./App";
 import { PasswordField, RequirementRow } from "./auth/PasswordFields";
 import { PASSWORD_MIN_LENGTH, hasUppercase, hasSymbol } from "./passwordPolicy";
 
-// Pantalla de "poner nueva contraseña" para la recuperación autoservicio
-// (ForgotPasswordScreen → email → aquí), deliberadamente SEPARADA de
-// CreatePasswordScreen: no incluye LegalConsentFields — la aceptación de
-// bases legales ya se hizo en el alta original y no debe repetirse solo
-// por recuperar una contraseña (encargo explícito 2026-09-01, ver
-// resetPassword() en useSession.js). RequirementRow/PasswordField viven en
-// ./auth/PasswordFields — extraídos de aquí y de CreatePasswordScreen al
-// aparecer un tercer sitio que los necesitaba (ForcedPasswordUpdateScreen,
-// 2026-09-02).
-
-// onSubmit: (newPassword) => Promise — en AuthGate es resetPassword() de
-// useSession con tokenHash/type/expectedEmail ya aplicados (ver App.jsx).
-// resetPassword lanza siempre un Error con un mensaje ya pensado para
-// mostrarse tal cual — nunca un error crudo de Supabase. Texto genérico de
-// respaldo (onSubmit lanza sin .message, no debería pasar) en
-// i18n/locales/*/auth.json → resetPassword.genericError.
-export default function ResetPasswordScreen({ onSubmit }) {
+// Pantalla de "actualiza tu contraseña" para cuentas YA EXISTENTES cuya
+// contraseña actual no cumple la política reforzada (1 mayúscula + 1
+// símbolo, ver passwordPolicy.js) — pedido explícito del usuario
+// 2026-09-02: "para las cuentas ya creadas, la primera vez que entren si
+// la contraseña no cumple, debería ir a la pantalla de crear contraseña,
+// sin bases legales y explicando claramente que tienen que crear la
+// contraseña porque se ha reforzado la seguridad de la aplicación".
+//
+// Deliberadamente SEPARADA de CreatePasswordScreen (primer acceso, con
+// bases legales) y de ResetPasswordScreen (recuperación autoservicio, sin
+// enlace de activación de por medio): esta pantalla aparece DESPUÉS de un
+// login normal con credenciales correctas — la sesión ya existe, así que
+// onSubmit es completePasswordChange() de useSession.js directamente
+// (supabase.auth.updateUser), no activateAccount ni resetPassword. Nunca
+// pide bases legales (ya se aceptaron en su momento) ni un enlace de un
+// solo uso (no hace falta, la persona ya demostró conocer su contraseña
+// actual al iniciar sesión).
+//
+// Limitación real, documentada aquí porque no es evidente desde fuera:
+// solo se puede comprobar la política contra la contraseña en texto plano
+// que la persona ACABA de escribir en el login (ver signIn en
+// useSession.js) — Supabase Auth nunca expone la contraseña de una cuenta
+// ya creada para comprobarla fuera de ese instante. Una sesión ya
+// restaurada de una recarga anterior no vuelve a pasar por esta
+// comprobación hasta el siguiente login explícito.
+export default function ForcedPasswordUpdateScreen({ onSubmit }) {
   const { t } = useTranslation("auth");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -44,7 +53,7 @@ export default function ResetPasswordScreen({ onSubmit }) {
     try {
       await onSubmit(password);
     } catch (err) {
-      setError(err.message || t("resetPassword.genericError"));
+      setError(err.message || t("forcedPasswordUpdate.genericError"));
       setLoading(false);
     }
   };
@@ -57,18 +66,18 @@ export default function ResetPasswordScreen({ onSubmit }) {
             <Waves size={22} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
           </div>
           <div className="text-center leading-tight">
-            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>{t("resetPassword.eyebrow")}</p>
-            <h1 className="mt-1 text-lg font-bold tracking-tight" style={{ color: NAVY }}>{t("resetPassword.title")}</h1>
+            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>{t("forcedPasswordUpdate.eyebrow")}</p>
+            <h1 className="mt-1 text-lg font-bold tracking-tight" style={{ color: NAVY }}>{t("forcedPasswordUpdate.title")}</h1>
           </div>
         </div>
 
         <p className="mb-6 text-center text-sm text-gray-500">
-          {t("resetPassword.description")}
+          {t("forcedPasswordUpdate.description")}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <PasswordField
-            label={t("resetPassword.newPasswordLabel")}
+            label={t("forcedPasswordUpdate.newPasswordLabel")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
@@ -85,7 +94,7 @@ export default function ResetPasswordScreen({ onSubmit }) {
           </div>
 
           <PasswordField
-            label={t("resetPassword.confirmPasswordLabel")}
+            label={t("forcedPasswordUpdate.confirmPasswordLabel")}
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             autoComplete="new-password"
@@ -102,11 +111,11 @@ export default function ResetPasswordScreen({ onSubmit }) {
             style={{ backgroundColor: TEAL }}
           >
             {loading && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
-            {t("resetPassword.submit")}
+            {t("forcedPasswordUpdate.submit")}
           </button>
 
           <p className="text-center text-[11px] text-gray-400">
-            {t("resetPassword.footNote")}
+            {t("forcedPasswordUpdate.footNote")}
           </p>
         </form>
       </div>

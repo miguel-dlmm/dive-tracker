@@ -548,6 +548,58 @@ describe("cuenta desactivada — login (signIn)", () => {
   });
 });
 
+describe("política de contraseña reforzada — login (signIn)", () => {
+  it("contraseña sin mayúscula ni símbolo: marca forcedPasswordUpdate tras un login correcto", async () => {
+    const { result } = await renderWithoutSession();
+    supabase.auth.signInWithPassword.mockResolvedValue({ error: null });
+
+    await act(async () => {
+      await result.current.signIn("cuenta@example.com", "password123");
+    });
+
+    expect(result.current.forcedPasswordUpdate).toBe(true);
+  });
+
+  it("contraseña que ya cumple la política: no marca forcedPasswordUpdate", async () => {
+    const { result } = await renderWithoutSession();
+    supabase.auth.signInWithPassword.mockResolvedValue({ error: null });
+
+    await act(async () => {
+      await result.current.signIn("cuenta@example.com", "Password123!");
+    });
+
+    expect(result.current.forcedPasswordUpdate).toBe(false);
+  });
+
+  it("credenciales incorrectas: no llega a comprobar la política (sigue en false)", async () => {
+    const { result } = await renderWithoutSession();
+    supabase.auth.signInWithPassword.mockResolvedValue({ error: { message: "Invalid login credentials", code: "invalid_credentials" } });
+
+    await act(async () => {
+      await expect(result.current.signIn("cuenta@example.com", "password123")).rejects.toBeTruthy();
+    });
+
+    expect(result.current.forcedPasswordUpdate).toBe(false);
+  });
+
+  it("updateForcedPassword guarda la contraseña nueva y cierra el gate", async () => {
+    const { result } = await renderWithoutSession();
+    supabase.auth.signInWithPassword.mockResolvedValue({ error: null });
+    await act(async () => {
+      await result.current.signIn("cuenta@example.com", "password123");
+    });
+    expect(result.current.forcedPasswordUpdate).toBe(true);
+
+    supabase.auth.updateUser.mockResolvedValue({ error: null });
+    await act(async () => {
+      await result.current.updateForcedPassword("Password123!");
+    });
+
+    expect(supabase.auth.updateUser).toHaveBeenCalledWith({ password: "Password123!" });
+    expect(result.current.forcedPasswordUpdate).toBe(false);
+  });
+});
+
 describe("cuenta desactivada — activateAccount (pantalla de activación abierta o enlace nuevo)", () => {
   it("verifyOtp falla con user_banned (enlace nuevo para una cuenta ya desactivada): mensaje unificado, no 'enlace inválido'", async () => {
     const { result } = await renderWithoutSession();

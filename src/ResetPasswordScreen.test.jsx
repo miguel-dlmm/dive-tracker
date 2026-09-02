@@ -32,12 +32,34 @@ describe("ResetPasswordScreen", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it("mantiene el botón deshabilitado si la contraseña no tiene ninguna mayúscula", async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<ResetPasswordScreen onSubmit={onSubmit} />);
+
+    await fillPasswords(user, { password: "password123!", confirm: "password123!" });
+
+    expect(screen.getByRole("button", { name: /guardar nueva contraseña/i })).toBeDisabled();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("mantiene el botón deshabilitado si la contraseña no tiene ningún símbolo", async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<ResetPasswordScreen onSubmit={onSubmit} />);
+
+    await fillPasswords(user, { password: "Password123", confirm: "Password123" });
+
+    expect(screen.getByRole("button", { name: /guardar nueva contraseña/i })).toBeDisabled();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("mantiene el botón deshabilitado si las contraseñas no coinciden", async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
     render(<ResetPasswordScreen onSubmit={onSubmit} />);
 
-    await fillPasswords(user, { password: "password123", confirm: "password124" });
+    await fillPasswords(user, { password: "Password123!", confirm: "Password124!" });
 
     expect(screen.getByRole("button", { name: /guardar nueva contraseña/i })).toBeDisabled();
     expect(onSubmit).not.toHaveBeenCalled();
@@ -48,9 +70,9 @@ describe("ResetPasswordScreen", () => {
     const user = userEvent.setup();
     render(<ResetPasswordScreen onSubmit={onSubmit} />);
 
-    await fillAndSubmit(user, { password: "password123", confirm: "password123" });
+    await fillAndSubmit(user, { password: "Password123!", confirm: "Password123!" });
 
-    expect(onSubmit).toHaveBeenCalledWith("password123");
+    expect(onSubmit).toHaveBeenCalledWith("Password123!");
   });
 
   it("muestra el mensaje de onSubmit tal cual cuando lanza (contrato de resetPassword)", async () => {
@@ -58,7 +80,7 @@ describe("ResetPasswordScreen", () => {
     const user = userEvent.setup();
     render(<ResetPasswordScreen onSubmit={onSubmit} />);
 
-    await fillAndSubmit(user, { password: "password123", confirm: "password123" });
+    await fillAndSubmit(user, { password: "Password123!", confirm: "Password123!" });
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Este enlace ya no es válido.");
   });
@@ -68,7 +90,7 @@ describe("ResetPasswordScreen", () => {
     const user = userEvent.setup();
     render(<ResetPasswordScreen onSubmit={onSubmit} />);
 
-    await fillAndSubmit(user, { password: "password123", confirm: "password123" });
+    await fillAndSubmit(user, { password: "Password123!", confirm: "Password123!" });
 
     expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo guardar");
   });
@@ -79,7 +101,7 @@ describe("ResetPasswordScreen", () => {
     const user = userEvent.setup();
     render(<ResetPasswordScreen onSubmit={onSubmit} />);
 
-    await fillAndSubmit(user, { password: "password123", confirm: "password123" });
+    await fillAndSubmit(user, { password: "Password123!", confirm: "Password123!" });
 
     const button = screen.getByRole("button", { name: /guardar nueva contraseña/i });
     expect(button).toBeDisabled();
