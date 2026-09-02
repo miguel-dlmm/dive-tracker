@@ -1,4 +1,4 @@
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFName } from "pdf-lib";
 import { buildFillOperations, fillTrainingRecordPdf } from "./pdfFill";
 
 // 2x2 PNG rojo válido — solo para comprobar que embedPng/drawImage no
@@ -155,6 +155,54 @@ describe("fillTrainingRecordPdf", () => {
     const fixtureBytes = await buildFixturePdf();
     await expect(
       fillTrainingRecordPdf(fixtureBytes, MINIMAL_TEMPLATE, { firstName: "Ana", lastName: "Garcia" })
+    ).resolves.toBeInstanceOf(Uint8Array);
+  });
+
+  // Regresión (2026-09-02, verificado con las 4 plantillas reales activas
+  // vía Supabase Storage, no solo con este fixture): las plantillas SSI
+  // reales tienen cada campo con un /Parent que apunta, por error del
+  // generador original del PDF, al propio diccionario AcroForm en vez de a
+  // un campo padre real o a ningún /Parent. pdf-lib no sabe resolver esto y
+  // form.flatten() lanzaba "Tried to remove inexistent field" para
+  // cualquier campo — ver stripBrokenParentRefs() en pdfFill.js. Los
+  // fixtures de arriba, construidos con form.createTextField(...), no
+  // reproducen el problema porque generan campos sin ese /Parent roto — hay
+  // que fabricarlo a mano para que este test pueda fallar sin el fix.
+  it("rellena y aplana un PDF cuyos campos tienen el /Parent roto (apuntando al propio AcroForm), como las plantillas reales", async () => {
+    // Fixture aparte, sin puntos en los nombres de campo: pdf-lib interpreta
+    // un punto en form.createTextField(name) como separador de jerarquía
+    // (crea campos no-terminales intermedios), lo que enmascararía el bug
+    // real — las plantillas SSI reales no tienen esa jerarquía, cada campo
+    // es un único nivel con un /Parent roto apuntando al AcroForm.
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([300, 300]);
+    const form = pdfDoc.getForm();
+    form.createTextField("first").addToPage(page, { x: 10, y: 280, width: 100, height: 14 });
+    form.createTextField("last").addToPage(page, { x: 10, y: 260, width: 100, height: 14 });
+    form.createTextField("sig").addToPage(page, { x: 10, y: 40, width: 80, height: 30 });
+
+    const acroFormRef = pdfDoc.catalog.get(PDFName.of("AcroForm"));
+    for (const field of form.getFields()) {
+      field.acroField.dict.set(PDFName.of("Parent"), acroFormRef);
+    }
+    const corruptedBytes = await pdfDoc.save();
+
+    // Con el /Parent apuntando al AcroForm (sin /T), pdf-lib calcula el
+    // nombre completo de cada campo como "undefined.<nombre original>" —
+    // exactamente el motivo por el que templateFieldMaps.js ya usa ese
+    // mismo prefijo para las 4 plantillas reales (helper P(), ver ese
+    // archivo).
+    const CORRUPTED_TEMPLATE = {
+      fields: { firstName: "undefined.first", lastName: "undefined.last" },
+      sessionRows: [],
+      signatures: { student: "undefined.sig" },
+    };
+
+    await expect(
+      fillTrainingRecordPdf(corruptedBytes, CORRUPTED_TEMPLATE, {
+        firstName: "Ana", lastName: "Garcia",
+        signatures: { studentPng: TINY_PNG },
+      })
     ).resolves.toBeInstanceOf(Uint8Array);
   });
 });

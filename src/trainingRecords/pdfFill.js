@@ -1,4 +1,4 @@
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFName } from "pdf-lib";
 
 // Relleno de un Training Record real a partir del mapeo verificado de
 // templateFieldMaps.js. Todo ocurre en cliente (decisión de arquitectura de
@@ -103,6 +103,29 @@ function dataUrlToBytes(dataUrl) {
   return bytes;
 }
 
+// Las 4 plantillas activas (verificado con las 4, no solo una) tienen cada
+// campo de su AcroForm con un /Parent que apunta, por error del generador
+// original del PDF, al propio diccionario AcroForm (que tiene /Fields, no
+// /Kids) en vez de a un campo padre real o no tener /Parent en absoluto. Como
+// el campo SÍ está listado directamente en AcroForm.Fields, pdf-lib no lo
+// necesita para nada — pero su `form.flatten()` sigue el /Parent roto,
+// intenta buscar el campo dentro de los (inexistentes) /Kids de ese "padre",
+// y lanza "Tried to remove inexistent field" para el primer campo de
+// cualquier plantilla, sin excepción. Sin este saneado, generar cualquier
+// Training Record fallaba siempre — no es un caso límite de una plantilla
+// concreta.
+function stripBrokenParentRefs(pdfDoc, form) {
+  for (const field of form.getFields()) {
+    const acroDict = field.acroField.dict;
+    const parentRef = acroDict.get(PDFName.of("Parent"));
+    if (!parentRef) continue;
+    const parentDict = pdfDoc.context.lookup(parentRef);
+    if (!parentDict || !parentDict.get(PDFName.of("Kids"))) {
+      acroDict.delete(PDFName.of("Parent"));
+    }
+  }
+}
+
 async function drawSignature(pdfDoc, page, form, fieldName, signaturePngDataUrl) {
   const field = form.getTextField(fieldName);
   const widget = field.acroField.getWidgets()[0];
@@ -153,6 +176,7 @@ export async function fillTrainingRecordPdf(pdfBytes, templateMap, data) {
     await drawSignature(pdfDoc, page, form, field, dataUrl);
   }
 
+  stripBrokenParentRefs(pdfDoc, form);
   form.flatten();
   return pdfDoc.save();
 }
