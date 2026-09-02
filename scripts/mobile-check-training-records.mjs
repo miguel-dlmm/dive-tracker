@@ -171,8 +171,15 @@ async function main() {
       await page.locator('button[aria-label="Configuración"]').tap();
       await page.waitForTimeout(250);
       await shot(page, "config-reabierta");
-      await page.getByRole("button", { name: "Training Records" }).tap();
-      await page.waitForTimeout(300);
+      // ConfigTab recuerda la última sección abierta (ver clearStoredSection
+      // en ConfigTab.jsx) — puede reabrir directo en Training Records en vez
+      // de en el menú principal, así que el botón "Training Records" no
+      // siempre está presente para pulsarlo.
+      const trainingRecordsMenuButton = page.getByRole("button", { name: "Training Records" });
+      if (await trainingRecordsMenuButton.isVisible().catch(() => false)) {
+        await trainingRecordsMenuButton.tap();
+        await page.waitForTimeout(300);
+      }
       await firstTemplate.tap();
       await page.waitForTimeout(600);
       await shot(page, "plantilla-tras-completar-instructor");
@@ -261,6 +268,24 @@ async function main() {
           redownloadBtn.tap(),
         ]);
         if (!redownload) consoleIssues.push("[training-records] 'Descargar de nuevo' no disparó ninguna descarga");
+      }
+
+      console.log("→ 'Descargar como imagen (JPG)' debe convertir el PDF ya generado y descargar un JPG (pdfjs-dist + worker)");
+      const jpgBtn = page.locator('button[aria-label="Descargar como imagen (JPG)"]');
+      if (!(await jpgBtn.isVisible().catch(() => false))) {
+        consoleIssues.push("[training-records] Tras generar, no aparece el botón 'Descargar como imagen (JPG)' en la fila del alumno");
+      } else {
+        const [jpgDownload] = await Promise.all([
+          page.waitForEvent("download", { timeout: 15000 }).catch(() => null),
+          jpgBtn.tap(),
+        ]);
+        if (!jpgDownload) {
+          consoleIssues.push("[training-records] 'Descargar como imagen (JPG)' no disparó ninguna descarga (¿falló el worker de pdfjs-dist?)");
+        } else {
+          const jpgPath = path.join(OUT_DIR, `tr-generado-${jpgDownload.suggestedFilename()}`);
+          await jpgDownload.saveAs(jpgPath);
+          console.log(`  🖼️ JPG descargado -> ${path.relative(process.cwd(), jpgPath)}`);
+        }
       }
 
       console.log("→ 'Descargar todos los generados' debe estar visible con al menos un PDF generado");

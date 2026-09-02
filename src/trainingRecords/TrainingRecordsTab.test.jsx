@@ -12,6 +12,14 @@ vi.mock("signature_pad", () => ({
 const fillTrainingRecordPdf = vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3]));
 vi.mock("./pdfFill", () => ({ fillTrainingRecordPdf: (...args) => fillTrainingRecordPdf(...args) }));
 
+// La conversión real a JPG necesita pdfjs-dist + un <canvas> 2D real, que
+// jsdom no implementa (mismo límite del sistema que signature_pad) — aquí
+// solo interesa que TrainingRecordsTab la invoque con los bytes del PDF ya
+// generado y dispare la descarga, la conversión en sí ya se prueba sin
+// canvas en pdfToJpg.test.js (computeConcatenatedLayout).
+const renderPdfToJpgBytes = vi.fn().mockResolvedValue(new Uint8Array([4, 5, 6]));
+vi.mock("./pdfToJpg", () => ({ renderPdfToJpgBytes: (...args) => renderPdfToJpgBytes(...args) }));
+
 const templatesQuery = { order: vi.fn() };
 const templatesEq = vi.fn(() => templatesQuery);
 const templatesSelect = vi.fn(() => ({ eq: templatesEq }));
@@ -49,9 +57,22 @@ beforeEach(() => {
   templatesQuery.order.mockResolvedValue({ data: [TEMPLATE_ROW], error: null });
   storageDownload.mockResolvedValue({ data: { arrayBuffer: async () => new Uint8Array([9, 9, 9]).buffer }, error: null });
   fillTrainingRecordPdf.mockClear();
+  renderPdfToJpgBytes.mockClear();
   global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
   global.URL.revokeObjectURL = vi.fn();
 });
+
+async function generateForAna(user) {
+  await user.click(await screen.findByText("Open Water Diver"));
+  await screen.findByText("Alumnos de esta sesión");
+  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
+  await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ana");
+  await user.type(screen.getByRole("textbox", { name: "Apellidos" }), "Garcia");
+  await user.click(screen.getByRole("button", { name: "Guardar" }));
+  await user.click(screen.getByText("Ana Garcia"));
+  await user.click(await screen.findByText("Generar y descargar"));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalled());
+}
 
 it("lista las plantillas activas y descarga la elegida al seleccionarla", async () => {
   const user = userEvent.setup();
@@ -130,4 +151,15 @@ it.each([
 
   await user.click(screen.getByRole("button", { name: "Ir a mi perfil" }));
   expect(onOpenProfile).toHaveBeenCalledTimes(1);
+});
+
+it("exporta el registro ya generado como imagen JPG", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await generateForAna(user);
+
+  await user.click(screen.getByRole("button", { name: "Descargar como imagen (JPG)" }));
+
+  await waitFor(() => expect(renderPdfToJpgBytes).toHaveBeenCalledWith(new Uint8Array([1, 2, 3])));
+  expect(global.URL.createObjectURL).toHaveBeenCalledWith(expect.objectContaining({ type: "image/jpeg" }));
 });

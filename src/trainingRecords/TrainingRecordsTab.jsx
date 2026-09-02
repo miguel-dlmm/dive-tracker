@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, ChevronLeft, Award, UserPlus, Download, AlertTriangle } from "lucide-react";
+import { ChevronRight, ChevronLeft, Award, UserPlus, Download, ImageDown, Loader2, AlertTriangle } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { useToast, Fab, RowMenu } from "../shared";
 import { TEAL, NAVY } from "../App";
 import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
 import StudentFormSheet from "./StudentFormSheet";
 import StudentRecordSheet from "./StudentRecordSheet";
+import { renderPdfToJpgBytes } from "./pdfToJpg";
 
 // Generador de Training Records (Release V1, Fase 5). Todo lo que entra
 // aquí — roster de alumnos, firmas — es efímero: vive solo en el estado de
@@ -33,8 +34,8 @@ import StudentRecordSheet from "./StudentRecordSheet";
 // se rellena ninguna fecha todavía (pedido explícito, misma fecha) — se
 // decidirá más adelante de dónde sale cada una.
 
-function downloadBytes(bytes, filename) {
-  const blob = new Blob([bytes], { type: "application/pdf" });
+function downloadBytes(bytes, filename, mimeType = "application/pdf") {
+  const blob = new Blob([bytes], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -103,7 +104,7 @@ function TemplatePicker({ templates, onSelect }) {
   );
 }
 
-function RosterRow({ student, hasGenerated, onOpenGenerate, onEdit, onDelete, onRedownload }) {
+function RosterRow({ student, hasGenerated, exportingJpg, onOpenGenerate, onEdit, onDelete, onRedownload, onDownloadJpg }) {
   const { t } = useTranslation("trainingRecords");
   return (
     <li className="flex items-center gap-2 px-4 py-2.5 text-sm">
@@ -112,9 +113,21 @@ function RosterRow({ student, hasGenerated, onOpenGenerate, onEdit, onDelete, on
         <span className="min-w-0 flex-1 truncate font-medium text-gray-800">{student.firstName} {student.lastName}</span>
       </button>
       {hasGenerated && (
-        <button onClick={() => onRedownload(student)} aria-label={t("roster.descargarDeNuevo")} title={t("roster.descargarDeNuevo")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
-          <Download size={16} aria-hidden="true" />
-        </button>
+        <>
+          <button onClick={() => onRedownload(student)} aria-label={t("roster.descargarDeNuevo")} title={t("roster.descargarDeNuevo")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
+            <Download size={16} aria-hidden="true" />
+          </button>
+          <button
+            onClick={() => onDownloadJpg(student)}
+            disabled={exportingJpg}
+            aria-label={t("roster.descargarComoImagen")}
+            title={t("roster.descargarComoImagen")}
+            className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 disabled:opacity-50"
+            style={{ color: TEAL }}
+          >
+            {exportingJpg ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <ImageDown size={16} aria-hidden="true" />}
+          </button>
+        </>
       )}
       <RowMenu onEdit={() => onEdit(student)} onDelete={() => onDelete(student)} itemLabel={`"${student.firstName} ${student.lastName}"`} />
     </li>
@@ -133,6 +146,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   const [studentSheet, setStudentSheet] = useState(null);
   const [generateFor, setGenerateFor] = useState(null);
   const [generatedByStudent, setGeneratedByStudent] = useState({});
+  const [exportingJpgFor, setExportingJpgFor] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -188,7 +202,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     });
   };
 
-  const filenameFor = (student) => `${safeFilePart(student.firstName)}_${safeFilePart(student.lastName)}_${selectedTemplate.code}.pdf`;
+  const filenameFor = (student, ext = "pdf") => `${safeFilePart(student.firstName)}_${safeFilePart(student.lastName)}_${selectedTemplate.code}.${ext}`;
 
   const handleGenerated = (student, bytes) => {
     setGeneratedByStudent((g) => ({ ...g, [student.id]: bytes }));
@@ -199,6 +213,21 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   const redownload = (student) => {
     const bytes = generatedByStudent[student.id];
     if (bytes) downloadBytes(bytes, filenameFor(student));
+  };
+
+  const downloadAsJpg = async (student) => {
+    const bytes = generatedByStudent[student.id];
+    if (!bytes) return;
+    setExportingJpgFor(student.id);
+    try {
+      const jpgBytes = await renderPdfToJpgBytes(bytes);
+      downloadBytes(jpgBytes, filenameFor(student, "jpg"), "image/jpeg");
+    } catch (err) {
+      console.error(err);
+      toast?.error(t("roster.noSePudoExportarImagen"));
+    } finally {
+      setExportingJpgFor(null);
+    }
   };
 
   // Descargas secuenciales con una pequeña pausa entre cada una — varios
@@ -273,10 +302,12 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                     key={student.id}
                     student={student}
                     hasGenerated={!!generatedByStudent[student.id]}
+                    exportingJpg={exportingJpgFor === student.id}
                     onOpenGenerate={setGenerateFor}
                     onEdit={(s) => setStudentSheet({ mode: "edit", student: s })}
                     onDelete={removeStudent}
                     onRedownload={redownload}
+                    onDownloadJpg={downloadAsJpg}
                   />
                 ))}
               </ul>

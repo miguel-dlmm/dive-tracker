@@ -18,6 +18,8 @@
     "vacio": "Añade a los alumnos a los que vas a generar el registro.",
     "anadirAlumno": "Añadir alumno",
     "descargarDeNuevo": "Descargar de nuevo",
+    "descargarComoImagen": "Descargar como imagen (JPG)",
+    "noSePudoExportarImagen": "No se pudo exportar la imagen. Inténtalo de nuevo.",
     "descargarTodosGenerados": "Descargar todos los generados"
   },
   "studentForm": {
