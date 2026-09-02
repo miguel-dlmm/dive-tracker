@@ -28,7 +28,7 @@
 | 2 | Multidioma | ✅ Hecho (2026-09-01, noche) |
 | 3 | KPIs en la home | ✅ Hecho (2026-09-01, noche) |
 | 4 | Cabecera y notificaciones | ✅ Hecho (2026-09-01/02, noche) |
-| 5 | Sistema de Training Records | 🟡 En curso — mapeo verificado, generador sin construir (ver detalle) |
+| 5 | Sistema de Training Records | 🟡 En curso — generador MVP construido, sin verificar en dispositivo real (ver detalle) |
 | 6 | Slides y avisos | ⬜ Pendiente |
 | 7 | Usabilidad, carga y escalabilidad | ⬜ Pendiente |
 | 8 | Revisión visual y libro de estilo | ⬜ Pendiente |
@@ -770,35 +770,124 @@ iconos en vez de 4, "Cerrar sesión" funciona desde Mi perfil, "Ver
 qué hay de nuevo" reabre el slide correctamente, ambos en español e
 inglés, sin errores de consola.
 
-## Fase 5 — Sistema de generación de Training Records (🟡 en curso — desbloqueada, generador sin construir todavía)
+## Fase 5 — Sistema de generación de Training Records (🟡 en curso — generador MVP construido para las 4 plantillas activas)
 
 **Rama:** `feature/training-records` (creada desde `Release-V1`, tal como
 pedía el encargo — no se ha fusionado todavía).
 
-### ✅ Actualización — el bloqueo de abajo ya está resuelto
+### ✅ Actualización 2026-09-02 — generador MVP construido
 
-El hallazgo de más abajo (mapeo de campos sin verificar) llevó a
-construir `scripts/render-training-record-debug.mjs`: renderiza cada
-página real de cada plantilla con un recuadro numerado sobre cada
-campo, para poder contrastar visualmente cada número contra su
-etiqueta de texto en la propia imagen. Con esa herramienta verifiqué
-a mano, plantilla a plantilla, las 4 rellenables (OWD, AOWD, SC-DD,
-SC-EAN) — resultado en `src/trainingRecords/templateFieldMaps.js`,
-confirmado además con `scripts/verify-training-record-field-maps.mjs`
-(cada campo referenciado existe de verdad en el PDF real, ninguno se
-usa dos veces). Las 4 ya están `status = 'active'` en
-`training_record_templates`. Alcance de este mapeo: solo la página 1
-de cada una (completar el curso entero) — la página 2 de OWD
-(finalización de Referral/Scuba/Indoor Diver, para cuando el alumno
-NO completa todo el programa) queda fuera, es un camino secundario
-más complejo, documentado como pendiente en el propio
-`templateFieldMaps.js`.
+Construido el generador en sí (roster + firma + relleno de PDF), no solo
+el mapeo de campos:
+
+- `src/trainingRecords/computeInitials.js` — regla acordada con el
+  usuario: primera letra del nombre + primera letra de cada palabra del
+  apellido (apellidos compuestos cuentan cada palabra).
+- `src/trainingRecords/pdfFill.js` — `buildFillOperations()` (lógica
+  pura: qué campo recibe qué valor) + `fillTrainingRecordPdf()` (aplica
+  esas operaciones sobre el PDF real con `pdf-lib` y lo aplana con
+  `form.flatten()` al final, para que el resultado sea un documento
+  estático, no un formulario reeditable). Las firmas (student/parent/
+  instructor) son en realidad `PDFTextField` normales en el PDF
+  original, no campos de firma nativos — comprobado con
+  `render-training-record-debug.mjs` — así que la imagen capturada con
+  `signature_pad` se dibuja directamente sobre la página en el
+  rectángulo real de ese campo (`page.drawImage`), no se "escribe" en
+  el campo.
+- `src/trainingRecords/SignatureCapture.jsx`, `StudentFormSheet.jsx`
+  (alta/edición de alumno del roster) y `StudentRecordSheet.jsx` (el
+  formulario dinámico por alumno, construido a partir de la forma real
+  de `templateFieldMaps.js` — una sola implementación sirve para las 4
+  plantillas activas en vez de 4 formularios distintos, aunque cada una
+  tenga bloques distintos como `optionalSpecialtyDives` de AOWD o
+  `courseVariant` de SC-EAN).
+- `src/trainingRecords/TrainingRecordsTab.jsx` — pantalla completa:
+  elegir plantilla activa → datos del instructor (nombre, iniciales,
+  número SSI Pro — persistidos en `localStorage` por ser preferencia
+  personal, no dato de un alumno, mismo criterio que la moneda favorita
+  de ADR-0007) → roster de alumnos (nunca persistido, ni en Supabase ni
+  en `localStorage`) → generar/descargar el PDF de cada alumno →
+  "Descargar todos los generados" (descargas secuenciales con una
+  pequeña pausa entre cada una, no un `.zip`: añadir una librería de
+  compresión nueva solo para esto no compensa para el tamaño típico de
+  un roster).
+- Punto de entrada: nueva sección "Training Records" dentro de
+  Configuración (`BUSINESS_SECTIONS`, visible a cualquier usuario, no
+  solo admin — es una herramienta del día a día del instructor, no de
+  gestión de la instalación), icono `Award`.
+- Namespace de traducción nuevo, `trainingRecords` (ES/EN), registrado
+  en `src/i18n/index.js` — mismo patrón que el resto de pantallas.
+- Tests: `computeInitials.test.js`, `pdfFill.test.js` (lógica de
+  relleno probada exhaustivamente con un PDF de prueba construido con
+  `pdf-lib`, sin depender de red ni de las plantillas reales),
+  `SignatureCapture.test.jsx` y `TrainingRecordsTab.test.jsx`
+  (`signature_pad` mockeado — jsdom no implementa canvas 2D, mismo
+  criterio que mockear Supabase).
+
+**Decisiones tomadas sobre la marcha (pedido explícito del usuario,
+2026-09-02, antes de que se completara toda esta fase — mejor
+documentarlas ahora que dejarlas sueltas en el chat):**
+- **MVP explícito: solo las plantillas que ya son formularios PDF
+  rellenables de verdad** (las 4 `active`). Las 6 sin campos de
+  formulario quedan fuera de este generador hasta que se decida el
+  enfoque técnico (superponer texto en coordenadas fijas).
+- **Ninguna fecha se rellena todavía** (ni en las filas de progreso ni
+  en las firmas) — pendiente decidir de dónde sale cada una (¿la del
+  propio movimiento en Mi trabajo? ¿la que teclee el instructor?). El
+  único sitio que hay que tocar cuando se decida es `pushProgressRow`/
+  los tres campos `*Date` de firma en `pdfFill.js` — están señalados
+  con un comentario explícito.
+
+**Explícitamente NO construido todavía, con motivo:**
+- **Exportar a JPG** (`pdfjs-dist` + canvas, página larga concatenada
+  para las multipágina) — el encargo original lo pedía, pero requiere
+  configurar el *worker* de `pdfjs-dist` en el build de Vite
+  (`?url` + `new Worker(..., { type: "module" })`), algo que no se ha
+  podido verificar visualmente esta noche en un navegador real. Antes
+  de darlo por construido sin esa verificación, se deja pendiente en
+  vez de arriesgar un build roto o un export silenciosamente
+  incorrecto en un documento de certificación — mismo criterio de
+  "nunca adivinar en algo de alto riesgo" que ya se aplicó al mapeo de
+  campos. El relleno y descarga en PDF (lo importante, el documento
+  real) sí está construido y probado.
+- Ubicación definitiva en la navegación más allá de "dentro de
+  Configuración" — se decidió esta ubicación por ser consistente con
+  Escuelas/Cursos/Tarifas (mismo patrón de menú con drill-down), pero
+  no se ha validado con el usuario si merece un acceso más directo.
+- Pipeline de análisis automático de plantillas nuevas subidas por un
+  admin — sigue fuera de alcance, tal como pedía el encargo original,
+  hasta que el generador esté completamente terminado.
+
+**Pendiente de verificación humana (no se ha podido hacer esta noche):**
+navegador real / `mobile-check` — el flujo completo (elegir plantilla,
+añadir alumno, firmar con el dedo, generar y descargar) no se ha
+probado en un dispositivo real ni con Playwright. `npm run test`
+(583/583) y `npm run build` sí están en verde.
+
+### Hallazgo — mapeo de campos (histórico, ya resuelto)
+
+El mapeo de campos (ver detalle debajo) se verificó construyendo
+`scripts/render-training-record-debug.mjs`: renderiza cada página real
+de cada plantilla con un recuadro numerado sobre cada campo, para
+poder contrastar visualmente cada número contra su etiqueta de texto
+en la propia imagen. Con esa herramienta verifiqué a mano, plantilla a
+plantilla, las 4 rellenables (OWD, AOWD, SC-DD, SC-EAN) — resultado en
+`src/trainingRecords/templateFieldMaps.js`, confirmado además con
+`scripts/verify-training-record-field-maps.mjs` (cada campo
+referenciado existe de verdad en el PDF real, ninguno se usa dos
+veces). Las 4 ya están `status = 'active'` en
+`training_record_templates`, y el generador (ver "Actualización" más
+arriba) ya las usa. Alcance de este mapeo: solo la página 1 de cada
+una (completar el curso entero) — la página 2 de OWD (finalización de
+Referral/Scuba/Indoor Diver, para cuando el alumno NO completa todo el
+programa) queda fuera, es un camino secundario más complejo,
+documentado como pendiente en el propio `templateFieldMaps.js`.
 
 **Lo que sigue siendo cierto y sigue pendiente:** las 6 plantillas sin
 campos de formulario (BD, SC-LV, SC-NV, SC-PB, SC-RR, SC-SR) — ver el
-hallazgo original abajo, no ha cambiado nada ahí.
+detalle original abajo, no ha cambiado nada ahí.
 
-### Hallazgo original (contexto — ya resuelto para las 4 rellenables, ver arriba)
+### Detalle original del hallazgo (contexto)
 
 Al analizar los 10 PDF que estaban en la raíz del repo para diseñar el
 generador, aparecieron dos problemas de fondo que **cambian el alcance
@@ -895,19 +984,29 @@ drop table if exists public.training_record_templates;
 
 ### Próximos pasos
 
-1. Construir el generador propiamente dicho: roster de alumnos
-   (formulario + iniciales autogeneradas), captura de firma
-   (`signature_pad`, nada se guarda en BD), relleno del PDF en
-   cliente (`pdf-lib`) y exportación a PDF/JPG (página larga
-   concatenada con `pdfjs-dist` para las multipágina). Este es el
-   siguiente trabajo sustancial de la fase — nada más la bloquea.
-2. Decidir el enfoque para las 6 plantillas sin campos de formulario
+El generador en sí (roster, iniciales autogeneradas, formulario dinámico
+por plantilla, firma táctil, relleno de PDF con `pdf-lib`) ya está
+construido para las 4 plantillas activas — ver "✅ Actualización
+2026-09-02" arriba. Queda:
+
+1. **Validación humana en dispositivo real / `mobile-check`** — el flujo
+   completo no se ha probado en un navegador de verdad ni con
+   Playwright esta noche, solo `npm run test`/`npm run build`.
+2. Decidir de dónde sale cada fecha (petición explícita del usuario:
+   no rellenar ninguna por ahora) y activarlas en `pdfFill.js` una vez
+   decidido — un único punto de cambio, ya señalado con comentario ahí.
+3. Exportación a JPG (página larga concatenada con `pdfjs-dist`) —
+   deferida por no poder verificar en un navegador real el
+   *worker* de `pdfjs-dist` en el build de Vite esta noche (ver
+   "Explícitamente NO construido todavía" arriba).
+4. Decidir el enfoque para las 6 plantillas sin campos de formulario
    (mapear coordenadas a mano tiene coste y fragilidad altos; también
-   cabe dejarlas fuera del generador por ahora y ofrecer solo las 4
-   activas, revisando esta decisión más adelante si hace falta).
-3. Ubicación del acceso en la navegación — todavía sin decidir, queda
-   pendiente junto con el resto de la interfaz.
-4. El pipeline de análisis automático de plantillas nuevas (lo que
+   cabe dejarlas fuera del generador y ofrecer solo las 4 activas,
+   revisando esta decisión más adelante si hace falta).
+5. Validar con el usuario si "Training Records" merece un acceso más
+   directo que dentro de Configuración (decisión tomada por
+   consistencia con Escuelas/Cursos/Tarifas, no confirmada con él).
+6. El pipeline de análisis automático de plantillas nuevas (lo que
    subiría un admin en el futuro) sigue explícitamente fuera de
    alcance hasta que la interfaz de generación esté terminada, tal
    como pedía el encargo original.
