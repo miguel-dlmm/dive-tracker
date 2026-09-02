@@ -1030,41 +1030,47 @@ propuesta de próximos pasos, no se implementa.
 
 ## Cola de tareas adicionales (fuera de las 8 fases)
 
-Pedidas explícitamente por el usuario mid-sesión, con la instrucción de
-hacerlas **al final de todas las fases**, no ahora — se anotan aquí para
-no perderlas.
+Pedidas explícitamente por el usuario mid-sesión, con la instrucción
+inicial de hacerlas **al final de todas las fases** — completadas el
+2026-09-02 dentro del mismo lote de trabajo nocturno, por petición
+directa del usuario ("también deja hecho esto dentro de este lote"),
+que sustituye esa instrucción inicial de esperar. Las 4 están hechas,
+probadas (`npm run test` 591/591, `npm run build` en verde) y
+comiteadas; el detalle completo de cada una queda documentado en su
+propio bullet más abajo para que quede como referencia permanente, no
+solo como historial de la cola.
 
-- **Avatares de perfil: que todos sean animales marinos.** Hoy
-  `avatarCatalog.js` usa un catálogo de iconos genéricos de
-  `lucide-react` (sin relación temática con buceo/mar). Pendiente:
-  sustituir por un catálogo de iconos de animales marinos — revisar qué
-  ofrece `lucide-react` en esa temática (p. ej. `Fish`; `Waves` ya se usa
-  como logo de la app, así que no debería repetirse como avatar) y
-  confirmar cuántos iconos reales hay disponibles antes de prometer un
-  catálogo concreto.
+- **✅ Avatares de perfil: que todos sean animales marinos.** Hoy
+  `avatarCatalog.js` usaba un catálogo de iconos genéricos de
+  `lucide-react` (sin relación temática con buceo/mar).
+  **Implementado:** catálogo reducido a los 6 iconos de `lucide-react`
+  que representan de verdad un animal marino (`Fish`, `FishSymbol`,
+  `Turtle`, `Shrimp`, `Snail`, `Shell`) — no hay ballena, delfín,
+  pulpo, cangrejo, tiburón, estrella de mar ni medusa en esta
+  librería, así que el catálogo se queda en 6 en vez de forzar 10
+  volviendo a mezclar objetos náuticos (`Waves` sigue excluido, es el
+  icono de la app). Grid de selección ajustado a 3 columnas.
 
-- **Robustecer la contraseña (1 mayúscula + 1 símbolo mínimo) y migrar
-  cuentas existentes que no lo cumplan.** Pedido explícito, también
-  "al final". Encargo: cualquier cuenta ya creada cuya contraseña no
-  cumpla la nueva regla debe, en su próximo login, ir a la pantalla de
-  crear contraseña (sin bases legales, ya aceptadas antes) explicando
-  que toca crear una nueva porque se reforzó la seguridad.
-  **Reto de diseño a resolver antes de implementar** (no trivial, por
-  eso se deja para el final y no se improvisa ahora): las contraseñas
-  se guardan hasheadas (Supabase Auth) — no hay forma de "leer" si una
-  contraseña ya existente cumple la regla nueva, así que no se puede
-  detectar por inspección. La vía razonable es un flag nuevo en
-  `profiles` (p. ej. `password_meets_policy boolean`), puesto a
-  `false`/`null` para TODAS las cuentas existentes en la migración que
-  introduzca la regla, y a `true` solo cuando alguien fija una
-  contraseña nueva ya validada contra la regla (activación, reset,
-  cambio desde perfil). El login comprobaría ese flag y, si es falso,
-  redirigiría al flujo de crear contraseña en vez de dejar entrar. Es
-  un cambio de autenticación real — sigue la regla de `CLAUDE.md` de
-  proponer un plan de migración completo y pedir aprobación explícita
-  antes de tocar nada, no implementar en un solo paso.
+- **✅ Robustecer la contraseña (1 mayúscula + 1 símbolo mínimo) y
+  forzar su actualización en cuentas existentes que no la cumplan.**
+  **Resuelto sin necesitar el flag `profiles.password_meets_policy`
+  que se había anticipado** (planteado abajo como "reto de diseño"
+  antes de tener la solución real): `useSession.js` → `signIn()` tiene
+  acceso a la contraseña en TEXTO PLANO en el único instante en que
+  alguien la teclea para iniciar sesión — es la única oportunidad real
+  de comprobarla contra la política nueva, ya que Supabase Auth nunca
+  expone contraseñas ya guardadas para inspeccionarlas. No hizo falta
+  ninguna migración de esquema: `forcedPasswordUpdate` es un estado en
+  memoria del hook, calculado en cada login exitoso. Ver
+  `src/passwordPolicy.js`, `src/ForcedPasswordUpdateScreen.jsx`, y el
+  gate en `AuthGate` (`App.jsx`, se comprueba antes que los
+  consentimientos legales pendientes). Limitación real, documentada en
+  el propio código: una sesión ya restaurada de una recarga anterior
+  no vuelve a pasar por esta comprobación hasta el siguiente login
+  explícito (no hay contraseña en texto plano disponible fuera de ese
+  instante).
 
-- **Enlace de invitación desde Configuración → Usuarios.** Junto al
+- **✅ Enlace de invitación desde Configuración → Usuarios.** Junto al
   botón "Crear usuario" existente (superadmin), un botón nuevo para
   generar un enlace de invitación de un solo uso: quien lo recibe puede
   autoregistrarse aunque `app_config.allow_external_registration` esté
@@ -1084,30 +1090,59 @@ no perderlas.
     fin — el tramo nuevo es solo "crear perfil sin que
     `allow_external_registration` tenga que estar activado", el resto
     reutiliza el alta ya existente tal cual.
-  **Puntos a resolver en el diseño antes de implementar** (auth real,
-  sigue la regla de `CLAUDE.md` de proponer plan de migración y pedir
-  aprobación primero, no en un solo paso):
-  - Tabla nueva para el token (p. ej. `invitation_links`: token, quién
-    lo generó, `created_at`, `expires_at` = `created_at` + 24h,
-    usado/no usado) — un token de un solo uso, no reutilizable, y
-    caduca solo por tiempo (no hace falta un job de limpieza aparte,
-    basta con comprobar `expires_at` al validar).
-  - Qué dataset inicial clona un alta por invitación — ¿el mismo
-    criterio que ya usa `externalRegister.js` (dataset activo
-    `is_default`), o lo elige el superadmin al generar el enlace, como
-    ya hace `createUser.js`? Decisión de producto pendiente.
-  - El endpoint de registro público necesita aceptar un `token` y
-    saltarse la comprobación de `allow_external_registration` solo
-    cuando el token es válido, no usado y no caducado — reutilizar la
-    mayor parte de `externalRegister.js`/`RegisterScreen.jsx`, no
-    duplicar el flujo entero.
-  - Qué mensaje ve la persona si visita el enlace ya caducado o ya
-    usado — decidir el texto (tono cercano, no un error técnico) antes
-    de implementar.
+  **✅ Implementado 2026-09-02, con estas decisiones ya resueltas y
+  documentadas** (el usuario pidió explícitamente completar esta cola
+  dentro del mismo lote de trabajo, en vez de esperar a otra sesión —
+  la nota de abajo sobre "pedir aprobación primero" venía de la primera
+  vez que se anotó el pendiente, ya superada por ese encargo directo):
+  - **Migración aditiva `0009-invitation-links.sql`** (rollback
+    documentado en el propio fichero antes de ejecutar, aplicada solo
+    contra TEST): tabla `invitation_links` (token uuid, created_by,
+    created_at, expires_at, used_at). RLS habilitada SIN ninguna
+    policy — todo el acceso real pasa por endpoints de servidor con
+    service role (que ignora RLS), ningún cliente debe poder leer ni
+    escribir un token directamente.
+  - **Dataset inicial de un alta por invitación:** mismo criterio que
+    `externalRegister.js` ya usa (el dataset activo marcado
+    `is_default`), no un selector nuevo para el superadmin — MVP,
+    coherente con "reutilizar antes que construir". Se puede añadir un
+    selector más adelante si hace falta, sin romper nada de lo ya
+    construido.
+  - **Mensaje de enlace caducado/ya usado:** "Este enlace de invitación
+    ya no es válido. Puede que haya caducado o que ya se haya usado.
+    Pide uno nuevo a quien te invitó." — mismo tono cercano que el
+    resto de mensajes de enlaces inválidos de la app (ver
+    `ACTIVATION_LINK_INVALID` en `useSession.js`).
+  - **Servidor:** `server/users/generateInvitationLink.js` (superadmin,
+    igual que crear usuario) crea la fila con `expires_at = now() + 24h`
+    y devuelve `${APP_URL}/?invite=<token>`. `externalRegister.js`
+    amplía su body con un `invite_token` opcional: si viene, valida el
+    token (existe, no caducado, no usado) ANTES de mirar
+    `allow_external_registration` — un token roto siempre falla
+    explícitamente, nunca cae en silencio al criterio general de
+    registro abierto/cerrado. Al completar el alta con éxito, marca
+    `used_at = now()` en esa fila (un solo uso real, no solo por
+    convención de cliente).
+  - **Cliente:** `RegisterScreen.jsx` acepta un `inviteToken` opcional
+    y lo manda en el body. `AuthGate` (`App.jsx`) lee `?invite=` de la
+    URL — si está presente, muestra `RegisterScreen` directamente
+    (salta el botón "Regístrate" y su gate de
+    `externalRegistrationEnabled`, que sigue siendo solo UX, nunca el
+    control de acceso real) y limpia el parámetro de la URL al volver
+    atrás, para no quedarse "atascado" en el registro tras pulsar
+    "Volver al login".
+  - Reutiliza el resto del flujo de alta tal cual (mismo
+    `provisionUser`, mismo `CreatePasswordScreen` con bases legales,
+    misma activación) — el único tramo nuevo es "crear perfil sin que
+    `allow_external_registration` tenga que estar activado".
 
-- **Bug de UI: el campo "cantidad" del Ajuste de compañeros descuadra
-  el formulario y provoca un salto.** En `MovementSheet.jsx`, el
-  formulario de crear/editar un Ajuste de compañeros no mantiene el
-  mismo formato/altura de navegación entre tipos que el resto —
-  revisar y ajustar para que cambiar de tipo de movimiento no salte ni
-  descuadre el layout, igual que ya no lo hace con Curso/Comisión.
+- **✅ Bug de UI: el campo "cantidad" del Ajuste de compañeros
+  descuadra el formulario y provoca un salto.** Causa real encontrada
+  en `shared.jsx` (`Field`), no en `MovementSheet.jsx`: el botón de
+  ayuda ("?") del campo "Importe" — el único campo con `hint` en toda
+  la app — usaba un objetivo táctil de 44×44 EN FLUJO normal dentro de
+  la fila de etiqueta, que quedaba más alta que la de su vecino sin
+  hint. Arreglado ahí (el icono pasa a un área pulsable superpuesta
+  con `position: absolute`, sin ocupar espacio en el flujo) — corrige
+  el problema en el único sitio real donde vivía, sin tocar
+  `MovementSheet.jsx`.
