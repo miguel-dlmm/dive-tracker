@@ -28,7 +28,7 @@
 | 2 | Multidioma | ✅ Hecho (2026-09-01, noche) |
 | 3 | KPIs en la home | ✅ Hecho (2026-09-01, noche) |
 | 4 | Cabecera y notificaciones | ✅ Hecho (2026-09-01/02, noche) |
-| 5 | Sistema de Training Records | 🟡 En curso — generador verificado en dispositivo real y bug crítico de generación corregido; quedan fechas/JPG/6 plantillas sin campos (ver detalle) |
+| 5 | Sistema de Training Records | 🟡 En curso — generador verificado en dispositivo real (PDF+JPG), bug crítico de generación corregido; quedan fechas/6 plantillas sin campos/nav (ver detalle) |
 | 6 | Slides y avisos | ⬜ Pendiente |
 | 7 | Usabilidad, carga y escalabilidad | ⬜ Pendiente |
 | 8 | Revisión visual y libro de estilo | ⬜ Pendiente |
@@ -1072,11 +1072,31 @@ bloquee con un aviso y un botón directo a "Mi perfil".
   Cuenta demo restaurada a su estado original (todos los campos a null)
   tras la comprobación, para no dejar datos de prueba reales en TEST.
 
+**Exportación a JPG, ya construida y verificada** (mismo bloque de
+sesión, tras dejar operativo el flujo de verificación en dispositivo
+real): `src/trainingRecords/pdfToJpg.js`, `renderPdfToJpgBytes()`
+rasteriza cada página del PDF ya relleno con `pdfjs-dist` (worker
+resuelto vía `?url` de Vite — se emite como asset aparte,
+`dist/assets/pdf.worker-*.mjs`, confirmado con `npm run build`) y las
+concatena verticalmente en un único JPG si hay más de una página.
+`computeConcatenatedLayout()` es la parte de lógica pura (escalado al
+ancho de la página más ancha, huecos entre páginas) y tiene su propio
+test sin canvas; el renderizado en sí solo se puede verificar en un
+navegador real, igual que `signature_pad`. Botón nuevo "Descargar como
+imagen (JPG)" junto a "Descargar de nuevo" en el roster, reutiliza los
+bytes del PDF ya generado (no vuelve a rellenar nada). Verificado en
+dispositivo real con las dos formas reales que existen hoy: AOWD (1
+página, JPG 1188×1584) y OWD (2 páginas — la 2ª es la de
+Referral/Scuba/Indoor Diver, sin rellenar — JPG 1188×3180, ambas
+páginas legibles y en orden), sin ningún error de consola en ninguno
+de los dos casos.
+
 **Commits** (rama `feature/training-records`, empujada a `origin` —
 genera Preview Deployment nuevo, ver más abajo): `106c3ab` (fix del
-bug de pdf-lib + herramientas de verificación) y `e9347d6` (datos de
-instructor al perfil). `npm run test` (590/590) y `npm run build` en
-verde tras ambos.
+bug de pdf-lib + herramientas de verificación), `e9347d6` (datos de
+instructor al perfil), `4dffa38` (este documento) y `b14dc05`
+(exportación a JPG). `npm run test` (595/595) y `npm run build` en
+verde tras todos.
 
 **Preview Deployment de esta sesión:**
 `https://dive-tracker-git-feature-training-records-ocean-pulse1.vercel.app`
@@ -1086,28 +1106,25 @@ lo actualiza solo).
 ### Próximos pasos
 
 El generador (roster, iniciales autogeneradas, formulario dinámico por
-plantilla, firma táctil, relleno de PDF con `pdf-lib`) está construido,
-verificado en dispositivo real y genera un PDF correcto de verdad para
-las 4 plantillas activas. Queda:
+plantilla, firma táctil, relleno de PDF con `pdf-lib`, exportación a
+PDF y a JPG) está construido y verificado en dispositivo real para las
+4 plantillas activas. Queda:
 
 1. Decidir de dónde sale cada fecha (petición explícita del usuario:
    no rellenar ninguna por ahora) y activarlas en `pdfFill.js` una vez
    decidido — un único punto de cambio, ya señalado con comentario ahí.
-2. Exportación a JPG (página larga concatenada con `pdfjs-dist`) —
-   sigue sin construirse, mismo motivo que antes (verificar el *worker*
-   de `pdfjs-dist` en el build de Vite necesita un navegador real).
-3. Decidir el enfoque para las 6 plantillas sin campos de formulario
+2. Decidir el enfoque para las 6 plantillas sin campos de formulario
    (mapear coordenadas a mano tiene coste y fragilidad altos; también
    cabe dejarlas fuera del generador y ofrecer solo las 4 activas,
    revisando esta decisión más adelante si hace falta).
-4. Validar con el usuario si "Training Records" merece un acceso más
+3. Validar con el usuario si "Training Records" merece un acceso más
    directo que dentro de Configuración (decisión tomada por
    consistencia con Escuelas/Cursos/Tarifas, no confirmada con él).
-5. El pipeline de análisis automático de plantillas nuevas (lo que
+4. El pipeline de análisis automático de plantillas nuevas (lo que
    subiría un admin en el futuro) sigue explícitamente fuera de
    alcance hasta que la interfaz de generación esté terminada, tal
    como pedía el encargo original.
-6. Fusión a `develop`: sigue pendiente de revisión y aprobación
+5. Fusión a `develop`: sigue pendiente de revisión y aprobación
    explícita del usuario, como el resto de esta rama.
 
 ## Fase 6 — Slides y avisos
