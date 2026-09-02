@@ -31,7 +31,7 @@
 | 5 | Sistema de Training Records | 🟡 En curso — generador MVP construido, sin verificar en dispositivo real (ver detalle) |
 | 6 | Slides y avisos | 🟡 En curso — avisos generalizados, WhatsNew sin tocar (ver detalle) |
 | 7 | Usabilidad, carga y escalabilidad | ✅ Hecho (2026-09-02, análisis documental, sin cambios de código) |
-| 8 | Revisión visual y libro de estilo | ⬜ Pendiente |
+| 8 | Revisión visual y libro de estilo | ✅ Hecho (2026-09-02, `docs/ESTILO.md` actualizado, sin pulido pixel-a-pixel) |
 
 > Ver sección "Análisis de riesgos y decisiones previas al trabajo
 > nocturno" más abajo para el detalle completo de cada fase (riesgo,
@@ -865,6 +865,21 @@ documentarlas ahora que dejarlas sueltas en el chat):**
 - Pipeline de análisis automático de plantillas nuevas subidas por un
   admin — sigue fuera de alcance, tal como pedía el encargo original,
   hasta que el generador esté completamente terminado.
+- **Hallazgo de consistencia (Fase 8, revisión de estilo, 2026-09-02),
+  no corregido a propósito:** `StudentRecordSheet.jsx` define un
+  `RadioChoice` propio (grupo de chips de selección única) que
+  reproduce lo que `ChipGroup` (`shared.jsx`) ya resuelve, con dos
+  diferencias reales: `RadioChoice` admite `{value, label}` distintos
+  (necesario para examVersion/courseVariant, con copy traducido) y
+  permite deseleccionar tocando la opción ya activa (estos campos son
+  opcionales); `ChipGroup` asume que la opción visible ES el valor y no
+  se puede deseleccionar. No se ha tocado esta rama para no meter
+  commits nuevos justo cuando el usuario está revisando el PR — si al
+  fusionar se decide que la diferencia es real (no accidental, ver
+  criterio de `docs/ESTILO.md`), lo correcto es documentarlo ahí como
+  un segundo caso "no consolidado"; si se decide que no lo es, ampliar
+  `ChipGroup` con `{value,label}` + deselección opcional y que
+  `StudentRecordSheet.jsx` lo reutilice.
 
 **Pendiente de verificación humana (no se ha podido hacer esta noche):**
 navegador real / `mobile-check` — el flujo completo (elegir plantilla,
@@ -1166,12 +1181,31 @@ ahora — no hay una cuenta real que lo necesite todavía.
 Ningún cambio de código en esta fase — es puramente un documento de
 análisis, tal como decidió el propio riesgo de la fase.
 
-## Fase 8 — Revisión visual y libro de estilo
+## Fase 8 — Revisión visual y libro de estilo (✅ 2026-09-02)
 
-⬜ Pendiente — no iniciada. Recordatorio del documento maestro:
-restricción de esta fase = nada de backend ni funcionalidades nuevas que
-requieran BBDD nueva; si surge algo así de interesante, se anota como
-propuesta de próximos pasos, no se implementa.
+Sin backend ni BBDD nueva, tal como pedía el encargo. `docs/ESTILO.md`
+actualizado con 4 patrones reales consolidados durante esta sesión:
+
+1. Objetivo táctil 44×44 sin estirar el layout (el fix del bug de
+   `Field`, generalizado como principio para cualquier icono futuro).
+2. `src/auth/PasswordFields.jsx` como el sitio único para campos de
+   contraseña — documentado para que una cuarta pantalla futura no
+   vuelva a duplicar en vez de importar.
+3. Catálogos cerrados de iconos: el tamaño lo decide lo que existe de
+   verdad, nunca rellenar hasta un número "redondo".
+4. `ActivationLinkPanel` + su prop `hideMockEmailButton`, ahora
+   reutilizado por un cuarto flujo (enlace de invitación).
+
+**No se ha hecho** un pulido visual pixel-a-pixel de toda la app (fuera
+de proporción para una sola fase, sin evidencia de que haga falta) ni
+se ha tocado nada en `feature/training-records` (un hallazgo de
+consistencia real se documentó en la Fase 5 en vez de comitear ahí
+mientras el usuario revisa ese PR — ver esa sección).
+
+### Verificación
+
+`npm run test`/`npm run build` en verde (sin cambios de código en esta
+fase, solo documentación).
 
 ---
 
