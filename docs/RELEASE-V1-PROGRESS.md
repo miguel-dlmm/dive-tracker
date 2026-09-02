@@ -30,7 +30,7 @@
 | 4 | Cabecera y notificaciones | ✅ Hecho (2026-09-01/02, noche) |
 | 5 | Sistema de Training Records | 🟡 En curso — generador MVP construido, sin verificar en dispositivo real (ver detalle) |
 | 6 | Slides y avisos | 🟡 En curso — avisos generalizados, WhatsNew sin tocar (ver detalle) |
-| 7 | Usabilidad, carga y escalabilidad | ⬜ Pendiente |
+| 7 | Usabilidad, carga y escalabilidad | ✅ Hecho (2026-09-02, análisis documental, sin cambios de código) |
 | 8 | Revisión visual y libro de estilo | ⬜ Pendiente |
 
 > Ver sección "Análisis de riesgos y decisiones previas al trabajo
@@ -1096,9 +1096,75 @@ se replantea esto salvo que surja una razón concreta más adelante.
 `mobile-check`/navegador real, igual que el resto de piezas de esta
 noche.
 
-## Fase 7 — Usabilidad, carga y escalabilidad
+## Fase 7 — Usabilidad, carga y escalabilidad (✅ 2026-09-02)
 
-⬜ Pendiente — no iniciada.
+Análisis teórico/documental, sin pruebas de carga reales contra
+Supabase TEST (decisión ya tomada, ver "Análisis de riesgos" arriba) —
+revisión real del código, no una checklist genérica.
+
+### Patrón de acceso a datos encontrado
+
+`useSupabaseTable.js` (el hook genérico detrás de casi toda la app) hace
+`select("*").order(orderBy)` **sin límite ni paginación** — cada tabla
+de negocio (`worklog`, `comisiones`, `colleague_payments`, `rates`,
+`commission_rates`...) se trae ENTERA a memoria del cliente en cada
+carga de `App.jsx`, y el resto de la app (listas, calendarios,
+agregados de Resumen) calcula todo en el propio navegador sobre ese
+array completo. No hay ninguna consulta agregada en servidor (ni una
+función RPC de suma/count) — todos los totales de Resumen/Home se
+calculan en JS sobre las filas ya cargadas.
+
+**Por qué esto NO es un problema hoy, con números reales:** el alcance
+del producto ya excluye B2B (ADR-0001) — una cuenta es un instructor
+freelance, no una escuela con miles de reservas. Un instructor con
+actividad diaria intensa (varios cursos/día, todos los días del año)
+generaría del orden de mil-pocos-miles de filas por tabla al año. Eso
+es una respuesta de PostgREST de milisegundos y un array trivial de
+manejar en cualquier navegador moderno — no hay indicio real de que la
+carga completa sea lenta a este volumen. **El eje real de crecimiento
+de esta app es el NÚMERO DE CUENTAS (más instructores dándose de alta),
+no el volumen de datos DENTRO de una cuenta** — y cada cuenta ya está
+aislada por RLS, así que más cuentas no compiten por trabajo entre sí
+más allá de la cuota compartida de la instalación de Supabase.
+
+### Límites de la infraestructura actual (plan Free/Hobby) vs. patrones reales
+
+- **Supabase Free:** 500MB de base de datos, ~2GB de transferencia/mes.
+  A los tamaños de fila de este esquema (sin blobs — las plantillas de
+  Training Records viven en Storage, no en filas), decenas de miles de
+  movimientos por cuenta caben cómodos en ese límite. El backup manual
+  semanal ya documentado (`docs/ADR/0017`) sigue siendo la única red de
+  seguridad — sin cambios aquí, es una decisión de coste ya en
+  `docs/BACKLOG.md`, no algo que resolver en esta fase.
+- **Vercel (funciones serverless, `api/*.js`):** límite de ejecución
+  (10s en Hobby) muy por encima de lo que tarda cualquier endpoint
+  actual (altas de usuario, envío de email, generación de enlaces) —
+  todos son operaciones puntuales de un solo usuario, no procesamiento
+  en lote. Sin riesgo real hoy.
+- **RLS y el patrón "traer todo, filtrar en cliente":** ningún índice
+  explícito más allá de las claves primarias/foráneas en `schema.sql` —
+  a este volumen por cuenta, el planificador de Postgres resuelve un
+  `select * where user_id = $1` con o sin índice adicional en un tiempo
+  indistinguible. Añadir índices ahora sería optimizar sin problema
+  medido — exactamente la sobreingeniería que `CLAUDE.md` pide evitar.
+
+### Recomendación concreta (para cuándo, no para ahora)
+
+**No cambiar nada de arquitectura de datos en esta fase.** La única
+señal real que justificaría paginar/agregar en servidor sería una
+cuenta con varios años de uso intensivo notando lentitud real — no
+hay evidencia de que exista hoy. Si llega esa señal, la recomendación
+concreta (por si hace falta consultarla más adelante) sería, en orden
+de esfuerzo creciente: (1) limitar `useSupabaseTable` a un rango de
+fechas razonable por defecto (p. ej. año en curso) con un selector para
+ver años anteriores, antes de (2) mover los totales de Resumen a una
+función RPC agregada en servidor. Ninguna de las dos se implementa
+ahora — no hay una cuenta real que lo necesite todavía.
+
+### Verificación
+
+Ningún cambio de código en esta fase — es puramente un documento de
+análisis, tal como decidió el propio riesgo de la fase.
 
 ## Fase 8 — Revisión visual y libro de estilo
 
