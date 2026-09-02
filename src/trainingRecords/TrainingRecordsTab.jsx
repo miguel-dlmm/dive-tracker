@@ -7,7 +7,6 @@ import { TEAL, NAVY } from "../App";
 import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
 import StudentFormSheet from "./StudentFormSheet";
 import StudentRecordSheet from "./StudentRecordSheet";
-import { renderPdfToJpgBytes } from "./pdfToJpg";
 
 // Generador de Training Records (Release V1, Fase 5). Todo lo que entra
 // aquí — roster de alumnos, firmas — es efímero: vive solo en el estado de
@@ -215,11 +214,20 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     if (bytes) downloadBytes(bytes, filenameFor(student));
   };
 
+  // import() dinámico, no estático: pdfjs-dist (~2MB) usa Promise.withResolvers
+  // internamente, disponible solo desde Safari 17.4 (marzo 2024) — con un
+  // import estático, ese código se ejecuta al cargar CUALQUIER pantalla de la
+  // app (hasta el login) en cuanto entra en el bundle principal, y revienta
+  // en Safari más antiguo con una pantalla en blanco total, no solo en
+  // Training Records. Cargarlo solo al pulsar este botón aísla el riesgo a
+  // quien de verdad usa la exportación a JPG, sin arrastrar al resto de la
+  // app ni a un visitante que ni siquiera ha iniciado sesión.
   const downloadAsJpg = async (student) => {
     const bytes = generatedByStudent[student.id];
     if (!bytes) return;
     setExportingJpgFor(student.id);
     try {
+      const { renderPdfToJpgBytes } = await import("./pdfToJpg");
       const jpgBytes = await renderPdfToJpgBytes(bytes);
       downloadBytes(jpgBytes, filenameFor(student, "jpg"), "image/jpeg");
     } catch (err) {
