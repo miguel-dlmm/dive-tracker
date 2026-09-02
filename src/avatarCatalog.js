@@ -1,4 +1,4 @@
-import { Anchor, Sailboat, Fish, Turtle, Compass, Ship, Shell, LifeBuoy, Droplets, Sunrise } from "lucide-react";
+import { Fish, FishSymbol, Turtle, Shrimp, Snail, Shell } from "lucide-react";
 import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN } from "./colors";
 
 // Catálogo cerrado de avatares (Bloque 5) — mismo criterio que el icono de
@@ -6,27 +6,24 @@ import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN } from "./colors";
 // + colores de marca, nunca una imagen subida por el usuario. Evita
 // moderación de contenido y almacenamiento de ficheros para algo que, en
 // una app de un único instructor por cuenta, no necesita ser una foto real.
-// Set de iconos DISTINTO del de "icono de carga" a propósito — que no se
-// confunda un avatar con el spinner de la app.
 //
-// Waves NO está en esta lista a propósito (corrección 2026-09-01): es el
-// icono de la propia app (favicon, login, spinner de carga — ver
-// EnvironmentIndicator.jsx/index.html) — un avatar de usuario con el mismo
-// icono se confundía visualmente con la identidad de la app. Sunrise lo
-// sustituye 1:1 (10 iconos, mismo tamaño de catálogo): salidas de barco al
-// amanecer es una imagen habitual del día a día de un instructor de buceo,
-// y no se solapa conceptualmente con ningún otro icono ya presente.
+// Catálogo reducido a animales marinos de verdad (pedido explícito del
+// usuario, 2026-09-01/02) — antes mezclaba objetos náuticos (Anchor,
+// Sailboat, Ship, Compass, LifeBuoy, Droplets, Sunrise) con animales. Se
+// revisó el catálogo completo de lucide-react buscando fauna marina real:
+// no existen iconos de ballena, delfín, pulpo, cangrejo, tiburón, estrella
+// de mar ni medusa en esta librería — el catálogo se queda en los 6 que sí
+// representan un animal marino real, en vez de forzar 10 rellenando con
+// objetos náuticos otra vez (eso es justo lo que se pidió dejar de hacer).
+// Waves sigue sin estar aquí: es el icono de la propia app (favicon,
+// login, spinner — ver EnvironmentIndicator.jsx/index.html), no un avatar.
 export const AVATAR_ICONS = [
-  { name: "Anchor", Icon: Anchor },
-  { name: "Sailboat", Icon: Sailboat },
   { name: "Fish", Icon: Fish },
+  { name: "FishSymbol", Icon: FishSymbol },
   { name: "Turtle", Icon: Turtle },
-  { name: "Compass", Icon: Compass },
-  { name: "Ship", Icon: Ship },
+  { name: "Shrimp", Icon: Shrimp },
+  { name: "Snail", Icon: Snail },
   { name: "Shell", Icon: Shell },
-  { name: "LifeBuoy", Icon: LifeBuoy },
-  { name: "Droplets", Icon: Droplets },
-  { name: "Sunrise", Icon: Sunrise },
 ];
 
 export const AVATAR_COLORS = [

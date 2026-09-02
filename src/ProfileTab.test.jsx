@@ -54,7 +54,7 @@ describe("avatar", () => {
     renderProfile();
 
     await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
-    await user.click(screen.getByRole("button", { name: "Icono Anchor" }));
+    await user.click(screen.getByRole("button", { name: "Icono Fish" }));
 
     expect(update).not.toHaveBeenCalled();
   });
@@ -65,7 +65,7 @@ describe("avatar", () => {
     const { onProfileUpdated } = renderProfile();
 
     await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
-    await user.click(screen.getByRole("button", { name: "Icono Anchor" }));
+    await user.click(screen.getByRole("button", { name: "Icono Fish" }));
     await user.click(screen.getByRole("button", { name: "Icono Turtle" }));
     await user.click(screen.getByRole("button", { name: "Color teal" }));
     await user.click(screen.getByRole("button", { name: "Guardar" }));
@@ -82,7 +82,7 @@ describe("avatar", () => {
     const { onProfileUpdated } = renderProfile();
 
     await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
-    await user.click(screen.getByRole("button", { name: "Icono Anchor" }));
+    await user.click(screen.getByRole("button", { name: "Icono Turtle" }));
     await user.click(screen.getByRole("button", { name: "Cancelar" }));
 
     expect(update).not.toHaveBeenCalled();
@@ -95,12 +95,12 @@ describe("avatar", () => {
     renderProfile();
 
     await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
-    await user.click(screen.getByRole("button", { name: "Icono Anchor" }));
+    await user.click(screen.getByRole("button", { name: "Icono Turtle" }));
     await user.click(screen.getByRole("button", { name: "Cancelar" }));
 
     await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
     expect(screen.getByRole("button", { name: "Icono Fish" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "Icono Anchor" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Icono Turtle" })).toHaveAttribute("aria-pressed", "false");
   });
 });
 
