@@ -42,7 +42,7 @@
   },
   "studentSheet": {
     "cerrar": "Cerrar",
-    "fechas": "Fechas",
+    "fechaDeFila": "Fecha: {{label}}",
     "progreso": "Progreso del curso",
     "inmersionesEspecialidad": "Inmersiones de especialidad",
     "elegirAventura": "Elige una aventura",

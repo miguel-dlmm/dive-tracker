@@ -69,15 +69,27 @@ async function drawSignature(page, canvasLocator) {
 }
 
 // El botón "Hoy" vive DENTRO del panel flotante del calendario — hay que
-// abrir el DatePicker de ese día primero (cada uno tiene su propio
-// aria-label, "Día 1"/"Día 2"/"Fecha del curso"...) antes de poder
-// tocarlo.
-async function pickToday(page, dayLabel) {
-  await page.getByRole("button", { name: dayLabel, exact: true }).tap();
+// abrir el DatePicker de esa fila primero (cada fila de progreso tiene su
+// propio selector, con aria-label "Fecha: <etiqueta de la fila>") antes de
+// poder tocarlo.
+async function pickToday(page, dateFieldLabel) {
+  await page.getByRole("button", { name: dateFieldLabel, exact: true }).tap();
   await page.waitForTimeout(200);
   await page.getByRole("button", { name: "Hoy" }).tap();
   await page.waitForTimeout(200);
 }
+
+// Las 6 filas obligatorias de OWD vienen marcadas por defecto — cada una
+// necesita su propia fecha para poder generar (pedido explícito del
+// usuario: fecha por fila, no agrupada por día).
+const OWD_MANDATORY_ROW_LABELS = [
+  "Sesiones Académicas",
+  "Sesiones en Piscina/Aguas Confinadas",
+  "Inmersión de Formación en Aguas Abiertas 1",
+  "Inmersión de Formación en Aguas Abiertas 2",
+  "Inmersión de Formación en Aguas Abiertas 3",
+  "Inmersión de Formación en Aguas Abiertas 4",
+];
 
 async function dismissWhatsNewIfPresent(page) {
   if (!(await page.getByRole("dialog").isVisible().catch(() => false))) return;
@@ -155,12 +167,15 @@ async function main() {
   await page.waitForTimeout(300);
   await shot(page, "plantilla-elegida");
 
-  console.log("→ Fechas Día 1 y Día 2 (botón 'Hoy' del selector de fecha)");
-  await pickToday(page, "Día 1");
-  await pickToday(page, "Día 2");
+  console.log("→ Fecha de cada fila de progreso marcada (botón 'Hoy' del selector de fecha de cada fila)");
+  for (const label of OWD_MANDATORY_ROW_LABELS) {
+    await pickToday(page, `Fecha: ${label}`);
+  }
 
-  console.log("→ Confirmación de examen + firma del alumno");
+  console.log("→ Confirmación de examen (con su propia fecha) + firma del alumno");
   await page.getByRole("checkbox", { name: "Confirmación de Examen Final" }).tap();
+  await page.waitForTimeout(200);
+  await pickToday(page, "Fecha: Confirmación de Examen Final");
   await drawSignature(page, page.locator('canvas[aria-label*="Firma del alumno"]'));
   await shot(page, "formulario-completo");
 

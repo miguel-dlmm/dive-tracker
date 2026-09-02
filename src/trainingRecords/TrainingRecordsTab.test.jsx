@@ -85,16 +85,28 @@ beforeEach(() => {
 });
 
 // Recorrido feliz completo: abre la hoja, rellena alumno + plantilla +
-// fecha del Día 1 + progreso + examen + certificación + confirmación de
-// examen + firma, genera. Reutilizado por varios tests para no repetir el
-// mismo bloque de interacciones una y otra vez.
+// fecha de cada fila de progreso marcada + confirmación de examen (con su
+// propia fecha) + firma, genera. Reutilizado por varios tests para no
+// repetir el mismo bloque de interacciones una y otra vez.
 // El botón "Hoy" vive DENTRO del panel flotante del calendario — hay que
-// abrir el DatePicker de ese día primero (cada uno tiene su propio
-// aria-label, "Día 1"/"Día 2"/...) antes de poder tocarlo.
-async function pickToday(user, dayLabel) {
-  await user.click(screen.getByRole("button", { name: dayLabel, exact: true }));
+// abrir el DatePicker de esa fila primero (cada fila tiene su propio
+// selector, con un aria-label único derivado de la etiqueta de la fila)
+// antes de poder tocarlo.
+async function pickToday(user, dateFieldLabel) {
+  await user.click(screen.getByRole("button", { name: dateFieldLabel, exact: true }));
   await user.click(await screen.findByRole("button", { name: "Hoy" }));
 }
+
+// Las 6 filas obligatorias de OWD (índices 0-5) vienen marcadas por
+// defecto — cada una necesita su propia fecha para poder generar.
+const OWD_MANDATORY_ROW_LABELS = [
+  "Sesiones Académicas",
+  "Sesiones en Piscina/Aguas Confinadas",
+  "Inmersión de Formación en Aguas Abiertas 1",
+  "Inmersión de Formación en Aguas Abiertas 2",
+  "Inmersión de Formación en Aguas Abiertas 3",
+  "Inmersión de Formación en Aguas Abiertas 4",
+];
 
 async function fillAndGenerate(user, { firstName = "Ana", lastName = "Garcia" } = {}) {
   await user.click(await screen.findByRole("button", { name: "Añadir alumno" }));
@@ -102,10 +114,12 @@ async function fillAndGenerate(user, { firstName = "Ana", lastName = "Garcia" } 
   await user.type(screen.getByRole("textbox", { name: "Apellidos" }), lastName);
   await user.click(await screen.findByText("Open Water Diver"));
 
-  await pickToday(user, "Día 1");
-  await pickToday(user, "Día 2"); // activo por defecto: filas obligatorias de OWD
+  for (const label of OWD_MANDATORY_ROW_LABELS) {
+    await pickToday(user, `Fecha: ${label}`);
+  }
 
   await user.click(screen.getByRole("checkbox", { name: "Confirmación de Examen Final" }));
+  await pickToday(user, "Fecha: Confirmación de Examen Final");
   signStudent();
 
   await user.click(screen.getByRole("button", { name: "Generar y descargar" }));
@@ -139,6 +153,10 @@ it("muestra un enlace para añadir el primer alumno cuando el roster está vací
   expect(await screen.findByText("Nuevo alumno")).toBeInTheDocument();
 });
 
+// fillAndGenerate hace un tap por cada fila de progreso (7 en total para
+// OWD, una por fila obligatoria + la confirmación de examen) — el timeout
+// por defecto (5000ms) queda justo bajo la carga de la suite completa en
+// paralelo, aunque en solitario sobra de sobra.
 it("genera y descarga el registro completo de un alumno, y lo refleja en el roster", async () => {
   const user = userEvent.setup();
   renderTab();
@@ -153,9 +171,9 @@ it("genera y descarga el registro completo de un alumno, y lo refleja en el rost
   expect(await screen.findByText("Ana Garcia")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Descargar PDF" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Descargar imagen (JPG)" })).toBeInTheDocument();
-});
+}, 15000);
 
-it("no genera si faltan campos obligatorios del documento (versión de examen, certificación, confirmación, firma o fecha del Día 1)", async () => {
+it("no genera si faltan campos obligatorios del documento (versión de examen, certificación, confirmación, firma o la fecha de una fila de progreso)", async () => {
   const user = userEvent.setup();
   renderTab();
 
@@ -172,7 +190,9 @@ it("no genera si faltan campos obligatorios del documento (versión de examen, c
   await user.click(screen.getByRole("button", { name: "Generar y descargar" }));
 
   expect(fillTrainingRecordPdf).not.toHaveBeenCalled();
-  expect(screen.getByText("La fecha de inicio del curso es obligatoria.")).toBeInTheDocument();
+  // Las 6 filas obligatorias de OWD están marcadas por defecto y ninguna
+  // tiene fecha todavía — aparece un aviso por cada una.
+  expect(screen.getAllByText("Falta la fecha de esta fila.").length).toBe(6);
   expect(screen.getByText("Elige la versión del examen.")).toBeInTheDocument();
   expect(screen.getByText("Elige la certificación.")).toBeInTheDocument();
   expect(screen.getByText("Confirma que se ha completado el examen final.")).toBeInTheDocument();
@@ -188,7 +208,7 @@ it("exporta el registro ya generado como imagen JPG desde el icono de la fila", 
 
   await waitFor(() => expect(renderPdfToJpgBytes).toHaveBeenCalledWith(new Uint8Array([1, 2, 3])));
   expect(global.URL.createObjectURL).toHaveBeenCalledWith(expect.objectContaining({ type: "image/jpeg" }));
-});
+}, 15000);
 
 it("al editar un alumno ya generado, reabre con su nombre, plantilla y configuración ya rellenos", async () => {
   const user = userEvent.setup();
@@ -204,7 +224,7 @@ it("al editar un alumno ya generado, reabre con su nombre, plantilla y configura
   // en el radio de certificación, texto ambiguo si se busca sin acotar).
   expect(screen.getByRole("button", { name: "Cambiar plantilla" })).toBeInTheDocument();
   expect(screen.getByRole("checkbox", { name: "Confirmación de Examen Final" })).toBeChecked();
-});
+}, 15000);
 
 it("mantiene el roster y los documentos ya generados si el componente se vuelve a montar (recarga de página)", async () => {
   const user = userEvent.setup();
@@ -216,4 +236,4 @@ it("mantiene el roster y los documentos ya generados si el componente se vuelve 
   renderTab();
   expect(await screen.findByText("Ana Garcia")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Descargar PDF" })).toBeInTheDocument();
-});
+}, 15000);

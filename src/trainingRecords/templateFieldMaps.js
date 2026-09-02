@@ -28,20 +28,14 @@
 
 const P = (id) => `undefined.tr-input-${id}`;
 
-// `day` agrupa filas de progreso que comparten fecha (Release V1, Fase 5,
-// lote 2026-09-02) — en vez de un selector de fecha por fila (repetitivo:
-// varias filas del mismo día real de curso), la UI muestra un selector por
-// grupo de día y lo aplica a todas las filas de ese grupo al generar. Sin
-// `day` (SC-DD/SC-EAN, que no tienen una regla de varios días pedida
-// explícitamente) se trata como un único día genérico ("Fecha del curso").
-// El día 1 es SIEMPRE obligatorio (pedido explícito del usuario: "siempre
-// se pedirá la fecha de inicio del curso"); días siguientes son opcionales
-// y solo se piden si hay alguna fila de ese día marcada.
-function progressRow(base, { optional = false, label, day = 1 } = {}) {
+// Cada fila de progreso lleva su propia fecha, seleccionable a mano
+// directamente desde esa fila (pedido explícito del usuario, Release V1,
+// Fase 5, corrección 2026-09-02) — no se agrupan varias filas bajo una
+// fecha compartida de "Día 1"/"Día 2".
+function progressRow(base, { optional = false, label } = {}) {
   return {
     label,
     optional,
-    day,
     studentInitials: P(`${base}-0`),
     date: P(`${base}-1`),
     instructorInitials: P(`${base}-2`),
@@ -57,27 +51,18 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: P("23905082-0"),
       lastName: P("23905082-1"),
     },
-    // Reparto de días pedido explícitamente por el usuario (2026-09-02):
-    // Día 1 = OW1+OW2 (siempre); Día 2 = Académicas+Piscina+OW3+OW4 (curso
-    // de 2 días) — si el curso se hace en 3 días, el propio instructor deja
-    // el Día 2 solo con OW3+OW4 y usa el Día 3 (más abajo) para
-    // Académicas+Piscina, o al revés: el generador no impone el orden
-    // interno de un mismo día, solo agrupa qué comparte fecha. OW5/OW6
-    // (opcionales) no estaban cubiertos por la regla 2-días/3-días del
-    // encargo — se les da su propio Día 3, que solo aparece si se marca
-    // alguna de las dos (ver detalle en docs/RELEASE-V1-PROGRESS.md).
     sessionRows: [
-      progressRow("23905086", { label: "Sesiones Académicas", day: 2 }),
-      progressRow("23905088", { label: "Sesiones en Piscina/Aguas Confinadas", day: 2 }),
-      progressRow("23905090", { label: "Inmersión de Formación en Aguas Abiertas 1", day: 1 }),
-      progressRow("23905092", { label: "Inmersión de Formación en Aguas Abiertas 2", day: 1 }),
-      progressRow("23905094", { label: "Inmersión de Formación en Aguas Abiertas 3", day: 2 }),
-      progressRow("23905096", { label: "Inmersión de Formación en Aguas Abiertas 4", day: 2 }),
+      progressRow("23905086", { label: "Sesiones Académicas" }),
+      progressRow("23905088", { label: "Sesiones en Piscina/Aguas Confinadas" }),
+      progressRow("23905090", { label: "Inmersión de Formación en Aguas Abiertas 1" }),
+      progressRow("23905092", { label: "Inmersión de Formación en Aguas Abiertas 2" }),
+      progressRow("23905094", { label: "Inmersión de Formación en Aguas Abiertas 3" }),
+      progressRow("23905096", { label: "Inmersión de Formación en Aguas Abiertas 4" }),
       // Las dos siguientes son las "inmersiones opcionales del tercer día"
       // que menciona el encargo original — el generador debe poder
       // dejarlas en blanco cuando el curso se hizo en 2 días.
-      progressRow("23905098", { label: "Inmersión de Formación en Aguas Abiertas 5", optional: true, day: 3 }),
-      progressRow("23905100", { label: "Inmersión de formación en aguas abiertas 6", optional: true, day: 3 }),
+      progressRow("23905098", { label: "Inmersión de Formación en Aguas Abiertas 5", optional: true }),
+      progressRow("23905100", { label: "Inmersión de formación en aguas abiertas 6", optional: true }),
     ],
     examVersion: { printed: P("23905148-0"), online: P("23905150-0") },
     // Checkboxes de actualización opcional (el alumno certifica Scuba
@@ -102,39 +87,35 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: P("30037160-0"),
       lastName: P("30037160-1"),
     },
-    // Profunda y Navegación van con fecha del Día 1 (pedido explícito del
-    // usuario). Sesiones Académicas no se mencionó explícitamente — se
-    // agrupa también en Día 1 (supuesto razonable, documentado en
-    // docs/RELEASE-V1-PROGRESS.md como punto a confirmar).
     sessionRows: [
-      progressRow("30037164", { label: "Sesiones Académicas Finalizadas", day: 1 }),
-      progressRow("30037167", { label: "Inmersión de Formación en Aguas Abiertas Completada | Deep Diving", day: 1 }),
-      progressRow("30037170", { label: "Inmersión de Formación en Aguas Abiertas Completada | Navegación", day: 1 }),
+      progressRow("30037164", { label: "Sesiones Académicas Finalizadas" }),
+      progressRow("30037167", { label: "Inmersión de Formación en Aguas Abiertas Completada | Deep Diving" }),
+      progressRow("30037170", { label: "Inmersión de Formación en Aguas Abiertas Completada | Navegación" }),
     ],
     // Las 3 inmersiones optativas de especialidad — cada una tiene un
     // combo (nombre de la aventura, catálogo en BBDD, ver
-    // training_record_adventures) y una fila de finalización con fecha del
-    // Día 2 (pedido explícito). La fila de "sesión de piscina" se deja sin
-    // usar desde este combo — el encargo pide rellenar solo la fila de
-    // finalización, ver TrainingRecordsTab.jsx.
+    // training_record_adventures) y una fila de finalización con su propia
+    // fecha. La fila de "sesión de piscina" se deja sin usar desde este
+    // combo — el encargo pide rellenar solo la fila de finalización, ver
+    // TrainingRecordsTab.jsx.
     optionalSpecialtyDives: [
       {
         label: "Inmersión de Formación en Aguas Abiertas 3",
         specialtyName: P("30037175-0"),
         poolSession: progressRow("30037177", { label: "Sesión en la Piscina/Aguas Confinadas | Si es necesario" }),
-        completed: progressRow("30037179", { label: "Inmersión de Formación en Aguas Abiertas 3 Completada", day: 2 }),
+        completed: progressRow("30037179", { label: "Inmersión de Formación en Aguas Abiertas 3 Completada" }),
       },
       {
         label: "Inmersión de Formación en Aguas Abiertas 4",
         specialtyName: P("30037181-0"),
         poolSession: progressRow("30037183", { label: "Sesión en la Piscina/Aguas Confinadas | Si es necesario" }),
-        completed: progressRow("30037185", { label: "Inmersión de Formación en Aguas Abiertas 4 Completada", day: 2 }),
+        completed: progressRow("30037185", { label: "Inmersión de Formación en Aguas Abiertas 4 Completada" }),
       },
       {
         label: "Inmersión de Formación en Aguas Abiertas 5",
         specialtyName: P("30037187-0"),
         poolSession: progressRow("30037189", { label: "Sesión en la Piscina/Aguas Confinadas | Si es necesario" }),
-        completed: progressRow("30037191", { label: "Inmersión de Formación en Aguas Abiertas 5 Completada", day: 2 }),
+        completed: progressRow("30037191", { label: "Inmersión de Formación en Aguas Abiertas 5 Completada" }),
       },
     ],
     signatures: {

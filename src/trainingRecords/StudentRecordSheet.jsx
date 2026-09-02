@@ -7,7 +7,7 @@ import { computeInitials } from "../computeInitials";
 import SignatureCapture from "../SignatureCapture";
 import { fillTrainingRecordPdf } from "./pdfFill";
 import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
-import { buildDefaultConfig, activeDayGroups, dayGroupLabels, validateRecordConfig, buildFillData } from "./recordConfig";
+import { buildDefaultConfig, validateRecordConfig, buildFillData } from "./recordConfig";
 
 // Pestaña única de creación/edición (Release V1, Fase 5, lote 2026-09-02,
 // pedido explícito del usuario: "me gusta el modelo planteado con el de
@@ -18,12 +18,25 @@ import { buildDefaultConfig, activeDayGroups, dayGroupLabels, validateRecordConf
 // para crear (mode="add") y para editar (mode="edit", initial=entrada del
 // roster) — reabrir para editar restaura de verdad lo que ya había,
 // alumno + plantilla + configuración completos, no solo el documento.
-function ProgressRowToggle({ label, checked, onChange }) {
+// dateValue/onDateChange (opcionales): cuando se pasan, la fila marcada
+// muestra su propio selector de fecha justo debajo — cada item del
+// progreso del curso lleva su fecha asociada, seteable a mano ahí mismo
+// (pedido explícito del usuario, corrección 2026-09-02), sin agrupar
+// varias filas bajo una fecha compartida de "Día 1"/"Día 2".
+function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, dateError, dateLabel }) {
   return (
-    <label className="flex min-h-11 items-center gap-2.5 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-700">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: TEAL }} />
-      <span className="flex-1">{label}</span>
-    </label>
+    <div>
+      <label className="flex min-h-11 items-center gap-2.5 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-700">
+        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: TEAL }} />
+        <span className="flex-1">{label}</span>
+      </label>
+      {checked && onDateChange && (
+        <div className="mt-1 pl-3">
+          <DatePicker value={dateValue} onChange={onDateChange} placeholder={dateLabel} />
+          <FieldError message={dateError} />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -100,7 +113,7 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
 
   const updateConfig = (patch) => setConfig((c) => ({ ...c, ...patch }));
   const toggleRow = (i, checked) => setConfig((c) => ({ ...c, includedRows: c.includedRows.map((v, idx) => (idx === i ? checked : v)) }));
-  const setDayDate = (day, value) => setConfig((c) => ({ ...c, dayDates: { ...c.dayDates, [day]: value } }));
+  const setRowDate = (i, value) => setConfig((c) => ({ ...c, rowDates: { ...c.rowDates, [i]: value } }));
   const updateDive = (i, patch) => setConfig((c) => ({ ...c, specialtyDives: c.specialtyDives.map((d, idx) => (idx === i ? { ...d, ...patch } : d)) }));
 
   const validateStudent = () => {
@@ -146,9 +159,6 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
       setGenerating(false);
     }
   };
-
-  const activeDays = templateMap && config ? activeDayGroups(templateMap, config) : [];
-  const dayLabels = templateMap ? dayGroupLabels(templateMap) : {};
 
   return (
     <Sheet open={open} onClose={onClose}>
@@ -218,25 +228,20 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
 
         {templateMap && config && (
           <>
-            <section className="space-y-2">
-              <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.fechas")}</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {activeDays.map((day) => (
-                  <div key={day} className={activeDays.length === 1 ? "col-span-2" : ""}>
-                    <Field label={dayLabels[day]}>
-                      <DatePicker value={config.dayDates[day]} onChange={(v) => setDayDate(day, v)} placeholder={dayLabels[day]} />
-                    </Field>
-                    {day === 1 && <FieldError message={configErrors.day1} />}
-                  </div>
-                ))}
-              </div>
-            </section>
-
             <section>
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.progreso")}</h4>
               <div className="space-y-1.5">
                 {templateMap.sessionRows.map((r, i) => (
-                  <ProgressRowToggle key={i} label={r.label} checked={config.includedRows[i]} onChange={(checked) => toggleRow(i, checked)} />
+                  <ProgressRowToggle
+                    key={i}
+                    label={r.label}
+                    checked={config.includedRows[i]}
+                    onChange={(checked) => toggleRow(i, checked)}
+                    dateValue={config.rowDates[i]}
+                    onDateChange={(v) => setRowDate(i, v)}
+                    dateError={configErrors.rowDates?.[i]}
+                    dateLabel={t("studentSheet.fechaDeFila", { label: r.label })}
+                  />
                 ))}
               </div>
               <FieldError message={configErrors.rows} />
@@ -260,6 +265,12 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
                           options={adventures.map((a) => a.name)}
                           placeholder={t("studentSheet.elegirAventura")}
                         />
+                        {current.adventureId && (
+                          <div className="mt-1.5">
+                            <DatePicker value={current.date} onChange={(v) => updateDive(i, { date: v })} placeholder={t("studentSheet.fechaDeFila", { label: dive.label })} />
+                            <FieldError message={configErrors.specialtyDates?.[i]} />
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -313,7 +324,15 @@ export default function StudentRecordSheet({ open, onClose, mode, initial, templ
 
             {templateMap.examConfirmation && (
               <section>
-                <ProgressRowToggle label={templateMap.examConfirmation.label} checked={config.examConfirmed} onChange={(v) => updateConfig({ examConfirmed: v })} />
+                <ProgressRowToggle
+                  label={templateMap.examConfirmation.label}
+                  checked={config.examConfirmed}
+                  onChange={(v) => updateConfig({ examConfirmed: v })}
+                  dateValue={config.examConfirmedDate}
+                  onDateChange={(v) => updateConfig({ examConfirmedDate: v })}
+                  dateError={configErrors.examConfirmationDate}
+                  dateLabel={t("studentSheet.fechaDeFila", { label: templateMap.examConfirmation.label })}
+                />
                 <FieldError message={configErrors.examConfirmation} />
               </section>
             )}

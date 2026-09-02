@@ -2,73 +2,66 @@ import { formatDateDDMMYY, todayIso } from "./dateFormat";
 
 // Lógica de negocio del formulario de configuración del documento —
 // separada de StudentRecordSheet.jsx (UI) para poder probarla a fondo sin
-// montar componentes. Cubre: valores por defecto de un registro nuevo, qué
-// grupos de fecha (Día 1/2/3) hay que pedir según la plantilla y lo que ya
-// se ha marcado, validación de campos obligatorios antes de generar, y la
-// traducción final a la forma que espera pdfFill.js (fechas ya aplicadas a
-// cada fila, ya en formato DD/MM/AA).
+// montar componentes. Cubre: valores por defecto de un registro nuevo,
+// validación de campos obligatorios antes de generar, y la traducción
+// final a la forma que espera pdfFill.js (fechas ya en formato DD/MM/AA).
+//
+// Cada fila de progreso del curso lleva su propia fecha, seleccionable a
+// mano directamente desde esa fila (pedido explícito del usuario,
+// corrección 2026-09-02) — no hay agrupación de filas bajo una fecha
+// compartida de "Día 1"/"Día 2".
 
 export function buildDefaultConfig(templateMap) {
   return {
     includedRows: (templateMap?.sessionRows || []).map((row) => !row.optional),
+    rowDates: {},
     examVersion: templateMap?.examVersion ? "online" : null, // premarcado Online — pedido explícito del usuario.
     upgrade: templateMap?.upgradeCheckboxes ? "openWaterDiver" : null,
     courseVariant: null,
     examConfirmed: false,
-    specialtyDives: (templateMap?.optionalSpecialtyDives || []).map(() => ({ adventureId: null, adventureName: "", completed: false })),
+    examConfirmedDate: null,
+    specialtyDives: (templateMap?.optionalSpecialtyDives || []).map(() => ({ adventureId: null, adventureName: "", completed: false, date: null })),
     signatures: { studentPng: null, parentPng: null },
-    dayDates: {},
   };
-}
-
-// Los días "posibles" de una plantilla (no necesariamente activos todavía)
-// — determina si es una plantilla de un solo día (SC-DD/SC-EAN: un único
-// selector genérico "Fecha del curso") o de varios (OWD/AOWD: "Día 1",
-// "Día 2"...).
-function possibleDays(templateMap) {
-  const fromRows = (templateMap?.sessionRows || []).map((r) => r.day || 1);
-  const fromDives = templateMap?.optionalSpecialtyDives?.length ? [2] : [];
-  return [...new Set([1, ...fromRows, ...fromDives])].sort((a, b) => a - b);
-}
-
-// Los días REALMENTE activos ahora mismo, según qué filas opcionales están
-// marcadas y si hay alguna aventura elegida — Día 1 siempre está presente
-// (pedido explícito: "siempre se pedirá la fecha de inicio del curso").
-export function activeDayGroups(templateMap, config) {
-  const days = new Set([1]);
-  (templateMap?.sessionRows || []).forEach((row, i) => {
-    if (!row.optional || config.includedRows[i]) days.add(row.day || 1);
-  });
-  if (templateMap?.optionalSpecialtyDives && config.specialtyDives?.some((d) => d.adventureId)) days.add(2);
-  return [...days].sort((a, b) => a - b);
-}
-
-export function dayGroupLabels(templateMap) {
-  const multiDay = possibleDays(templateMap).length > 1;
-  return multiDay ? { 1: "Día 1", 2: "Día 2", 3: "Día 3" } : { 1: "Fecha del curso" };
 }
 
 // Validación de los campos obligatorios del documento (pedido explícito
 // del usuario): versión de examen, certificación, confirmación de examen
 // final y firma del alumno cuando la plantilla tiene esa sección; al menos
-// una fila de progreso marcada siempre; la fecha del Día 1 siempre. No
-// exige una sección que la plantilla no tiene (p. ej. AOWD no tiene
-// versión de examen).
+// una fila de progreso marcada siempre; cada fila marcada (de progreso, de
+// inmersión de especialidad completada, o la confirmación de examen)
+// necesita su propia fecha.
 export function validateRecordConfig(templateMap, config) {
   const errors = {};
   if (!config.includedRows.some(Boolean)) errors.rows = "Marca al menos una fila del progreso del curso.";
-  if (!config.dayDates[1]) errors.day1 = "La fecha de inicio del curso es obligatoria.";
+
+  const rowDateErrors = {};
+  (templateMap.sessionRows || []).forEach((row, i) => {
+    if (config.includedRows[i] && !config.rowDates[i]) rowDateErrors[i] = "Falta la fecha de esta fila.";
+  });
+  if (Object.keys(rowDateErrors).length > 0) errors.rowDates = rowDateErrors;
+
+  const specialtyDateErrors = {};
+  (templateMap.optionalSpecialtyDives || []).forEach((_, i) => {
+    const dive = config.specialtyDives?.[i];
+    if (dive?.adventureId && !dive.date) specialtyDateErrors[i] = "Falta la fecha de esta inmersión.";
+  });
+  if (Object.keys(specialtyDateErrors).length > 0) errors.specialtyDates = specialtyDateErrors;
+
   if (templateMap.examVersion && !config.examVersion) errors.examVersion = "Elige la versión del examen.";
   if (templateMap.upgradeCheckboxes && !config.upgrade) errors.upgrade = "Elige la certificación.";
-  if (templateMap.examConfirmation && !config.examConfirmed) errors.examConfirmation = "Confirma que se ha completado el examen final.";
+  if (templateMap.examConfirmation) {
+    if (!config.examConfirmed) errors.examConfirmation = "Confirma que se ha completado el examen final.";
+    else if (!config.examConfirmedDate) errors.examConfirmationDate = "Falta la fecha de la confirmación de examen.";
+  }
   if (!config.signatures?.studentPng) errors.studentSignature = "Falta la firma del alumno.";
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
-function rowValues(studentInitials, day, config, instructor) {
+function rowValues(studentInitials, dateIso, config, instructor) {
   return {
     studentInitials,
-    date: formatDateDDMMYY(config.dayDates[day]),
+    date: formatDateDDMMYY(dateIso),
     instructorInitials: instructor.initials,
     instructorNumber: instructor.number,
   };
@@ -76,17 +69,13 @@ function rowValues(studentInitials, day, config, instructor) {
 
 /**
  * Traduce el estado del formulario (config) a la forma que espera
- * fillTrainingRecordPdf: cada fila ya lleva su fecha del día que le toca,
- * la fecha de examen es la más tardía de los días activos ("el último
- * día", pedido explícito), y la fecha de firma es siempre hoy.
+ * fillTrainingRecordPdf: cada fila lleva su propia fecha ya elegida a
+ * mano, y la fecha de firma es siempre hoy.
  */
 export function buildFillData(templateMap, student, config, instructor) {
-  const activeDays = activeDayGroups(templateMap, config);
-  const lastActiveDay = Math.max(...activeDays);
-
   const sessionRows = (templateMap.sessionRows || []).map((row, i) => {
     if (!config.includedRows[i]) return null;
-    return rowValues(student.initials, row.day || 1, config, instructor);
+    return rowValues(student.initials, config.rowDates[i], config, instructor);
   });
 
   const specialtyDives = (templateMap.optionalSpecialtyDives || []).map((_, i) => {
@@ -97,7 +86,7 @@ export function buildFillData(templateMap, student, config, instructor) {
     return {
       specialtyName: values.adventureName,
       poolSession: null,
-      completed: rowValues(student.initials, 2, config, instructor),
+      completed: rowValues(student.initials, values.date, config, instructor),
     };
   });
 
@@ -108,7 +97,7 @@ export function buildFillData(templateMap, student, config, instructor) {
     examVersion: config.examVersion,
     upgrade: config.upgrade,
     courseVariant: config.courseVariant,
-    examConfirmation: templateMap.examConfirmation ? rowValues(student.initials, lastActiveDay, config, instructor) : null,
+    examConfirmation: templateMap.examConfirmation ? rowValues(student.initials, config.examConfirmedDate, config, instructor) : null,
     specialtyDives,
     instructor: { namePrinted: instructor.namePrinted, number: instructor.number },
     signatures: { studentPng: config.signatures?.studentPng, parentPng: config.signatures?.parentPng, instructorPng: instructor.signature },

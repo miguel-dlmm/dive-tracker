@@ -42,7 +42,7 @@
   },
   "studentSheet": {
     "cerrar": "Close",
-    "fechas": "Dates",
+    "fechaDeFila": "Date: {{label}}",
     "progreso": "Course progress",
     "inmersionesEspecialidad": "Specialty dives",
     "elegirAventura": "Choose an adventure",

@@ -1222,39 +1222,39 @@ Verificado renderizando el PDF real generado (`pdftoppm`), no solo
 asumido — ver captura en la sesión, texto e iniciales en mayúscula
 teal bien centrados, firmas claramente más visibles que antes.
 
-**7. Fechas por plantilla.** Cada fila de progreso de
-`templateFieldMaps.js` gana un `day` (1/2/3) — agrupa filas que
-comparten fecha real de curso, según lo que describió el usuario:
-  - **OWD:** Día 1 = Inmersiones 1 y 2. Día 2 = Sesiones
-    Académicas + Piscina + Inmersiones 3 y 4. Día 3 (opcional, solo
-    aparece si se marca alguna de las dos filas opcionales OW5/OW6):
-    **no estaba cubierto por la regla 2-días/3-días del encargo** — se
-    les dio su propio grupo en vez de adivinar a cuál de los otros dos
-    pertenecían. **Pendiente de confirmar con el usuario.**
-  - **AOWD:** Profunda y Navegación con fecha del Día 1 (pedido
-    explícito). Sesiones Académicas no se mencionó explícitamente —
-    **se agrupó también en Día 1 por defecto, pendiente de confirmar.**
-    Las 3 aventuras opcionales (combo, ver punto 8) van con fecha del
-    Día 2 (pedido explícito).
-  - **SC-DD y SC-EAN:** sin regla explícita en el encargo — se dejaron
-    con un único grupo de fecha genérico ("Fecha del curso" en vez de
-    "Día 1"), todas sus filas comparten esa misma fecha.
-  - **BD y el resto de plantillas sin campos de formulario:** la regla
-    ("todas las filas con fecha del Día 1") queda anotada aquí para
-    cuando esas 6 plantillas se aborden — no aplicable hoy, no tienen
-    ningún campo rellenable (ver Fase 5 original).
-  - **Fecha de las firmas:** siempre la fecha de generación del PDF
-    (`generatedAtLabel`), igual para las 3 firmas y todas las
-    plantillas — se rellena aunque esa firma en concreto no se haya
-    capturado (p. ej. la del padre/madre/tutor si no firmó), porque el
-    encargo no lo condicionó a que la firma exista.
-  - **Examen final (ambos OW):** fecha = el día activo más tardío
-    (Día 3 si hay, si no Día 2), calculado en tiempo de generación, no
-    un selector aparte. Confirmado que solo se rellena la página 1 de
-    cada plantilla, como ya era el caso.
-  La UI muestra un selector de fecha por grupo de día activo (no uno
-  por fila — se agrupan para no repetir la misma fecha varias veces),
-  con acceso directo "Hoy" (ver punto 9).
+**7. Fechas por fila de progreso (corregido 2026-09-02, mismo día,
+tras feedback directo del usuario).** El primer corte de este punto
+agrupaba las filas de progreso en fechas de "Día 1"/"Día 2"/"Día 3"
+compartidas — el usuario aclaró que su petición original era otra:
+**cada item del progreso del curso lleva su propio campo de fecha,
+seteable a mano justo ahí**, sin ningún agrupado por día. Se ha
+revertido el agrupado por completo:
+  - `templateFieldMaps.js` pierde el campo `day` de `progressRow()` —
+    ya no agrupa nada, cada fila es independiente.
+  - `recordConfig.js`: `config.dayDates` (por día) pasa a ser
+    `config.rowDates` (por índice de fila). La confirmación de examen
+    final (OWD/SC-DD/SC-EAN) también gana su propia fecha manual
+    (`examConfirmedDate`) en vez de derivarse sola del "último día
+    activo" — mismo criterio de "cada item marcado lleva su fecha" que
+    el resto de filas, más simple que mantener un caso especial. Cada
+    inmersión de especialidad completada de AOWD (combo, ver punto 8)
+    también gana su propia fecha (`specialtyDives[i].date`).
+  - `StudentRecordSheet.jsx`: cada fila de progreso (`ProgressRowToggle`)
+    muestra su propio `DatePicker` (con el botón "Hoy" del punto 9) en
+    cuanto se marca, en vez de una sección "Fechas" aparte al principio
+    de la hoja. Validación por fila: si una fila está marcada y le
+    falta la fecha, aviso justo debajo de esa fila.
+  - Las dos preguntas que quedaban "pendientes de confirmar" en el
+    primer corte (agrupación de OW5/OW6 y de Sesiones Académicas de
+    AOWD) **quedan resueltas por descarte** — al no existir ya ningún
+    agrupado por día, no hay nada que confirmar.
+  - Fecha de las firmas: sigue siendo siempre la fecha de generación
+    del PDF (`generatedAtLabel`), sin cambios — no es un "item de
+    progreso", es la fecha real en que se firma el documento.
+  - Verificado de nuevo end-to-end con `scripts/mobile-check-training-records.mjs`
+    (actualizado al nuevo flujo: un tap "Hoy" por fila) y con el PDF
+    real renderizado — cada fila del documento generado muestra su
+    propia fecha correctamente.
 
 **8. Combo de aventuras de Advanced (AOWD).** Tabla nueva
 `training_record_adventures` (migración `0010`, sembrada con las 6
