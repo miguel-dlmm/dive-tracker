@@ -110,6 +110,13 @@ function RosterRow({ student, hasGenerated, exportingJpg, onOpenGenerate, onEdit
       <button onClick={() => onOpenGenerate(student)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">{student.initials}</span>
         <span className="min-w-0 flex-1 truncate font-medium text-gray-800">{student.firstName} {student.lastName}</span>
+        {/* Sin esto, la fila no daba ninguna pista visual de que se podía
+            tocar para generar el registro — reportado en vivo (2026-09-02):
+            tras añadir un alumno, "ya no hay más botones de acción en la
+            interfaz". Mismo chevron que ya usa TemplatePicker justo arriba
+            en esta misma pantalla, para reutilizar una señal que el usuario
+            acaba de aprender a reconocer, no inventar una nueva. */}
+        {!hasGenerated && <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />}
       </button>
       {hasGenerated && (
         <>
