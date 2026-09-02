@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr, ExpandableCard } from "./shared";
 import { listItemVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
-import { computeRateTotal, comparePeriods } from "./rateCalc";
+import { buildEntriesBySource, comparePeriods } from "./rateCalc";
 import { NAVY, CORAL, GREEN } from "./App";
 
 // Rediseño 2026-08-29 (ver docs/ADR/0009-rediseno-resumen.md): Resumen deja
@@ -421,14 +421,14 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   const sourceColor = source === "total" ? NAVY : SOURCE_META[source].color;
   const sourceLabel = source === "total" ? t("totalCombined") : t("totalOf", { source: SOURCE_META[source].label });
 
-  const rateTotal = (e, ratesTable) => {
-    const r = ratesTable.rows.find((r) => r.school === e.school && r.activity === e.activity);
-    return { total: computeRateTotal(r, e.people), currency: r?.currency || e.currency || fallbackCurrency };
-  };
-
-  const ganadoEntries = useMemo(() => worklog.rows.map((e) => ({ ...e, ...rateTotal(e, rates), _source: "ganado" })), [worklog.rows, rates.rows, fallbackCurrency]);
-  const comisionEntries = useMemo(() => comisiones.rows.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" })), [comisiones.rows, commissionRates.rows, fallbackCurrency]);
-  const companerosEntries = useMemo(() => colleaguePayments.rows.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" })), [colleaguePayments.rows]);
+  // buildEntriesBySource (rateCalc.js): antes duplicado byte a byte aquí y
+  // en HomeTab.jsx — ver docs/BACKLOG.md, "Reutilizar componente entre
+  // Home y Resumen".
+  const entriesBySource = useMemo(
+    () => buildEntriesBySource({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
+  );
+  const { ganado: ganadoEntries, comision: comisionEntries, companeros: companerosEntries } = entriesBySource;
 
   const withTotals = useMemo(() => {
     if (source === "total") return [...ganadoEntries, ...comisionEntries, ...companerosEntries];
