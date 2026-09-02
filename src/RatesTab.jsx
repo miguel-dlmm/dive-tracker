@@ -36,29 +36,25 @@ const CREATE_TYPES = [
   { key: "comision", icon: Handshake },
 ];
 
-// schools / activities / paymentTypes / currencies: { rows: [...] } — de useSupabaseTable
+// schools / activities / currencies: { rows: [...] } — de useSupabaseTable
 // rates / commissionRates: { rows, insertRow, updateRow, deleteRow }
 // worklog / comisiones: { rows: [...] } — para comprobar si una tarifa está en uso antes de dejar borrarla
 // accentColor: color de sección (nav_sections), para el botón flotante de crear
-export default function RatesTab({ schools, activities, paymentTypes, currencies, rates, commissionRates, worklog, comisiones, accentColor = TEAL }) {
+export default function RatesTab({ schools, activities, currencies, rates, commissionRates, worklog, comisiones, accentColor = TEAL }) {
   const { t } = useTranslation("rates");
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
-  // El tipo de pago ya no se elige en ningún formulario — toda tarifa nueva
-  // se crea como "Per Person" (si no existe esa fila en payment_types, cae
-  // al is_default de la tabla y, si tampoco hay, al primero).
-  // WORKAROUND TEMPORAL (ver docs/BACKLOG.md y docs/ADR/0003): una cuenta
-  // nueva nace con payment_types vacío (clone_setup_dataset no lo siembra),
-  // así que sin este último fallback a "Per Person" el guardado de tarifa
-  // queda bloqueado para todo instructor recién dado de alta. payment_type
-  // como concepto está aprobado para eliminarse (ADR-0003) — este fallback
-  // desaparece con esa migración, no antes.
-  const defaultPaymentType = paymentTypes.rows.find((t) => t.name === "Per Person")?.name || paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "Per Person";
   const toast = useToast();
 
   const tableFor = (source) => (source === "ganado" ? rates : commissionRates);
   const entriesForSource = (source) => (source === "ganado" ? worklog.rows : comisiones.rows);
 
-  const emptyForm = { school: "", activity: "", payment_type: defaultPaymentType, currency: defaultCurrency, rate: "" };
+  // payment_type: "Per Person" — literal fijo, no una elección real (ver
+  // ADR-0003, pasos 1-2: la columna sigue en BD por ahora con NOT NULL,
+  // pero deja de ser un concepto que el usuario vea o elija; el importe
+  // siempre es tarifa × personas, ver rateCalc.js). Solo hace falta al
+  // CREAR (insert) — al editar (ver startEdit) ni se lee ni se reenvía,
+  // la columna ya tiene un valor de cuando se creó la fila.
+  const emptyForm = { school: "", activity: "", payment_type: "Per Person", currency: defaultCurrency, rate: "" };
   const [form, setForm] = useState(emptyForm);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -144,7 +140,7 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
   };
 
   const startEdit = (r) => {
-    setForm({ school: r.school, activity: r.activity, payment_type: r.payment_type, currency: r.currency, rate: r.rate });
+    setForm({ school: r.school, activity: r.activity, currency: r.currency, rate: r.rate });
     setCreating(r._source);
     setEditingEntry(r);
     setSheetOpen(true);
@@ -162,7 +158,7 @@ export default function RatesTab({ schools, activities, paymentTypes, currencies
   };
 
   const submitSheet = async () => {
-    if (!form.school || !form.activity || !form.payment_type || !form.rate) return;
+    if (!form.school || !form.activity || !form.rate) return;
     try {
       if (editingEntry) {
         await tableFor(creating).updateRow(editingEntry.id, { ...form, rate: Number(form.rate) });

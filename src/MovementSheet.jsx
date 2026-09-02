@@ -57,7 +57,7 @@ function useAutoResizeTextarea(value) {
 // Home, calendario de Home): todos crean/editan el mismo tipo de dato.
 export default function MovementSheet({
   request, onClose, onSaved,
-  schools, activities, paymentTypes, paymentStatuses, currencies, rates, commissionRates,
+  schools, activities, paymentStatuses, currencies, rates, commissionRates,
   worklog, comisiones, colleaguePayments,
   accentColor = TEAL, userId = null,
 }) {
@@ -68,10 +68,6 @@ export default function MovementSheet({
   const defaultSchool = schools.rows.find((s) => s.is_default)?.name || "";
   const defaultActivity = activities.rows.find((a) => a.is_default)?.name || "";
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
-  // WORKAROUND TEMPORAL (ver docs/BACKLOG.md y docs/ADR/0003): una cuenta
-  // nueva nace con payment_types vacío — sin este fallback, el alta de
-  // tarifa al vuelo queda bloqueada.
-  const defaultPaymentType = paymentTypes.rows.find((t) => t.name === "Per Person")?.name || paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "Per Person";
 
   // 2026-08-30: la moneda deja de elegirse por movimiento — pasa a ser una
   // configuración global. Se sigue leyendo la misma preferencia de
@@ -229,11 +225,15 @@ export default function MovementSheet({
   };
 
   const openInlineRate = () => {
-    setRateForm({ school: form.school, activity: form.activity, payment_type: defaultPaymentType, currency: lastCurrencyFor(form.school), rate: "" });
+    // payment_type: "Per Person" — literal fijo, no una elección real (ver
+    // ADR-0003, pasos 1-2: la columna sigue en BD por ahora con NOT NULL,
+    // pero deja de ser un concepto que el usuario vea o elija; el importe
+    // siempre es tarifa × personas).
+    setRateForm({ school: form.school, activity: form.activity, payment_type: "Per Person", currency: lastCurrencyFor(form.school), rate: "" });
     setAddingRate(true);
   };
   const saveRate = async () => {
-    if (!rateForm.school || !rateForm.activity || !rateForm.payment_type || !rateForm.rate) return;
+    if (!rateForm.school || !rateForm.activity || !rateForm.rate) return;
     setSavingRate(true);
     try {
       await ratesTableFor(creating).insertRow({ ...rateForm, rate: Number(rateForm.rate) });

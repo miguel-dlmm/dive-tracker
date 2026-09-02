@@ -288,7 +288,7 @@ function emptyMessage(statusFilter, hasActiveFilters, t) {
   return hasActiveFilters ? t("emptyMessage.paidWithFilters") : t("emptyMessage.paidNoFilters");
 }
 
-// schools / activities / paymentTypes / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
+// schools / activities / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates / commissionRates / worklog / comisiones / colleaguePayments: { rows: [...], insertRow, updateRow, deleteRow, bulkUpdateWhere }
 // accentColor: color de sección (nav_sections), para el FAB y el botón "Guardar" de la hoja (ver MovementSheet)
 // userId: profile.user_id — clave de la moneda favorita en localStorage (ver MovementSheet)
@@ -297,7 +297,7 @@ function emptyMessage(statusFilter, hasActiveFilters, t) {
 // modelo actual (sin migración de datos ni cambio de esquema): sigue
 // escribiendo sobre worklog/comisiones/colleague_payments de siempre.
 export default function MiTrabajoTab({
-  schools, activities, paymentTypes, paymentStatuses, currencies,
+  schools, activities, paymentStatuses, currencies,
   rates, commissionRates, worklog, comisiones, colleaguePayments,
   accentColor = TEAL, userId = null, onOpenPayments,
 }) {
@@ -725,7 +725,7 @@ export default function MiTrabajoTab({
       <MovementSheet
         request={sheetRequest}
         onClose={() => setSheetRequest(null)}
-        schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
+        schools={schools} activities={activities} paymentStatuses={paymentStatuses}
         currencies={currencies} rates={rates} commissionRates={commissionRates}
         worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
         accentColor={accentColor} userId={userId}

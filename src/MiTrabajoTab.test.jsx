@@ -14,7 +14,6 @@ const rowsHook = (rows) => ({
 
 const SCHOOLS = rowsHook([{ name: "PADI Cozumel", is_default: true }]);
 const ACTIVITIES = rowsHook([{ name: "Open Water", is_default: true }, { name: "Advanced", is_default: false }]);
-const PAYMENT_TYPES = rowsHook([{ name: "Per Person", is_default: true }]);
 const PAYMENT_STATUSES = rowsHook([{ name: "Pending", is_default: true }, { name: "Paid", is_default: false }]);
 const CURRENCIES = rowsHook([
   { code: "EUR", symbol: "€", name: "Euro", is_default: true },
@@ -45,7 +44,7 @@ function renderMiTrabajo({ worklog = [], comisiones = [], colleaguePayments = []
   render(
     <ToastProvider>
       <MiTrabajoTab
-        schools={schools} activities={ACTIVITIES} paymentTypes={PAYMENT_TYPES} paymentStatuses={PAYMENT_STATUSES} currencies={CURRENCIES}
+        schools={schools} activities={ACTIVITIES} paymentStatuses={PAYMENT_STATUSES} currencies={CURRENCIES}
         rates={hooks.rates} commissionRates={hooks.commissionRates}
         worklog={hooks.worklog} comisiones={hooks.comisiones} colleaguePayments={hooks.colleaguePayments}
       />

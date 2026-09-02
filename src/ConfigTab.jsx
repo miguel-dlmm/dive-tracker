@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
-  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2,
+  Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2,
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
 import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle } from "./shared";
@@ -32,7 +32,7 @@ function actionErrorMessage(res, payload, { forbidden, fallback }) {
 
 /**
  * Tabla CRUD genérica reutilizada por las secciones de Configuración
- * (Escuelas, Cursos, Tipos de pago, Estados de pago, Monedas). Crear y
+ * (Escuelas, Cursos, Estados de pago, Monedas). Crear y
  * editar comparten la misma hoja inferior (FAB + hoja, ver CLAUDE.md
  * convención #3 y RatesTab/MovementSheet) en vez de un formulario fijo o
  * una edición en línea — hasta el addendum de 2026-08-29 (ver
@@ -1562,8 +1562,15 @@ const BUSINESS_SECTIONS = [
   { key: "cursos", i18nKey: "cursos", icon: GraduationCap },
   { key: "tarifas", i18nKey: "tarifas", icon: Coins },
 ];
+// "Tipos de pago" retirado del menú 2026-09-02 (ADR-0003, pasos 1-2): el
+// concepto desaparece de la app — importe siempre es tarifa × personas
+// (rateCalc.js), sin excepciones que gestionar. La tabla payment_types
+// sigue existiendo en BD por ahora (columnas rates.payment_type/
+// commission_rates.payment_type con NOT NULL, escritas con el literal fijo
+// "Per Person" — ver RatesTab.jsx/MovementSheet.jsx); su DROP real es el
+// paso 3-5 de esa misma ADR, deliberadamente no hecho en este cambio
+// (solo frontend, sin migraciones).
 const ADMIN_SECTIONS = [
-  { key: "tipos-pago", i18nKey: "tiposPago", icon: CreditCard },
   { key: "estados-pago", i18nKey: "estadosPago", icon: Flag },
   { key: "monedas", i18nKey: "monedas", icon: DollarSign },
   { key: "navegacion", i18nKey: "navegacion", icon: Palette },
@@ -1623,13 +1630,13 @@ function ConfigMenuGroup({ title, items, onSelect }) {
   );
 }
 
-// schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
+// schools / activities / currencies / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
 // rates / commissionRates / worklog / comisiones: hooks que necesitan las secciones Tarifas y Pagos, embebidas aquí
 // profile: fila propia de profiles (useSession) — is_admin/is_superadmin deciden qué secciones se ven
 // onClose (opcional): cierra Configuración entera (mismo handler que la "X"
 // de la cabecera, ver App.jsx) — lo dispara el gesto de "atrás" cuando ya
 // estamos en el menú principal, sin ninguna sección abierta (ver backProps).
-export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose }) {
+export default function ConfigTab({ schools, activities, currencies, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose }) {
   const { t } = useTranslation("config");
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
   const isSuperadmin = !!profile?.is_superadmin;
@@ -1682,13 +1689,10 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
       )}
       {section === "tarifas" && (
         <RatesTab
-          schools={schools} activities={activities} paymentTypes={paymentTypes} currencies={currencies}
+          schools={schools} activities={activities} currencies={currencies}
           rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
           accentColor={sectionColor("rates")}
         />
-      )}
-      {isAdmin && section === "tipos-pago" && (
-        <CrudTable createLabel={t("crud.nuevoTipoPago")} editLabel={t("crud.editarTipoPago")} table={paymentTypes} hasDefault fields={[{ key: "name", label: t("crud.nombreCampo") }]} />
       )}
       {isAdmin && section === "estados-pago" && (
         <CrudTable createLabel={t("crud.nuevoEstadoPago")} editLabel={t("crud.editarEstadoPago")} table={paymentStatuses} hasDefault protectDefaultFromDelete

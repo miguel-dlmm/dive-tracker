@@ -132,7 +132,6 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
 
   const schools = useSupabaseTable("schools", "name");
   const activities = useSupabaseTable("activities", "name");
-  const paymentTypes = useSupabaseTable("payment_types", "name");
   const paymentStatuses = useSupabaseTable("payment_statuses", "name");
   const currencies = useSupabaseTable("currencies", "name", "code");
   const rates = useSupabaseTable("rates", "school");
@@ -235,7 +234,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   // ya se vio), esto solo permite reabrirlo bajo demanda desde Ayuda.
   const showWhatsNewAgain = () => setWhatsNewOpen(true);
 
-  const loaded = schools.loaded && activities.loaded && paymentTypes.loaded && paymentStatuses.loaded
+  const loaded = schools.loaded && activities.loaded && paymentStatuses.loaded
     && currencies.loaded && rates.loaded && commissionRates.loaded && worklog.loaded
     && comisiones.loaded && colleaguePayments.loaded && navSections.loaded && appConfig.loaded;
 
@@ -390,13 +389,13 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
         )}
         {tab === "log" && (
           <WorkLogTab
-            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} appConfig={appConfig}
+            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} appConfig={appConfig}
             accentColor={sectionColor("log")}
           />
         )}
         {tab === "comisiones" && (
           <ComisionesTab
-            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones} appConfig={appConfig}
+            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones} appConfig={appConfig}
             accentColor={sectionColor("comisiones")}
           />
         )}
@@ -408,14 +407,14 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
         )}
         {tab === "trabajo" && (
           <MiTrabajoTab
-            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies}
+            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
             accentColor={sectionColor("trabajo")} userId={profile?.user_id}
           />
         )}
         {tab === "config" && (
           <ConfigTab
-            schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
+            schools={schools} activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
             navSections={navSections} appConfig={appConfig} profile={profile} onClose={closeSecondary}
           />
@@ -482,7 +481,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
         request={homeSheetRequest}
         onClose={() => setHomeSheetRequest(null)}
         onSaved={() => { setHomeSheetRequest(null); changeTab("trabajo"); }}
-        schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
+        schools={schools} activities={activities} paymentStatuses={paymentStatuses}
         currencies={currencies} rates={rates} commissionRates={commissionRates}
         worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
         accentColor={sectionColor("trabajo")} userId={profile?.user_id}

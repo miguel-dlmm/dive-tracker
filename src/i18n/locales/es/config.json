@@ -214,10 +214,6 @@
       "label": "Tarifas",
       "description": "Cuánto cobras por escuela y curso"
     },
-    "tiposPago": {
-      "label": "Tipos de pago",
-      "description": "Por persona, por curso..."
-    },
     "estadosPago": {
       "label": "Estados de pago",
       "description": "Pendiente, cobrado..."
@@ -255,8 +251,6 @@
     "colorCampo": "Color",
     "nuevoCurso": "Nuevo curso",
     "editarCurso": "Editar curso",
-    "nuevoTipoPago": "Nuevo tipo de pago",
-    "editarTipoPago": "Editar tipo de pago",
     "nuevoEstadoPago": "Nuevo estado de pago",
     "editarEstadoPago": "Editar estado de pago",
     "nuevaMoneda": "Nueva moneda",

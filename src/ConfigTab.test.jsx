@@ -15,7 +15,7 @@ import { supabase } from "./supabaseClient";
 // agrupado con drill-down en vez de pestañas horizontales, y creación en
 // CrudTable vía FAB + hoja inferior en vez de un formulario fijo. Estas
 // pruebas cubren el contrato nuevo, no cada catálogo uno a uno — el mismo
-// CrudTable sirve a Escuelas/Cursos/Tipos de pago/Estados de pago/Monedas,
+// CrudTable sirve a Escuelas/Cursos/Estados de pago/Monedas,
 // así que basta con probarlo una vez (aquí, vía Escuelas).
 const rowsHook = (rows) => ({
   rows, loaded: true,
@@ -38,7 +38,6 @@ function baseProps(overrides = {}) {
     schools: rowsHook([{ id: "s1", name: "PADI Cozumel" }]),
     activities: emptyHook,
     currencies: rowsHook([{ code: "EUR", symbol: "€", name: "Euro", is_default: true }]),
-    paymentTypes: emptyHook,
     paymentStatuses: emptyHook,
     rates: emptyHook,
     commissionRates: emptyHook,
