@@ -28,7 +28,7 @@
 | 2 | Multidioma | ✅ Hecho (2026-09-01, noche) |
 | 3 | KPIs en la home | ✅ Hecho (2026-09-01, noche) |
 | 4 | Cabecera y notificaciones | ✅ Hecho (2026-09-01/02, noche) |
-| 5 | Sistema de Training Records | 🟡 En curso — generador verificado en dispositivo real (PDF+JPG), bug crítico de generación corregido; quedan fechas/6 plantillas sin campos/nav (ver detalle) |
+| 5 | Sistema de Training Records | 🟡 En curso — pestaña única, fechas por plantilla, firma de instructor, validación y ajustes visuales del PDF construidos y verificados; quedan 2 supuestos de fecha por confirmar y las 6 plantillas sin campos (ver detalle) |
 | 6 | Slides y avisos | ⬜ Pendiente |
 | 7 | Usabilidad, carga y escalabilidad | ⬜ Pendiente |
 | 8 | Revisión visual y libro de estilo | ⬜ Pendiente |
@@ -1143,18 +1143,184 @@ sin el fix.
 (alias estable de la rama — cada push nuevo a `feature/training-records`
 lo actualiza solo).
 
-### Próximos pasos
+### ✅ Actualización 2026-09-02 (lote de trabajo — pestaña única de creación, fechas por plantilla, firma de instructor, validación, ajustes visuales del PDF)
 
-El generador (roster, iniciales autogeneradas, formulario dinámico por
-plantilla, firma táctil, relleno de PDF con `pdf-lib`, exportación a
-PDF y a JPG) está construido y verificado en dispositivo real para las
-4 plantillas activas.
+Lote grande de trabajo autónomo pedido explícitamente por el usuario
+("trabaja este lote de forma autónoma... no esperes respuesta mía en
+el chat entre unidades"), con un commit por unidad cerrada. Reemplaza
+por completo el modelo de interacción de Fase 5 construido hasta
+ahora — sigue siendo la misma arquitectura de fondo (generación
+enteramente en cliente, nada se persiste en Supabase salvo lo que ya
+persistía: plantillas y perfil del instructor).
 
-**Decisiones cerradas con el usuario 2026-09-02 (mismo bloque de
-sesión):**
-- **Fechas:** se queda como está — ninguna fecha se rellena todavía,
-  sin decidir de dónde saldría. No se replantea salvo que el usuario lo
-  pida explícitamente.
+**1. Firma del instructor en el perfil.** `profiles.instructor_signature`
+(migración `0010-firma-instructor-y-aventuras.sql`, aplicada a TEST) —
+se firma una vez en "Mi perfil" → "Datos de instructor" (reutiliza
+`SignatureCapture`, movido de `trainingRecords/` a la raíz de `src/`
+porque ya no es exclusivo de esa pantalla) y se reutiliza en cada
+Training Record generado después, sin volver a firmar documento a
+documento. Campo obligatorio para poder usar el generador (se suma a
+nombre/apellidos/iniciales/número SSI Pro en el aviso de "faltan datos
+de instructor"), editable en cualquier momento.
+
+**2. Iniciales de instructor autogeneradas.** Al guardar "Datos
+personales" (nombre/apellidos) en el perfil, si `instructor_initials`
+está vacío se calcula solo (`computeInitials`, movido también a la
+raíz de `src/`) y se guarda en el mismo patch — nunca sobrescribe unas
+iniciales que el usuario ya haya editado a mano (se usa que ya tengan
+un valor como señal de "ya editadas", sin necesitar una columna nueva
+de "tocado").
+
+**3. Pestaña única de creación (cambio de arquitectura).** Pedido
+explícito: "me gusta el modelo planteado con el de cómo configurar el
+PDF". `StudentFormSheet.jsx` se retira — sus campos (nombre, apellidos,
+iniciales) se fusionan dentro de `StudentRecordSheet.jsx`, que pasa a
+ser una única hoja continua: datos del alumno (+ nombre del
+padre/madre/tutor, opcional, nuevo) → elegir la plantilla/curso a
+certificar → configuración del documento → generar. La plantilla ya no
+se elige una vez para toda la sesión: se elige por alumno, así que el
+roster de una sesión puede mezclar alumnos de varias plantillas.
+`TrainingRecordsTab.jsx` pierde su pantalla de "elegir plantilla
+primero" — entra directo al roster (o al aviso de instructor
+incompleto).
+
+**4. Roster: iconos siempre visibles, no un menú "⋯".** Pedido
+explícito del usuario, que revierte el diseño de la sesión anterior
+(menú "⋯" con las descargas dentro): cada fila muestra 3 iconos
+reconocibles — Editar (lápiz), PDF (`FileText`) y JPG (`ImageDown`), los
+dos últimos solo una vez generado el documento — más la fecha/hora de
+la última generación bajo el nombre. El menú "⋯" (`RowMenu`) se queda
+solo para Eliminar. `RowMenu` gana un prop `extraActions` genérico (no
+usado aquí ahora, pero reutilizable por cualquier pantalla que sí
+necesite ese patrón).
+
+**5. Validación de campos obligatorios del documento.** Versión de
+examen, certificación y confirmación de examen final (solo si la
+plantilla tiene esa sección — AOWD no tiene ninguna de las tres), al
+menos una fila de progreso marcada, la fecha del Día 1, y la firma del
+alumno — bloquean "Generar y descargar" con mensajes en rojo junto a
+cada sección si faltan (`recordConfig.js`, `validateRecordConfig()`,
+con tests unitarios exhaustivos). "Versión en línea" y "Open Water
+Diver" vienen premarcados por defecto (pedido explícito), así que en
+la práctica casi nunca hace falta tocarlos.
+
+**6. Ajustes visuales del PDF — reescritura de `pdfFill.js`.** Los
+valores ya no se escriben con `form.getTextField(...).setText()`: se
+dibujan a mano (`page.drawText`, igual que ya hacían las firmas) para
+poder controlarlos del todo, pedido explícito del usuario:
+- **Mayúscula, color de marca (`#0F766E`, el TEAL de Ocean Flow) en vez
+  del negro de la plantilla, fuente Helvetica** (estándar de PDF, sin
+  incrustar un archivo de fuente aparte, visualmente próxima a la
+  fuente sans-serif de las plantillas reales).
+- **Centrado y por encima de la línea impresa**, nunca tapado por
+  ella — posición calculada desde el rectángulo real de cada campo
+  (mismo dato ya usado para las firmas).
+- **Firmas más grandes** (`SIGNATURE_BOOST = 1.7`, sin el tope de
+  escala ×1 que tenían antes) — pedido explícito ("apenas se ven... si
+  parte de la firma cae sobre la línea, no pasa nada").
+Verificado renderizando el PDF real generado (`pdftoppm`), no solo
+asumido — ver captura en la sesión, texto e iniciales en mayúscula
+teal bien centrados, firmas claramente más visibles que antes.
+
+**7. Fechas por plantilla.** Cada fila de progreso de
+`templateFieldMaps.js` gana un `day` (1/2/3) — agrupa filas que
+comparten fecha real de curso, según lo que describió el usuario:
+  - **OWD:** Día 1 = Inmersiones 1 y 2. Día 2 = Sesiones
+    Académicas + Piscina + Inmersiones 3 y 4. Día 3 (opcional, solo
+    aparece si se marca alguna de las dos filas opcionales OW5/OW6):
+    **no estaba cubierto por la regla 2-días/3-días del encargo** — se
+    les dio su propio grupo en vez de adivinar a cuál de los otros dos
+    pertenecían. **Pendiente de confirmar con el usuario.**
+  - **AOWD:** Profunda y Navegación con fecha del Día 1 (pedido
+    explícito). Sesiones Académicas no se mencionó explícitamente —
+    **se agrupó también en Día 1 por defecto, pendiente de confirmar.**
+    Las 3 aventuras opcionales (combo, ver punto 8) van con fecha del
+    Día 2 (pedido explícito).
+  - **SC-DD y SC-EAN:** sin regla explícita en el encargo — se dejaron
+    con un único grupo de fecha genérico ("Fecha del curso" en vez de
+    "Día 1"), todas sus filas comparten esa misma fecha.
+  - **BD y el resto de plantillas sin campos de formulario:** la regla
+    ("todas las filas con fecha del Día 1") queda anotada aquí para
+    cuando esas 6 plantillas se aborden — no aplicable hoy, no tienen
+    ningún campo rellenable (ver Fase 5 original).
+  - **Fecha de las firmas:** siempre la fecha de generación del PDF
+    (`generatedAtLabel`), igual para las 3 firmas y todas las
+    plantillas — se rellena aunque esa firma en concreto no se haya
+    capturado (p. ej. la del padre/madre/tutor si no firmó), porque el
+    encargo no lo condicionó a que la firma exista.
+  - **Examen final (ambos OW):** fecha = el día activo más tardío
+    (Día 3 si hay, si no Día 2), calculado en tiempo de generación, no
+    un selector aparte. Confirmado que solo se rellena la página 1 de
+    cada plantilla, como ya era el caso.
+  La UI muestra un selector de fecha por grupo de día activo (no uno
+  por fila — se agrupan para no repetir la misma fecha varias veces),
+  con acceso directo "Hoy" (ver punto 9).
+
+**8. Combo de aventuras de Advanced (AOWD).** Tabla nueva
+`training_record_adventures` (migración `0010`, sembrada con las 6
+aventuras que dio el usuario: Flotabilidad perfecta, Buceo nocturno,
+Computador de buceo, Barco hundido, Identificación de peces,
+Corrientes) — nunca hardcodeadas en código (convención 1 de
+CLAUDE.md). El campo de texto libre de "Nombre de la especialidad" se
+sustituye por un `Select` con estas opciones. Elegir una aventura
+marca automáticamente esa fila como completada (fecha del Día 2); la
+fila de "sesión en la piscina" se deja siempre sin usar desde este
+combo, pedido explícito ("rellenaremos solo la opción de Inmersión...
+3, 4 y 5").
+
+**9. Selector de fecha compartido mejorado.** `DatePicker` en
+`shared.jsx` (usado en toda la app, no solo aquí) gana un botón "Hoy"
+al principio del panel — un toque para el caso más común con
+diferencia (fecha de curso = hoy o muy reciente) — y las celdas de día
+pasan de 36px a 40px de alto, más cerca del objetivo táctil mínimo de
+la convención 7. Mejora hecha en el componente base, no duplicada
+localmente, pedido explícito del usuario.
+
+**10. Persistencia entre recargas.** El roster completo (alumnos,
+configuración de cada uno, PDF ya generado en bytes) se guarda en
+`sessionStorage` (`oceanpulse:trainingRecordsSession`, PDF
+codificado en base64) y se restaura al montar — sobrevive a recargar
+la página, pedido explícito del usuario ("si tengo alumnos y/o
+documentos generados, mantenerlos"). Sigue sin sobrevivir a cerrar la
+pestaña ni la sesión — mismo criterio de "efímero" que ya regía este
+módulo, solo ampliado de "mientras dure la instancia de React" a
+"mientras dure la pestaña del navegador".
+
+**11. Estado vacío con enlace.** "Todavía no has añadido ningún
+alumno." + un enlace de texto "Añade tu primer alumno" (además del
+FAB) que abre la misma hoja de creación.
+
+**12. Bug real corregido en desarrollo** (encontrado montando el
+punto 3, no reportado por el usuario): sembrar la configuración de un
+alumno solo en un `useEffect` (después del primer render) reventaba la
+pantalla entera al abrir plantillas con inmersiones de especialidad
+(AOWD) — su JSX ya lee `specialtyDives[i]` en ese primer render, antes
+de que el efecto llegara a rellenarlo. Corregido sembrando también con
+inicializadores perezosos de `useState`. Test de regresión con la
+plantilla AOWD real (no mockeada) — confirmado que falla sin el fix.
+
+**Respuesta a la pregunta del usuario ("¿cuáles más podrías procesar
+como plantilla?"):** hoy solo las mismas 4 (OWD, AOWD, SC-DD, SC-EAN)
+son procesables — son las únicas con campos de formulario PDF
+rellenables de verdad. Las otras 6 (BD, SC-LV, SC-NV, SC-PB, SC-RR,
+SC-SR) siguen sin ningún campo interactivo en el PDF original; la
+regla de fechas para BD que dio el usuario queda anotada arriba para
+cuando se aborden, pero construirlas requiere el enfoque de
+superposición de texto por coordenadas que se decidió no hacer todavía
+(ver "hallazgo" original de esta misma Fase 5).
+
+**Verificación:** `npm run test` (622/622) y `npm run build` en verde.
+`scripts/mobile-check-training-records.mjs` reescrito de arriba a
+abajo para el nuevo flujo (Chromium + iPhone 14 Pro Max) — recorrido
+real completo: perfil del instructor con firma → crear alumno → elegir
+plantilla → fechas con "Hoy" → confirmación de examen → firma del
+alumno → generar → PDF y JPG descargados → recargar página → roster
+sigue ahí. Sin errores de consola. PDF real renderizado a imagen
+(`pdftoppm`) y revisado a mano: mayúscula/color/centrado/firmas
+correctos.
+
+**Decisiones cerradas con el usuario 2026-09-02 (sesión anterior,
+siguen vigentes):**
 - **Acceso en la navegación:** se queda dentro de Configuración, mismo
   patrón que Escuelas/Cursos/Tarifas — confirmado, no se cambia nada.
 - **Las 6 plantillas sin campos de formulario rellenables** (BD, SC-LV,
@@ -1175,11 +1341,19 @@ sesión):**
 
 **Queda pendiente:**
 
-1. El pipeline de análisis automático de plantillas nuevas (lo que
+1. **Confirmar 2 supuestos de agrupación de fechas** (ver punto 7
+   arriba): a qué día pertenecen las filas opcionales OW5/OW6 de OWD
+   (se les dio un Día 3 propio, no descrito en el encargo), y si
+   "Sesiones Académicas" de AOWD va de verdad con el Día 1 (supuesto,
+   no confirmado explícitamente).
+2. El pipeline de análisis automático de plantillas nuevas (lo que
    subiría un admin en el futuro) sigue explícitamente fuera de
    alcance hasta que la interfaz de generación esté terminada, tal
    como pedía el encargo original.
-2. Fusión a `develop`: sigue pendiente de revisión y aprobación
+3. Las 6 plantillas sin campos de formulario (BD y el resto) siguen sin
+   abordar — la regla de fechas de BD que dio el usuario en este lote
+   ya queda anotada para cuando se decida construirlas.
+4. Fusión a `develop`: sigue pendiente de revisión y aprobación
    explícita del usuario, como el resto de esta rama.
 
 ## Fase 6 — Slides y avisos
