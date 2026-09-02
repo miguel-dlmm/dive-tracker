@@ -1356,6 +1356,56 @@ siguen vigentes):**
 4. Fusión a `develop`: sigue pendiente de revisión y aprobación
    explícita del usuario, como el resto de esta rama.
 
+### Técnica validada para las 6 plantillas sin campos de formulario (2026-09-02, sin wiring todavía)
+
+El usuario pidió explícitamente añadir campos a las 6 plantillas sin
+AcroForm (BD, SC-LV, SC-NV, SC-PB, SC-RR, SC-SR), con verificación
+visual por plantilla antes de darla por buena (no adivinar coordenadas
+a ojo, mismo criterio de rigor que ya regía las 4 plantillas con
+campos). Técnica desarrollada y validada con **SC-LV** como piloto:
+
+- **Extracción real de coordenadas** (`scripts/extract-flat-template-rects.mjs`):
+  usa `page.getOperatorList()`
+  de pdfjs-dist para parsear el content stream real del PDF y localizar
+  cada recuadro gris relleno (`setFillRGBColor` ~`#f1f1f2` seguido de
+  `constructPath` con un rectángulo simple) — no una medición a ojo
+  sobre la imagen renderizada. pdfjs-dist ya optimiza un rectángulo
+  simple relleno a un único `constructPath` cuyo tercer argumento es
+  directamente `[minX, minY, maxX, maxY]`.
+- **Verificación visual** (`scripts/render-flat-template-rects-overlay.mjs`):
+  renderiza la página real y numera cada recuadro extraído encima de su
+  posición — confirmado pixel-perfecto contra las 36 cajas de SC-LV
+  (ver `training-records-debug/SC-LV-rects-overlay.png`, no
+  versionado). Mismo patrón de fila de 4 columnas (Iniciales del
+  Alumno/Fecha/Iniciales del Instructor/Número SSI Pro) que las
+  plantillas ya soportadas — filas: Sesiones Académicas, Habilidades en
+  Piscina (opcional), Inmersión 1, Inmersión 2, Inmersión Adicional
+  (opcional), Confirmación de Examen Final; firmas alumno/tutor/
+  instructor con sus 2 filas.
+- **Checkboxes de versión de examen** ("Versión Impresa"/"Versión
+  Online"): SC-LV no los dibuja como rectángulo relleno (son solo
+  contorno), así que no los captura la extracción anterior. Posición
+  derivada por patrón desde una plantilla real ya soportada (SC-DD:
+  hueco de 5.4pt entre el borde derecho del checkbox de 6×6pt y el
+  inicio del texto de la etiqueta, aplicado a la posición real del
+  texto de SC-LV vía `page.getTextContent()`) — menor confianza que las
+  filas de datos (extracción exacta) pero igual de defendible que
+  cualquier posición ya usada en producción, no una suposición sin
+  referencia.
+
+**Por qué no se ha hecho el wiring todavía** (`templateFieldMaps.js`
+con un tipo de campo "rect" en vez de nombre de campo AcroForm,
+soporte en `pdfFill.js` para dibujar checkboxes a mano cuando no hay
+`form.getCheckBox()` real, entrada completa en `StudentRecordSheet.jsx`
++ tests): el Bloque 5 del encargo nocturno del mismo día reconstruye
+la pantalla del generador de arriba a abajo (config compartida por
+lote de alumnos, no por alumno) — conectar las 6 plantillas contra la
+pantalla actual, a punto de sustituirse, sería trabajo tirado. Los
+datos de coordenadas de SC-LV (`training-records-debug/SC-LV-rects.json`,
+no versionado) se conservan para reutilizarlos al hacer el wiring
+dentro del Bloque 5, junto con las 5 plantillas restantes usando la
+misma técnica ya validada.
+
 ## Fase 6 — Slides y avisos
 
 ⬜ Pendiente — no iniciada.
