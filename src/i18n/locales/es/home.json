@@ -6,9 +6,9 @@
   "noCoursesThisMonth": "Sin cursos este mes",
   "trendVsPreviousMonth": "{{delta}} vs mes anterior",
   "kpis": {
-    "sectionTitle": "Tu impacto",
-    "studentsThisMonth": "Alumnos este mes",
-    "coursesTotal": "Cursos impartidos",
-    "referredThisMonth": "Captados este mes"
+    "sectionTitle": "Tu impacto este mes",
+    "studentsThisMonth": "Alumnos",
+    "coursesTotal": "Cursos",
+    "referredThisMonth": "Captados"
   }
 }

@@ -128,14 +128,16 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // KPIs de Fase 3 (Release V1) — tres ángulos distintos de "cómo me está
   // yendo", deliberadamente no financieros (eso ya lo cubren "Pendiente de
   // cobrar" y "Generado este mes" arriba): alumnos este mes ya se calculaba
-  // (peopleTrainedThisMonth, se reutiliza tal cual); cursos impartidos es
-  // un total histórico, no de mes — un instructor lleva meses/años usando
-  // la app, "cuántos cursos he dado en total" es una cifra que solo crece
-  // y da sensación de trayectoria, no de "este mes concreto". Personas
-  // captadas: mismo criterio que people trained pero sobre comisionEntries
-  // (aclaración explícita del usuario: "personas por las que he
-  // comisionado" — clientes referidos, no formados por ti).
-  const coursesTotal = worklog.rows.length;
+  // (peopleTrainedThisMonth, se reutiliza tal cual). Cursos impartidos era
+  // al principio un total histórico (sensación de trayectoria) — cambiado
+  // a mensual (pedido explícito del usuario 2026-09-03: "TU IMPACTO ESTE
+  // MES" como título único, los 3 KPIs deben ser del mes, no mezclar un
+  // total de siempre con dos del mes actual). Personas captadas: mismo
+  // criterio que people trained pero sobre comisionEntries (aclaración
+  // explícita del usuario: "personas por las que he comisionado" —
+  // clientes referidos, no formados por ti).
+  const coursesTotal = useMemo(() => worklog.rows
+    .filter((e) => e.date.slice(0, 7) === currentMonthKey).length, [worklog.rows, currentMonthKey]);
   const referredThisMonth = useMemo(() => comisionEntries
     .filter((e) => e.date.slice(0, 7) === currentMonthKey)
     .reduce((sum, e) => sum + (e.people || 0), 0), [comisionEntries, currentMonthKey]);
