@@ -1,30 +1,31 @@
 {
   "whatsNew": {
     "close": "Cerrar",
+    "eyebrow": "Novedades de esta versión",
     "slideTablist": "Diapositiva",
     "back": "Atrás",
     "next": "Siguiente",
     "start": "Empezar",
     "slides": [
       {
-        "title": "Mi trabajo, todo en un sitio",
-        "body": "Cursos, comisiones y ajustes con compañeros, en una única lista — sin saltar entre tres pantallas para lo mismo."
+        "title": "Training Records al instante",
+        "body": "Genera el registro de progreso SSI de cada alumno, firmado, en segundos — sin papeleo."
       },
       {
-        "title": "Tarifas, con la misma cara que Mi trabajo",
-        "body": "Tipo, fecha de alta y moneda se ven de un vistazo en cada tarifa — sin campos de más que rellenar cada vez."
+        "title": "La app ya habla tu idioma",
+        "body": "Cambia entre español e inglés cuando quieras, desde tu perfil."
       },
       {
-        "title": "Resumen, más fácil de recorrer",
-        "body": "Toca cualquier periodo de la franja de arriba para saltar a él, y cualquier curso para ver de dónde viene el dinero."
+        "title": "Home, más a mano",
+        "body": "Tus KPIs del mes abren la pantalla, y Training Records ya tiene su propio acceso directo — sin pasar por Configuración."
       },
       {
-        "title": "Desliza, no solo toques",
-        "body": "Cierra formularios y vuelve atrás en Configuración y Ayuda deslizando — como en cualquier app a la que ya estás acostumbrado."
+        "title": "Cabecera más simple",
+        "body": "\"Cerrar sesión\" vive ahora en Mi perfil — menos iconos arriba, más espacio para lo que usas cada día."
       },
       {
-        "title": "Más estable de un extremo a otro",
-        "body": "Corregidos varios detalles de fondo: la barra inferior, los totales de fin de mes, y la gestión de usuarios."
+        "title": "Repásalo cuando quieras",
+        "body": "Vuelve a estas novedades desde Ayuda → \"Ver qué hay de nuevo\", sin esperar al próximo cambio."
       }
     ]
   },
