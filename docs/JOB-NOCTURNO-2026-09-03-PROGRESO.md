@@ -468,6 +468,39 @@ sentido evaluar si `Release-V1` ya está lista para su propio proceso
 de release hacia `main`/producción — esa decisión y su alcance
 quedan fuera de lo que este job nocturno debía dejar preparado.
 
+## Grupo 1 preparado para probar — rama de integración
+
+A petición del usuario tras el cierre del job, se preparó una rama de
+**integración** (no un merge a `develop`) con las 7 ramas del Grupo 1
+ya fusionadas entre sí, para poder probarlas todas juntas antes de
+decidir:
+
+- Rama: `integration/grupo1-mantenimiento` (creada desde `develop`,
+  commit `48d6b2c`, empujada a GitHub).
+- Contiene, en este orden: `fix/paymentstab-test-fecha-relativa` →
+  `fix/bloque4-ajustes-rapidos` → `fix/bloque6-revision-textos` →
+  `fix/bloque7-toasts` → `fix/bloque12-sesion-perfil` →
+  `fix/bloque17-cobertura-usesupabasetable` →
+  `chore/bloque-final-analisis-codigo`.
+- 1 conflicto real (no trivial) al fusionar
+  `chore/bloque-final-analisis-codigo`: `src/ConfigTab.jsx` tenía dos
+  imports distintos de `motion/react` (uno con `useAnimationControls`,
+  del Bloque 4; otro sin él, de la limpieza de imports de React del
+  bloque final). Resuelto conservando `useAnimationControls` (sí se usa
+  en el archivo, línea `const controls = useAnimationControls();`) y
+  quitando el import de `React` ya innecesario.
+- 384 tests en verde, build de producción correcto.
+- Preview de Vercel (rama de `develop` con las variables TEST, ver
+  "Ramas y entornos" en `CLAUDE.md`):
+  `https://dive-tracker-git-integration-grupo1-mantenimiento-ocean-pulse1.vercel.app`
+- Mail con la URL de preview y el plan de pruebas ya enviado al
+  superadmin.
+- **Esta rama es solo para probar** — `develop` sigue intacta, no se
+  ha fusionado nada de verdad. Si tras probar se aprueba, la fusión
+  real definitiva sigue siendo la de las 7 ramas originales a
+  `develop` (una a una o mediante esta misma rama de integración,
+  a decisión del usuario), no esta rama tal cual sin más revisión.
+
 ## Cierre del job — 2026-09-03
 
 **Job completado.** Todos los bloques del listado original (6-18),
