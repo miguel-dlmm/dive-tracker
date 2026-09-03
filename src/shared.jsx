@@ -304,7 +304,7 @@ export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLab
       setOpen(false);
       try {
         await onConfirm();
-        toast?.success("Eliminado correctamente");
+        toast?.success("Eliminado");
       } catch (e) {
         toast?.error(e?.message || "No se pudo eliminar. Inténtalo de nuevo.");
       }
@@ -313,7 +313,7 @@ export function DeleteButton({ onConfirm, size = 15, label = "Eliminar", itemLab
     setLoading(true);
     try {
       await onConfirm();
-      toast?.success("Eliminado correctamente");
+      toast?.success("Eliminado");
       setOpen(false);
     } catch (e) {
       toast?.error(e?.message || "No se pudo eliminar. Inténtalo de nuevo.");
