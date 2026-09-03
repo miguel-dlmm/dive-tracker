@@ -24,10 +24,13 @@
   "personalData": {
     "nameLine": "Name:",
     "nicknameLine": "Nickname:",
+    "professionalLine": "Professional:",
     "edit": "Edit",
     "nameLabel": "First name",
     "lastNameLabel": "Last name",
     "nicknameLabel": "Nickname",
+    "professionalLabel": "Professional",
+    "professionalPlaceholder": "Not set",
     "nicknameAtError": "It can't contain \"@\".",
     "save": "Save",
     "saving": "Saving…",
@@ -42,6 +45,7 @@
     "hint": "Used to auto-fill your Training Records — saved here once, not per device.",
     "card": {
       "role": "SSI Instructor",
+      "roleWithLevel": "SSI {{level}}",
       "noSignature": "No signature",
       "signatureAlt": "{{name}}'s signature",
       "initialsLabel": "Initials",

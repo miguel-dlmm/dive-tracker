@@ -148,6 +148,18 @@ function AvatarPicker({ profile, onProfileUpdated }) {
   );
 }
 
+// Nivel profesional de buceo (2026-09-03, pedido explícito del usuario) —
+// código guardado, no la etiqueta (mismo criterio que LANGUAGE_OPTIONS más
+// abajo): taxonomía fija del sector, no configuración de negocio propia de
+// cada cuenta (por eso no es una tabla catálogo editable por admin como
+// Escuelas/Cursos). "Divemaster"/"Instructor" son términos de uso
+// internacional en buceo, sin traducción real en contexto — mismo motivo
+// por el que LANGUAGE_OPTIONS tampoco pasa "Español"/"English" por t().
+const PROFESSIONAL_LEVEL_OPTIONS = [
+  { code: "divemaster", label: "Divemaster" },
+  { code: "instructor", label: "Instructor" },
+];
+
 function PersonalDataSection({ profile, onProfileUpdated }) {
   const { t } = useTranslation("profile");
   const toast = useToast();
@@ -156,11 +168,13 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
   const [firstName, setFirstName] = useState(profile.first_name || "");
   const [lastName, setLastName] = useState(profile.last_name || "");
   const [nickname, setNickname] = useState(profile.nickname || "");
+  const [professionalLevel, setProfessionalLevel] = useState(profile.professional_level || "");
 
   const startEdit = () => {
     setFirstName(profile.first_name || "");
     setLastName(profile.last_name || "");
     setNickname(profile.nickname || "");
+    setProfessionalLevel(profile.professional_level || "");
     setEditing(true);
   };
 
@@ -168,7 +182,7 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
     if (!nickname.trim() || nickname.includes("@")) return;
     setSaving(true);
     try {
-      const patch = { first_name: firstName.trim() || null, last_name: lastName.trim() || null, nickname: nickname.trim() };
+      const patch = { first_name: firstName.trim() || null, last_name: lastName.trim() || null, nickname: nickname.trim(), professional_level: professionalLevel || null };
       // Iniciales de instructor autogeneradas desde nombre/apellidos al
       // guardar — pedido explícito del usuario, 2026-09-02 — pero solo si
       // todavía no hay ninguna guardada: que ya tengan un valor es la
@@ -195,6 +209,7 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
         <div className="space-y-2 text-sm">
           <p><span className="text-gray-400">{t("personalData.nameLine")}</span> {profile.first_name || "—"} {profile.last_name || ""}</p>
           <p><span className="text-gray-400">{t("personalData.nicknameLine")}</span> {profile.nickname}</p>
+          <p><span className="text-gray-400">{t("personalData.professionalLine")}</span> {PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === profile.professional_level)?.label || "—"}</p>
         </div>
         <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: TEAL }}>
           <Pencil size={14} aria-hidden="true" /> {t("personalData.edit")}
@@ -213,6 +228,14 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
         <input value={nickname} onChange={(e) => setNickname(e.target.value)} className={`${inputCls} w-full`} />
       </Field>
       {nickname.includes("@") && <p role="alert" className="-mt-2 text-xs text-red-600">{t("personalData.nicknameAtError")}</p>}
+      <Field label={t("personalData.professionalLabel")}>
+        <Select
+          value={PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === professionalLevel)?.label || ""}
+          onChange={(label) => setProfessionalLevel(PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.label === label)?.code || "")}
+          options={PROFESSIONAL_LEVEL_OPTIONS.map((o) => o.label)}
+          placeholder={t("personalData.professionalPlaceholder")}
+        />
+      </Field>
       <div className="mt-3">
         <EditActions onSave={save} onCancel={() => setEditing(false)} saveLabel={saving ? t("personalData.saving") : t("personalData.save")} />
       </div>
@@ -294,6 +317,13 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
   const avatar = resolveAvatar(profile);
   const AvatarIcon = Icons[avatar.icon] || Icons.Waves;
   const trimmedSignature = useTrimmedSignature(signature);
+  // Nivel profesional real (Divemaster/Instructor, ver "Datos
+  // personales") en vez del texto fijo "Instructor SSI" de antes —
+  // pedido explícito del usuario: "refléjalo en el carnet". Sin nivel
+  // elegido, se mantiene el genérico de siempre en vez de dejar la fila
+  // en blanco.
+  const professionalLabel = PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === profile.professional_level)?.label;
+  const roleText = professionalLabel ? t("instructor.card.roleWithLevel", { level: professionalLabel }) : t("instructor.card.role");
 
   return (
     <div
@@ -330,7 +360,7 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
           </span>
           <div className="min-w-0">
             <p className="line-clamp-2 text-base font-bold leading-tight text-white">{fullName}</p>
-            <p className="text-[10.5px] font-semibold uppercase tracking-wider text-white/70">{t("instructor.card.role")}</p>
+            <p className="text-[10.5px] font-semibold uppercase tracking-wider text-white/70">{roleText}</p>
           </div>
         </div>
         {/* Firma en vez de QR — pedido explícito del usuario. */}

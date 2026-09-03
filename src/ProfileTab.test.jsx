@@ -130,7 +130,7 @@ describe("datos personales", () => {
     await user.type(nickname, "adalovelace");
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", instructor_initials: "AL" }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null, instructor_initials: "AL" }));
     expect(eq).toHaveBeenCalledWith("user_id", "u1");
     expect(onProfileUpdated).toHaveBeenCalled();
   });
@@ -146,7 +146,20 @@ describe("datos personales", () => {
     await user.type(nickname, "adalovelace");
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace" }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null }));
+  });
+
+  it("permite elegir el nivel profesional (Divemaster/Instructor) y lo guarda junto al resto de datos personales", async () => {
+    const user = userEvent.setup();
+    const { update } = mockUpdate();
+    renderProfile();
+
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Sin elegir" }));
+    await user.click(screen.getByRole("option", { name: "Divemaster" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "ada", professional_level: "divemaster", instructor_initials: "AL" }));
   });
 
   it("no deja guardar un nickname con \"@\"", async () => {
@@ -185,6 +198,17 @@ describe("datos de instructor", () => {
     // Iniciales y número SSI Pro — las 2 vacías por defecto (la firma usa
     // "Sin firma" en vez de "—", ver arriba).
     expect(section.getAllByText("—")).toHaveLength(2);
+  });
+
+  it("el carnet refleja el nivel profesional elegido en vez del genérico 'Instructor SSI'", () => {
+    renderProfile({ profile: { ...PROFILE, professional_level: "divemaster" } });
+    expect(within(instructorSection()).getByText("SSI Divemaster")).toBeInTheDocument();
+    expect(within(instructorSection()).queryByText("Instructor SSI")).not.toBeInTheDocument();
+  });
+
+  it("el carnet muestra el genérico 'Instructor SSI' cuando no hay nivel profesional elegido", () => {
+    renderProfile();
+    expect(within(instructorSection()).getByText("Instructor SSI")).toBeInTheDocument();
   });
 
   it("edita iniciales y número SSI Pro y guarda", async () => {

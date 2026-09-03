@@ -109,6 +109,13 @@ create table if not exists public.profiles (
   -- reutiliza en cada Training Record generado, en vez de firmar
   -- documento a documento (Release V1 Fase 5, 2026-09-02).
   instructor_signature text,
+  -- Nivel profesional de buceo (2026-09-03) — código corto ('divemaster'/
+  -- 'instructor'), no la etiqueta que ve el usuario, mismo criterio que
+  -- `language`. Taxonomía fija del sector (como los tipos de movimiento),
+  -- no configuración de negocio propia de cada cuenta — de ahí el check
+  -- en vez de una tabla catálogo aparte. Se muestra en "Datos personales"
+  -- y en el carnet de instructor de Mi perfil.
+  professional_level text check (professional_level in ('divemaster', 'instructor')),
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
@@ -976,6 +983,10 @@ create policy "admin manage template files" on storage.objects
 -- el perfil) para instalaciones existentes —
 -- scripts/migrations/0011-datos-instructor-perfil.sql tiene el mismo DDL,
 -- aplicarlo con scripts/apply-migration.mjs.
+
+-- Migración aditiva Release V1 (2026-09-03, nivel profesional) para
+-- instalaciones existentes — scripts/migrations/0013-nivel-profesional.sql
+-- tiene el mismo DDL, aplicarlo con scripts/apply-migration.mjs.
 
 -- Catálogo de "aventuras" opcionales para el combo de Advanced Open Water
 -- Diver (Release V1, Fase 5, 2026-09-02) — nunca hardcodeadas en el código
