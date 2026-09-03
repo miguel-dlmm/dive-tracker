@@ -7,7 +7,8 @@
     "schoolAll": "All",
     "course": "Course",
     "courseAll": "All",
-    "clear": "Clear filters"
+    "clear": "Clear filters",
+    "showInactive": "Show deactivated"
   },
   "search": {
     "placeholder": "Search",
@@ -16,7 +17,8 @@
   "list": {
     "count": "{{count}} rates",
     "empty": "No results.",
-    "createdOn": "Added: {{date}} · {{type}}"
+    "createdOn": "Added: {{date}} · {{type}}",
+    "inactive": "Deactivated"
   },
   "fab": "New rate",
   "sheet": {
@@ -34,11 +36,17 @@
   "toasts": {
     "saved": "Changes saved",
     "added": "Rate added",
-    "saveError": "Couldn't save. Try again."
+    "saveError": "Couldn't save. Try again.",
+    "duplicate": "You already have an active rate for this school and course. Deactivate it before creating another.",
+    "reactivateBlocked": "Can't reactivate: there's already another active rate for this school and course.",
+    "deactivated": "Rate deactivated",
+    "reactivated": "Rate reactivated"
   },
   "deleteInUse_one": "Can't delete: {{count}} entry uses this rate.",
   "deleteInUse_other": "Can't delete: {{count}} entries use this rate.",
   "rowMenu": {
-    "itemLabel": "the {{school}} - {{activity}} rate"
+    "itemLabel": "the {{school}} - {{activity}} rate",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate"
   }
 }

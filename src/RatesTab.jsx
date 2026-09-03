@@ -1,11 +1,19 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Check, X, Search, SlidersHorizontal, GraduationCap, Handshake } from "lucide-react";
+import { Plus, Check, X, Search, SlidersHorizontal, GraduationCap, Handshake, Eye, EyeOff } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import {
   inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, MoneyInput,
   EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate,
 } from "./shared";
+
+// Baja lógica (2026-09-04, ver scripts/migrations/0015-tarifas-vigencia.sql):
+// `is_active` puede faltar en una fila si el objeto viene de un test/mock
+// que no lo fija explícitamente — se trata como activa por defecto (mismo
+// valor por defecto que la columna real en BD, `not null default true`),
+// nunca al revés, para no ocultar de golpe listados que no conocían este
+// campo antes de esta migración.
+const isRateActive = (r) => r.is_active !== false;
 
 // Rediseño 2026-08-30 — Tarifas pasa a hablar el mismo idioma visual que Mi
 // trabajo: una única lista (antes dos pestañas de página, "Instructor"/
@@ -62,6 +70,14 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
   // trabajo, ver filtersOpen/activeFilterCount en MiTrabajoTab.jsx).
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({ type: "", school: "", activity: [] });
+  // Las tarifas desactivadas se ocultan por defecto (2026-09-04) — es la
+  // lista de "lo que cobro hoy", no un archivo histórico. Aparte de
+  // `filters` a propósito: no es un filtro que ACOTE resultados con un
+  // criterio de negocio (escuela/curso/tipo), es una preferencia de
+  // visibilidad ("enséñame también lo que ya no está vigente") — por eso
+  // vive fuera de hasFilters/activeFilterCount y "Limpiar filtros" no lo
+  // toca.
+  const [showInactive, setShowInactive] = useState(false);
   // creating: tipo elegido en la hoja — solo relevante al CREAR (ver
   // switchType); al editar, se fija al tipo real de la fila y no cambia
   // (mover una tarifa de tabla sería un cambio de modelo, fuera de
@@ -107,6 +123,7 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
 
   const filtered = useMemo(() => {
     let list = allRows;
+    if (!showInactive) list = list.filter(isRateActive);
     if (filters.type) list = list.filter((r) => r._source === TYPE_KEY[filters.type]);
     if (filters.school) list = list.filter((r) => r.school === filters.school);
     if (filters.activity && filters.activity.length > 0) list = list.filter((r) => filters.activity.includes(r.activity));
@@ -115,7 +132,18 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
       list = list.filter((r) => [r.school, r.activity].some((v) => String(v ?? "").toLowerCase().includes(q)));
     }
     return list;
-  }, [allRows, query, filters]);
+  }, [allRows, query, filters, showInactive]);
+
+  // Única fuente de verdad de "¿ya hay una tarifa activa para esta
+  // escuela+curso?" — usada tanto al crear/editar (submitSheet) como al
+  // reactivar (toggleActive), para dar un error claro ANTES de golpear el
+  // índice único parcial de BD (rates_active_school_activity_unique /
+  // commission_rates_active_school_activity_unique, ver
+  // scripts/migrations/0015-tarifas-vigencia.sql) con un 23505 crudo.
+  // excludeId: la propia fila al editar/reactivar, para no chocar consigo
+  // misma.
+  const hasActiveDuplicate = (source, school, activity, excludeId) =>
+    tableFor(source).rows.some((r) => r.id !== excludeId && isRateActive(r) && r.school === school && r.activity === activity);
 
   const closeSheet = () => { setSheetOpen(false); setEditingEntry(null); };
 
@@ -157,8 +185,24 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
     setForm({ ...form, rate: "" });
   };
 
+  // 23505 = unique_violation del índice único parcial de la migración 0015
+  // (una tarifa activa duplicada coló pese a la comprobación de cliente en
+  // submitSheet/toggleActive — p. ej. dos pestañas a la vez). Mismo
+  // criterio que friendlyProfileError en ProfileTab.jsx: la BD es la
+  // frontera real, el cliente solo falla rápido con un mensaje mejor.
+  const friendlyRateError = (err) =>
+    (err?.code === "23505" || err?.message?.includes("_active_school_activity_unique")) ? t("toasts.duplicate") : t("toasts.saveError");
+
   const submitSheet = async () => {
     if (!form.school || !form.activity || !form.rate) return;
+    // No permitir dos tarifas ACTIVAS para la misma escuela+curso — punto
+    // 1 de la migración 0015. Comprobación de cliente para fallar rápido
+    // con un mensaje claro; el índice único parcial en BD es la frontera
+    // real (ver friendlyRateError arriba).
+    if (hasActiveDuplicate(creating, form.school, form.activity, editingEntry?.id)) {
+      toast?.error(t("toasts.duplicate"));
+      return;
+    }
     try {
       if (editingEntry) {
         await tableFor(creating).updateRow(editingEntry.id, { ...form, rate: Number(form.rate) });
@@ -168,8 +212,29 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
         toast?.success(t("toasts.added"));
       }
       closeSheet();
-    } catch {
-      toast?.error(t("toasts.saveError"));
+    } catch (err) {
+      toast?.error(friendlyRateError(err));
+    }
+  };
+
+  // Baja lógica (punto 2 de la migración 0015) — desactivar nunca falla
+  // por estar "en uso" (a diferencia de deleteRate más abajo): no borra
+  // nada, así que los movimientos ya guardados que la usaron siguen
+  // calculando su importe igual (rateCalc.js sigue encontrando la fila).
+  // Reactivar sí puede chocar con otra tarifa activa que se haya creado
+  // mientras tanto para la misma escuela+curso — misma comprobación que
+  // submitSheet.
+  const toggleActive = async (r) => {
+    const next = !isRateActive(r);
+    if (next && hasActiveDuplicate(r._source, r.school, r.activity, r.id)) {
+      toast?.error(t("toasts.reactivateBlocked"));
+      return;
+    }
+    try {
+      await tableFor(r._source).updateRow(r.id, { is_active: next });
+      toast?.success(next ? t("toasts.reactivated") : t("toasts.deactivated"));
+    } catch (err) {
+      toast?.error(friendlyRateError(err));
     }
   };
 
@@ -225,6 +290,20 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
             )}
             <Field label={t("filter.course")}><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder={t("filter.courseAll")} /></Field>
           </div>
+          {/* "Mostrar desactivadas" vive fuera de `filters` a propósito
+              (ver comentario de showInactive más arriba) — checkbox simple,
+              mismo criterio de "reutilizar antes que construir" que el
+              resto de la pantalla: no hace falta un componente nuevo para
+              un único checkbox. */}
+          <label className="flex min-h-9 w-fit items-center gap-2 text-xs font-medium text-gray-500">
+            <input
+              type="checkbox"
+              checked={showInactive}
+              onChange={(e) => setShowInactive(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+            />
+            {t("filter.showInactive")}
+          </label>
           {hasFilters && (
             <button onClick={() => setFilters({ type: "", school: "", activity: [] })} className="min-h-9 text-xs font-medium text-gray-400 hover:text-gray-600">
               {t("filter.clear")}
@@ -255,7 +334,12 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
             // separación entre cards ya se descartó en Mi trabajo por
             // ruido visual — el borde izquierdo de color y el propio
             // padding ya distinguen una fila de la siguiente.
-            <div key={r.id} className="border-l-4 px-4 py-3.5 text-sm" style={{ borderColor: TYPE_META[r._source].color }}>
+            // Fila desactivada: opacidad reducida (mismo criterio que
+            // fila/opción deshabilitada en el resto de la app,
+            // disabled:opacity-30/40) + "· Desactivada" en el metadato —
+            // solo se ve cuando showInactive está activo, ya que si no la
+            // propia lista las filtra fuera.
+            <div key={r.id} className={`border-l-4 px-4 py-3.5 text-sm ${!isRateActive(r) ? "opacity-50" : ""}`} style={{ borderColor: TYPE_META[r._source].color }}>
               <div className="flex items-start justify-between gap-2">
                 <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
                 <span className="shrink-0 font-semibold tabular-nums" style={{ color: NAVY }}>
@@ -265,8 +349,18 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
               <div className="mt-1.5 flex items-center justify-between gap-2">
                 <span className="truncate text-xs text-gray-400">
                   {t("list.createdOn", { date: shortDate(r.created_at), type: t(`common:movementTypes.${r._source}`) })}
+                  {!isRateActive(r) && ` · ${t("list.inactive")}`}
                 </span>
-                <RowMenu onEdit={() => startEdit(r)} onDelete={() => deleteRate(r)} itemLabel={t("rowMenu.itemLabel", { school: r.school, activity: r.activity })} />
+                <RowMenu
+                  onEdit={() => startEdit(r)}
+                  onDelete={() => deleteRate(r)}
+                  itemLabel={t("rowMenu.itemLabel", { school: r.school, activity: r.activity })}
+                  extraActions={[{
+                    label: isRateActive(r) ? t("rowMenu.deactivate") : t("rowMenu.reactivate"),
+                    icon: isRateActive(r) ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />,
+                    onClick: () => toggleActive(r),
+                  }]}
+                />
               </div>
             </div>
           ))}
