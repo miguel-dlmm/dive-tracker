@@ -1,3 +1,8 @@
+// Este import va SIEMPRE antes que "pdfjs-dist" — pone los polyfills que
+// esa dependencia necesita (Promise.withResolvers, Iterator) antes de que
+// su propio código se evalúe por primera vez. Ver pdfjsPolyfills.js para
+// el porqué exacto (Safari por debajo de la 17.4/18.4 según la API).
+import "./pdfjsPolyfills";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 
