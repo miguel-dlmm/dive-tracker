@@ -257,7 +257,7 @@ export function Field({ label, hint, children }) {
   const [showHint, setShowHint] = useState(false);
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="flex items-center gap-0.5 text-xs font-medium text-gray-500">
+      <span className="relative flex items-center gap-0.5 text-xs font-medium text-gray-500">
         {label}
         {hint && (
           <button
@@ -270,8 +270,18 @@ export function Field({ label, hint, children }) {
             <HelpCircle size={13} aria-hidden="true" />
           </button>
         )}
+        {/* Flotante (position:absolute), no dentro del flujo del documento —
+            antes era un <span> normal debajo de la etiqueta, así que un
+            hint largo (p. ej. "Importe" en Ajuste de compañeros,
+            MovementSheet.jsx) estiraba esa celda de una fila en grid de 2
+            columnas y descuadraba el formulario frente a la celda vecina.
+            Bug real reportado por el usuario. */}
+        {hint && showHint && (
+          <span className="absolute left-0 top-full z-20 mt-1 w-56 max-w-[75vw] rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-normal italic normal-case text-gray-500 shadow-lg">
+            {hint}
+          </span>
+        )}
       </span>
-      {hint && showHint && <span className="-mt-0.5 text-[11px] italic text-gray-400">{hint}</span>}
       {children}
     </label>
   );
@@ -612,7 +622,18 @@ export function DateRangePicker({ from, to, onChange }) {
 // Input de importe: mientras escribes, número plano y libre; al perder el
 // foco, se muestra formateado con separador de miles (es-ES). Así el campo
 // de Tarifa/Importe también respeta el separador, no solo la visualización.
-export function MoneyInput({ value, onChange, className = "", placeholder, "aria-label": ariaLabel }) {
+// allowNegative: el teclado numérico que iOS Safari muestra para
+// inputMode="decimal" NO tiene tecla de signo menos (limitación conocida
+// de la plataforma, no de esta app) — escribir un negativo a mano es
+// imposible ahí. Bug real reportado por el usuario en "Ajuste de
+// compañeros" (MovementSheet.jsx), el único uso de MoneyInput donde un
+// negativo tiene sentido (pagas tú al compañero). En vez de cambiar el
+// comportamiento de TODOS los usos de MoneyInput (tarifas, importes de
+// curso... siempre positivos), un botón +/- opcional junto al campo
+// permite invertir el signo sin depender de esa tecla — el usuario
+// sigue pudiendo teclear "-" a mano donde el teclado sí la tenga
+// (Android, escritorio), esto es un camino alternativo, no un reemplazo.
+export function MoneyInput({ value, onChange, className = "", placeholder, "aria-label": ariaLabel, allowNegative = false }) {
   const [editing, setEditing] = useState(false);
   const [raw, setRaw] = useState(value != null && value !== "" ? String(value) : "");
 
@@ -623,8 +644,15 @@ export function MoneyInput({ value, onChange, className = "", placeholder, "aria
   const display = editing
     ? raw
     : (value !== "" && value != null ? Number(value).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "");
+  const isNegative = Number(value) < 0;
 
-  return (
+  const toggleSign = () => {
+    const flipped = -Number(value || 0);
+    setRaw(String(flipped));
+    onChange(String(flipped));
+  };
+
+  const input = (
     <input
       type="text"
       inputMode="decimal"
@@ -638,8 +666,24 @@ export function MoneyInput({ value, onChange, className = "", placeholder, "aria
         onChange(v);
       }}
       onBlur={() => setEditing(false)}
-      className={`${inputCls} w-full ${className}`}
+      className={`${inputCls} w-full ${allowNegative ? "pl-10" : ""} ${className}`}
     />
+  );
+
+  if (!allowNegative) return input;
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={toggleSign}
+        aria-label={isNegative ? "Cambiar a positivo" : "Cambiar a negativo"}
+        className="absolute inset-y-0 left-0 flex min-h-11 w-11 items-center justify-center text-base font-semibold text-gray-500"
+      >
+        {isNegative ? "−" : "+"}
+      </button>
+      {input}
+    </div>
   );
 }
 

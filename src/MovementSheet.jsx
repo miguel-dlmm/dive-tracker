@@ -392,7 +392,7 @@ export default function MovementSheet({
                         label={`Importe · ${form.currency}`}
                         hint="Positivo si te paga a ti; negativo si le pagas tú a él/ella"
                       >
-                        <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
+                        <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" allowNegative />
                       </Field>
                     </div>
                   ) : (

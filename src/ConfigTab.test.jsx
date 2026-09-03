@@ -273,6 +273,35 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
   });
 
+  // Pedido explícito del usuario (job nocturno, Bloque 4): la fila mostraba
+  // la fecha de alta, que dice poco de si la cuenta sigue viva — pasa a
+  // mostrar el último acceso, el mismo dato que ya se pedía para la hoja
+  // de detalle (listUserStatus.js), solo que ahora también en la fila.
+  it("la fila del listado muestra el último acceso, no la fecha de alta", async () => {
+    const user = userEvent.setup();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": "2026-08-15T10:00:00Z" } }),
+    });
+
+    await openUsuarios(user);
+
+    await waitFor(() => expect(screen.getByText(/Último acceso:/)).toBeInTheDocument());
+    expect(screen.queryByText(/^Alta:/)).not.toBeInTheDocument();
+  });
+
+  it("muestra 'Nunca' como último acceso en la fila si la cuenta no ha iniciado sesión todavía", async () => {
+    const user = userEvent.setup();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null } }),
+    });
+
+    await openUsuarios(user);
+
+    await waitFor(() => expect(screen.getByText("Último acceso: Nunca")).toBeInTheDocument());
+  });
+
   it("muestra 'Pendiente' para una cuenta sin banned_until pero nunca activada (activated_at null)", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
