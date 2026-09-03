@@ -411,7 +411,15 @@ export function Field({ label, hint, children }) {
 // animación, esta transcurre oculta detrás y nunca se llega a ver). El
 // error, si lo hay, se sigue avisando por toast — solo cambia cuándo se
 // cierra el diálogo, no el manejo de errores.
-export function DeleteButton({ onConfirm, size = 15, label, itemLabel, variant = "icon", optimistic = false }) {
+// confirmMessage/successMessage/successAction (opcionales, Bloque baja
+// lógica de movimientos, 2026-09-04): permiten a quien usa DeleteButton
+// personalizar el texto del diálogo y el toast de éxito, y añadir una
+// acción "Deshacer" al toast (mismo mecanismo de acción ya usado por
+// toggleStatus en MiTrabajoTab.jsx — nunca se reinventa un segundo
+// patrón de undo). Sin ellos, el comportamiento es exactamente el de
+// siempre (mensaje genérico, sin acción) — los demás usos de
+// DeleteButton en la app no cambian.
+export function DeleteButton({ onConfirm, size = 15, label, itemLabel, variant = "icon", optimistic = false, confirmMessage, successMessage, successAction }) {
   const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -419,12 +427,14 @@ export function DeleteButton({ onConfirm, size = 15, label, itemLabel, variant =
   const resolvedLabel = label || t("deleteButton.defaultLabel");
   const resolvedItemLabel = itemLabel || t("deleteButton.defaultItemLabel");
 
+  const notifySuccess = () => toast?.success(successMessage || t("deleteButton.deletedToast"), successAction ? { action: successAction } : undefined);
+
   const handleConfirm = async () => {
     if (optimistic) {
       setOpen(false);
       try {
         await onConfirm();
-        toast?.success(t("deleteButton.deletedToast"));
+        notifySuccess();
       } catch (e) {
         toast?.error(e?.message || t("deleteButton.errorToast"));
       }
@@ -433,7 +443,7 @@ export function DeleteButton({ onConfirm, size = 15, label, itemLabel, variant =
     setLoading(true);
     try {
       await onConfirm();
-      toast?.success(t("deleteButton.deletedToast"));
+      notifySuccess();
       setOpen(false);
     } catch (e) {
       toast?.error(e?.message || t("deleteButton.errorToast"));
@@ -466,7 +476,7 @@ export function DeleteButton({ onConfirm, size = 15, label, itemLabel, variant =
       <ConfirmDialog
         open={open}
         title={t("deleteButton.confirmTitle")}
-        message={t("deleteButton.confirmMessage", { item: resolvedItemLabel })}
+        message={confirmMessage || t("deleteButton.confirmMessage", { item: resolvedItemLabel })}
         onConfirm={handleConfirm}
         onCancel={() => setOpen(false)}
         loading={loading}
@@ -1621,7 +1631,7 @@ export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }
 // destructivo abajo). Evita que cada pantalla con una necesidad extra tenga
 // que inventar su propio menú de "⋯" desde cero — RowMenu ya es el patrón
 // compartido de "más opciones" en Mi trabajo/Configuración/Tarifas.
-export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, deleteDisabledReason, extraActions = [] }) {
+export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, deleteDisabledReason, extraActions = [], deleteConfirmMessage, deleteSuccessAction }) {
   const { t } = useTranslation("common");
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   // Cierra el menú "⋯" en el mismo instante en que se CONFIRMA el borrado
@@ -1683,7 +1693,14 @@ export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, d
             <Trash2 size={14} aria-hidden="true" /> {t("rowMenu.delete")}
           </div>
         ) : (
-          <DeleteButton variant="menuItem" onConfirm={handleDeleteConfirmed} itemLabel={itemLabel} optimistic />
+          <DeleteButton
+            variant="menuItem"
+            onConfirm={handleDeleteConfirmed}
+            itemLabel={itemLabel}
+            optimistic
+            confirmMessage={deleteConfirmMessage}
+            successAction={deleteSuccessAction}
+          />
         )}
       </FloatingPanel>
     </>

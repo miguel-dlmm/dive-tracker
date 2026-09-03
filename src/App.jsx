@@ -158,9 +158,17 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   const currencies = useSupabaseTable("currencies", "name", "code");
   const rates = useSupabaseTable("rates", "school");
   const commissionRates = useSupabaseTable("commission_rates", "school");
-  const worklog = useSupabaseTable("worklog", "date");
-  const comisiones = useSupabaseTable("comisiones", "date");
-  const colleaguePayments = useSupabaseTable("colleague_payments", "date");
+  // softDelete: true (migración 0015, Baja lógica de movimientos,
+  // 2026-09-04) — "eliminar" en Mi trabajo deja de ser un DELETE real
+  // (dinero real del instructor); ver la nota junto a la opción en
+  // useSupabaseTable.js. Única fuente de verdad de estas 3 tablas en toda
+  // la app (HomeTab, SummaryTab, MiTrabajoTab, rateCalc.js... todos
+  // reciben estas mismas instancias como props) — con el filtro
+  // `deleted_at is null` viviendo aquí, en la carga, ningún consumidor
+  // necesita acordarse de excluir las filas dadas de baja por su cuenta.
+  const worklog = useSupabaseTable("worklog", "date", "id", { softDelete: true });
+  const comisiones = useSupabaseTable("comisiones", "date", "id", { softDelete: true });
+  const colleaguePayments = useSupabaseTable("colleague_payments", "date", "id", { softDelete: true });
   const navSections = useSupabaseTable("nav_sections", "key", "key");
   const appConfig = useSupabaseTable("app_config", "id", "id");
 

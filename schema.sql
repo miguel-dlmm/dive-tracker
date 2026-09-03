@@ -356,7 +356,29 @@ create unique index if not exists commission_rates_active_school_activity_unique
 
 -- ---------- Movimientos ----------
 
+-- Trigger reutilizable de `updated_at` (migración 0015, 2026-09-04) —
+-- primero de este tipo en el esquema; cualquier tabla futura que
+-- necesite "se autorrellena sola en cada UPDATE" puede reutilizarlo, no
+-- solo los 3 movimientos de abajo. SECURITY INVOKER (por defecto): corre
+-- con los permisos de quien hace el UPDATE, ya sujeto a la política RLS
+-- "own rows" de cada tabla — no necesita privilegios elevados.
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
 -- Work Log: actividades que impartes tú.
+-- deleted_at/created_at/updated_at (migración 0015, 2026-09-04): baja
+-- lógica — nunca se borra de verdad un movimiento con dinero real del
+-- instructor. Toda lectura de la app (useSupabaseTable con
+-- softDelete: true, ver src/App.jsx) filtra `deleted_at is null`; el
+-- índice parcial de abajo cubre exactamente esa consulta. Decisión de
+-- "columnas directas, no una tabla de auditoría aparte" documentada en
+-- la cabecera de 0016-baja-logica-movimientos.sql.
 create table if not exists worklog (
   id uuid primary key default gen_random_uuid(),
   date date not null,
@@ -366,14 +388,21 @@ create table if not exists worklog (
   notes text default '',
   status text not null default 'Pending',
   currency text not null default 'EUR', -- legado; el importe real usa la moneda de `rates`, no esta columna
-  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  deleted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 alter table worklog enable row level security;
 drop policy if exists "allow all" on worklog;
 create policy "own rows" on worklog for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists worklog_not_deleted_idx on worklog (user_id) where deleted_at is null;
+drop trigger if exists set_updated_at on worklog;
+create trigger set_updated_at before update on worklog for each row execute function public.set_updated_at();
 
 -- Comisiones: clientes que refieres a la escuela (no los impartes tú).
+-- deleted_at/created_at/updated_at: ver nota en worklog, mismo criterio.
 create table if not exists comisiones (
   id uuid primary key default gen_random_uuid(),
   date date not null,
@@ -383,14 +412,21 @@ create table if not exists comisiones (
   currency text not null default 'EUR', -- legado; ver nota en worklog.currency
   notes text default '',
   status text not null default 'Pending',
-  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  deleted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 alter table comisiones enable row level security;
 drop policy if exists "allow all" on comisiones;
 create policy "own rows" on comisiones for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists comisiones_not_deleted_idx on comisiones (user_id) where deleted_at is null;
+drop trigger if exists set_updated_at on comisiones;
+create trigger set_updated_at before update on comisiones for each row execute function public.set_updated_at();
 
 -- Pagos entre compañeros (cubrirse turnos, etc.) — independiente de rates.
+-- deleted_at/created_at/updated_at: ver nota en worklog, mismo criterio.
 create table if not exists colleague_payments (
   id uuid primary key default gen_random_uuid(),
   date date not null,
@@ -401,12 +437,18 @@ create table if not exists colleague_payments (
   status text not null default 'Pending',
   notes text default '',
   currency text not null default 'EUR',
-  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  deleted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 alter table colleague_payments enable row level security;
 drop policy if exists "allow all" on colleague_payments;
 create policy "own rows" on colleague_payments for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists colleague_payments_not_deleted_idx on colleague_payments (user_id) where deleted_at is null;
+drop trigger if exists set_updated_at on colleague_payments;
+create trigger set_updated_at before update on colleague_payments for each row execute function public.set_updated_at();
 
 -- ---------- Auth (Supabase Auth) y perfiles ----------
 
