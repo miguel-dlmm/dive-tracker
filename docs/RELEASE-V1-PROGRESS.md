@@ -32,7 +32,7 @@
 | 6 | Slides y avisos | 🟡 En curso — avisos generalizados, WhatsNew sin tocar (ver detalle) |
 | 7 | Usabilidad, carga y escalabilidad | ✅ Hecho (2026-09-02, análisis documental, sin cambios de código) |
 | 8 | Revisión visual y libro de estilo | ✅ Hecho (2026-09-02, `docs/ESTILO.md` actualizado, sin pulido pixel-a-pixel) |
-| 9 | Cierre de Release V1 y despliegue a PRO | 🟡 En curso (2026-09-03/04) — **v1.0.0 desplegado en producción**, 13 migraciones aplicadas y verificadas, `main` en `a640de4`; **sin taguear** (bug preexistente de registro externo encontrado en la verificación, migración `0014` lista pero pendiente de aprobación, y verificación de datos reales pendiente del usuario) — ver detalle |
+| 9 | Cierre de Release V1 y despliegue a PRO | 🟡 En curso (2026-09-03/04) — **v1.0.0 desplegado en producción**, 13 migraciones aplicadas y verificadas, `main` en `a640de4`; **sin taguear** (bug preexistente de registro externo encontrado en la verificación, migración `0014` lista pero pendiente de aprobación, y verificación de datos reales pendiente del usuario). Además, 8 agentes en paralelo completaron trabajo extra en `develop` (733/733 tests en verde) — ver detalle |
 
 > Ver sección "Análisis de riesgos y decisiones previas al trabajo
 > nocturno" más abajo para el detalle completo de cada fase (riesgo,
@@ -2320,7 +2320,55 @@ configuración, tarifas...) en cuanto había varios worktrees activos a
 la vez. Corregido en `vite.config.js` (`3b56f2c`):
 `exclude: [...configDefaults.exclude, '**/.claude/**']` — sobre la
 base por defecto de Vitest, no en vez de ella. Verificado: 705/705 tras
-el fix, con varios agentes todavía trabajando en paralelo.
+el fix, con varios agentes todavía trabajando en paralelo. Mismo bug,
+mismo remedio, encontrado también en ESLint (`eslint.config.js`,
+`b25b4e9`, `globalIgnores` ampliado con `.claude`) — sin él, `npm run
+lint` contaba los 9 avisos preexistentes una vez por worktree activo
+(81 en vez de 9), ninguno real.
+
+**✅ `fix/training-records-usabilidad` — fusionada (`2925a9f`), 8
+commits, el bloque más grande de la noche.** Confirmado antes de
+aceptar la fusión: `git diff` sobre `App.jsx`/`ConfigTab.jsx` vacío — el
+punto de entrada de Training Records sigue oculto, nada se reexpuso.
+733/733 tests y build en verde sobre el estado final. Completado:
+título de fila de progreso ya no se corta, firmas ancladas arriba y más
+grandes (con tests unitarios de la nueva `computeSignaturePlacement()`),
+formulario de creación más claro, FAB de añadir alumno sustituido por
+fila inline en la tabla, sin avatar en el listado (nunca lo tuvo, ya
+estaba así) con tooltip para nombres largos, tarjeta de Home más
+prominente y en 2ª posición (construida, deliberadamente desconectada,
+igual que el resto de la pantalla), carnet de instructor de TR
+reutilizado directamente de Mi perfil (una sola fuente de verdad, ya
+no dos copias). OW: campos obligatorios correctos (Académicas/Piscina/
+Aguas Abiertas 1-4), examen online primero en la lista, "fecha de
+examen" sin check, "Menor de edad" revela tutor+firma como campos
+obligatorios. AOWD: 3 filas de Progreso del curso fijas y obligatorias,
+aventuras electivas integradas ahí mismo con exclusión cruzada real,
+renombradas "Aventuras" en toda la app (ES+EN). Deep Diving/EAN: mismo
+cambio de fecha de examen; EAN32 por defecto.
+
+**Export a JPG en Safari — 2 gaps reales encontrados y corregidos, sin
+poder verificar en Safari real.** Leyendo el código fuente instalado de
+`pdfjs-dist` (no adivinando): la librería usa `Promise.withResolvers()`
+(Safari ≥17.4) y dá por hecho que `Iterator` ya existe como global
+(Safari ≥18.4) para su propio parcheo interno — en un Safari por debajo
+de esas versiones, cualquiera de las dos revienta el export antes de
+llegar al fix del `import()` dinámico que ya existía. `pdfjsPolyfills.js`
+(nuevo, con tests) rellena ambas de forma mínima, importado antes que
+`pdfjs-dist` para que ESM lo evalúe primero. **Sin WebKit disponible en
+este entorno (misma limitación ya documentada en CLAUDE.md para
+`mobile-check`), esto queda como corrección de alta confianza a nivel
+de código fuente, no como arreglo confirmado en un iPhone real** —
+reportado así explícitamente por el agente, sin reclamar más de lo
+verificado.
+
+**❌ No completado: las 6 plantillas de Training Records restantes.**
+Necesitan descargar los PDF reales de Supabase Storage y verificar
+visualmente las coordenadas extraídas (`scripts/extract-flat-template-rects.mjs`
++ overlay) antes de darlas por buenas — el propio historial de este
+proyecto trata esa verificación como obligatoria para un documento de
+certificación, así que el agente no adivinó coordenadas sin
+credenciales de Storage. Sigue pendiente, sin fecha.
 
 ### Verificación
 
@@ -2333,12 +2381,13 @@ el fast-forward. Bloque A de esta sesión: `npm run lint` (0 errores),
 `https://dive-tracker-exgg.vercel.app` (200, sin badge TEST, sin
 errores de consola salvo el bug de `external_registration_enabled` ya
 descrito). Backup verificado con `pg_restore --list`. Las 13 migraciones
-verificadas una a una por catálogo tras aplicarse. Tras los 8 agentes:
-`npm run test -- --run` (715/716 — el único fallo, un test de
-renderizado PDF de Training Records, confirmado en verde de forma
-aislada, es ruido de carga de máquina, no una regresión) y `npm run
-build` en verde sobre `develop` con todo fusionado salvo restyling
-(deliberadamente aparte) y Training Records (todavía en curso). Se
+verificadas una a una por catálogo tras aplicarse. **Con los 8 agentes
+ya terminados** (uno sin cambios — ESLint —, 6 fusionados a `develop`, 1
+—restyling— pusheado sin fusionar a propósito): `npm run test -- --run`
+final sobre `develop` → **733/733 en verde, sin ningún fallo** (una vez
+resuelto el ruido real de carga de máquina de mitad de la noche —
+confirmado no regresión, ver el bug de tooling de Vitest/ESLint más
+arriba) y `npm run build` limpio. Se
 revisó a mano el diff real (no solo el resumen del agente) de cada
 fusión con cambios en código compartido (`useSupabaseTable.js`,
 `shared.jsx`, `App.jsx`) antes de aceptarla — varios agentes dispararon
