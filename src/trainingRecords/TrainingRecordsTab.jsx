@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { UserPlus, Pencil, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2 } from "lucide-react";
+import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2 } from "lucide-react";
 import { supabase } from "../supabaseClient";
-import { useToast, Fab, RowMenu, DatePicker, Select, ConfirmDialog } from "../shared";
+import { useToast, Fab, RowMenu, DatePicker, Select, ConfirmDialog, Avatar } from "../shared";
+import { resolveAvatar } from "../avatarCatalog";
 import { TEAL } from "../App";
 import { fillTrainingRecordPdf } from "./pdfFill";
 import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
@@ -114,12 +115,26 @@ function formatGeneratedAt(timestamp, locale) {
   return new Date(timestamp).toLocaleString(locale === "en" ? "en-GB" : "es-ES", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function InstructorSummary({ instructor }) {
+// Card de instructor (rediseño 2026-09-03, pedido explícito del usuario:
+// "algo como una pequeña card con el avatar de mi perfil, nombre,
+// iniciales, SSI PRO Number, firma") — sustituye a la única línea de texto
+// anterior. El avatar reutiliza exactamente el mismo icono/color que "Mi
+// perfil" (resolveAvatar), nunca una foto: mismo criterio que el resto de
+// la app (ver avatarCatalog.js).
+function InstructorCard({ profile, instructor }) {
   const { t } = useTranslation("trainingRecords");
+  const { icon, color } = resolveAvatar(profile);
   return (
-    <p className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-xs text-gray-500">
-      {t("instructorSummary.firmandoComo", { name: instructor.namePrinted, initials: instructor.initials, number: instructor.number })}
-    </p>
+    <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3">
+      <Avatar icon={icon} color={color} size={44} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-gray-800">{instructor.namePrinted}</p>
+        <p className="text-xs text-gray-500">{t("instructorSummary.datos", { initials: instructor.initials, number: instructor.number })}</p>
+      </div>
+      {instructor.signature && (
+        <img src={instructor.signature} alt={t("instructorSummary.firmaAlt")} className="h-9 w-16 shrink-0 rounded border border-gray-100 bg-white object-contain" />
+      )}
+    </div>
   );
 }
 
@@ -145,19 +160,32 @@ function FieldError({ message }) {
   return <p role="alert" className="mt-1 text-xs text-red-600">{message}</p>;
 }
 
+// Fecha en la MISMA fila que el checkbox (rediseño 2026-09-03, pedido
+// explícito: "quiero algo más pequeño para que cada item del progreso del
+// curso esté en una fila y no en dos como hasta ahora") — antes el
+// DatePicker (w-full de por sí) se pintaba debajo, en una segunda línea.
+// Envolverlo en un contenedor de ancho fijo basta para que quepa junto al
+// checkbox sin tocar el componente compartido (DatePicker sigue siendo
+// w-full de su propio contenedor, igual que en cualquier otro formulario).
 function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, dateError, dateLabel }) {
+  const { t } = useTranslation("trainingRecords");
   return (
-    <div>
-      <label className="flex min-h-11 items-center gap-2.5 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-700">
-        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: TEAL }} />
-        <span className="flex-1">{label}</span>
-      </label>
-      {checked && onDateChange && (
-        <div className="mt-1 pl-3">
-          <DatePicker value={dateValue} onChange={onDateChange} placeholder={dateLabel} />
-          <FieldError message={dateError} />
-        </div>
-      )}
+    <div className="rounded-md border border-gray-200 px-3 py-2">
+      <div className="flex min-h-11 items-center gap-2.5">
+        <label className="flex min-w-0 flex-1 items-center gap-2.5 text-sm text-gray-700">
+          <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: TEAL }} />
+          <span className="min-w-0 flex-1 truncate">{label}</span>
+        </label>
+        {checked && onDateChange && (
+          <div className="w-36 shrink-0">
+            {/* placeholder corto porque el campo ya va pegado a su propia
+                etiqueta (checked && onDateChange) — el texto completo
+                sigue disponible para lectores de pantalla vía ariaLabel */}
+            <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} />
+          </div>
+        )}
+      </div>
+      {checked && onDateChange && <FieldError message={dateError} />}
     </div>
   );
 }
@@ -191,7 +219,28 @@ function configHasData(config) {
   return false;
 }
 
-function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf, onDownloadJpg, onShare }) {
+// Tarjeta de acción en lote (rediseño 2026-09-03, pedido explícito:
+// "dale una vuelta a la parte de Todo el listado... para que sea todo
+// mucho más visual") — sustituye los 3 botones planos de contorno por
+// tarjetas icono+etiqueta, mismo lenguaje visual que la lista de
+// plantillas de arriba (icono en badge de color).
+function BatchActionTile({ icon: Icon, label, onClick, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-3 text-center disabled:opacity-50"
+    >
+      <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: "#F0FDFA", color: TEAL }}>
+        <Icon size={17} aria-hidden="true" />
+      </span>
+      <span className="px-1 text-xs font-medium text-gray-700">{label}</span>
+    </button>
+  );
+}
+
+function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf, onDownloadJpg, onShare, onRegenerate, regenerating }) {
   const { t } = useTranslation("trainingRecords");
   const hasGenerated = !!student.pdfBytes;
   return (
@@ -209,8 +258,19 @@ function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf
           {!hasGenerated && hasError && <span className="block text-xs text-red-600">{t("roster.faltanDatos")}</span>}
         </span>
       </button>
-      <button onClick={() => onEdit(student)} aria-label={t("roster.editar")} title={t("roster.editar")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-gray-400">
-        <Pencil size={16} aria-hidden="true" />
+      {/* Editar ya vive en el menú "⋯" (RowMenu, abajo) — este icono deja
+          de duplicarlo (rediseño 2026-09-03) y pasa a ser la acción
+          "Regenerar TR" individual, para volver a generar SOLO este
+          alumno sin repetir "Generar para todos los alumnos". */}
+      <button
+        onClick={() => onRegenerate(student)}
+        disabled={hasError || regenerating}
+        aria-label={t("roster.regenerarTr")}
+        title={t("roster.regenerarTr")}
+        className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 disabled:opacity-30"
+        style={{ color: TEAL }}
+      >
+        {regenerating ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <RefreshCw size={16} aria-hidden="true" />}
       </button>
       {hasGenerated && (
         <>
@@ -246,6 +306,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   const [confirmingTemplateChange, setConfirmingTemplateChange] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [batchWorking, setBatchWorking] = useState(false);
+  const [regeneratingId, setRegeneratingId] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -378,6 +439,35 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     }
   };
 
+  // Regenera SOLO este alumno (rediseño 2026-09-03) — mismo cálculo que un
+  // paso del bucle de generateAll, pero sin repetir el resto del listado.
+  // La configuración compartida debe seguir siendo válida (no se puede
+  // regenerar un alumno con fechas de progreso a medias), aunque el resto
+  // de alumnos no se toquen ni se revaliden.
+  const regenerateStudent = async (student) => {
+    if (!templateCode) return;
+    const { valid: configValid, errors } = validateRecordConfig(templateMap, config);
+    setConfigErrors(errors);
+    const { valid: studentValid } = validateStudentFields(student);
+    if (!configValid || !studentValid) {
+      toast?.error(t("studentSheet.faltanCampos"));
+      return;
+    }
+    setRegeneratingId(student.id);
+    try {
+      const templateBytes = await getTemplateBytes(templateCode);
+      const data = buildFillData(templateMap, student, config, instructor);
+      const pdfBytes = await fillTrainingRecordPdf(templateBytes, templateMap, data);
+      setSession((s) => ({ ...s, students: s.students.map((x) => (x.id === student.id ? { ...x, pdfBytes, generatedAt: Date.now() } : x)) }));
+      toast?.success(t("roster.regeneradoCorrectamente"));
+    } catch (err) {
+      console.error(err);
+      toast?.error(t("studentSheet.noSePudoGenerar"));
+    } finally {
+      setRegeneratingId(null);
+    }
+  };
+
   const downloadAllAs = async (format) => {
     setBatchWorking(true);
     try {
@@ -417,15 +507,17 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   return (
     <div className="space-y-5 pb-24">
       <p className="text-sm text-gray-500">{t("intro")}</p>
-      <InstructorSummary instructor={instructor} />
+      <InstructorCard profile={profile} instructor={instructor} />
 
       <section>
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentForm.plantilla")}</h3>
-        {templateCode && (
-          <button onClick={requestTemplateChange} className="mb-2 flex min-h-9 items-center gap-1 text-xs font-medium" style={{ color: TEAL }}>
-            {t("studentForm.cambiarPlantilla")}
-          </button>
-        )}
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentForm.plantilla")}</h3>
+          {templateCode && (
+            <button onClick={requestTemplateChange} className="flex min-h-9 shrink-0 items-center gap-1 text-xs font-medium" style={{ color: TEAL }}>
+              {t("studentForm.cambiarPlantilla")}
+            </button>
+          )}
+        </div>
         {!templateCode ? (
           templates.length === 0 ? (
             <p className="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-gray-400">{t("sinPlantillas")}</p>
@@ -580,6 +672,8 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                     onDownloadPdf={downloadPdf}
                     onDownloadJpg={downloadJpg}
                     onShare={canShareFiles([new File([""], "t.pdf", { type: "application/pdf" })]) ? shareRecord : null}
+                    onRegenerate={regenerateStudent}
+                    regenerating={regeneratingId === student.id}
                   />
                 ))}
               </ul>
@@ -597,34 +691,15 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
           </button>
 
           {generatedStudents.length > 0 && (
-            <section className="space-y-2 rounded-lg border border-gray-200 bg-white p-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("roster.enLote")}</h3>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => downloadAllAs("pdf")}
-                  disabled={batchWorking}
-                  className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md border px-3 text-sm font-medium disabled:opacity-60"
-                  style={{ borderColor: TEAL, color: TEAL }}
-                >
-                  <FileText size={15} aria-hidden="true" /> {t("roster.descargarTodoPdf")}
-                </button>
-                <button
-                  onClick={() => downloadAllAs("jpg")}
-                  disabled={batchWorking}
-                  className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md border px-3 text-sm font-medium disabled:opacity-60"
-                  style={{ borderColor: TEAL, color: TEAL }}
-                >
-                  <ImageDown size={15} aria-hidden="true" /> {t("roster.descargarTodoJpg")}
-                </button>
-                {shareAllSupported && (
-                  <button
-                    onClick={shareAll}
-                    className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md border px-3 text-sm font-medium"
-                    style={{ borderColor: TEAL, color: TEAL }}
-                  >
-                    <Share2 size={15} aria-hidden="true" /> {t("roster.compartirTodo")}
-                  </button>
-                )}
+            <section className="space-y-2.5 rounded-lg border border-gray-200 bg-white p-3.5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("roster.enLote")}</h3>
+                <span className="text-xs text-gray-400">{t("roster.enLoteCount", { count: generatedStudents.length })}</span>
+              </div>
+              <div className={`grid gap-2 ${shareAllSupported ? "grid-cols-3" : "grid-cols-2"}`}>
+                <BatchActionTile icon={FileText} label={t("roster.descargarTodoPdf")} onClick={() => downloadAllAs("pdf")} disabled={batchWorking} />
+                <BatchActionTile icon={ImageDown} label={t("roster.descargarTodoJpg")} onClick={() => downloadAllAs("jpg")} disabled={batchWorking} />
+                {shareAllSupported && <BatchActionTile icon={Share2} label={t("roster.compartirTodo")} onClick={shareAll} />}
               </div>
             </section>
           )}

@@ -431,7 +431,13 @@ function parseDateStr(s) {
   return { y, m: m - 1, d };
 }
 
-export function DatePicker({ value, onChange, placeholder }) {
+// ariaLabel (opcional): nombre accesible del botón cuando debe ser más
+// descriptivo que el placeholder visible — p.ej. un DatePicker angosto que
+// muestra un placeholder corto ("Fecha") pero necesita distinguirse de
+// otros iguales en la misma pantalla para lectores de pantalla (ver
+// ProgressRowToggle en trainingRecords/TrainingRecordsTab.jsx). Por
+// defecto sigue siendo el propio placeholder, igual que siempre.
+export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
   const { t, months, weekdays } = useCalendarLabels();
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const parsed = parseDateStr(value);
@@ -477,11 +483,11 @@ export function DatePicker({ value, onChange, placeholder }) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={placeholder || t("datePicker.defaultAriaLabel")}
+        aria-label={ariaLabel || placeholder || t("datePicker.defaultAriaLabel")}
         className={`${inputCls} flex min-h-11 w-full items-center gap-1.5 text-left`}
       >
         <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
-        <span className={parsed ? "text-gray-800" : "text-gray-400"}>{display}</span>
+        <span className={`min-w-0 flex-1 truncate ${parsed ? "text-gray-800" : "text-gray-400"}`}>{display}</span>
       </button>
       <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-72 p-3">
         {/* Acceso directo a "Hoy" — el caso más común con diferencia (una

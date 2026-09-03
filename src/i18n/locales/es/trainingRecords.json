@@ -9,14 +9,16 @@
     "boton": "Ir a mi perfil"
   },
   "instructorSummary": {
-    "firmandoComo": "Firmando como {{name}} ({{initials}}) — SSI Pro {{number}}"
+    "datos": "Iniciales {{initials}} · SSI Pro {{number}}",
+    "firmaAlt": "Firma del instructor"
   },
   "roster": {
     "titulo": "Alumnos",
     "vacio": "Todavía no has añadido ningún alumno.",
     "anadirPrimerAlumno": "Añade tu primer alumno",
     "anadirAlumno": "Añadir alumno",
-    "editar": "Editar",
+    "regenerarTr": "Regenerar TR",
+    "regeneradoCorrectamente": "Registro regenerado.",
     "descargarPdf": "Descargar PDF",
     "descargarJpg": "Descargar imagen (JPG)",
     "compartir": "Compartir",
@@ -26,6 +28,8 @@
     "noSePudoExportarImagen": "No se pudo exportar la imagen. Inténtalo de nuevo.",
     "noSePudoCompartir": "No se pudo compartir el documento. Inténtalo de nuevo.",
     "enLote": "Todo el listado",
+    "enLoteCount_one": "{{count}} documento",
+    "enLoteCount_other": "{{count}} documentos",
     "descargarTodoPdf": "Descargar todo en PDF",
     "descargarTodoJpg": "Descargar todo en JPG",
     "compartirTodo": "Compartir todo"
@@ -56,6 +60,7 @@
   "studentSheet": {
     "cerrar": "Cerrar",
     "fechaDeFila": "Fecha: {{label}}",
+    "elegirFechaCorta": "Fecha",
     "progreso": "Progreso del curso",
     "inmersionesEspecialidad": "Inmersiones de especialidad",
     "elegirAventura": "Elige una aventura",
