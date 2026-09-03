@@ -260,6 +260,8 @@
     "editarEstadoPago": "Edit payment status",
     "nuevaMoneda": "New currency",
     "editarMoneda": "Edit currency",
+    "monedasDescripcion": "Choose the app's fallback currency here: it's used when a user hasn't picked their own favorite currency yet in My profile. It's not a personal preference — it's the one applied by default to any new account.",
+    "monedaPorDefectoApp": "App default",
     "codigoCampo": "Code (e.g. EUR)",
     "simboloCampo": "Symbol"
   }

@@ -260,6 +260,8 @@
     "editarEstadoPago": "Editar estado de pago",
     "nuevaMoneda": "Nueva moneda",
     "editarMoneda": "Editar moneda",
+    "monedasDescripcion": "Elige aquí la moneda de respaldo de toda la app: se usa cuando un usuario todavía no ha elegido su propia moneda favorita en Mi perfil. No es una preferencia personal — es la que se aplica por defecto a cualquier cuenta nueva.",
+    "monedaPorDefectoApp": "Predeterminada de la app",
     "codigoCampo": "Código (ej. EUR)",
     "simboloCampo": "Símbolo"
   }

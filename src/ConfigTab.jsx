@@ -61,7 +61,7 @@ function actionErrorMessage(res, payload, { forbidden, fallback }) {
  * la sección en sí lo muestra ya la cabecera del menú de Configuración,
  * no hace falta repetirlo aquí dentro.
  */
-function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false }) {
+function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false, description, defaultLabel }) {
   const { t } = useTranslation("config");
   const emptyForm = Object.fromEntries(fields.map((f) => [f.key, f.type === "color" ? "#0E7C7B" : ""]));
   const [form, setForm] = useState(emptyForm);
@@ -132,6 +132,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
 
   return (
     <div className="space-y-3 pb-16">
+      {description && <p className="text-xs text-gray-400">{description}</p>}
       {(searchable || (pullDefaultOut && defaultRow)) && (
         <div className="space-y-3">
           {searchable && (
@@ -143,7 +144,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
           {pullDefaultOut && defaultRow && (
             <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2.5">
               <Star size={14} className="shrink-0 text-amber-500" fill="currentColor" aria-hidden="true" />
-              <span className="shrink-0 text-xs font-medium text-amber-700">{t("crudTable.favorita")}</span>
+              <span className="shrink-0 text-xs font-medium text-amber-700">{defaultLabel || t("crudTable.favorita")}</span>
               {fields.map((f) => (
                 f.type === "color"
                   ? renderColorField(defaultRow, f)
@@ -1822,7 +1823,16 @@ export default function ConfigTab({ schools, activities, currencies, paymentStat
           fields={[{ key: "name", label: t("crud.nombreCampo") }, { key: "color", label: t("crud.colorCampo"), type: "color", required: false }]} />
       )}
       {isAdmin && section === "monedas" && (
+        // description/defaultLabel: aclaración pedida por el usuario
+        // ("parece raro, hay dos tipos de moneda favorita") — la marcada
+        // aquí NO es una preferencia personal (esa vive en Mi perfil,
+        // localStorage, ADR-0007), es la moneda de RESPALDO de toda la
+        // app cuando un usuario todavía no ha elegido la suya. Antes esta
+        // pantalla reutilizaba la misma etiqueta genérica "Favorita" que
+        // Escuelas/Cursos/Estados de pago, sin ningún texto que explicara
+        // la diferencia — de ahí la sensación de dos conceptos mezclados.
         <CrudTable createLabel={t("crud.nuevaMoneda")} editLabel={t("crud.editarMoneda")} table={currencies} pkField="code" hasDefault searchable pullDefaultOut
+          description={t("crud.monedasDescripcion")} defaultLabel={t("crud.monedaPorDefectoApp")}
           fields={[{ key: "code", label: t("crud.codigoCampo") }, { key: "name", label: t("crud.nombreCampo") }, { key: "symbol", label: t("crud.simboloCampo") }]} />
       )}
       {isAdmin && section === "navegacion" && <SectionColors navSections={navSections} />}
