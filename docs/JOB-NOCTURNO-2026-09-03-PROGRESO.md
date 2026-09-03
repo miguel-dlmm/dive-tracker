@@ -115,7 +115,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 7 | Revisión de notificaciones propias (toasts) | ✅ Hecho | `fix/bloque7-toasts` (desde `develop`) | `ed2c5b2` |
 | 8 | Rediseño del slide de novedades (WhatsNew) | ✅ Hecho | `feat/bloque8-whatsnew-releasev1` (desde `Release-V1`) | `8b9f520` |
 | 9 | KPIs de la home a primera posición | ✅ Hecho | `feat/bloque9-kpis-primera-posicion` (desde `Release-V1`) | `ccc622e` |
-| 10 | Rediseño de Home + enlace al generador de Training Records | ⬜ No empezado | — | — |
+| 10 | Rediseño de Home + enlace al generador de Training Records | ✅ Hecho | `feat/bloque10-home-training-records` (desde `feature/training-records`, con el Bloque 9 cherry-picked encima) | `5ff378e` |
 | 11 | KPIs animados en Movimientos (Generado este mes / Pendiente de cobrar + 3º a decidir) | ⬜ No empezado | — | — |
 | 12 | Análisis de sesión/perfil (eficiencia, robustez) | ⬜ No empezado | — | — |
 | 13 | Análisis de build/push/despliegue | ⬜ No empezado | — | — |
@@ -238,11 +238,24 @@ salida más adelante, investigar la causa raíz de fondo (versión de
 "motion" vs. modo concurrente de React 19) antes de volver a envolver
 esto en `AnimatePresence`.
 
-**Bloque 10 — Home y acceso al generador**
-Mover el enlace al generador de Training Records a la Home,
-rediseñando Home para incluirlo — una Home útil y visualmente cuidada,
-línea Ocean Flow. (Pregunta ya respondida en el Bloque 1: sí hay libro
-de estilo parcial, `docs/ESTILO.md`.)
+**Bloque 10 — Home y acceso al generador** ✅ Hecho — ver tabla arriba.
+Nueva tarjeta "Training Records" al final de Home (icono+título+
+subtítulo+chevron, mismo lenguaje visual que el resto de la app);
+retirada del menú de Configuración (sigue siendo la misma sección por
+dentro, vía `HIDDEN_SECTIONS` + `setStoredSection()` exportado). No se
+tocó el resto de Home más allá de esto — ya estaba bien cuidada tras
+varias rondas previas (KPIs, tendencia, calendario), rediseñarla entera
+sin una razón concreta habría sido cambiar por cambiar.
+
+**Hallazgo importante de este bloque:** `Release-V1` en sí NO tiene el
+generador de Training Records — solo vive en la rama
+`feature/training-records` (aún sin fusionar). La rama de este bloque
+se construyó sobre `feature/training-records`, no sobre `Release-V1`
+directo, con el commit del Bloque 9 (`ccc622e`, KPIs primera posición)
+cherry-picked encima para partir del Home más reciente. **Cualquier
+bloque futuro que toque Home o dependa de Training Records debe
+construirse igual, sobre `feature/training-records`** (o esperar a que
+el usuario la fusione a `Release-V1`) — no sobre `Release-V1` a secas.
 
 **Bloque 11 — KPIs en Movimientos**
 Cambiar la pastilla superior de la página de movimientos por KPIs
@@ -318,10 +331,18 @@ explícitamente.
    recrearlo seed con la lógica descrita en "Hallazgo técnico
    importante" más arriba (inserta en `deployment_notices` + envía por
    Resend, sin depender de `server/`).
-6. Bloques de mantenimiento general (7, 11 si no toca Home, 12-18,
-   final) → rama nueva desde `develop`. Bloques que son Release V1 (8,
-   10, 11 si se hace junto al Bloque 10, TR-restyle) → misma rama
-   `Release-V1`/`feature/training-records` según corresponda.
+6. Bloques de mantenimiento general (12-18, final) → rama nueva desde
+   `develop`. Bloques que son Release V1 y NO tocan Home ni Training
+   Records → rama nueva desde `Release-V1`. **Bloque 11 (KPIs
+   animados en Movimientos) toca la MISMA pantalla que Bloque 10 tocó
+   parcialmente y depende de patrones ya usados ahí — construir sobre
+   `feat/bloque10-home-training-records`, no sobre `Release-V1` a
+   secas, para no perder ese trabajo ni duplicar esfuerzo.** Cualquier
+   bloque futuro que dependa de Training Records (el generador en sí,
+   no solo el enlace desde Home) debe partir de
+   `feature/training-records` (o de una rama que ya la incluya, como
+   `feat/bloque10-home-training-records`) — `Release-V1` a secas NO
+   tiene el generador todavía, solo esa rama.
 7. Al cerrar el job de verdad (todos los bloques + análisis final +
    release lista para desplegar), actualizar la tabla de arriba y
    enviar el mail resumen definitivo.
