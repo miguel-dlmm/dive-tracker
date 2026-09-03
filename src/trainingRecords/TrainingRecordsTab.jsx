@@ -432,7 +432,8 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
       const updated = [];
       for (const student of students) {
         const data = buildFillData(templateMap, student, config, instructor);
-        // eslint-disable-next-line no-await-in-loop -- cada PDF depende del anterior solo por orden de descarga, no hay independencia real que paralelizar aquí
+        // Cada PDF depende del anterior solo por orden de descarga, no hay
+        // independencia real que paralelizar aquí.
         const pdfBytes = await fillTrainingRecordPdf(templateBytes, templateMap, data);
         updated.push({ ...student, pdfBytes, generatedAt: Date.now() });
       }
@@ -479,10 +480,10 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     setBatchWorking(true);
     try {
       for (const student of generatedStudents) {
-        // eslint-disable-next-line no-await-in-loop -- descargas secuenciales a propósito: varias descargas simultáneas se bloquean en algunos navegadores
+        // Descargas secuenciales a propósito: varias descargas simultáneas
+        // se bloquean en algunos navegadores.
         if (format === "pdf") downloadPdf(student);
         else await downloadJpg(student);
-        // eslint-disable-next-line no-await-in-loop
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
     } finally {

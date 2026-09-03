@@ -47,7 +47,7 @@ beforeEach(() => {
   supabase.auth.updateUser.mockReset();
   supabase.auth.getSession.mockReset().mockResolvedValue({ data: { session: { access_token: "tok-1" } } });
   supabase.auth.signInWithPassword.mockReset();
-  global.fetch = vi.fn();
+  globalThis.fetch = vi.fn();
   try { localStorage.clear(); } catch { /* noop */ }
 });
 
@@ -328,7 +328,7 @@ describe("privacidad — eliminar cuenta", () => {
     await user.click(screen.getByRole("button", { name: /Eliminar mi cuenta/ }));
 
     expect(screen.getByRole("alertdialog")).toBeInTheDocument();
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
   // Release V1, Fase 1 (encargo explícito): tras confirmar, un segundo
@@ -351,12 +351,12 @@ describe("privacidad — eliminar cuenta", () => {
     await user.clear(input);
     await user.type(input, "CANCELAR");
     expect(deleteButton).not.toBeDisabled();
-    expect(global.fetch).not.toHaveBeenCalled();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
   it("al escribir CANCELAR y confirmar, llama a /api/delete-own-account con el token de sesión y avisa al padre", async () => {
     const user = userEvent.setup();
-    global.fetch.mockResolvedValue({ ok: true, json: async () => ({ deleted: true }) });
+    globalThis.fetch.mockResolvedValue({ ok: true, json: async () => ({ deleted: true }) });
     const { onAccountDeleted } = renderProfile();
 
     await user.click(screen.getByRole("button", { name: /Eliminar mi cuenta/ }));
@@ -364,7 +364,7 @@ describe("privacidad — eliminar cuenta", () => {
     await user.type(screen.getByLabelText(/Escribe CANCELAR/i), "CANCELAR");
     await user.click(screen.getByRole("button", { name: /^Eliminar cuenta$/ }));
 
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/delete-own-account", expect.objectContaining({
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/delete-own-account", expect.objectContaining({
       method: "POST",
       headers: expect.objectContaining({ Authorization: "Bearer tok-1" }),
     })));
@@ -373,7 +373,7 @@ describe("privacidad — eliminar cuenta", () => {
 
   it("si el servidor rechaza el borrado (p.ej. cuenta superadmin), muestra el error y no cierra sesión", async () => {
     const user = userEvent.setup();
-    global.fetch.mockResolvedValue({ ok: false, json: async () => ({ error: "Una cuenta superadmin no puede eliminarse a sí misma desde aquí." }) });
+    globalThis.fetch.mockResolvedValue({ ok: false, json: async () => ({ error: "Una cuenta superadmin no puede eliminarse a sí misma desde aquí." }) });
     const { onAccountDeleted } = renderProfile();
 
     await user.click(screen.getByRole("button", { name: /Eliminar mi cuenta/ }));

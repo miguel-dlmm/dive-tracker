@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Star, Copy, Loader2 } from "lucide-react";
-import { NAVY, TEAL } from "./colors";
+import { TEAL } from "./colors";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { supabase } from "./supabaseClient";
 import { useToast, Field, Sheet, Fab, DeleteButton, BooleanToggle, inputCls } from "./shared";
@@ -35,6 +35,9 @@ async function duplicateDatasetContent(sourceId, targetId) {
     const { data: rows, error: readError } = await supabase.from(table).select("*").eq("dataset_id", sourceId);
     if (readError) throw readError;
     if (!rows.length) continue;
+    // Desestructurar es la forma más clara de excluir dataset_id (el
+    // original) sin arrastrarlo a rest.
+    // eslint-disable-next-line no-unused-vars
     const copies = rows.map(({ dataset_id: _drop, ...rest }) => ({ ...rest, dataset_id: targetId }));
     const { error: insertError } = await supabase.from(table).insert(copies);
     if (insertError) throw insertError;

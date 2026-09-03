@@ -254,7 +254,6 @@ describe("HomeTab — calendario: instrucción de uso encima, dentro de la tarje
     const caption = screen.getByText("Toca un día para ver el detalle, o uno vacío para añadir un movimiento");
     expect(caption.textContent.endsWith(".")).toBe(false);
     const weekdayHeader = screen.getByText("L");
-    // eslint-disable-next-line no-bitwise
     expect(caption.compareDocumentPosition(weekdayHeader) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

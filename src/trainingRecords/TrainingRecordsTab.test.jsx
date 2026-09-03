@@ -79,8 +79,8 @@ beforeEach(() => {
   storageDownload.mockResolvedValue({ data: { arrayBuffer: async () => new Uint8Array([9, 9, 9]).buffer }, error: null });
   fillTrainingRecordPdf.mockClear();
   renderPdfToJpgBytes.mockClear();
-  global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
-  global.URL.revokeObjectURL = vi.fn();
+  globalThis.URL.createObjectURL = vi.fn(() => "blob:mock-url");
+  globalThis.URL.revokeObjectURL = vi.fn();
 });
 
 it("bloquea el generador con un aviso mientras falte cualquier dato de instructor, incluida la firma", async () => {

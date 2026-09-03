@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, Waves } from "lucide-react";
 import * as Icons from "lucide-react";

@@ -57,14 +57,13 @@ export async function renderPdfToJpgBytes(pdfBytes, { scale = DEFAULT_SCALE } = 
   const doc = await pdfjsLib.getDocument({ data: pdfBytes, disableImageDecoder: true }).promise;
   const pageCanvases = [];
   for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
-    // eslint-disable-next-line no-await-in-loop -- cada página depende del mismo PDFDocumentProxy, no son independientes
+    // Cada página depende del mismo PDFDocumentProxy, no son independientes.
     const page = await doc.getPage(pageNum);
     const viewport = page.getViewport({ scale });
     const canvas = document.createElement("canvas");
     canvas.width = viewport.width;
     canvas.height = viewport.height;
     const ctx = canvas.getContext("2d");
-    // eslint-disable-next-line no-await-in-loop
     await page.render({ canvasContext: ctx, viewport }).promise;
     pageCanvases.push(canvas);
   }

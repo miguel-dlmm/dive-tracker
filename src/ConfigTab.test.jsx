@@ -329,7 +329,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   // de detalle (listUserStatus.js), solo que ahora también en la fila.
   it("la fila del listado muestra el último acceso, no la fecha de alta", async () => {
     const user = userEvent.setup();
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": "2026-08-15T10:00:00Z" } }),
     });
@@ -342,7 +342,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("muestra 'Nunca' como último acceso en la fila si la cuenta no ha iniciado sesión todavía", async () => {
     const user = userEvent.setup();
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null } }),
     });
@@ -365,7 +365,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("cuenta desactivada con deactivated_at registrado: la fila muestra la fecha real de baja", async () => {
     const user = userEvent.setup();
     mockProfilesFrom("2026-08-02T00:00:00Z", "2026-08-15T10:00:00Z");
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: { "target-1": null } }) });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: { "target-1": null } }) });
 
     await openUsuarios(user);
 
@@ -377,7 +377,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("cuenta desactivada sin deactivated_at (baja anterior a esta migración): cae al aviso explícito, no a un dato inventado", async () => {
     const user = userEvent.setup();
     mockProfilesFrom("2026-08-02T00:00:00Z", null);
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: { "target-1": null } }) });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: { "target-1": null } }) });
 
     await openUsuarios(user);
 
@@ -433,14 +433,14 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("genera un enlace de invitación (superadmin) y lo muestra en el panel, sin el botón de simular envío", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) }) // list-user-status inicial
       .mockResolvedValueOnce({ ok: true, json: async () => ({ invitation_link: "https://app.example/?invite=abc-123", expires_at: "2026-09-03T00:00:00Z" }) });
 
     await openUsuarios(user);
     await user.click(screen.getByRole("button", { name: "Generar enlace de invitación" }));
 
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/generate-invitation-link", expect.objectContaining({
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/generate-invitation-link", expect.objectContaining({
       method: "POST",
       headers: expect.objectContaining({ Authorization: "Bearer tok" }),
     })));
@@ -451,7 +451,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("regenerar enlace no muestra el panel manual cuando el email se envía correctamente", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
       .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }) // regenerate-activation-link
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
@@ -464,7 +464,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await user.click(screen.getByRole("button", { name: "Regenerar enlace" }));
     await user.click(screen.getByRole("button", { name: "Generar enlace" }));
 
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/regenerate-activation-link", expect.objectContaining({
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/regenerate-activation-link", expect.objectContaining({
       body: JSON.stringify({ target_user_id: "target-1" }),
     })));
     expect(screen.queryByText(/https:\/\/app\.example\/activate/)).not.toBeInTheDocument();
@@ -493,7 +493,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("regenerar contraseña no muestra el panel manual cuando el email se envía correctamente", async () => {
     const user = userEvent.setup();
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
       .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }) // regenerate-password
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
@@ -506,7 +506,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await user.click(screen.getByRole("button", { name: "Regenerar contraseña" }));
     await user.click(screen.getByRole("button", { name: "Regenerar", exact: true }));
 
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/regenerate-password", expect.objectContaining({
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/regenerate-password", expect.objectContaining({
       body: JSON.stringify({ target_user_id: "target-1" }),
     })));
     expect(screen.queryByText(/https:\/\/app\.example\/activate/)).not.toBeInTheDocument();
@@ -559,7 +559,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("cerrar la hoja de detalle mientras se edita, y reabrirla, no deja la edición a medias", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
 
     await openUsuarios(user);
     await user.click(screen.getByRole("button", { name: /ana/ }));
@@ -576,7 +576,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("cerrar 'Crear usuario' con datos a medio rellenar, y reabrir, muestra el formulario en blanco", async () => {
     const user = userEvent.setup();
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
     // CreateUserSheet ahora se queda siempre montada (ver backlog más
     // arriba) y pide setup_datasets en cuanto se abre — mockProfilesFrom
     // (beforeEach) solo conocía la tabla "profiles", hace falta ampliarla.

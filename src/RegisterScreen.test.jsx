@@ -9,7 +9,7 @@ function renderWithToast(ui) {
 }
 
 beforeEach(() => {
-  global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ email_sent: true }) });
+  globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ email_sent: true }) });
 });
 
 // i18n es un singleton global — el test de cambio de idioma deja i18next en
@@ -28,7 +28,7 @@ it("pulsar 'Volver a entrar' antes de enviar llama a onBack sin llamar a fetch",
   await user.click(screen.getByRole("button", { name: /Volver a entrar/ }));
 
   expect(onBack).toHaveBeenCalledTimes(1);
-  expect(global.fetch).not.toHaveBeenCalled();
+  expect(globalThis.fetch).not.toHaveBeenCalled();
 });
 
 it("enviar el formulario llama a /api/external-register con los datos y muestra la confirmación", async () => {
@@ -41,7 +41,7 @@ it("enviar el formulario llama a /api/external-register con los datos y muestra 
   await user.type(screen.getByLabelText("Nickname"), "ada");
   await user.click(screen.getByRole("button", { name: "Registrarme" }));
 
-  await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
+  await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
     method: "POST",
     body: JSON.stringify({ email: "diver@example.com", first_name: "Ada", last_name: "Lovelace", nickname: "ada", language: "es" }),
   })));
@@ -60,7 +60,7 @@ it("con inviteToken, lo incluye en el body como invite_token", async () => {
   await user.type(screen.getByLabelText("Nickname"), "ada");
   await user.click(screen.getByRole("button", { name: "Registrarme" }));
 
-  await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
+  await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
     body: JSON.stringify({ email: "diver@example.com", first_name: "", last_name: "", nickname: "ada", language: "es", invite_token: "abc-123" }),
   })));
 });
@@ -73,8 +73,8 @@ it("sin inviteToken, no incluye invite_token en el body (comportamiento normal)"
   await user.type(screen.getByLabelText("Nickname"), "ada");
   await user.click(screen.getByRole("button", { name: "Registrarme" }));
 
-  await waitFor(() => expect(global.fetch).toHaveBeenCalled());
-  const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+  await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+  const body = JSON.parse(globalThis.fetch.mock.calls[0][1].body);
   expect(body.invite_token).toBeUndefined();
 });
 
@@ -91,13 +91,13 @@ it("cambiar el idioma en el selector se envía en el registro", async () => {
   await user.type(screen.getByLabelText("Nickname"), "ada");
   await user.click(screen.getByRole("button", { name: "Sign up" }));
 
-  await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
+  await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
     body: expect.stringContaining('"language":"en"'),
   })));
 });
 
 it("si el servidor responde con error (p. ej. registro externo desactivado), lo muestra y no pasa a la confirmación", async () => {
-  global.fetch = vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: "El registro externo no está habilitado." }) });
+  globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: "El registro externo no está habilitado." }) });
   const user = userEvent.setup();
   renderWithToast(<RegisterScreen onBack={vi.fn()} />);
 
@@ -119,11 +119,11 @@ it("un nickname con '@' muestra el aviso, deshabilita el envío y no llama a fet
   expect(screen.getByText('El nickname no puede contener "@".')).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Registrarme" })).toBeDisabled();
   await user.click(screen.getByRole("button", { name: "Registrarme" }));
-  expect(global.fetch).not.toHaveBeenCalled();
+  expect(globalThis.fetch).not.toHaveBeenCalled();
 });
 
 it("si el email no se pudo enviar (email_sent:false), avisa por toast y no pasa a la confirmación", async () => {
-  global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ email_sent: false }) });
+  globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ email_sent: false }) });
   const user = userEvent.setup();
   renderWithToast(<RegisterScreen onBack={vi.fn()} />);
 
@@ -131,6 +131,6 @@ it("si el email no se pudo enviar (email_sent:false), avisa por toast y no pasa 
   await user.type(screen.getByLabelText("Nickname"), "ada");
   await user.click(screen.getByRole("button", { name: "Registrarme" }));
 
-  await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+  await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
   expect(screen.queryByText(/Te hemos enviado un email/)).not.toBeInTheDocument();
 });

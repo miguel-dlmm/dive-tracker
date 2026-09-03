@@ -5,7 +5,7 @@ import ForgotPasswordScreen from "./ForgotPasswordScreen";
 const CONFIRMATION_TEXT = /Si ese email tiene una cuenta en Ocean Flow/;
 
 beforeEach(() => {
-  global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
+  globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
 });
 
 it("pulsar 'Volver a entrar' antes de enviar llama a onBack sin llamar a fetch", async () => {
@@ -16,7 +16,7 @@ it("pulsar 'Volver a entrar' antes de enviar llama a onBack sin llamar a fetch",
   await user.click(screen.getByRole("button", { name: /Volver a entrar/ }));
 
   expect(onBack).toHaveBeenCalledTimes(1);
-  expect(global.fetch).not.toHaveBeenCalled();
+  expect(globalThis.fetch).not.toHaveBeenCalled();
 });
 
 it("enviar el formulario llama a /api/request-password-reset con el email y muestra el mensaje de confirmación genérico", async () => {
@@ -26,7 +26,7 @@ it("enviar el formulario llama a /api/request-password-reset con el email y mues
   await user.type(screen.getByLabelText("Email"), "diver@example.com");
   await user.click(screen.getByRole("button", { name: "Enviar enlace" }));
 
-  await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/request-password-reset", expect.objectContaining({
+  await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/request-password-reset", expect.objectContaining({
     method: "POST",
     body: JSON.stringify({ email: "diver@example.com" }),
   })));
@@ -34,7 +34,7 @@ it("enviar el formulario llama a /api/request-password-reset con el email y mues
 });
 
 it("muestra el MISMO mensaje de confirmación aunque la petición de red falle (nunca revela si el email existe)", async () => {
-  global.fetch = vi.fn().mockRejectedValue(new Error("network down"));
+  globalThis.fetch = vi.fn().mockRejectedValue(new Error("network down"));
   const user = userEvent.setup();
   render(<ForgotPasswordScreen onBack={vi.fn()} />);
 

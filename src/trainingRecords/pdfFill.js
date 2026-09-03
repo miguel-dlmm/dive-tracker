@@ -231,7 +231,7 @@ export async function fillTrainingRecordPdf(pdfBytes, templateMap, data) {
     else checkbox.uncheck();
   });
   for (const { field, dataUrl } of signatures) {
-    // eslint-disable-next-line no-await-in-loop -- cada imagen depende del PDFDocument compartido, no son independientes
+    // Cada imagen depende del PDFDocument compartido, no son independientes.
     await drawSignature(pdfDoc, page, form, field, dataUrl);
   }
 
