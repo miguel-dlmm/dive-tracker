@@ -19,7 +19,7 @@ import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
-import ConfigTab, { clearStoredSection } from "./ConfigTab";
+import ConfigTab, { clearStoredSection, setStoredSection } from "./ConfigTab";
 import CompanerosTab from "./CompanerosTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
@@ -385,6 +385,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             onQuickCreate={startHomeCreate}
             onOpenPending={() => changeTab("trabajo")}
             onOpenSummary={() => changeTab("summary")}
+            onOpenTrainingRecords={() => { setStoredSection("training-records"); changeTab("config"); }}
           />
         )}
         {tab === "log" && (
