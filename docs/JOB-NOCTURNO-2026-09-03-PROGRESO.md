@@ -116,7 +116,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 8 | Rediseño del slide de novedades (WhatsNew) | ✅ Hecho | `feat/bloque8-whatsnew-releasev1` (desde `Release-V1`) | `8b9f520` |
 | 9 | KPIs de la home a primera posición | ✅ Hecho | `feat/bloque9-kpis-primera-posicion` (desde `Release-V1`) | `ccc622e` |
 | 10 | Rediseño de Home + enlace al generador de Training Records | ✅ Hecho | `feat/bloque10-home-training-records` (desde `feature/training-records`, con el Bloque 9 cherry-picked encima) | `5ff378e` |
-| 11 | KPIs animados en Movimientos (Generado este mes / Pendiente de cobrar + 3º a decidir) | ⬜ No empezado | — | — |
+| 11 | KPIs animados en Movimientos (Generado este mes / Pendiente de cobrar + 3º a decidir) | ✅ Hecho | `feat/bloque11-kpis-movimientos` (desde `feat/bloque10-home-training-records`) | `08079f8` |
 | 12 | Análisis de sesión/perfil (eficiencia, robustez) | ⬜ No empezado | — | — |
 | 13 | Análisis de build/push/despliegue | ⬜ No empezado | — | — |
 | 14 | Velocidad de la suite de test | ⬜ No empezado | — | — |
@@ -257,12 +257,25 @@ bloque futuro que toque Home o dependa de Training Records debe
 construirse igual, sobre `feature/training-records`** (o esperar a que
 el usuario la fusione a `Release-V1`) — no sobre `Release-V1` a secas.
 
-**Bloque 11 — KPIs en Movimientos**
-Cambiar la pastilla superior de la página de movimientos por KPIs
-animados: "Generado este mes" y "Pendiente de cobrar" (solo
-cantidades, no nº de movimientos). Valorar un 3er KPI por estética,
-explicando en el informe qué opciones se valoraron y por qué se eligió
-la implementada.
+**Bloque 11 — KPIs en Movimientos** ✅ Hecho — ver tabla arriba. 3
+KPIs animados (Generado este mes / Pendiente de cobrar / Cobrado este
+mes) sustituyen la tarjeta única de antes (que tenía un `onPress` a un
+`onOpenPayments` nunca conectado desde App.jsx — prop muerta, eliminada
+de paso). 3er KPI elegido: "Cobrado este mes" — completa el ángulo
+financiero (Generado = todo lo facturado; Pendiente = deuda total;
+Cobrado = lo que de verdad ha entrado este mes) sin duplicar los KPIs
+no financieros que ya tiene Home (alumnos/cursos/captados). Detalle
+completo de las opciones descartadas en el propio mensaje de commit.
+
+Hallazgo de testing (no bug de producción): el test que comprobaba el
+importe animado era frágil bajo carga — un `waitFor` con timeout fijo
+no bastaba porque animar en CÉNTIMOS exige que `useCountUp` llegue casi
+al 100% de su duración para que `Math.round()` coincida exacto (a
+diferencia de un KPI entero pequeño, que ya redondea bien mucho antes).
+Arreglado forzando `prefers-reduced-motion` con un mock local de
+`matchMedia` — determinista, sin depender del reloj real. Si un futuro
+bloque anima OTRO importe de dinero con `useCountUp`, aplicar el mismo
+patrón desde el principio en su test.
 
 **Bloque 12 — Sesión y perfil**
 Qué eficiencias, mejoras y robustez se pueden añadir a la gestión de
