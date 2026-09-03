@@ -83,6 +83,13 @@ function persistSession(session) {
   }
 }
 
+// Bug real reportado en Safari iOS: "No se ha podido completar la
+// operación (Error de WebKitBlobResource)" al descargar. Causa conocida
+// de Safari/WebKit — revocar el blob: URL justo después de a.click()
+// (como hacíamos antes) corta la descarga a mitad, porque Safari la
+// gestiona de forma asíncrona (a diferencia de Chrome, donde revocar en
+// el mismo tick funciona sin problema). Se retrasa la revocación para
+// darle tiempo real a completarla.
 function downloadBytes(bytes, filename, mimeType = "application/pdf") {
   const blob = new Blob([bytes], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -92,7 +99,7 @@ function downloadBytes(bytes, filename, mimeType = "application/pdf") {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function safeFilePart(text) {
