@@ -220,20 +220,80 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
   );
 }
 
+// Firma recortada a su contenido real — display-only, no toca lo que se
+// guarda en Supabase (SignatureCapture sigue exportando el canvas
+// COMPLETO tal cual, lo sigue usando igual el generador de Training
+// Records). El canvas de captura es ancho y bajo (h-28 w-full,
+// SignatureCapture.jsx) y exporta ese lienzo entero como PNG, margen
+// transparente incluido — una firma pequeña centrada se veía diminuta
+// dentro del hueco del carnet aunque ese hueco ya la mostrara "lo más
+// grande posible": el problema era el margen en blanco ya horneado en
+// la propia imagen, no el tamaño del hueco. Se recalcula una vez por
+// firma (no en cada render) escaneando el canal alfa para encontrar el
+// rectángulo real del trazo.
+function useTrimmedSignature(dataUrl) {
+  const [trimmed, setTrimmed] = useState(null);
+  useEffect(() => {
+    if (!dataUrl) { setTrimmed(null); return undefined; }
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      if (cancelled) return;
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0, found = false;
+        for (let y = 0; y < canvas.height; y++) {
+          for (let x = 0; x < canvas.width; x++) {
+            if (data[(y * canvas.width + x) * 4 + 3] > 10) {
+              found = true;
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+        if (!found) { setTrimmed(dataUrl); return; }
+        const pad = 6;
+        minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
+        maxX = Math.min(canvas.width, maxX + pad); maxY = Math.min(canvas.height, maxY + pad);
+        const w = maxX - minX, h = maxY - minY;
+        const out = document.createElement("canvas");
+        out.width = w; out.height = h;
+        out.getContext("2d").drawImage(canvas, minX, minY, w, h, 0, 0, w, h);
+        setTrimmed(out.toDataURL("image/png"));
+      } catch {
+        setTrimmed(dataUrl);
+      }
+    };
+    img.onerror = () => setTrimmed(dataUrl);
+    img.src = dataUrl;
+    return () => { cancelled = true; };
+  }, [dataUrl]);
+  return trimmed;
+}
+
 // Mini carnet del instructor (2026-09-03, pedido explícito del usuario):
 // sustituye las 3 líneas de texto plano del modo visualización por algo
 // que se parezca a un carnet real — inspirado en el carnet de SSI (fondo
 // oscuro, avatar+nombre a la izquierda, un panel claro a la derecha),
 // pero con identidad propia, no una copia: en vez de un QR (que no
 // tenemos nada que codificar en él), ese hueco lo ocupa la firma real del
-// instructor — es la pieza que de verdad autentica el carnet. Solo
-// visual, no toca ni sustituye el guardado/edición existente (ver
-// InstructorSection más abajo, que sigue igual).
-function InstructorCard({ profile, initials, ssiProNumber, signature }) {
+// instructor — es la pieza que de verdad autentica el carnet. onEdit
+// (icono superpuesto, no un link aparte debajo) es la única acción del
+// carnet — sigue disparando exactamente el mismo startEdit() de siempre
+// (ver InstructorSection más abajo), solo cambia DÓNDE vive el botón.
+function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) {
   const { t } = useTranslation("profile");
   const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.nickname;
   const avatar = resolveAvatar(profile);
   const AvatarIcon = Icons[avatar.icon] || Icons.Waves;
+  const trimmedSignature = useTrimmedSignature(signature);
 
   return (
     <div
@@ -249,7 +309,21 @@ function InstructorCard({ profile, initials, ssiProNumber, signature }) {
         style={{ background: "radial-gradient(120% 60% at 15% 0%, rgba(255,255,255,0.16), transparent 60%)" }}
         aria-hidden="true"
       />
-      <div className="relative flex items-start justify-between gap-3">
+      {/* Editar — icono superpuesto en vez de un link debajo del carnet
+          (pedido explícito: "de una manera estéticamente moderna"),
+          mismo patrón táctil que el resto de la app (círculo visual más
+          pequeño que el objetivo táctil real de 44×44, convención #7,
+          CLAUDE.md). */}
+      <button
+        onClick={onEdit}
+        aria-label={t("instructor.edit")}
+        className="absolute right-1 top-1 z-10 flex h-11 w-11 items-center justify-center text-white"
+      >
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
+          <Pencil size={14} aria-hidden="true" />
+        </span>
+      </button>
+      <div className="relative flex items-start justify-between gap-3 pr-8">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-white/40 bg-white/10">
             <AvatarIcon size={26} style={{ color: avatar.color }} aria-hidden="true" />
@@ -260,9 +334,9 @@ function InstructorCard({ profile, initials, ssiProNumber, signature }) {
           </div>
         </div>
         {/* Firma en vez de QR — pedido explícito del usuario. */}
-        <div className="flex h-16 w-20 shrink-0 flex-col items-center justify-center rounded-lg bg-white/95 p-1">
-          {signature ? (
-            <img src={signature} alt={t("instructor.card.signatureAlt", { name: fullName })} className="max-h-full max-w-full object-contain" />
+        <div className="flex h-16 w-24 shrink-0 flex-col items-center justify-center rounded-lg bg-white/95 p-1.5">
+          {trimmedSignature ? (
+            <img src={trimmedSignature} alt={t("instructor.card.signatureAlt", { name: fullName })} className="h-full w-full object-contain" />
           ) : (
             <span className="px-1 text-center text-[9px] font-medium leading-tight text-gray-400">{t("instructor.card.noSignature")}</span>
           )}
@@ -330,10 +404,13 @@ function InstructorSection({ profile, onProfileUpdated }) {
     return (
       <SectionCard id="instructor-section" title={t("sections.instructor")}>
         <p className="mb-3 text-xs text-gray-400">{t("instructor.hint")}</p>
-        <InstructorCard profile={profile} initials={profile.instructor_initials} ssiProNumber={profile.ssi_pro_number} signature={profile.instructor_signature} />
-        <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: TEAL }}>
-          <Pencil size={14} aria-hidden="true" /> {t("instructor.edit")}
-        </button>
+        <InstructorCard
+          profile={profile}
+          initials={profile.instructor_initials}
+          ssiProNumber={profile.ssi_pro_number}
+          signature={profile.instructor_signature}
+          onEdit={startEdit}
+        />
       </SectionCard>
     );
   }
