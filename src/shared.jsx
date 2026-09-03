@@ -1942,16 +1942,23 @@ export function lighten(hex, amount = 0.88) {
 // propio acento pero sin competir en peso — sustituye al antiguo
 // "Escuela - Actividad" en una sola línea, donde ambos datos competían por
 // la misma jerarquía visual.
-export function EntryTitle({ school, activity, schoolColor, activityColor }) {
+// schoolSuffix (opcional): texto añadido tras el nombre de la escuela, sin
+// tocar su color (p. ej. " · con Ana" en un Ajuste de curso, Mi trabajo) —
+// mismo componente para cualquier fila de "curso + escuela" en la app
+// (Tarifas, Mi trabajo), consolidado 2026-09-04 al confirmar que
+// EntryRowTitle (antes privado de MiTrabajoTab.jsx) y este componente
+// pintaban exactamente lo mismo con un desvío accidental (los puntos de
+// color de escuela/curso solo existían aquí) — ver docs/ESTILO.md.
+export function EntryTitle({ school, activity, schoolColor, activityColor, schoolSuffix }) {
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-1.5">
         <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: activityColor }} aria-hidden="true" />
-        <span className="truncate text-[15px] font-semibold leading-tight" style={{ color: activityColor }}>{activity}</span>
+        <span className="truncate text-[15px] font-semibold leading-tight" style={{ color: activityColor }}>{activity || "—"}</span>
       </div>
       <div className="mt-1 flex items-center gap-1.5">
         <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: schoolColor }} aria-hidden="true" />
-        <span className="truncate text-[11.5px] font-medium text-gray-400">{school}</span>
+        <span className="truncate text-[11.5px] font-medium text-gray-400">{school}{schoolSuffix || ""}</span>
       </div>
     </div>
   );

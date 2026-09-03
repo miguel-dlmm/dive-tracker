@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   Money, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
-  isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab,
+  isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab, EntryTitle,
 } from "./shared";
 import { buildActivityEntries, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
@@ -35,23 +35,6 @@ function matchesEntryFilters(e, f) {
   if (f.school && e.school !== f.school) return false;
   if (f.activity.length > 0 && !f.activity.includes(e.activity)) return false;
   return true;
-}
-
-// Sin marcador delante del texto (ver Pagos) — para el ajuste, el curso
-// lidera igual que en Curso/Comisión, con el instructor relacionado como
-// detalle secundario, porque el ajuste sigue estando ligado a un curso.
-function EntryRowTitle({ entry, activityColor }) {
-  const isAjuste = entry._source === "companeros";
-  return (
-    <div className="min-w-0">
-      <p className="truncate text-[15px] font-semibold leading-tight" style={{ color: activityColor(entry.activity) }}>
-        {entry.activity || "—"}
-      </p>
-      <p className="mt-0.5 truncate text-[11.5px] font-medium text-gray-400">
-        {entry.school}{isAjuste && entry.colleague_name ? ` · con ${entry.colleague_name}` : ""}
-      </p>
-    </div>
-  );
 }
 
 // "Confirmar cobro" no describe bien saldar una deuda hacia un compañero
@@ -95,7 +78,7 @@ const HEIGHT_DELAY_MS = 60;
 const HEIGHT_MS = 220;
 const EXIT_MS = HEIGHT_DELAY_MS + HEIGHT_MS + 30; // margen antes de disparar el borrado real
 
-function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onEdit, onDelete, animPhase }) {
+function EntryRow({ entry, activityColor, schoolColor, currencyRows, isPending, onToggle, onEdit, onDelete, animPhase }) {
   const { t } = useTranslation("trabajo");
   const isAjuste = entry._source === "companeros";
   const negative = isAjuste && entry.total < 0;
@@ -215,7 +198,13 @@ function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onE
         }}
       >
         <div className="flex items-start justify-between gap-2">
-          <EntryRowTitle entry={entry} activityColor={activityColor} />
+          <EntryTitle
+            school={entry.school}
+            activity={entry.activity}
+            schoolColor={schoolColor(entry.school)}
+            activityColor={activityColor(entry.activity)}
+            schoolSuffix={isAjuste && entry.colleague_name ? ` · con ${entry.colleague_name}` : ""}
+          />
           <span className="shrink-0 font-semibold tabular-nums" style={{ color: amountColor }}>
             {isAjuste && (negative ? "− " : "+ ")}
             <Money amount={Math.abs(entry.total)} code={entry.currency} currencyRows={currencyRows} style={{ color: amountColor }} />
@@ -345,6 +334,7 @@ export default function MiTrabajoTab({
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
 
   const activityColor = (name) => colorFor(activities.rows, name, "#374151");
+  const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
 
   const activityEntries = useMemo(
     () => buildActivityEntries({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
@@ -421,11 +411,6 @@ export default function MiTrabajoTab({
   }, [incomeEntries, currentMonthKey, paymentStatuses.rows]);
 
   const tableFor = (source) => (source === "ganado" ? worklog : source === "comision" ? comisiones : colleaguePayments);
-  // Sin esto, la pantalla mostraba "Estás al día — nada pendiente" durante
-  // el instante entre montar y recibir la primera respuesta de Supabase —
-  // un usuario nuevo lo leía como "esta app no tiene nada", no como
-  // "cargando". Un esqueleto breve evita ese vistazo equivocado.
-  const dataLoaded = worklog.loaded && comisiones.loaded && colleaguePayments.loaded && rates.loaded && commissionRates.loaded;
 
   // -----------------------------------------------------------------
   // Animación de fila al cambiar de estado — mismo lenguaje de movimiento
@@ -722,23 +707,19 @@ export default function MiTrabajoTab({
         </div>
       )}
 
+      {/* Sin esqueleto de carga aquí a propósito (auditoría de estilo
+          2026-09-04): App.jsx ya bloquea el render de CUALQUIER pestaña
+          (incluida esta) hasta que worklog/comisiones/colleaguePayments/
+          rates/commissionRates estén los 5 cargados (ver `loaded` en
+          App.jsx) — un esqueleto propio aquí solo podría llegar a pintarse
+          si esas mismas tablas estuvieran cargadas por App.jsx pero NO por
+          esta pantalla, algo que no puede pasar (son las mismas instancias
+          de useSupabaseTable, pasadas por props). Había uno hasta esta
+          revisión — código muerto en la práctica, nunca alcanzable — se
+          retira en vez de replicarlo en Tarifas al llevar su lenguaje
+          visual al día. */}
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        {!dataLoaded ? (
-          <div aria-hidden="true">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="animate-pulse px-4 py-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="h-3.5 w-32 rounded bg-gray-200" />
-                  <div className="h-3.5 w-14 rounded bg-gray-200" />
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <div className="h-3 w-20 rounded bg-gray-100" />
-                  <div className="h-3 w-16 rounded bg-gray-100" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : visibleList.length === 0 ? (
+        {visibleList.length === 0 ? (
           // animate-help-fade-in (index.css): sin él, cuando la última fila
           // pendiente se anima fuera de la lista, este bloque aparece de
           // golpe al terminar la animación de la fila y "salta" al tomar su
@@ -765,7 +746,7 @@ export default function MiTrabajoTab({
                     </div>
                   )}
                   <EntryRow
-                    entry={e} activityColor={activityColor} currencyRows={currencies.rows}
+                    entry={e} activityColor={activityColor} schoolColor={schoolColor} currencyRows={currencies.rows}
                     isPending={statusFilter === "pendientes"}
                     onToggle={() => toggleStatus(e)}
                     onEdit={() => setSheetRequest({ type: e._source, editingEntry: e })}
