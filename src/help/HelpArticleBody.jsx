@@ -34,12 +34,7 @@ export default function HelpArticleBody({ article, accentColor }) {
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("sections.steps")}</h3>
         <ol className="space-y-3">
           {article.steps.map((step, i) => (
-            <HelpStep
-              key={i}
-              index={i + 1}
-              text={typeof step === "string" ? step : step.text}
-              image={typeof step === "string" ? null : step.image}
-            />
+            <HelpStep key={i} index={i + 1} text={step} />
           ))}
         </ol>
       </div>

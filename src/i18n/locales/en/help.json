@@ -31,7 +31,7 @@
       "whatYouCanDo": "Ocean Flow helps you keep track of your income as a freelance instructor: the classes you teach, the commissions you earn from referred clients, and the money adjustments with other instructors — all under one concept, \"entry\".",
       "whenToUseIt": "The first time you open the app, or whenever you want a reminder of what each screen is for.",
       "steps": [
-        { "text": "Home: how much you have pending to collect, a widget with your oldest debts, the month's calendar, and a shortcut to create an entry.", "imageAlt": "Home screen with the total pending to collect and the month's calendar" },
+        "Home: how much you have pending to collect, a widget with your oldest debts, the month's calendar, and a shortcut to create an entry.",
         "My work: the full list of your entries (courses, commissions and adjustments) — create, edit, collect or delete them.",
         "Summary: your balance for whichever period you pick, with the option to drill down by school, by course, or by commissions."
       ],
@@ -46,7 +46,7 @@
       "whatYouCanDo": "Settings is organised into two blocks: what any user maintains (Schools, Courses, Rates) and, if you have an admin role, an \"Administration\" block with catalogues for the whole app (payment types and statuses, currencies, colours, users).",
       "whenToUseIt": "Before logging your first entry, and afterwards every time you start working with a new school or course, or change a price.",
       "steps": [
-        { "text": "Go to Settings (gear icon, top right) and tap the section you need.", "imageAlt": "Settings menu with the Schools, Courses and Rates sections" },
+        "Go to Settings (gear icon, top right) and tap the section you need.",
         "Add your Schools and Courses first — a Rate always links a school to a course, so both need to exist beforehand.",
         "Inside a section, tap the floating \"+\" button to create one; \"‹ Settings\" takes you back to the menu.",
         "Tap a row's colour to customise it, and the star to mark it as a favourite."
@@ -64,7 +64,7 @@
       "whenToUseIt": "Right after teaching a class, when closing a commission, or when you agree an adjustment with another instructor.",
       "steps": [
         "Tap \"Add entry\": the \"+\" button on the \"Pending to collect\" card in Home, the same button by tapping a day on Home's calendar, or the floating \"+\" in My work.",
-        { "text": "At the top of the form, choose the type: Course taught, Commission, or Course adjustment.", "imageAlt": "Entry creation sheet with the type selector: Course taught, Commission or Course adjustment" },
+        "At the top of the form, choose the type: Course taught, Commission, or Course adjustment.",
         "Course taught: school, course, date and number of people — the course rate calculates the amount for you.",
         "Commission: same as a course, but for a client you referred who trains with another instructor — it uses its own commission rate, not the course one.",
         "Course adjustment: doesn't depend on any rate — you enter the amount yourself (positive if you're owed, negative if you owe) and which colleague it's with.",
@@ -82,7 +82,7 @@
       "whatYouCanDo": "Every entry has a status (pending or collected). Changing it is instant, a single tap, with the option to undo if you make a mistake. You can do it entry by entry, or all at once across the whole visible list.",
       "whenToUseIt": "As soon as a school or a colleague pays you (one at a time), or all at once when you check in periodically and several payments have already come through.",
       "steps": [
-        { "text": "To collect one: go to My work (the \"Pending\" tab opens by default) and tap \"Confirm payment\" on its row (or \"Mark settled\" if it's an adjustment against you).", "imageAlt": "List of pending entries in My work with the Confirm payment button" },
+        "To collect one: go to My work (the \"Pending\" tab opens by default) and tap \"Confirm payment\" on its row (or \"Mark settled\" if it's an adjustment against you).",
         "The \"Pending to collect\" card on Home takes you straight to that same tab — one tap from the main screen.",
         "To collect several at once: in My work, use \"Collect all\" above the list — it affects everything currently visible.",
         "Before \"Collect all\", use \"Filter\" (by date, school, course or type) to narrow the list down to exactly what you want to collect in one go."
@@ -100,7 +100,7 @@
       "whenToUseIt": "Home, for a quick glance when you open the app. Summary, when you want a period other than the current month or want to understand where the money is coming from.",
       "steps": [
         "On Home, the \"Earned this month\" card is always visible, no need to tap anything — and tapping it takes you to Summary to dig deeper.",
-        { "text": "In Summary, choose the granularity and period in the control at the top (monthly, quarterly, half-yearly, yearly, or a custom range) and, if you want, the type (Course, Commission or Adjustment).", "imageAlt": "Summary screen with the monthly trend strip and the period total" },
+        "In Summary, choose the granularity and period in the control at the top (monthly, quarterly, half-yearly, yearly, or a custom range) and, if you want, the type (Course, Commission or Adjustment).",
         "The main card shows the period's total and how much it's changed compared with the previous period.",
         "Tap \"By school\", \"By course\", \"Commissions\", \"Course adjustments\" or \"Calendar\" to drill down — each one only expands when you ask for it."
       ],
@@ -159,7 +159,7 @@
     "perfil-referencia": {
       "title": "My profile, at a glance",
       "summary": "Your avatar, your details, your favourite currency and your password — all in one place, reachable from your name in the header.",
-      "whatYouCanDo": "Tap your avatar or your nickname, top right on any screen, to go into My profile: change your avatar (icon and colour), edit your first name/last name/nickname, choose your favourite currency, change your password, and delete your account if you ever need to.",
+      "whatYouCanDo": "Tap your avatar or your nickname, top right on any screen, to go into My profile: change your avatar (icon and colour), edit first name/last name/nickname, choose your favourite currency, change your password, and delete your account if you ever need to.",
       "whenToUseIt": "Whenever you want to personalise your account, fix a detail, or change your password without having to sign out and go through \"forgot my password\".",
       "steps": [
         "Tap the avatar/nickname in the header to go into My profile.",

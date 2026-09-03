@@ -31,7 +31,7 @@
       "whatYouCanDo": "Ocean Flow te ayuda a llevar el control de tus ingresos como instructor freelance: las clases que impartes, las comisiones que generas por clientes referidos y los ajustes económicos con otros instructores — todo bajo un mismo concepto, \"movimiento\".",
       "whenToUseIt": "La primera vez que abres la app, o cuando quieras recordar para qué sirve cada pantalla.",
       "steps": [
-        { "text": "Home: cuánto tienes pendiente de cobrar, un widget con tus deudas más antiguas, el calendario del mes y un acceso directo para crear un movimiento.", "imageAlt": "Pantalla de Home con el total pendiente de cobrar y el calendario del mes" },
+        "Home: cuánto tienes pendiente de cobrar, un widget con tus deudas más antiguas, el calendario del mes y un acceso directo para crear un movimiento.",
         "Mi trabajo: la lista completa de tus movimientos (cursos, comisiones y ajustes), para crearlos, editarlos, cobrarlos o eliminarlos.",
         "Resumen: tu balance por el periodo que elijas, con la posibilidad de profundizar por escuela, por curso o por comisiones."
       ],
@@ -46,7 +46,7 @@
       "whatYouCanDo": "Configuración se organiza en dos bloques: lo que cualquier usuario mantiene (Escuelas, Cursos, Tarifas) y, si tienes rol de administrador, un bloque de \"Administración\" con catálogos de toda la app (tipos y estados de pago, monedas, colores, usuarios).",
       "whenToUseIt": "Antes de registrar tu primer movimiento, y después cada vez que empieces a trabajar con una escuela o curso nuevo, o cambies un precio.",
       "steps": [
-        { "text": "Entra en Configuración (icono de engranaje, arriba a la derecha) y toca la sección que necesites.", "imageAlt": "Menú de Configuración con las secciones Escuelas, Cursos y Tarifas" },
+        "Entra en Configuración (icono de engranaje, arriba a la derecha) y toca la sección que necesites.",
         "Da de alta tus Escuelas y Cursos primero — una Tarifa siempre relaciona una escuela con un curso, así que hace falta que existan los dos antes.",
         "Dentro de una sección, pulsa el botón \"+\" flotante para crear; \"‹ Configuración\" te devuelve al menú.",
         "Toca el color de una fila para personalizarlo, y la estrella para marcarla como favorita."
@@ -64,7 +64,7 @@
       "whenToUseIt": "Justo después de dar una clase, al cerrar una comisión, o cuando acuerdes un ajuste con otro instructor.",
       "steps": [
         "Pulsa \"Añadir movimiento\": el botón \"+\" de la tarjeta \"Pendiente de cobrar\" en Home, el mismo botón tocando un día del calendario de Home, o el \"+\" flotante de Mi trabajo.",
-        { "text": "Arriba del formulario, elige el tipo: Curso impartido, Comisión o Ajuste de curso.", "imageAlt": "Hoja de creación de movimiento con el selector de tipo: Curso impartido, Comisión o Ajuste de curso" },
+        "Arriba del formulario, elige el tipo: Curso impartido, Comisión o Ajuste de curso.",
         "Curso impartido: escuela, curso, fecha y nº de personas — la tarifa por curso calcula el importe sola.",
         "Comisión: igual que un curso, pero para un cliente que has referido y que forma otro instructor — usa su propia tarifa de comisión, no la de curso.",
         "Ajuste de curso: no depende de ninguna tarifa — indica tú mismo el importe (positivo si te deben, negativo si tú debes) y con qué compañero es el ajuste.",
@@ -82,7 +82,7 @@
       "whatYouCanDo": "Cada movimiento tiene un estado (pendiente o cobrado). Cambiarlo es inmediato, de un solo toque, con la opción de deshacer si te equivocas. Puedes hacerlo movimiento a movimiento, o de golpe sobre toda la lista visible.",
       "whenToUseIt": "En cuanto una escuela o un compañero te paga (uno a uno), o de golpe cuando revisas periódicamente y ya te han pagado varios pendientes a la vez.",
       "steps": [
-        { "text": "Para cobrar uno: entra en Mi trabajo (la pestaña \"Pendientes\" se abre por defecto) y pulsa \"Confirmar cobro\" en su fila (o \"Marcar liquidado\" si es un ajuste en tu contra).", "imageAlt": "Lista de movimientos pendientes en Mi trabajo con el botón Confirmar cobro" },
+        "Para cobrar uno: entra en Mi trabajo (la pestaña \"Pendientes\" se abre por defecto) y pulsa \"Confirmar cobro\" en su fila (o \"Marcar liquidado\" si es un ajuste en tu contra).",
         "La tarjeta \"Pendiente de cobrar\" de Home te lleva directa a esa misma pestaña — un toque desde la pantalla principal.",
         "Para cobrar varios a la vez: en Mi trabajo, usa \"Cobrar todos\" arriba de la lista — afecta a todo lo que esté visible en ese momento.",
         "Antes de \"Cobrar todos\", usa \"Filtrar\" (por fecha, escuela, curso o tipo) para acotar la lista a justo lo que quieres cobrar de golpe."
@@ -100,7 +100,7 @@
       "whenToUseIt": "Home, para un vistazo rápido al entrar en la app. Resumen, cuando quieras un periodo distinto al mes actual o entender de dónde viene el dinero.",
       "steps": [
         "En Home, la tarjeta \"Generado este mes\" ya está siempre visible, sin tocar nada — y tocarla te lleva a Resumen para profundizar.",
-        { "text": "En Resumen, elige la granularidad y el periodo en el control de arriba (mensual, trimestral, semestral, anual o un rango personalizado) y, si quieres, el tipo (Curso, Comisión o Ajuste).", "imageAlt": "Pantalla de Resumen con la franja de tendencia mensual y el total del periodo" },
+        "En Resumen, elige la granularidad y el periodo en el control de arriba (mensual, trimestral, semestral, anual o un rango personalizado) y, si quieres, el tipo (Curso, Comisión o Ajuste).",
         "La tarjeta principal muestra el total del periodo y cuánto ha cambiado respecto al periodo anterior.",
         "Toca \"Por escuela\", \"Por curso\", \"Comisiones\", \"Ajustes de curso\" o \"Calendario\" para profundizar — cada uno se despliega solo si lo pides."
       ],

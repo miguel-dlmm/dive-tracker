@@ -8,24 +8,19 @@ import { HELP_CATEGORIES } from "./help/content";
 import HelpArticleBody from "./help/HelpArticleBody";
 
 // Combina el texto traducido (namespace "help", claves `articles.<id>.*`)
-// con los metadatos no traducibles de content.js (`stepImages`: índice de
-// paso -> src de la captura) para dar a HelpArticleBody el mismo shape de
-// `article` que tenía antes de la Fase 2 (steps: string | { text, image }).
+// con el id del artículo en content.js para dar a HelpArticleBody el
+// shape de `article` que espera. Ya no resuelve imágenes de paso — el
+// rediseño 2026-09-04 las retiró por completo (ver comentario en
+// content.js): `steps` son strings simples, sin variante `{ text, image }`.
 function resolveArticle(articleMeta, t) {
   const base = `articles.${articleMeta.id}`;
-  const steps = t(`${base}.steps`, { returnObjects: true });
-  const tips = t(`${base}.tips`, { returnObjects: true, defaultValue: [] });
   return {
     title: t(`${base}.title`),
     summary: t(`${base}.summary`),
     whatYouCanDo: t(`${base}.whatYouCanDo`),
     whenToUseIt: t(`${base}.whenToUseIt`),
-    steps: steps.map((step, i) => {
-      const src = articleMeta.stepImages?.[i];
-      if (typeof step === "string") return src ? { text: step, image: { src, alt: "" } } : step;
-      return src ? { text: step.text, image: { src, alt: step.imageAlt } } : step.text;
-    }),
-    tips,
+    steps: t(`${base}.steps`, { returnObjects: true }),
+    tips: t(`${base}.tips`, { returnObjects: true, defaultValue: [] }),
     expectedResult: t(`${base}.expectedResult`),
   };
 }
