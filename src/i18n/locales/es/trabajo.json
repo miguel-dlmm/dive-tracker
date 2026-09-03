@@ -1,0 +1,137 @@
+{
+  "actionLabel": {
+    "markPending": "Marcar pendiente",
+    "markSettled": "Marcar liquidado",
+    "confirmCollection": "Confirmar cobro"
+  },
+  "dateGroup": {
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "weekdaysShort": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+    "monthsShort": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "Sin elementos pendientes con estos filtros.",
+    "pendingNoFilters": "Estás al día — nada pendiente.",
+    "paidWithFilters": "Sin elementos cobrados con estos filtros.",
+    "paidNoFilters": "Todavía no has marcado nada como cobrado."
+  },
+  "rowMenu": {
+    "adjustmentWith": "el ajuste con {{name}}",
+    "courseAt": "{{activity}} en {{school}}"
+  },
+  "tabs": {
+    "pending": "Pendientes",
+    "paid": "Cobrados"
+  },
+  "filter": {
+    "label": "Filtrar",
+    "period": "Periodo",
+    "school": "Escuela",
+    "course": "Curso",
+    "type": "Tipo",
+    "allFeminine": "Todas",
+    "allMasculine": "Todos",
+    "clear": "Limpiar filtros"
+  },
+  "collectAll": {
+    "button": "Cobrar todos",
+    "confirmLabel": "Cobrar",
+    "title_one": "¿Cobrar {{count}} movimiento pendiente?",
+    "title_other": "¿Cobrar {{count}} movimientos pendientes?",
+    "messageAjuste_one": "Vas a marcar este movimiento como cobrado(s) o liquidado(s) de golpe, según corresponda a cada uno. Puedes revertir cada uno por separado después, igual que al confirmarlo de uno en uno.",
+    "messageAjuste_other": "Vas a marcar estos {{count}} movimientos como cobrado(s) o liquidado(s) de golpe, según corresponda a cada uno. Puedes revertir cada uno por separado después, igual que al confirmarlo de uno en uno.",
+    "messageSimple_one": "Vas a marcar este movimiento como cobrado de golpe. Puedes revertir cada uno por separado después, igual que al confirmarlo de uno en uno.",
+    "messageSimple_other": "Vas a marcar estos {{count}} movimientos como cobrados de golpe. Puedes revertir cada uno por separado después, igual que al confirmarlo de uno en uno.",
+    "toastSwitch_one": "{{count}} movimiento marcado como {{verb}} — cambia a \"Cobrados\" para verlos",
+    "toastSwitch_other": "{{count}} movimientos marcados como {{verbPlural}} — cambia a \"Cobrados\" para verlos",
+    "toastNoSwitch_one": "{{count}} movimiento marcado como {{verb}}",
+    "toastNoSwitch_other": "{{count}} movimientos marcados como {{verbPlural}}",
+    "verbCobrado": "cobrado",
+    "verbCobradoPlural": "cobrados",
+    "verbCobradoOLiquidado": "cobrado o liquidado",
+    "verbCobradoOLiquidadoPlural": "cobrados o liquidados"
+  },
+  "markAllPending": {
+    "button": "Marcar todos como pendientes",
+    "confirmLabel": "Marcar pendientes",
+    "title_one": "¿Marcar {{count}} movimiento cobrado como pendientes?",
+    "title_other": "¿Marcar {{count}} movimientos cobrados como pendientes?",
+    "message_one": "Vas a devolver este movimiento a pendiente de golpe. Puedes revertir cada uno por separado después, igual que al hacerlo de uno en uno.",
+    "message_other": "Vas a devolver estos {{count}} movimientos a pendiente de golpe. Puedes revertir cada uno por separado después, igual que al hacerlo de uno en uno.",
+    "toast_one": "{{count}} movimiento marcado como pendiente",
+    "toast_other": "{{count}} movimientos marcados como pendientes"
+  },
+  "paidCapHint": "Mostrando los {{limit}} cobrados más recientes de {{total}} — usa \"Filtrar\" para ver un periodo concreto.",
+  "fabAdd": "Añadir",
+  "toggleStatus": {
+    "undoneToast": "Deshecho",
+    "undoError": "No se pudo deshacer. Inténtalo de nuevo.",
+    "undoAction": "Deshacer",
+    "markedPending": "Marcado como pendiente",
+    "markedPaidSwitchTab": "Marcado como cobrado — cámbialo a \"Cobrados\" para verlo",
+    "markedPaid": "Marcado como cobrado"
+  },
+  "genericUpdateError": "No se pudo actualizar. Inténtalo de nuevo.",
+  "sheet": {
+    "close": "Cerrar",
+    "typeSelectorAria": "Tipo de movimiento",
+    "createTypes": {
+      "ganado": "Curso impartido",
+      "comision": "Comisión",
+      "companeros": "Ajuste de curso"
+    },
+    "titleEdit": {
+      "ganado": "Editar curso impartido",
+      "comision": "Editar comisión",
+      "companeros": "Editar ajuste de curso"
+    },
+    "titleNew": {
+      "ganado": "Nuevo curso impartido",
+      "comision": "Nueva comisión",
+      "companeros": "Nuevo ajuste de curso"
+    },
+    "fields": {
+      "course": "Curso",
+      "school": "Escuela",
+      "date": "Fecha",
+      "relatedColleague": "Instructor relacionado",
+      "amount": "Importe · {{currency}}",
+      "amountHint": "Positivo si te paga a ti; negativo si le pagas tú a él/ella",
+      "colleaguePlaceholder": "Ana, Marc...",
+      "amountPlaceholder": "90 ó -30",
+      "peopleCount": "Nº personas",
+      "lessPeople": "Menos personas",
+      "morePeople": "Más personas",
+      "total": "Total",
+      "perPerson": "/ persona",
+      "addRate": "Añadir tarifa",
+      "notes": "Notas",
+      "notesPlaceholder": "Opcional",
+      "addNote": "Añadir nota"
+    },
+    "rate": {
+      "label": "Tarifa — {{school}} · {{activity}}",
+      "cancel": "Cancelar",
+      "placeholder": "Tarifa",
+      "ariaLabel": "Tarifa · {{currency}}",
+      "saving": "Guardando tarifa",
+      "save": "Guardar tarifa"
+    },
+    "save": "Guardar",
+    "toasts": {
+      "changesSaved": "Cambios guardados",
+      "adjustmentAdded": "Ajuste añadido",
+      "courseAdded": "Curso añadido",
+      "commissionAdded": "Comisión añadida",
+      "saveError": "No se pudo guardar. Inténtalo de nuevo.",
+      "rateAdded": "Tarifa añadida",
+      "rateSaveError": "No se pudo guardar la tarifa. Inténtalo de nuevo."
+    }
+  },
+  "kpis": {
+    "generatedThisMonth": "Generado este mes",
+    "pendingToCollect": "Pendiente de cobrar",
+    "collectedThisMonth": "Cobrado este mes"
+  }
+}

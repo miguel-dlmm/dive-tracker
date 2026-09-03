@@ -1,25 +1,48 @@
 // rateCalc.js — única fuente de verdad para el importe de un registro
 // (Work Log / Comisiones) a partir de su tarifa y el nº de personas.
 // Antes duplicado en WorkLogTab, ComisionesTab, PaymentsTab, SummaryTab y HomeTab.
+//
+// Sin distinción por payment_type desde 2026-09-02 (ADR-0003, pasos 1-2 del
+// plan de migración — la columna payment_type sigue existiendo en BD por
+// ahora, solo el frontend deja de leerla/depender de ella): auditoría
+// completa confirmó que ningún formulario de la app expuso nunca un
+// selector real para elegir tarifa fija — "Per Person" era el único valor
+// que cualquier flujo llegaba a escribir a propósito. La excepción real
+// encontrada (ADR-0003, addendum 2026-08-30) no era una tarifa fija
+// intencional: una cuenta cuyo catálogo payment_types no incluía
+// exactamente "Per Person" obtenía tarifas fijas de forma silenciosa,
+// sin aviso — el propio bug que esta simplificación elimina de raíz.
 export function computeRateTotal(rate, people) {
   if (!rate) return 0;
-  return rate.payment_type === "Per Person"
-    ? rate.rate * (Number(people) || 0)
-    : rate.rate;
+  return rate.rate * (Number(people) || 0);
+}
+
+// Las 3 fuentes de actividad económica, SIN fusionar — HomeTab y
+// SummaryTab necesitan tanto el array combinado (calendario, "total")
+// como cada fuente por separado (calendario agrupado por tipo,
+// KPIs/desgloses que solo miran una fuente concreta). Antes cada pantalla
+// duplicaba byte a byte este mismo `rateTotal` + los 3 `.map()` — ver
+// docs/BACKLOG.md, "Reutilizar componente entre Home y Resumen"
+// (extraído aquí 2026-09-02, sin cambiar ningún cálculo, solo el sitio
+// donde vive).
+export function buildEntriesBySource({ worklog, rates, comisiones, commissionRates, colleaguePayments, fallbackCurrency }) {
+  const rateTotal = (e, ratesTable) => {
+    const r = ratesTable.find((r) => r.school === e.school && r.activity === e.activity);
+    return { total: computeRateTotal(r, e.people), currency: r?.currency || e.currency || fallbackCurrency };
+  };
+  return {
+    ganado: worklog.map((e) => ({ ...e, ...rateTotal(e, rates), _source: "ganado" })),
+    comision: comisiones.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" })),
+    companeros: colleaguePayments.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" })),
+  };
 }
 
 // Única fuente de verdad de toda la actividad económica del instructor —
 // Registro + Comisiones + TODOS los pagos de compañeros, incluidos los
 // negativos (lo que tú debes, no solo lo que te deben). Es la base de "Mi
 // trabajo" — ver docs/ADR/0005-mi-trabajo-unificacion-economica.md.
-export function buildActivityEntries({ worklog, rates, comisiones, commissionRates, colleaguePayments, fallbackCurrency }) {
-  const rateTotal = (e, ratesTable) => {
-    const r = ratesTable.find((r) => r.school === e.school && r.activity === e.activity);
-    return { total: computeRateTotal(r, e.people), currency: r?.currency || e.currency || fallbackCurrency };
-  };
-  const ganado = worklog.map((e) => ({ ...e, ...rateTotal(e, rates), _source: "ganado" }));
-  const comision = comisiones.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" }));
-  const companeros = colleaguePayments.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" }));
+export function buildActivityEntries(args) {
+  const { ganado, comision, companeros } = buildEntriesBySource(args);
   return [...ganado, ...comision, ...companeros];
 }
 

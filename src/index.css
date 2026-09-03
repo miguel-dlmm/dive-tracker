@@ -8,6 +8,20 @@ body {
   font-family: 'Inter', sans-serif;
   font-feature-settings: "tnum" 1; /* cifras tabulares por defecto */
 }
+/* Refuerzo global contra el bounce/pull-to-refresh de iOS Safari (bug
+   real reportado: dibujar en el pad de firma podía "recargar" la app,
+   que resurgía en el menú de Configuración por defecto). El
+   overscroll-contain puesto en el contenido interno de cada hoja
+   inferior (ver Sheet en shared.jsx) ya lo mitigaba, pero no cierra el
+   caso en que el propio <html>/<body> hace el rebote elástico nativo
+   ANTES de que el listener de touchstart del canvas de firma pueda
+   frenarlo — overscroll-behavior en html/body sí lo bloquea a nivel de
+   documento entero, más robusto que depender solo del contenedor
+   scrollable interno. Complementa (no sustituye) el bloqueo de scroll
+   por position:fixed que ya hace acquireScrollLock en shared.jsx. */
+html, body {
+  overscroll-behavior-y: none;
+}
 /* iOS Safari hace zoom automático de toda la página al enfocar cualquier
    input/textarea con font-size por debajo de 16px — es la causa real del
    "zoom inesperado" en iPhone (no un campo suelto: todos los inputs de la
@@ -37,5 +51,30 @@ body {
 }
 .animate-help-fade-in {
   animation: helpFadeIn 200ms ease-out;
+}
+/* input[type="color"] (Escuelas/Cursos/Colores de sección en
+   Configuración): por defecto el navegador dibuja el swatch interior con
+   esquinas cuadradas y su propio borde nativo, aunque el <input> tenga
+   border-radius — el redondeado del elemento en sí no se hereda al
+   pseudo-elemento del swatch en Chrome/Safari. Resultado: un rectángulo
+   de esquina recta que desentona con el lenguaje visual redondeado del
+   resto de Ocean Flow (lavado de cara 2026-09-03, pedido explícito del
+   usuario: "el estilado no acaba de cuadrar 100% con el resto de la
+   línea Ocean Flow"). Se fuerza el propio swatch interior a heredar el
+   radio del input. */
+input[type="color"] {
+  border-radius: 6px;
+  overflow: hidden;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border-radius: 6px;
+  border: none;
+}
+input[type="color"]::-moz-color-swatch {
+  border-radius: 6px;
+  border: none;
 }
 @import "tailwindcss";// vercel test

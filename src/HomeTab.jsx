@@ -1,8 +1,11 @@
-import React, { useMemo } from "react";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { motion } from "motion/react";
+import { TrendingUp, TrendingDown, Minus, GraduationCap, Award, Handshake, ChevronRight } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { Money, formatMoney, MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
-import { computeRateTotal, buildIncomeEntries, comparePeriods } from "./rateCalc";
+import { buildEntriesBySource, buildIncomeEntries, comparePeriods } from "./rateCalc";
+import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import PendingCollectionCard from "./PendingCollectionCard";
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
@@ -34,27 +37,83 @@ import PendingCollectionCard from "./PendingCollectionCard";
 // junto a withinRange ahí).
 const monthKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary }) {
+// Curso/Comisión/Ajuste traducidos una única vez (common:movementTypes,
+// fuente única compartida con SummaryTab/MiTrabajoTab/RatesTab, pedido
+// explícito del usuario 2026-09-01 para no repetir esta traducción por
+// pantalla) — MOVEMENT_TYPE_META (shared.jsx) sigue siendo la fuente de
+// los colores, solo el label se resuelve aquí con t().
+function useTranslatedMovementTypeMeta(t) {
+  return {
+    ganado: { ...MOVEMENT_TYPE_META.ganado, label: t("common:movementTypes.ganado") },
+    comision: { ...MOVEMENT_TYPE_META.comision, label: t("common:movementTypes.comision") },
+    companeros: { ...MOVEMENT_TYPE_META.companeros, label: t("common:movementTypes.companeros") },
+  };
+}
+
+// Tarjeta de KPI animada (Fase 3, Release V1 — "algún KPI interesante en
+// formato animado y chulo"). Entra con fade+slide-up escalonado (index*80ms
+// de retraso entre las tres) y la cifra hace un conteo ascendente
+// (useCountUp, motion.js) — mismo vocabulario EASE.enter/DURATION.md que
+// usa el resto de la app para lo que ENTRA en pantalla, no un cuarto
+// sistema de animación aparte.
+function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
+  const count = useCountUp(value, { reduced });
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
+      className="flex flex-col items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 py-4 text-center"
+    >
+      <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+        <Icon size={17} style={{ color }} aria-hidden="true" />
+      </span>
+      <span className="text-xl font-bold tabular-nums" style={{ color: NAVY }}>{count}</span>
+      <span className="text-[10.5px] font-medium leading-tight text-gray-500">{label}</span>
+    </motion.div>
+  );
+}
+
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary, onOpenTrainingRecords }) {
+  const { t } = useTranslation("home");
+  const translatedTypeMeta = useTranslatedMovementTypeMeta(t);
+  const reducedMotion = usePrefersReducedMotion();
   const now = new Date();
   const currentMonthKey = monthKey(now);
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
 
+  // Corrección 7/7 (2026-09-01): navegación de meses en el calendario de
+  // Home — antes fijo siempre al mes actual (now.getFullYear()/getMonth()
+  // pasados directos a MonthCalendar). Estado propio de Home, no de
+  // MonthCalendar (que sigue siendo controlado, ver shared.jsx): solo
+  // afecta a qué mes se ve en el calendario, nunca a "Generado este mes" /
+  // "Pendiente de cobrar" (arriba), que siguen ancladas al mes real de
+  // hoy — son cifras de "ahora mismo", no de lo que se esté navegando.
+  const [calendarCursor, setCalendarCursor] = useState({ year: now.getFullYear(), month: now.getMonth() });
+  const isCurrentCalendarMonth = calendarCursor.year === now.getFullYear() && calendarCursor.month === now.getMonth();
+  const goToPrevMonth = () => setCalendarCursor(({ year, month }) => (month === 0 ? { year: year - 1, month: 11 } : { year, month: month - 1 }));
+  const goToNextMonth = () => setCalendarCursor(({ year, month }) => (month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 }));
+  const goToCurrentMonth = () => setCalendarCursor({ year: now.getFullYear(), month: now.getMonth() });
+
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
-  const rateTotal = (e, ratesTable) => {
-    const r = ratesTable.rows.find((r) => r.school === e.school && r.activity === e.activity);
-    return { total: computeRateTotal(r, e.people), currency: r?.currency || e.currency || fallbackCurrency };
-  };
 
   // ganado/comision/companeros: se mantienen separadas porque el calendario
   // de abajo necesita distinguir la fuente de cada apunte del día (incluye
   // pagos de compañeros en cualquier sentido, también los que tú pagas).
-  const ganadoEntries = useMemo(() => worklog.rows.map((e) => ({ ...e, ...rateTotal(e, rates), _source: "ganado" })), [worklog.rows, rates.rows, fallbackCurrency]);
-  const comisionEntries = useMemo(() => comisiones.rows.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" })), [comisiones.rows, commissionRates.rows, fallbackCurrency]);
-  const companerosEntries = useMemo(() => colleaguePayments.rows.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" })), [colleaguePayments.rows]);
+  // buildEntriesBySource (rateCalc.js): antes duplicado byte a byte aquí y
+  // en SummaryTab.jsx — ver docs/BACKLOG.md, "Reutilizar componente entre
+  // Home y Resumen".
+  const entriesBySource = useMemo(
+    () => buildEntriesBySource({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
+  );
+  const { ganado: ganadoEntries, comision: comisionEntries, companeros: companerosEntries } = entriesBySource;
 
-  const monthAllEntries = useMemo(() => [...ganadoEntries, ...comisionEntries, ...companerosEntries].filter((e) =>
-    e.date.slice(0, 7) === currentMonthKey
-  ), [ganadoEntries, comisionEntries, companerosEntries, currentMonthKey]);
+  // Sin filtrar por mes aquí: MonthCalendar (shared.jsx) ya filtra por su
+  // propio year/month internamente (byDay) — pre-filtrar al mes actual
+  // aquí impedía navegar a cualquier otro mes (los datos ya habrían
+  // desaparecido del array antes de llegar al calendario).
+  const calendarEntries = useMemo(() => [...ganadoEntries, ...comisionEntries, ...companerosEntries],
+    [ganadoEntries, comisionEntries, companerosEntries]);
 
   // Dato secundario de "Generado este mes" — personas formadas, no comisión
   // ni ajustes: son clientes que TÚ has impartido este mes, un dato humano y
@@ -65,6 +124,23 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const peopleTrainedThisMonth = useMemo(() => ganadoEntries
     .filter((e) => e.date.slice(0, 7) === currentMonthKey)
     .reduce((sum, e) => sum + (e.people || 0), 0), [ganadoEntries, currentMonthKey]);
+
+  // KPIs de Fase 3 (Release V1) — tres ángulos distintos de "cómo me está
+  // yendo", deliberadamente no financieros (eso ya lo cubren "Pendiente de
+  // cobrar" y "Generado este mes" arriba): alumnos este mes ya se calculaba
+  // (peopleTrainedThisMonth, se reutiliza tal cual). Cursos impartidos era
+  // al principio un total histórico (sensación de trayectoria) — cambiado
+  // a mensual (pedido explícito del usuario 2026-09-03: "TU IMPACTO ESTE
+  // MES" como título único, los 3 KPIs deben ser del mes, no mezclar un
+  // total de siempre con dos del mes actual). Personas captadas: mismo
+  // criterio que people trained pero sobre comisionEntries (aclaración
+  // explícita del usuario: "personas por las que he comisionado" —
+  // clientes referidos, no formados por ti).
+  const coursesTotal = useMemo(() => worklog.rows
+    .filter((e) => e.date.slice(0, 7) === currentMonthKey).length, [worklog.rows, currentMonthKey]);
+  const referredThisMonth = useMemo(() => comisionEntries
+    .filter((e) => e.date.slice(0, 7) === currentMonthKey)
+    .reduce((sum, e) => sum + (e.people || 0), 0), [comisionEntries, currentMonthKey]);
 
   // Base común de las dos métricas financieras del dashboard — ver
   // buildIncomeEntries en rateCalc.js y docs/ADR/0004-home-dashboard-operativo-instructor.md.
@@ -112,7 +188,25 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
 
   return (
     <div className="space-y-4">
-      {/* 1. Pendiente de cobrar — información financiera principal, la más
+      {/* 1. KPIs — Fase 3, Release V1 ("algún KPI interesante en formato
+          animado y chulo"). Movido a primera posición (job nocturno,
+          Bloque 9, pedido explícito del usuario) — antes cerraba la
+          pantalla; tres ángulos no financieros de "cómo me está yendo"
+          (financiero lo cubren las dos tarjetas de más abajo). Conteo
+          ascendente + entrada escalonada (KpiTile, arriba) en vez de
+          aparecer estáticas de golpe. */}
+      <div>
+        <h2 className="mb-2 px-0.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          {t("kpis.sectionTitle")}
+        </h2>
+        <div className="grid grid-cols-3 gap-2">
+          <KpiTile icon={GraduationCap} color={TEAL} value={peopleTrainedThisMonth} label={t("kpis.studentsThisMonth")} index={0} reduced={reducedMotion} />
+          <KpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
+          <KpiTile icon={Handshake} color={GREEN} value={referredThisMonth} label={t("kpis.referredThisMonth")} index={2} reduced={reducedMotion} />
+        </div>
+      </div>
+
+      {/* 2. Pendiente de cobrar — información financiera principal, la más
           visible de la pantalla. Integra también el acceso rápido de
           creación (botón "+" a la derecha, onQuickAdd): antes era una fila
           aparte debajo de esta tarjeta, con el mismo ancho y casi el mismo
@@ -134,7 +228,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         onQuickAdd={() => onQuickCreate("ganado")}
       />
 
-      {/* 2. Calendario del mes — revisión de jerarquía 2026-08-29 (ver
+      {/* 3. Calendario del mes — revisión de jerarquía 2026-08-29 (ver
           docs/ADR/0004, addendum): antes iba en tercer y último lugar,
           después de "Generado este mes", cuando en la práctica un día
           normal no acumula demasiados movimientos distintos (el propio
@@ -143,8 +237,10 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           es también la vía más directa para crear (tocar un día vacío) y
           para entender el mes de un vistazo (qué días hubo actividad, de
           qué tipo), así que sube justo debajo de la cifra financiera
-          principal. sourceMeta viene de MOVEMENT_TYPE_META (shared.jsx,
-          única fuente para Home/Resumen/Mi trabajo). onCreateForDay solo
+          principal. sourceMeta viene de useTranslatedMovementTypeMeta,
+          sobre MOVEMENT_TYPE_META (shared.jsx) con el label ya traducido
+          desde common:movementTypes — única fuente para Home/Resumen/Mi
+          trabajo/Tarifas. onCreateForDay solo
           se pasa aquí, no en Resumen: tocar un día vacío inicia un
           movimiento para esa fecha; uno con datos conserva su desglose y
           gana un "+" para añadir otro.
@@ -156,22 +252,26 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           pasó este mes?", la pregunta más frecuente al entrar en Home. */}
       <div>
         <MonthCalendar
-          year={now.getFullYear()}
-          month={now.getMonth()}
-          entries={monthAllEntries}
+          year={calendarCursor.year}
+          month={calendarCursor.month}
+          entries={calendarEntries}
           dotColor={TEAL}
           currencyRows={currencies.rows}
           activityColor={activityColor}
-          caption="Toca un día para ver el detalle, o uno vacío para añadir un movimiento"
+          caption={t("calendarCaption")}
           autoSelectFirstDay
           detailed
           groupBySource
-          sourceMeta={MOVEMENT_TYPE_META}
+          sourceMeta={translatedTypeMeta}
           onCreateForDay={(dateStr) => onQuickCreate("ganado", dateStr)}
+          onPrevMonth={goToPrevMonth}
+          onNextMonth={goToNextMonth}
+          onGoToday={goToCurrentMonth}
+          isCurrentMonth={isCurrentCalendarMonth}
         />
       </div>
 
-      {/* 3. Generado este mes — información secundaria de cierre, no la
+      {/* 4. Generado este mes — información secundaria de cierre, no la
           protagonista: una cifra que solo se consulta, complementaria al
           propio calendario de arriba (que ya muestra qué días tuvieron
           actividad). "Generado" y no "Ganado" porque cuenta las 3 fuentes
@@ -202,7 +302,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
       >
         <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
           <TrendingUp size={14} style={{ color: TEAL }} aria-hidden="true" />
-          Generado este mes
+          {t("generatedThisMonth")}
         </div>
         <div className="mt-1 text-2xl font-bold tabular-nums" style={{ color: NAVY }}>
           {Object.keys(monthTotals).length === 0 ? (
@@ -215,18 +315,51 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         </div>
         <div className="mt-0.5 text-xs text-gray-400">
           {peopleTrainedThisMonth > 0
-            ? `${peopleTrainedThisMonth} ${peopleTrainedThisMonth === 1 ? "persona formada" : "personas formadas"} este mes`
-            : "Sin cursos este mes"}
+            ? t("peopleTrained", { count: peopleTrainedThisMonth })
+            : t("noCoursesThisMonth")}
         </div>
         {monthTrend && (
           <div className="mt-1.5 flex items-center gap-1 text-xs font-medium" style={{ color: monthTrend.delta > 0 ? GREEN : monthTrend.delta < 0 ? CORAL : "#9CA3AF" }}>
             {monthTrend.delta > 0 ? <TrendingUp size={12} aria-hidden="true" /> : monthTrend.delta < 0 ? <TrendingDown size={12} aria-hidden="true" /> : <Minus size={12} aria-hidden="true" />}
-            {monthTrend.pct !== null
-              ? `${monthTrend.delta >= 0 ? "+" : ""}${monthTrend.pct.toFixed(0)}% vs mes anterior`
-              : `${monthTrend.delta >= 0 ? "+" : ""}${formatMoney(monthTrend.delta, monthTrend.code, currencies.rows)} vs mes anterior`}
+            {t("trendVsPreviousMonth", {
+              delta: monthTrend.pct !== null
+                ? `${monthTrend.delta >= 0 ? "+" : ""}${monthTrend.pct.toFixed(0)}%`
+                : `${monthTrend.delta >= 0 ? "+" : ""}${formatMoney(monthTrend.delta, monthTrend.code, currencies.rows)}`,
+            })}
           </div>
         )}
       </button>
+
+      {/* 5. Training Records — cierre de la pantalla (Bloque 10, job
+          nocturno 2026-09-03, pedido explícito: "mover el enlace al
+          generador de Training Records a la Home"). Antes solo se
+          llegaba a través de Configuración, donde competía visualmente
+          con Escuelas/Cursos/Tarifas pese a ser la funcionalidad más
+          nueva y de más peso de la app (ver WhatsNew.jsx, Bloque 8, que
+          ya la anuncia como titular) — se elimina del menú de
+          Configuración (ver ConfigTab.jsx, HIDDEN_SECTIONS) y gana su
+          propia tarjeta, con el mismo lenguaje visual de icono+chevron
+          que ya usa Ayuda/Configuración para una fila con destino claro.
+          onOpenTrainingRecords (App.jsx) escribe la sección en
+          sessionStorage vía setStoredSection() y cambia de pestaña —
+          ConfigTab la recoge en su primer render, sin pasar por su
+          propio menú. */}
+      {onOpenTrainingRecords && (
+        <button
+          type="button"
+          onClick={onOpenTrainingRecords}
+          className="flex w-full min-h-[64px] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left transition-transform active:scale-[0.98]"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
+            <Award size={19} style={{ color: TEAL }} aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold" style={{ color: NAVY }}>{t("trainingRecordsCard.title")}</span>
+            <span className="block truncate text-xs text-gray-400">{t("trainingRecordsCard.subtitle")}</span>
+          </span>
+          <ChevronRight size={18} className="shrink-0 text-gray-300" aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }

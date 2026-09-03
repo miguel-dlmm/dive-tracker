@@ -63,6 +63,21 @@ export function sheetVariants(reduced = false) {
   };
 }
 
+// Toast (shared.jsx, ToastProvider) — entra/sale con el mismo par
+// enter/exit que el resto de feedback de la app, en vez del pop-in/pop-out
+// instantáneo que tenía antes (revisión de notificaciones, Bloque 7 del
+// job nocturno 2026-09-03: la propia app anima hojas y filas, pero el
+// toast, que es feedback puro, se quedaba fuera de ese vocabulario).
+// Desplazamiento vertical pequeño porque el toast ya vive fijo arriba de
+// la pantalla — no necesita el desplazamiento lateral de listItemVariants.
+export function toastVariants(reduced = false) {
+  return {
+    initial: { opacity: 0, y: -12, scale: 0.95 },
+    animate: { opacity: 1, y: 0, scale: 1, transition: { duration: d(reduced, DURATION.sm), ease: EASE.enter } },
+    exit: { opacity: 0, y: -8, scale: 0.95, transition: { duration: d(reduced, DURATION.xs), ease: EASE.exit } },
+  };
+}
+
 // prefers-reduced-motion — cualquier componente que anime debe consultar
 // esto y, si es true, usar duraciones ~0 en vez de desactivar la
 // funcionalidad (el estado final debe seguir siendo el mismo).
@@ -78,6 +93,34 @@ export function usePrefersReducedMotion() {
     return () => mq.removeEventListener("change", handler);
   }, []);
   return reduced;
+}
+
+// Cuenta ascendente para cifras de KPI (Fase 3, Release V1 — "algún KPI
+// interesante en formato animado"): anima de 0 al valor real con ease-out
+// cúbico (decelera al llegar, mismo espíritu que EASE.enter aunque aquí no
+// puede reutilizarse tal cual — Motion anima propiedades CSS/transform, no
+// un número entero arbitrario que además hay que redondear en cada
+// fotograma). requestAnimationFrame, no Motion: no hay ningún elemento del
+// DOM que animar, solo un valor de React — traer la librería para esto
+// sería más pesado que 15 líneas de rAF. Con prefers-reduced-motion, salta
+// directa al valor final (mismo criterio que el resto de la app: el
+// resultado nunca cambia, solo si se ve la transición).
+export function useCountUp(target, { duration = 1.1, reduced = false } = {}) {
+  const [value, setValue] = useState(reduced ? target : 0);
+  useEffect(() => {
+    if (reduced) { setValue(target); return; }
+    let raf;
+    const startTime = performance.now();
+    const animate = (now) => {
+      const progress = Math.min((now - startTime) / (duration * 1000), 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(target * eased));
+      if (progress < 1) raf = requestAnimationFrame(animate);
+    };
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration, reduced]);
+  return value;
 }
 
 // Deslizar hacia la derecha = "atrás" — feedback explícito 2026-08-30,

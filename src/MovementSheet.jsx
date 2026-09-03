@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { Plus, Minus, X, Check, Loader2, StickyNote, GraduationCap, Handshake, Users } from "lucide-react";
 import { TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   inputCls, formatMoney, Field, Select, MoneyInput,
-  DatePicker, lighten, useToast, useBodyScrollLock, todayStr,
+  DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency,
 } from "./shared";
 import { DURATION, sheetVariants, usePrefersReducedMotion } from "./motion";
 import { computeRateTotal, buildActivityEntries } from "./rateCalc";
@@ -16,10 +17,11 @@ import { computeRateTotal, buildActivityEntries } from "./rateCalc";
 // rápido, calendario) montan este mismo componente; el comportamiento no
 // cambia según quién lo abra, solo qué pasa después de guardar (eso lo
 // decide `onSaved`, no este componente).
+// label se resuelve en render vía t(`createTypes.${key}`) (namespace "trabajo").
 const CREATE_TYPES = [
-  { key: "ganado", label: "Curso impartido", icon: GraduationCap }, // formación/certificación — más reconocible a tamaño pequeño que un icono náutico genérico
-  { key: "comision", label: "Comisión", icon: Handshake },
-  { key: "companeros", label: "Ajuste de curso", icon: Users },
+  { key: "ganado", icon: GraduationCap }, // formación/certificación — más reconocible a tamaño pequeño que un icono náutico genérico
+  { key: "comision", icon: Handshake },
+  { key: "companeros", icon: Users },
 ];
 
 // Mismo cálculo que rowAccent en MiTrabajoTab, pero pensado para el
@@ -30,17 +32,6 @@ function formAccentColor(creating, amount) {
   if (creating === "ganado") return TEAL;
   if (creating === "comision") return SUN;
   return Number(amount) < 0 ? CORAL : GREEN;
-}
-
-// Moneda favorita — preferencia personal del instructor, no dato de
-// negocio (no vive en Supabase a propósito, ver docs/ADR/0007). Solo
-// lectura aquí desde 2026-08-30: escribirla (antes, el botón "Usar X como
-// favorita" en el propio formulario) queda para la futura pantalla
-// "Configuración → Moneda favorita" (ver docs/BACKLOG.md) — misma clave de
-// localStorage, mismo formato, nada que migrar cuando se construya.
-const favoriteCurrencyKey = (userId) => `oceanpulse:favoriteCurrency:${userId || "anon"}`;
-function getFavoriteCurrency(userId) {
-  try { return localStorage.getItem(favoriteCurrencyKey(userId)); } catch { return null; }
 }
 
 // Notas se expande sola con el contenido — sin WYSIWYG, pero más cómoda en
@@ -66,27 +57,24 @@ function useAutoResizeTextarea(value) {
 // Home, calendario de Home): todos crean/editan el mismo tipo de dato.
 export default function MovementSheet({
   request, onClose, onSaved,
-  schools, activities, paymentTypes, paymentStatuses, currencies, rates, commissionRates,
+  schools, activities, paymentStatuses, currencies, rates, commissionRates,
   worklog, comisiones, colleaguePayments,
   accentColor = TEAL, userId = null,
 }) {
+  const { t } = useTranslation("trabajo");
   const toast = useToast();
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
   const defaultStatus = paymentStatuses.rows.find((s) => s.is_default)?.name || paymentStatuses.rows[0]?.name || "Pending";
   const defaultSchool = schools.rows.find((s) => s.is_default)?.name || "";
   const defaultActivity = activities.rows.find((a) => a.is_default)?.name || "";
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
-  // WORKAROUND TEMPORAL (ver docs/BACKLOG.md y docs/ADR/0003): una cuenta
-  // nueva nace con payment_types vacío — sin este fallback, el alta de
-  // tarifa al vuelo queda bloqueada.
-  const defaultPaymentType = paymentTypes.rows.find((t) => t.name === "Per Person")?.name || paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "Per Person";
 
   // 2026-08-30: la moneda deja de elegirse por movimiento — pasa a ser una
-  // configuración global (ver docs/BACKLOG.md, "Configuración → Moneda
-  // favorita"). Se sigue leyendo la misma preferencia de siempre
-  // (localStorage, ADR-0007), pero ya no hay ningún campo en este
-  // formulario desde el que cambiarla — esa gestión explícita queda para
-  // la futura pantalla de Configuración, todavía sin implementar.
+  // configuración global. Se sigue leyendo la misma preferencia de
+  // siempre (localStorage, ADR-0007, helper compartido en shared.jsx),
+  // pero ya no hay ningún campo en este formulario desde el que cambiarla
+  // — esa gestión explícita vive en Mi perfil → Moneda favorita
+  // (ProfileTab.jsx, Bloque 5, 2026-09-01).
   const favoriteCurrency = getFavoriteCurrency(userId);
 
   const schoolNames = schools.rows.map((s) => s.name);
@@ -217,13 +205,13 @@ export default function MovementSheet({
           ? { ...form, amount: Number(form.amount) }
           : { ...form, people: Number(form.people) || 0 };
         saved = await tableFor(creating).updateRow(editingEntry.id, patch);
-        toast?.success("Cambios guardados");
+        toast?.success(t("sheet.toasts.changesSaved"));
       } else if (creating === "companeros") {
         saved = await colleaguePayments.insertRow({ ...form, amount: Number(form.amount), status: defaultStatus });
-        toast?.success("Ajuste añadido");
+        toast?.success(t("sheet.toasts.adjustmentAdded"));
       } else {
         saved = await tableFor(creating).insertRow({ ...form, people: Number(form.people) || 0, status: defaultStatus });
-        toast?.success(creating === "ganado" ? "Curso añadido" : "Comisión añadida");
+        toast?.success(creating === "ganado" ? t("sheet.toasts.courseAdded") : t("sheet.toasts.commissionAdded"));
       }
       // onSaved se dispara con la operación ya confirmada por Supabase —
       // nunca de forma optimista — para que quien decide navegar tras
@@ -232,35 +220,39 @@ export default function MovementSheet({
       onSaved?.(saved, { isNew: !editingEntry });
       closeSheet();
     } catch {
-      toast?.error("No se pudo guardar. Inténtalo de nuevo.");
+      toast?.error(t("sheet.toasts.saveError"));
     }
   };
 
   const openInlineRate = () => {
-    setRateForm({ school: form.school, activity: form.activity, payment_type: defaultPaymentType, currency: lastCurrencyFor(form.school), rate: "" });
+    // payment_type: "Per Person" — literal fijo, no una elección real (ver
+    // ADR-0003, pasos 1-2: la columna sigue en BD por ahora con NOT NULL,
+    // pero deja de ser un concepto que el usuario vea o elija; el importe
+    // siempre es tarifa × personas).
+    setRateForm({ school: form.school, activity: form.activity, payment_type: "Per Person", currency: lastCurrencyFor(form.school), rate: "" });
     setAddingRate(true);
   };
   const saveRate = async () => {
-    if (!rateForm.school || !rateForm.activity || !rateForm.payment_type || !rateForm.rate) return;
+    if (!rateForm.school || !rateForm.activity || !rateForm.rate) return;
     setSavingRate(true);
     try {
       await ratesTableFor(creating).insertRow({ ...rateForm, rate: Number(rateForm.rate) });
       setAddingRate(false);
       setRateForm(null);
-      toast?.success("Tarifa añadida");
+      toast?.success(t("sheet.toasts.rateAdded"));
     } catch {
-      toast?.error("No se pudo guardar la tarifa. Inténtalo de nuevo.");
+      toast?.error(t("sheet.toasts.rateSaveError"));
     } finally {
       setSavingRate(false);
     }
   };
 
   const sheetTitle = editingEntry
-    ? { ganado: "Editar curso impartido", comision: "Editar comisión", companeros: "Editar ajuste de curso" }[creating]
-    : { ganado: "Nuevo curso impartido", comision: "Nueva comisión", companeros: "Nuevo ajuste de curso" }[creating];
+    ? t(`sheet.titleEdit.${creating}`)
+    : t(`sheet.titleNew.${creating}`);
   // Mismo icono que su fila en el selector de tipo — conecta visualmente
   // el tipo elegido con el formulario.
-  const SheetIcon = CREATE_TYPES.find((t) => t.key === creating)?.icon;
+  const SheetIcon = CREATE_TYPES.find((ct) => ct.key === creating)?.icon;
   const typeColor = formAccentColor(creating, form?.amount);
 
   return (
@@ -310,15 +302,15 @@ export default function MovementSheet({
                   )}
                   <h3 className="text-sm font-semibold text-gray-800">{sheetTitle}</h3>
                 </div>
-                <button onClick={closeSheet} className="text-gray-400" aria-label="Cerrar"><X size={19} /></button>
+                <button onClick={closeSheet} className="text-gray-400" aria-label={t("sheet.close")}><X size={19} /></button>
               </div>
 
               {/* Selector de tipo integrado. Solo al crear: el tipo de una
                   entrada ya guardada no se cambia desde aquí (movería la
                   fila entre tablas distintas, fuera de alcance). */}
               {!editingEntry && (
-                <div className="mb-3 grid grid-cols-3 gap-1 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="Tipo de movimiento">
-                  {CREATE_TYPES.map(({ key, label, icon: Icon }) => (
+                <div className="mb-3 grid grid-cols-3 gap-1 rounded-lg bg-gray-100 p-1" role="tablist" aria-label={t("sheet.typeSelectorAria")}>
+                  {CREATE_TYPES.map(({ key, icon: Icon }) => (
                     <button
                       key={key}
                       type="button"
@@ -329,7 +321,7 @@ export default function MovementSheet({
                       style={creating === key ? { backgroundColor: "white", color: typeColor, boxShadow: "0 1px 2px rgba(0,0,0,0.08)" } : { color: "#6B7280" }}
                     >
                       <Icon size={14} aria-hidden="true" />
-                      {label}
+                      {t(`sheet.createTypes.${key}`)}
                     </button>
                   ))}
                 </div>
@@ -341,7 +333,7 @@ export default function MovementSheet({
                   lastActivityFor), Nº personas ya es 1. Notas al final,
                   colapsada, por ser el campo de menor frecuencia de uso. */}
               <div className="space-y-2.5">
-                <Field label="Curso">
+                <Field label={t("sheet.fields.course")}>
                   <Select
                     value={form.activity}
                     onChange={(v) => setForm({ ...form, activity: v })}
@@ -351,14 +343,14 @@ export default function MovementSheet({
                 </Field>
 
                 <div className="grid grid-cols-2 gap-2.5">
-                  <Field label="Escuela">
+                  <Field label={t("sheet.fields.school")}>
                     <Select
                       value={form.school}
                       onChange={(v) => setForm(creating === "companeros" ? { ...form, school: v, activity: "" } : { ...form, school: v })}
                       options={schoolNames}
                     />
                   </Field>
-                  <Field label="Fecha">
+                  <Field label={t("sheet.fields.date")}>
                     <DatePicker value={form.date} onChange={(v) => setForm({ ...form, date: v })} />
                   </Field>
                 </div>
@@ -376,23 +368,23 @@ export default function MovementSheet({
                     // de los dos necesita el ancho completo, y así el
                     // formulario ocupa una fila menos en móvil.
                     <div className="grid grid-cols-2 gap-2.5">
-                      <Field label="Instructor relacionado">
+                      <Field label={t("sheet.fields.relatedColleague")}>
                         <input
                           list="movement-sheet-colleague-names"
                           value={form.colleague_name}
                           onChange={(e) => setForm({ ...form, colleague_name: e.target.value })}
                           className={`${inputCls} w-full`}
-                          placeholder="Ana, Marc..."
+                          placeholder={t("sheet.fields.colleaguePlaceholder")}
                         />
                         <datalist id="movement-sheet-colleague-names">
                           {colleagueSuggestions(form.school).map((n) => <option key={n} value={n} />)}
                         </datalist>
                       </Field>
                       <Field
-                        label={`Importe · ${form.currency}`}
-                        hint="Positivo si te paga a ti; negativo si le pagas tú a él/ella"
+                        label={t("sheet.fields.amount", { currency: form.currency })}
+                        hint={t("sheet.fields.amountHint")}
                       >
-                        <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder="90 ó -30" />
+                        <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder={t("sheet.fields.amountPlaceholder")} allowNegative />
                       </Field>
                     </div>
                   ) : (
@@ -400,12 +392,12 @@ export default function MovementSheet({
                     // consecuencia directa de las personas, así que vive
                     // justo al lado del dato que lo modifica.
                     <div className="grid grid-cols-2 gap-2.5">
-                      <Field label="Nº personas">
+                      <Field label={t("sheet.fields.peopleCount")}>
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => setForm({ ...form, people: String(Math.max(0, Number(form.people || 0) - 1)) })}
-                            aria-label="Menos personas"
+                            aria-label={t("sheet.fields.lessPeople")}
                             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
                           >
                             <Minus size={14} aria-hidden="true" />
@@ -418,30 +410,30 @@ export default function MovementSheet({
                           <button
                             type="button"
                             onClick={() => setForm({ ...form, people: String(Number(form.people || 0) + 1) })}
-                            aria-label="Más personas"
+                            aria-label={t("sheet.fields.morePeople")}
                             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
                           >
                             <Plus size={14} aria-hidden="true" />
                           </button>
                         </div>
                       </Field>
-                      <Field label="Total">
+                      <Field label={t("sheet.fields.total")}>
                         {preview ? (
                           <div className="flex h-11 flex-col justify-center rounded-md px-2.5" style={{ backgroundColor: "#F0FDFA" }}>
                             <span className="text-sm font-semibold tabular-nums" style={{ color: TEAL }}>
                               {formatMoney(preview.total, preview.currency, currencies.rows)}
                             </span>
                             <span className="text-[10px] leading-tight text-gray-400">
-                              {formatMoney(preview.rate, preview.currency, currencies.rows)} / persona
+                              {formatMoney(preview.rate, preview.currency, currencies.rows)} {t("sheet.fields.perPerson")}
                             </span>
                           </div>
                         ) : form.school && form.activity ? (
                           <button
                             type="button" onClick={openInlineRate}
-                            aria-label="Añadir tarifa"
+                            aria-label={t("sheet.fields.addRate")}
                             className="flex h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 bg-amber-50 px-2 text-xs font-semibold text-amber-700"
                           >
-                            Añadir tarifa
+                            {t("sheet.fields.addRate")}
                           </button>
                         ) : (
                           <div className="flex h-11 items-center rounded-md bg-gray-50 px-2.5 text-sm text-gray-300">—</div>
@@ -457,8 +449,8 @@ export default function MovementSheet({
                   {creating !== "companeros" && addingRate && (
                     <div className="space-y-2 border-l-2 pl-3" style={{ borderColor: "#FCD34D" }}>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">Tarifa — {form.school} · {form.activity}</span>
-                        <button type="button" onClick={() => { setAddingRate(false); setRateForm(null); }} disabled={savingRate} aria-label="Cancelar" className="text-gray-400">
+                        <span className="text-xs text-gray-500">{t("sheet.rate.label", { school: form.school, activity: form.activity })}</span>
+                        <button type="button" onClick={() => { setAddingRate(false); setRateForm(null); }} disabled={savingRate} aria-label={t("sheet.rate.cancel")} className="text-gray-400">
                           <X size={13} aria-hidden="true" />
                         </button>
                       </div>
@@ -468,12 +460,12 @@ export default function MovementSheet({
                             de la tarifa más reciente de esta escuela, nunca
                             un desplegable que haya que tocar aquí. */}
                         <span className="shrink-0 text-xs font-medium text-gray-400">{rateForm.currency}</span>
-                        <MoneyInput value={rateForm.rate} onChange={(v) => setRateForm({ ...rateForm, rate: v })} placeholder="Tarifa" aria-label={`Tarifa · ${rateForm.currency}`} className="flex-1" />
+                        <MoneyInput value={rateForm.rate} onChange={(v) => setRateForm({ ...rateForm, rate: v })} placeholder={t("sheet.rate.placeholder")} aria-label={t("sheet.rate.ariaLabel", { currency: rateForm.currency })} className="flex-1" />
                         <button
                           type="button"
                           onClick={saveRate}
                           disabled={savingRate || !rateForm.rate}
-                          aria-label={savingRate ? "Guardando tarifa" : "Guardar tarifa"}
+                          aria-label={savingRate ? t("sheet.rate.saving") : t("sheet.rate.save")}
                           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white disabled:cursor-not-allowed disabled:opacity-50"
                           style={{ backgroundColor: accentColor }}
                         >
@@ -485,11 +477,11 @@ export default function MovementSheet({
                 </div>
 
                 {notesOpen || form.notes ? (
-                  <Field label="Notas">
+                  <Field label={t("sheet.fields.notes")}>
                     <textarea
                       ref={notesRef}
                       value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      rows={2} placeholder="Opcional" autoFocus={notesOpen && !form.notes}
+                      rows={2} placeholder={t("sheet.fields.notesPlaceholder")} autoFocus={notesOpen && !form.notes}
                       className="w-full resize-none overflow-hidden rounded-md border border-gray-200 bg-white px-2.5 py-2 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1"
                       style={{ minHeight: "4.5rem" }}
                     />
@@ -500,7 +492,7 @@ export default function MovementSheet({
                       type="button" onClick={() => setNotesOpen(true)}
                       className="flex min-h-11 items-center gap-1.5 px-3 text-xs font-medium text-gray-400 transition-colors hover:text-gray-600"
                     >
-                      <StickyNote size={13} aria-hidden="true" /> Añadir nota
+                      <StickyNote size={13} aria-hidden="true" /> {t("sheet.fields.addNote")}
                     </button>
                   </div>
                 )}
@@ -512,7 +504,7 @@ export default function MovementSheet({
                 className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ backgroundColor: accentColor }}
               >
-                {editingEntry ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />} Guardar
+                {editingEntry ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />} {t("sheet.save")}
               </button>
             </div>
           </motion.div>

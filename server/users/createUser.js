@@ -1,36 +1,20 @@
-import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
-import { sendWelcomeEmail } from "../email/sendWelcomeEmail.js";
-import { generateActivationLink } from "./activationLink.js";
+import { verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
+import { provisionUser, friendlyError } from "./provisionUser.js";
 
-// Alta de usuarios (MVP) — el acceso depende exclusivamente del enlace de
-// primer acceso: justo debajo se genera un enlace de recovery de un solo
-// uso y se envía por email, para que el usuario entre y fije su propia
-// contraseña (ver CreatePasswordScreen) sin que nadie tenga que
-// comunicarle ninguna. auth.admin.createUser() no recibe password —
-// Supabase permite crear la cuenta sin ella; la cuenta queda sin
-// contraseña utilizable hasta que el propio usuario la fija.
+// Alta de usuarios por un superadmin (MVP). Delega la orquestación de
+// Supabase (crear cuenta, clonar dataset, enviar activación) en
+// provisionUser.js, compartida con el registro externo (externalRegister.js)
+// — este handler solo se ocupa de HTTP + autorización de superadmin + qué
+// dataset_key usar (aquí, el que el propio superadmin elige en el formulario).
 //
-// Lógica de negocio pura, sin nada de Netlify ni de Vercel: recibe una
-// petición ya normalizada ({ method, headers, body }) y devuelve una
-// respuesta normalizada ({ status, payload }). Los adaptadores de cada
-// proveedor (netlify/functions/create-user.js, api/create-user.js) son los
-// únicos que traducen el formato de evento/HTTP de su plataforma hacia/desde
-// esta forma — así no hay lógica duplicada entre proveedores.
+// Lógica de negocio pura, sin nada de Vercel: recibe una petición ya
+// normalizada ({ method, headers, body }) y devuelve una respuesta
+// normalizada ({ status, payload }). El adaptador (api/create-user.js) es
+// el único que traduce el formato de evento/HTTP de la plataforma
+// hacia/desde esta forma.
 
-// Traduce violaciones de constraint conocidas de public.profiles a mensajes
-// legibles; cualquier otro error (de Postgres o de GoTrue) se propaga tal
-// cual, ya suele venir en un formato razonable.
-function friendlyError(message) {
-  if (!message) return "Error desconocido";
-  if (message.includes("profiles_nickname_lower_key")) return "Ese nickname ya está en uso.";
-  if (message.includes("profiles_nickname_no_at")) return 'El nickname no puede contener "@".';
-  if (message.includes("unknown setup dataset")) return "El dataset seleccionado ya no existe. Recarga la página e inténtalo de nuevo.";
-  return message;
-}
-
-// Netlify entrega event.body como string; Vercel ya entrega req.body
-// parseado como objeto cuando el Content-Type es JSON. Se acepta cualquiera
-// de las dos formas aquí para que ningún adaptador tenga que parsear nada.
+// req.body ya llega parseado como objeto cuando el Content-Type es JSON;
+// se acepta también un string por si acaso, sin nada que parsear de más.
 function parseBody(body) {
   if (body == null) return {};
   if (typeof body !== "string") return body;
@@ -41,8 +25,8 @@ function parseBody(body) {
   }
 }
 
-// event.headers (Netlify) y req.headers (Vercel) no garantizan la misma
-// capitalización, así que la búsqueda es case-insensitive.
+// req.headers no garantiza una capitalización concreta, así que la
+// búsqueda es case-insensitive.
 function getHeader(headers, name) {
   if (!headers) return undefined;
   const key = Object.keys(headers).find((k) => k.toLowerCase() === name.toLowerCase());
@@ -71,10 +55,14 @@ export async function handleCreateUser({ method, headers, body }) {
     return { status: 400, payload: { error: "Cuerpo de la petición inválido." } };
   }
 
-  const { email, first_name, last_name, nickname, dataset_key } = input;
+  const { email, first_name, last_name, nickname, dataset_key, language } = input;
   if (!email || !nickname || !dataset_key) {
     return { status: 400, payload: { error: "Email, nickname y dataset inicial son obligatorios." } };
   }
+  // Mismos 2 idiomas que el check de profiles.language (schema.sql) — si
+  // llega algo distinto (o nada), provisionUser()/handle_new_user() caen
+  // al 'es' por defecto, nunca se propaga un valor sin validar a metadata.
+  const safeLanguage = ["es", "en"].includes(language) ? language : undefined;
 
   const caller = await verifyCaller(token);
   if (!caller) {
@@ -86,86 +74,19 @@ export async function handleCreateUser({ method, headers, body }) {
   const denied = await requireSuperadmin(caller.id, "Solo un superadmin puede crear usuarios.");
   if (denied) return denied;
 
-  // is_admin / is_superadmin NUNCA se pasan aquí a propósito: handle_new_user()
-  // no los toca al crear la fila de profiles, así que nace siempre con
-  // ambos en false, sin importar lo que llegue en el body de esta función.
-  const { data: created, error: createError } = await getServiceRoleClient().auth.admin.createUser({
-    email,
-    email_confirm: true,
-    user_metadata: {
-      first_name: first_name || null,
-      last_name: last_name || null,
-      nickname,
-    },
-  });
-
-  if (createError) {
-    console.error(createError);
-    return { status: 400, payload: { error: friendlyError(createError.message) } };
+  const result = await provisionUser({ email, first_name, last_name, nickname, dataset_key, reason: "signup", language: safeLanguage });
+  if (result.error) {
+    console.error(result.error);
+    return { status: 400, payload: { error: friendlyError(result.error.message) } };
   }
-
-  // Dataset inicial obligatorio: sin esto, el alta dejaría al usuario con
-  // escuelas/actividades/tarifas/comisiones/catálogos de pago completamente
-  // vacíos. A diferencia del bloque best-effort de más abajo, un fallo aquí
-  // SÍ deshace el alta — no se deja un usuario a medias, sin configuración
-  // inicial (mismo criterio que ya sigue scripts/create-demo-user.js).
-  const { error: cloneError } = await getServiceRoleClient().rpc("clone_setup_dataset", {
-    p_dataset_key: dataset_key,
-    p_target_user_id: created.user.id,
-  });
-  if (cloneError) {
-    console.error(cloneError);
-    await getServiceRoleClient().auth.admin.deleteUser(created.user.id);
-    return { status: 400, payload: { error: friendlyError(cloneError.message) } };
-  }
-
-  // Enlace de primer acceso + email de bienvenida — best-effort: la cuenta
-  // ya está creada, así que un fallo aquí no debe impedir la respuesta de
-  // éxito. Si falla, el admin puede seguir compartiendo la contraseña
-  // inicial a mano (ver comentario de arriba). generateActivationLink()
-  // (activationLink.js) es el mismo helper que usan ahora también
-  // regenerar-link y regenerar-contraseña — un único sitio que genera este
-  // tipo de enlace.
-  let emailSent = false;
-  let emailError = null;
-  const { activationLink, error: linkErrorMessage } = await generateActivationLink(email);
-
-  if (linkErrorMessage) {
-    emailError = linkErrorMessage;
-  } else {
-    // try/catch defensivo: sendWelcomeEmail está documentado como "nunca
-    // lanza", pero no dependemos solo de esa convención — si algún día deja
-    // de cumplirse, esto sigue garantizando email_sent:false + el fallback
-    // de action_link en vez de tumbar toda la petición sin respuesta útil.
-    try {
-      const result = await sendWelcomeEmail({
-        email,
-        firstName: first_name,
-        nickname,
-        actionLink: activationLink,
-      });
-      emailSent = result.sent;
-      if (!result.sent) emailError = result.error;
-    } catch (err) {
-      console.error("create-user: sendWelcomeEmail lanzó una excepción inesperada", err);
-      emailError = "No se pudo enviar el email de bienvenida.";
-    }
-  }
-
-  // Fallback operativo MVP. Permite activar usuarios manualmente si el
-  // proveedor de email falla. Revisar/eliminar antes de producción pública.
-  // Solo se devuelve cuando el email NO se ha enviado (fallo de envío o
-  // configuración incompleta) — si el envío funciona, la respuesta no
-  // incluye el enlace y se comporta igual que antes de este fallback.
-  const actionLink = !emailSent ? activationLink : undefined;
 
   return {
     status: 200,
     payload: {
-      user_id: created.user.id,
-      email_sent: emailSent,
-      ...(emailError ? { email_error: emailError } : {}),
-      ...(actionLink ? { action_link: actionLink } : {}),
+      user_id: result.user_id,
+      email_sent: result.email_sent,
+      ...(result.email_error ? { email_error: result.email_error } : {}),
+      ...(result.action_link ? { action_link: result.action_link } : {}),
     },
   };
 }

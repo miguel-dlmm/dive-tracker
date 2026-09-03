@@ -1,10 +1,34 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import * as Icons from "lucide-react";
 import { TEAL } from "./App";
 import { ExpandableCard } from "./shared";
 import { useSwipeBack } from "./motion";
 import { HELP_CATEGORIES } from "./help/content";
 import HelpArticleBody from "./help/HelpArticleBody";
+
+// Combina el texto traducido (namespace "help", claves `articles.<id>.*`)
+// con los metadatos no traducibles de content.js (`stepImages`: índice de
+// paso -> src de la captura) para dar a HelpArticleBody el mismo shape de
+// `article` que tenía antes de la Fase 2 (steps: string | { text, image }).
+function resolveArticle(articleMeta, t) {
+  const base = `articles.${articleMeta.id}`;
+  const steps = t(`${base}.steps`, { returnObjects: true });
+  const tips = t(`${base}.tips`, { returnObjects: true, defaultValue: [] });
+  return {
+    title: t(`${base}.title`),
+    summary: t(`${base}.summary`),
+    whatYouCanDo: t(`${base}.whatYouCanDo`),
+    whenToUseIt: t(`${base}.whenToUseIt`),
+    steps: steps.map((step, i) => {
+      const src = articleMeta.stepImages?.[i];
+      if (typeof step === "string") return src ? { text: step, image: { src, alt: "" } } : step;
+      return src ? { text: step.text, image: { src, alt: step.imageAlt } } : step.text;
+    }),
+    tips,
+    expectedResult: t(`${base}.expectedResult`),
+  };
+}
 
 // Rediseño 2026-08-30 (ver docs/ADR/0011-rediseno-ayuda.md, addendum "de
 // índice a guía viva" — feedback explícito: "un primer nivel y, cuando
@@ -34,12 +58,17 @@ import HelpArticleBody from "./help/HelpArticleBody";
 //
 // navSections: { rows } — la Ayuda hereda el color de cada sección en vez
 // de tener su propia paleta (ver CLAUDE.md, convención 2)
-// profile: fila de profiles (useSession) — is_admin/is_superadmin filtran
-// categorías/artículos adminOnly (p.ej. "Gestionar usuarios")
+// Sin prop `profile`: la Ayuda no documenta nada de admin/superadmin (regla
+// permanente, Release V1 Fase 1 — ver CLAUDE.md), así que no necesita saber
+// el rol de quien la abre. Antes sí lo recibía, para un filtro
+// adminOnly/superadminOnly retirado 2026-09-01 junto con el contenido que
+// filtraba.
 // onClose: cierra Ayuda entera (mismo handler que la "X" de la cabecera,
 // ver App.jsx) — lo dispara el gesto de "atrás" cuando no hay ninguna
 // categoría desplegada (ver backProps más abajo).
-const GROUP_LABELS = { quiero: "Quiero...", funcionalidades: "Funcionalidades" };
+// Etiqueta de grupo resuelta en render vía t(`groupLabels.${group}`)
+// (namespace "help") — GROUP_LABELS ya no guarda texto, solo qué grupos
+// existen y en qué orden.
 const GROUP_ORDER = [undefined, "quiero", "funcionalidades"];
 
 // Categoría desplegada, persistida (feedback explícito 2026-08-30: "recargar
@@ -57,8 +86,8 @@ export function clearStoredHelpOpen() {
   try { sessionStorage.removeItem(HELP_OPEN_KEY); } catch { /* no-op */ }
 }
 
-export default function HelpTab({ navSections, profile, onClose }) {
-  const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
+export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
+  const { t } = useTranslation("help");
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
   const [openId, setOpenIdState] = useState(readStoredOpen);
   const setOpenId = (id) => {
@@ -75,37 +104,54 @@ export default function HelpTab({ navSections, profile, onClose }) {
   // cualquier nivel de profundidad.
   const backProps = useSwipeBack(openId ? () => setOpenId(null) : onClose);
 
-  const categories = HELP_CATEGORIES
-    .filter((c) => !c.adminOnly || isAdmin)
-    .map((c) => ({ ...c, articles: c.articles.filter((a) => !a.adminOnly || isAdmin) }))
-    .filter((c) => c.articles.length > 0);
+  const categories = HELP_CATEGORIES.filter((c) => c.articles.length > 0);
 
   if (categories.length === 0) {
-    return <p className="px-3 py-10 text-center text-sm text-gray-400">Todavía no hay contenido de ayuda.</p>;
+    return <p className="px-3 py-10 text-center text-sm text-gray-400">{t("emptyState")}</p>;
   }
 
   return (
     <div className="space-y-5" {...backProps}>
+      {/* Fase 4, Release V1 — "Ver novedades": antes, cerrar el slide de
+          "Qué hay de nuevo" (WhatsNew.jsx) lo perdía hasta el siguiente
+          release; investigación de UX de notificaciones (Smashing
+          Magazine, 2025 — ver docs/RELEASE-V1-PROGRESS.md, Fase 4) señala
+          el control del usuario sobre qué ha visto/puede revisar como un
+          principio recurrente. No toca el gate de "una vez por versión"
+          (whatsNewOpen en App.jsx sigue naciendo cerrado si ya se vio) —
+          solo ofrece una forma de volver a abrirlo bajo demanda. Vive en
+          Ayuda por ser el sitio natural para "quiero repasar algo de la
+          app", no una notificación en sí. */}
+      {onShowWhatsNew && (
+        <button
+          type="button"
+          onClick={onShowWhatsNew}
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700"
+        >
+          <Icons.Sparkles size={16} style={{ color: TEAL }} aria-hidden="true" />
+          {t("whatsNewReplay")}
+        </button>
+      )}
       {GROUP_ORDER.map((group) => {
         const rows = categories.filter((c) => c.group === group);
         if (rows.length === 0) return null;
         return (
           <div key={group || "sin-grupo"}>
-            {GROUP_LABELS[group] && (
+            {group && (
               <h2 className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                {GROUP_LABELS[group]}
+                {t(`groupLabels.${group}`)}
               </h2>
             )}
             <div className="space-y-2">
               {rows.map((category) => {
                 const Icon = Icons[category.icon] || Icons.HelpCircle;
                 const color = sectionColor(category.sectionKey);
-                const article = category.articles[0];
+                const article = resolveArticle(category.articles[0], t);
                 return (
                   <ExpandableCard
                     key={category.id}
-                    title={category.label}
-                    subtitle={category.description}
+                    title={t(`categories.${category.id}.label`)}
+                    subtitle={t(`categories.${category.id}.description`)}
                     icon={Icon}
                     iconColor={color}
                     open={openId === category.id}

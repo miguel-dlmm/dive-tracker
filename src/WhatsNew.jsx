@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { X, Briefcase, Coins, TrendingUp, Hand, ShieldCheck } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { motion } from "motion/react";
+import { X, Languages, TrendingUp, UserCircle, Sparkles } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
@@ -12,68 +13,54 @@ import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 // con la misma fuente de verdad que CHANGELOG.md (no una tarea aparte
 // inventada después).
 //
-// Contenido reescrito 2026-08-30, segunda vuelta (feedback explícito: "no
-// hables del cambio de nombre de la app... piensa en un instructor en el
-// descanso del barco, con las manos mojadas, sin ganas de leer texto
-// largo"). La primera reescritura de esta sesión abría con una diapositiva
-// dedicada a "Ocean Pulse → Ocean Flow" — dato interno de branding, no algo
-// que un instructor necesite parar a leer entre inmersiones. Se sustituye
-// por Mi trabajo (la unificación real de Registro/Comisiones/Compañeros en
-// una sola pantalla, el cambio de fondo más grande de esta tanda de
-// ramas) y se mantiene el resto: 5 diapositivas, título + una frase de
-// cuerpo, nada que exija pararse a leer. Se prioriza lo que un instructor
-// SIENTE al usar la app sobre el detalle técnico — ese detalle ya vive en
+// Contenido reescrito 2026-09-03 (Bloque 8 del job nocturno — "adaptarlo a
+// los cambios de Release V1"). El contenido anterior (2026-08-30) hablaba
+// de cambios de `develop` (Mi trabajo, Tarifas, Resumen) que ya llevaban
+// semanas en producción para cuando esta rama fuera a desplegarse — nada
+// de eso es "nuevo" en Release V1. Mismo criterio que la reescritura
+// anterior: "instructor en el descanso del barco, con las manos
+// mojadas" — frases cortas, sin tecnicismos, el detalle completo vive en
 // CHANGELOG.md para quien lo quiera.
+//
+// Training Records retirado de aquí (y de Ayuda, que nunca llegó a
+// documentarlo) el mismo 2026-09-03, pedido explícito del usuario: no
+// sale en este paquete de Release V1, se desplegará en una versión
+// posterior como feature nueva — no tiene sentido anunciarla antes de
+// que esté disponible de verdad para el usuario final. El código de
+// Training Records en sí (generador, acceso desde Home) sigue en la
+// rama tal cual, solo se retira de los sitios que la ANUNCIAN.
 //
 // Sin capturas de pantalla, mismo motivo que la versión anterior de este
 // archivo: ninguna captura real de esta sesión queda presentable para un
 // usuario real (cuenta "dev-bypass", datos de prueba). Iconografía + color
 // coherente con el resto de la app cumple igual el objetivo ("muy
 // visual") sin ese riesgo.
-const SLIDES = [
-  {
-    icon: Briefcase,
-    color: TEAL,
-    title: "Mi trabajo, todo en un sitio",
-    body: "Cursos, comisiones y ajustes con compañeros, en una única lista — sin saltar entre tres pantallas para lo mismo.",
-  },
-  {
-    icon: Coins,
-    color: SUN,
-    title: "Tarifas, con la misma cara que Mi trabajo",
-    body: "Tipo, fecha de alta y moneda se ven de un vistazo en cada tarifa — sin campos de más que rellenar cada vez.",
-  },
-  {
-    icon: TrendingUp,
-    color: GREEN,
-    title: "Resumen, más fácil de recorrer",
-    body: "Toca cualquier periodo de la franja de arriba para saltar a él, y cualquier curso para ver de dónde viene el dinero.",
-  },
-  {
-    icon: Hand,
-    color: CORAL,
-    title: "Desliza, no solo toques",
-    body: "Cierra formularios y vuelve atrás en Configuración y Ayuda deslizando — como en cualquier app a la que ya estás acostumbrado.",
-  },
-  {
-    icon: ShieldCheck,
-    color: NAVY,
-    title: "Más estable de un extremo a otro",
-    body: "Corregidos varios detalles de fondo: la barra inferior, los totales de fin de mes, y la gestión de usuarios.",
-  },
+// icon/color no son traducibles — título/cuerpo de cada diapositiva viven en
+// notices.json (whatsNew.slides, mismo orden por índice) y se combinan con
+// este array en el componente.
+const SLIDE_ICONS = [
+  { icon: Languages, color: SUN },
+  { icon: TrendingUp, color: GREEN },
+  { icon: UserCircle, color: CORAL },
+  { icon: Sparkles, color: NAVY },
 ];
 
 const SWIPE_THRESHOLD = 60;
 
 export default function WhatsNew({ onClose }) {
+  const { t } = useTranslation("notices");
   const [step, setStep] = useState(0);
   const reduced = usePrefersReducedMotion();
   useEscapeClose(true, onClose);
   useBodyScrollLock(true);
 
-  const slide = SLIDES[step];
+  // returnObjects: true — necesario en i18next para leer un array/objeto
+  // completo de la traducción en vez de una única cadena.
+  const slideCopy = t("whatsNew.slides", { returnObjects: true });
+  const slides = SLIDE_ICONS.map((s, i) => ({ ...s, ...slideCopy[i] }));
+  const slide = slides[step];
   const Icon = slide.icon;
-  const isLast = step === SLIDES.length - 1;
+  const isLast = step === slides.length - 1;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
@@ -84,38 +71,63 @@ export default function WhatsNew({ onClose }) {
         className="w-full max-w-sm overflow-hidden rounded-xl bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-end p-2">
-          <button onClick={onClose} aria-label="Cerrar" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50">
+        {/* Eyebrow (Bloque 8, job nocturno 2026-09-03): antes se entraba
+            directo al contenido de la primera diapositiva, sin ninguna
+            palabra que dijera "esto son las novedades" — para alguien con
+            prisa que solo ve la primera diapositiva antes de cerrar, ese
+            contexto importa. Mismo patrón ya usado en DeploymentNotice.jsx
+            (deploymentNotice.eyebrow), no un patrón nuevo. */}
+        <div className="flex items-center justify-between px-4 pt-3">
+          <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("whatsNew.eyebrow")}</span>
+          <button onClick={onClose} aria-label={t("whatsNew.close")} className="-mr-2 flex h-9 w-9 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50">
             <X size={18} aria-hidden="true" />
           </button>
         </div>
 
+        {/* Bug real encontrado y arreglado en el Bloque 8 (job nocturno
+            2026-09-03), preexistente en Release-V1 desde antes de esta
+            sesión — no introducido por el cambio de contenido de más
+            arriba: envolver este motion.div en <AnimatePresence
+            mode="wait"> (o incluso sin mode, en modo "sync" por defecto)
+            dejaba la diapositiva ANTERIOR permanentemente en el DOM al
+            avanzar — dos elementos #whats-new-title a la vez, el visible
+            siempre el viejo, aunque los puntos/botones (que leen `step`
+            directo, sin pasar por la animación) ya mostraran la
+            diapositiva nueva. Confirmado con motion 13.1.1 + React
+            19.2.8: ni quitar `mode="wait"`, ni desactivar `drag`, ni
+            quitar el desplazamiento en `x` de animate/exit lo arreglaban
+            — solo quitar AnimatePresence. Se pierde el fundido de SALIDA
+            de la diapositiva vieja (React la desmonta al instante, sin
+            animar) pero se mantiene el fundido de ENTRADA de la nueva
+            (motion.div sigue animando `initial`→`animate` en cualquier
+            montaje, con o sin AnimatePresence) — mejor un cambio abrupto
+            que una pantalla rota. Ver docs/BACKLOG.md para investigar la
+            causa raíz de fondo (versión de "motion", modo concurrente de
+            React 19) si se quiere recuperar el fundido de salida más
+            adelante. */}
         <div className="min-h-[220px] touch-pan-y overflow-hidden px-6 pb-2 text-center">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={step}
-              drag={reduced ? false : "x"}
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.7}
-              onDragEnd={(_e, info) => {
-                if (info.offset.x < -SWIPE_THRESHOLD && !isLast) setStep((s) => s + 1);
-                else if (info.offset.x > SWIPE_THRESHOLD && step > 0) setStep((s) => s - 1);
-              }}
-              initial={{ opacity: 0, x: reduced ? 0 : 16 }}
-              animate={{ opacity: 1, x: 0, transition: { duration: reduced ? 0.01 : DURATION.sm, ease: EASE.enter } }}
-              exit={{ opacity: 0, x: reduced ? 0 : -16, transition: { duration: reduced ? 0.01 : DURATION.xs, ease: EASE.exit } }}
-            >
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${slide.color}1A` }}>
-                <Icon size={26} style={{ color: slide.color }} aria-hidden="true" />
-              </div>
-              <h2 id="whats-new-title" className="mb-2 text-base font-bold" style={{ color: NAVY }}>{slide.title}</h2>
-              <p className="text-sm leading-relaxed text-gray-500">{slide.body}</p>
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            key={step}
+            drag={reduced ? false : "x"}
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.7}
+            onDragEnd={(_e, info) => {
+              if (info.offset.x < -SWIPE_THRESHOLD && !isLast) setStep((s) => s + 1);
+              else if (info.offset.x > SWIPE_THRESHOLD && step > 0) setStep((s) => s - 1);
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: reduced ? 0.01 : DURATION.sm, ease: EASE.enter } }}
+          >
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${slide.color}1A` }}>
+              <Icon size={26} style={{ color: slide.color }} aria-hidden="true" />
+            </div>
+            <h2 id="whats-new-title" className="mb-2 text-base font-bold" style={{ color: NAVY }}>{slide.title}</h2>
+            <p className="text-sm leading-relaxed text-gray-500">{slide.body}</p>
+          </motion.div>
         </div>
 
-        <div className="flex items-center justify-center gap-1.5 py-4" role="tablist" aria-label="Diapositiva">
-          {SLIDES.map((_, i) => (
+        <div className="flex items-center justify-center gap-1.5 py-4" role="tablist" aria-label={t("whatsNew.slideTablist")}>
+          {slides.map((_, i) => (
             <span
               key={i}
               className="h-1.5 rounded-full transition-all"
@@ -130,7 +142,7 @@ export default function WhatsNew({ onClose }) {
               onClick={() => setStep((s) => s - 1)}
               className="min-h-11 flex-1 rounded-md border border-gray-200 text-sm font-medium text-gray-600"
             >
-              Atrás
+              {t("whatsNew.back")}
             </button>
           )}
           <button
@@ -138,7 +150,7 @@ export default function WhatsNew({ onClose }) {
             className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-semibold text-white"
             style={{ backgroundColor: TEAL }}
           >
-            {isLast ? "Empezar" : "Siguiente"}
+            {isLast ? t("whatsNew.start") : t("whatsNew.next")}
           </button>
         </div>
       </div>

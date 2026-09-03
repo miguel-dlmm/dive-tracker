@@ -1,8 +1,13 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CreatePasswordScreen from "./CreatePasswordScreen";
-import { TITLE as PRIVACY_TITLE } from "./legal/privacyPolicy";
-import { TITLE as TERMS_TITLE } from "./legal/termsOfUse";
+
+// El título de cada documento ya no es una constante importable (Release
+// V1, Fase 2 — multidioma): vive en i18n/locales/*/auth.json. El idioma
+// por defecto en tests es "es" (ver vitest.setup.js), así que se hardcodea
+// aquí igual que el resto de textos en español de este archivo.
+const PRIVACY_TITLE = "Política de Privacidad";
+const TERMS_TITLE = "Términos de Uso";
 
 async function fillPasswords(user, { password, confirm }) {
   await user.type(screen.getByLabelText("Nueva contraseña"), password);
@@ -28,12 +33,36 @@ describe("CreatePasswordScreen", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it("mantiene el botón deshabilitado si la contraseña no tiene ninguna mayúscula", async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<CreatePasswordScreen onSubmit={onSubmit} />);
+
+    await fillPasswords(user, { password: "password123!", confirm: "password123!" });
+    await user.click(screen.getByRole("checkbox"));
+
+    expect(screen.getByRole("button", { name: /crear contraseña/i })).toBeDisabled();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("mantiene el botón deshabilitado si la contraseña no tiene ningún símbolo", async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    render(<CreatePasswordScreen onSubmit={onSubmit} />);
+
+    await fillPasswords(user, { password: "Password123", confirm: "Password123" });
+    await user.click(screen.getByRole("checkbox"));
+
+    expect(screen.getByRole("button", { name: /crear contraseña/i })).toBeDisabled();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("mantiene el botón deshabilitado si las contraseñas no coinciden", async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();
     render(<CreatePasswordScreen onSubmit={onSubmit} />);
 
-    await fillPasswords(user, { password: "password123", confirm: "password124" });
+    await fillPasswords(user, { password: "Password123!", confirm: "Password124!" });
     await user.click(screen.getByRole("checkbox"));
 
     expect(screen.getByRole("button", { name: /crear contraseña/i })).toBeDisabled();
@@ -45,7 +74,7 @@ describe("CreatePasswordScreen", () => {
     const user = userEvent.setup();
     render(<CreatePasswordScreen onSubmit={onSubmit} />);
 
-    await fillPasswords(user, { password: "password123", confirm: "password123" });
+    await fillPasswords(user, { password: "Password123!", confirm: "Password123!" });
 
     expect(screen.getByRole("button", { name: /crear contraseña/i })).toBeDisabled();
     expect(onSubmit).not.toHaveBeenCalled();
@@ -56,9 +85,9 @@ describe("CreatePasswordScreen", () => {
     const user = userEvent.setup();
     render(<CreatePasswordScreen onSubmit={onSubmit} />);
 
-    await fillAndSubmit(user, { password: "password123", confirm: "password123" });
+    await fillAndSubmit(user, { password: "Password123!", confirm: "Password123!" });
 
-    expect(onSubmit).toHaveBeenCalledWith("password123");
+    expect(onSubmit).toHaveBeenCalledWith("Password123!");
   });
 
   it("muestra el mensaje de onSubmit tal cual cuando lanza (contrato de activateAccount)", async () => {
@@ -66,7 +95,7 @@ describe("CreatePasswordScreen", () => {
     const user = userEvent.setup();
     render(<CreatePasswordScreen onSubmit={onSubmit} />);
 
-    await fillAndSubmit(user, { password: "password123", confirm: "password123" });
+    await fillAndSubmit(user, { password: "Password123!", confirm: "Password123!" });
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Este enlace ya no es válido.");
   });
@@ -76,7 +105,7 @@ describe("CreatePasswordScreen", () => {
     const user = userEvent.setup();
     render(<CreatePasswordScreen onSubmit={onSubmit} />);
 
-    await fillAndSubmit(user, { password: "password123", confirm: "password123" });
+    await fillAndSubmit(user, { password: "Password123!", confirm: "Password123!" });
 
     expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo guardar");
   });
@@ -87,7 +116,7 @@ describe("CreatePasswordScreen", () => {
     const user = userEvent.setup();
     render(<CreatePasswordScreen onSubmit={onSubmit} />);
 
-    await fillAndSubmit(user, { password: "password123", confirm: "password123" });
+    await fillAndSubmit(user, { password: "Password123!", confirm: "Password123!" });
 
     const button = screen.getByRole("button", { name: /crear contraseña/i });
     expect(button).toBeDisabled();

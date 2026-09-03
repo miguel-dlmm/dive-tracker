@@ -45,13 +45,19 @@ compañeros, Tarifas, Resumen).
 ## Ramas y entornos
 
 Modelo completo en `docs/ADR/0006-estrategia-de-ramas-y-entornos.md`. Hoy:
-`develop` es la única rama de entorno (test **y** producción a la vez
-para el grupo reducido de usuarios actual — decisión consciente, no una
-mala práctica pendiente de corregir). Todo cambio nace en una rama
-`feature/*`/`fix/*`/`hotfix/*` creada desde `develop` y vuelve a fusionarse
-ahí — nunca commits directos sobre `develop`. No existen todavía `test`
-ni `main`; se crean solo cuando se cumpla alguno de los disparadores
-objetivos que describe el ADR, no por adelantado.
+`main` es la producción real (proyecto Vercel `dive-tracker-exgg`,
+`dive-tracker-exgg.vercel.app`) y `develop` es la rama de
+integración/preparación, que además hace de entorno TEST de facto para el
+proyecto Vercel `dive-tracker` (`dive-tracker-three.vercel.app`), con su
+propio Supabase separado del de producción — ver "Indicador visual de
+entorno TEST" más abajo y el ADR para el detalle completo. Todo cambio
+nace en una rama `feature/*`/`fix/*`/`hotfix/*` creada desde `develop` y
+vuelve a fusionarse ahí — nunca commits directos sobre `develop`. Empujar
+esa rama a GitHub (sin fusionarla) genera sola un Preview Deployment en
+Vercel con las mismas variables TEST, útil para validar sin tocar
+`develop`. No existe todavía una rama `test` dedicada; se crea solo
+cuando se cumpla alguno de los disparadores objetivos que describe el
+ADR, no por adelantado.
 
 ## Bypass de login en desarrollo
 
@@ -98,6 +104,46 @@ ningún control de seguridad.
   cuenta de un usuario real; no comitear `.env.local`; no configurar
   `VITE_DEV_AUTH_BYPASS` ni `VITE_DEV_DEMO_*` en Vercel — es exclusivamente
   para `npm run dev` en local.
+
+## Indicador visual de entorno TEST
+
+Igual que el bypass de login de arriba, es una herramienta permanente,
+no una tarea puntual — para que nadie confunda nunca el entorno TEST con
+producción, sin que la identificación visual altere en nada la copia
+exacta de producción (posiciones, tamaños, layout).
+
+- **Fuente de verdad única:** `VITE_ENVIRONMENT`. Vale `"test"` en el
+  entorno TEST, cualquier otro valor (o ausente) en producción y en local
+  por defecto. Nunca detección de rama Git, de proyecto Vercel ni de URL.
+- **Componente:** `src/EnvironmentIndicator.jsx` — aislado a propósito, no
+  depende de auth/navegación/negocio. Se monta una única vez en
+  `App.jsx`, como hermano de `<AuthGate />` dentro de
+  `export default function App()`, fuera de cualquier condicional — por
+  eso aparece igual en login, crear contraseña y cualquier pestaña, sin
+  tener que montarlo en cada pantalla por separado.
+- **Qué hace:** una pill "TEST" `position: fixed`, centrada en el eje
+  horizontal y alineada verticalmente con la fila de la cabecera (mismas
+  coordenadas en toda la app, incluidas las pantallas sin cabecera propia
+  como login), `z-index` por encima de todo (incluidos modales) y
+  `pointer-events: none` — nunca intercepta taps. Además antepone
+  `[TEST] ` al `document.title`. No ocupa espacio de layout: al ser
+  `fixed`, nunca desplaza el header ni ningún componente.
+- **Eliminado del bundle de producción, no solo oculto:** al no estar
+  `VITE_ENVIRONMENT` definida en el build de producción, Vite elimina la
+  rama entera por dead-code elimination — verificado con `grep` sobre
+  `dist/`, el string ni siquiera aparece en el JS servido. Mismo nivel de
+  garantía que el `MODE === "development"` del bypass de login, sin
+  necesitar ese doble candado aquí (no hay riesgo de seguridad que
+  mitigar, es solo un indicador visual).
+- **Dónde está activo hoy:** `.env.local` (local) y el proyecto Vercel
+  `dive-tracker` (Production y Preview, `dive-tracker-three.vercel.app` y
+  cualquier Preview Deployment de rama) tienen `VITE_ENVIRONMENT=test`. El
+  proyecto de producción real (`dive-tracker-exgg`, rama `main`) no la
+  tiene — nunca debe configurarse ahí.
+- **Favicon:** `public/icon.svg` (referenciado por `index.html`) usa el
+  mismo icono `Waves` de `lucide-react` y el mismo color `TEAL` que ya usa
+  la app en cabecera/login/spinner — antes ese archivo no existía
+  (`<link>` roto, sin favicon real).
 
 ## Convenciones — seguirlas es más importante que "queda bien"
 
@@ -150,6 +196,49 @@ ningún control de seguridad.
     fuentes. Cifras de dinero: `tabular-nums` + símbolo de moneda más
     apagado que la cifra (componente `Money`).
 
+## Reglas permanentes — Release V1 (lanzamiento público)
+
+Reglas de trabajo que arrancan con la iniciativa "Release V1" (documento
+maestro de fases del usuario, iniciado 2026-09-01: preparar Ocean Flow
+para hacerlo público fuera de usuarios de test) y que se aplican siempre
+a partir de ahora, sin que haga falta repetirlas en cada sesión. El
+progreso fase a fase de esa iniciativa se lleva en
+`docs/RELEASE-V1-PROGRESS.md` — ver la sección 9 de "Reglas de trabajo
+obligatorias" más abajo para el mecanismo general de trabajo por lotes.
+
+1. **La Ayuda nunca documenta funcionalidades de admin ni de
+   superadmin.** No basta con ocultarlas a quien no tiene el rol — hoy
+   `help/content.js` ya soporta marcar una categoría/artículo
+   `adminOnly`/`superadminOnly` y `HelpTab.jsx` los filtra en cliente,
+   pero eso solo esconde el contenido, no lo elimina. Contenido de
+   admin/superadmin no debe existir en la Ayuda en absoluto. Se aplica
+   cada vez que se regenera o modifica la Ayuda, sin excepción.
+2. **Tono de los textos de producto: cercano, humano, agradable — un
+   punto joven y fresco, sin salirse de una línea profesional.** Nunca
+   mensajes de "máquina" (errores genéricos, jerga técnica expuesta al
+   usuario). Aplica a toda copy nueva: toasts, estados vacíos,
+   confirmaciones, emails, slides de novedades.
+3. **Contexto de uso real: manos mojadas.** El usuario típico está en el
+   móvil, a menudo recién salido del agua — cualquier pantalla nueva debe
+   leerse y entenderse rápido, sin párrafos largos. Refuerza (no
+   sustituye) la convención 7 de mobile-first/accesibilidad de arriba.
+4. **MVP y reutilización primero.** Ya es el principio de trabajo #2 de
+   `docs/PRODUCT.md` ("la solución más barata que resuelve el problema
+   real gana") — se reafirma aquí explícitamente para esta iniciativa:
+   preferir siempre lo sencillo, integrable y ya construido (p. ej.
+   `motion.js`, `shared.jsx`, `ESTILO.md`) sobre una solución nueva y más
+   elaborada.
+5. **Benchmarking y tendencias: solo con fuentes contrastadas.** Cuando
+   se pida investigar mercado, patrones de UX o tendencias (p. ej. las
+   fases de cabecera/notificaciones y revisión visual), citar de dónde
+   sale cada afirmación — nunca una recomendación de diseño sin respaldo
+   verificable.
+6. **Validación humana antes de cerrar cualquier fase.** Además de tests
+   y build (regla 2 de "Reglas de trabajo obligatorias" abajo), todo
+   entregable de UI se comprueba de verdad (con `npm run mobile-check`
+   cuando el módulo lo soporte, o navegación manual/browser tool) antes
+   de reportarlo como terminado.
+
 ## Cosas que NO existen todavía (no asumir que están hechas)
 
 - Interacción real en el calendario de Resumen (sigue siendo de solo
@@ -157,9 +246,10 @@ ningún control de seguridad.
   pantalla). El calendario de Home sí admite crear un movimiento al tocar
   un día vacío o desde el propio desglose de un día con actividad — ver
   `onCreateForDay` en `MonthCalendar`, `shared.jsx`.
-- Los iconos/imágenes que referencia `index.html` (`/icon.svg`,
-  `/icon-192.png`, `/icon-512.png`, `/og-image.png`) son placeholders — hay
-  que generarlos
+- Los iconos/imágenes que referencia `index.html` (`/icon-192.png`,
+  `/icon-512.png`, `/og-image.png`) son placeholders — hay que generarlos.
+  `/icon.svg` (favicon) ya no lo es — ver "Indicador visual de entorno
+  TEST" arriba
 - El icono del logo real de Ocean Flow — de momento el loading usa iconos de
   lucide-react (configurable en Configuración → Ajustes) a la espera del
   logo oficial
@@ -179,7 +269,12 @@ ningún control de seguridad.
 
 Ver `schema.sql` — es el esquema consolidado actual (sustituye a las ~10
 migraciones sueltas del historial de chat, que ya no hace falta volver a
-mirar salvo para entender el porqué de alguna decisión).
+mirar salvo para entender el porqué de alguna decisión). Para levantar
+una base de datos nueva desde cero (TEST, o cualquier entorno futuro):
+ejecutar `schema.sql` y después `seed.sql` — este último siembra lo
+mínimo que la app necesita para ser utilizable (moneda por defecto,
+`nav_sections`, `app_config`, dataset `ihasia`). Nunca hace falta contra
+producción, que ya tiene sus propias filas reales.
 
 For database and architecture changes:
 Always propose a migration plan first.
@@ -368,3 +463,26 @@ tacto físico real (presión, gestos multitáctiles). Para todo lo demás
 flujos de interacción, errores de consola) sí sustituye la ausencia total
 de verificación móvil automática que había antes — se comprueba solo, en
 cada sesión, antes de pedirle nada al usuario.
+
+### 9. Trabajo por fases en iniciativas largas
+
+Cuando una iniciativa se trabaja **por lotes** (una fase por sesión,
+sesiones largas, sin que el usuario tenga que repetir contexto), aplica
+este mecanismo — elegido para la iniciativa "Release V1" (ver sección
+"Reglas permanentes — Release V1" arriba) y reutilizable para cualquier
+iniciativa futura equivalente:
+
+- **Un documento de progreso dedicado por iniciativa**, en `docs/`
+  (ejemplo: `docs/RELEASE-V1-PROGRESS.md`), con una sección por fase:
+  estado, lo hecho, decisiones tomadas y su porqué, lo descartado,
+  riesgos, y el punto exacto por el que se iba. Se actualiza al cerrar
+  (o al compactar/cortar) cada fase — nunca se deja para "luego".
+- **No sustituye la documentación de decisiones ya exigida por la regla
+  7** ("Documentación viva de decisiones"): una decisión de arquitectura
+  o producto con impacto futuro real sigue yendo a su propio ADR, a
+  `docs/PRODUCT.md` o a `docs/BACKLOG.md`. El documento de progreso
+  enlaza a esos, no los repite ni los reemplaza — es el "por dónde iba",
+  no la fuente de verdad de cada decisión.
+- **Una sesión nueva, sin nada del contexto de la anterior, debe poder
+  leer solo ese documento y continuar** exactamente donde se quedó la
+  fase anterior, sin tener que releer el historial de chat.

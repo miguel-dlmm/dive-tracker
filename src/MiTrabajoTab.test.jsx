@@ -14,7 +14,6 @@ const rowsHook = (rows) => ({
 
 const SCHOOLS = rowsHook([{ name: "PADI Cozumel", is_default: true }]);
 const ACTIVITIES = rowsHook([{ name: "Open Water", is_default: true }, { name: "Advanced", is_default: false }]);
-const PAYMENT_TYPES = rowsHook([{ name: "Per Person", is_default: true }]);
 const PAYMENT_STATUSES = rowsHook([{ name: "Pending", is_default: true }, { name: "Paid", is_default: false }]);
 const CURRENCIES = rowsHook([
   { code: "EUR", symbol: "€", name: "Euro", is_default: true },
@@ -45,7 +44,7 @@ function renderMiTrabajo({ worklog = [], comisiones = [], colleaguePayments = []
   render(
     <ToastProvider>
       <MiTrabajoTab
-        schools={schools} activities={ACTIVITIES} paymentTypes={PAYMENT_TYPES} paymentStatuses={PAYMENT_STATUSES} currencies={CURRENCIES}
+        schools={schools} activities={ACTIVITIES} paymentStatuses={PAYMENT_STATUSES} currencies={CURRENCIES}
         rates={hooks.rates} commissionRates={hooks.commissionRates}
         worklog={hooks.worklog} comisiones={hooks.comisiones} colleaguePayments={hooks.colleaguePayments}
       />
@@ -86,15 +85,30 @@ function mixedDataset() {
 describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
   beforeEach(() => localStorage.clear());
 
-  it("por defecto muestra los pendientes de los 3 tipos, con la cabecera limitada a lo que te deben (sin el ajuste negativo)", () => {
-    renderMiTrabajo(mixedDataset());
+  it("por defecto muestra los pendientes de los 3 tipos, con el KPI 'Pendiente de cobrar' limitado a lo que te deben (sin el ajuste negativo)", () => {
+    // KPI animado en céntimos (useCountUp, motion.js) — un waitFor con
+    // timeout fijo resultó frágil bajo carga (toda la suite a la vez):
+    // el conteo necesita llegar prácticamente al 100% de su propia
+    // duración para que Math.round() coincida exacto con el céntimo (a
+    // diferencia de un KPI entero pequeño, que ya redondea bien mucho
+    // antes de terminar). Forzar prefers-reduced-motion aquí hace que
+    // useCountUp fije el valor final de un solo golpe, sin animación —
+    // determinista, sin depender de reloj real ni de la carga de la
+    // máquina que ejecuta el test.
+    const original = window.matchMedia;
+    window.matchMedia = () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} });
+    try {
+      renderMiTrabajo(mixedDataset());
 
-    expect(screen.getByRole("button", { name: "Pendientes · 3" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByText(money("30,00 €"))).toBeInTheDocument(); // cabecera: 20 (curso) + 10 (comisión), sin el ajuste
-    expect(screen.getByText(money("20,00 €"))).toBeInTheDocument();
-    expect(screen.getByText(money("10,00 €"))).toBeInTheDocument();
-    expect(screen.getByText(money("15,00 €"))).toBeInTheDocument(); // el ajuste sí aparece en la lista
-    expect(screen.getByText("con Ana", { exact: false })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Pendientes · 3" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByText(money("30,00 €"))).toBeInTheDocument(); // KPI: 20 (curso) + 10 (comisión), sin el ajuste
+      expect(screen.getByText(money("20,00 €"))).toBeInTheDocument();
+      expect(screen.getByText(money("10,00 €"))).toBeInTheDocument();
+      expect(screen.getByText(money("15,00 €"))).toBeInTheDocument(); // el ajuste sí aparece en la lista
+      expect(screen.getByText("con Ana", { exact: false })).toBeInTheDocument();
+    } finally {
+      window.matchMedia = original;
+    }
   });
 
   it("un ajuste negativo pendiente ofrece 'Marcar liquidado' en vez de 'Confirmar cobro'", () => {
@@ -323,6 +337,32 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
 
     await user.click(screen.getByRole("button", { name: "Ocultar ayuda" }));
     expect(screen.queryByText(helpText)).not.toBeInTheDocument();
+  });
+
+  // Bug real reportado por el usuario: en Safari iOS, el teclado numérico
+  // de inputMode="decimal" no tiene tecla de signo menos, así que era
+  // imposible escribir un importe negativo a mano en Ajuste de curso — el
+  // único movimiento donde un negativo tiene sentido (pagas tú al
+  // compañero). Botón +/- como camino alternativo que no depende de esa
+  // tecla (MoneyInput, shared.jsx, prop allowNegative).
+  it("el campo Importe de Ajuste de curso tiene un botón +/- para poner un importe negativo sin depender del teclado", async () => {
+    const user = userEvent.setup();
+    renderMiTrabajo({});
+
+    await user.click(screen.getByRole("button", { name: "Añadir" }));
+    await user.click(screen.getByRole("tab", { name: /Ajuste de curso/ }));
+
+    const importeInput = screen.getByPlaceholderText("90 ó -30");
+    await user.type(importeInput, "30");
+    expect(screen.getByRole("button", { name: "Cambiar a negativo" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cambiar a negativo" }));
+    expect(importeInput.value).toMatch(/^-30/); // formateado (2 decimales) al perder el foco al pulsar el botón
+    expect(screen.getByRole("button", { name: "Cambiar a positivo" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cambiar a positivo" }));
+    expect(importeInput.value).toMatch(/^30/);
+    expect(importeInput.value).not.toMatch(/^-/);
   });
 
   it("añadir tarifa se expande dentro de la misma hoja (no abre un segundo modal) y guarda la tarifa nueva", async () => {

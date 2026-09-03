@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import HomeTab from "./HomeTab";
 
@@ -254,8 +254,83 @@ describe("HomeTab — calendario: instrucción de uso encima, dentro de la tarje
     const caption = screen.getByText("Toca un día para ver el detalle, o uno vacío para añadir un movimiento");
     expect(caption.textContent.endsWith(".")).toBe(false);
     const weekdayHeader = screen.getByText("L");
-    // eslint-disable-next-line no-bitwise
     expect(caption.compareDocumentPosition(weekdayHeader) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
+
+// Corrección 7/7 (2026-09-01): el calendario de Home ya no está fijo al
+// mes actual — se puede navegar con "‹"/"›". Cubre los tres casos que
+// pide la corrección: mes actual (marcado, sin atajo "Hoy"), mes anterior
+// con actividad (los datos aparecen, no los del mes actual), y mes sin
+// actividad (no revienta, ninguna celda queda marcada).
+describe("HomeTab — calendario: navegación entre meses", () => {
+  it("el mes actual se muestra sin el atajo 'Hoy' (ya estás en él)", () => {
+    renderHome({});
+    expect(screen.queryByRole("button", { name: "Hoy" })).not.toBeInTheDocument();
+  });
+
+  it("retroceder un mes muestra los datos de ese mes (no los del actual) y ofrece volver con 'Hoy'", async () => {
+    const user = userEvent.setup();
+    renderHome({
+      worklog: [
+        { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }, // 20€, este mes
+        { id: "w2", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }, // 40€, mes anterior
+      ],
+      rates: RATES,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Mes anterior" }));
+
+    expect(screen.getByRole("button", { name: "Hoy" })).toBeInTheDocument();
+    // autoSelectFirstDay vuelve a auto-seleccionar el primer día con datos
+    // del mes ahora visible (LAST_MONTH, día 15) — su desglose muestra 40€,
+    // no los 20€ de hoy.
+    const label = screen.getByText("Generado el día");
+    expect(label.parentElement).toHaveTextContent("40,00");
+  });
+
+  it("navegar a un mes sin actividad no rompe el calendario y no deja ningún día marcado", async () => {
+    const user = userEvent.setup();
+    renderHome({
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+      rates: RATES,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Mes siguiente" }));
+
+    await waitFor(() => expect(screen.queryByText("Generado el día")).not.toBeInTheDocument());
+  });
+
+  it("navegar dos meses seguidos rápido nunca deja el detalle de un día de un mes distinto al que se muestra", () => {
+    // Bug real encontrado en verificación manual: sin esperar a que
+    // termine la transición del primer clic, un segundo clic rápido podía
+    // dejar visible "Día 1 de <mes anterior>" con el encabezado ya en el
+    // mes siguiente — un día y un mes que nunca deberían combinarse.
+    renderHome({
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+      rates: RATES,
+    });
+    const next = screen.getByRole("button", { name: "Mes siguiente" });
+
+    fireEvent.click(next);
+    fireEvent.click(next);
+
+    expect(screen.queryByText("Generado el día")).not.toBeInTheDocument();
+  });
+
+  it("'Hoy' vuelve al mes actual tras navegar", async () => {
+    const user = userEvent.setup();
+    renderHome({
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
+      rates: RATES,
+    });
+
+    await user.click(screen.getByRole("button", { name: "Mes anterior" }));
+    await user.click(screen.getByRole("button", { name: "Hoy" }));
+
+    expect(screen.queryByRole("button", { name: "Hoy" })).not.toBeInTheDocument();
+    const label = screen.getByText("Generado el día");
+    expect(label.parentElement).toHaveTextContent("20,00");
   });
 });
 
@@ -275,5 +350,41 @@ describe("HomeTab — calendario: total del día seleccionado", () => {
     // datos de ejemplo del mismo día de hoy.
     const label = screen.getByText("Generado el día");
     expect(label.parentElement).toHaveTextContent("25,00"); // 20€ del curso + 5€ del ajuste
+  });
+});
+
+// Fase 3, Release V1: KPIs animados al final de Home. La cifra hace un
+// conteo ascendente (useCountUp, motion.js) — se espera con waitFor a que
+// termine en vez de asumir que aparece ya resuelta en el primer render.
+// 2026-09-03, pedido explícito del usuario: título único "Tu impacto este
+// mes" y los 3 KPIs son del mes actual (antes "Cursos impartidos" era un
+// total histórico, deliberadamente distinto de los otros dos — se
+// unifica).
+describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", () => {
+  it("los 3 KPIs cuentan solo el mes actual", async () => {
+    renderHome({
+      worklog: [
+        { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" },
+        { id: "w2", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" },
+        { id: "w3", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 3, status: "Paid" },
+      ],
+      comisiones: [
+        { id: "c1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 4, status: "Paid" },
+        { id: "c2", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 9, status: "Paid" },
+      ],
+      rates: RATES,
+      commissionRates: COMMISSION_RATES,
+    });
+
+    expect(screen.getByText("Tu impacto este mes")).toBeInTheDocument();
+    expect(screen.getByText("Alumnos")).toBeInTheDocument();
+    expect(screen.getByText("Cursos")).toBeInTheDocument();
+    expect(screen.getByText("Captados")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("Alumnos").previousSibling).toHaveTextContent("3"); // 2 + 1, solo este mes
+      expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("2"); // w1 + w2, solo este mes (w3 es del mes pasado)
+      expect(screen.getByText("Captados").previousSibling).toHaveTextContent("4"); // solo c1, este mes
+    }, { timeout: 2000 });
   });
 });

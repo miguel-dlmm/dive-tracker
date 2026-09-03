@@ -1,0 +1,44 @@
+{
+  "filter": {
+    "button": "Filtrar",
+    "type": "Tipo",
+    "typeAll": "Todos",
+    "school": "Escuela",
+    "schoolAll": "Todas",
+    "course": "Curso",
+    "courseAll": "Todos",
+    "clear": "Limpiar filtros"
+  },
+  "search": {
+    "placeholder": "Buscar",
+    "ariaLabel": "Buscar tarifa"
+  },
+  "list": {
+    "count": "{{count}} tarifas",
+    "empty": "Sin resultados.",
+    "createdOn": "Alta: {{date}} · {{type}}"
+  },
+  "fab": "Nueva tarifa",
+  "sheet": {
+    "editTitle": "Editar tarifa de {{school}} - {{activity}}",
+    "createTitle": "Nueva tarifa de {{type}}",
+    "close": "Cerrar",
+    "typeTablistLabel": "Tipo de tarifa",
+    "hintGanado": "Lo que cobras por impartir tú el curso.",
+    "hintComision": "Lo que cobras por traer a un cliente.",
+    "school": "Escuela",
+    "course": "Curso",
+    "rateLabel": "Tarifa · {{currency}}",
+    "save": "Guardar"
+  },
+  "toasts": {
+    "saved": "Cambios guardados",
+    "added": "Tarifa añadida",
+    "saveError": "No se pudo guardar. Inténtalo de nuevo."
+  },
+  "deleteInUse_one": "No se puede eliminar: hay {{count}} registro que usa esta tarifa.",
+  "deleteInUse_other": "No se puede eliminar: hay {{count}} registros que usan esta tarifa.",
+  "rowMenu": {
+    "itemLabel": "la tarifa de {{school}} - {{activity}}"
+  }
+}

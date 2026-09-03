@@ -1,0 +1,48 @@
+{
+  "whatsNew": {
+    "close": "Cerrar",
+    "eyebrow": "Novedades de esta versión",
+    "slideTablist": "Diapositiva",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "start": "Empezar",
+    "slides": [
+      {
+        "title": "La app ya habla tu idioma",
+        "body": "Cambia entre español e inglés cuando quieras, desde tu perfil."
+      },
+      {
+        "title": "Home, más a mano",
+        "body": "Tus KPIs del mes (alumnos, cursos, captados) son ahora lo primero que ves al abrir Home."
+      },
+      {
+        "title": "Cabecera más simple",
+        "body": "\"Cerrar sesión\" vive ahora en Mi perfil — menos iconos arriba, más espacio para lo que usas cada día."
+      },
+      {
+        "title": "Repásalo cuando quieras",
+        "body": "Vuelve a estas novedades desde Ayuda → \"Ver qué hay de nuevo\", sin esperar al próximo cambio."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Cerrar",
+    "eyebrow": "Nuevo despliegue",
+    "branchLabel": "Rama",
+    "commitLabel": "commit",
+    "technicalChanges": "Cambios técnicos",
+    "functionalChanges": "Cambios de funcionalidad",
+    "uiChangesLabel": "Cambios de UI:",
+    "uiChangesYes": "Sí",
+    "uiChangesNo": "No",
+    "stepsHeading": "Qué probar / qué hacer",
+    "testsLabel": "Tests:",
+    "buildLabel": "Build:",
+    "notReported": "no reportado",
+    "previewCommit": "Preview del commit",
+    "previewCommitEmpty": "Preview del commit: sin preview todavía",
+    "previewIntegrated": "Preview integrada (Release-V1)",
+    "previewIntegratedEmpty": "Preview integrada: sin preview todavía",
+    "understood": "Entendido"
+  }
+}

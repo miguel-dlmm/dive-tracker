@@ -95,6 +95,58 @@ sueltos escritos a mano por pantalla.
   `CORAL`, `GREEN`…) exportados desde `App.jsx` son la única excepción
   (identidad visual de la app, no dato de negocio).
 
+## Objetivo táctil 44×44 sin estirar el layout
+
+`Field` (`shared.jsx`) tiene un icono de ayuda ("?") opcional junto a la
+etiqueta — su área pulsable real es 44×44, pero **superpuesta con
+`position: absolute`**, no en el flujo normal de la fila. Encontrado
+como bug real 2026-09-02 (Release V1): un botón de 44×44 EN FLUJO
+dentro de una fila de etiqueta la hace más alta que la de cualquier
+campo vecino sin ese icono, descuadrando cualquier grid de columnas que
+los ponga uno al lado del otro. Mismo criterio a seguir en cualquier
+icono/control pequeño que necesite un objetivo táctil grande dentro de
+una línea de texto corta: el tamaño visual del icono decide el alto de
+la línea, el área pulsable de 44×44 se logra con un wrapper `relative`
++ un hijo `absolute -inset-[Npx]`, nunca agrandando el propio elemento
+en el flujo.
+
+## Contraseña: campos y requisitos — `src/auth/PasswordFields.jsx`
+
+`PasswordField` (mostrar/ocultar) y `RequirementRow` (fila de requisito
+con check en vivo) — usados por `CreatePasswordScreen.jsx`,
+`ResetPasswordScreen.jsx` y `ForcedPasswordUpdateScreen.jsx`. Extraídos
+aquí 2026-09-02 al aparecer el tercer sitio que los necesitaba (las dos
+primeras pantallas los duplicaban a propósito mientras solo eran dos —
+ver comentario en el propio archivo). Cualquier pantalla nueva que pida
+una contraseña usa estos, nunca un campo de contraseña escrito a mano.
+La política en sí (longitud/mayúscula/símbolo) vive aparte, en
+`src/passwordPolicy.js` — única fuente de verdad, usada también por
+`useSession.js` para decidir si forzar una actualización de contraseña.
+
+## Catálogos cerrados de iconos: nunca forzar un número arbitrario
+
+`avatarCatalog.js` (avatares de perfil) es un catálogo cerrado de
+iconos de `lucide-react` + colores de marca — mismo criterio que el
+icono de carga de la app. Al reducirlo a "solo animales marinos"
+(2026-09-02), el catálogo pasó de 10 a 6 porque `lucide-react`
+sencillamente no tiene más de 6 iconos que sean un animal marino real
+(no hay ballena, delfín, pulpo, cangrejo, tiburón, estrella de mar ni
+medusa). Principio a seguir con cualquier catálogo cerrado de iconos
+futuro: el tamaño del catálogo lo decide lo que existe de verdad y
+encaja con el criterio pedido, nunca rellenar hasta un número "redondo"
+con algo que no cumple el criterio solo por completar.
+
+## Panel de enlace de un solo uso: `ActivationLinkPanel` (`ConfigTab.jsx`)
+
+Muestra un enlace de un solo uso para copiar/compartir — usado por
+alta de usuario, activar/reactivar, regenerar contraseña, y (desde
+2026-09-02) generar un enlace de invitación. Prop `hideMockEmailButton`
+(default `false`): el botón "simular envío" temporal (ver comentario en
+el propio componente) solo tiene sentido cuando el panel es el
+FALLBACK de un intento real de enviar un email — un flujo que nunca
+intenta enviar ningún email (como generar una invitación) debe pasar
+`hideMockEmailButton`, para no confundir con un botón que no aplica ahí.
+
 ## Feedback de operaciones
 
 `useToast().success(...)`/`.error(...)` con try/catch alrededor de toda

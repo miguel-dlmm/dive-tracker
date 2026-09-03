@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 import { generateActivationLink } from "./activationLink.js";
+import { sendActivationEmail } from "../email/EmailService.js";
 
 // "Regenerar contraseña" — a diferencia de regenerate-activation-link.js,
 // esto invalida explícitamente la contraseña actual (no solo genera un
@@ -69,7 +70,7 @@ export async function handleRegeneratePassword({ method, headers, body }) {
 
   const { data: target, error: targetError } = await client
     .from("profiles")
-    .select("is_superadmin")
+    .select("is_superadmin, first_name, nickname")
     .eq("user_id", targetUserId)
     .maybeSingle();
   if (targetError) {
@@ -107,21 +108,46 @@ export async function handleRegeneratePassword({ method, headers, body }) {
   // artificial. No toca legal_consents (tabla aparte, ver useSession.js):
   // aceptar las bases legales no depende de activated_at, así que no se
   // vuelve a pedir.
+  // deactivated_at a null (Bloque 11): esta llamada también desbanea (ver
+  // ban_duration arriba), así que la cuenta ya no está de baja.
   const { error: profileError } = await client
     .from("profiles")
-    .update({ activated_at: null })
+    .update({ activated_at: null, deactivated_at: null })
     .eq("user_id", targetUserId);
   if (profileError) {
-    console.error("regenerate-password: no se pudo limpiar activated_at", profileError);
+    console.error("regenerate-password: no se pudo limpiar activated_at/deactivated_at", profileError);
     // No se corta aquí: la contraseña ya se invalidó (lo importante para
     // seguridad) y el enlace nuevo sigue siendo válido — solo faltaría un
     // dato de estado, que se corregirá solo en el próximo reload().
   }
 
-  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email);
+  // flow: "recovery" — esta cuenta ya existe y ya tiene una contraseña (la
+  // que se acaba de invalidar arriba): regenerar contraseña nunca es un
+  // alta, así que el enlace debe entrar por ResetPasswordScreen, nunca por
+  // CreatePasswordScreen (que exige aceptar de nuevo las bases legales).
+  // Corrección 2026-09-01: antes no se pasaba `flow`, así que este enlace
+  // mostraba la pantalla de bienvenida/alta por error.
+  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email, { flow: "recovery" });
   if (linkErrorMessage) {
     return { status: 500, payload: { error: linkErrorMessage } };
   }
 
-  return { status: 200, payload: { user_id: targetUserId, action_link: activationLink } };
+  let emailSent = false;
+  try {
+    const result = await sendActivationEmail({
+      email: authUser.user.email,
+      firstName: target.first_name,
+      nickname: target.nickname,
+      actionLink: activationLink,
+      reason: "password_reset",
+    });
+    emailSent = result.sent;
+  } catch (err) {
+    console.error("regenerate-password: sendActivationEmail lanzó una excepción inesperada", err);
+  }
+
+  return {
+    status: 200,
+    payload: { user_id: targetUserId, email_sent: emailSent, ...(!emailSent ? { action_link: activationLink } : {}) },
+  };
 }

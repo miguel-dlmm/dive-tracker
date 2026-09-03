@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabaseClient";
 import { DOCUMENT_TYPE as PRIVACY_TYPE, VERSION as PRIVACY_VERSION } from "./legal/privacyPolicy";
 import { DOCUMENT_TYPE as TERMS_TYPE, VERSION as TERMS_VERSION } from "./legal/termsOfUse";
+import { meetsPasswordPolicy } from "./passwordPolicy";
 
 // Documentos legales vigentes — la versión es una constante de código (ver
 // legal/privacyPolicy.js), no hay tabla legal_documents todavía (MVP).
@@ -113,6 +114,14 @@ export function useSession() {
   // aviso justo después de mostrarlo. Solo signIn() lo reinicia, al empezar
   // un intento nuevo.
   const [accountBanned, setAccountBanned] = useState(false);
+  // Cuenta ya existente cuya contraseña actual no cumple la política
+  // reforzada (1 mayúscula + 1 símbolo, ver passwordPolicy.js) — se
+  // detecta en signIn(), es la única vez que este hook tiene la
+  // contraseña en texto plano. Igual que accountBanned, solo signIn()
+  // decide su valor: una recarga que restaura una sesión ya existente
+  // (resolveSessionState, más abajo) no puede volver a comprobar esto, no
+  // hay contraseña en texto plano disponible fuera de un login explícito.
+  const [forcedPasswordUpdate, setForcedPasswordUpdate] = useState(false);
 
   useEffect(() => {
     // setSession/setProfile/setConsents se llaman siempre juntos, DESPUÉS de
@@ -137,7 +146,23 @@ export function useSession() {
       if (resolved.banned) setAccountBanned(true);
       setLoading(false);
     });
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      // TOKEN_REFRESHED (Bloque 12, job nocturno 2026-09-03): GoTrue
+      // refresca el access token en segundo plano cada ~1h mientras la
+      // pestaña sigue abierta — antes, cada refresco disparaba
+      // resolveSessionState entera (getUser() + profile + consents, 3
+      // peticiones de red) aunque ni el perfil ni los consentimientos
+      // cambien nunca en un refresco de token. Basta con actualizar
+      // `session` con el token nuevo. La detección de baneo no se
+      // debilita: un refresh token de una cuenta baneada ya falla en el
+      // propio endpoint de refresco de GoTrue (nunca llega a emitir
+      // TOKEN_REFRESHED) — la garantía de resolveSessionState en cada
+      // llamada de auth.* sigue intacta, solo evita repetirla aquí donde
+      // ya está implícita en el propio evento.
+      if (event === "TOKEN_REFRESHED" && newSession) {
+        setSession(newSession);
+        return;
+      }
       const resolved = await resolveSessionState(newSession);
       setSession(resolved.session);
       setProfile(resolved.profile);
@@ -173,6 +198,9 @@ export function useSession() {
       if (isBannedError(error)) setAccountBanned(true);
       throw error;
     }
+    // Única oportunidad de comprobar la política reforzada contra una
+    // cuenta ya existente — ver comentario del useState de arriba.
+    setForcedPasswordUpdate(!meetsPasswordPolicy(password));
   }, []);
 
   const signOut = useCallback(() => supabase.auth.signOut(), []);
@@ -193,6 +221,14 @@ export function useSession() {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error && error.code !== "same_password") throw error;
   }, []);
+
+  // Guarda la contraseña nueva para una cuenta con forcedPasswordUpdate en
+  // curso y cierra ese gate — reutiliza completePasswordChange de arriba en
+  // vez de duplicar la llamada a supabase.auth.updateUser.
+  const updateForcedPassword = useCallback(async (newPassword) => {
+    await completePasswordChange(newPassword);
+    setForcedPasswordUpdate(false);
+  }, [completePasswordChange]);
 
   // Marca que la fase de contraseña de la activación ha terminado — NO
   // significa que se haya completado todo el onboarding, ver
@@ -236,13 +272,14 @@ export function useSession() {
     setConsents((c) => [...c, ...rows]);
   }, [session, consents]);
 
-  // Punto de entrada único y resumible para todo el primer acceso: valida
-  // o consume el enlace de invitación (verifyOtp, una sola vez en la vida
-  // de ese token), fija la contraseña, marca profiles.activated_at y
-  // registra el consentimiento legal, en ese orden — así un fallo que solo
-  // afecte al consentimiento legal deja activated_at ya fijado y el
-  // usuario converge en AcceptLegalScreen en vez de tener que repetir el
-  // formulario de contraseña.
+  // Resuelve QUIÉN es la persona a partir de un enlace de un solo uso
+  // (verifyOtp), o reutiliza la sesión ya creada si es un reintento —
+  // compartido por activateAccount() (alta/reactivación/regenerar
+  // contraseña) y resetPassword() (recuperación autoservicio) para no
+  // duplicar la detección de "enlace inválido"/"cuenta baneada" en dos
+  // sitios: ambos flujos parten del mismo tipo de enlace de Supabase
+  // (type=recovery), solo cambia qué se hace DESPUÉS de identificar a la
+  // persona (ver comentarios de cada función más abajo).
   //
   // Resumible: si ya existe una sesión (un intento previo ya llamó a
   // verifyOtp con éxito, o esta llamada es un reintento tras un fallo
@@ -256,39 +293,48 @@ export function useSession() {
   // comprobación tras un verifyOtp fresco: el token ya es la frontera de
   // seguridad real ahí, solo puede resolver a la cuenta para la que se
   // emitió.
+  const resolveRecoverySession = useCallback(async ({ tokenHash, type, expectedEmail }) => {
+    const { data: { session: existing } } = await supabase.auth.getSession();
+
+    if (existing) {
+      if (existing.user.email.toLowerCase() !== expectedEmail.toLowerCase()) {
+        throw new Error(ACTIVATION_SESSION_MISMATCH);
+      }
+      return existing.user.id;
+    }
+
+    const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+    if (error) {
+      // Confirmado en vivo: un enlace recién generado para una cuenta ya
+      // desactivada también falla aquí con "user_banned" (GoTrue banea
+      // antes de aceptar el OTP, no solo antes de emitirlo) — nunca debe
+      // leerse como "enlace inválido/caducado", que sugeriría pedir uno
+      // nuevo cuando lo que hace falta es que un superadmin reactive la
+      // cuenta primero.
+      if (isBannedError(error)) {
+        setAccountBanned(true);
+        throw new Error(ACCOUNT_DEACTIVATED_MESSAGE, { cause: error });
+      }
+      throw new Error(ACTIVATION_LINK_INVALID, { cause: error });
+    }
+    // onAuthStateChange actualiza `session` (estado React) de forma
+    // asíncrona a partir de aquí — quien llama debe seguir usando el
+    // userId devuelto aquí, nunca `session` del closure.
+    return data.user.id;
+  }, []);
+
+  // Punto de entrada único y resumible para todo el primer acceso (alta,
+  // reactivación, regenerar contraseña por un admin): fija la contraseña,
+  // marca profiles.activated_at y registra el consentimiento legal, en ese
+  // orden — así un fallo que solo afecte al consentimiento legal deja
+  // activated_at ya fijado y el usuario converge en AcceptLegalScreen en
+  // vez de tener que repetir el formulario de contraseña.
   //
   // Lanza siempre un Error con uno de los tres mensajes de arriba, nunca
   // un error crudo de Supabase — CreatePasswordScreen solo tiene que
   // mostrar err.message tal cual.
   const activateAccount = useCallback(async ({ tokenHash, type, expectedEmail, password }) => {
-    const { data: { session: existing } } = await supabase.auth.getSession();
-
-    let userId;
-    if (existing) {
-      if (existing.user.email.toLowerCase() !== expectedEmail.toLowerCase()) {
-        throw new Error(ACTIVATION_SESSION_MISMATCH);
-      }
-      userId = existing.user.id;
-    } else {
-      const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-      if (error) {
-        // Confirmado en vivo: un enlace recién generado para una cuenta ya
-        // desactivada también falla aquí con "user_banned" (GoTrue banea
-        // antes de aceptar el OTP, no solo antes de emitirlo) — nunca debe
-        // leerse como "enlace inválido/caducado", que sugeriría pedir uno
-        // nuevo cuando lo que hace falta es que un superadmin reactive la
-        // cuenta primero.
-        if (isBannedError(error)) {
-          setAccountBanned(true);
-          throw new Error(ACCOUNT_DEACTIVATED_MESSAGE, { cause: error });
-        }
-        throw new Error(ACTIVATION_LINK_INVALID, { cause: error });
-      }
-      userId = data.user.id;
-      // onAuthStateChange actualiza `session` (estado React) de forma
-      // asíncrona a partir de aquí — todo lo de abajo usa `userId`, nunca
-      // `session`.
-    }
+    const userId = await resolveRecoverySession({ tokenHash, type, expectedEmail });
 
     try {
       await completePasswordChange(password);
@@ -313,19 +359,69 @@ export function useSession() {
 
     window.history.replaceState(null, "", window.location.pathname);
     return { userId };
-  }, [completePasswordChange, markAccountActivated, acceptLegalConsents]);
+  }, [resolveRecoverySession, completePasswordChange, markAccountActivated, acceptLegalConsents]);
+
+  // Recuperación de contraseña autoservicio (ForgotPasswordScreen →
+  // ResetPasswordScreen) — deliberadamente MÁS ESTRECHA que
+  // activateAccount(): valida el enlace, fija la contraseña nueva y nada
+  // más. NUNCA llama a acceptLegalConsents() — esa aceptación ya se hizo
+  // en el alta original y no debe repetirse solo por recuperar una
+  // contraseña (encargo explícito 2026-09-01). Si algún día los documentos
+  // legales cambiaran de versión DESPUÉS de esa aceptación, la puerta de
+  // `pendingLegalConsents` en AuthGate lo sigue detectando igual para
+  // CUALQUIER sesión — no es responsabilidad de este flujo, es el mismo
+  // control ya existente para un login normal.
+  //
+  // Sí llama a markAccountActivated(): no tiene relación con bases legales
+  // (es la marca de "esta persona ya fijó una contraseña alguna vez"), y
+  // cubre sin coste extra el caso límite de una cuenta admin-creada que
+  // nunca completó su primer acceso y usa "olvidé mi contraseña" en vez
+  // del enlace original — sin esto, quedaría con acceso real pero
+  // marcada "Pendiente" para siempre en el directorio de Usuarios.
+  const resetPassword = useCallback(async ({ tokenHash, type, expectedEmail, password }) => {
+    const userId = await resolveRecoverySession({ tokenHash, type, expectedEmail });
+
+    try {
+      await completePasswordChange(password);
+      await markAccountActivated(userId);
+    } catch (err) {
+      if (isBannedError(err)) {
+        setAccountBanned(true);
+        await supabase.auth.signOut();
+        throw new Error(ACCOUNT_DEACTIVATED_MESSAGE, { cause: err });
+      }
+      throw new Error(ACTIVATION_GENERIC_RETRY, { cause: err });
+    }
+
+    window.history.replaceState(null, "", window.location.pathname);
+    return { userId };
+  }, [resolveRecoverySession, completePasswordChange, markAccountActivated]);
+
+  // Parche optimista local del perfil (Bloque 5, ProfileTab.jsx) — quien
+  // llama ya ha escrito en Supabase (supabase.from("profiles").update(...))
+  // y sabe que ha funcionado; esto solo evita esperar al próximo
+  // onAuthStateChange (que no se dispara por una edición de perfil, solo
+  // por cambios de sesión) para que la cabecera/el resto de la app vean el
+  // cambio. Mismo patrón que markAccountActivated de arriba.
+  const updateProfile = useCallback((patch) => {
+    setProfile((p) => (p ? { ...p, ...patch } : p));
+  }, []);
 
   return {
     session,
     profile,
     loading,
     accountBanned,
+    forcedPasswordUpdate,
+    updateForcedPassword,
     signIn,
     signOut,
     completePasswordChange,
     markAccountActivated,
     acceptLegalConsents,
     activateAccount,
+    resetPassword,
+    updateProfile,
     pendingLegalConsents,
   };
 }

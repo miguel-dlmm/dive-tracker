@@ -4,6 +4,75 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.0.0] - 2026-09-04
+
+### Added
+- **Multidioma (español/inglés)** en toda la app, con selector en
+  Registro, Mi perfil y alta de usuarios (admin) — cambia al instante y
+  se recuerda por cuenta.
+- **Home**: sección "Tu impacto" — alumnos formados este mes, cursos
+  impartidos y personas captadas, con animación de conteo; ahora en
+  primera posición de la pantalla.
+- **Mi trabajo**: 3 KPIs animados en la cabecera (Generado este mes,
+  Pendiente de cobrar, Cobrado este mes) en vez de la única tarjeta
+  "Pendiente de cobrar" anterior.
+- **Mi perfil**: carnet visual del instructor — nivel profesional
+  (Divemaster/Instructor), número SSI Pro, iniciales autogeneradas y
+  firma capturada, con estética de carnet físico.
+- **Recuperación de contraseña autoservicio** ("¿Olvidaste tu
+  contraseña?").
+- **Registro externo autoservicio** (configurable) y **enlaces de
+  invitación de un solo uso** (caducan a las 24h) para dar de alta a
+  una persona concreta sin necesidad de abrir el registro público.
+- **Contraseña reforzada**: cualquier alta o cambio de contraseña nuevo
+  exige ahora un mínimo de 1 mayúscula y 1 símbolo (ver también
+  "Changed" — afecta también a cuentas ya existentes).
+- **Avisos de despliegue** visibles para todos los usuarios, no solo
+  para superadmin (antes solo el resumen técnico llegaba a superadmin).
+- **"Ver qué hay de nuevo en esta versión"**: enlace en Ayuda para
+  reabrir el slide de novedades cuando se quiera, sin esperar a la
+  próxima versión.
+- **Indicador visual "TEST"** en el entorno de pruebas, para no
+  confundirlo nunca con producción.
+- Acceso directo "Hoy" en el selector de fecha.
+- Avatares de perfil: catálogo con animales marinos reales (pez,
+  tortuga, gamba, caracol, concha).
+
+### Changed
+- Cabecera: "Cerrar sesión" se mueve a Mi perfil — de 4 iconos
+  tocables a 3 (Ayuda, Configuración, perfil).
+- **Contraseña reforzada — efecto sobre cuentas existentes**: una
+  cuenta ya creada que no cumpla la política nueva (mínimo 1 mayúscula
+  y 1 símbolo) se ve obligada a actualizarla en su próximo inicio de
+  sesión, antes de poder seguir usando la app.
+- Configuración → Monedas aclara que "predeterminada de la app"
+  (respaldo general cuando nadie ha elegido moneda propia) no es lo
+  mismo que la moneda favorita personal de Mi perfil — antes ambas
+  usaban la misma palabra ("Favorita") sin ninguna explicación.
+- Toasts rediseñados: animación de entrada/salida y cierre manual.
+- Tono más cercano en los toasts de éxito y en el email de bienvenida.
+- Eliminar la cuenta pide ahora escribir la palabra "CANCELAR" como
+  paso adicional antes de confirmar.
+- Ayuda ya no incluye ningún contenido de administración/superadmin,
+  ni siquiera oculto tras el filtro de rol.
+
+### Fixed
+- El botón de ayuda ("?") de un campo con texto de ayuda adicional
+  (p. ej. Importe en el Ajuste de compañeros) descuadraba el
+  formulario y provocaba un salto visual; el propio texto de ayuda
+  podía además salirse de la pantalla en campos cerca del borde.
+- Las hojas de gestión de usuarios (crear, editar, eliminar) no
+  animaban su cierre correctamente.
+- El listado de Usuarios mostraba la fecha de alta en cada fila; ahora
+  muestra el último acceso real (o "Nunca") — el dato ya existía en la
+  hoja de detalle, solo faltaba en la fila.
+- El slide de "Eliminar" al arrastrar una fila de Usuarios podía
+  quedarse a medio abrir si se soltaba antes de completar el gesto.
+- El teclado numérico que muestra iOS Safari no tiene tecla de signo
+  menos — el importe de Ajuste de curso (el único caso donde un
+  negativo tiene sentido) gana un botón +/- para poder escribirlo sin
+  depender del teclado.
+
 ## [0.2.0] - 2026-08-30
 
 ### Added

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Waves, Loader2 } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
 import LegalConsentFields from "./legal/LegalConsentFields";
@@ -11,6 +12,7 @@ import LegalConsentFields from "./legal/LegalConsentFields";
 // de un usuario nuevo acepta los documentos dentro de CreatePasswordScreen,
 // no aquí — ver LegalConsentFields, reutilizado en ambas pantallas.
 export default function AcceptLegalScreen({ onSubmit }) {
+  const { t } = useTranslation("auth");
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -25,7 +27,7 @@ export default function AcceptLegalScreen({ onSubmit }) {
     try {
       await onSubmit();
     } catch {
-      setError("No se pudo guardar tu aceptación. Inténtalo de nuevo.");
+      setError(t("acceptLegal.genericError"));
       setLoading(false);
     }
   };
@@ -38,13 +40,13 @@ export default function AcceptLegalScreen({ onSubmit }) {
             <Waves size={22} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
           </div>
           <div className="text-center leading-tight">
-            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>Antes de continuar</p>
-            <h1 className="mt-1 text-lg font-bold tracking-tight" style={{ color: NAVY }}>Privacidad y condiciones de uso</h1>
+            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>{t("acceptLegal.eyebrow")}</p>
+            <h1 className="mt-1 text-lg font-bold tracking-tight" style={{ color: NAVY }}>{t("acceptLegal.title")}</h1>
           </div>
         </div>
 
         <p className="mb-6 text-center text-sm text-gray-500">
-          Revisa y acepta estos documentos para poder usar Ocean Flow.
+          {t("acceptLegal.description")}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
@@ -59,7 +61,7 @@ export default function AcceptLegalScreen({ onSubmit }) {
             style={{ backgroundColor: TEAL }}
           >
             {loading && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
-            Continuar
+            {t("acceptLegal.submit")}
           </button>
         </form>
       </div>

@@ -1,7 +1,28 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PaymentsTab from "./PaymentsTab";
 import { ToastProvider } from "./shared";
+
+// Reloj congelado dentro de agosto 2026 — coherente con las fechas fijas del
+// fixture de abajo (2026-08-05/2026-08-10). Sin esto, el test "el filtro de
+// periodo..." dependía de la fecha real del sistema: DatePicker (shared.jsx)
+// abre siempre en el mes de "hoy" cuando no hay fecha elegida, así que
+// "10 de Agosto" solo era visible sin navegar el calendario mientras "hoy"
+// cayera en agosto — dejó de serlo el 2026-09-01 (encontrado y confirmado
+// como la causa real, no un fallo intermitente sin explicación).
+beforeEach(() => {
+  // Solo se falsea `Date` — dejar setTimeout/setInterval reales es
+  // imprescindible: userEvent (@testing-library/user-event) depende de
+  // temporizadores reales para simular clicks/escritura, y con
+  // vi.useFakeTimers() sin scoping los tests que usan userEvent cuelgan
+  // (confirmado: 5 tests con timeout al probarlo sin `toFake`).
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 7, 15, 12, 0, 0)); // 15 de agosto de 2026
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 const rowsHook = (rows) => ({
   rows, loaded: true,
@@ -141,6 +162,21 @@ describe("PaymentsTab — liquidación agrupada por escuela", () => {
 
     const [desde] = screen.getAllByLabelText("Sin límite");
     await user.click(desde);
+    // El calendario abre en el mes REAL de hoy (sin valor todavía, ver
+    // DatePicker en shared.jsx), no en el de los datos de prueba
+    // (2026-08-10, fijo) — hay que navegar hasta agosto de 2026 antes de
+    // poder pulsar el día. Número de clics calculado en tiempo de
+    // ejecución en vez de fijo a mano: este mismo test se rompió porque
+    // asumía que "hoy" seguiría siendo agosto de 2026 para siempre (bug
+    // reportado en main, ver docs/BACKLOG.md) — con el cálculo dinámico
+    // no vuelve a pasar según avance el reloj real.
+    const target = new Date(2026, 7, 1); // agosto 2026 (mes 7, 0-indexado)
+    const now = new Date();
+    const monthsDiff = (now.getFullYear() - target.getFullYear()) * 12 + (now.getMonth() - target.getMonth());
+    const navButton = monthsDiff >= 0 ? "Mes anterior" : "Mes siguiente";
+    for (let i = 0; i < Math.abs(monthsDiff); i++) {
+      await user.click(screen.getByRole("button", { name: navButton }));
+    }
     await user.click(screen.getByRole("button", { name: "10 de Agosto" }));
 
     expect(screen.getByText("PADI Cozumel")).toBeInTheDocument();

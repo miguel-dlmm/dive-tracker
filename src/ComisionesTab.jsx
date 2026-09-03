@@ -1,28 +1,18 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Pencil, X } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import { inputCls, formatMoney, Money, Field, Select, CurrencySearchSelect, MoneyInput, ListFilterBar, applyListFilters, colorFor, StatusPill, DeleteButton, DatePicker, EditActions, AppLoading, EntryTitle, useToast } from "./shared";
 import { computeRateTotal } from "./rateCalc";
 
-// schools / activities / paymentTypes / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
+// schools / activities / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // commissionRates / comisiones: { rows: [...], insertRow, updateRow, deleteRow }
 // accentColor: color de sección (nav_sections), para el botón flotante de crear
 // appConfig: { rows: [...] } — para el icono de carga configurado, usado en el loading al dar de alta una tarifa al vuelo
 // La moneda ya NO se elige aquí — se toma de la tarifa de comisión en Tarifas.
-export default function ComisionesTab({ schools, activities, paymentTypes, paymentStatuses, currencies, commissionRates, comisiones, appConfig, accentColor = TEAL, autoOpenSheet = false, onAutoOpened }) {
+export default function ComisionesTab({ schools, activities, paymentStatuses, currencies, commissionRates, comisiones, appConfig, accentColor = TEAL, autoOpenSheet = false, onAutoOpened }) {
   const defaultStatus = paymentStatuses.rows.find((s) => s.is_default)?.name || paymentStatuses.rows[0]?.name || "Pending";
   const defaultSchool = schools.rows.find((s) => s.is_default)?.name || "";
   const defaultActivity = activities.rows.find((a) => a.is_default)?.name || "";
-  // El tipo de pago ya no se elige en ningún formulario — toda tarifa nueva
-  // se crea como "Per Person" (si no existe esa fila en payment_types, cae
-  // al is_default de la tabla y, si tampoco hay, al primero).
-  // WORKAROUND TEMPORAL (ver docs/BACKLOG.md y docs/ADR/0003): una cuenta
-  // nueva nace con payment_types vacío (clone_setup_dataset no lo siembra),
-  // así que sin este último fallback a "Per Person" el alta de tarifa al
-  // vuelo queda bloqueada para todo instructor recién dado de alta.
-  // payment_type como concepto está aprobado para eliminarse (ADR-0003) —
-  // este fallback desaparece con esa migración, no antes.
-  const defaultPaymentType = paymentTypes.rows.find((t) => t.name === "Per Person")?.name || paymentTypes.rows.find((t) => t.is_default)?.name || paymentTypes.rows[0]?.name || "Per Person";
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
 
   const emptyForm = () => ({
@@ -64,7 +54,7 @@ export default function ComisionesTab({ schools, activities, paymentTypes, payme
     const r = rateFor(form.school, form.activity);
     if (!r) return null;
     const total = computeRateTotal(r, form.people);
-    return { rate: r.rate, paymentType: r.payment_type, total, currency: r.currency };
+    return { rate: r.rate, total, currency: r.currency };
   }, [form, commissionRates.rows]);
 
   const toast = useToast();
@@ -87,14 +77,16 @@ export default function ComisionesTab({ schools, activities, paymentTypes, payme
     setRateForm({
       school: form.school || defaultSchool,
       activity: form.activity || defaultActivity,
-      payment_type: defaultPaymentType,
+      // payment_type ya no se elige — se escribe fijo hasta que la migración
+      // de ADR-0003 elimine la columna de la tabla.
+      payment_type: "Per Person",
       currency: defaultCurrency,
       rate: "",
     });
     setRateSheetOpen(true);
   };
   const saveRate = async () => {
-    if (!rateForm.school || !rateForm.activity || !rateForm.payment_type || !rateForm.rate) return;
+    if (!rateForm.school || !rateForm.activity || !rateForm.rate) return;
     setSavingRate(true);
     try {
       await commissionRates.insertRow({ ...rateForm, rate: Number(rateForm.rate) });
@@ -215,7 +207,7 @@ export default function ComisionesTab({ schools, activities, paymentTypes, payme
             <div className="mt-3 rounded-md bg-gray-50 px-3 py-2.5 text-xs text-gray-600">
               {preview ? (
                 <span>
-                  Tarifa: <b>{formatMoney(preview.rate, preview.currency, currencies.rows)}</b> ({preview.paymentType}) →
+                  Tarifa: <b>{formatMoney(preview.rate, preview.currency, currencies.rows)}</b> →
                   {" "}Total: <b style={{ color: TEAL }}>{formatMoney(preview.total, preview.currency, currencies.rows)}</b>
                 </span>
               ) : form.school && form.activity ? (
@@ -270,7 +262,7 @@ export default function ComisionesTab({ schools, activities, paymentTypes, payme
 
             <button
               onClick={saveRate}
-              disabled={savingRate || !rateForm.school || !rateForm.activity || !rateForm.payment_type || !rateForm.rate}
+              disabled={savingRate || !rateForm.school || !rateForm.activity || !rateForm.rate}
               className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
               style={{ backgroundColor: accentColor }}
             >

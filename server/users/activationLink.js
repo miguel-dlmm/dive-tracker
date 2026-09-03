@@ -15,16 +15,25 @@ const ACTIVATION_LINK_TYPE = "recovery";
 // verificación de Supabase, que consume el token con un simple GET: un
 // escáner de email/link-preview que lo precargue lo invalidaría antes de
 // que el usuario llegue a pulsarlo. Con esta URL propia, cargar la página
-// no consume nada — solo lo hace activateAccount() al enviar el formulario
-// (ver useSession.js). email va en la URL a propósito: AuthGate lo
-// necesita para poder detectar una sesión ajena (ver App.jsx), y no añade
-// exposición nueva — es el mismo email al que ya se envía el correo o que
-// ya conoce el superadmin que gestiona la cuenta.
-function buildActivationUrl(baseUrl, { tokenHash, email }) {
+// no consume nada — solo lo hace activateAccount()/resetPassword() al
+// enviar el formulario (ver useSession.js). email va en la URL a
+// propósito: AuthGate lo necesita para poder detectar una sesión ajena
+// (ver App.jsx), y no añade exposición nueva — es el mismo email al que
+// ya se envía el correo o que ya conoce el superadmin que gestiona la
+// cuenta.
+//
+// flow (opcional): únicamente "recovery" (recuperación autoservicio, ver
+// requestPasswordReset.js) lo pasa hoy — le dice a AuthGate que muestre
+// ResetPasswordScreen en vez de CreatePasswordScreen (sin bases legales,
+// ver ADR pendiente de esta sesión). Los otros tres llamadores
+// (createUser/regenerateActivationLink/regeneratePassword) no lo pasan:
+// sus enlaces se comportan exactamente igual que siempre.
+function buildActivationUrl(baseUrl, { tokenHash, email, flow }) {
   const url = new URL(baseUrl);
   url.searchParams.set("token_hash", tokenHash);
   url.searchParams.set("type", ACTIVATION_LINK_TYPE);
   url.searchParams.set("email", email);
+  if (flow) url.searchParams.set("flow", flow);
   return url.toString();
 }
 
@@ -32,7 +41,7 @@ function buildActivationUrl(baseUrl, { tokenHash, email }) {
 // lanza — devuelve { activationLink: null, error: "mensaje" } en
 // cualquier fallo (enlace no generado, o falta APP_URL) para que cada
 // llamador decida cómo responder sin necesitar try/catch propio.
-export async function generateActivationLink(email) {
+export async function generateActivationLink(email, { flow } = {}) {
   const { data: linkData, error: linkError } = await getServiceRoleClient().auth.admin.generateLink({
     type: ACTIVATION_LINK_TYPE,
     email,
@@ -51,5 +60,5 @@ export async function generateActivationLink(email) {
     return { activationLink: null, error: "No se pudo generar el enlace de activación." };
   }
 
-  return { activationLink: buildActivationUrl(process.env.APP_URL, { tokenHash: linkData.properties.hashed_token, email }), error: null };
+  return { activationLink: buildActivationUrl(process.env.APP_URL, { tokenHash: linkData.properties.hashed_token, email, flow }), error: null };
 }

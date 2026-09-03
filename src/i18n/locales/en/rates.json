@@ -1,0 +1,44 @@
+{
+  "filter": {
+    "button": "Filter",
+    "type": "Type",
+    "typeAll": "All",
+    "school": "School",
+    "schoolAll": "All",
+    "course": "Course",
+    "courseAll": "All",
+    "clear": "Clear filters"
+  },
+  "search": {
+    "placeholder": "Search",
+    "ariaLabel": "Search rate"
+  },
+  "list": {
+    "count": "{{count}} rates",
+    "empty": "No results.",
+    "createdOn": "Added: {{date}} · {{type}}"
+  },
+  "fab": "New rate",
+  "sheet": {
+    "editTitle": "Edit rate for {{school}} - {{activity}}",
+    "createTitle": "New {{type}} rate",
+    "close": "Close",
+    "typeTablistLabel": "Rate type",
+    "hintGanado": "What you charge for teaching the course yourself.",
+    "hintComision": "What you charge for bringing in a client.",
+    "school": "School",
+    "course": "Course",
+    "rateLabel": "Rate · {{currency}}",
+    "save": "Save"
+  },
+  "toasts": {
+    "saved": "Changes saved",
+    "added": "Rate added",
+    "saveError": "Couldn't save. Try again."
+  },
+  "deleteInUse_one": "Can't delete: {{count}} entry uses this rate.",
+  "deleteInUse_other": "Can't delete: {{count}} entries use this rate.",
+  "rowMenu": {
+    "itemLabel": "the {{school}} - {{activity}} rate"
+  }
+}

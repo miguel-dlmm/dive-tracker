@@ -1,4 +1,4 @@
-import React from "react";
+import { useTranslation } from "react-i18next";
 import { Wallet, Plus } from "lucide-react";
 import { MoneyLine } from "./shared";
 
@@ -19,6 +19,7 @@ import { MoneyLine } from "./shared";
 // Home) — así ambos son pulsables de forma independiente sin necesitar
 // stopPropagation.
 export default function PendingCollectionCard({ totals, count, currencyRows, color, onPress, onQuickAdd }) {
+  const { t } = useTranslation("common");
   const hasAmount = Object.keys(totals || {}).length > 0;
   // Wrapper cubre solo el bloque de información, nunca la tarjeta entera:
   // con onQuickAdd presente, el botón "+" es un HERMANO suyo, no un
@@ -42,20 +43,20 @@ export default function PendingCollectionCard({ totals, count, currencyRows, col
       >
         <div className="flex items-center gap-1.5">
           <Wallet size={14} aria-hidden="true" />
-          <span className="text-xs font-medium opacity-80">Pendiente de cobrar</span>
+          <span className="text-xs font-medium opacity-80">{t("pendingCollectionCard.pendingLabel")}</span>
         </div>
         <div className="mt-1 text-2xl font-bold tabular-nums">
           {hasAmount ? <MoneyLine totals={totals} currencyRows={currencyRows} /> : "—"}
         </div>
         <div className="mt-0.5 text-xs opacity-80">
-          {count === 0 ? "Nada pendiente" : `${count} ${count === 1 ? "pago pendiente" : "pagos pendientes"}`}
+          {count === 0 ? t("pendingCollectionCard.empty") : t("pendingCollectionCard.count", { count })}
         </div>
       </Wrapper>
       {onQuickAdd && (
         <button
           type="button"
           onClick={onQuickAdd}
-          aria-label="Añadir movimiento"
+          aria-label={t("pendingCollectionCard.addMovement")}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/40 bg-white/15 text-white transition-transform active:scale-90"
         >
           <Plus size={22} aria-hidden="true" />

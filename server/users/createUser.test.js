@@ -5,13 +5,13 @@ vi.mock("../supabaseAdmin.js", () => ({
   getServiceRoleClient: vi.fn(),
 }));
 
-vi.mock("../email/sendWelcomeEmail.js", () => ({
-  sendWelcomeEmail: vi.fn(),
+vi.mock("../email/EmailService.js", () => ({
+  sendActivationEmail: vi.fn(),
 }));
 
 import { handleCreateUser } from "./createUser.js";
 import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
-import { sendWelcomeEmail } from "../email/sendWelcomeEmail.js";
+import { sendActivationEmail } from "../email/EmailService.js";
 
 const VALID_BODY = {
   email: "diver@example.com",
@@ -140,9 +140,15 @@ describe("con permisos válidos", () => {
     });
     deleteUser = vi.fn().mockResolvedValue({ error: null });
     rpc = vi.fn().mockResolvedValue({ error: null });
-    getServiceRoleClient.mockReturnValue({ auth: { admin: { createUser, generateLink, deleteUser } }, rpc });
-    sendWelcomeEmail.mockReset();
-    sendWelcomeEmail.mockResolvedValue({ sent: true });
+    // .from("profiles")...maybeSingle(): comprobación de nickname
+    // disponible que provisionUser.js hace antes de llamar a createUser()
+    // (ver server/users/provisionUser.js) — sin existir para este test,
+    // se asume "nickname libre" (data: null) en todos los casos salvo que
+    // un test concreto la sobrescriba.
+    const from = vi.fn(() => ({ select: vi.fn(() => ({ ilike: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }) })) })) }));
+    getServiceRoleClient.mockReturnValue({ auth: { admin: { createUser, generateLink, deleteUser } }, rpc, from });
+    sendActivationEmail.mockReset();
+    sendActivationEmail.mockResolvedValue({ sent: true });
   });
 
   it("crea el usuario y devuelve exactamente { user_id, email_sent: true } cuando el email se envía bien, sin exponer el enlace", async () => {
@@ -166,8 +172,34 @@ describe("con permisos válidos", () => {
         first_name: VALID_BODY.first_name,
         last_name: VALID_BODY.last_name,
         nickname: VALID_BODY.nickname,
+        language: null,
       },
     });
+  });
+
+  // Release V1, Fase 2 (multidioma): language solo se propaga si es uno de
+  // los 2 idiomas soportados — cualquier otro valor cae a null, y
+  // handle_new_user() (schema.sql) lo resuelve a 'es' por defecto.
+  it("propaga language cuando es un idioma soportado", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+    const body = { ...VALID_BODY, language: "en" };
+
+    await handleCreateUser(request({ body: JSON.stringify(body) }));
+
+    expect(createUser).toHaveBeenCalledWith(expect.objectContaining({
+      user_metadata: expect.objectContaining({ language: "en" }),
+    }));
+  });
+
+  it("ignora un language no soportado, cae a null", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+    const body = { ...VALID_BODY, language: "fr" };
+
+    await handleCreateUser(request({ body: JSON.stringify(body) }));
+
+    expect(createUser).toHaveBeenCalledWith(expect.objectContaining({
+      user_metadata: expect.objectContaining({ language: null }),
+    }));
   });
 
   it("clona el dataset elegido en el usuario recién creado", async () => {
@@ -188,7 +220,7 @@ describe("con permisos válidos", () => {
     const result = await handleCreateUser(request());
 
     expect(deleteUser).toHaveBeenCalledWith("new-user-1");
-    expect(sendWelcomeEmail).not.toHaveBeenCalled();
+    expect(sendActivationEmail).not.toHaveBeenCalled();
     expect(result).toEqual({
       status: 400,
       payload: { error: "El dataset seleccionado ya no existe. Recarga la página e inténtalo de nuevo." },
@@ -212,19 +244,20 @@ describe("con permisos válidos", () => {
 
     await handleCreateUser(request());
 
-    expect(sendWelcomeEmail).toHaveBeenCalledTimes(1);
-    const { actionLink } = sendWelcomeEmail.mock.calls[0][0];
+    expect(sendActivationEmail).toHaveBeenCalledTimes(1);
+    const { actionLink } = sendActivationEmail.mock.calls[0][0];
     const url = new URL(actionLink);
 
     expect(url.origin).toBe(new URL(APP_URL).origin);
     expect(url.searchParams.get("token_hash")).toBe("hashed-token-abc");
     expect(url.searchParams.get("type")).toBe("recovery");
     expect(url.searchParams.get("email")).toBe(VALID_BODY.email);
-    expect(sendWelcomeEmail).toHaveBeenCalledWith({
+    expect(sendActivationEmail).toHaveBeenCalledWith({
       email: VALID_BODY.email,
       firstName: VALID_BODY.first_name,
       nickname: VALID_BODY.nickname,
       actionLink: expectedActivationLink({ tokenHash: "hashed-token-abc", email: VALID_BODY.email }),
+      reason: "signup",
     });
   });
 
@@ -238,7 +271,7 @@ describe("con permisos válidos", () => {
       status: 200,
       payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de activación." },
     });
-    expect(sendWelcomeEmail).not.toHaveBeenCalled();
+    expect(sendActivationEmail).not.toHaveBeenCalled();
   });
 
   it("no bloquea la creación si falta APP_URL — no hay base para construir el enlace de activación", async () => {
@@ -251,7 +284,7 @@ describe("con permisos válidos", () => {
       status: 200,
       payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de activación." },
     });
-    expect(sendWelcomeEmail).not.toHaveBeenCalled();
+    expect(sendActivationEmail).not.toHaveBeenCalled();
   });
 
   it("no bloquea la creación si generateLink no devuelve hashed_token", async () => {
@@ -264,12 +297,12 @@ describe("con permisos válidos", () => {
       status: 200,
       payload: { user_id: "new-user-1", email_sent: false, email_error: "No se pudo generar el enlace de activación." },
     });
-    expect(sendWelcomeEmail).not.toHaveBeenCalled();
+    expect(sendActivationEmail).not.toHaveBeenCalled();
   });
 
   it("no bloquea la creación si falla el envío del email — la cuenta ya existe, y devuelve la URL de activación igualmente para probar el flujo a mano", async () => {
     createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
-    sendWelcomeEmail.mockResolvedValue({ sent: false, error: "No se pudo enviar el email de bienvenida." });
+    sendActivationEmail.mockResolvedValue({ sent: false, error: "No se pudo enviar el email de bienvenida." });
 
     const result = await handleCreateUser(request());
 
@@ -284,9 +317,9 @@ describe("con permisos válidos", () => {
     });
   });
 
-  it("no bloquea la creación ni deja email_sent:true si sendWelcomeEmail lanza una excepción inesperada", async () => {
+  it("no bloquea la creación ni deja email_sent:true si sendActivationEmail lanza una excepción inesperada", async () => {
     createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
-    sendWelcomeEmail.mockRejectedValue(new Error("boom"));
+    sendActivationEmail.mockRejectedValue(new Error("boom"));
 
     const result = await handleCreateUser(request());
 

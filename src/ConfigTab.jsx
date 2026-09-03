@@ -1,17 +1,37 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { motion } from "motion/react";
+import { useState, useMemo, useEffect, useRef, Fragment } from "react";
+import { useTranslation } from "react-i18next";
+import { motion, useAnimationControls } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
-  CreditCard, Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck,
+  Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2,
 } from "lucide-react";
 import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate } from "./shared";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle } from "./shared";
 import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
+import i18n from "./i18n";
 import RatesTab from "./RatesTab";
+import DatasetsSection from "./DatasetsSection";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
+
+// Backlog: "Animación de salida completa en UserDetailSheet/CreateUserSheet/
+// ActivationLinkPanel" — las 3 hojas las MONTABA/DESMONTABA por completo su
+// padre ({cond && <Hoja/>}), así que Motion nunca llegaba a terminar la
+// transición de salida (React desmonta el árbol entero antes de que
+// AnimatePresence pueda animar el cierre). El patrón correcto (ya probado en
+// MovementSheet.jsx) es mantener la hoja siempre montada y pasarle `open`
+// como prop — pero eso significa que, en el instante de cerrar, el propio
+// padre ya ha puesto a null el dato real (el usuario, el enlace) mientras
+// la animación de salida SIGUE en pantalla un momento más. useRetained
+// recuerda el último valor no-nulo para que la hoja no se quede en blanco
+// a mitad de esa animación.
+function useRetained(value) {
+  const ref = useRef(value);
+  if (value != null) ref.current = value;
+  return ref.current;
+}
 
 // Mensaje determinista para las 4 acciones de gestión de usuarios: cada
 // handler (server/users/*.js) usa 403 EXCLUSIVAMENTE para "quien llama no
@@ -29,7 +49,7 @@ function actionErrorMessage(res, payload, { forbidden, fallback }) {
 
 /**
  * Tabla CRUD genérica reutilizada por las secciones de Configuración
- * (Escuelas, Cursos, Tipos de pago, Estados de pago, Monedas). Crear y
+ * (Escuelas, Cursos, Estados de pago, Monedas). Crear y
  * editar comparten la misma hoja inferior (FAB + hoja, ver CLAUDE.md
  * convención #3 y RatesTab/MovementSheet) en vez de un formulario fijo o
  * una edición en línea — hasta el addendum de 2026-08-29 (ver
@@ -40,7 +60,8 @@ function actionErrorMessage(res, payload, { forbidden, fallback }) {
  * la sección en sí lo muestra ya la cabecera del menú de Configuración,
  * no hace falta repetirlo aquí dentro.
  */
-function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false }) {
+function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false, description, defaultLabel }) {
+  const { t } = useTranslation("config");
   const emptyForm = Object.fromEntries(fields.map((f) => [f.key, f.type === "color" ? "#0E7C7B" : ""]));
   const [form, setForm] = useState(emptyForm);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -74,14 +95,14 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
     try {
       if (editingRow) {
         await table.updateRow(editingRow[pkField], form);
-        toast?.success("Cambios guardados");
+        toast?.success(t("crudTable.cambiosGuardados"));
       } else {
         await table.insertRow(form);
-        toast?.success("Añadido correctamente");
+        toast?.success(t("crudTable.anadidoCorrectamente"));
       }
       closeSheet();
     } catch {
-      toast?.error("No se pudo guardar. Inténtalo de nuevo.");
+      toast?.error(t("crudTable.noSePudoGuardar"));
     }
   };
 
@@ -93,7 +114,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
     try {
       await table.updateRow(pk, patch);
     } catch {
-      toast?.error("No se pudo guardar el cambio.");
+      toast?.error(t("crudTable.noSePudoGuardarCambio"));
     }
   };
 
@@ -103,25 +124,26 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
       type="color"
       value={row[f.key]}
       onChange={(e) => updateLive(row[pkField], { [f.key]: e.target.value })}
-      title="Cambiar color"
+      title={t("crudTable.cambiarColor")}
       className="h-9 w-11 shrink-0 cursor-pointer rounded border border-gray-200"
     />
   );
 
   return (
     <div className="space-y-3 pb-16">
+      {description && <p className="text-xs text-gray-400">{description}</p>}
       {(searchable || (pullDefaultOut && defaultRow)) && (
         <div className="space-y-3">
           {searchable && (
             <div className="relative">
               <Search size={14} className="pointer-events-none absolute left-3 top-3.5 text-gray-400" aria-hidden="true" />
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar..." aria-label="Buscar" className={`${inputCls} w-full pl-9`} />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("crudTable.buscarPlaceholder")} aria-label={t("crudTable.buscarAria")} className={`${inputCls} w-full pl-9`} />
             </div>
           )}
           {pullDefaultOut && defaultRow && (
             <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2.5">
               <Star size={14} className="shrink-0 text-amber-500" fill="currentColor" aria-hidden="true" />
-              <span className="shrink-0 text-xs font-medium text-amber-700">Favorita</span>
+              <span className="shrink-0 text-xs font-medium text-amber-700">{defaultLabel || t("crudTable.favorita")}</span>
               {fields.map((f) => (
                 f.type === "color"
                   ? renderColorField(defaultRow, f)
@@ -147,7 +169,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
                 );
               })}
               {hasDefault && (
-                <button onClick={() => table.setDefault(pk)} title="Marcar como predeterminado" aria-label="Marcar como predeterminado"
+                <button onClick={() => table.setDefault(pk)} title={t("crudTable.marcarPredeterminado")} aria-label={t("crudTable.marcarPredeterminado")}
                   className={`-m-2 flex min-h-11 min-w-11 items-center justify-center rounded p-2 ${row.is_default ? "text-amber-500" : "text-gray-300 hover:text-amber-400"}`}>
                   <Star size={15} fill={row.is_default ? "currentColor" : "none"} aria-hidden="true" />
                 </button>
@@ -155,7 +177,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
               <RowMenu
                 onEdit={() => openEditSheet(row)}
                 onDelete={() => table.deleteRow(pk)}
-                itemLabel={row.name ? `"${row.name}"` : "este elemento"}
+                itemLabel={row.name ? `"${row.name}"` : t("crudTable.esteElemento")}
                 deleteDisabled={isProtected}
                 // Sin esto, borrar el estado predeterminado deja el catálogo
                 // sin ningún is_default=true — para Estados de pago eso no es
@@ -164,12 +186,12 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
                 // isPendingStatus, shared.jsx), así que perderlo rompe el
                 // bucket de pendientes/cobrados de toda la app, no solo el
                 // valor por defecto de un formulario.
-                deleteDisabledReason={isProtected ? 'Es el estado predeterminado (representa "pendiente") — marca otro como predeterminado antes de eliminar este' : undefined}
+                deleteDisabledReason={isProtected ? t("crudTable.estadoPredeterminadoRazon") : undefined}
               />
             </li>
           );
         })}
-        {filteredRows.length === 0 && <li className="px-4 py-6 text-center text-sm text-gray-400">Sin resultados.</li>}
+        {filteredRows.length === 0 && <li className="px-4 py-6 text-center text-sm text-gray-400">{t("crudTable.sinResultados")}</li>}
       </ul>
 
       <Fab onClick={openCreateSheet} label={createLabel} color={TEAL} />
@@ -177,7 +199,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
       <Sheet open={sheetOpen} onClose={closeSheet}>
         <div className="mb-1 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-800">{editingRow ? (editLabel || createLabel) : createLabel}</h3>
-          <button onClick={closeSheet} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+          <button onClick={closeSheet} aria-label={t("crudTable.cerrar")} className="text-gray-400"><X size={19} /></button>
         </div>
         <div className="mt-2 flex flex-wrap items-end gap-2.5">
           {fields.map((f) => (
@@ -200,7 +222,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
           className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"
           style={{ backgroundColor: TEAL }}
         >
-          {editingRow ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />} Guardar
+          {editingRow ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />} {t("crudTable.guardar")}
         </button>
       </Sheet>
     </div>
@@ -217,9 +239,10 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
 // navegación (pestaña + botón de "+ Nuevo"), no el de los tipos de
 // movimiento dentro de Mi trabajo.
 function SectionColors({ navSections }) {
+  const { t } = useTranslation("config");
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <p className="mb-3 text-xs text-gray-400">Usados en la barra de navegación y en los botones de crear registro de cada área.</p>
+      <p className="mb-3 text-xs text-gray-400">{t("sectionColors.descripcion")}</p>
       <ul className="space-y-1">
         {navSections.rows.map((s) => (
           <li key={s.key} className="flex items-center gap-2 rounded-md bg-gray-50 px-3 py-1.5 text-sm">
@@ -242,6 +265,7 @@ function SectionColors({ navSections }) {
 const ICON_OPTIONS = ["Waves", "Anchor", "Sailboat", "LifeBuoy", "Fish", "Compass"];
 
 function GeneralSettings({ appConfig }) {
+  const { t } = useTranslation("config");
   const row = appConfig.rows[0];
   const toast = useToast();
   if (!row) return null;
@@ -249,16 +273,16 @@ function GeneralSettings({ appConfig }) {
   const setIcon = async (name) => {
     try {
       await appConfig.updateRow(true, { logo_icon: name });
-      toast?.success("Icono actualizado");
+      toast?.success(t("generalSettings.iconoActualizado"));
     } catch {
-      toast?.error("No se pudo guardar. Inténtalo de nuevo.");
+      toast?.error(t("generalSettings.noSePudoGuardar"));
     }
   };
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <h3 className="mb-1 text-sm font-semibold text-gray-800">Icono de carga</h3>
-      <p className="mb-3 text-xs text-gray-400">Se usa en la animación de "cargando" de toda la app. Cuando tengáis el logo oficial de Ocean Flow, avisadme y lo sustituyo por el icono real en vez de esta lista.</p>
+      <h3 className="mb-1 text-sm font-semibold text-gray-800">{t("generalSettings.iconoCarga")}</h3>
+      <p className="mb-3 text-xs text-gray-400">{t("generalSettings.descripcion")}</p>
       <div className="mb-4 flex flex-wrap gap-2">
         {ICON_OPTIONS.map((name) => (
           <button
@@ -273,7 +297,49 @@ function GeneralSettings({ appConfig }) {
       </div>
       <div className="flex items-center gap-3 rounded-md bg-gray-50 p-4">
         <AppLoading iconName={row.logo_icon} color={TEAL} size={32} />
-        <span className="text-xs text-gray-400">Vista previa</span>
+        <span className="text-xs text-gray-400">{t("generalSettings.vistaPrevia")}</span>
+      </div>
+
+      <hr className="my-4 border-gray-100" />
+
+      <ExternalRegistrationSetting appConfig={appConfig} row={row} />
+    </div>
+  );
+}
+
+// Registro externo (ADR-0023) — off por defecto en cualquier instalación.
+// Encendido, "Regístrate" aparece en el login y cualquiera puede darse de
+// alta él mismo (mismo mecanismo que el alta hecha por un superadmin,
+// solo que autoservicio — ver server/users/externalRegister.js). El
+// endpoint público ya comprueba este mismo flag en cada petición, así que
+// este switch es la única fuente de verdad — nunca hay una vía que lo
+// esquive.
+function ExternalRegistrationSetting({ appConfig, row }) {
+  const { t } = useTranslation("config");
+  const toast = useToast();
+  const [saving, setSaving] = useState(false);
+  const enabled = !!row.allow_external_registration;
+
+  const toggle = async () => {
+    setSaving(true);
+    try {
+      await appConfig.updateRow(true, { allow_external_registration: !enabled });
+      toast?.success(enabled ? t("externalRegistration.desactivado") : t("externalRegistration.activado"));
+    } catch {
+      toast?.error(t("externalRegistration.noSePudoGuardar"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-800">{t("externalRegistration.titulo")}</h3>
+          <p className="mt-0.5 text-xs text-gray-400">{t("externalRegistration.descripcion")}</p>
+        </div>
+        <BooleanToggle checked={enabled} onChange={toggle} disabled={saving} ariaLabel={t("externalRegistration.titulo")} />
       </div>
     </div>
   );
@@ -295,18 +361,19 @@ function GeneralSettings({ appConfig }) {
 //   esta pantalla) — nunca recibe onChange, así que siempre cae en la rama
 //   de solo lectura de abajo.
 function RoleCheckbox({ checked, label, locked = false, onChange }) {
+  const { t } = useTranslation("config");
   const editable = !locked && !!onChange;
   return (
     <span
       className="inline-flex items-center gap-1"
-      title={locked ? `${label} — rol de sistema protegido, no editable` : label}
+      title={locked ? t("roleCheckbox.rolProtegido", { label }) : label}
     >
       <input
         type="checkbox"
         checked={!!checked}
         disabled={!editable}
         onChange={editable ? onChange : undefined}
-        aria-label={`${label}: ${checked ? "sí" : "no"}`}
+        aria-label={t("roleCheckbox.etiquetaAria", { label, value: checked ? t("roleCheckbox.si") : t("roleCheckbox.no") })}
         className={`h-4 w-4 shrink-0 rounded border-gray-300 disabled:opacity-100 ${editable ? "cursor-pointer" : "cursor-not-allowed"}`}
         style={{ accentColor: checked ? (locked ? SUN : GREEN) : undefined }}
       />
@@ -329,10 +396,15 @@ function userStatus(active, activatedAt) {
   return "activo";
 }
 
+// label se resuelve en render vía t(`userStatus.${status}`) (namespace "config").
 const STATUS_META = {
-  activo: { label: "Activo", cls: "bg-emerald-50 text-emerald-700", dot: "#10B981" },
-  pendiente: { label: "Pendiente", cls: "bg-amber-50 text-amber-700", dot: "#D97706" },
-  desactivado: { label: "Desactivado", cls: "bg-gray-100 text-gray-500", dot: "#9CA3AF" },
+  activo: { cls: "bg-emerald-50 text-emerald-700", dot: "#10B981" },
+  pendiente: { cls: "bg-amber-50 text-amber-700", dot: "#D97706" },
+  // text-gray-600, no -500 (Bloque 11, accesibilidad): gray-500 sobre
+  // gray-100 da ~4.4:1 de contraste, justo por debajo del 4.5:1 mínimo
+  // AA para texto normal (12px, no es "texto grande") — comprobado con la
+  // fórmula de contraste relativo de WCAG. gray-600 sube a ~6.9:1.
+  desactivado: { cls: "bg-gray-100 text-gray-600", dot: "#9CA3AF" },
 };
 
 // Badge de solo lectura — cualquier admin puede VERLO, cambiarlo es cosa
@@ -345,11 +417,12 @@ const STATUS_META = {
 // se mantiene (nunca solo color, que no llega a quien no distingue bien
 // los colores ni a un lector de pantalla), el punto es el atajo visual.
 function StatusBadge({ status }) {
+  const { t } = useTranslation("config");
   const meta = STATUS_META[status] || STATUS_META.desactivado;
   return (
     <span className={`inline-flex min-h-6 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.cls}`}>
       <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: meta.dot }} aria-hidden="true" />
-      {meta.label}
+      {t(`userStatus.${status in STATUS_META ? status : "desactivado"}`)}
     </span>
   );
 }
@@ -362,8 +435,9 @@ function StatusBadge({ status }) {
 // Shield (contorno) para admin — mismo icono base, distinción por "nivel
 // de relleno" en vez de dos formas distintas sin relación visual entre sí.
 function RoleIcon({ isAdmin, isSuperadmin }) {
-  if (isSuperadmin) return <ShieldCheck size={14} className="shrink-0" style={{ color: SUN }} role="img" aria-label="Superadmin" />;
-  if (isAdmin) return <Shield size={14} className="shrink-0" style={{ color: NAVY }} role="img" aria-label="Administrador" />;
+  const { t } = useTranslation("config");
+  if (isSuperadmin) return <ShieldCheck size={14} className="shrink-0" style={{ color: SUN }} role="img" aria-label={t("roleIcon.superadmin")} />;
+  if (isAdmin) return <Shield size={14} className="shrink-0" style={{ color: NAVY }} role="img" aria-label={t("roleIcon.admin")} />;
   return null;
 }
 
@@ -377,32 +451,13 @@ function RoleIcon({ isAdmin, isSuperadmin }) {
 // pendiente de activación sigue sin poder entrar hasta completar el
 // enlace, el switch solo refleja el baneo, la pastilla de al lado matiza
 // el resto.
-function BooleanToggle({ checked, onChange, disabled, ariaLabel, color = TEAL }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={ariaLabel}
-      disabled={disabled}
-      onClick={onChange}
-      className="relative -m-2 flex shrink-0 items-center justify-center p-2 disabled:cursor-not-allowed disabled:opacity-40"
-      style={{ minHeight: 44, minWidth: 44 }}
-    >
-      <span className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors" style={{ backgroundColor: checked ? color : "#D1D5DB" }}>
-        <span
-          className="inline-block h-5 w-5 rounded-full bg-white shadow transition-transform"
-          style={{ transform: checked ? "translateX(20px)" : "translateX(2px)" }}
-        />
-      </span>
-    </button>
-  );
-}
-
 // Fecha + hora, para "último login real" — una fecha sola no basta para
 // distinguir "hace 5 minutos" de "hace 20 horas" el mismo día.
-function shortDateTime(iso) {
-  return iso ? new Date(iso).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" }) : "Nunca";
+// neverLabel: la pantalla llamadora resuelve la traducción de "Nunca" con
+// t("userStatus.nunca") (namespace "config") — esta función es pura, fuera
+// de cualquier componente, no puede usar useTranslation() directamente.
+function shortDateTime(iso, neverLabel) {
+  return iso ? new Date(iso).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" }) : neverLabel;
 }
 
 // Rediseño 2026-08-29: la tabla con scroll lateral (9 columnas) se
@@ -415,15 +470,12 @@ function shortDateTime(iso) {
 // UserDetailSheet, al tocar la fila.
 //
 // "Fecha de desactivación" (pedida explícitamente, "fecha de baja" en la
-// petición original): no existe hoy ninguna columna que registre CUÁNDO se
-// desactivó una cuenta — `banned_until` (Supabase Auth) guarda cuándo
-// TERMINARÍA el baneo, no cuándo empezó, así que no sirve para derivarla.
-// Añadirla requeriría una columna nueva (`profiles.deactivated_at`) — un
-// cambio de esquema real que las reglas del proyecto piden proponer aparte
-// antes de implementar (ver ADR de esta sesión). Mientras tanto, para una
-// cuenta desactivada se muestra explícitamente "fecha no registrada
-// todavía" en vez de omitir el dato en silencio — dejar claro que es un
-// hueco real, no un olvido.
+// petición original; también en docs/BACKLOG.md desde 2026-08-29):
+// implementada en el Bloque 11 (2026-09-01) — profiles.deactivated_at,
+// escrita por setUserActive.js al desactivar y limpiada a null por
+// regenerateActivationLink.js/regeneratePassword.js al reactivar (ver
+// schema.sql). `banned_until` (Supabase Auth) no servía para derivarla:
+// guarda cuándo TERMINARÍA el baneo, no cuándo empezó.
 // Arrastrar una fila de Usuarios hacia la izquierda revela "Eliminar"
 // detrás — un atajo ADICIONAL, no un segundo mecanismo de borrado: tocar
 // el botón revelado llama al mismo `onDelete` (el `requestDelete` ya
@@ -435,22 +487,35 @@ function shortDateTime(iso) {
 // pierde la posibilidad de eliminar por no poder arrastrar. Con
 // `prefers-reduced-motion`, el arrastre se desactiva del todo y solo
 // queda ese camino sin gestos.
+const SWIPE_SPRING = { type: "spring", stiffness: 500, damping: 40 };
+
 function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
+  const { t } = useTranslation("config");
   const [open, setOpen] = useState(false);
   const reduced = usePrefersReducedMotion();
+  // controls, no solo el prop `animate` ligado a `open`: si se arrastra
+  // poco (por debajo del umbral) y se suelta, `open` no cambia de valor
+  // (false -> false), así que un `animate={{x: open ? -80 : 0}}` ligado
+  // solo al estado no dispara ninguna animación nueva — Motion compara el
+  // OBJETIVO, no la posición visual real tras soltar, y la fila se queda
+  // a mitad de camino de donde se soltó el dedo, sin volver a cerrarse.
+  // Bug real reportado por el usuario. Llamar a controls.start(...)
+  // explícitamente en onDragEnd fuerza el snap siempre, cambie o no el
+  // estado.
+  const controls = useAnimationControls();
   if (reduced) return children;
   return (
     <div className="relative overflow-hidden">
       <div className="absolute inset-y-0 right-0 w-20" style={{ backgroundColor: CORAL }}>
         <button
-          onClick={() => { setOpen(false); onDelete(); }}
+          onClick={() => { setOpen(false); controls.start({ x: 0, transition: SWIPE_SPRING }); onDelete(); }}
           aria-label={deleteLabel}
           tabIndex={open ? 0 : -1}
           aria-hidden={!open}
           className="flex h-full w-full flex-col items-center justify-center gap-0.5 text-white"
         >
           <Trash2 size={18} aria-hidden="true" />
-          <span className="text-[10px] font-medium">Eliminar</span>
+          <span className="text-[10px] font-medium">{t("swipeToDelete.eliminar")}</span>
         </button>
       </div>
       <motion.div
@@ -458,9 +523,13 @@ function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
         dragConstraints={{ left: -80, right: 0 }}
         dragElastic={0.08}
         dragMomentum={false}
-        animate={{ x: open ? -80 : 0 }}
-        transition={{ type: "spring", stiffness: 500, damping: 40 }}
-        onDragEnd={(_, info) => setOpen(info.offset.x < -40)}
+        animate={controls}
+        initial={{ x: 0 }}
+        onDragEnd={(_, info) => {
+          const shouldOpen = info.offset.x < -40;
+          setOpen(shouldOpen);
+          controls.start({ x: shouldOpen ? -80 : 0, transition: SWIPE_SPRING });
+        }}
         className="relative bg-white"
       >
         {children}
@@ -469,7 +538,8 @@ function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
   );
 }
 
-function UserListRow({ user, status, onOpen }) {
+function UserListRow({ user, status, lastSignInAt, deactivatedAt, onOpen }) {
+  const { t } = useTranslation("config");
   return (
     <button
       onClick={() => onOpen(user.user_id)}
@@ -491,8 +561,13 @@ function UserListRow({ user, status, onOpen }) {
         </p>
       </div>
       <div className="shrink-0 text-right text-xs text-gray-400">
-        <div>Alta: {shortDate(user.created_at)}</div>
-        {status === "desactivado" && <div className="mt-0.5 italic">Baja: fecha no registrada aún</div>}
+        {/* Último acceso en vez de fecha de alta (pedido explícito del
+            usuario) — "cuándo se dio de alta" dice poco de si la cuenta
+            sigue viva; "cuándo entró por última vez" sí. */}
+        <div>{t("userListRow.ultimoAcceso", { date: shortDateTime(lastSignInAt, t("userStatus.nunca")) })}</div>
+        {status === "desactivado" && (
+          <div className="mt-0.5 italic">{t("userListRow.baja", { date: deactivatedAt ? shortDate(deactivatedAt) : t("userListRow.fechaNoRegistrada") })}</div>
+        )}
       </div>
       <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />
     </button>
@@ -516,15 +591,38 @@ function UserListRow({ user, status, onOpen }) {
 // de interacción (EditActions, Field, feedback por toast) sin forzar una
 // estructura de pantalla que no pinta nada en este caso.
 function UserDetailSheet({
-  user, status, lastSignInAt, currentUserId, viewerIsSuperadmin, actionBusy,
+  open, user: userProp, status: statusProp, lastSignInAt: lastSignInAtProp, deactivatedAt: deactivatedAtProp,
+  currentUserId, viewerIsSuperadmin, actionBusy,
   onClose, onRequestToggleAdmin, onRequestToggleActive, onRequestRegenerateLink,
   onRequestRegeneratePassword, onRequestDelete, onSaveProfile,
 }) {
+  const { t } = useTranslation("config");
+  // Retenidos juntos (mismo snapshot) porque están relacionados entre sí —
+  // ver useRetained arriba. Antes de la primera apertura no hay nada que
+  // retener todavía, la hoja no debe montar ningún contenido real. Los
+  // props llegan con sufijo *Prop porque el resto del render de abajo
+  // sigue usando los nombres cortos (user/status/...) tal cual, ahora
+  // apuntando al snapshot retenido — ver el shadowing explícito más abajo.
+  const snapshot = useRetained(userProp ? { user: userProp, status: statusProp, lastSignInAt: lastSignInAtProp, deactivatedAt: deactivatedAtProp } : null);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ first_name: "", last_name: "", nickname: "" });
+  // Cierra siempre sin edición pendiente — reabrir (el mismo usuario u
+  // otro distinto) debe partir en blanco, igual que antes cuando cada
+  // apertura remontaba el componente desde cero. Todos los hooks van ANTES
+  // del "return null" de abajo (nunca condicionales) — reglas de hooks.
+  useEffect(() => {
+    if (!open) setEditingProfile(false);
+  }, [open]);
+
+  if (!snapshot) return null;
+  // Shadowing intencionado: el resto del render de abajo ya usa
+  // user/status/lastSignInAt/deactivatedAt tal cual (sin tocar), ahora
+  // apuntando al snapshot retenido en vez de a los props crudos — así no
+  // hace falta renombrar cada referencia en todo el cuerpo del componente.
+  const { user, status, lastSignInAt, deactivatedAt } = snapshot;
   const editable = viewerIsSuperadmin && user.user_id !== currentUserId && !user.is_superadmin;
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "—";
 
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({ first_name: user.first_name || "", last_name: user.last_name || "", nickname: user.nickname || "" });
   const startEditProfile = () => {
     setProfileForm({ first_name: user.first_name || "", last_name: user.last_name || "", nickname: user.nickname || "" });
     setEditingProfile(true);
@@ -535,23 +633,23 @@ function UserDetailSheet({
   };
 
   return (
-    <Sheet open onClose={onClose}>
+    <Sheet open={open} onClose={onClose}>
       <div className="mb-1 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-800">{user.nickname}</h3>
-        <button onClick={onClose} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+        <button onClick={onClose} aria-label={t("userDetailSheet.cerrar")} className="text-gray-400"><X size={19} /></button>
       </div>
 
       {editingProfile ? (
           <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50/60 p-3">
             <div className="grid grid-cols-2 gap-2">
-              <Field label="Nombre">
+              <Field label={t("userDetailSheet.nombre")}>
                 <input value={profileForm.first_name} onChange={(e) => setProfileForm({ ...profileForm, first_name: e.target.value })} className={`${inputCls} w-full`} />
               </Field>
-              <Field label="Apellidos">
+              <Field label={t("userDetailSheet.apellidos")}>
                 <input value={profileForm.last_name} onChange={(e) => setProfileForm({ ...profileForm, last_name: e.target.value })} className={`${inputCls} w-full`} />
               </Field>
               <div className="col-span-2">
-                <Field label="Nickname">
+                <Field label={t("userDetailSheet.nickname")}>
                   <input value={profileForm.nickname} onChange={(e) => setProfileForm({ ...profileForm, nickname: e.target.value })} className={`${inputCls} w-full`} />
                 </Field>
               </div>
@@ -561,30 +659,32 @@ function UserDetailSheet({
         ) : (
           <div className="space-y-2.5 rounded-lg border border-gray-200 bg-gray-50/60 p-3 text-sm">
             <div className="flex items-start justify-between gap-3">
-              <span className="shrink-0 text-xs text-gray-400">Nombre</span>
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.nombre")}</span>
               <span className="truncate text-right text-gray-700">{fullName}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="shrink-0 text-xs text-gray-400">Email</span>
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.email")}</span>
               <span className="truncate text-right text-gray-700">{user.email || "—"}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="shrink-0 text-xs text-gray-400">Alta</span>
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.altaLabel")}</span>
               <span className="text-gray-700">{shortDate(user.created_at)}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="shrink-0 text-xs text-gray-400">Último acceso</span>
-              <span className="text-gray-700">{shortDateTime(lastSignInAt)}</span>
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.ultimoAcceso")}</span>
+              <span className="text-gray-700">{shortDateTime(lastSignInAt, t("userStatus.nunca"))}</span>
             </div>
             {status === "desactivado" && (
               <div className="flex items-center justify-between gap-3">
-                <span className="shrink-0 text-xs text-gray-400">Baja</span>
-                <span className="italic text-gray-400">fecha no registrada aún</span>
+                <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.baja")}</span>
+                <span className={deactivatedAt ? "text-gray-700" : "italic text-gray-400"}>
+                  {deactivatedAt ? shortDateTime(deactivatedAt, t("userStatus.nunca")) : t("userDetailSheet.fechaNoRegistrada")}
+                </span>
               </div>
             )}
             {editable && (
               <button onClick={startEditProfile} className="flex min-h-9 items-center gap-1 text-xs font-semibold" style={{ color: TEAL }}>
-                <Pencil size={13} aria-hidden="true" /> Editar datos
+                <Pencil size={13} aria-hidden="true" /> {t("userDetailSheet.editarDatos")}
               </button>
             )}
           </div>
@@ -593,31 +693,31 @@ function UserDetailSheet({
         <div className="mt-3 space-y-3 rounded-lg border border-gray-200 p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-500">Estado</span>
+              <span className="text-xs font-medium text-gray-500">{t("userDetailSheet.estado")}</span>
               <StatusBadge status={status} />
             </div>
             <BooleanToggle
               checked={status !== "desactivado"}
               disabled={!editable || actionBusy}
-              ariaLabel={status === "desactivado" ? "Activar usuario" : "Desactivar usuario"}
+              ariaLabel={status === "desactivado" ? t("userDetailSheet.activarUsuario") : t("userDetailSheet.desactivarUsuario")}
               onChange={() => (status === "desactivado" ? onRequestRegenerateLink(user) : onRequestToggleActive(user))}
             />
           </div>
           {status === "pendiente" && editable && (
             <p className="text-xs text-gray-400">
-              Pendiente de que la persona abra el enlace y cree su contraseña.{" "}
+              {t("userDetailSheet.pendienteTexto")}{" "}
               <button onClick={() => onRequestRegenerateLink(user)} disabled={actionBusy} className="font-semibold underline disabled:opacity-40" style={{ color: TEAL }}>
-                Regenerar enlace
+                {t("userDetailSheet.regenerarEnlace")}
               </button>
             </p>
           )}
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Admin</span>
-            <RoleCheckbox checked={user.is_admin} label="Admin" onChange={editable ? () => onRequestToggleAdmin(user) : undefined} />
+            <span className="text-xs font-medium text-gray-500">{t("userDetailSheet.admin")}</span>
+            <RoleCheckbox checked={user.is_admin} label={t("userDetailSheet.admin")} onChange={editable ? () => onRequestToggleAdmin(user) : undefined} />
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Superadmin</span>
-            <RoleCheckbox checked={user.is_superadmin} label="Superadmin" locked />
+            <span className="text-xs font-medium text-gray-500">{t("userDetailSheet.superadmin")}</span>
+            <RoleCheckbox checked={user.is_superadmin} label={t("userDetailSheet.superadmin")} locked />
           </div>
         </div>
 
@@ -627,7 +727,7 @@ function UserDetailSheet({
             disabled={actionBusy}
             className="mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 text-sm font-medium text-gray-600 disabled:opacity-40"
           >
-            <KeyRound size={15} aria-hidden="true" /> Regenerar contraseña
+            <KeyRound size={15} aria-hidden="true" /> {t("userDetailSheet.regenerarContrasena")}
           </button>
         )}
 
@@ -636,7 +736,7 @@ function UserDetailSheet({
             onClick={() => onRequestDelete(user)}
             className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-red-200 text-sm font-medium text-red-600"
           >
-            <Trash2 size={15} aria-hidden="true" /> Eliminar usuario
+            <Trash2 size={15} aria-hidden="true" /> {t("userDetailSheet.eliminarUsuario")}
           </button>
         )}
     </Sheet>
@@ -648,24 +748,38 @@ function UserDetailSheet({
 // enlace de un solo uso que copiar/compartir). Mismo patrón visual que el
 // fallback de email de CreateUserSheet (justo abajo), extraído aquí porque
 // ahora lo usan varias acciones, no solo el alta.
-function ActivationLinkPanel({ title, description, link, onClose }) {
+// hideMockEmailButton (Release V1, 2026-09-02): el botón "simular envío"
+// de más abajo solo tiene sentido cuando ESTE panel es el fallback de un
+// intento real de enviar un email (alta, regenerar enlace/contraseña) —
+// generar un enlace de invitación nunca intenta enviar ningún email, así
+// que mostrarlo ahí sería confuso, no solo temporalmente irrelevante.
+function ActivationLinkPanel({ open, title: titleProp, description: descriptionProp, link: linkProp, onClose, hideMockEmailButton: hideMockEmailButtonProp = false }) {
+  const { t } = useTranslation("config");
   const toast = useToast();
+  // Ver useRetained arriba — sin esto, el panel se quedaría en blanco a
+  // mitad de la animación de cierre (el padre ya pone `linkPanel` a null
+  // en el instante de cerrar). El resto del render sigue usando los
+  // nombres cortos (title/description/link/hideMockEmailButton), ahora
+  // apuntando al snapshot retenido — ver el shadowing explícito abajo.
+  const snapshot = useRetained(linkProp ? { title: titleProp, description: descriptionProp, link: linkProp, hideMockEmailButton: hideMockEmailButtonProp } : null);
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(link);
-      toast?.success("Enlace copiado");
+      await navigator.clipboard.writeText(snapshot.link);
+      toast?.success(t("activationLinkPanel.enlaceCopiado"));
     } catch {
-      toast?.error("No se pudo copiar. Selecciónalo a mano.");
+      toast?.error(t("activationLinkPanel.noSePudoCopiar"));
     }
   };
+  if (!snapshot) return null;
+  const { title, description, link, hideMockEmailButton } = snapshot;
   return (
     // z-50: puede convivir con UserDetailSheet (z-40) todavía abierta detrás
     // (p. ej. tras "Regenerar enlace" desde el propio detalle) — debe
     // quedar por encima, no reemplazarla.
-    <Sheet open onClose={onClose} zIndexClass="z-50">
+    <Sheet open={open} onClose={onClose} zIndexClass="z-50">
       <div className="mb-1 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-        <button onClick={onClose} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+        <button onClick={onClose} aria-label={t("activationLinkPanel.cerrar")} className="text-gray-400"><X size={19} /></button>
       </div>
       <p className="mb-2 text-xs text-gray-500">{description}</p>
       <p className="mb-3 break-all rounded-md bg-gray-50 px-3 py-2 font-mono text-xs text-gray-700">{link}</p>
@@ -675,12 +789,25 @@ function ActivationLinkPanel({ title, description, link, onClose }) {
           className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white"
           style={{ backgroundColor: TEAL }}
         >
-          <Copy size={15} aria-hidden="true" /> Copiar enlace
+          <Copy size={15} aria-hidden="true" /> {t("activationLinkPanel.copiarEnlace")}
         </button>
         <button onClick={onClose} className="flex min-h-11 flex-1 items-center justify-center rounded-md border border-gray-200 text-sm font-medium text-gray-600">
-          Cerrar
+          {t("activationLinkPanel.cerrar")}
         </button>
       </div>
+      {/* TEMPORAL — quitar en cuanto el dominio de Resend esté verificado
+          (ver conversación 2026-08-31). Simula en la UI que el email SÍ se
+          envió, sin llamar a Resend — solo para probar visualmente ese
+          camino mientras el dominio sigue sin verificar. No toca ningún
+          estado real del backend. */}
+      {!hideMockEmailButton && (
+        <button
+          onClick={() => { toast?.success(t("activationLinkPanel.mockEmailEnviado")); onClose(); }}
+          className="mt-2 flex min-h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 text-xs font-medium text-amber-700"
+        >
+          {t("activationLinkPanel.simularEnvioMock")}
+        </button>
+      )}
     </Sheet>
   );
 }
@@ -692,14 +819,33 @@ function ActivationLinkPanel({ title, description, link, onClose }) {
 // ningún otro hook de useSupabaseTable ya cargado en App.jsx.
 const emptyUserForm = { email: "", first_name: "", last_name: "", nickname: "" };
 
+// Idioma de la cuenta nueva — mismo patrón que el desplegable de dataset
+// justo abajo: el estado guarda la ETIQUETA visible (siempre en su propio
+// idioma nativo, "Español"/"English", nunca traducida — igual que el
+// selector de idioma no traduce los nombres de los idiomas en ningún sitio
+// de la app) y se resuelve al código real ("es"/"en") en el submit. Por
+// defecto, el idioma actual de la interfaz de quien está rellenando el
+// formulario (el superadmin) — más natural que forzar "es" siempre: si el
+// superadmin ya está trabajando en inglés, es razonable asumir que la
+// cuenta que está creando también lo estará, y sigue siendo un desplegable
+// editable con un solo toque si no es el caso.
+const LANGUAGE_OPTIONS = [
+  { code: "es", label: "Español" },
+  { code: "en", label: "English" },
+];
+
 // Hoja de creación de usuario — solo visible/usable para superadmin (ver
-// UsersDirectory). Llama a la función Netlify create-user, que es la única
-// pieza con permiso para invocar el Admin API de Supabase Auth.
-function CreateUserSheet({ onClose, onCreated }) {
+// UsersDirectory). Llama a la función serverless create-user, que es la
+// única pieza con permiso para invocar el Admin API de Supabase Auth.
+function CreateUserSheet({ open, onClose, onCreated }) {
+  const { t } = useTranslation("config");
   const [form, setForm] = useState(emptyUserForm);
   const [datasetLabel, setDatasetLabel] = useState("");
   const [datasets, setDatasets] = useState([]);
   const [datasetsLoading, setDatasetsLoading] = useState(true);
+  const [languageLabel, setLanguageLabel] = useState(
+    LANGUAGE_OPTIONS.find((l) => l.code === i18n.language)?.label || LANGUAGE_OPTIONS[0].label
+  );
   const [submitting, setSubmitting] = useState(false);
   // Fallback operativo MVP. Permite activar usuarios manualmente si el
   // proveedor de email falla. Revisar/eliminar antes de producción pública.
@@ -709,55 +855,73 @@ function CreateUserSheet({ onClose, onCreated }) {
   const [emailFailure, setEmailFailure] = useState(null);
   const toast = useToast();
 
+  // La hoja ahora se queda siempre montada (ver useRetained arriba y el
+  // punto de montaje más abajo, "Animación de salida completa") — sin
+  // este reset, reabrirla tras cancelar/completar un alta anterior
+  // mostraría el formulario a medio rellenar de la vez anterior, en vez
+  // de partir en blanco como pasaba antes (remontaje completo cada vez).
+  useEffect(() => {
+    if (!open) return;
+    setForm(emptyUserForm);
+    setDatasetLabel("");
+    setLanguageLabel(LANGUAGE_OPTIONS.find((l) => l.code === i18n.language)?.label || LANGUAGE_OPTIONS[0].label);
+    setEmailFailure(null);
+  }, [open]);
+
   // setup_datasets tiene una policy propia de solo-lectura para admins
   // (ver schema.sql) pensada exactamente para este desplegable — nunca se
   // lee aquí setup_dataset_schools/activities/rates/..., esas siguen
   // cerradas y solo accesibles vía clone_setup_dataset() en el servidor.
+  // Condicionado a `open` (antes bastaba con montar el componente, porque
+  // el padre solo lo montaba al abrir la hoja): al quedarse siempre
+  // montada para animar bien el cierre, sin este guard se pediría el
+  // listado de datasets en cuanto se abre "Usuarios", aunque nunca se
+  // llegue a pulsar "Crear usuario".
   useEffect(() => {
+    if (!open) return;
     let active = true;
+    setDatasetsLoading(true);
     supabase.from("setup_datasets").select("key, label").order("label").then(({ data, error }) => {
       if (!active) return;
       if (error) {
         console.error(error);
-        toast?.error("No se pudieron cargar los datasets disponibles.");
+        toast?.error(t("createUserSheet.noSePudieronCargarDatasets"));
       } else {
         setDatasets(data || []);
       }
       setDatasetsLoading(false);
     });
     return () => { active = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toast/t no deben re-disparar el fetch
+  }, [open]);
 
   const submit = async () => {
     const dataset = datasets.find((d) => d.label === datasetLabel);
     if (!form.email || !form.nickname || !dataset) {
-      toast?.error("Email, nickname y dataset inicial son obligatorios.");
+      toast?.error(t("createUserSheet.camposObligatorios"));
       return;
     }
+    const languageCode = LANGUAGE_OPTIONS.find((l) => l.label === languageLabel)?.code;
     setSubmitting(true);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
-      // Ruta única e independiente del proveedor: en Vercel /api/create-user
-      // ya sirve directamente api/create-user.js; en Netlify, netlify.toml
-      // reescribe esta misma ruta hacia la función en netlify/functions/.
       const res = await fetch("/api/create-user", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...form, dataset_key: dataset.key }),
+        body: JSON.stringify({ ...form, dataset_key: dataset.key, language: languageCode }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede crear usuarios.", fallback: "No se pudo crear el usuario." }));
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("createUserSheet.soloSuperadminCrear"), fallback: t("createUserSheet.noSePudoCrear") }));
       if (payload.action_link) {
-        toast?.success("Usuario creado (el email no se pudo enviar)");
+        toast?.success(t("createUserSheet.usuarioCreadoSinEmail"));
         setEmailFailure(payload);
       } else {
-        toast?.success("Usuario creado correctamente");
+        toast?.success(t("createUserSheet.usuarioCreadoCorrectamente"));
         onCreated();
       }
     } catch (err) {
-      toast?.error(err.message || "No se pudo crear el usuario.");
+      toast?.error(err.message || t("createUserSheet.noSePudoCrear"));
     } finally {
       setSubmitting(false);
     }
@@ -766,9 +930,9 @@ function CreateUserSheet({ onClose, onCreated }) {
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(emailFailure.action_link);
-      toast?.success("Enlace copiado");
+      toast?.success(t("createUserSheet.enlaceCopiado"));
     } catch {
-      toast?.error("No se pudo copiar. Selecciónalo a mano.");
+      toast?.error(t("createUserSheet.noSePudoCopiar"));
     }
   };
 
@@ -776,13 +940,13 @@ function CreateUserSheet({ onClose, onCreated }) {
   // proveedor de email falla. Revisar/eliminar antes de producción pública.
   if (emailFailure) {
     return (
-      <Sheet open onClose={onCreated}>
+      <Sheet open={open} onClose={onCreated}>
         <div className="mb-1 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-amber-700">No se pudo enviar el email</h3>
-          <button onClick={onCreated} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+          <h3 className="text-sm font-semibold text-amber-700">{t("createUserSheet.noSePudoEnviarEmailTitulo")}</h3>
+          <button onClick={onCreated} aria-label={t("createUserSheet.cerrar")} className="text-gray-400"><X size={19} /></button>
         </div>
         <p className="mb-2 text-xs text-gray-500">
-          No se pudo enviar el email de activación. Puedes compartir este enlace manualmente.
+          {t("createUserSheet.noSePudoEnviarEmailDescripcion")}
         </p>
         <p className="mb-3 break-all rounded-md bg-gray-50 px-3 py-2 font-mono text-xs text-gray-700">{emailFailure.action_link}</p>
         <div className="flex gap-2">
@@ -791,55 +955,78 @@ function CreateUserSheet({ onClose, onCreated }) {
             className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-medium text-white"
             style={{ backgroundColor: TEAL }}
           >
-            Copiar enlace
+            {t("createUserSheet.copiarEnlace")}
           </button>
           <button
             onClick={onCreated}
             className="flex min-h-11 flex-1 items-center justify-center rounded-md border border-gray-200 text-sm font-medium text-gray-600"
           >
-            Cerrar
+            {t("createUserSheet.cerrar")}
           </button>
         </div>
+        {/* TEMPORAL — quitar en cuanto el dominio de Resend esté verificado
+            (ver conversación 2026-08-31). Simula en la UI que el email SÍ se
+            envió, sin llamar a Resend — solo para probar visualmente ese
+            camino mientras el dominio sigue sin verificar. No toca ningún
+            estado real del backend. */}
+        <button
+          onClick={() => { toast?.success(t("createUserSheet.mockUsuarioCreado")); onCreated(); }}
+          className="mt-2 flex min-h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 text-xs font-medium text-amber-700"
+        >
+          {t("createUserSheet.simularEnvioMock")}
+        </button>
       </Sheet>
     );
   }
 
   return (
-    <Sheet open onClose={() => !submitting && onClose()}>
+    <Sheet open={open} onClose={() => !submitting && onClose()}>
       <div className="mb-1 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-800">Crear usuario</h3>
-        <button onClick={() => !submitting && onClose()} aria-label="Cerrar" className="text-gray-400"><X size={19} /></button>
+        <h3 className="text-sm font-semibold text-gray-800">{t("createUserSheet.titulo")}</h3>
+        <button onClick={() => !submitting && onClose()} aria-label={t("createUserSheet.cerrar")} className="text-gray-400"><X size={19} /></button>
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2">
         <div className="col-span-2">
-          <Field label="Email">
+          <Field label={t("createUserSheet.email")}>
             <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={`${inputCls} w-full`} />
           </Field>
         </div>
-        <Field label="Nombre">
+        <Field label={t("createUserSheet.nombre")}>
           <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} className={`${inputCls} w-full`} />
         </Field>
-        <Field label="Apellidos">
+        <Field label={t("createUserSheet.apellidos")}>
           <input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className={`${inputCls} w-full`} />
         </Field>
-        <Field label="Nickname">
+        <Field label={t("createUserSheet.nickname")}>
           <input value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} className={`${inputCls} w-full`} />
         </Field>
         <div className="col-span-2">
-          <Field label="Dataset inicial">
+          <Field label={t("createUserSheet.datasetInicial")}>
             <Select
               value={datasetLabel}
               onChange={setDatasetLabel}
               options={datasets.map((d) => d.label)}
-              placeholder={datasetsLoading ? "Cargando…" : datasets.length ? "Selecciona un dataset" : "No hay datasets disponibles"}
+              placeholder={datasetsLoading ? t("createUserSheet.cargando") : datasets.length ? t("createUserSheet.seleccionaDataset") : t("createUserSheet.sinDatasets")}
+            />
+          </Field>
+        </div>
+        <div className="col-span-2">
+          {/* Idioma de la cuenta nueva — encargo explícito de Fase 2
+              (multidioma): añadir el idioma preferido también al alta de
+              usuario por admin, no solo al registro. Ver LANGUAGE_OPTIONS
+              arriba para el porqué del valor por defecto. */}
+          <Field label={t("createUserSheet.idioma")}>
+            <Select
+              value={languageLabel}
+              onChange={setLanguageLabel}
+              options={LANGUAGE_OPTIONS.map((l) => l.label)}
             />
           </Field>
         </div>
       </div>
 
       <p className="mt-2 text-xs text-gray-400">
-        El dataset elegido carga automáticamente escuelas, cursos, tarifas, comisiones y catálogos de pago iniciales.
-        La persona recibirá un email con un enlace de un solo uso para entrar y crear su propia contraseña.
+        {t("createUserSheet.nota")}
       </p>
 
       <button
@@ -848,17 +1035,19 @@ function CreateUserSheet({ onClose, onCreated }) {
         className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
         style={{ backgroundColor: TEAL }}
       >
-        <UserPlus size={16} /> {submitting ? "Creando…" : "Crear usuario"}
+        <UserPlus size={16} /> {submitting ? t("createUserSheet.creando") : t("createUserSheet.crearUsuario")}
       </button>
     </Sheet>
   );
 }
 
 function UsersDirectory({ profile }) {
+  const { t } = useTranslation("config");
   const [rows, setRows] = useState([]);
   const [activeByUser, setActiveByUser] = useState({});
   const [lastSignInByUser, setLastSignInByUser] = useState({});
   const [activatedAtByUser, setActivatedAtByUser] = useState({});
+  const [deactivatedAtByUser, setDeactivatedAtByUser] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [query, setQuery] = useState("");
@@ -875,6 +1064,7 @@ function UsersDirectory({ profile }) {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [linkPanel, setLinkPanel] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [generatingInvitation, setGeneratingInvitation] = useState(false);
   const toast = useToast();
 
   const applyResult = ({ data, error }) => {
@@ -883,8 +1073,8 @@ function UsersDirectory({ profile }) {
       // porque el motivo casi siempre es diagnosticable desde aquí mismo:
       // función inexistente en la BD todavía, falta de grant, etc.
       console.error(error);
-      setLoadError(error.message || "Error desconocido");
-      toast?.error("No se pudo cargar el listado de usuarios.");
+      setLoadError(error.message || t("usersDirectory.errorDesconocido"));
+      toast?.error(t("usersDirectory.noSePudoCargarListado"));
     } else {
       setLoadError(null);
       setRows(data || []);
@@ -916,18 +1106,21 @@ function UsersDirectory({ profile }) {
     }
   };
 
-  // activated_at no está en admin_list_profiles() — se consulta aparte
-  // (RLS de profiles ya permite a un admin leer cualquier fila, ver ADR de
-  // esta sesión) y se cruza por user_id en el cliente, para no tocar
-  // schema.sql por este requisito. Igual de silencioso que loadActiveStatus:
-  // un fallo aquí no debe tumbar el resto del directorio.
-  const loadActivatedAt = async () => {
+  // activated_at/deactivated_at no están en admin_list_profiles() — se
+  // consultan aparte (RLS de profiles ya permite a un admin leer
+  // cualquier fila, ver ADR de esta sesión) y se cruzan por user_id en el
+  // cliente, para no tocar esa función por este requisito. Igual de
+  // silencioso que loadActiveStatus: un fallo aquí no debe tumbar el
+  // resto del directorio.
+  const loadAccountDates = async () => {
     try {
-      const { data, error } = await supabase.from("profiles").select("user_id, activated_at");
+      const { data, error } = await supabase.from("profiles").select("user_id, activated_at, deactivated_at");
       if (error) throw error;
-      const map = {};
-      (data || []).forEach((r) => { map[r.user_id] = r.activated_at; });
-      setActivatedAtByUser(map);
+      const activatedMap = {};
+      const deactivatedMap = {};
+      (data || []).forEach((r) => { activatedMap[r.user_id] = r.activated_at; deactivatedMap[r.user_id] = r.deactivated_at; });
+      setActivatedAtByUser(activatedMap);
+      setDeactivatedAtByUser(deactivatedMap);
     } catch (err) {
       console.error(err);
     }
@@ -937,7 +1130,7 @@ function UsersDirectory({ profile }) {
     let active = true;
     supabase.rpc("admin_list_profiles").then((result) => { if (active) applyResult(result); });
     loadActiveStatus();
-    loadActivatedAt();
+    loadAccountDates();
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -949,7 +1142,7 @@ function UsersDirectory({ profile }) {
     setLoading(true);
     supabase.rpc("admin_list_profiles").then(applyResult);
     loadActiveStatus();
-    loadActivatedAt();
+    loadAccountDates();
   };
 
   const filteredRows = useMemo(() => {
@@ -993,12 +1186,12 @@ function UsersDirectory({ profile }) {
         body: JSON.stringify({ target_user_id: pendingToggle.user_id, is_admin: pendingToggle.nextValue }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede cambiar el rol de admin de otra cuenta.", fallback: "No se pudo actualizar el rol." }));
-      toast?.success("Rol actualizado correctamente");
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminRol"), fallback: t("usersDirectory.noSePudoActualizarRol") }));
+      toast?.success(t("usersDirectory.rolActualizado"));
       setPendingToggle(null);
       reload();
     } catch (err) {
-      toast?.error(err.message || "No se pudo actualizar el rol.");
+      toast?.error(err.message || t("usersDirectory.noSePudoActualizarRol"));
     } finally {
       setSubmitting(false);
     }
@@ -1026,8 +1219,8 @@ function UsersDirectory({ profile }) {
         body: JSON.stringify({ target_user_id: pendingDelete.user_id }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede eliminar usuarios.", fallback: "No se pudo eliminar el usuario." }));
-      toast?.success("Usuario eliminado");
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminEliminar"), fallback: t("usersDirectory.noSePudoEliminar") }));
+      toast?.success(t("usersDirectory.usuarioEliminado"));
       setPendingDelete(null);
       setOpenUserId(null); // la cuenta ya no existe — no queda nada que mostrar en la hoja de detalle
       // Quita la fila del estado local en vez de recargar todo el listado
@@ -1038,7 +1231,7 @@ function UsersDirectory({ profile }) {
       // desapareció; no hace falta otro viaje de red para confirmarlo.
       setRows((prev) => prev.filter((r) => r.user_id !== pendingDelete.user_id));
     } catch (err) {
-      toast?.error(err.message || "No se pudo eliminar el usuario.");
+      toast?.error(err.message || t("usersDirectory.noSePudoEliminar"));
     } finally {
       setSubmitting(false);
     }
@@ -1067,13 +1260,13 @@ function UsersDirectory({ profile }) {
         body: JSON.stringify({ target_user_id: pendingToggleActive.user_id, active: false }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede activar o desactivar usuarios.", fallback: "No se pudo actualizar el estado." }));
-      toast?.success("Usuario desactivado");
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminActivar"), fallback: t("usersDirectory.noSePudoActualizarEstado") }));
+      toast?.success(t("usersDirectory.usuarioDesactivado"));
       setPendingToggleActive(null);
       loadActiveStatus();
-      loadActivatedAt();
+      loadAccountDates();
     } catch (err) {
-      toast?.error(err.message || "No se pudo actualizar el estado.");
+      toast?.error(err.message || t("usersDirectory.noSePudoActualizarEstado"));
     } finally {
       setSubmitting(false);
     }
@@ -1102,17 +1295,25 @@ function UsersDirectory({ profile }) {
         body: JSON.stringify({ target_user_id: pendingRegenerateLink.user_id }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede activar cuentas o regenerar su enlace de acceso.", fallback: "No se pudo generar el enlace." }));
-      setLinkPanel({
-        title: "Enlace de activación generado",
-        description: `Comparte este enlace con ${pendingRegenerateLink.nickname}. Seguirá apareciendo como "Pendiente" hasta que lo use para crear su contraseña.`,
-        link: payload.action_link,
-      });
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminEnlace"), fallback: t("usersDirectory.noSePudoGenerarEnlace") }));
+      // El backend ya intenta enviar el email automáticamente — el panel con
+      // el enlace para copiar solo aparece si el envío falla (mismo patrón
+      // que CreateUserSheet más abajo).
+      if (payload.action_link) {
+        toast?.success(t("usersDirectory.enlaceGeneradoSinEmail", { nickname: pendingRegenerateLink.nickname }));
+        setLinkPanel({
+          title: t("usersDirectory.enlaceActivacionTitulo"),
+          description: t("usersDirectory.enlaceActivacionDescripcion", { nickname: pendingRegenerateLink.nickname }),
+          link: payload.action_link,
+        });
+      } else {
+        toast?.success(t("usersDirectory.emailActivacionEnviado", { nickname: pendingRegenerateLink.nickname }));
+      }
       setPendingRegenerateLink(null);
       loadActiveStatus();
-      loadActivatedAt();
+      loadAccountDates();
     } catch (err) {
-      toast?.error(err.message || "No se pudo generar el enlace.");
+      toast?.error(err.message || t("usersDirectory.noSePudoGenerarEnlace"));
     } finally {
       setSubmitting(false);
     }
@@ -1141,19 +1342,56 @@ function UsersDirectory({ profile }) {
         body: JSON.stringify({ target_user_id: pendingRegeneratePassword.user_id }),
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede regenerar la contraseña de otra cuenta.", fallback: "No se pudo regenerar la contraseña." }));
-      setLinkPanel({
-        title: "Contraseña regenerada",
-        description: `La contraseña anterior de ${pendingRegeneratePassword.nickname} ya no es válida. Comparte este enlace para que cree una nueva — la cuenta vuelve a "Pendiente" hasta entonces.`,
-        link: payload.action_link,
-      });
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminContrasena"), fallback: t("usersDirectory.noSePudoRegenerarContrasena") }));
+      // El backend ya intenta enviar el email automáticamente — el panel con
+      // el enlace para copiar solo aparece si el envío falla (mismo patrón
+      // que CreateUserSheet más abajo).
+      if (payload.action_link) {
+        toast?.success(t("usersDirectory.contrasenaRegeneradaSinEmail", { nickname: pendingRegeneratePassword.nickname }));
+        setLinkPanel({
+          title: t("usersDirectory.contrasenaRegeneradaTitulo"),
+          description: t("usersDirectory.contrasenaRegeneradaDescripcion", { nickname: pendingRegeneratePassword.nickname }),
+          link: payload.action_link,
+        });
+      } else {
+        toast?.success(t("usersDirectory.contrasenaRegeneradaEmailEnviado", { nickname: pendingRegeneratePassword.nickname }));
+      }
       setPendingRegeneratePassword(null);
       loadActiveStatus();
-      loadActivatedAt();
+      loadAccountDates();
     } catch (err) {
-      toast?.error(err.message || "No se pudo regenerar la contraseña.");
+      toast?.error(err.message || t("usersDirectory.noSePudoRegenerarContrasena"));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Enlace de invitación (Release V1, 2026-09-02) — permite autoregistrarse
+  // aunque app_config.allow_external_registration esté desactivado, sin
+  // dar de alta la cuenta directamente (a diferencia de "Crear usuario", el
+  // superadmin no elige nombre/email/dataset aquí; el resultado se muestra
+  // en el mismo ActivationLinkPanel que ya usan regenerar enlace/contraseña).
+  const generateInvitationLink = async () => {
+    setGeneratingInvitation(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const res = await fetch("/api/generate-invitation-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminInvitacion"), fallback: t("usersDirectory.noSePudoGenerarInvitacion") }));
+      setLinkPanel({
+        title: t("usersDirectory.enlaceInvitacionTitulo"),
+        description: t("usersDirectory.enlaceInvitacionDescripcion"),
+        link: payload.invitation_link,
+        hideMockEmailButton: true,
+      });
+    } catch (err) {
+      toast?.error(err.message || t("usersDirectory.noSePudoGenerarInvitacion"));
+    } finally {
+      setGeneratingInvitation(false);
     }
   };
 
@@ -1163,7 +1401,7 @@ function UsersDirectory({ profile }) {
   const saveProfile = async (user, form) => {
     const nickname = form.nickname.trim();
     if (!nickname) {
-      toast?.error("El nickname no puede quedar vacío.");
+      toast?.error(t("usersDirectory.nicknameVacio"));
       return false;
     }
     try {
@@ -1172,12 +1410,12 @@ function UsersDirectory({ profile }) {
         .update({ first_name: form.first_name.trim() || null, last_name: form.last_name.trim() || null, nickname })
         .eq("user_id", user.user_id);
       if (error) throw error;
-      toast?.success("Datos actualizados");
+      toast?.success(t("usersDirectory.datosActualizados"));
       reload();
       return true;
     } catch (err) {
       console.error(err);
-      toast?.error("No se pudieron guardar los cambios.");
+      toast?.error(t("usersDirectory.noSePudieronGuardarCambios"));
       return false;
     }
   };
@@ -1190,8 +1428,8 @@ function UsersDirectory({ profile }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar..."
-            aria-label="Buscar usuarios"
+            placeholder={t("usersDirectory.buscarPlaceholder")}
+            aria-label={t("usersDirectory.buscarAria")}
             className={`${inputCls} w-full min-w-[9rem] pl-8`}
           />
         </div>
@@ -1202,19 +1440,33 @@ function UsersDirectory({ profile }) {
             className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-white"
             style={{ backgroundColor: TEAL }}
           >
-            <UserPlus size={15} aria-hidden="true" /> Crear usuario
+            <UserPlus size={15} aria-hidden="true" /> {t("usersDirectory.crearUsuario")}
+          </button>
+        )}
+        {/* Enlace de invitación (Release V1, 2026-09-02) — junto a "Crear
+            usuario", mismo nivel de permiso. Deja autoregistrarse a quien lo
+            reciba aunque el registro externo general esté cerrado, sin que
+            el superadmin tenga que rellenar los datos de la cuenta a mano. */}
+        {profile?.is_superadmin && (
+          <button
+            onClick={generateInvitationLink}
+            disabled={generatingInvitation}
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-gray-200 px-3 text-sm font-medium text-gray-600 disabled:opacity-50"
+          >
+            {generatingInvitation ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Link2 size={15} aria-hidden="true" />}
+            {t("usersDirectory.generarInvitacion")}
           </button>
         )}
       </div>
       {loadError && (
         <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">
-          No se pudo cargar el listado: {loadError}
+          {t("usersDirectory.errorCargarListado", { error: loadError })}
         </p>
       )}
       {loading ? (
-        <p className="px-3 py-6 text-center text-sm text-gray-400">Cargando usuarios…</p>
+        <p className="px-3 py-6 text-center text-sm text-gray-400">{t("usersDirectory.cargandoUsuarios")}</p>
       ) : filteredRows.length === 0 ? (
-        <p className="px-3 py-6 text-center text-sm text-gray-400">Sin resultados.</p>
+        <p className="px-3 py-6 text-center text-sm text-gray-400">{t("usersDirectory.sinResultados")}</p>
       ) : (
         <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
           {filteredRows.map((p) => {
@@ -1222,6 +1474,8 @@ function UsersDirectory({ profile }) {
               <UserListRow
                 user={p}
                 status={userStatus(activeByUser[p.user_id] ?? true, activatedAtByUser[p.user_id])}
+                lastSignInAt={lastSignInByUser[p.user_id] ?? null}
+                deactivatedAt={deactivatedAtByUser[p.user_id]}
                 onOpen={setOpenUserId}
               />
             );
@@ -1229,7 +1483,7 @@ function UsersDirectory({ profile }) {
             return (
               <div key={p.user_id}>
                 {canDelete
-                  ? <SwipeToDeleteRow onDelete={() => requestDelete(p)} deleteLabel={`Eliminar a ${p.nickname}`}>{row}</SwipeToDeleteRow>
+                  ? <SwipeToDeleteRow onDelete={() => requestDelete(p)} deleteLabel={t("swipeToDelete.eliminarA", { nickname: p.nickname })}>{row}</SwipeToDeleteRow>
                   : row}
               </div>
             );
@@ -1237,121 +1491,133 @@ function UsersDirectory({ profile }) {
         </div>
       )}
 
-      {sheetOpen && (
-        <CreateUserSheet
-          onClose={() => setSheetOpen(false)}
-          onCreated={() => { setSheetOpen(false); reload(); }}
-        />
-      )}
+      {/* Backlog: "Animación de salida completa" — las 3 hojas de abajo se
+          quedan SIEMPRE montadas (nunca `{cond && <Hoja/>}`) y reciben
+          `open` como prop, para que Motion pueda terminar la animación de
+          cierre en vez de que React desmonte el árbol de golpe. Cada hoja
+          retiene su último contenido no-nulo mientras `open` es false
+          (ver useRetained), así que sigue siendo seguro pasarle un
+          `openUser`/`linkPanel` ya a null en ese instante. */}
+      <CreateUserSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onCreated={() => { setSheetOpen(false); reload(); }}
+      />
 
-      {openUser && (
-        <UserDetailSheet
-          user={openUser}
-          status={userStatus(activeByUser[openUser.user_id] ?? true, activatedAtByUser[openUser.user_id])}
-          lastSignInAt={lastSignInByUser[openUser.user_id] ?? null}
-          currentUserId={profile?.user_id}
-          viewerIsSuperadmin={!!profile?.is_superadmin}
-          actionBusy={submitting}
-          onClose={() => setOpenUserId(null)}
-          onRequestToggleAdmin={requestAdminToggle}
-          onRequestToggleActive={requestToggleActive}
-          onRequestRegenerateLink={requestRegenerateLink}
-          onRequestRegeneratePassword={requestRegeneratePassword}
-          onRequestDelete={requestDelete}
-          onSaveProfile={saveProfile}
-        />
-      )}
+      <UserDetailSheet
+        open={!!openUser}
+        user={openUser}
+        status={openUser ? userStatus(activeByUser[openUser.user_id] ?? true, activatedAtByUser[openUser.user_id]) : null}
+        lastSignInAt={openUser ? (lastSignInByUser[openUser.user_id] ?? null) : null}
+        deactivatedAt={openUser ? deactivatedAtByUser[openUser.user_id] : null}
+        currentUserId={profile?.user_id}
+        viewerIsSuperadmin={!!profile?.is_superadmin}
+        actionBusy={submitting}
+        onClose={() => setOpenUserId(null)}
+        onRequestToggleAdmin={requestAdminToggle}
+        onRequestToggleActive={requestToggleActive}
+        onRequestRegenerateLink={requestRegenerateLink}
+        onRequestRegeneratePassword={requestRegeneratePassword}
+        onRequestDelete={requestDelete}
+        onSaveProfile={saveProfile}
+      />
 
-      {linkPanel && (
-        <ActivationLinkPanel
-          title={linkPanel.title}
-          description={linkPanel.description}
-          link={linkPanel.link}
-          onClose={() => setLinkPanel(null)}
-        />
-      )}
+      <ActivationLinkPanel
+        open={!!linkPanel}
+        title={linkPanel?.title}
+        description={linkPanel?.description}
+        link={linkPanel?.link}
+        onClose={() => setLinkPanel(null)}
+        hideMockEmailButton={linkPanel?.hideMockEmailButton}
+      />
 
       <ConfirmDialog
         open={!!pendingToggle}
-        title="Cambiar rol de admin"
+        title={t("usersDirectory.cambiarRolAdminTitulo")}
         message={pendingToggle && (
           <>
-            Usuario: {pendingToggle.nickname}
+            {t("usersDirectory.usuarioLabel", { nickname: pendingToggle.nickname })}
             <br />
-            Admin: {pendingToggle.currentValue ? "Sí" : "No"} → {pendingToggle.nextValue ? "Sí" : "No"}
+            {t("usersDirectory.adminLabel", {
+              from: pendingToggle.currentValue ? t("roleCheckbox.si") : t("roleCheckbox.no"),
+              to: pendingToggle.nextValue ? t("roleCheckbox.si") : t("roleCheckbox.no"),
+            })}
           </>
         )}
         onConfirm={confirmAdminToggle}
         onCancel={cancelAdminToggle}
         loading={submitting}
-        confirmLabel="Confirmar"
+        confirmLabel={t("usersDirectory.confirmar")}
         danger={false}
       />
 
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Eliminar usuario"
+        title={t("usersDirectory.eliminarUsuarioTitulo")}
         message={pendingDelete && (
           <>
-            Se eliminará la cuenta de <strong>{pendingDelete.nickname}</strong> y todos sus datos
-            (escuelas, tarifas, movimientos...) de forma permanente. Esta acción no se puede deshacer.
+            {t("usersDirectory.eliminarUsuarioMensaje", { nickname: pendingDelete.nickname }).split(pendingDelete.nickname).map((part, i, arr) => (
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingDelete.nickname}</strong>}</Fragment>
+            ))}
             <br />
-            Si solo quieres revocarle el acceso conservando sus datos, usa "Desactivar" en su lugar.
+            {t("usersDirectory.eliminarUsuarioAlternativa")}
           </>
         )}
         onConfirm={confirmDelete}
         onCancel={cancelDelete}
         loading={submitting}
-        confirmLabel="Eliminar"
+        confirmLabel={t("usersDirectory.eliminar")}
         danger
       />
 
       <ConfirmDialog
         open={!!pendingToggleActive}
-        title="Desactivar usuario"
+        title={t("usersDirectory.desactivarUsuarioTitulo")}
         message={pendingToggleActive && (
           <>
-            <strong>{pendingToggleActive.nickname}</strong> dejará de poder iniciar sesión. Todos sus datos
-            (escuelas, tarifas, movimientos...) se conservan intactos — puedes reactivarlo cuando quieras
-            generándole un enlace de activación nuevo.
+            {t("usersDirectory.desactivarUsuarioMensaje", { nickname: pendingToggleActive.nickname }).split(pendingToggleActive.nickname).map((part, i, arr) => (
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingToggleActive.nickname}</strong>}</Fragment>
+            ))}
           </>
         )}
         onConfirm={confirmToggleActive}
         onCancel={cancelToggleActive}
         loading={submitting}
-        confirmLabel="Desactivar"
+        confirmLabel={t("usersDirectory.desactivar")}
         danger={false}
       />
 
       <ConfirmDialog
         open={!!pendingRegenerateLink}
-        title="Generar enlace de activación"
+        title={t("usersDirectory.generarEnlaceTitulo")}
         message={pendingRegenerateLink && (
           <>
-            Se generará un enlace nuevo de un solo uso para <strong>{pendingRegenerateLink.nickname}</strong>.
-            Cualquier enlace anterior deja de servir. La cuenta no gana acceso hasta que lo complete.
+            {t("usersDirectory.generarEnlaceMensaje", { nickname: pendingRegenerateLink.nickname }).split(pendingRegenerateLink.nickname).map((part, i, arr) => (
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingRegenerateLink.nickname}</strong>}</Fragment>
+            ))}
           </>
         )}
         onConfirm={confirmRegenerateLink}
         onCancel={cancelRegenerateLink}
         loading={submitting}
-        confirmLabel="Generar enlace"
+        confirmLabel={t("usersDirectory.generarEnlace")}
         danger={false}
       />
 
       <ConfirmDialog
         open={!!pendingRegeneratePassword}
-        title="Regenerar contraseña"
+        title={t("usersDirectory.regenerarContrasenaTitulo")}
         message={pendingRegeneratePassword && (
           <>
-            La contraseña actual de <strong>{pendingRegeneratePassword.nickname}</strong> dejará de funcionar de
-            inmediato. Deberá crear una nueva desde un enlace de activación nuevo — sus datos no se ven afectados.
+            {t("usersDirectory.regenerarContrasenaMensaje", { nickname: pendingRegeneratePassword.nickname }).split(pendingRegeneratePassword.nickname).map((part, i, arr) => (
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingRegeneratePassword.nickname}</strong>}</Fragment>
+            ))}
           </>
         )}
         onConfirm={confirmRegeneratePassword}
         onCancel={cancelRegeneratePassword}
         loading={submitting}
-        confirmLabel="Regenerar"
+        confirmLabel={t("usersDirectory.regenerar")}
         danger={false}
       />
     </div>
@@ -1379,18 +1645,45 @@ function UsersDirectory({ profile }) {
 // docs/BACKLOG.md: solo texto de UI, sin tocar props/variables internas
 // como `activities`/`activityColor` — esa es la fase 2, deliberadamente no
 // incluida en este cambio).
+// label/description se resuelven en render vía t(`sections.<i18nKey>.label`)
+// (namespace "config") — i18nKey es camelCase porque i18next usa "." como
+// separador de clave anidada, incompatible con los `key` con guiones de
+// abajo (identificadores de sección, no cambian).
 const BUSINESS_SECTIONS = [
-  { key: "escuelas", label: "Escuelas", icon: Building2, description: "Dónde impartes, con su color" },
-  { key: "cursos", label: "Cursos", icon: GraduationCap, description: "Qué impartes, con su color" },
-  { key: "tarifas", label: "Tarifas", icon: Coins, description: "Cuánto cobras por escuela y curso" },
+  { key: "escuelas", i18nKey: "escuelas", icon: Building2 },
+  { key: "cursos", i18nKey: "cursos", icon: GraduationCap },
+  { key: "tarifas", i18nKey: "tarifas", icon: Coins },
 ];
+// "Tipos de pago" retirado del menú 2026-09-02 (ADR-0003, pasos 1-2): el
+// concepto desaparece de la app — importe siempre es tarifa × personas
+// (rateCalc.js), sin excepciones que gestionar. La tabla payment_types
+// sigue existiendo en BD por ahora (columnas rates.payment_type/
+// commission_rates.payment_type con NOT NULL, escritas con el literal fijo
+// "Per Person" — ver RatesTab.jsx/MovementSheet.jsx); su DROP real es el
+// paso 3-5 de esa misma ADR, deliberadamente no hecho en este cambio
+// (solo frontend, sin migraciones).
+// Training Records fuera de Release V1 (decisión del usuario,
+// 2026-09-04, docs/RELEASE-V1-PROGRESS.md Fase 9): la tarjeta de acceso
+// desde Home y esta sección se retiran de la UI para este release —
+// TrainingRecordsTab.jsx, sus migraciones y sus tablas quedan intactos.
+// Reversible restaurando el HIDDEN_SECTIONS/allowedSectionKeys/
+// currentSectionI18nKey/render de antes de este commit.
 const ADMIN_SECTIONS = [
-  { key: "tipos-pago", label: "Tipos de pago", icon: CreditCard, description: "Por persona, por curso..." },
-  { key: "estados-pago", label: "Estados de pago", icon: Flag, description: "Pendiente, cobrado..." },
-  { key: "monedas", label: "Monedas", icon: DollarSign, description: "Catálogo disponible en toda la app" },
-  { key: "navegacion", label: "Colores de navegación", icon: Palette, description: "Identidad visual de cada área" },
-  { key: "ajustes", label: "Ajustes generales", icon: SlidersHorizontal, description: "Icono de carga de la app" },
-  { key: "usuarios", label: "Usuarios", icon: Users, description: "Cuentas con acceso a la app" },
+  { key: "estados-pago", i18nKey: "estadosPago", icon: Flag },
+  { key: "monedas", i18nKey: "monedas", icon: DollarSign },
+  { key: "navegacion", i18nKey: "navegacion", icon: Palette },
+  { key: "ajustes", i18nKey: "ajustes", icon: SlidersHorizontal },
+  { key: "usuarios", i18nKey: "usuarios", icon: Users },
+];
+// Exclusivo de superadmin — a diferencia de ADMIN_SECTIONS (visible a
+// cualquier admin), gestionar datasets iniciales es configuración de
+// infraestructura de la app, no una tarea de negocio del día a día (misma
+// decisión ya aplicada a los avisos de despliegue, ADR-0024). El gate real
+// vive en RLS (schema.sql: insert/update/delete de setup_datasets y sus 4
+// tablas hijas exigen is_superadmin(auth.uid())) — esto solo evita
+// mostrar una pantalla que un admin normal no podría usar.
+const SUPERADMIN_SECTIONS = [
+  { key: "datasets", i18nKey: "datasets", icon: Database },
 ];
 
 // Sub-navegación de Configuración persistida (feedback explícito
@@ -1407,13 +1700,23 @@ function readStoredSection() {
 export function clearStoredSection() {
   try { sessionStorage.removeItem(CONFIG_SECTION_KEY); } catch { /* no-op */ }
 }
+// Exportado para Home (Bloque 10): entrar directo a una sección de
+// Configuración desde fuera de este archivo sin duplicar la clave de
+// sessionStorage — se llama justo antes de navegar a la pestaña
+// "config" (ver App.jsx, onOpenTrainingRecords), para que el
+// `useState(() => readStoredSection())` de ConfigTab la recoja ya en su
+// primer render.
+export function setStoredSection(key) {
+  try { sessionStorage.setItem(CONFIG_SECTION_KEY, key); } catch { /* no-op */ }
+}
 
 function ConfigMenuGroup({ title, items, onSelect }) {
+  const { t } = useTranslation("config");
   return (
     <div>
       {title && <h2 className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{title}</h2>}
       <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
-        {items.map(({ key, label, icon: Icon, description }) => (
+        {items.map(({ key, i18nKey, icon: Icon }) => (
           <button
             key={key}
             onClick={() => onSelect(key)}
@@ -1423,8 +1726,8 @@ function ConfigMenuGroup({ title, items, onSelect }) {
               <Icon size={18} aria-hidden="true" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium text-gray-800">{label}</span>
-              <span className="block truncate text-xs text-gray-400">{description}</span>
+              <span className="block text-sm font-medium text-gray-800">{t(`sections.${i18nKey}.label`)}</span>
+              <span className="block truncate text-xs text-gray-400">{t(`sections.${i18nKey}.description`)}</span>
             </span>
             <ChevronRight size={16} className="shrink-0 text-gray-300" aria-hidden="true" />
           </button>
@@ -1434,15 +1737,17 @@ function ConfigMenuGroup({ title, items, onSelect }) {
   );
 }
 
-// schools / activities / currencies / paymentTypes / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
+// schools / activities / currencies / paymentStatuses / navSections / appConfig: hooks de useSupabaseTable
 // rates / commissionRates / worklog / comisiones: hooks que necesitan las secciones Tarifas y Pagos, embebidas aquí
 // profile: fila propia de profiles (useSession) — is_admin/is_superadmin deciden qué secciones se ven
 // onClose (opcional): cierra Configuración entera (mismo handler que la "X"
 // de la cabecera, ver App.jsx) — lo dispara el gesto de "atrás" cuando ya
 // estamos en el menú principal, sin ninguna sección abierta (ver backProps).
-export default function ConfigTab({ schools, activities, currencies, paymentTypes, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose }) {
+export default function ConfigTab({ schools, activities, currencies, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose }) {
+  const { t } = useTranslation("config");
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
-  const allowedSectionKeys = [...BUSINESS_SECTIONS, ...(isAdmin ? ADMIN_SECTIONS : [])].map((s) => s.key);
+  const isSuperadmin = !!profile?.is_superadmin;
+  const allowedSectionKeys = [...BUSINESS_SECTIONS, ...(isAdmin ? ADMIN_SECTIONS : []), ...(isSuperadmin ? SUPERADMIN_SECTIONS : [])].map((s) => s.key);
   const [section, setSectionState] = useState(() => {
     const stored = readStoredSection();
     return allowedSectionKeys.includes(stored) ? stored : null;
@@ -1453,7 +1758,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
     else clearStoredSection();
   };
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
-  const currentLabel = [...BUSINESS_SECTIONS, ...ADMIN_SECTIONS].find((s) => s.key === section)?.label;
+  const currentSectionI18nKey = [...BUSINESS_SECTIONS, ...ADMIN_SECTIONS, ...SUPERADMIN_SECTIONS].find((s) => s.key === section)?.i18nKey;
   // Deslizar hacia la derecha = "atrás", recursivo (feedback explícito
   // 2026-08-30: "no como una excepción, no como un truco, no como una
   // interacción aislada"): dentro de una sección, vuelve al menú; ya en el
@@ -1464,7 +1769,8 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
     return (
       <div className="space-y-5" {...backProps}>
         <ConfigMenuGroup items={BUSINESS_SECTIONS} onSelect={setSection} />
-        {isAdmin && <ConfigMenuGroup title="Administración" items={ADMIN_SECTIONS} onSelect={setSection} />}
+        {isAdmin && <ConfigMenuGroup title={t("menu.administracion")} items={ADMIN_SECTIONS} onSelect={setSection} />}
+        {isSuperadmin && <ConfigMenuGroup title={t("menu.superadmin")} items={SUPERADMIN_SECTIONS} onSelect={setSection} />}
       </div>
     );
   }
@@ -1476,39 +1782,54 @@ export default function ConfigTab({ schools, activities, currencies, paymentType
         className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium"
         style={{ color: TEAL }}
       >
-        <ChevronLeft size={18} aria-hidden="true" /> Configuración
+        <ChevronLeft size={18} aria-hidden="true" /> {t("menu.configuracion")}
       </button>
-      <h2 className="-mt-1 text-base font-semibold" style={{ color: NAVY }}>{currentLabel}</h2>
+      <h2 className="-mt-1 text-base font-semibold" style={{ color: NAVY }}>{currentSectionI18nKey && t(`sections.${currentSectionI18nKey}.label`)}</h2>
 
       {section === "escuelas" && (
-        <CrudTable createLabel="Nueva escuela" editLabel="Editar escuela" table={schools} hasDefault
-          fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
+        // colorizeText: mismo tratamiento que Cursos (lavado de cara
+        // 2026-09-03, pedido explícito del usuario: "el estilado no acaba
+        // de cuadrar 100% con el resto de Ocean Flow") — antes Escuelas
+        // tenía el nombre en gris neutro mientras Cursos, misma pantalla
+        // hermana con el mismo CrudTable, coloreaba el nombre con su
+        // propio color. Se unifica en vez de decidir cuál de las dos
+        // "estaba bien", porque las dos ya eran igual de válidas por
+        // separado — la inconsistencia estaba en que difirieran entre sí.
+        <CrudTable createLabel={t("crud.nuevaEscuela")} editLabel={t("crud.editarEscuela")} table={schools} hasDefault colorizeText
+          fields={[{ key: "name", label: t("crud.nombreCampo") }, { key: "color", label: t("crud.colorCampo"), type: "color", required: false }]} />
       )}
       {section === "cursos" && (
-        <CrudTable createLabel="Nuevo curso" editLabel="Editar curso" table={activities} hasDefault searchable pullDefaultOut colorizeText
-          fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
+        <CrudTable createLabel={t("crud.nuevoCurso")} editLabel={t("crud.editarCurso")} table={activities} hasDefault searchable pullDefaultOut colorizeText
+          fields={[{ key: "name", label: t("crud.nombreCampo") }, { key: "color", label: t("crud.colorCampo"), type: "color", required: false }]} />
       )}
       {section === "tarifas" && (
         <RatesTab
-          schools={schools} activities={activities} paymentTypes={paymentTypes} currencies={currencies}
+          schools={schools} activities={activities} currencies={currencies}
           rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
           accentColor={sectionColor("rates")}
         />
       )}
-      {isAdmin && section === "tipos-pago" && (
-        <CrudTable createLabel="Nuevo tipo de pago" editLabel="Editar tipo de pago" table={paymentTypes} hasDefault fields={[{ key: "name", label: "Nombre" }]} />
-      )}
       {isAdmin && section === "estados-pago" && (
-        <CrudTable createLabel="Nuevo estado de pago" editLabel="Editar estado de pago" table={paymentStatuses} hasDefault protectDefaultFromDelete
-          fields={[{ key: "name", label: "Nombre" }, { key: "color", label: "Color", type: "color", required: false }]} />
+        <CrudTable createLabel={t("crud.nuevoEstadoPago")} editLabel={t("crud.editarEstadoPago")} table={paymentStatuses} hasDefault protectDefaultFromDelete
+          fields={[{ key: "name", label: t("crud.nombreCampo") }, { key: "color", label: t("crud.colorCampo"), type: "color", required: false }]} />
       )}
       {isAdmin && section === "monedas" && (
-        <CrudTable createLabel="Nueva moneda" editLabel="Editar moneda" table={currencies} pkField="code" hasDefault searchable pullDefaultOut
-          fields={[{ key: "code", label: "Código (ej. EUR)" }, { key: "name", label: "Nombre" }, { key: "symbol", label: "Símbolo" }]} />
+        // description/defaultLabel: aclaración pedida por el usuario
+        // ("parece raro, hay dos tipos de moneda favorita") — la marcada
+        // aquí NO es una preferencia personal (esa vive en Mi perfil,
+        // localStorage, ADR-0007), es la moneda de RESPALDO de toda la
+        // app cuando un usuario todavía no ha elegido la suya. Antes esta
+        // pantalla reutilizaba la misma etiqueta genérica "Favorita" que
+        // Escuelas/Cursos/Estados de pago, sin ningún texto que explicara
+        // la diferencia — de ahí la sensación de dos conceptos mezclados.
+        <CrudTable createLabel={t("crud.nuevaMoneda")} editLabel={t("crud.editarMoneda")} table={currencies} pkField="code" hasDefault searchable pullDefaultOut
+          description={t("crud.monedasDescripcion")} defaultLabel={t("crud.monedaPorDefectoApp")}
+          fields={[{ key: "code", label: t("crud.codigoCampo") }, { key: "name", label: t("crud.nombreCampo") }, { key: "symbol", label: t("crud.simboloCampo") }]} />
       )}
       {isAdmin && section === "navegacion" && <SectionColors navSections={navSections} />}
       {isAdmin && section === "ajustes" && <GeneralSettings appConfig={appConfig} />}
       {isAdmin && section === "usuarios" && <UsersDirectory profile={profile} />}
+      {isSuperadmin && section === "datasets" && <DatasetsSection />}
     </div>
   );
 }

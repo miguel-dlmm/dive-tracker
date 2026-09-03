@@ -1,0 +1,105 @@
+{
+  "sections": {
+    "personalData": "Personal details",
+    "instructor": "Instructor details",
+    "favoriteCurrency": "Favorite currency",
+    "language": "Language",
+    "security": "Security",
+    "privacy": "Privacy"
+  },
+  "signOut": {
+    "button": "Sign out"
+  },
+  "avatar": {
+    "changeAvatar": "Change avatar",
+    "closeAvatarPicker": "Close avatar picker",
+    "colorLabel": "Color {{name}}",
+    "iconLabel": "Icon {{name}}",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "toastSuccess": "Avatar updated",
+    "toastError": "Couldn't save your avatar. Please try again."
+  },
+  "personalData": {
+    "nameLine": "Name:",
+    "nicknameLine": "Nickname:",
+    "professionalLine": "Professional:",
+    "edit": "Edit",
+    "nameLabel": "First name",
+    "lastNameLabel": "Last name",
+    "nicknameLabel": "Nickname",
+    "professionalLabel": "Professional",
+    "professionalPlaceholder": "Not set",
+    "nicknameAtError": "It can't contain \"@\".",
+    "save": "Save",
+    "saving": "Saving…",
+    "toastSuccess": "Profile updated",
+    "errors": {
+      "nicknameTaken": "That nickname is already taken.",
+      "nicknameAt": "The nickname can't contain \"@\".",
+      "generic": "Couldn't save. Please try again."
+    }
+  },
+  "instructor": {
+    "hint": "Used to auto-fill your Training Records — saved here once, not per device.",
+    "card": {
+      "role": "SSI Professional",
+      "roleWithLevel": "SSI {{level}}",
+      "noSignature": "No signature",
+      "signatureAlt": "{{name}}'s signature",
+      "initialsLabel": "Initials",
+      "numberLabel": "SSI PRO"
+    },
+    "signatureLabel": "Your signature",
+    "edit": "Edit",
+    "initialsLabel": "Initials",
+    "numberLabel": "SSI Pro number",
+    "save": "Save",
+    "saving": "Saving…",
+    "toastSuccess": "Instructor details updated",
+    "toastError": "Couldn't save your instructor details. Please try again."
+  },
+  "currency": {
+    "hint": "Used as the default currency for a course adjustment when there's no rate to determine it. Every other movement always uses its own rate's currency.",
+    "placeholder": "Not chosen yet — uses the app's default currency",
+    "toastSuccess": "Favorite currency updated"
+  },
+  "language": {
+    "placeholder": "Choose a language",
+    "toastSuccess": "Language updated",
+    "toastError": "Couldn't change the language. Please try again."
+  },
+  "password": {
+    "currentLabel": "Current password",
+    "newLabel": "New password",
+    "confirmLabel": "Confirm password",
+    "showCurrent": "Show current password",
+    "hideCurrent": "Hide current password",
+    "show": "Show password",
+    "hide": "Hide password",
+    "minLength": "At least 8 characters",
+    "matches": "Passwords match",
+    "submit": "Change password",
+    "toastSuccess": "Password updated",
+    "toastError": "Couldn't change the password. Please try again.",
+    "wrongCurrent": "Current password is incorrect."
+  },
+  "deleteAccount": {
+    "confirmWord": "CANCEL",
+    "description": "Deleting your account permanently removes your access and all your Ocean Flow data: schools, courses, rates, class log, commissions, and adjustments with colleagues. No copy is kept. This action can't be undone.",
+    "button": "Delete my account",
+    "confirmTitle": "Delete your account?",
+    "confirmMessage": "You're about to permanently delete the account \"{{nickname}}\" and all its data. This can't be undone.",
+    "continue": "Continue",
+    "finalCheckTitle": "One last check",
+    "typeWordPrefix": "Type",
+    "typeWordSuffix": "to confirm you want to permanently delete your account.",
+    "typeWordAriaLabel": "Type {{word}} to confirm",
+    "back": "Go back",
+    "deleteButton": "Delete account",
+    "toastSuccess": "Account deleted",
+    "genericError": "Couldn't delete the account. Please try again.",
+    "networkError": "Couldn't delete the account. Check your connection and try again."
+  }
+}

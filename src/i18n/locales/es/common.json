@@ -1,0 +1,82 @@
+{
+  "loading": { "defaultLabel": "Cargando" },
+  "movementTypes": {
+    "ganado": "Curso",
+    "comision": "Comisión",
+    "companeros": "Ajuste"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "Pendiente de cobrar",
+    "empty": "Nada pendiente",
+    "count_one": "{{count}} pago pendiente",
+    "count_other": "{{count}} pagos pendientes",
+    "addMovement": "Añadir movimiento"
+  },
+  "confirmDialog": { "cancel": "Cancelar", "defaultConfirmLabel": "Eliminar" },
+  "editActions": { "defaultSaveLabel": "Guardar", "cancel": "Cancelar" },
+  "deleteButton": {
+    "defaultLabel": "Eliminar",
+    "defaultItemLabel": "este elemento",
+    "deletedToast": "Eliminado",
+    "errorToast": "No se pudo eliminar. Inténtalo de nuevo.",
+    "confirmTitle": "¿Eliminar este registro?",
+    "confirmMessage": "Vas a eliminar {{item}}. Esta acción no se puede deshacer."
+  },
+  "field": { "hideHelp": "Ocultar ayuda", "help": "Ayuda" },
+  "calendar": {
+    "months": ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+    "weekdays": ["L", "M", "X", "J", "V", "S", "D"],
+    "prevMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "today": "Hoy"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "Fecha",
+    "defaultAriaLabel": "Elegir fecha",
+    "pickerAriaLabel": "Selector de fecha",
+    "dayAriaLabel": "{{day}} de {{month}}",
+    "today": "Hoy"
+  },
+  "dateRangePicker": {
+    "from": "Desde",
+    "to": "Hasta",
+    "fromAriaLabel": "Fecha desde",
+    "toAriaLabel": "Fecha hasta",
+    "pickerAriaLabel": "Selector de rango de fechas",
+    "chooseStart": "Elige la fecha de inicio",
+    "chooseEnd": "Elige la fecha de fin",
+    "chooseDate": "Elige una fecha",
+    "okFrom": "OK — solo desde {{date}}",
+    "presets": { "today": "Hoy", "thisWeek": "Esta semana", "thisMonth": "Este mes", "last30Days": "Últimos 30 días" }
+  },
+  "monthCalendar": {
+    "addOnDay": "Añadir movimiento el {{day}} de {{month}}",
+    "addOnDayToday": "Añadir movimiento el {{day}} de {{month}} (hoy)",
+    "dayToday": "{{day}} de {{month}} (hoy)",
+    "closeDayDetail": "Cerrar detalle del día",
+    "dayHeading": "Día {{day}} de {{month}}",
+    "generatedOnDay": "Generado el día",
+    "table": { "course": "Curso", "comment": "Comentario", "people": "Pers.", "amount": "Importe" }
+  },
+  "select": { "placeholder": "Selecciona..." },
+  "multiSelect": { "placeholder": "Todas", "clearSelection": "Limpiar selección", "selectedCount": "{{count}} seleccionadas" },
+  "searchSelect": { "placeholder": "Buscar...", "ariaLabel": "Buscar", "noResults": "Sin resultados" },
+  "currencySearchSelect": { "placeholder": "Buscar moneda..." },
+  "listFilterBar": {
+    "from": "Desde",
+    "to": "Hasta",
+    "school": "Escuela",
+    "activity": "Actividad",
+    "noLimit": "Sin límite",
+    "all": "Todas",
+    "clearFilters": "Limpiar filtros"
+  },
+  "rowMenu": { "moreActions": "Más acciones", "edit": "Editar", "delete": "Eliminar" },
+  "statusSwitch": { "ariaLabel": "Estado: {{value}}. Pulsa para pasar a {{next}}", "title": "{{value}} — clic para pasar a \"{{next}}\"" },
+  "signature": {
+    "opcional": "opcional",
+    "borrar": "Borrar",
+    "firmadoAria": "{{label}}: firmado",
+    "sinFirmarAria": "{{label}}: sin firmar"
+  }
+}

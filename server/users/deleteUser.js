@@ -17,7 +17,7 @@ import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig 
 // tanto tocar admin_list_profiles()), eliminar es una operación de una sola
 // vía que no necesita persistir ningún estado nuevo.
 //
-// Lógica de negocio pura, sin nada de Netlify ni de Vercel — mismo patrón
+// Lógica de negocio pura, sin nada de Vercel — mismo patrón
 // que createUser.js / updateAdminStatus.js: recibe una petición ya
 // normalizada ({ method, headers, body }) y devuelve una respuesta
 // normalizada ({ status, payload }).

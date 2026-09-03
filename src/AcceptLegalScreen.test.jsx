@@ -1,8 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import AcceptLegalScreen from "./AcceptLegalScreen";
-import { TITLE as PRIVACY_TITLE } from "./legal/privacyPolicy";
-import { TITLE as TERMS_TITLE } from "./legal/termsOfUse";
+
+// El título de cada documento ya no es una constante importable (Release
+// V1, Fase 2 — multidioma): vive en i18n/locales/*/auth.json. El idioma
+// por defecto en tests es "es" (ver vitest.setup.js), así que se hardcodea
+// aquí igual que el resto de textos en español de este archivo.
+const PRIVACY_TITLE = "Política de Privacidad";
+const TERMS_TITLE = "Términos de Uso";
 
 describe("AcceptLegalScreen", () => {
   it("mantiene el botón deshabilitado hasta marcar la casilla", async () => {

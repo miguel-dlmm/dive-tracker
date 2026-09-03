@@ -9,9 +9,14 @@ vi.mock("./activationLink.js", () => ({
   generateActivationLink: vi.fn(),
 }));
 
+vi.mock("../email/EmailService.js", () => ({
+  sendActivationEmail: vi.fn(),
+}));
+
 import { handleRegeneratePassword } from "./regeneratePassword.js";
 import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 import { generateActivationLink } from "./activationLink.js";
+import { sendActivationEmail } from "../email/EmailService.js";
 
 const CALLER_ID = "caller-1";
 const TARGET_ID = "target-1";
@@ -50,6 +55,8 @@ beforeEach(() => {
   getServiceRoleClient.mockReset();
   generateActivationLink.mockReset();
   generateActivationLink.mockResolvedValue({ activationLink: "https://app.example/activate?token_hash=xyz", error: null });
+  sendActivationEmail.mockReset();
+  sendActivationEmail.mockResolvedValue({ sent: false, error: "Configuración de email incompleta." });
 });
 
 it("rechaza métodos distintos de POST sin tocar Supabase", async () => {
@@ -109,7 +116,7 @@ it("rechaza regenerar la contraseña de una cuenta superadmin", async () => {
   expect(client.auth.admin.updateUserById).not.toHaveBeenCalled();
 });
 
-it("sobrescribe la contraseña con una cadena aleatoria de 64 caracteres hex, quita el baneo, limpia activated_at y genera un enlace nuevo", async () => {
+it("sobrescribe la contraseña con una cadena aleatoria de 64 caracteres hex, quita el baneo, limpia activated_at/deactivated_at y genera un enlace nuevo", async () => {
   const client = makeClient({ lookupResult: { data: { is_superadmin: false }, error: null } });
   getServiceRoleClient.mockReturnValue(client);
 
@@ -121,10 +128,30 @@ it("sobrescribe la contraseña con una cadena aleatoria de 64 caracteres hex, qu
   expect(calledPayload.ban_duration).toBe("none");
   expect(calledPayload.password).toMatch(/^[0-9a-f]{64}$/);
 
-  expect(client.update).toHaveBeenCalledWith({ activated_at: null });
+  expect(client.update).toHaveBeenCalledWith({ activated_at: null, deactivated_at: null });
   expect(client.eqForUpdate).toHaveBeenCalledWith("user_id", TARGET_ID);
-  expect(generateActivationLink).toHaveBeenCalledWith(TARGET_EMAIL);
-  expect(result).toEqual({ status: 200, payload: { user_id: TARGET_ID, action_link: "https://app.example/activate?token_hash=xyz" } });
+  expect(generateActivationLink).toHaveBeenCalledWith(TARGET_EMAIL, { flow: "recovery" });
+  expect(result).toEqual({
+    status: 200,
+    payload: { user_id: TARGET_ID, email_sent: false, action_link: "https://app.example/activate?token_hash=xyz" },
+  });
+});
+
+it("envía el email de contraseña regenerada con los datos del perfil objetivo y no devuelve action_link si se envía bien", async () => {
+  const client = makeClient({ lookupResult: { data: { is_superadmin: false, first_name: "Ana", nickname: "ana" }, error: null } });
+  getServiceRoleClient.mockReturnValue(client);
+  sendActivationEmail.mockResolvedValue({ sent: true });
+
+  const result = await handleRegeneratePassword(request());
+
+  expect(sendActivationEmail).toHaveBeenCalledWith({
+    email: TARGET_EMAIL,
+    firstName: "Ana",
+    nickname: "ana",
+    actionLink: "https://app.example/activate?token_hash=xyz",
+    reason: "password_reset",
+  });
+  expect(result).toEqual({ status: 200, payload: { user_id: TARGET_ID, email_sent: true } });
 });
 
 it("genera una contraseña distinta en cada llamada", async () => {
@@ -163,7 +190,10 @@ it("no corta la respuesta si falla limpiar activated_at — la contraseña ya se
 
   const result = await handleRegeneratePassword(request());
 
-  expect(result).toEqual({ status: 200, payload: { user_id: TARGET_ID, action_link: "https://app.example/activate?token_hash=xyz" } });
+  expect(result).toEqual({
+    status: 200,
+    payload: { user_id: TARGET_ID, email_sent: false, action_link: "https://app.example/activate?token_hash=xyz" },
+  });
 });
 
 it("devuelve 500 si falla la generación del enlace", async () => {

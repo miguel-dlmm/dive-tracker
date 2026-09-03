@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle, LogOut } from "lucide-react";
+import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
-import { ToastProvider, AppLoading, useScrolled } from "./shared";
+import { supabase } from "./supabaseClient";
+import { ToastProvider, AppLoading, useScrolled, Avatar } from "./shared";
+import { resolveAvatar } from "./avatarCatalog";
+import EnvironmentIndicator from "./EnvironmentIndicator";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG } from "./colors";
 import LoginScreen from "./LoginScreen";
+import ForgotPasswordScreen from "./ForgotPasswordScreen";
+import ResetPasswordScreen from "./ResetPasswordScreen";
+import RegisterScreen from "./RegisterScreen";
 import CreatePasswordScreen from "./CreatePasswordScreen";
+import ForcedPasswordUpdateScreen from "./ForcedPasswordUpdateScreen";
 import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
@@ -17,10 +25,13 @@ import CompanerosTab from "./CompanerosTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
 import WhatsNew from "./WhatsNew";
+import DeploymentNotice from "./DeploymentNotice";
 import { APP_VERSION } from "./version";
 import SummaryTab from "./SummaryTab";
 import HelpTab, { clearStoredHelpOpen } from "./HelpTab";
 import PaymentsTab from "./PaymentsTab";
+import ProfileTab from "./ProfileTab";
+import i18n, { setStoredLanguage } from "./i18n";
 
 // ---------------------------------------------------------------
 // Paleta — profesional y contenida: un único acento neutro, fondo
@@ -44,10 +55,12 @@ export const BODY_FONT = "'Inter', sans-serif";
 // pantallas siguen existiendo en el código (rutas "log"/"comisiones"/
 // "colegas" más abajo) por si hiciera falta revertir, aunque ya no tienen
 // ningún punto de entrada en la UI.
+// label se resuelve en render vía t(`tabs.${id}`) (namespace "app") — estos
+// ids son también las claves de traducción, no solo rutas internas.
 const PRIMARY_TABS = [
-  { id: "home", label: "Home", icon: HomeIcon },
-  { id: "trabajo", label: "Mi trabajo", icon: Briefcase },
-  { id: "summary", label: "Resumen", icon: BarChart3 },
+  { id: "home", icon: HomeIcon },
+  { id: "trabajo", icon: Briefcase },
+  { id: "summary", icon: BarChart3 },
 ];
 
 // Configuración/Ayuda son accesos secundarios (desde la cabecera). Al
@@ -58,7 +71,8 @@ const PRIMARY_TABS = [
 // "pagos" sigue en este mapa por si se reactiva, pero ya no tiene ningún
 // punto de entrada en la UI — ver docs/ADR/0005 (Mi trabajo cubre su
 // función con "Cobrar todos" + filtro por escuela).
-const SECONDARY_TITLES = { config: "Configuración", help: "Ayuda", pagos: "Pagos" };
+// Título resuelto en render vía t(`secondaryTitles.${tab}`) (namespace "app").
+const SECONDARY_TABS = ["config", "help", "pagos", "perfil"];
 
 // Recuerda la pestaña activa y a cuál "volver" desde una pantalla
 // secundaria — corrige de raíz dos problemas reales, no dos parches
@@ -102,10 +116,22 @@ function markWhatsNewSeen(userId) {
   try { localStorage.setItem(whatsNewSeenKey(userId), APP_VERSION); } catch { /* no-op */ }
 }
 
-function AppShell({ onSignOut, profile, initialTab = "home" }) {
+function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" }) {
+  const { t } = useTranslation("app");
+  // profiles.language es la fuente de verdad una vez hay sesión (Release V1,
+  // Fase 2) — sincroniza la interfaz al idioma guardado del usuario y
+  // actualiza el respaldo de localStorage (oceanpulse:language) que usan
+  // las pantallas sin sesión (Login, Registro...) para que la próxima vez
+  // que se cierre sesión, esas pantallas ya arranquen en el idioma correcto.
+  useEffect(() => {
+    if (profile?.language && profile.language !== i18n.language) {
+      i18n.changeLanguage(profile.language);
+    }
+    if (profile?.language) setStoredLanguage(profile.language);
+  }, [profile?.language]);
+
   const schools = useSupabaseTable("schools", "name");
   const activities = useSupabaseTable("activities", "name");
-  const paymentTypes = useSupabaseTable("payment_types", "name");
   const paymentStatuses = useSupabaseTable("payment_statuses", "name");
   // Siembra los 2 estados de pago por defecto (Pendiente/Cobrado) la
   // primera vez que una cuenta carga la app con el catálogo vacío —
@@ -181,7 +207,7 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
   // que navega para mantenerla al día.
   const [returnTab, setReturnTab] = useState(() => readStoredNav()?.returnTab || "home");
   useEffect(() => {
-    if (PRIMARY_TABS.some((t) => t.id === tab)) setReturnTab(tab);
+    if (PRIMARY_TABS.some((tabItem) => tabItem.id === tab)) setReturnTab(tab);
   }, [tab]);
   useEffect(() => {
     try { sessionStorage.setItem(NAV_STORAGE_KEY, JSON.stringify({ tab, returnTab })); } catch { /* no-op */ }
@@ -221,14 +247,23 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
     markWhatsNewSeen(profile?.user_id);
     setWhatsNewOpen(false);
   };
+  // Fase 4, Release V1 (rediseño de notificaciones — investigación de
+  // patrones de UX, ver docs/RELEASE-V1-PROGRESS.md, Fase 4: "user control
+  // and customization" es un principio recurrente en el diseño de
+  // notificaciones actual). Antes, una vez cerrado, "Qué hay de nuevo" no
+  // se podía volver a consultar hasta el siguiente release — sin tocar el
+  // gate de "una vez por versión" (whatsNewOpen sigue naciendo en false si
+  // ya se vio), esto solo permite reabrirlo bajo demanda desde Ayuda.
+  const showWhatsNewAgain = () => setWhatsNewOpen(true);
 
-  const loaded = schools.loaded && activities.loaded && paymentTypes.loaded && paymentStatuses.loaded
+  const loaded = schools.loaded && activities.loaded && paymentStatuses.loaded
     && currencies.loaded && rates.loaded && commissionRates.loaded && worklog.loaded
     && comisiones.loaded && colleaguePayments.loaded && navSections.loaded && appConfig.loaded;
 
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
-  const bottomTabActive = PRIMARY_TABS.some((t) => t.id === tab) ? tab : null;
-  const isSecondary = tab in SECONDARY_TITLES;
+  const avatar = resolveAvatar(profile);
+  const bottomTabActive = PRIMARY_TABS.some((tabItem) => tabItem.id === tab) ? tab : null;
+  const isSecondary = SECONDARY_TABS.includes(tab);
   // Cerrar Configuración/Ayuda (la "X" de la cabecera, y el gesto de
   // "atrás" de cada una en su nivel más externo — ver ConfigTab.jsx/
   // HelpTab.jsx) siempre vuelve al INICIO de esa pantalla la próxima vez
@@ -242,6 +277,20 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
     if (tab === "config") clearStoredSection();
     if (tab === "help") clearStoredHelpOpen();
     changeTab(returnTab);
+  };
+  // Cerrar sesión — Fase 4, Release V1 (rediseño de cabecera): antes vivía
+  // como icono propio en la cabecera; investigación de patrones de
+  // navegación móvil (ver docs/RELEASE-V1-PROGRESS.md, Fase 4 — UXPin,
+  // "avoid hiding frequent tasks inside overflow menus", pero cerrar sesión
+  // es justo lo contrario, una tarea INFRECUENTE, el caso de libro para
+  // sacarla del nivel superior) apoya moverla a Mi perfil, donde vive en
+  // casi cualquier app de referencia. Misma función que antes (limpia
+  // navegación guardada, respeta el bypass de desarrollo si está activo),
+  // solo cambia desde dónde se dispara.
+  const handleSignOut = () => {
+    clearStoredNav();
+    if (DEV_AUTH_BYPASS) disableDevBypass();
+    onSignOut();
   };
   const logoIcon = appConfig.rows[0]?.logo_icon || "Waves";
   // La cabecera acompaña siempre al usuario (ver rediseño de navegación
@@ -299,9 +348,9 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             // HelpTab.jsx, "de índice a guía viva" — pero el razonamiento
             // de fondo, "capa encima" vs. "un paso más adentro", se
             // mantiene igual para las dos.)
-            <button onClick={closeSecondary} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label="Cerrar">
+            <button onClick={closeSecondary} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label={t("aria.close")}>
               <X size={20} style={{ color: NAVY }} aria-hidden="true" />
-              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{SECONDARY_TITLES[tab]}</h1>
+              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{t(`secondaryTitles.${tab}`)}</h1>
             </button>
           ) : (
             // 2026-08-30: la marca se unifica en "Ocean Flow" — antes
@@ -309,30 +358,36 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
             // personal) como subtítulo aparte; con un único nombre, esa
             // segunda línea sería literalmente repetir el mismo texto dos
             // veces, así que desaparece en vez de quedar redundante.
-            <button onClick={() => changeTab("home")} className="-m-2 flex min-h-11 items-center gap-2.5 p-2" aria-label="Ir a Home">
+            // "Ocean Flow" es el nombre de marca — no se traduce en
+            // ningún idioma, igual que cualquier nombre propio de producto.
+            <button onClick={() => changeTab("home")} className="-m-2 flex min-h-11 items-center gap-2.5 p-2" aria-label={t("aria.goHome")}>
               <Waves size={20} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
               <h1 className="text-[15px] font-bold tracking-tight" style={{ color: NAVY }}>Ocean Flow</h1>
             </button>
           )}
           <div className="flex items-center gap-1">
             {tab !== "help" && (
-              <button onClick={() => changeTab("help")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Ayuda">
+              <button onClick={() => changeTab("help")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label={t("aria.help")}>
                 <HelpCircle size={20} style={{ color: NAVY }} aria-hidden="true" />
               </button>
             )}
             {tab !== "config" && (
-              <button onClick={() => changeTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Configuración">
+              <button onClick={() => changeTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label={t("aria.config")}>
                 <Settings size={20} style={{ color: NAVY }} aria-hidden="true" />
               </button>
             )}
-            {profile?.nickname && (
-              <span className="max-w-[104px] truncate text-[12px] font-medium text-gray-500" title={profile.nickname}>
-                {profile.nickname}
-              </span>
+            {profile?.nickname && tab !== "perfil" && (
+              <button
+                onClick={() => changeTab("perfil")}
+                className="-m-1 flex min-h-11 items-center gap-1.5 rounded-full p-1"
+                aria-label={t("aria.profile")}
+              >
+                <Avatar icon={avatar.icon} color={avatar.color} size={28} />
+                <span className="max-w-[88px] truncate text-[12px] font-medium text-gray-500" title={profile.nickname}>
+                  {profile.nickname}
+                </span>
+              </button>
             )}
-            <button onClick={() => { clearStoredNav(); if (DEV_AUTH_BYPASS) disableDevBypass(); onSignOut(); }} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label="Cerrar sesión">
-              <LogOut size={20} style={{ color: NAVY }} aria-hidden="true" />
-            </button>
           </div>
         </div>
       </header>
@@ -356,13 +411,13 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
         )}
         {tab === "log" && (
           <WorkLogTab
-            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} appConfig={appConfig}
+            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} appConfig={appConfig}
             accentColor={sectionColor("log")}
           />
         )}
         {tab === "comisiones" && (
           <ComisionesTab
-            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones} appConfig={appConfig}
+            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones} appConfig={appConfig}
             accentColor={sectionColor("comisiones")}
           />
         )}
@@ -374,19 +429,26 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
         )}
         {tab === "trabajo" && (
           <MiTrabajoTab
-            schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses} currencies={currencies}
+            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
             accentColor={sectionColor("trabajo")} userId={profile?.user_id}
           />
         )}
         {tab === "config" && (
           <ConfigTab
-            schools={schools} activities={activities} currencies={currencies} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
+            schools={schools} activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
             navSections={navSections} appConfig={appConfig} profile={profile} onClose={closeSecondary}
           />
         )}
-        {tab === "help" && <HelpTab navSections={navSections} profile={profile} onClose={closeSecondary} />}
+        {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} />}
+        {tab === "perfil" && (
+          <ProfileTab
+            profile={profile} currencies={currencies}
+            onClose={closeSecondary} onProfileUpdated={onProfileUpdated} onAccountDeleted={onSignOut}
+            onSignOut={handleSignOut}
+          />
+        )}
         {tab === "pagos" && (
           <PaymentsTab
             activities={activities} schools={schools} paymentStatuses={paymentStatuses} currencies={currencies}
@@ -404,25 +466,25 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
           elementos fixed cuando la barra de direcciones se oculta al hacer
           scroll. */}
       <nav
-        aria-label="Navegación principal"
+        aria-label={t("aria.mainNav")}
         className="fixed inset-x-0 bottom-0 z-20 border-t border-black/5 bg-white"
         style={{ paddingBottom: "env(safe-area-inset-bottom)", transform: "translateZ(0)" }}
       >
         <div className="mx-auto flex max-w-3xl items-stretch justify-around px-2 py-1">
-          {PRIMARY_TABS.map((t) => {
-            const Icon = t.icon;
-            const active = bottomTabActive === t.id;
-            const c = sectionColor(t.id);
+          {PRIMARY_TABS.map((tabItem) => {
+            const Icon = tabItem.icon;
+            const active = bottomTabActive === tabItem.id;
+            const c = sectionColor(tabItem.id);
             return (
               <button
-                key={t.id}
-                onClick={() => changeTab(t.id)}
+                key={tabItem.id}
+                onClick={() => changeTab(tabItem.id)}
                 aria-current={active ? "page" : undefined}
                 className="flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-2 transition-colors"
                 style={{ color: active ? c : "#9CA3AF" }}
               >
                 <Icon size={19} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-                <span className="text-[10.5px] font-medium">{t.label}</span>
+                <span className="text-[10.5px] font-medium">{t(`tabs.${tabItem.id}`)}</span>
               </button>
             );
           })}
@@ -441,13 +503,19 @@ function AppShell({ onSignOut, profile, initialTab = "home" }) {
         request={homeSheetRequest}
         onClose={() => setHomeSheetRequest(null)}
         onSaved={() => { setHomeSheetRequest(null); changeTab("trabajo"); }}
-        schools={schools} activities={activities} paymentTypes={paymentTypes} paymentStatuses={paymentStatuses}
+        schools={schools} activities={activities} paymentStatuses={paymentStatuses}
         currencies={currencies} rates={rates} commissionRates={commissionRates}
         worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
         accentColor={sectionColor("trabajo")} userId={profile?.user_id}
       />
 
       {whatsNewOpen && <WhatsNew onClose={closeWhatsNew} />}
+      {/* Fase 6, Release V1 (2026-09-02): generalizado a cualquier cuenta,
+          ya no solo superadmin — el gate real de qué fila puede ver cada
+          quien vive en RLS (ver schema.sql, "read own audience"), esto
+          solo evita renderizar dos modales fixed inset-0 apilados a la
+          vez sobre "Qué hay de nuevo". */}
+      {!whatsNewOpen && <DeploymentNotice userId={profile.user_id} profileCreatedAt={profile.created_at} />}
     </div>
   );
 }
@@ -514,7 +582,10 @@ function disableDevBypass() {
 }
 
 function AuthGate() {
-  const { session, profile, loading, accountBanned, signIn, signOut, activateAccount, pendingLegalConsents, acceptLegalConsents } = useSession();
+  const {
+    session, profile, loading, accountBanned, signIn, signOut, activateAccount, resetPassword,
+    pendingLegalConsents, acceptLegalConsents, updateProfile, forcedPasswordUpdate, updateForcedPassword,
+  } = useSession();
   const [bypassAttempted, setBypassAttempted] = useState(false);
   // Mientras esté en true, se muestra el mismo loading que "loading" en vez
   // de dejar parpadear LoginScreen durante el auto-signIn. Si falla o
@@ -571,17 +642,88 @@ function AuthGate() {
   // compuesta para que CreatePasswordScreen siga siendo quien decide qué
   // mostrar mientras dura.
   const [activating, setActivating] = useState(false);
+  // Pantalla de "olvidé mi contraseña" — estado local, no ruta ni parámetro
+  // de URL, igual que el resto de la navegación pre-login. Solo tiene
+  // sentido mostrarla sin sesión y sin un enlace de activación ya en la
+  // URL (ver más abajo, hasActivationLink lo cierra solo si se llega aquí
+  // con un enlace real).
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  // "Regístrate" en el login — condicionado a app_config.allow_external_registration
+  // (ver ADR-0023). Se lee vía RPC pública (external_registration_enabled)
+  // porque app_config no es legible sin sesión (su policy de SELECT exige
+  // auth.uid() is not null). null mientras carga: el botón no aparece ni
+  // desaparece de golpe, simplemente no está hasta saber que debe estarlo.
+  const [externalRegistrationEnabled, setExternalRegistrationEnabled] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    supabase.rpc("external_registration_enabled").then(({ data, error }) => {
+      if (!active) return;
+      if (error) {
+        console.error("No se pudo comprobar si el registro externo está habilitado", error);
+        return;
+      }
+      setExternalRegistrationEnabled(Boolean(data));
+    });
+    return () => { active = false; };
+  }, []);
 
   const params = new URLSearchParams(window.location.search);
   const tokenHash = params.get("token_hash");
   const type = params.get("type");
   const hasActivationLink = Boolean(tokenHash && type);
+  // flow=recovery solo lo lleva el enlace de "olvidé mi contraseña"
+  // (requestPasswordReset.js → activationLink.js) — decide qué pantalla
+  // mostrar (ResetPasswordScreen, sin bases legales) y qué función de
+  // useSession llamar (resetPassword, sin acceptLegalConsents). Los
+  // enlaces de alta/reactivación/regenerar-contraseña-por-admin no llevan
+  // este parámetro, así que siguen exactamente igual que antes.
+  const isRecoveryFlow = params.get("flow") === "recovery";
+  // Enlace de invitación (Release V1, 2026-09-02, ver
+  // server/users/generateInvitationLink.js/externalRegister.js) — muestra
+  // RegisterScreen directamente, sin pasar por el botón "Regístrate" ni su
+  // gate de externalRegistrationEnabled (eso es solo UX; el control de
+  // acceso real vive en el servidor, que valida el token). inviteToken se
+  // pasa tal cual a RegisterScreen para que lo mande en la petición.
+  const inviteToken = params.get("invite");
+  // inviteDismissed, no solo leer la URL en cada render: "‹ Volver al
+  // login" limpia el parámetro con replaceState (efecto en el DOM, no en
+  // el estado de React) y llama a setShowRegister(false) — pero
+  // showRegister YA estaba en false en este camino (se llegó aquí por
+  // hasInviteLink, no por el botón "Regístrate"), así que ese setState no
+  // cambia de valor y React no vuelve a renderizar (bailout de React en
+  // updates a un valor idéntico) — la pantalla se quedaba congelada en
+  // RegisterScreen aunque la URL ya estuviera limpia. Un estado propio que
+  // sí cambia de valor (false -> true) fuerza el re-render real.
+  const [inviteDismissed, setInviteDismissed] = useState(false);
+  const hasInviteLink = Boolean(inviteToken) && !inviteDismissed;
+  const handleBackFromRegister = () => {
+    if (hasInviteLink) {
+      window.history.replaceState(null, "", window.location.pathname);
+      setInviteDismissed(true);
+    }
+    setShowRegister(false);
+  };
 
   const handleActivate = async (password) => {
     setActivating(true);
     try {
       await activateAccount({ tokenHash, type, expectedEmail: session?.user?.email, password });
       setJustActivated(true);
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  // Deliberadamente NO pone justActivated: esa bandera abre AppShell en
+  // Ayuda en vez de Home, pensado para alguien completando su primer
+  // acceso — quien recupera una contraseña ya conoce la app, no es una
+  // persona nueva a la que orientar.
+  const handleResetPassword = async (password) => {
+    setActivating(true);
+    try {
+      await resetPassword({ tokenHash, type, expectedEmail: session?.user?.email, password });
     } finally {
       setActivating(false);
     }
@@ -607,25 +749,51 @@ function AuthGate() {
   }
 
   if (!session && !activating) {
-    if (!hasActivationLink) return <LoginScreen signIn={signIn} />;
-    return <CreatePasswordScreen onSubmit={handleActivate} />;
+    if (hasActivationLink) {
+      return isRecoveryFlow
+        ? <ResetPasswordScreen onSubmit={handleResetPassword} />
+        : <CreatePasswordScreen onSubmit={handleActivate} />;
+    }
+    if (showForgotPassword) return <ForgotPasswordScreen onBack={() => setShowForgotPassword(false)} />;
+    if (showRegister || hasInviteLink) return <RegisterScreen onBack={handleBackFromRegister} inviteToken={inviteToken} />;
+    return (
+      <LoginScreen
+        signIn={signIn}
+        onForgotPassword={() => setShowForgotPassword(true)}
+        onRegister={externalRegistrationEnabled ? () => setShowRegister(true) : undefined}
+      />
+    );
   }
 
   if (activating || !profile || !profile.activated_at) {
-    return <CreatePasswordScreen onSubmit={handleActivate} />;
+    return isRecoveryFlow
+      ? <ResetPasswordScreen onSubmit={handleResetPassword} />
+      : <CreatePasswordScreen onSubmit={handleActivate} />;
+  }
+
+  // Cuenta ya activada, con sesión válida, pero cuya contraseña actual no
+  // cumple la política reforzada (ver passwordPolicy.js/useSession.js) —
+  // se comprueba ANTES que los consentimientos legales a propósito: es la
+  // condición más urgente ("se ha reforzado la seguridad de la app"), y no
+  // depende de si hay o no un documento legal nuevo pendiente.
+  if (forcedPasswordUpdate) {
+    return <ForcedPasswordUpdateScreen onSubmit={updateForcedPassword} />;
   }
 
   if (pendingLegalConsents.length > 0) {
     return <AcceptLegalScreen onSubmit={acceptLegalConsents} />;
   }
 
-  return <AppShell onSignOut={signOut} profile={profile} initialTab={justActivated ? "help" : "home"} />;
+  return <AppShell onSignOut={signOut} profile={profile} onProfileUpdated={updateProfile} initialTab={justActivated ? "help" : "home"} />;
 }
 
 export default function App() {
   return (
-    <ToastProvider>
-      <AuthGate />
-    </ToastProvider>
+    <>
+      <EnvironmentIndicator />
+      <ToastProvider>
+        <AuthGate />
+      </ToastProvider>
+    </>
   );
 }

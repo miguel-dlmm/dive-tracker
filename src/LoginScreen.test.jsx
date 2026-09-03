@@ -45,4 +45,20 @@ describe("LoginScreen", () => {
 
     expect(screen.queryByText(ACCOUNT_DEACTIVATED_MESSAGE)).not.toBeInTheDocument();
   });
+
+  it("sin onForgotPassword: no muestra el enlace de recuperar contraseña", () => {
+    render(<LoginScreen signIn={vi.fn()} />);
+
+    expect(screen.queryByText("¿Olvidaste tu contraseña?")).not.toBeInTheDocument();
+  });
+
+  it("con onForgotPassword: muestra el enlace y lo llama al pulsarlo", async () => {
+    const onForgotPassword = vi.fn();
+    const user = userEvent.setup();
+    render(<LoginScreen signIn={vi.fn()} onForgotPassword={onForgotPassword} />);
+
+    await user.click(screen.getByText("¿Olvidaste tu contraseña?"));
+
+    expect(onForgotPassword).toHaveBeenCalledTimes(1);
+  });
 });

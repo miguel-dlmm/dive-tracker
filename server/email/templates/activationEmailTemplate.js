@@ -1,0 +1,125 @@
+import { renderEmailShell, escapeHtml, TEAL, NAVY } from "./emailLayout.js";
+
+// Generalización de la plantilla de bienvenida (antes welcomeEmailTemplate.js)
+// para que un único template sirva a los tres flujos que envían "aquí tienes
+// un enlace para entrar y fijar tu contraseña": alta, reactivación y
+// regenerar contraseña. Solo cambia el copy (motivo), nunca el layout —
+// evita triplicar HTML/texto para el mismo email con distinto contexto.
+export const ACTIVATION_EMAIL_COPY = {
+  signup: {
+    subject: "Tu acceso a Ocean Flow ya está listo",
+    preheader: "Entra y crea tu contraseña para empezar.",
+    title: "Bienvenido/a a Ocean Flow",
+    greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
+    intro: "Ya tienes cuenta en Ocean Flow, la herramienta que usamos para llevar el control de clases, comisiones y pagos.",
+    ctaLabel: "Entrar en Ocean Flow",
+    securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu propia contraseña.",
+    expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
+    footer: "Ocean Flow",
+  },
+  // Registro externo (ADR-0023) — a diferencia de "signup" (alta manual
+  // por un admin), aquí la propia persona se ha registrado, así que el
+  // tono confirma su propia acción ("gracias por registrarte") en vez de
+  // avisar de un alta hecha por otra persona.
+  external_signup: {
+    subject: "Confirma tu cuenta en Ocean Flow",
+    preheader: "Entra y crea tu contraseña para empezar.",
+    title: "¡Gracias por registrarte en Ocean Flow!",
+    greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
+    intro: "Ya casi está — confirma tu cuenta para empezar a llevar el control de tus clases, comisiones y pagos.",
+    ctaLabel: "Confirmar cuenta",
+    securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu propia contraseña.",
+    expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, vuelve a registrarte desde la pantalla de acceso.",
+    footer: "Ocean Flow",
+  },
+  reactivation: {
+    subject: "Tu acceso a Ocean Flow ha sido reactivado",
+    preheader: "Entra y crea tu contraseña para volver a acceder.",
+    title: "Bienvenido/a de nuevo a Ocean Flow",
+    greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
+    intro: "Tu cuenta en Ocean Flow ha sido reactivada.",
+    ctaLabel: "Entrar en Ocean Flow",
+    securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu propia contraseña.",
+    expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
+    footer: "Ocean Flow",
+  },
+  password_reset: {
+    subject: "Se ha restablecido tu contraseña en Ocean Flow",
+    preheader: "Crea tu nueva contraseña para volver a acceder.",
+    title: "Restablece tu contraseña",
+    greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
+    intro: "Se ha invalidado tu contraseña anterior en Ocean Flow. Usa el siguiente enlace para crear una nueva.",
+    ctaLabel: "Crear nueva contraseña",
+    securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu nueva contraseña.",
+    expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
+    footer: "Ocean Flow",
+  },
+  // Distinto de "password_reset" (ese es cuando UN ADMIN invalida la
+  // contraseña de otra cuenta). Este es autoservicio — la propia persona
+  // lo ha pedido desde "¿Olvidaste tu contraseña?" en el login — así que el
+  // tono es "lo pediste tú" en vez de "un admin te la ha invalidado", y
+  // añade la nota de seguridad estándar de "si no has sido tú, ignóralo".
+  password_reset_request: {
+    subject: "Restablece tu contraseña en Ocean Flow",
+    preheader: "Crea una nueva contraseña para volver a acceder.",
+    title: "Restablece tu contraseña",
+    greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
+    intro: "Has solicitado restablecer tu contraseña en Ocean Flow. Si no has sido tú, puedes ignorar este email — tu contraseña actual seguirá funcionando.",
+    ctaLabel: "Crear nueva contraseña",
+    securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu nueva contraseña.",
+    expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, vuelve a solicitar la recuperación desde la pantalla de acceso.",
+    footer: "Ocean Flow",
+  },
+};
+
+// HTML con tabla + CSS inline a propósito: los clientes de email (Outlook
+// sobre todo) no soportan Flexbox/Grid ni <style> externo, así que este
+// template no puede reutilizar las clases Tailwind del resto de la app —
+// es su propio sistema reducido, coherente en color/tipografía con el
+// resto de la app (mismo NAVY/TEAL, mismo icono Waves que el login —
+// ver emailLayout.js). Una sola columna, mobile-first.
+export function renderActivationEmailHtml({ firstName, actionLink, copy = ACTIVATION_EMAIL_COPY.signup }) {
+  const safeName = escapeHtml(firstName);
+  const safeLink = escapeHtml(actionLink);
+  const bodyRows = `
+    <tr>
+      <td style="padding:12px 28px 0 28px;">
+        <h1 style="margin:0 0 16px 0;font-size:20px;color:${NAVY};">${escapeHtml(copy.title)}</h1>
+        <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#374151;">${copy.greeting(safeName)}</p>
+        <p style="margin:0 0 24px 0;font-size:14px;line-height:1.6;color:#374151;">${escapeHtml(copy.intro)}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 28px;text-align:center;">
+        <a href="${safeLink}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;background-color:${TEAL};color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 24px;border-radius:8px;">${escapeHtml(copy.ctaLabel)}</a>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px 28px 0 28px;">
+        <p style="margin:0;font-size:12.5px;line-height:1.6;color:#6B7280;text-align:center;">${escapeHtml(copy.securityNote)}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:24px 28px 32px 28px;">
+        <p style="margin:0;font-size:11.5px;line-height:1.5;color:#9CA3AF;text-align:center;">${escapeHtml(copy.expiryNote)}</p>
+      </td>
+    </tr>`;
+  return renderEmailShell({ preheader: copy.preheader, bodyRows, footerText: copy.footer });
+}
+
+// Parte de texto plano — mejora la entregabilidad en clientes/filtros que
+// la valoran, coste mínimo al reutilizar el mismo copy.
+export function renderActivationEmailText({ firstName, actionLink, copy = ACTIVATION_EMAIL_COPY.signup }) {
+  return [
+    copy.greeting(firstName),
+    "",
+    copy.intro,
+    "",
+    `${copy.ctaLabel}: ${actionLink}`,
+    "",
+    copy.securityNote,
+    copy.expiryNote,
+    "",
+    copy.footer,
+  ].join("\n");
+}

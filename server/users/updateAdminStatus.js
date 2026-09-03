@@ -8,7 +8,7 @@ import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig 
 // base de datos — la barrera final, definitiva, sigue siendo el trigger
 // (ver schema.sql).
 //
-// Lógica de negocio pura, sin nada de Netlify ni de Vercel — mismo patrón
+// Lógica de negocio pura, sin nada de Vercel — mismo patrón
 // que createUser.js: recibe una petición ya normalizada ({ method, headers,
 // body }) y devuelve una respuesta normalizada ({ status, payload }).
 

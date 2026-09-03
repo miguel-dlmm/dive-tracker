@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr, ExpandableCard } from "./shared";
 import { listItemVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
-import { computeRateTotal, comparePeriods } from "./rateCalc";
+import { buildEntriesBySource, comparePeriods } from "./rateCalc";
 import { NAVY, CORAL, GREEN } from "./App";
 
 // Rediseño 2026-08-29 (ver docs/ADR/0009-rediseno-resumen.md): Resumen deja
@@ -26,16 +27,13 @@ const NEUTRAL_GRAY = "#94A3B8";
 // neutra (slate), no un color inventado aparte.
 const AJUSTE_FILL = "#64748B";
 
-const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const MONTHS_SHORT = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 const fmtInt = (n) => (n || 0).toLocaleString("es-ES");
 
-function shortPeriodLabel(granularity, year, unitIndex) {
-  if (granularity === "mensual") return MONTHS_SHORT[unitIndex];
-  if (granularity === "trimestral") return `T${unitIndex + 1}`;
-  if (granularity === "semestral") return `S${unitIndex + 1}`;
-  return `${year}`;
-}
+// MONTHS/MONTHS_SHORT/shortPeriodLabel/periodLabel dependían de arrays
+// fijos en español — ahora dependen de t() (namespace "summary"), así que
+// se convierten en funciones/valores calculados DENTRO de SummaryTab
+// (t() solo existe tras el hook useTranslation, no a nivel de módulo). Ver
+// más abajo, justo antes de donde se usan por primera vez.
 
 const UNITS_PER_YEAR = { mensual: 12, trimestral: 4, semestral: 2, anual: 1 };
 
@@ -49,9 +47,8 @@ const UNITS_PER_YEAR = { mensual: 12, trimestral: 4, semestral: 2, anual: 1 };
 // dos preguntas distintas. "Personalizado" es la única granularidad sin
 // navegación ‹ › con sentido (un rango arbitrario no tiene "periodo
 // siguiente"), así que ahí la fila muestra el rango en vez de flechas.
-const GRANULARITY_LABELS = { mensual: "Mes", trimestral: "Trimestre", semestral: "Semestre", anual: "Año", personalizado: "Rango" };
-const GRANULARITY_LABEL_LIST = Object.values(GRANULARITY_LABELS);
-const GRANULARITY_KEY_BY_LABEL = Object.fromEntries(Object.entries(GRANULARITY_LABELS).map(([k, l]) => [l, k]));
+// GRANULARITY_LABELS depende de t() — se calcula dentro de SummaryTab, ver
+// más abajo, junto a MONTHS/MONTHS_SHORT.
 
 const pad2 = (n) => String(n).padStart(2, "0");
 // Formatea un Date construido con componentes locales (new Date(y,m,d),
@@ -79,10 +76,14 @@ function periodRange(granularity, year, unitIndex, customFrom, customTo) {
   return [dstr(new Date(year, 0, 1)), dstr(new Date(year, 11, 31))]; // anual
 }
 
-function periodLabel(granularity, year, unitIndex) {
-  if (granularity === "mensual") return `${MONTHS[unitIndex]} ${year}`;
-  if (granularity === "trimestral") return `T${unitIndex + 1} ${year}`;
-  if (granularity === "semestral") return `S${unitIndex + 1} ${year}`;
+// months: array largo de nombres de mes (t("months.long")). quarterAbbr/
+// halfYearAbbr: "T"/"S" en español, "Q"/"H" en inglés — pasados como
+// argumentos en vez de leídos de t() aquí para que esta función siga
+// siendo pura (fácil de llamar varias veces sin repetir lookups).
+function periodLabel(granularity, year, unitIndex, months, quarterAbbr, halfYearAbbr) {
+  if (granularity === "mensual") return `${months[unitIndex]} ${year}`;
+  if (granularity === "trimestral") return `${quarterAbbr}${unitIndex + 1} ${year}`;
+  if (granularity === "semestral") return `${halfYearAbbr}${unitIndex + 1} ${year}`;
   return `${year}`;
 }
 
@@ -155,10 +156,11 @@ function magnitude(totals) {
 // que hay que activar y descifrar (ver docs/PROPUESTA-home-resumen.md,
 // revisión 2026-08-30 tras feedback explícito de que el toggle anterior
 // no se entendía sin explicación).
-function RankedList({ rows, currencyRows, textColor, emptyLabel = "Sin datos.", expandedKey, onToggle, renderExpanded, badge }) {
+function RankedList({ rows, currencyRows, textColor, emptyLabel, expandedKey, onToggle, renderExpanded, badge }) {
+  const { t } = useTranslation("summary");
   const reduced = usePrefersReducedMotion();
   const sorted = useMemo(() => [...rows].sort((a, b) => magnitude(b.totals) - magnitude(a.totals)), [rows]);
-  if (sorted.length === 0) return <p className="px-1 py-1 text-sm text-gray-400">{emptyLabel}</p>;
+  if (sorted.length === 0) return <p className="px-1 py-1 text-sm text-gray-400">{emptyLabel || t("empty.noData")}</p>;
   return (
     <ul className="divide-y divide-gray-100">
       {sorted.map((r) => (
@@ -204,6 +206,7 @@ function RankedList({ rows, currencyRows, textColor, emptyLabel = "Sin datos.", 
 // moneda (ver singleCurrencyAmount) — antes callar que mostrar un delta
 // que parezca preciso sin serlo.
 function HeroTotal({ label, period, color, total, previousTotal, canCompare, currencyRows }) {
+  const { t } = useTranslation("summary");
   const cmp = canCompare ? comparePeriods(total, previousTotal) : null;
 
   return (
@@ -213,9 +216,11 @@ function HeroTotal({ label, period, color, total, previousTotal, canCompare, cur
       {cmp && (
         <div className="mt-1.5 flex items-center gap-1 text-xs font-medium opacity-90">
           {cmp.delta > 0 ? <TrendingUp size={13} aria-hidden="true" /> : cmp.delta < 0 ? <TrendingDown size={13} aria-hidden="true" /> : <Minus size={13} aria-hidden="true" />}
-          {cmp.pct !== null
-            ? `${cmp.delta >= 0 ? "+" : ""}${cmp.pct.toFixed(0)}% vs periodo anterior`
-            : `${cmp.delta >= 0 ? "+" : ""}${formatMoney(cmp.delta, cmp.code, currencyRows)} vs periodo anterior`}
+          {t("trendVsPreviousPeriod", {
+            delta: cmp.pct !== null
+              ? `${cmp.delta >= 0 ? "+" : ""}${cmp.pct.toFixed(0)}%`
+              : `${cmp.delta >= 0 ? "+" : ""}${formatMoney(cmp.delta, cmp.code, currencyRows)}`,
+          })}
         </div>
       )}
     </div>
@@ -277,8 +282,18 @@ const TREND_RADIUS = 3;
 // prácticamente cero sin perder el resultado final (bar bajo/alta, tacto
 // registrado), igual que en cualquier otra animación de motion.js.
 function TrendBars({ periods, color, onSelect }) {
+  const { t } = useTranslation("summary");
   const reduced = usePrefersReducedMotion();
   const max = Math.max(1, ...periods.map((p) => magnitude(p.totals)));
+  const monthsShort = t("months.short", { returnObjects: true });
+  const quarterAbbr = t("quarterAbbr");
+  const halfYearAbbr = t("halfYearAbbr");
+  const shortPeriodLabel = (granularity, year, unitIndex) => {
+    if (granularity === "mensual") return monthsShort[unitIndex];
+    if (granularity === "trimestral") return `${quarterAbbr}${unitIndex + 1}`;
+    if (granularity === "semestral") return `${halfYearAbbr}${unitIndex + 1}`;
+    return `${year}`;
+  };
   return (
     <div className="flex gap-1.5">
       {periods.map((p) => (
@@ -287,7 +302,7 @@ function TrendBars({ periods, color, onSelect }) {
           type="button"
           onClick={() => onSelect(p)}
           disabled={p.isSelected}
-          aria-label={`Ir a ${p.label}${p.isCurrent ? " (periodo actual)" : ""}`}
+          aria-label={`${t("trend.goTo", { period: p.label })}${p.isCurrent ? t("trend.currentSuffix") : ""}`}
           aria-current={p.isSelected ? "true" : undefined}
           whileTap={reduced ? undefined : { scale: 0.88 }}
           className="flex flex-1 flex-col items-center gap-1"
@@ -342,6 +357,7 @@ function SchoolGrowthBadge({ growth }) {
 
 // worklog / rates / comisiones / commissionRates / activities / schools / currencies / colleaguePayments: hooks de useSupabaseTable
 export default function SummaryTab({ worklog, rates, comisiones, commissionRates, activities, schools, currencies, colleaguePayments }) {
+  const { t } = useTranslation("summary");
   const reducedMotion = usePrefersReducedMotion();
   const now = new Date();
   const [granularity, setGranularity] = useState("mensual");
@@ -356,13 +372,39 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   const [expandedSchool, setExpandedSchool] = useState(null);
   const [expandedActivity, setExpandedActivity] = useState(null);
 
+  // MONTHS/GRANULARITY_LABELS dependen de t() — no pueden ser constantes de
+  // módulo (Release V1, Fase 2, multidioma). GRANULARITY_LABEL_LIST/
+  // GRANULARITY_KEY_BY_LABEL siguen el mismo criterio de antes: Select
+  // (shared.jsx) trabaja con el propio texto visible como valor, así que la
+  // traducción tiene que ir también en el puente label<->key.
+  const MONTHS = t("months.long", { returnObjects: true });
+  const GRANULARITY_LABELS = {
+    mensual: t("granularity.mensual"),
+    trimestral: t("granularity.trimestral"),
+    semestral: t("granularity.semestral"),
+    anual: t("granularity.anual"),
+    personalizado: t("granularity.personalizado"),
+  };
+  const GRANULARITY_LABEL_LIST = Object.values(GRANULARITY_LABELS);
+  const GRANULARITY_KEY_BY_LABEL = Object.fromEntries(Object.entries(GRANULARITY_LABELS).map(([k, l]) => [l, k]));
+  const quarterAbbr = t("quarterAbbr");
+  const halfYearAbbr = t("halfYearAbbr");
+
+  // Labels de Curso/Comisión/Ajuste desde common:movementTypes (fuente
+  // única compartida con Home/Mi trabajo/Tarifas, pedido explícito del
+  // usuario 2026-09-01 para no repetir esta traducción por pantalla) —
+  // MOVEMENT_TYPE_META (shared.jsx) sigue dando el color.
   const SOURCES = [
-    ["total", "Total"],
-    ["ganado", MOVEMENT_TYPE_META.ganado.label],
-    ["comision", MOVEMENT_TYPE_META.comision.label],
-    ["companeros", MOVEMENT_TYPE_META.companeros.label],
+    ["total", t("total")],
+    ["ganado", t("common:movementTypes.ganado")],
+    ["comision", t("common:movementTypes.comision")],
+    ["companeros", t("common:movementTypes.companeros")],
   ];
-  const SOURCE_META = { ...MOVEMENT_TYPE_META, companeros: { ...MOVEMENT_TYPE_META.companeros, color: AJUSTE_FILL } };
+  const SOURCE_META = {
+    ganado: { ...MOVEMENT_TYPE_META.ganado, label: t("common:movementTypes.ganado") },
+    comision: { ...MOVEMENT_TYPE_META.comision, label: t("common:movementTypes.comision") },
+    companeros: { ...MOVEMENT_TYPE_META.companeros, label: t("common:movementTypes.companeros"), color: AJUSTE_FILL },
+  };
   // label -> color, para pintar el desglose por tipo dentro de "Por curso"
   // (renderActivityTypes) con el mismo criterio de color que el resto de
   // la pantalla, sin repetir SOURCE_META con las claves ya traducidas.
@@ -377,16 +419,16 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   // único elemento consigo mismo.
   const hasMultipleSchools = schools.rows.length > 1;
   const sourceColor = source === "total" ? NAVY : SOURCE_META[source].color;
-  const sourceLabel = source === "total" ? "Total combinado" : `Total ${SOURCE_META[source].label}`;
+  const sourceLabel = source === "total" ? t("totalCombined") : t("totalOf", { source: SOURCE_META[source].label });
 
-  const rateTotal = (e, ratesTable) => {
-    const r = ratesTable.rows.find((r) => r.school === e.school && r.activity === e.activity);
-    return { total: computeRateTotal(r, e.people), currency: r?.currency || e.currency || fallbackCurrency };
-  };
-
-  const ganadoEntries = useMemo(() => worklog.rows.map((e) => ({ ...e, ...rateTotal(e, rates), _source: "ganado" })), [worklog.rows, rates.rows, fallbackCurrency]);
-  const comisionEntries = useMemo(() => comisiones.rows.map((e) => ({ ...e, ...rateTotal(e, commissionRates), _source: "comision" })), [comisiones.rows, commissionRates.rows, fallbackCurrency]);
-  const companerosEntries = useMemo(() => colleaguePayments.rows.map((p) => ({ ...p, total: p.amount, people: 0, _source: "companeros" })), [colleaguePayments.rows]);
+  // buildEntriesBySource (rateCalc.js): antes duplicado byte a byte aquí y
+  // en HomeTab.jsx — ver docs/BACKLOG.md, "Reutilizar componente entre
+  // Home y Resumen".
+  const entriesBySource = useMemo(
+    () => buildEntriesBySource({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
+  );
+  const { ganado: ganadoEntries, comision: comisionEntries, companeros: companerosEntries } = entriesBySource;
 
   const withTotals = useMemo(() => {
     if (source === "total") return [...ganadoEntries, ...comisionEntries, ...companerosEntries];
@@ -492,8 +534,8 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   const colleagueByName = groupSum(colleaguePeriodEntries, (p) => p.colleague_name, { amountKey: "amount", currencyKey: "currency" });
 
   const label = granularity === "personalizado"
-    ? (customFrom && customTo ? `${customFrom} → ${customTo}` : "Elige un rango")
-    : periodLabel(granularity, year, unitIndex);
+    ? (customFrom && customTo ? `${customFrom} → ${customTo}` : t("chooseRange"))
+    : periodLabel(granularity, year, unitIndex, MONTHS, quarterAbbr, halfYearAbbr);
 
   // Ventana de TREND_RADIUS periodos a cada lado del elegido (más antiguo
   // primero), para TrendBars — sin límite hacia el futuro, igual que
@@ -511,18 +553,18 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         year: y,
         unitIndex: u,
         granularity,
-        label: periodLabel(granularity, y, u),
+        label: periodLabel(granularity, y, u, MONTHS, quarterAbbr, halfYearAbbr),
         totals: groupSum(entries, () => "Total")[0]?.totals || {},
         isSelected: offset === 0,
         isCurrent: y === now.getFullYear() && u === nowUnit,
       });
     }
     return periods;
-  }, [granularity, year, unitIndex, withTotals]);
+  }, [granularity, year, unitIndex, withTotals, MONTHS, quarterAbbr, halfYearAbbr]);
 
   const renderSchoolActivities = (schoolName) => {
     const rows = groupSum(periodEntries.filter((e) => e.school === schoolName), (e) => e.activity, { withPeople: true });
-    return <RankedList rows={rows} currencyRows={currencies.rows} textColor={activityColor} emptyLabel="Sin cursos en este periodo." />;
+    return <RankedList rows={rows} currencyRows={currencies.rows} textColor={activityColor} emptyLabel={t("empty.noCoursesInPeriod")} />;
   };
 
   // Desglose por TIPO de movimiento (Curso/Comisión/Ajuste) de un curso
@@ -533,7 +575,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   // solo daba el total combinado, sin decir de dónde venía.
   const renderActivityTypes = (activityName) => {
     const rows = groupSum(periodEntries.filter((e) => e.activity === activityName), (e) => SOURCE_META[e._source]?.label || e._source, { withPeople: true });
-    return <RankedList rows={rows} currencyRows={currencies.rows} textColor={(label) => SOURCE_TYPE_COLOR[label] || NAVY} emptyLabel="Sin movimientos en este periodo." />;
+    return <RankedList rows={rows} currencyRows={currencies.rows} textColor={(label) => SOURCE_TYPE_COLOR[label] || NAVY} emptyLabel={t("empty.noMovementsInPeriod")} />;
   };
 
   return (
@@ -556,7 +598,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
               value={GRANULARITY_LABELS[granularity]}
               onChange={(l) => changeGranularity(GRANULARITY_KEY_BY_LABEL[l])}
               options={GRANULARITY_LABEL_LIST}
-              label="Granularidad del periodo"
+              label={t("granularityLabel")}
             />
           </div>
           {/* AnimatePresence+key=label (feedback explícito 2026-08-30:
@@ -582,7 +624,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         </div>
         {trendPeriods.length > 0 && (
           <div className="border-t border-gray-100 p-3">
-            <div className="mb-2 text-xs font-medium text-gray-400">Tendencia — toca un periodo para navegar</div>
+            <div className="mb-2 text-xs font-medium text-gray-400">{t("trend.heading")}</div>
             <TrendBars
               periods={trendPeriods}
               color={sourceColor}
@@ -595,11 +637,11 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
       {granularity === "personalizado" && (
         <div className="grid grid-cols-2 gap-2 rounded-lg border border-gray-200 bg-white p-3">
           <div>
-            <span className="mb-1 block text-xs font-medium text-gray-500">Desde</span>
+            <span className="mb-1 block text-xs font-medium text-gray-500">{t("from")}</span>
             <DatePicker value={customFrom} onChange={setCustomFrom} />
           </div>
           <div>
-            <span className="mb-1 block text-xs font-medium text-gray-500">Hasta</span>
+            <span className="mb-1 block text-xs font-medium text-gray-500">{t("to")}</span>
             <DatePicker value={customTo} onChange={setCustomTo} />
           </div>
         </div>
@@ -640,7 +682,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
           hereda el defaultOpen cuando "Por escuela" no está, para que
           la pantalla no se quede con todo colapsado de entrada. */}
       {hasMultipleSchools && (
-        <ExpandableCard title="Por escuela" icon={Building2} iconColor={NAVY} defaultOpen>
+        <ExpandableCard title={t("sections.bySchool")} icon={Building2} iconColor={NAVY} defaultOpen>
           <RankedList
             rows={globalBySchool}
             currencyRows={currencies.rows}
@@ -653,7 +695,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         </ExpandableCard>
       )}
 
-      <ExpandableCard title="Por curso" icon={GraduationCap} iconColor={MOVEMENT_TYPE_META.ganado.color} defaultOpen={!hasMultipleSchools}>
+      <ExpandableCard title={t("sections.byActivity")} icon={GraduationCap} iconColor={MOVEMENT_TYPE_META.ganado.color} defaultOpen={!hasMultipleSchools}>
         <RankedList
           rows={globalByActivity}
           currencyRows={currencies.rows}
@@ -677,16 +719,16 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
           que "Ajuste de curso"; Resumen era la última pantalla que
           todavía usaba el nombre antiguo. */}
       {source === "total" && (
-        <ExpandableCard title="Comisiones" icon={Handshake} iconColor={SOURCE_META.comision.color}>
+        <ExpandableCard title={t("sections.commissions")} icon={Handshake} iconColor={SOURCE_META.comision.color}>
           <div className="space-y-3">
             {hasMultipleSchools && (
               <div>
-                <h4 className="mb-1.5 text-xs font-semibold text-gray-500">Por escuela</h4>
+                <h4 className="mb-1.5 text-xs font-semibold text-gray-500">{t("sections.bySchool")}</h4>
                 <RankedList rows={comisionBySchool} currencyRows={currencies.rows} textColor={schoolColor} />
               </div>
             )}
             <div>
-              <h4 className="mb-1.5 text-xs font-semibold text-gray-500">Por curso</h4>
+              <h4 className="mb-1.5 text-xs font-semibold text-gray-500">{t("sections.byActivity")}</h4>
               <RankedList rows={comisionByActivity} currencyRows={currencies.rows} textColor={activityColor} />
             </div>
           </div>
@@ -694,9 +736,9 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
       )}
 
       {(source === "total" || source === "companeros") && (
-        <ExpandableCard title="Ajustes de curso" icon={Users} iconColor={SOURCE_META.companeros.color}>
+        <ExpandableCard title={t("sections.colleagueAdjustments")} icon={Users} iconColor={SOURCE_META.companeros.color}>
           {colleagueByName.length === 0 ? (
-            <p className="text-sm text-gray-400">Sin ajustes de curso en este periodo.</p>
+            <p className="text-sm text-gray-400">{t("empty.noColleagueAdjustmentsInPeriod")}</p>
           ) : (
             <ul className="divide-y divide-gray-100">
               {colleagueByName.map((r) => {
@@ -716,7 +758,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
       )}
 
       {granularity === "mensual" && (
-        <ExpandableCard title="Calendario" icon={Calendar} iconColor={NAVY}>
+        <ExpandableCard title={t("sections.calendar")} icon={Calendar} iconColor={NAVY}>
           <MonthCalendar
             year={year}
             month={unitIndex}

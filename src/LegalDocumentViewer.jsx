@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 
@@ -6,6 +7,7 @@ import { NAVY, TEAL } from "./App";
 // Términos de Uso) — usado hoy desde AcceptLegalScreen; reutilizable más
 // adelante para el acceso post-login (fuera de alcance de este MVP).
 export default function LegalDocumentViewer({ title, sections, onClose }) {
+  const { t } = useTranslation("auth");
   useEffect(() => {
     function handler(e) {
       if (e.key === "Escape") onClose();
@@ -33,7 +35,7 @@ export default function LegalDocumentViewer({ title, sections, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Cerrar"
+            aria-label={t("legalDocumentViewer.closeAria")}
             className="flex h-11 w-11 shrink-0 items-center justify-center text-gray-400 hover:text-gray-600"
           >
             <X size={18} aria-hidden="true" />

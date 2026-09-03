@@ -1,0 +1,268 @@
+{
+  "datasets": {
+    "copySuffix": "copy",
+    "summary_one": "Starter setup (schools, courses and rates) cloned into every new account. {{count}} active out of {{total}}.",
+    "summary_other": "Starter setup (schools, courses and rates) cloned into every new account. {{count}} active out of {{total}}.",
+    "inactive": "Inactive",
+    "setDefault": "Set as default",
+    "setDefaultAria": "Set \"{{label}}\" as default",
+    "duplicate": "Duplicate",
+    "duplicateAria": "Duplicate \"{{label}}\"",
+    "activeAria": "Dataset \"{{label}}\" active",
+    "deleteItemLabel": "the \"{{label}}\" dataset",
+    "empty": "No datasets yet.",
+    "fab": "New dataset",
+    "sheetTitle": "New dataset",
+    "sheetHint": "Starts empty and inactive — duplicate an existing one if you want to start from content that's already loaded.",
+    "nameLabel": "Name",
+    "create": "Create",
+    "toasts": {
+      "created": "Dataset created — add its content before activating it",
+      "duplicated": "\"{{newLabel}}\" created with the same content as \"{{sourceLabel}}\"",
+      "duplicateError": "Couldn't duplicate. Try again.",
+      "keyTaken": "A dataset with that key already exists.",
+      "createError": "Couldn't create. Try again.",
+      "updateError": "Couldn't update."
+    },
+    "errors": {
+      "isDefault": "This is the default dataset — set another one as default before deleting it.",
+      "lastOne": "You can't delete the only dataset — external registration and manual sign-up both need at least one."
+    }
+  },
+  "crudTable": {
+    "buscarPlaceholder": "Search...",
+    "buscarAria": "Search",
+    "cambiarColor": "Change color",
+    "favorita": "Favorite",
+    "marcarPredeterminado": "Set as default",
+    "esteElemento": "this item",
+    "sinResultados": "No results.",
+    "cerrar": "Close",
+    "guardar": "Save",
+    "cambiosGuardados": "Changes saved",
+    "anadidoCorrectamente": "Added",
+    "noSePudoGuardar": "Couldn't save. Please try again.",
+    "noSePudoGuardarCambio": "Couldn't save the change.",
+    "estadoPredeterminadoRazon": "This is the default status (represents \"pending\") — set another one as default before deleting this"
+  },
+  "sectionColors": {
+    "descripcion": "Used in the navigation bar and in each area's \"create entry\" buttons."
+  },
+  "generalSettings": {
+    "iconoCarga": "Loading icon",
+    "descripcion": "Used in the \"loading\" animation across the app. Once you have Ocean Flow's official logo, let me know and I'll swap it in for the real icon instead of this list.",
+    "iconoActualizado": "Icon updated",
+    "noSePudoGuardar": "Couldn't save. Please try again.",
+    "vistaPrevia": "Preview"
+  },
+  "externalRegistration": {
+    "titulo": "Allow external sign-up",
+    "descripcion": "Shows \"Sign up\" on the login screen so anyone can create their own account.",
+    "activado": "External sign-up enabled",
+    "desactivado": "External sign-up disabled",
+    "noSePudoGuardar": "Couldn't save. Please try again."
+  },
+  "roleCheckbox": {
+    "rolProtegido": "{{label}} — protected system role, not editable",
+    "si": "yes",
+    "no": "no",
+    "etiquetaAria": "{{label}}: {{value}}"
+  },
+  "roleIcon": {
+    "superadmin": "Superadmin",
+    "admin": "Admin"
+  },
+  "userStatus": {
+    "activo": "Active",
+    "pendiente": "Pending",
+    "desactivado": "Deactivated",
+    "nunca": "Never"
+  },
+  "swipeToDelete": {
+    "eliminar": "Delete",
+    "eliminarA": "Delete {{nickname}}"
+  },
+  "userListRow": {
+    "alta": "Joined: {{date}}",
+    "ultimoAcceso": "Last access: {{date}}",
+    "baja": "Deactivated: {{date}}",
+    "fechaNoRegistrada": "date not recorded"
+  },
+  "userDetailSheet": {
+    "cerrar": "Close",
+    "nombre": "First name",
+    "apellidos": "Last name",
+    "nickname": "Nickname",
+    "editarDatos": "Edit details",
+    "email": "Email",
+    "altaLabel": "Joined",
+    "ultimoAcceso": "Last access",
+    "baja": "Deactivated",
+    "fechaNoRegistrada": "date not recorded",
+    "estado": "Status",
+    "activarUsuario": "Activate user",
+    "desactivarUsuario": "Deactivate user",
+    "pendienteTexto": "Waiting for this person to open the link and set their password.",
+    "regenerarEnlace": "Regenerate link",
+    "admin": "Admin",
+    "superadmin": "Superadmin",
+    "regenerarContrasena": "Reset password",
+    "eliminarUsuario": "Delete user"
+  },
+  "activationLinkPanel": {
+    "cerrar": "Close",
+    "enlaceCopiado": "Link copied",
+    "noSePudoCopiar": "Couldn't copy. Select it manually.",
+    "copiarEnlace": "Copy link",
+    "simularEnvioMock": "Simulate successful send (mock)",
+    "mockEmailEnviado": "(Mock) Email sent successfully"
+  },
+  "createUserSheet": {
+    "cerrar": "Close",
+    "noSePudieronCargarDatasets": "Couldn't load the available datasets.",
+    "camposObligatorios": "Email, nickname and starting dataset are required.",
+    "soloSuperadminCrear": "Only a superadmin can create users.",
+    "noSePudoCrear": "Couldn't create the user.",
+    "usuarioCreadoSinEmail": "User created (the email couldn't be sent)",
+    "usuarioCreadoCorrectamente": "User created",
+    "enlaceCopiado": "Link copied",
+    "noSePudoCopiar": "Couldn't copy. Select it manually.",
+    "noSePudoEnviarEmailTitulo": "Couldn't send the email",
+    "noSePudoEnviarEmailDescripcion": "The activation email couldn't be sent. You can share this link manually.",
+    "copiarEnlace": "Copy link",
+    "simularEnvioMock": "Simulate successful send (mock)",
+    "mockUsuarioCreado": "(Mock) User created and email sent successfully",
+    "titulo": "Create user",
+    "email": "Email",
+    "nombre": "First name",
+    "apellidos": "Last name",
+    "nickname": "Nickname",
+    "datasetInicial": "Starting dataset",
+    "cargando": "Loading…",
+    "seleccionaDataset": "Select a dataset",
+    "sinDatasets": "No datasets available",
+    "idioma": "Language",
+    "nota": "The chosen dataset automatically loads starting schools, courses, rates, commissions and payment catalogs. This person will get an email with a one-time link to sign in and set their own password.",
+    "creando": "Creating…",
+    "crearUsuario": "Create user"
+  },
+  "usersDirectory": {
+    "buscarPlaceholder": "Search...",
+    "buscarAria": "Search users",
+    "crearUsuario": "Create user",
+    "noSePudoCargarListado": "Couldn't load the user list.",
+    "errorDesconocido": "Unknown error",
+    "errorCargarListado": "Couldn't load the list: {{error}}",
+    "cargandoUsuarios": "Loading users…",
+    "sinResultados": "No results.",
+    "soloSuperadminRol": "Only a superadmin can change another account's admin role.",
+    "noSePudoActualizarRol": "Couldn't update the role.",
+    "rolActualizado": "Role updated",
+    "soloSuperadminEliminar": "Only a superadmin can delete users.",
+    "noSePudoEliminar": "Couldn't delete the user.",
+    "usuarioEliminado": "User deleted",
+    "soloSuperadminActivar": "Only a superadmin can activate or deactivate users.",
+    "noSePudoActualizarEstado": "Couldn't update the status.",
+    "usuarioDesactivado": "User deactivated",
+    "soloSuperadminEnlace": "Only a superadmin can activate accounts or regenerate their access link.",
+    "noSePudoGenerarEnlace": "Couldn't generate the link.",
+    "enlaceGeneradoSinEmail": "Link generated (the email couldn't be sent to {{nickname}})",
+    "enlaceActivacionTitulo": "Activation link generated",
+    "enlaceActivacionDescripcion": "Share this link with {{nickname}}. They'll keep showing as \"Pending\" until they use it to set their password.",
+    "emailActivacionEnviado": "Activation email sent to {{nickname}}",
+    "soloSuperadminContrasena": "Only a superadmin can reset another account's password.",
+    "noSePudoRegenerarContrasena": "Couldn't reset the password.",
+    "contrasenaRegeneradaSinEmail": "Password reset (the email couldn't be sent to {{nickname}})",
+    "contrasenaRegeneradaTitulo": "Password reset",
+    "contrasenaRegeneradaDescripcion": "{{nickname}}'s previous password is no longer valid. Share this link so they can set a new one — the account goes back to \"Pending\" until then.",
+    "contrasenaRegeneradaEmailEnviado": "Password reset and email sent to {{nickname}}",
+    "nicknameVacio": "Nickname can't be empty.",
+    "datosActualizados": "Details updated",
+    "noSePudieronGuardarCambios": "Couldn't save the changes.",
+    "cambiarRolAdminTitulo": "Change admin role",
+    "usuarioLabel": "User: {{nickname}}",
+    "adminLabel": "Admin: {{from}} → {{to}}",
+    "confirmar": "Confirm",
+    "eliminarUsuarioTitulo": "Delete user",
+    "eliminarUsuarioMensaje": "This will permanently delete {{nickname}}'s account and all their data (schools, rates, entries...). This action can't be undone.",
+    "eliminarUsuarioAlternativa": "If you just want to revoke access while keeping their data, use \"Deactivate\" instead.",
+    "eliminar": "Delete",
+    "desactivarUsuarioTitulo": "Deactivate user",
+    "desactivarUsuarioMensaje": "{{nickname}} will no longer be able to sign in. All their data (schools, rates, entries...) stays intact — you can reactivate them anytime by generating a new activation link.",
+    "desactivar": "Deactivate",
+    "generarEnlaceTitulo": "Generate activation link",
+    "generarEnlaceMensaje": "A new one-time link will be generated for {{nickname}}. Any earlier link stops working. The account won't gain access until they complete it.",
+    "generarEnlace": "Generate link",
+    "regenerarContrasenaTitulo": "Reset password",
+    "regenerarContrasenaMensaje": "{{nickname}}'s current password will stop working immediately. They'll need to set a new one from a new activation link — their data isn't affected.",
+    "regenerar": "Reset",
+    "generarInvitacion": "Generate invitation link",
+    "soloSuperadminInvitacion": "Only a superadmin can generate invitation links.",
+    "noSePudoGenerarInvitacion": "Couldn't generate the invitation link.",
+    "enlaceInvitacionTitulo": "Invitation link",
+    "enlaceInvitacionDescripcion": "Valid for 24 hours, single use. Share it with the person you want to invite — they'll be able to register even if external registration is closed."
+  },
+  "sections": {
+    "escuelas": {
+      "label": "Schools",
+      "description": "Where you teach, with its color"
+    },
+    "cursos": {
+      "label": "Courses",
+      "description": "What you teach, with its color"
+    },
+    "tarifas": {
+      "label": "Rates",
+      "description": "What you charge by school and course"
+    },
+    "estadosPago": {
+      "label": "Payment statuses",
+      "description": "Pending, paid..."
+    },
+    "monedas": {
+      "label": "Currencies",
+      "description": "Catalog available across the app"
+    },
+    "navegacion": {
+      "label": "Navigation colors",
+      "description": "Visual identity for each area"
+    },
+    "ajustes": {
+      "label": "General settings",
+      "description": "The app's loading icon"
+    },
+    "usuarios": {
+      "label": "Users",
+      "description": "Accounts with access to the app"
+    },
+    "datasets": {
+      "label": "Starting datasets",
+      "description": "Configuration cloned when creating an account"
+    },
+    "trainingRecords": {
+      "label": "Training Records",
+      "description": "Generate signed SSI training progress records per student"
+    }
+  },
+  "menu": {
+    "administracion": "Administration",
+    "superadmin": "Superadmin",
+    "configuracion": "Settings"
+  },
+  "crud": {
+    "nuevaEscuela": "New school",
+    "editarEscuela": "Edit school",
+    "nombreCampo": "Name",
+    "colorCampo": "Color",
+    "nuevoCurso": "New course",
+    "editarCurso": "Edit course",
+    "nuevoEstadoPago": "New payment status",
+    "editarEstadoPago": "Edit payment status",
+    "nuevaMoneda": "New currency",
+    "editarMoneda": "Edit currency",
+    "monedasDescripcion": "Choose the app's fallback currency here: it's used when a user hasn't picked their own favorite currency yet in My profile. It's not a personal preference — it's the one applied by default to any new account.",
+    "monedaPorDefectoApp": "App default",
+    "codigoCampo": "Code (e.g. EUR)",
+    "simboloCampo": "Symbol"
+  }
+}

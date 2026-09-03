@@ -9,7 +9,7 @@ vi.hoisted(() => {
 });
 
 import { createClient } from "@supabase/supabase-js";
-import { getServiceRoleClient, verifyCaller, isSuperadmin } from "./supabaseAdmin.js";
+import { getServiceRoleClient, verifyCaller } from "./supabaseAdmin.js";
 
 const ENV = {
   VITE_SUPABASE_URL: "https://example.supabase.co",

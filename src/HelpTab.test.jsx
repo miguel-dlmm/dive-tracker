@@ -6,10 +6,7 @@ import HelpTab from "./HelpTab";
 // addendum): Ayuda deja de navegar por pantallas (categorías → artículos
 // → detalle) — cada categoría es ahora una ExpandableCard que despliega
 // su artículo en el sitio. Se prueba el contrato de despliegue, no el
-// contenido exacto de cada artículo (es texto, no lógica). El filtrado
-// adminOnly (ver content.js) no tiene hoy ningún artículo real que lo
-// ejercite — el manual quedó orientado solo a usuario final tras revisar
-// el contenido.
+// contenido exacto de cada artículo (es texto, no lógica).
 const navSections = { rows: [] };
 
 // Ayuda persiste la categoría desplegada en sessionStorage
@@ -23,7 +20,7 @@ beforeEach(() => {
 
 describe("HelpTab", () => {
   it("agrupa las categorías en 'Quiero...' y 'Funcionalidades', todas plegadas de entrada", () => {
-    render(<HelpTab navSections={navSections} profile={null} />);
+    render(<HelpTab navSections={navSections} />);
 
     expect(screen.getByText("Quiero...")).toBeInTheDocument();
     expect(screen.getByText("Funcionalidades")).toBeInTheDocument();
@@ -34,7 +31,7 @@ describe("HelpTab", () => {
 
   it("tocar una categoría despliega su artículo en el sitio, sin cambiar de pantalla", async () => {
     const user = userEvent.setup();
-    render(<HelpTab navSections={navSections} profile={null} />);
+    render(<HelpTab navSections={navSections} />);
 
     const miTrabajo = screen.getByRole("button", { name: /Mi trabajo/ });
     await user.click(miTrabajo);
@@ -48,7 +45,7 @@ describe("HelpTab", () => {
 
   it("tocar de nuevo la misma categoría la vuelve a plegar", async () => {
     const user = userEvent.setup();
-    render(<HelpTab navSections={navSections} profile={null} />);
+    render(<HelpTab navSections={navSections} />);
 
     const miTrabajo = screen.getByRole("button", { name: /Mi trabajo/ });
     await user.click(miTrabajo);
@@ -65,7 +62,7 @@ describe("HelpTab", () => {
   // igual que el menú con drill-down de Configuración.
   it("desplegar una categoría pliega la que estuviera abierta antes (acordeón)", async () => {
     const user = userEvent.setup();
-    render(<HelpTab navSections={navSections} profile={null} />);
+    render(<HelpTab navSections={navSections} />);
 
     await user.click(screen.getByRole("button", { name: /Mi trabajo/ }));
     await user.click(screen.getByRole("button", { name: /^Resumen/ }));
@@ -84,11 +81,11 @@ describe("HelpTab", () => {
 describe("HelpTab — la categoría desplegada sobrevive a una recarga", () => {
   it("recargar (unmount+render) mantiene la categoría desplegada", async () => {
     const user = userEvent.setup();
-    const { unmount } = render(<HelpTab navSections={navSections} profile={null} />);
+    const { unmount } = render(<HelpTab navSections={navSections} />);
     await user.click(screen.getByRole("button", { name: /Mi trabajo/ }));
     unmount();
 
-    render(<HelpTab navSections={navSections} profile={null} />);
+    render(<HelpTab navSections={navSections} />);
 
     expect(screen.getByRole("button", { name: /Mi trabajo/ })).toHaveAttribute("aria-expanded", "true");
   });
@@ -105,7 +102,7 @@ describe("HelpTab — gesto de deslizar hacia la derecha = atrás, recursivo", (
 
   it("deslizar sin ninguna categoría abierta llama a onClose", () => {
     const onClose = vi.fn();
-    const { container } = render(<HelpTab navSections={navSections} profile={null} onClose={onClose} />);
+    const { container } = render(<HelpTab navSections={navSections} onClose={onClose} />);
 
     swipeRight(container.firstChild);
 
@@ -115,12 +112,32 @@ describe("HelpTab — gesto de deslizar hacia la derecha = atrás, recursivo", (
   it("deslizar con una categoría abierta la colapsa, sin llamar a onClose", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    const { container } = render(<HelpTab navSections={navSections} profile={null} onClose={onClose} />);
+    const { container } = render(<HelpTab navSections={navSections} onClose={onClose} />);
     await user.click(screen.getByRole("button", { name: /Mi trabajo/ }));
 
     swipeRight(container.firstChild);
 
     expect(screen.getByRole("button", { name: /Mi trabajo/ })).toHaveAttribute("aria-expanded", "false");
     expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+// Fase 4, Release V1: "Ver qué hay de nuevo" — reabre el slide WhatsNew
+// bajo demanda desde Ayuda, sin tocar su gate de "una vez por versión"
+// (eso vive en App.jsx, fuera del alcance de este componente).
+describe("HelpTab — 'Ver qué hay de nuevo'", () => {
+  it("sin onShowWhatsNew, no muestra el botón", () => {
+    render(<HelpTab navSections={navSections} />);
+    expect(screen.queryByText("Ver qué hay de nuevo en esta versión")).not.toBeInTheDocument();
+  });
+
+  it("con onShowWhatsNew, pulsar el botón lo llama", async () => {
+    const user = userEvent.setup();
+    const onShowWhatsNew = vi.fn();
+    render(<HelpTab navSections={navSections} onShowWhatsNew={onShowWhatsNew} />);
+
+    await user.click(screen.getByText("Ver qué hay de nuevo en esta versión"));
+
+    expect(onShowWhatsNew).toHaveBeenCalledTimes(1);
   });
 });

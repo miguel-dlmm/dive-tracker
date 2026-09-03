@@ -1,5 +1,6 @@
 import { getServiceRoleClient, verifyCaller, requireSuperadmin, hasServerConfig } from "../supabaseAdmin.js";
 import { generateActivationLink } from "./activationLink.js";
+import { sendActivationEmail } from "../email/EmailService.js";
 
 // "Activar" una cuenta desactivada, y "regenerar link" para una que sigue
 // pendiente de completar su primer acceso, son la MISMA acción — ninguna
@@ -13,6 +14,11 @@ import { generateActivationLink } from "./activationLink.js";
 // Por eso esto es un endpoint aparte y no una reutilización de
 // `active: true` en set-user-active.js: esa ruta concedía acceso
 // instantáneo, comportamiento que se abandona con este cambio.
+//
+// Envío de email best-effort, igual que createUser.js: si sendActivationEmail
+// falla o no está configurado, la respuesta sigue incluyendo action_link
+// para que el superadmin lo comparta a mano — nunca deja al usuario sin
+// forma de completar el acceso.
 
 function parseBody(body) {
   if (body == null) return {};
@@ -70,7 +76,7 @@ export async function handleRegenerateActivationLink({ method, headers, body }) 
 
   const { data: target, error: targetError } = await client
     .from("profiles")
-    .select("is_superadmin")
+    .select("is_superadmin, first_name, nickname")
     .eq("user_id", targetUserId)
     .maybeSingle();
   if (targetError) {
@@ -100,10 +106,61 @@ export async function handleRegenerateActivationLink({ method, headers, body }) 
     return { status: 400, payload: { error: unbanError.message } };
   }
 
-  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email);
+  // deactivated_at a null (Bloque 11): la cuenta ya no está de baja — no
+  // corta la respuesta si falla, el desbaneo (lo importante) ya se aplicó.
+  const { error: clearDeactivatedError } = await client
+    .from("profiles")
+    .update({ deactivated_at: null })
+    .eq("user_id", targetUserId);
+  if (clearDeactivatedError) {
+    console.error("regenerate-activation-link: no se pudo limpiar deactivated_at", clearDeactivatedError);
+  }
+
+  // Este mismo endpoint sirve a dos casos reales distintos (ver
+  // ConfigTab.jsx: el switch de "desactivado→activar" y el botón "Regenerar
+  // enlace" de una cuenta "pendiente" llaman los dos aquí):
+  // - Reactivar una cuenta que YA estuvo activa (aceptó las bases legales
+  //   la primera vez) — debe entrar por ResetPasswordScreen, sin volver a
+  //   pedir esa aceptación.
+  // - Reenviar el enlace a una cuenta que sigue "pendiente" de completar
+  //   su primer acceso (nunca aceptó nada todavía) — debe seguir siendo
+  //   una activación real, con LegalConsentFields.
+  // legal_consents es la señal correcta para distinguirlos (más directa
+  // que activated_at/deactivated_at): si ya existe alguna fila para este
+  // usuario, ya aceptó antes. Si la consulta falla, se asume que NO aceptó
+  // (opción más segura: como mucho vuelve a ver el checkbox, nunca se
+  // salta una aceptación legal que hiciera falta).
+  const { data: consentRows, error: consentError } = await client
+    .from("legal_consents")
+    .select("user_id")
+    .eq("user_id", targetUserId)
+    .limit(1);
+  if (consentError) {
+    console.error("regenerate-activation-link: no se pudo comprobar el consentimiento legal previo", consentError);
+  }
+  const alreadyAcceptedLegal = Boolean(consentRows && consentRows.length > 0);
+
+  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email, alreadyAcceptedLegal ? { flow: "recovery" } : {});
   if (linkErrorMessage) {
     return { status: 500, payload: { error: linkErrorMessage } };
   }
 
-  return { status: 200, payload: { user_id: targetUserId, action_link: activationLink } };
+  let emailSent = false;
+  try {
+    const result = await sendActivationEmail({
+      email: authUser.user.email,
+      firstName: target.first_name,
+      nickname: target.nickname,
+      actionLink: activationLink,
+      reason: "reactivation",
+    });
+    emailSent = result.sent;
+  } catch (err) {
+    console.error("regenerate-activation-link: sendActivationEmail lanzó una excepción inesperada", err);
+  }
+
+  return {
+    status: 200,
+    payload: { user_id: targetUserId, email_sent: emailSent, ...(!emailSent ? { action_link: activationLink } : {}) },
+  };
 }
