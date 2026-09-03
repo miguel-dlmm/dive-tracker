@@ -1181,6 +1181,65 @@ ahora — no hay una cuenta real que lo necesite todavía.
 Ningún cambio de código en esta fase — es puramente un documento de
 análisis, tal como decidió el propio riesgo de la fase.
 
+### Addendum — Monitorización de infraestructura (Bloque 18, job nocturno 2026-09-03)
+
+Encargo explícito: "estudiar alertas de consumo de recursos en Vercel/
+Supabase antes de abrir el registro público". Análisis documental,
+igual que el resto de esta fase — sin acceso a los dashboards reales
+de Vercel/Supabase desde esta sesión (no hay token de API configurado
+para consultarlos en vivo), así que esto son las alertas
+RECOMENDADAS a configurar a mano, no una comprobación de los valores
+actuales.
+
+**Por qué ahora, no antes:** con registro cerrado (altas solo por
+invitación de un superadmin, ver `docs/ADR/0024`/`0025`), el número de
+cuentas está bajo control total del propio usuario — no hace falta
+ninguna alerta para eso. En cuanto el registro público esté disponible,
+el número de cuentas deja de estar bajo ese control directo, y es
+justo ese eje (más cuentas, no más datos por cuenta — ver el análisis
+de escalabilidad de arriba) el que puede acercarse a los límites del
+plan gratuito sin que nadie lo note hasta que algo falle.
+
+**Supabase (plan Free) — alertas a configurar en Project Settings →
+Usage, o Billing → Alerts si el proyecto ya está en un plan de pago
+con facturación por uso:**
+- Tamaño de base de datos: umbral en 400MB (80% de los 500MB del plan
+  Free) — con margen para migrar de plan con calma, no en caliente.
+- Filas de `auth.users` / cuentas activas: sin alerta nativa de
+  Supabase para esto — la señal práctica es el propio tamaño de BBDD
+  de arriba, que ya crece con cada cuenta nueva.
+- Transferencia de red (egress) mensual: umbral en el 80% del límite
+  del plan — el más fácil de disparar sin avisar si el registro
+  público trae un pico de altas inesperado.
+- Storage (plantillas de Training Records + firmas, aunque las firmas
+  de alumno son efímeras y nunca se persisten — ver Fase 5): revisar
+  el % de uso una vez al mes mientras el registro esté abierto, no
+  hace falta alerta automática todavía a los volúmenes actuales.
+
+**Vercel (plan Hobby) — alertas a configurar en el dashboard del
+proyecto → Settings → Usage, o en la app de Vercel para notificaciones
+push:**
+- Invocaciones de funciones serverless (`api/*.js`): el plan Hobby
+  tiene un límite mensual — Vercel ya notifica por email al acercarse,
+  pero conviene confirmar que esa notificación llega a la cuenta
+  correcta (la que gestiona el despliegue, no una cuenta de desarrollo
+  aparte).
+- Ancho de banda: mismo criterio que Supabase — un pico de registro
+  público es el escenario más probable de disparo.
+- Build minutes: bajo riesgo real (el build local tarda ~1,7s, ver
+  Bloque 13 del job nocturno) — no necesita alerta dedicada.
+
+**Recomendación concreta:** antes de abrir el registro público,
+configurar a mano (Claude Code no tiene acceso a estos dashboards)
+las alertas de tamaño de BBDD y transferencia de red en Supabase, y
+confirmar que las notificaciones nativas de Vercel llegan a la cuenta
+correcta — son las dos señales más baratas de vigilar y las más
+probables de disparar primero si el registro público trae más altas
+de las esperadas. No hace falta nada más sofisticado (un panel de
+monitorización propio, alertas custom vía webhook) a este tamaño de
+proyecto — sería la misma sobreingeniería que el resto de esta fase
+ya decidió evitar.
+
 ## Fase 8 — Revisión visual y libro de estilo (✅ 2026-09-02)
 
 Sin backend ni BBDD nueva, tal como pedía el encargo. `docs/ESTILO.md`
