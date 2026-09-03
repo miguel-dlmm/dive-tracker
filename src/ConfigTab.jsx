@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, useAnimationControls } from "motion/react";
 import {
@@ -1556,7 +1556,7 @@ function UsersDirectory({ profile }) {
         message={pendingDelete && (
           <>
             {t("usersDirectory.eliminarUsuarioMensaje", { nickname: pendingDelete.nickname }).split(pendingDelete.nickname).map((part, i, arr) => (
-              <React.Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingDelete.nickname}</strong>}</React.Fragment>
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingDelete.nickname}</strong>}</Fragment>
             ))}
             <br />
             {t("usersDirectory.eliminarUsuarioAlternativa")}
@@ -1575,7 +1575,7 @@ function UsersDirectory({ profile }) {
         message={pendingToggleActive && (
           <>
             {t("usersDirectory.desactivarUsuarioMensaje", { nickname: pendingToggleActive.nickname }).split(pendingToggleActive.nickname).map((part, i, arr) => (
-              <React.Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingToggleActive.nickname}</strong>}</React.Fragment>
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingToggleActive.nickname}</strong>}</Fragment>
             ))}
           </>
         )}
@@ -1592,7 +1592,7 @@ function UsersDirectory({ profile }) {
         message={pendingRegenerateLink && (
           <>
             {t("usersDirectory.generarEnlaceMensaje", { nickname: pendingRegenerateLink.nickname }).split(pendingRegenerateLink.nickname).map((part, i, arr) => (
-              <React.Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingRegenerateLink.nickname}</strong>}</React.Fragment>
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingRegenerateLink.nickname}</strong>}</Fragment>
             ))}
           </>
         )}
@@ -1609,7 +1609,7 @@ function UsersDirectory({ profile }) {
         message={pendingRegeneratePassword && (
           <>
             {t("usersDirectory.regenerarContrasenaMensaje", { nickname: pendingRegeneratePassword.nickname }).split(pendingRegeneratePassword.nickname).map((part, i, arr) => (
-              <React.Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingRegeneratePassword.nickname}</strong>}</React.Fragment>
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingRegeneratePassword.nickname}</strong>}</Fragment>
             ))}
           </>
         )}
