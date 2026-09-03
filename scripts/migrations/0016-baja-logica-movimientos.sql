@@ -1,4 +1,4 @@
--- Migración 0015 — baja lógica (soft delete) + fecha de alta/modificación
+-- Migración 0016 — baja lógica (soft delete) + fecha de alta/modificación
 -- para los 3 movimientos económicos (worklog, comisiones,
 -- colleague_payments — la "Mi trabajo" unificada, ver
 -- docs/ADR/0005-mi-trabajo-unificacion-economica.md). Trabajo nocturno

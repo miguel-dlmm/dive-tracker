@@ -378,7 +378,7 @@ $$;
 -- softDelete: true, ver src/App.jsx) filtra `deleted_at is null`; el
 -- índice parcial de abajo cubre exactamente esa consulta. Decisión de
 -- "columnas directas, no una tabla de auditoría aparte" documentada en
--- la cabecera de 0015-baja-logica-movimientos.sql.
+-- la cabecera de 0016-baja-logica-movimientos.sql.
 create table if not exists worklog (
   id uuid primary key default gen_random_uuid(),
   date date not null,
