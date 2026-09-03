@@ -40,10 +40,13 @@
   },
   "instructor": {
     "hint": "Used to auto-fill your Training Records — saved here once, not per device.",
-    "initialsLine": "Initials:",
-    "numberLine": "SSI Pro number:",
-    "signatureLine": "Signature:",
-    "signatureSaved": "Saved",
+    "card": {
+      "role": "SSI Instructor",
+      "noSignature": "No signature",
+      "signatureAlt": "{{name}}'s signature",
+      "initialsLabel": "Initials",
+      "numberLabel": "SSI PRO"
+    },
     "signatureLabel": "Your signature",
     "edit": "Edit",
     "initialsLabel": "Initials",

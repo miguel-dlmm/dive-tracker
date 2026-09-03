@@ -177,12 +177,14 @@ describe("datos personales", () => {
 describe("datos de instructor", () => {
   const instructorSection = () => document.getElementById("instructor-section");
 
-  it("muestra — por defecto cuando el perfil no tiene datos de instructor", () => {
+  it("muestra el carnet con — y 'Sin firma' por defecto cuando el perfil no tiene datos de instructor", () => {
     renderProfile();
     const section = within(instructorSection());
-    expect(section.getByText("Iniciales:")).toBeInTheDocument();
-    // Iniciales, número SSI Pro y firma — las 3 vacías por defecto.
-    expect(section.getAllByText("—")).toHaveLength(3);
+    expect(section.getByText("Ada Lovelace")).toBeInTheDocument();
+    expect(section.getByText("Sin firma")).toBeInTheDocument();
+    // Iniciales y número SSI Pro — las 2 vacías por defecto (la firma usa
+    // "Sin firma" en vez de "—", ver arriba).
+    expect(section.getAllByText("—")).toHaveLength(2);
   });
 
   it("edita iniciales y número SSI Pro y guarda", async () => {

@@ -40,10 +40,13 @@
   },
   "instructor": {
     "hint": "Se usan para rellenar tus Training Records automáticamente — se guardan aquí una sola vez, no por dispositivo.",
-    "initialsLine": "Iniciales:",
-    "numberLine": "Número SSI Pro:",
-    "signatureLine": "Firma:",
-    "signatureSaved": "Guardada",
+    "card": {
+      "role": "Instructor SSI",
+      "noSignature": "Sin firma",
+      "signatureAlt": "Firma de {{name}}",
+      "initialsLabel": "Iniciales",
+      "numberLabel": "SSI PRO"
+    },
     "signatureLabel": "Tu firma",
     "edit": "Editar",
     "initialsLabel": "Iniciales",

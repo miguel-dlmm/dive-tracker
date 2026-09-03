@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut } from "lucide-react";
-import { NAVY, TEAL, CORAL } from "./colors";
+import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, Waves } from "lucide-react";
+import * as Icons from "lucide-react";
+import { NAVY, TEAL, AQUA, CORAL } from "./colors";
 import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
 import { AVATAR_ICONS, AVATAR_COLORS, resolveAvatar } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
@@ -219,6 +220,73 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
   );
 }
 
+// Mini carnet del instructor (2026-09-03, pedido explícito del usuario):
+// sustituye las 3 líneas de texto plano del modo visualización por algo
+// que se parezca a un carnet real — inspirado en el carnet de SSI (fondo
+// oscuro, avatar+nombre a la izquierda, un panel claro a la derecha),
+// pero con identidad propia, no una copia: en vez de un QR (que no
+// tenemos nada que codificar en él), ese hueco lo ocupa la firma real del
+// instructor — es la pieza que de verdad autentica el carnet. Solo
+// visual, no toca ni sustituye el guardado/edición existente (ver
+// InstructorSection más abajo, que sigue igual).
+function InstructorCard({ profile, initials, ssiProNumber, signature }) {
+  const { t } = useTranslation("profile");
+  const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.nickname;
+  const avatar = resolveAvatar(profile);
+  const AvatarIcon = Icons[avatar.icon] || Icons.Waves;
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl p-4 shadow-md"
+      style={{ background: `linear-gradient(135deg, ${NAVY} 0%, ${TEAL} 65%, ${AQUA} 100%)` }}
+    >
+      {/* Barrido diagonal sutil — la única concesión "decorativa" a
+          parecer un carnet físico (efecto laminado/holograma), sin
+          imágenes ni dependencias nuevas: un solo gradiente radial
+          semitransparente encima del fondo. */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: "radial-gradient(120% 60% at 15% 0%, rgba(255,255,255,0.16), transparent 60%)" }}
+        aria-hidden="true"
+      />
+      <div className="relative flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-white/40 bg-white/10">
+            <AvatarIcon size={26} style={{ color: avatar.color }} aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="line-clamp-2 text-base font-bold leading-tight text-white">{fullName}</p>
+            <p className="text-[10.5px] font-semibold uppercase tracking-wider text-white/70">{t("instructor.card.role")}</p>
+          </div>
+        </div>
+        {/* Firma en vez de QR — pedido explícito del usuario. */}
+        <div className="flex h-16 w-20 shrink-0 flex-col items-center justify-center rounded-lg bg-white/95 p-1">
+          {signature ? (
+            <img src={signature} alt={t("instructor.card.signatureAlt", { name: fullName })} className="max-h-full max-w-full object-contain" />
+          ) : (
+            <span className="px-1 text-center text-[9px] font-medium leading-tight text-gray-400">{t("instructor.card.noSignature")}</span>
+          )}
+        </div>
+      </div>
+      <div className="relative mt-4 flex items-end justify-between border-t border-white/15 pt-3">
+        <div className="flex gap-5">
+          <div>
+            <p className="text-[9px] font-semibold uppercase tracking-wider text-white/55">{t("instructor.card.initialsLabel")}</p>
+            <p className="text-sm font-bold tabular-nums text-white">{initials || "—"}</p>
+          </div>
+          <div>
+            <p className="text-[9px] font-semibold uppercase tracking-wider text-white/55">{t("instructor.card.numberLabel")}</p>
+            <p className="text-sm font-bold tabular-nums text-white">{ssiProNumber || "—"}</p>
+          </div>
+        </div>
+        <span className="flex items-center gap-1 text-white/40" aria-hidden="true">
+          <Waves size={16} />
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // Datos de instructor para el generador de Training Records (Release V1,
 // Fase 5, pedido explícito del usuario 2026-09-02): antes vivían en
 // localStorage dentro de la propia pantalla de Training Records (por
@@ -261,12 +329,8 @@ function InstructorSection({ profile, onProfileUpdated }) {
   if (!editing) {
     return (
       <SectionCard id="instructor-section" title={t("sections.instructor")}>
-        <p className="mb-2 text-xs text-gray-400">{t("instructor.hint")}</p>
-        <div className="space-y-2 text-sm">
-          <p><span className="text-gray-400">{t("instructor.initialsLine")}</span> {profile.instructor_initials || "—"}</p>
-          <p><span className="text-gray-400">{t("instructor.numberLine")}</span> {profile.ssi_pro_number || "—"}</p>
-          <p><span className="text-gray-400">{t("instructor.signatureLine")}</span> {profile.instructor_signature ? t("instructor.signatureSaved") : "—"}</p>
-        </div>
+        <p className="mb-3 text-xs text-gray-400">{t("instructor.hint")}</p>
+        <InstructorCard profile={profile} initials={profile.instructor_initials} ssiProNumber={profile.ssi_pro_number} signature={profile.instructor_signature} />
         <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: TEAL }}>
           <Pencil size={14} aria-hidden="true" /> {t("instructor.edit")}
         </button>
