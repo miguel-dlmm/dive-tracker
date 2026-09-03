@@ -468,6 +468,65 @@ sentido evaluar si `Release-V1` ya está lista para su propio proceso
 de release hacia `main`/producción — esa decisión y su alcance
 quedan fuera de lo que este job nocturno debía dejar preparado.
 
+## Training Records consolidado en la rama base
+
+A petición del usuario, `feature/training-records` (la rama base del
+generador) ya incluye, fusionados en ella misma (fast-forward limpio,
+sin conflictos, commit `08079f8`): Bloque 5, TR-restyle, Bloque 9
+(KPIs Home), Bloque 10 (acceso desde Home) y Bloque 11 (KPIs
+Movimientos). 616 tests en verde, build correcto. Preview:
+`https://dive-tracker-git-feature-training-records-ocean-pulse1.vercel.app`
+(mail con plan de pruebas ya enviado). Ya no hace falta partir de
+`feat/bloque10-home-training-records` ni `feat/bloque11-kpis-movimientos`
+para ver esta funcionalidad completa — esas ramas quedan como historial,
+`feature/training-records` es ahora la única rama a revisar para todo
+lo de Training Records.
+
+## Grupo 1 fusionado en Release-V1 (además de la rama de integración)
+
+A petición del usuario, el Grupo 1 se fusionó también directamente en
+`Release-V1` (commit `ae658ef`, tras el merge commit `239fcc5`),
+además de seguir disponible en `integration/grupo1-mantenimiento` para
+`develop`. Fue un merge real con **16 conflictos** (Release-V1 había
+divergido bastante — i18n, refactors paralelos), resueltos a mano uno
+a uno, no de forma automática:
+
+- `server/email/welcomeEmailTemplate.js` no existe en Release-V1 (ya
+  refactorizado a `server/email/templates/activationEmailTemplate.js`)
+  — se aplicó ahí el fix de texto del Bloque 6 en vez de resucitar el
+  archivo viejo.
+- `ConfigTab.jsx` — fila de usuario: Release-V1 ya tenía "fecha de
+  baja al desactivar" (`deactivatedAt`) de forma independiente al
+  "último acceso" (`lastSignInAt`) del Bloque 4. Ambas features
+  conviven ahora en la misma fila (antes solo se veía una u otra según
+  qué rama ganara) — se añadió la clave i18n `userListRow.ultimoAcceso`
+  que faltaba.
+- 4 textos de toasts con "correctamente"/"successfully" redundante
+  (Bloque 6) se corrigieron en las claves i18n de Release-V1 que
+  colisionaban en el merge (`crudTable.anadidoCorrectamente`,
+  `createUserSheet.usuarioCreadoCorrectamente`,
+  `usersDirectory.rolActualizado`, `deleteButton.deletedToast`) — el
+  resto de claves similares que Bloque 6 nunca tocó se dejaron igual,
+  fuera del alcance de este merge (posible bloque futuro de
+  consistencia si se quiere).
+- `CreatePasswordScreen.jsx`: el lado de Grupo 1 traía el código de
+  mostrar/ocultar contraseña **anterior** al refactor ya hecho en
+  Release-V1 (movido a `src/auth/PasswordFields.js` +
+  `src/passwordPolicy.js`) — se descartó ese lado, no aportaba nada
+  nuevo.
+- **Bug real encontrado por la propia suite de test antes del push:**
+  al quitar el import por defecto de `React` de `ConfigTab.jsx` (parte
+  de la limpieza del bloque final), 4 usos de `React.Fragment`
+  quedaron rotos (`ReferenceError`). Corregido con un import nombrado
+  `Fragment` en un commit aparte (`ae658ef`) tras detectarlo con
+  `npm run test`, antes de hacer push.
+
+623 tests en verde, build correcto. Preview:
+`https://dive-tracker-git-release-v1-ocean-pulse1.vercel.app` (mail
+con plan de pruebas ya enviado). `integration/grupo1-mantenimiento`
+sigue existiendo tal cual para cuando se decida fusionar el Grupo 1 a
+`develop` — no se ha tocado `develop` en ningún momento.
+
 ## Grupo 1 preparado para probar — rama de integración
 
 A petición del usuario tras el cierre del job, se preparó una rama de
