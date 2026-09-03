@@ -1,5 +1,5 @@
 import { PDFDocument, PDFName } from "pdf-lib";
-import { buildFillOperations, fillTrainingRecordPdf } from "./pdfFill";
+import { buildFillOperations, fillTrainingRecordPdf, computeSignaturePlacement } from "./pdfFill";
 
 // 2x2 PNG rojo válido — solo para comprobar que embedPng/drawImage no
 // revientan, el contenido visual no importa aquí (eso ya se comprobó a
@@ -112,6 +112,38 @@ describe("buildFillOperations", () => {
   it("nunca incluye una operación con campo vacío o valor vacío", () => {
     const { texts } = buildFillOperations(TEMPLATE, { firstName: "", lastName: "" });
     expect(texts).toEqual([]);
+  });
+});
+
+// 2026-09-04, pedido explícito del usuario: "firmas superpuestas arriba,
+// nunca cortadas" + "firmas más grandes". Estos tests cubren la lógica
+// pura de posicionamiento/tamaño, sin necesitar un PDFDocument real.
+describe("computeSignaturePlacement", () => {
+  it("ancla el borde SUPERIOR de la firma al borde superior del campo, nunca centrada", () => {
+    const rect = { x: 100, y: 50, width: 80, height: 20 };
+    const { y, height } = computeSignaturePlacement(rect, 300, 150); // ratio 2:1
+    expect(y + height).toBeCloseTo(rect.y + rect.height, 5);
+  });
+
+  it("crece más allá del propio rectángulo (boost > 1x) — todo el margen extra queda por debajo, nunca por encima", () => {
+    const rect = { x: 0, y: 100, width: 40, height: 10 };
+    const { y, height } = computeSignaturePlacement(rect, 400, 100); // 4:1, el ancho manda la escala
+    expect(height).toBeGreaterThan(rect.height);
+    // El borde superior sigue siendo el del rect — el desbordamiento no se
+    // reparte hacia arriba.
+    expect(y + height).toBeCloseTo(rect.y + rect.height, 5);
+  });
+
+  it("centra horizontalmente dentro del rectángulo", () => {
+    const rect = { x: 10, y: 0, width: 100, height: 100 };
+    const { x, width } = computeSignaturePlacement(rect, 50, 50);
+    expect(x + width / 2).toBeCloseTo(rect.x + rect.width / 2, 5);
+  });
+
+  it("conserva la proporción de la imagen original", () => {
+    const rect = { x: 0, y: 0, width: 80, height: 20 };
+    const { width, height } = computeSignaturePlacement(rect, 300, 150); // 2:1
+    expect(width / height).toBeCloseTo(2, 5);
   });
 });
 

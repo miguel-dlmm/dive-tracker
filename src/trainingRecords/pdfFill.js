@@ -177,24 +177,47 @@ function drawFieldText(page, font, rect, text) {
 // scale sin tope de 1x (a diferencia de antes) — pedido explícito del
 // usuario: las firmas se veían demasiado pequeñas, y "si parte de la firma
 // cae sobre la línea, no pasa nada" — SIGNATURE_BOOST permite que ocupen
-// más que su rectángulo original, siempre centradas sobre el mismo punto.
-const SIGNATURE_BOOST = 1.7;
+// más que su rectángulo original. Subido de 1.7 a 2.2 (2026-09-04, pedido
+// explícito: "firmas más grandes") — con el anclaje arriba de
+// computeSignaturePlacement (ver debajo) todo ese margen extra crece hacia
+// ABAJO, nunca hacia arriba, así que un boost mayor ya no arriesga tapar
+// la fila anterior.
+const SIGNATURE_BOOST = 2.2;
+
+// Lógica de posicionamiento/tamaño de una firma — separada de pdf-lib a
+// propósito (mismo criterio que buildFillOperations de arriba y
+// computeConcatenatedLayout en pdfToJpg.js) para poder comprobarla con
+// tests unitarios rápidos, sin construir un PDFDocument real.
+//
+// Ancla SIEMPRE el borde SUPERIOR de la firma al borde superior del propio
+// rectángulo del campo (2026-09-04, pedido explícito: "firmas superpuestas
+// arriba, nunca cortadas... como firmar con un boli real"). Antes se
+// centraba en el eje vertical — con SIGNATURE_BOOST > 1 eso repartía el
+// desbordamiento mitad arriba/mitad abajo, así que la parte de ARRIBA de
+// la firma podía quedar oculta bajo el texto/la fila anterior. Con el
+// anclaje arriba, todo el margen extra crece hacia abajo — "si parte de la
+// firma cae sobre la línea impresa, no pasa nada" sigue siendo la
+// instrucción vigente para el margen inferior.
+export function computeSignaturePlacement(rect, imgWidth, imgHeight) {
+  const padding = 2;
+  const maxWidth = Math.max(rect.width - padding * 2, 1) * SIGNATURE_BOOST;
+  const maxHeight = Math.max(rect.height - padding * 2, 1) * SIGNATURE_BOOST;
+  const scale = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+  const width = imgWidth * scale;
+  const height = imgHeight * scale;
+  return {
+    x: rect.x + (rect.width - width) / 2,
+    y: rect.y + rect.height - height,
+    width,
+    height,
+  };
+}
 
 async function drawSignature(pdfDoc, page, form, fieldName, signaturePngDataUrl) {
   const rect = getFieldRect(form, fieldName);
   const pngImage = await pdfDoc.embedPng(dataUrlToBytes(signaturePngDataUrl));
-  const padding = 2;
-  const maxWidth = Math.max(rect.width - padding * 2, 1) * SIGNATURE_BOOST;
-  const maxHeight = Math.max(rect.height - padding * 2, 1) * SIGNATURE_BOOST;
-  const scale = Math.min(maxWidth / pngImage.width, maxHeight / pngImage.height);
-  const width = pngImage.width * scale;
-  const height = pngImage.height * scale;
-  page.drawImage(pngImage, {
-    x: rect.x + (rect.width - width) / 2,
-    y: rect.y + (rect.height - height) / 2,
-    width,
-    height,
-  });
+  const { x, y, width, height } = computeSignaturePlacement(rect, pngImage.width, pngImage.height);
+  page.drawImage(pngImage, { x, y, width, height });
 }
 
 /**
