@@ -14,6 +14,7 @@
   },
   "roster": {
     "titulo": "Alumnos",
+    "hint": "Cada alumno solo aporta su nombre, iniciales y firma — el resto ya está configurado arriba.",
     "vacio": "Todavía no has añadido ningún alumno.",
     "anadirPrimerAlumno": "Añade tu primer alumno",
     "anadirAlumno": "Añadir alumno",
@@ -37,6 +38,7 @@
   "studentForm": {
     "nuevoAlumno": "Nuevo alumno",
     "editarAlumno": "Editar alumno",
+    "hint": "Solo lo que cambia de un alumno a otro — el curso y sus fechas ya se rellenaron una vez para todo el listado.",
     "nombre": "Nombre",
     "apellidos": "Apellidos",
     "menorDeEdad": "Menor de edad",
@@ -61,6 +63,7 @@
     "cerrar": "Cerrar",
     "fechaDeFila": "Fecha: {{label}}",
     "elegirFechaCorta": "Fecha",
+    "configCompartidaHint": "Esto se rellena UNA vez para toda la clase. Cada alumno solo aporta su nombre, iniciales y firma, más abajo en \"Alumnos\".",
     "progreso": "Progreso del curso",
     "progresoHint": "Marca lo que ya se ha completado — las filas en gris son obligatorias para certificar el curso.",
     "obligatorio": "Obligatorio",

@@ -86,6 +86,10 @@ export default function StudentQuickEntrySheet({ open, onClose, mode, initial, o
         <h3 className="text-sm font-semibold text-gray-800">{mode === "edit" ? t("studentForm.editarAlumno") : t("studentForm.nuevoAlumno")}</h3>
         <button onClick={onClose} aria-label={t("studentSheet.cerrar")} className="text-gray-400"><X size={19} /></button>
       </div>
+      {/* Pedido explícito 2026-09-04: dejar claro que esto es solo lo que
+          varía por alumno — el curso, las fechas y el resto de la
+          configuración ya se rellenaron una vez para todo el listado. */}
+      <p className="mb-4 text-xs text-gray-400">{t("studentForm.hint")}</p>
 
       <div className="space-y-5">
         <section className="space-y-2">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2 } from "lucide-react";
+import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2, Info } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { useToast, RowMenu, DatePicker, Select, ConfirmDialog, Avatar } from "../shared";
 import { resolveAvatar } from "../avatarCatalog";
@@ -610,6 +610,18 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
 
       {templateMap && config && (
         <>
+          {/* Aviso de "qué hace este formulario" (2026-09-04, pedido
+              explícito: "no me disgusta la línea, pero me parece difícil
+              de entender qué hace") — lo que sigue hasta el listado de
+              Alumnos es UNA configuración compartida para toda la clase,
+              no un formulario por alumno; cada alumno solo aporta su
+              nombre y su firma. Es la confusión más probable de esta
+              pantalla, así que se explicita en vez de darla por sabida. */}
+          <div className="flex items-start gap-2 rounded-lg border px-3 py-2.5 text-xs" style={{ borderColor: `${TEAL}33`, backgroundColor: "#F0FDFA", color: "#0F5B57" }}>
+            <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <p>{t("studentSheet.configCompartidaHint")}</p>
+          </div>
+
           <section>
             <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.progreso")}</h3>
             <p className="mb-2 text-xs text-gray-400">{t("studentSheet.progresoHint")}</p>
@@ -726,7 +738,8 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
           )}
 
           <section>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("roster.titulo")}</h3>
+            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("roster.titulo")}</h3>
+            <p className="mb-2 text-xs text-gray-400">{t("roster.hint")}</p>
             {students.length === 0 ? (
               <div className="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-gray-400">
                 <p className="mb-2">{t("roster.vacio")}</p>
