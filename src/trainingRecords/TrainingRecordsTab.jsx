@@ -7,7 +7,7 @@ import { resolveAvatar } from "../avatarCatalog";
 import { TEAL } from "../App";
 import { fillTrainingRecordPdf } from "./pdfFill";
 import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
-import { buildDefaultConfig, validateRecordConfig, validateStudentFields, buildFillData } from "./recordConfig";
+import { buildDefaultConfig, validateRecordConfig, validateStudentFields, buildFillData, availableAdventureOptions } from "./recordConfig";
 import StudentQuickEntrySheet from "./StudentQuickEntrySheet";
 
 // Generador de Training Records (Release V1, Fase 5) — rediseño
@@ -174,25 +174,78 @@ function FieldError({ message }) {
 // Envolverlo en un contenedor de ancho fijo basta para que quepa junto al
 // checkbox sin tocar el componente compartido (DatePicker sigue siendo
 // w-full de su propio contenedor, igual que en cualquier otro formulario).
-function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, dateError, dateLabel }) {
+//
+// La etiqueta YA NO se trunca (corrección 2026-09-04, reportado por el
+// usuario: con el campo de fecha ocupando ancho fijo al lado, títulos
+// largos como "Inmersión de Formación en Aguas Abiertas 3" se cortaban y
+// dejaban de distinguirse entre filas) — se deja envolver a varias líneas
+// en vez de recortarse; items-start (no items-center) para que el
+// checkbox/indicador y el campo de fecha se alineen con la PRIMERA línea
+// del texto, no con el centro vertical del bloque ya envuelto.
+//
+// `fixed` (nuevo, 2026-09-04): algunas filas son obligatorias de verdad,
+// no una casilla más — "no debe poder desmarcarse" (pedido explícito para
+// Aguas Abiertas/Sesiones de OW, y para las 3 filas de AOWD). En vez de un
+// checkbox interactivo se muestra un indicador fijo (marcado, deshabilitado)
+// más una etiqueta "Obligatorio" — la fecha se pide siempre, igual que una
+// fila normal ya marcada.
+function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, dateError, dateLabel, fixed }) {
   const { t } = useTranslation("trainingRecords");
+  const showDate = (fixed || checked) && onDateChange;
   return (
     <div className="rounded-md border border-gray-200 px-3 py-2">
-      <div className="flex min-h-11 items-center gap-2.5">
-        <label className="flex min-w-0 flex-1 items-center gap-2.5 text-sm text-gray-700">
-          <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: TEAL }} />
-          <span className="min-w-0 flex-1 truncate">{label}</span>
-        </label>
-        {checked && onDateChange && (
+      <div className="flex min-h-11 items-start gap-2.5 py-1">
+        {fixed ? (
+          <span className="flex min-w-0 flex-1 items-start gap-2.5 text-sm text-gray-700">
+            <input type="checkbox" checked disabled aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 opacity-70" style={{ accentColor: TEAL }} />
+            <span className="min-w-0 flex-1">
+              {label}
+              <span className="ml-1.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.obligatorio")}</span>
+            </span>
+          </span>
+        ) : (
+          <label className="flex min-w-0 flex-1 items-start gap-2.5 text-sm text-gray-700">
+            <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: TEAL }} />
+            <span className="min-w-0 flex-1">{label}</span>
+          </label>
+        )}
+        {showDate && (
           <div className="w-36 shrink-0">
             {/* placeholder corto porque el campo ya va pegado a su propia
-                etiqueta (checked && onDateChange) — el texto completo
-                sigue disponible para lectores de pantalla vía ariaLabel */}
+                etiqueta — el texto completo sigue disponible para
+                lectores de pantalla vía ariaLabel */}
             <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} />
           </div>
         )}
       </div>
-      {checked && onDateChange && <FieldError message={dateError} />}
+      {showDate && <FieldError message={dateError} />}
+    </div>
+  );
+}
+
+// Fila de aventura electiva de AOWD (2026-09-04, pedido explícito: "las
+// mismas 5 filas de aventura tienen la misma forma visual") — mismo
+// contenedor que ProgressRowToggle (rounded-md border px-3 py-2), pero con
+// un Select en vez de una casilla, porque aquí lo que varía por alumno no
+// es "sí/no" sino "cuál aventura". `options` ya llega filtrada por
+// exclusión cruzada (availableAdventureOptions, recordConfig.js) — la
+// aventura elegida en otra fila no puede repetirse aquí.
+function AdventureRow({ label, value, options, onSelect, dateValue, onDateChange, dateError, dateLabel }) {
+  const { t } = useTranslation("trainingRecords");
+  return (
+    <div className="rounded-md border border-gray-200 px-3 py-2">
+      <div className="flex flex-col gap-2 py-1 sm:flex-row sm:items-start sm:gap-2.5">
+        <div className="min-w-0 flex-1">
+          <p className="mb-1 text-sm text-gray-700">{label}</p>
+          <Select value={value} onChange={onSelect} options={options} placeholder={t("studentSheet.elegirAventura")} />
+        </div>
+        {value && (
+          <div className="sm:w-36 sm:shrink-0">
+            <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} />
+          </div>
+        )}
+      </div>
+      {value && <FieldError message={dateError} />}
     </div>
   );
 }
@@ -221,7 +274,7 @@ function RadioChoice({ options, value, onChange }) {
 function configHasData(config) {
   if (!config) return false;
   if (Object.values(config.rowDates || {}).some(Boolean)) return true;
-  if (config.examConfirmed || config.examConfirmedDate) return true;
+  if (config.examConfirmedDate) return true;
   if ((config.specialtyDives || []).some((d) => d.adventureId)) return true;
   return false;
 }
@@ -550,12 +603,14 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
       {templateMap && config && (
         <>
           <section>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.progreso")}</h3>
+            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.progreso")}</h3>
+            <p className="mb-2 text-xs text-gray-400">{t("studentSheet.progresoHint")}</p>
             <div className="space-y-1.5">
               {templateMap.sessionRows.map((r, i) => (
                 <ProgressRowToggle
                   key={i}
                   label={r.label}
+                  fixed={r.fixed}
                   checked={config.includedRows[i]}
                   onChange={(checked) => toggleRow(i, checked)}
                   dateValue={config.rowDates[i]}
@@ -564,50 +619,51 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                   dateLabel={t("studentSheet.fechaDeFila", { label: r.label })}
                 />
               ))}
+              {/* Aventuras electivas de AOWD (2026-09-04, pedido explícito:
+                  "las mismas 5 filas de aventura tienen la misma forma
+                  visual") — se integran como filas más de Progreso del
+                  curso, en vez de una sección aparte con otro estilo. */}
+              {templateMap.optionalSpecialtyDives && (
+                <>
+                  <p className="px-1 pt-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.aventuras")}</p>
+                  {templateMap.optionalSpecialtyDives.map((dive, i) => {
+                    const current = config.specialtyDives[i];
+                    const options = availableAdventureOptions(adventures, config.specialtyDives, i).map((a) => a.name);
+                    return (
+                      <AdventureRow
+                        key={i}
+                        label={dive.label}
+                        value={current.adventureName || ""}
+                        options={options}
+                        onSelect={(name) => {
+                          const found = adventures.find((a) => a.name === name);
+                          updateDive(i, { adventureId: found?.id || null, adventureName: name || "", completed: !!found });
+                        }}
+                        dateValue={current.date}
+                        onDateChange={(v) => updateDive(i, { date: v })}
+                        dateError={configErrors.specialtyDates?.[i]}
+                        dateLabel={t("studentSheet.fechaDeFila", { label: dive.label })}
+                      />
+                    );
+                  })}
+                </>
+              )}
             </div>
             <FieldError message={configErrors.rows} />
           </section>
 
-          {templateMap.optionalSpecialtyDives && (
-            <section>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.inmersionesEspecialidad")}</h3>
-              <div className="space-y-2">
-                {templateMap.optionalSpecialtyDives.map((dive, i) => {
-                  const current = config.specialtyDives[i];
-                  return (
-                    <div key={i} className="rounded-md border border-gray-200 p-2.5">
-                      <p className="mb-1.5 text-xs font-medium text-gray-500">{dive.label}</p>
-                      <Select
-                        value={current.adventureName || ""}
-                        onChange={(name) => {
-                          const found = adventures.find((a) => a.name === name);
-                          updateDive(i, { adventureId: found?.id || null, adventureName: name || "", completed: !!found });
-                        }}
-                        options={adventures.map((a) => a.name)}
-                        placeholder={t("studentSheet.elegirAventura")}
-                      />
-                      {current.adventureId && (
-                        <div className="mt-1.5">
-                          <DatePicker value={current.date} onChange={(v) => updateDive(i, { date: v })} placeholder={t("studentSheet.fechaDeFila", { label: dive.label })} />
-                          <FieldError message={configErrors.specialtyDates?.[i]} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
           {templateMap.examVersion && (
             <section>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.versionExamen")}</h3>
+              {/* "Online" primero (2026-09-04, pedido explícito) — es la
+                  opción premarcada por defecto y, en la práctica, casi la
+                  única que se usa. */}
               <RadioChoice
                 value={config.examVersion}
                 onChange={(v) => updateConfig({ examVersion: v })}
                 options={[
-                  { value: "printed", label: t("studentSheet.examenImpreso") },
                   { value: "online", label: t("studentSheet.examenOnline") },
+                  { value: "printed", label: t("studentSheet.examenImpreso") },
                 ]}
               />
               <FieldError message={configErrors.examVersion} />
@@ -632,6 +688,8 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
           {templateMap.courseVariant && (
             <section>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.varianteCurso")}</h3>
+              {/* EAN32 premarcado (2026-09-04, pedido explícito) — la
+                  variante más habitual, ver buildDefaultConfig. */}
               <RadioChoice
                 value={config.courseVariant}
                 onChange={(v) => updateConfig({ courseVariant: v })}
@@ -643,18 +701,19 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
             </section>
           )}
 
+          {/* "Fecha de examen" (2026-09-04, pedido explícito, OWD/SC-DD/
+              SC-EAN): ya no es una casilla de "confirmación" con fecha —
+              es directamente un campo de fecha obligatorio. */}
           {templateMap.examConfirmation && (
             <section>
-              <ProgressRowToggle
-                label={templateMap.examConfirmation.label}
-                checked={config.examConfirmed}
-                onChange={(v) => updateConfig({ examConfirmed: v })}
-                dateValue={config.examConfirmedDate}
-                onDateChange={(v) => updateConfig({ examConfirmedDate: v })}
-                dateError={configErrors.examConfirmationDate}
-                dateLabel={t("studentSheet.fechaDeFila", { label: templateMap.examConfirmation.label })}
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{templateMap.examConfirmation.label}</h3>
+              <DatePicker
+                value={config.examConfirmedDate}
+                onChange={(v) => updateConfig({ examConfirmedDate: v })}
+                placeholder={t("studentSheet.elegirFechaCorta")}
+                ariaLabel={templateMap.examConfirmation.label}
               />
-              <FieldError message={configErrors.examConfirmation} />
+              <FieldError message={configErrors.examConfirmationDate} />
             </section>
           )}
 

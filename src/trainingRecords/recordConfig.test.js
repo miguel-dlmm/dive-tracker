@@ -1,4 +1,4 @@
-import { buildDefaultConfig, validateRecordConfig, validateStudentFields, buildFillData } from "./recordConfig";
+import { buildDefaultConfig, validateRecordConfig, validateStudentFields, buildFillData, availableAdventureOptions } from "./recordConfig";
 import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
 
 const OWD = TEMPLATE_FIELD_MAPS.OWD;
@@ -52,38 +52,98 @@ describe("validateRecordConfig", () => {
     expect(errors.rowDates[1]).toBeUndefined();
   });
 
-  it("exige versión de examen, certificación y confirmación de examen final (con su propia fecha) solo si la plantilla las tiene", () => {
-    const base = { ...buildDefaultConfig(OWD), rowDates: allRowDates, examVersion: null, upgrade: null, examConfirmed: false };
+  it("exige versión de examen, certificación y fecha de examen solo si la plantilla las tiene", () => {
+    const base = { ...buildDefaultConfig(OWD), rowDates: allRowDates, examVersion: null, upgrade: null, examConfirmedDate: null };
     const { errors } = validateRecordConfig(OWD, base);
     expect(errors.examVersion).toBeTruthy();
     expect(errors.upgrade).toBeTruthy();
-    expect(errors.examConfirmation).toBeTruthy();
+    expect(errors.examConfirmationDate).toBeTruthy();
 
     // AOWD no tiene ninguna de esas 3 secciones — no deben exigirse.
-    const aowdCfg = { ...buildDefaultConfig(AOWD), rowDates: { 0: "2026-09-01", 1: "2026-09-01", 2: "2026-09-01" } };
+    const aowdCfg = {
+      ...buildDefaultConfig(AOWD),
+      rowDates: { 0: "2026-09-01", 1: "2026-09-01", 2: "2026-09-01" },
+      specialtyDives: [
+        { adventureId: "a1", adventureName: "Buceo nocturno", completed: true, date: "2026-09-01" },
+        { adventureId: "a2", adventureName: "Corrientes", completed: true, date: "2026-09-01" },
+        { adventureId: "a3", adventureName: "Navegación con brújula", completed: true, date: "2026-09-01" },
+      ],
+    };
     const aowdResult = validateRecordConfig(AOWD, aowdCfg);
     expect(aowdResult.errors.examVersion).toBeUndefined();
     expect(aowdResult.errors.upgrade).toBeUndefined();
-    expect(aowdResult.errors.examConfirmation).toBeUndefined();
+    expect(aowdResult.errors.examConfirmationDate).toBeUndefined();
   });
 
-  it("marca la confirmación de examen como incompleta si falta su fecha, aunque esté marcada", () => {
-    const cfg = { ...buildDefaultConfig(OWD), rowDates: allRowDates, examVersion: "online", upgrade: "openWaterDiver", examConfirmed: true, examConfirmedDate: null };
-    const { errors } = validateRecordConfig(OWD, cfg);
-    expect(errors.examConfirmation).toBeUndefined();
-    expect(errors.examConfirmationDate).toBeTruthy();
+  // 2026-09-04, pedido explícito ("Confirmación de Examen Final" pasa a
+  // ser "fecha de examen", campo de fecha obligatorio, sin casilla).
+  it("'fecha de examen' solo exige la fecha — no hay casilla de confirmación que marcar antes", () => {
+    const cfgSinFecha = { ...buildDefaultConfig(OWD), rowDates: allRowDates, examVersion: "online", upgrade: "openWaterDiver", examConfirmedDate: null };
+    expect(validateRecordConfig(OWD, cfgSinFecha).errors.examConfirmationDate).toBeTruthy();
+
+    const cfgConFecha = { ...buildDefaultConfig(OWD), rowDates: allRowDates, examVersion: "online", upgrade: "openWaterDiver", examConfirmedDate: "2026-09-02" };
+    expect(validateRecordConfig(OWD, cfgConFecha).errors.examConfirmationDate).toBeUndefined();
   });
 
-  it("exige la fecha de una inmersión de especialidad completada (AOWD)", () => {
-    const cfg = { ...buildDefaultConfig(AOWD), rowDates: { 0: "2026-09-01", 1: "2026-09-01", 2: "2026-09-01" } };
-    cfg.specialtyDives[0] = { adventureId: "abc", adventureName: "Buceo nocturno", completed: true, date: null };
-    const { errors } = validateRecordConfig(AOWD, cfg);
-    expect(errors.specialtyDates[0]).toBeTruthy();
+  // 2026-09-04, pedido explícito ("ALL AOWD fields become obligatory"):
+  // las 3 aventuras electivas dejan de ser opcionales de verdad — hay que
+  // elegir una en cada una, no solo poner fecha si se elige.
+  describe("AOWD — las 3 aventuras electivas son obligatorias", () => {
+    const baseRowDates = { 0: "2026-09-01", 1: "2026-09-01", 2: "2026-09-01" };
+
+    it("exige elegir una aventura en cada una de las 3, no solo poner fecha si se elige", () => {
+      const cfg = { ...buildDefaultConfig(AOWD), rowDates: baseRowDates };
+      const { errors } = validateRecordConfig(AOWD, cfg);
+      expect(errors.specialtyDates[0]).toBeTruthy();
+      expect(errors.specialtyDates[1]).toBeTruthy();
+      expect(errors.specialtyDates[2]).toBeTruthy();
+    });
+
+    it("exige la fecha de una aventura ya elegida", () => {
+      const cfg = { ...buildDefaultConfig(AOWD), rowDates: baseRowDates };
+      cfg.specialtyDives[0] = { adventureId: "abc", adventureName: "Buceo nocturno", completed: true, date: null };
+      const { errors } = validateRecordConfig(AOWD, cfg);
+      expect(errors.specialtyDates[0]).toBeTruthy();
+    });
+
+    it("válida cuando las 3 aventuras tienen adventureId y fecha", () => {
+      const cfg = {
+        ...buildDefaultConfig(AOWD),
+        rowDates: baseRowDates,
+        specialtyDives: [
+          { adventureId: "a1", adventureName: "Buceo nocturno", completed: true, date: "2026-09-01" },
+          { adventureId: "a2", adventureName: "Corrientes", completed: true, date: "2026-09-01" },
+          { adventureId: "a3", adventureName: "Navegación con brújula", completed: true, date: "2026-09-01" },
+        ],
+      };
+      expect(validateRecordConfig(AOWD, cfg).errors.specialtyDates).toBeUndefined();
+    });
   });
 
   it("válido cuando todos los campos obligatorios están completos, sin necesitar ninguna firma", () => {
-    const cfg = { ...buildDefaultConfig(OWD), rowDates: allRowDates, examVersion: "online", upgrade: "openWaterDiver", examConfirmed: true, examConfirmedDate: "2026-09-02" };
+    const cfg = { ...buildDefaultConfig(OWD), rowDates: allRowDates, examVersion: "online", upgrade: "openWaterDiver", examConfirmedDate: "2026-09-02" };
     expect(validateRecordConfig(OWD, cfg).valid).toBe(true);
+  });
+});
+
+describe("availableAdventureOptions", () => {
+  const adventures = [{ id: "a1", name: "Buceo nocturno" }, { id: "a2", name: "Corrientes" }, { id: "a3", name: "Barco hundido" }];
+
+  it("devuelve todas las aventuras cuando ninguna otra fila tiene nada elegido", () => {
+    const specialtyDives = [{ adventureId: null }, { adventureId: null }, { adventureId: null }];
+    expect(availableAdventureOptions(adventures, specialtyDives, 0)).toEqual(adventures);
+  });
+
+  it("excluye la aventura ya elegida en OTRA fila, pero no la de la propia fila", () => {
+    const specialtyDives = [{ adventureId: "a1" }, { adventureId: null }, { adventureId: "a3" }];
+    const result = availableAdventureOptions(adventures, specialtyDives, 1);
+    expect(result.map((a) => a.id)).toEqual(["a2"]);
+  });
+
+  it("la propia fila conserva su aventura ya elegida entre las opciones", () => {
+    const specialtyDives = [{ adventureId: "a1" }, { adventureId: null }, { adventureId: null }];
+    const result = availableAdventureOptions(adventures, specialtyDives, 0);
+    expect(result.map((a) => a.id)).toEqual(["a1", "a2", "a3"]);
   });
 });
 
@@ -101,8 +161,22 @@ describe("validateStudentFields", () => {
     expect(errors.studentSignature).toBeTruthy();
   });
 
-  it("no exige firma del tutor — es opcional", () => {
+  it("no exige nombre ni firma del tutor cuando el alumno no es menor de edad", () => {
     expect(validateStudentFields(validStudent).valid).toBe(true);
+  });
+
+  // 2026-09-04, pedido explícito (OW): "Menor de edad" revela nombre y
+  // firma del padre/madre/tutor, obligatorios en cuanto se marca.
+  it("exige nombre y firma del tutor cuando el alumno SÍ es menor de edad", () => {
+    const { valid, errors } = validateStudentFields({ ...validStudent, isMinor: true, guardianName: "", guardianSignature: null });
+    expect(valid).toBe(false);
+    expect(errors.guardianName).toBeTruthy();
+    expect(errors.guardianSignature).toBeTruthy();
+  });
+
+  it("válido si es menor de edad pero ya tiene nombre y firma de tutor", () => {
+    const minorStudent = { ...validStudent, isMinor: true, guardianName: "Juana Pérez", guardianSignature: "data:image/png;base64,TUTOR" };
+    expect(validateStudentFields(minorStudent).valid).toBe(true);
   });
 });
 

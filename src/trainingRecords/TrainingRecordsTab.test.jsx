@@ -19,11 +19,14 @@ vi.mock("signature_pad", () => ({
     };
   }),
 }));
-// Cada apertura de StudentQuickEntrySheet monta 2 SignatureCapture a la
-// vez (alumno primero, tutor después) — el handler del ALUMNO es el
-// penúltimo empujado en esta apertura, no el último (ese es el del tutor).
+// Con "Menor de edad" sin marcar (caso por defecto de estos tests) solo se
+// monta el SignatureCapture del alumno — el del tutor queda oculto del
+// todo (2026-09-04, pedido explícito: antes era un campo "opcional"
+// siempre visible; ahora el checkbox "Menor de edad" decide si existe
+// siquiera). El handler del alumno es, por tanto, el ÚLTIMO empujado en
+// esta apertura.
 function signStudentInOpenSheet() {
-  endStrokeHandlers[endStrokeHandlers.length - 2]?.();
+  endStrokeHandlers[endStrokeHandlers.length - 1]?.();
 }
 
 const fillTrainingRecordPdf = vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3]));
@@ -114,8 +117,10 @@ async function pickToday(user, dateFieldLabel) {
 async function selectTemplateAndFillSharedConfig(user) {
   await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
   for (const label of OWD_MANDATORY_ROW_LABELS) await pickToday(user, `Fecha: ${label}`);
-  await user.click(screen.getByRole("checkbox", { name: "Confirmación de Examen Final" }));
-  await pickToday(user, "Fecha: Confirmación de Examen Final");
+  // "Fecha de examen" (2026-09-04): ya no es una casilla + fecha, es
+  // directamente un campo de fecha obligatorio — ver ProgressRowToggle/
+  // examConfirmation en TrainingRecordsTab.jsx.
+  await pickToday(user, "Fecha de examen");
 }
 
 // Añade un alumno con nombre/apellidos/firma vía el FAB "Añadir alumno".
@@ -160,7 +165,7 @@ it("no genera si falta la configuración compartida o los datos de algún alumno
 
   expect(fillTrainingRecordPdf).not.toHaveBeenCalled();
   expect(screen.getAllByText("Falta la fecha de esta fila.").length).toBe(6);
-});
+}, 15000);
 
 it("marca con un aviso al alumno al que le falta la firma, y bloquea Generar sin borrar a los demás", async () => {
   const user = userEvent.setup();
@@ -175,6 +180,38 @@ it("marca con un aviso al alumno al que le falta la firma, y bloquea Generar sin
 
   expect(screen.getByText("Falta la firma del alumno.")).toBeInTheDocument();
   expect(fillTrainingRecordPdf).not.toHaveBeenCalled();
+}, 15000);
+
+// 2026-09-04, pedido explícito (OW): "Menor de edad" revela nombre/firma
+// del tutor, normalmente ocultos — y los exige en cuanto se marca. Firma
+// los pads por índice explícito (no con el helper compartido, que asume
+// un único SignatureCapture montado) porque marcar la casilla monta un
+// SEGUNDO SignatureCapture (el del tutor) sobre el mismo alumno.
+it("'Menor de edad' revela el nombre/firma del tutor y los exige antes de guardar", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+
+  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
+  expect(screen.queryByRole("textbox", { name: "Nombre del padre/madre/tutor" })).not.toBeInTheDocument();
+  const studentHandlerIndex = endStrokeHandlers.length - 1; // solo el del alumno, todavía sin tutor
+
+  await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ana");
+  await user.type(screen.getByRole("textbox", { name: "Apellidos" }), "Garcia");
+  await user.click(screen.getByRole("checkbox", { name: "Menor de edad" }));
+  expect(screen.getByRole("textbox", { name: "Nombre del padre/madre/tutor" })).toBeInTheDocument();
+  const guardianHandlerIndex = endStrokeHandlers.length - 1; // el del tutor, montado justo ahora
+
+  await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
+  expect(screen.getByText("Falta la firma del alumno.")).toBeInTheDocument();
+  expect(screen.getByText("Falta el nombre del padre, madre o tutor.")).toBeInTheDocument();
+  expect(screen.getByText("Falta la firma del padre, madre o tutor.")).toBeInTheDocument();
+
+  await user.type(screen.getByRole("textbox", { name: "Nombre del padre/madre/tutor" }), "Juana Perez");
+  endStrokeHandlers[studentHandlerIndex]();
+  endStrokeHandlers[guardianHandlerIndex]();
+  await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
+  await screen.findByText("Ana Garcia");
 }, 15000);
 
 it("el listado y los documentos ya generados sobreviven a un remontaje (recarga de página)", async () => {
@@ -208,4 +245,4 @@ it("pide confirmación antes de cambiar de plantilla solo si ya hay progreso rel
   expect(await screen.findByText("¿Cambiar de plantilla?")).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Cancelar" }));
   expect(screen.getByRole("button", { name: "Cambiar plantilla" })).toBeInTheDocument();
-});
+}, 15000);

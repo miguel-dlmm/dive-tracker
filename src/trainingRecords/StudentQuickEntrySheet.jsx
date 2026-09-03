@@ -15,7 +15,7 @@ import { validateStudentFields } from "./recordConfig";
 // (ver TrainingRecordsTab.jsx). Esta hoja solo pide lo que de verdad varía
 // de un alumno a otro: nombre, apellidos, iniciales (calculadas) y firma
 // (+ tutor, opcional). Sustituye a StudentRecordSheet.jsx.
-const emptyStudent = { firstName: "", lastName: "", initials: "", studentSignature: null, guardianName: "", guardianSignature: null };
+const emptyStudent = { firstName: "", lastName: "", initials: "", studentSignature: null, isMinor: false, guardianName: "", guardianSignature: null };
 
 function FieldError({ message }) {
   if (!message) return null;
@@ -30,6 +30,15 @@ export default function StudentQuickEntrySheet({ open, onClose, mode, initial, o
   const [initials, setInitials] = useState("");
   const [initialsTouched, setInitialsTouched] = useState(false);
   const [studentSignature, setStudentSignature] = useState(null);
+  // "Menor de edad" (2026-09-04, pedido explícito de OW, aplicado a
+  // cualquier plantilla): los datos del padre/madre/tutor solo se piden y
+  // se muestran cuando esta casilla está marcada — antes eran un campo
+  // "opcional" siempre visible, lo que no distinguía "no aplica" de
+  // "se me olvidó rellenarlo". Al editar un alumno ya guardado ANTES de
+  // este cambio (con guardianName/guardianSignature ya rellenos pero sin
+  // isMinor todavía), se deriva isMinor de que ya hubiera algún dato de
+  // tutor, para no "perder" esos datos de vista.
+  const [isMinor, setIsMinor] = useState(false);
   const [guardianName, setGuardianName] = useState("");
   const [guardianSignature, setGuardianSignature] = useState(null);
   const [errors, setErrors] = useState({});
@@ -45,6 +54,7 @@ export default function StudentQuickEntrySheet({ open, onClose, mode, initial, o
     setInitials(student.initials || "");
     setInitialsTouched(mode === "edit" && !!student.initials);
     setStudentSignature(student.studentSignature || null);
+    setIsMinor(student.isMinor ?? !!(student.guardianName || student.guardianSignature));
     setGuardianName(student.guardianName || "");
     setGuardianSignature(student.guardianSignature || null);
     setErrors({});
@@ -55,19 +65,19 @@ export default function StudentQuickEntrySheet({ open, onClose, mode, initial, o
   }, [firstName, lastName, initialsTouched]);
 
   const save = () => {
-    const student = { firstName: firstName.trim(), lastName: lastName.trim(), initials: initials.trim(), studentSignature };
+    const student = {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      initials: initials.trim(),
+      studentSignature,
+      isMinor,
+      guardianName: isMinor ? guardianName.trim() : "",
+      guardianSignature: isMinor ? guardianSignature : null,
+    };
     const { valid, errors: validationErrors } = validateStudentFields(student);
     setErrors(validationErrors);
     if (!valid) return;
-    onSaved({
-      id: mode === "edit" ? initial.id : crypto.randomUUID(),
-      firstName: student.firstName,
-      lastName: student.lastName,
-      initials: student.initials,
-      studentSignature,
-      guardianName: guardianName.trim(),
-      guardianSignature,
-    });
+    onSaved({ id: mode === "edit" ? initial.id : crypto.randomUUID(), ...student });
   };
 
   return (
@@ -103,9 +113,18 @@ export default function StudentQuickEntrySheet({ open, onClose, mode, initial, o
             </Field>
             <FieldError message={errors.initials} />
           </div>
-          <Field label={t("studentForm.tutor")} hint={t("studentForm.tutorHint")}>
-            <input value={guardianName} onChange={(e) => setGuardianName(e.target.value)} className={`${inputCls} w-full`} />
-          </Field>
+          <label className="flex min-h-11 items-center gap-2.5 text-sm text-gray-700">
+            <input type="checkbox" checked={isMinor} onChange={(e) => setIsMinor(e.target.checked)} className="h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: TEAL }} />
+            {t("studentForm.menorDeEdad")}
+          </label>
+          {isMinor && (
+            <div>
+              <Field label={t("studentForm.tutor")}>
+                <input value={guardianName} onChange={(e) => setGuardianName(e.target.value)} className={`${inputCls} w-full`} />
+              </Field>
+              <FieldError message={errors.guardianName} />
+            </div>
+          )}
         </section>
 
         <section>
@@ -115,7 +134,12 @@ export default function StudentQuickEntrySheet({ open, onClose, mode, initial, o
               <SignatureCapture label={t("studentSheet.firmaAlumno")} value={studentSignature} onChange={setStudentSignature} />
               <FieldError message={errors.studentSignature} />
             </div>
-            <SignatureCapture label={t("studentSheet.firmaTutor")} value={guardianSignature} onChange={setGuardianSignature} optionalHint />
+            {isMinor && (
+              <div>
+                <SignatureCapture label={t("studentSheet.firmaTutor")} value={guardianSignature} onChange={setGuardianSignature} />
+                <FieldError message={errors.guardianSignature} />
+              </div>
+            )}
           </div>
         </section>
 
