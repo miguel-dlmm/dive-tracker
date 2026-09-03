@@ -77,7 +77,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
         toast?.success("Cambios guardados");
       } else {
         await table.insertRow(form);
-        toast?.success("Añadido correctamente");
+        toast?.success("Añadido");
       }
       closeSheet();
     } catch {
@@ -774,7 +774,7 @@ function CreateUserSheet({ onClose, onCreated }) {
         toast?.success("Usuario creado (el email no se pudo enviar)");
         setEmailFailure(payload);
       } else {
-        toast?.success("Usuario creado correctamente");
+        toast?.success("Usuario creado");
         onCreated();
       }
     } catch (err) {
@@ -1015,7 +1015,7 @@ function UsersDirectory({ profile }) {
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: "Solo un superadmin puede cambiar el rol de admin de otra cuenta.", fallback: "No se pudo actualizar el rol." }));
-      toast?.success("Rol actualizado correctamente");
+      toast?.success("Rol actualizado");
       setPendingToggle(null);
       reload();
     } catch (err) {
