@@ -119,7 +119,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 11 | KPIs animados en Movimientos (Generado este mes / Pendiente de cobrar + 3º a decidir) | ✅ Hecho | `feat/bloque11-kpis-movimientos` (desde `feat/bloque10-home-training-records`) | `08079f8` |
 | 12 | Análisis de sesión/perfil (eficiencia, robustez) | ✅ Hecho | `fix/bloque12-sesion-perfil` (desde `develop`) | `f1a7576` |
 | 13 | Análisis de build/push/despliegue | ✅ Analizado + limpieza real ejecutada, mail enviado | — (solo análisis + `git gc` local) | — |
-| 14 | Velocidad de la suite de test | ⬜ No empezado | — | — |
+| 14 | Velocidad de la suite de test | ✅ Analizado, mail enviado | — (solo análisis) | — |
 | 15 | Mocks vs. BBDD real en los tests | ⬜ No empezado | — | — |
 | 16 | Eficiencia de las propias pruebas de Claude (navegador) | ⬜ No empezado | — | — |
 | 17 | Cobertura de test — ampliar / otros tipos / estándares | ⬜ No empezado | — | — |
@@ -315,9 +315,15 @@ libera ese espacio y evita que un `git add .` futuro repita el mismo
 problema; añadir `*.dmg`/`*.pkg` al `.gitignore` sería una prevención
 barata para el futuro.
 
-**Bloque 14 — Velocidad de la suite de test**
-¿Se podría paralelizar/optimizar para que vaya más rápido, o es
-prematuro pensarlo ahora?
+**Bloque 14 — Velocidad de la suite de test** ✅ Hecho — ver mail
+enviado. Veredicto: prematuro optimizar ahora (616 tests, ~45-100s de
+reloj real, ya paralelizado por defecto por Vitest entre varios
+workers — no corre en serie). Palanca concreta documentada para si
+algún día hace falta: `environment: 'jsdom'` → `'happy-dom'` (más
+ligero, 2-3x más rápido de instanciar según la comunidad) — no
+instalada ni probada, sería el primer sitio donde mirar. Revisar de
+nuevo si la suite crece mucho, si se añade CI, o si el propio usuario
+empieza a notar la espera como una molestia real.
 
 **Bloque 15 — Mocks en los tests**
 ¿Se usan mocks o llamadas reales a BBDD en los tests? Deberían ser
