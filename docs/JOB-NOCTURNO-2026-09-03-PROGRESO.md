@@ -105,7 +105,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 
 | # | Bloque | Estado | Rama | Commit |
 |---|---|---|---|---|
-| TR-restyle | Rediseño del generador de Training Records (pedido a mitad de sesión, prioridad máxima) | ⬜ No empezado | `feature/training-records` (continúa la misma rama del Bloque 5) | — |
+| TR-restyle | Rediseño del generador de Training Records (pedido a mitad de sesión, prioridad máxima) | ✅ Hecho | `feature/training-records` (continúa la misma rama del Bloque 5) | `d5609ea` |
 | 1 | Estado (notificaciones/styling/libro de estilo) | ✅ Analizado, mail enviado | — (solo análisis) | — |
 | 2 | email_for_nickname / rate limiting | ✅ Analizado, mail enviado, sin implementar (decisión del usuario) | — (solo análisis) | — |
 | 3 | Test roto en `main` (PaymentsTab, fecha relativa) | ✅ Hecho | `fix/paymentstab-test-fecha-relativa` (desde `develop`) | `f808a4d` |
@@ -162,6 +162,17 @@ Desglose accionable:
 Rama: continuar sobre `feature/training-records` (mismo feature que el
 Bloque 5, no una rama nueva — es un refinamiento de la misma pantalla,
 no un bloque conceptual distinto).
+
+✅ Hecho — commit `d5609ea`, verificado a mano en Chrome (viewport
+iPhone) contra Supabase TEST real además de la suite de tests (616
+passed). Los 6 puntos del desglose de arriba, cubiertos. Detalle
+técnico en el propio mensaje de commit y en el aviso de despliegue ya
+enviado. Único añadido no pedido explícitamente: `DatePicker`
+(`shared.jsx`) gana un prop opcional `ariaLabel` — necesario porque el
+placeholder visible se acortó a "Fecha" por espacio, pero cada fila
+sigue necesitando un nombre accesible distinto para lectores de
+pantalla; retrocompatible, ningún otro uso de `DatePicker` en la app
+lo pasa y sigue comportándose igual que antes.
 
 **Bloque 6 — Revisión de todos los textos** ✅ Hecho — ver tabla arriba.
 Alcance cubierto: toasts de éxito (quitado "correctamente" — redundante
@@ -260,10 +271,9 @@ explícitamente.
 1. Leer solo este documento — no hace falta el historial de chat.
 2. Confirmar que las ramas de la tabla de arriba siguen empujadas y sin
    mergear (`git branch -a`, `git log origin/<rama>..<rama>`).
-3. Si `TR-restyle` sigue en ⬜, es lo primero — el usuario lo pidió con
-   prioridad máxima a mitad de sesión. Se trabaja sobre
-   `feature/training-records` (continuación del Bloque 5, no rama
-   nueva).
+3. `TR-restyle` ya está hecho (commit `d5609ea` en
+   `feature/training-records`) — si algún día se pide seguir tocando esa
+   misma pantalla, continuar sobre esa rama, no una nueva.
 4. Seguir con el Bloque 7 en adelante, en orden, con el mismo protocolo
    (rama por bloque, commit por unidad, tests+build en verde antes de
    cada push — recordar el cherry-pick de `f808a4d` si `PaymentsTab.test.jsx`
