@@ -121,7 +121,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 13 | Análisis de build/push/despliegue | ✅ Analizado + limpieza real ejecutada, mail enviado | — (solo análisis + `git gc` local) | — |
 | 14 | Velocidad de la suite de test | ✅ Analizado, mail enviado | — (solo análisis) | — |
 | 15 | Mocks vs. BBDD real en los tests | ✅ Analizado, mail enviado — ya cumple, sin acción | — (solo análisis) | — |
-| 16 | Eficiencia de las propias pruebas de Claude (navegador) | ⬜ No empezado | — | — |
+| 16 | Eficiencia de las propias pruebas de Claude (navegador) | ✅ Analizado, mail enviado | — (solo análisis) | — |
 | 17 | Cobertura de test — ampliar / otros tipos / estándares | ⬜ No empezado | — | — |
 | 18 | Monitorización de infraestructura (Vercel/Supabase) | ⬜ No empezado | — | — |
 | final | Análisis de código (eficiencia, robustez, patrones, dependencias...) | ⬜ No empezado | — | — |
@@ -337,9 +337,17 @@ directo (`useSupabaseTable.js`, `useSession.js`, `ConfigTab.jsx`); los
 tocar. Hallazgo aparte para el Bloque 17: `useSupabaseTable.js` no
 tiene test propio, solo se verifica indirectamente.
 
-**Bloque 16 — Pruebas propias de Claude**
-¿Se puede hacer más eficiente cómo Claude prueba contra el navegador?
-Si ya está optimizado, nada que hacer.
+**Bloque 16 — Pruebas propias de Claude** ✅ Hecho — ver mail enviado.
+3 lecciones concretas de ESTA misma sesión: (1) esperar 1-2s tras
+cualquier navegación antes del primer clic — un clic inmediato tras
+cambiar de pestaña/abrir un slide falla casi siempre por la transición
+de motion; (2) para verificar texto/estado del DOM, usar
+`javascript_tool` (textContent, getComputedStyle) en vez de interpretar
+una captura — esta sesión tuvo un falso positivo Y un falso negativo
+leyendo capturas; (3) para depurar un bug de animación real, inspeccionar
+el DOM directamente por JS encontró la causa mucho más rápido que mirar
+capturas. No se ha tocado CLAUDE.md — se ofreció añadir una nota breve,
+a la espera de que el usuario lo confirme.
 
 **Bloque 17 — Cobertura y tipos de test**
 ¿Merece la pena ampliar cobertura? ¿Falta algún tipo de test que dé
