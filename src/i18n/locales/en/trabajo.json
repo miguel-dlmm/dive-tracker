@@ -128,5 +128,10 @@
       "rateAdded": "Rate added",
       "rateSaveError": "Couldn't save the rate. Try again."
     }
+  },
+  "kpis": {
+    "generatedThisMonth": "Generated this month",
+    "pendingToCollect": "Pending to collect",
+    "collectedThisMonth": "Collected this month"
   }
 }

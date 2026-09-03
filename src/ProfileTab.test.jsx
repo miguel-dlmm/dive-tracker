@@ -5,6 +5,15 @@ vi.mock("./supabaseClient", () => ({
   },
 }));
 
+// signature_pad necesita un canvas 2D real que jsdom no implementa — mismo
+// límite del sistema ya documentado donde se usa SignatureCapture en
+// Training Records (ver TrainingRecordsTab.test.jsx).
+vi.mock("signature_pad", () => ({
+  default: vi.fn().mockImplementation(function MockSignaturePad() {
+    return { clear: vi.fn(), off: vi.fn(), isEmpty: vi.fn().mockReturnValue(true), toDataURL: vi.fn(), addEventListener: vi.fn() };
+  }),
+}));
+
 import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ProfileTab from "./ProfileTab";
@@ -105,27 +114,46 @@ describe("avatar", () => {
 });
 
 describe("datos personales", () => {
-  it("edita nombre/apellidos/nickname y guarda", async () => {
+  // Acotado con within(): InstructorSection (Fase 5, Training Records)
+  // también usa botones "Editar"/"Guardar" en su propia SectionCard, así
+  // que screen.getByRole sin acotar ya no es único.
+  const personalDataSection = () => screen.getByText("Datos personales").closest("div");
+
+  it("edita nombre/apellidos/nickname y guarda, autogenerando las iniciales de instructor porque el perfil no tenía ninguna", async () => {
     const user = userEvent.setup();
     const { update, eq } = mockUpdate();
     const { onProfileUpdated } = renderProfile();
 
-    await user.click(screen.getByRole("button", { name: "Editar" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
     const nickname = screen.getByDisplayValue("ada");
     await user.clear(nickname);
     await user.type(nickname, "adalovelace");
-    await user.click(screen.getByRole("button", { name: "Guardar" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace" }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", instructor_initials: "AL" }));
     expect(eq).toHaveBeenCalledWith("user_id", "u1");
     expect(onProfileUpdated).toHaveBeenCalled();
+  });
+
+  it("no autogenera las iniciales de instructor si el perfil ya tenía unas guardadas a mano", async () => {
+    const user = userEvent.setup();
+    const { update } = mockUpdate();
+    renderProfile({ profile: { ...PROFILE, instructor_initials: "XX" } });
+
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
+    const nickname = screen.getByDisplayValue("ada");
+    await user.clear(nickname);
+    await user.type(nickname, "adalovelace");
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace" }));
   });
 
   it("no deja guardar un nickname con \"@\"", async () => {
     const user = userEvent.setup();
     renderProfile();
 
-    await user.click(screen.getByRole("button", { name: "Editar" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
     const nickname = screen.getByDisplayValue("ada");
     await user.clear(nickname);
     await user.type(nickname, "ada@x.com");
@@ -139,10 +167,37 @@ describe("datos personales", () => {
     mockUpdate({ error: { code: "23505", message: "duplicate key value violates unique constraint \"profiles_nickname_lower_key\"" } });
     renderProfile();
 
-    await user.click(screen.getByRole("button", { name: "Editar" }));
-    await user.click(screen.getByRole("button", { name: "Guardar" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
     expect(await screen.findByText("Ese nickname ya está en uso.")).toBeInTheDocument();
+  });
+});
+
+describe("datos de instructor", () => {
+  const instructorSection = () => document.getElementById("instructor-section");
+
+  it("muestra — por defecto cuando el perfil no tiene datos de instructor", () => {
+    renderProfile();
+    const section = within(instructorSection());
+    expect(section.getByText("Iniciales:")).toBeInTheDocument();
+    // Iniciales, número SSI Pro y firma — las 3 vacías por defecto.
+    expect(section.getAllByText("—")).toHaveLength(3);
+  });
+
+  it("edita iniciales y número SSI Pro y guarda", async () => {
+    const user = userEvent.setup();
+    const { update, eq } = mockUpdate();
+    const { onProfileUpdated } = renderProfile();
+
+    await user.click(within(instructorSection()).getByRole("button", { name: "Editar" }));
+    await user.type(within(instructorSection()).getByRole("textbox", { name: "Iniciales" }), "al");
+    await user.type(within(instructorSection()).getByRole("textbox", { name: "Número SSI Pro" }), "98765");
+    await user.click(within(instructorSection()).getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ instructor_initials: "AL", ssi_pro_number: "98765", instructor_signature: null }));
+    expect(eq).toHaveBeenCalledWith("user_id", "u1");
+    expect(onProfileUpdated).toHaveBeenCalled();
   });
 });
 

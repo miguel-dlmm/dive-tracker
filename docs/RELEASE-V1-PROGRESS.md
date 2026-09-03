@@ -28,7 +28,7 @@
 | 2 | Multidioma | ✅ Hecho (2026-09-01, noche) |
 | 3 | KPIs en la home | ✅ Hecho (2026-09-01, noche) |
 | 4 | Cabecera y notificaciones | ✅ Hecho (2026-09-01/02, noche) |
-| 5 | Sistema de Training Records | 🟡 En curso — generador MVP construido, sin verificar en dispositivo real (ver detalle) |
+| 5 | Sistema de Training Records | 🟡 En curso — pestaña única, fechas por plantilla, firma de instructor, validación y ajustes visuales del PDF construidos y verificados; rediseño completo del generador y 2 correcciones reales de Safari iOS ya aplicadas (ver detalle); quedan 2 supuestos de fecha por confirmar y las 6 plantillas sin campos |
 | 6 | Slides y avisos | 🟡 En curso — avisos generalizados, WhatsNew sin tocar (ver detalle) |
 | 7 | Usabilidad, carga y escalabilidad | ✅ Hecho (2026-09-02, análisis documental, sin cambios de código) |
 | 8 | Revisión visual y libro de estilo | ✅ Hecho (2026-09-02, `docs/ESTILO.md` actualizado, sin pulido pixel-a-pixel) |
@@ -778,10 +778,10 @@ iconos en vez de 4, "Cerrar sesión" funciona desde Mi perfil, "Ver
 qué hay de nuevo" reabre el slide correctamente, ambos en español e
 inglés, sin errores de consola.
 
-## Fase 5 — Sistema de generación de Training Records (🟡 en curso — generador MVP construido para las 4 plantillas activas)
+## Fase 5 — Sistema de generación de Training Records (🟡 en curso — rediseño del generador y correcciones reales de Safari iOS aplicadas, fusionado con Release-V1)
 
-**Rama:** `feature/training-records` (creada desde `Release-V1`, tal como
-pedía el encargo — no se ha fusionado todavía).
+**Rama:** `feature/training-records` (creada desde `Release-V1` tal como
+pedía el encargo — fusionada con `Release-V1` esta noche, 2026-09-03).
 
 ### ✅ Actualización 2026-09-02 — generador MVP construido
 
@@ -865,21 +865,6 @@ documentarlas ahora que dejarlas sueltas en el chat):**
 - Pipeline de análisis automático de plantillas nuevas subidas por un
   admin — sigue fuera de alcance, tal como pedía el encargo original,
   hasta que el generador esté completamente terminado.
-- **Hallazgo de consistencia (Fase 8, revisión de estilo, 2026-09-02),
-  no corregido a propósito:** `StudentRecordSheet.jsx` define un
-  `RadioChoice` propio (grupo de chips de selección única) que
-  reproduce lo que `ChipGroup` (`shared.jsx`) ya resuelve, con dos
-  diferencias reales: `RadioChoice` admite `{value, label}` distintos
-  (necesario para examVersion/courseVariant, con copy traducido) y
-  permite deseleccionar tocando la opción ya activa (estos campos son
-  opcionales); `ChipGroup` asume que la opción visible ES el valor y no
-  se puede deseleccionar. No se ha tocado esta rama para no meter
-  commits nuevos justo cuando el usuario está revisando el PR — si al
-  fusionar se decide que la diferencia es real (no accidental, ver
-  criterio de `docs/ESTILO.md`), lo correcto es documentarlo ahí como
-  un segundo caso "no consolidado"; si se decide que no lo es, ampliar
-  `ChipGroup` con `{value,label}` + deselección opcional y que
-  `StudentRecordSheet.jsx` lo reutilice.
 
 **Pendiente de verificación humana (no se ha podido hacer esta noche):**
 navegador real / `mobile-check` — el flujo completo (elegir plantilla,
@@ -1005,34 +990,521 @@ drop policy if exists "read active templates" on public.training_record_template
 drop table if exists public.training_record_templates;
 ```
 
-### Próximos pasos
+### ✅ Actualización 2026-09-02 (sesión de continuación) — verificación en dispositivo real, bug crítico corregido, datos de instructor movidos al perfil
 
-El generador en sí (roster, iniciales autogeneradas, formulario dinámico
-por plantilla, firma táctil, relleno de PDF con `pdf-lib`) ya está
-construido para las 4 plantillas activas — ver "✅ Actualización
-2026-09-02" arriba. Queda:
+Sesión dedicada al punto 1 pendiente ("validación humana en dispositivo
+real"), en rama `feature/training-records` (`npm run dev` + bypass de
+desarrollo). Resultado: **un bug real que rompía la generación para
+cualquier alumno, en las 4 plantillas activas, sin excepción** — no
+detectable por los tests unitarios existentes porque construyen su PDF
+de prueba con `pdf-lib` desde cero (estructura de campos "limpia"), no
+descargando la plantilla real de Storage.
 
-1. **Validación humana en dispositivo real / `mobile-check`** — el flujo
-   completo no se ha probado en un navegador de verdad ni con
-   Playwright esta noche, solo `npm run test`/`npm run build`.
-2. Decidir de dónde sale cada fecha (petición explícita del usuario:
-   no rellenar ninguna por ahora) y activarlas en `pdfFill.js` una vez
-   decidido — un único punto de cambio, ya señalado con comentario ahí.
-3. Exportación a JPG (página larga concatenada con `pdfjs-dist`) —
-   deferida por no poder verificar en un navegador real el
-   *worker* de `pdfjs-dist` en el build de Vite esta noche (ver
-   "Explícitamente NO construido todavía" arriba).
-4. Decidir el enfoque para las 6 plantillas sin campos de formulario
-   (mapear coordenadas a mano tiene coste y fragilidad altos; también
-   cabe dejarlas fuera del generador y ofrecer solo las 4 activas,
-   revisando esta decisión más adelante si hace falta).
-5. Validar con el usuario si "Training Records" merece un acceso más
-   directo que dentro de Configuración (decisión tomada por
-   consistencia con Escuelas/Cursos/Tarifas, no confirmada con él).
-6. El pipeline de análisis automático de plantillas nuevas (lo que
+**Bug encontrado y corregido — `form.flatten()` fallaba siempre:**
+`scripts/mobile-check-training-records.mjs` (script nuevo, mismo enfoque
+que `mobile-check.mjs` pero para este módulo — Chromium + emulación
+iPhone 14 Pro Max) reprodujo en el primer intento un error real al pulsar
+"Generar y descargar": `Error: Tried to remove inexistent field
+undefined.tr-input-XXXXXXXX-N`, lanzado por pdf-lib dentro de
+`form.flatten()`. Diagnosticado con un script de depuración puntual
+contra las 4 plantillas reales (descargadas de Supabase Storage): cada
+campo de cada una de las 4 plantillas tiene un `/Parent` que apunta, por
+error del generador original del PDF, al propio diccionario `/AcroForm`
+(que tiene `/Fields`, no `/Kids`) en vez de a un campo padre real o no
+tener `/Parent` en absoluto. pdf-lib sigue ese `/Parent` roto al
+aplanar, no encuentra el campo en los (inexistentes) `/Kids` de ese
+"padre", y lanza el error — **para el primer campo de cualquier
+plantilla, siempre**, sin relación con qué datos se rellenen. Sin este
+fix, el generador nunca había funcionado de verdad para ningún alumno,
+pese a que el mapeo de campos (verificado visualmente semanas atrás) sí
+era correcto.
+
+**Fix** (`src/trainingRecords/pdfFill.js`): `stripBrokenParentRefs()`
+recorre los campos del formulario justo antes de `form.flatten()` y
+quita el `/Parent` cuando el diccionario al que apunta no tiene
+`/Kids` (es decir, cuando no es un campo padre real) — verificado
+manualmente contra las 4 plantillas activas (AOWD, OWD, SC-DD, SC-EAN),
+las 4 flateaban correctamente tras el fix. Test de regresión en
+`pdfFill.test.js` que fabrica un PDF con esa misma corrupción a
+propósito (confirmado que falla sin el fix y pasa con él — no basta con
+que el test pase, hay que comprobar que también sabe fallar).
+
+**Segundo hallazgo, en el propio script de verificación** (no en la
+app): las firmas dibujadas con el ratón de Playwright no llegaban al
+`<canvas>` de `signature_pad` — el PDF se generaba igualmente (las
+firmas son opcionales en `pdfFill.js`) pero salían en blanco. Causa:
+el canvas de firma vive más abajo del viewport dentro de la hoja
+(`Sheet`, con scroll interno), y `page.mouse.move/down/up` no valida
+visibilidad como sí hace un `locator.click()` — el "trazo" no llegaba a
+ningún elemento real. Corregido con `scrollIntoViewIfNeeded()` antes de
+calcular las coordenadas del canvas. De paso, se encontró y corrigió el
+mismo tipo de bug (ambigüedad `getByRole` sin `exact:true`) en el propio
+`scripts/mobile-check.mjs` compartido — ver el commit
+`fix(training-records): sanea /Parent roto antes de aplanar el PDF`.
+
+**Verificado end-to-end con el PDF real generado** (renderizado a PNG
+con `pdftoppm` para revisión visual): nombre, apellidos, iniciales del
+alumno en cada fila de progreso, nombre del instructor y ambas firmas
+(alumno + instructor) aparecen en el sitio correcto de la página 1 de
+AOWD.
+
+**Cambio de arquitectura pedido explícitamente por el usuario mid-sesión
+— datos de instructor al perfil, no al dispositivo:** hasta ahora
+`InstructorPrefsPanel` guardaba nombre/iniciales/número SSI Pro en
+`localStorage`, editable directamente dentro de Training Records. El
+usuario pidió moverlos al perfil real (para que se rellenen una vez y
+sirvan en cualquier dispositivo) y que, si faltan, el generador lo
+bloquee con un aviso y un botón directo a "Mi perfil".
+**Implementado:**
+- Migración aditiva `0011-datos-instructor-perfil.sql` aplicada a TEST
+  (columnas `profiles.instructor_initials`/`ssi_pro_number`, nullable,
+  rollback documentado en el propio fichero) — el nombre impreso no es
+  una columna nueva, se deriva de `first_name`/`last_name`, que ya
+  existían.
+- `ProfileTab.jsx`: sección nueva "Datos de instructor" (mismo patrón de
+  edición que "Datos personales" ya existente).
+- `TrainingRecordsTab.jsx`: `InstructorPrefsPanel` (editable, localStorage)
+  retirado por completo. Si al perfil le falta cualquiera de los 4 datos,
+  la pantalla bloquea con `InstructorMissingNotice` (aviso + botón "Ir a
+  mi perfil", enhebrado `App.jsx` → `ConfigTab` → `TrainingRecordsTab`
+  vía `onOpenProfile={() => changeTab("perfil")}`) en vez de dejar
+  empezar un roster que no se podría terminar. Con los datos completos,
+  `InstructorSummary` (solo lectura) recuerda "Firmando como Nombre
+  (iniciales) — SSI Pro número" antes de generar — un documento de
+  certificación real no debe generarse sin que quede claro con qué
+  identidad se firma.
+- Verificado en navegador real con la cuenta demo (que no tenía ningún
+  dato de instructor): aparece el aviso → "Ir a mi perfil" → rellenar
+  nombre/apellidos + iniciales/número → volver a Training Records → el
+  aviso ya no aparece, "Firmando como..." visible, generación correcta.
+  Cuenta demo restaurada a su estado original (todos los campos a null)
+  tras la comprobación, para no dejar datos de prueba reales en TEST.
+
+**Exportación a JPG, ya construida y verificada** (mismo bloque de
+sesión, tras dejar operativo el flujo de verificación en dispositivo
+real): `src/trainingRecords/pdfToJpg.js`, `renderPdfToJpgBytes()`
+rasteriza cada página del PDF ya relleno con `pdfjs-dist` (worker
+resuelto vía `?url` de Vite — se emite como asset aparte,
+`dist/assets/pdf.worker-*.mjs`, confirmado con `npm run build`) y las
+concatena verticalmente en un único JPG si hay más de una página.
+`computeConcatenatedLayout()` es la parte de lógica pura (escalado al
+ancho de la página más ancha, huecos entre páginas) y tiene su propio
+test sin canvas; el renderizado en sí solo se puede verificar en un
+navegador real, igual que `signature_pad`. Botón nuevo "Descargar como
+imagen (JPG)" junto a "Descargar de nuevo" en el roster, reutiliza los
+bytes del PDF ya generado (no vuelve a rellenar nada). Verificado en
+dispositivo real con las dos formas reales que existen hoy: AOWD (1
+página, JPG 1188×1584) y OWD (2 páginas — la 2ª es la de
+Referral/Scuba/Indoor Diver, sin rellenar — JPG 1188×3180, ambas
+páginas legibles y en orden), sin ningún error de consola en ninguno
+de los dos casos.
+
+**Commits** (rama `feature/training-records`, empujada a `origin` —
+genera Preview Deployment nuevo, ver más abajo): `106c3ab` (fix del
+bug de pdf-lib + herramientas de verificación), `e9347d6` (datos de
+instructor al perfil), `4dffa38` (este documento), `b14dc05`
+(exportación a JPG), `bd418c5` (documentación), `de20eae` (fix
+crítico, ver abajo) y `f2d5bdf` (rediseño de la fila de alumno + fix
+de un crash real, ver abajo). `npm run test` (598/598) y
+`npm run build` en verde tras todos.
+
+**⚠️ Bug crítico encontrado y corregido en el Preview real, reportado
+en vivo por el usuario 2026-09-02: pantalla en blanco en Safari
+(escritorio y móvil), Chrome no se veía afectado.** Causa raíz:
+`pdfjs-dist` (añadido para la exportación a JPG) comprueba
+`Iterator.prototype.join` al cargar el módulo, sin proteger que
+`Iterator` (Iterator Helpers) exista siquiera — con el `import`
+estático de esa sesión, ese código entraba en el bundle principal y se
+ejecutaba en CUALQUIER pantalla, incluido el login, antes de que
+hubiera sesión. Corregido cambiando el import de `pdfToJpg.js` a
+`import()` dinámico dentro del propio botón de exportar — pdfjs-dist
+pasa a su propio chunk aparte, confirmado con `grep` que
+`Iterator.prototype.join` ya no aparece en `dist/assets/index-*.js`,
+solo en el chunk que carga bajo demanda. Verificado en vivo contra el
+Preview real tras el fix (confirmación del usuario).
+
+**Rediseño de la fila de alumno del roster, pedido explícito del
+usuario tras usar el Preview real** ("cuando edito, debería poder
+editar el alumno o la configuración del documento"; "repiensa bien la
+usabilidad de estos menús... piensa en la usabilidad de la página,
+fácil e intuitiva"): antes, el chevron de la fila aparecía/desaparecía
+según si ya se había generado el registro, y "Descargar de nuevo"/
+"Descargar imagen" eran iconos sueltos sin etiqueta apretados junto al
+menú "⋯" — confuso en la práctica ("ya no hay más botones de acción en
+la interfaz", reportado en vivo tras generar). Ahora: un único modelo
+de interacción (tocar la fila siempre abre la configuración del
+documento, generado o no), un check verde puramente informativo indica
+"ya generado", y las descargas se movieron al menú "⋯" ya existente
+(`RowMenu`, ahora con `extraActions`, reutilizable por cualquier otra
+pantalla). De paso, `StudentRecordSheet` pasó a restaurar de verdad la
+configuración ya guardada de cada alumno al reabrirlo (antes se podía
+perder o mezclar con la de otro alumno, porque esa hoja nunca se
+desmonta entre aperturas). Construyendo esto se encontró y corrigió un
+crash real (no reportado por el usuario, encontrado en desarrollo):
+sembrar la config del alumno solo en un `useEffect` reventaba la
+pantalla entera en plantillas con inmersiones de especialidad (AOWD) —
+test de regresión añadido con la plantilla real, confirmado que falla
+sin el fix.
+
+**Preview Deployment de esta sesión:**
+`https://dive-tracker-git-feature-training-records-ocean-pulse1.vercel.app`
+(alias estable de la rama — cada push nuevo a `feature/training-records`
+lo actualiza solo).
+
+### ✅ Actualización 2026-09-02 (lote de trabajo — pestaña única de creación, fechas por plantilla, firma de instructor, validación, ajustes visuales del PDF)
+
+Lote grande de trabajo autónomo pedido explícitamente por el usuario
+("trabaja este lote de forma autónoma... no esperes respuesta mía en
+el chat entre unidades"), con un commit por unidad cerrada. Reemplaza
+por completo el modelo de interacción de Fase 5 construido hasta
+ahora — sigue siendo la misma arquitectura de fondo (generación
+enteramente en cliente, nada se persiste en Supabase salvo lo que ya
+persistía: plantillas y perfil del instructor).
+
+**1. Firma del instructor en el perfil.** `profiles.instructor_signature`
+(migración `0012-firma-instructor-y-aventuras.sql`, aplicada a TEST) —
+se firma una vez en "Mi perfil" → "Datos de instructor" (reutiliza
+`SignatureCapture`, movido de `trainingRecords/` a la raíz de `src/`
+porque ya no es exclusivo de esa pantalla) y se reutiliza en cada
+Training Record generado después, sin volver a firmar documento a
+documento. Campo obligatorio para poder usar el generador (se suma a
+nombre/apellidos/iniciales/número SSI Pro en el aviso de "faltan datos
+de instructor"), editable en cualquier momento.
+
+**2. Iniciales de instructor autogeneradas.** Al guardar "Datos
+personales" (nombre/apellidos) en el perfil, si `instructor_initials`
+está vacío se calcula solo (`computeInitials`, movido también a la
+raíz de `src/`) y se guarda en el mismo patch — nunca sobrescribe unas
+iniciales que el usuario ya haya editado a mano (se usa que ya tengan
+un valor como señal de "ya editadas", sin necesitar una columna nueva
+de "tocado").
+
+**3. Pestaña única de creación (cambio de arquitectura).** Pedido
+explícito: "me gusta el modelo planteado con el de cómo configurar el
+PDF". `StudentFormSheet.jsx` se retira — sus campos (nombre, apellidos,
+iniciales) se fusionan dentro de `StudentRecordSheet.jsx`, que pasa a
+ser una única hoja continua: datos del alumno (+ nombre del
+padre/madre/tutor, opcional, nuevo) → elegir la plantilla/curso a
+certificar → configuración del documento → generar. La plantilla ya no
+se elige una vez para toda la sesión: se elige por alumno, así que el
+roster de una sesión puede mezclar alumnos de varias plantillas.
+`TrainingRecordsTab.jsx` pierde su pantalla de "elegir plantilla
+primero" — entra directo al roster (o al aviso de instructor
+incompleto).
+
+**4. Roster: iconos siempre visibles, no un menú "⋯".** Pedido
+explícito del usuario, que revierte el diseño de la sesión anterior
+(menú "⋯" con las descargas dentro): cada fila muestra 3 iconos
+reconocibles — Editar (lápiz), PDF (`FileText`) y JPG (`ImageDown`), los
+dos últimos solo una vez generado el documento — más la fecha/hora de
+la última generación bajo el nombre. El menú "⋯" (`RowMenu`) se queda
+solo para Eliminar. `RowMenu` gana un prop `extraActions` genérico (no
+usado aquí ahora, pero reutilizable por cualquier pantalla que sí
+necesite ese patrón).
+
+**5. Validación de campos obligatorios del documento.** Versión de
+examen, certificación y confirmación de examen final (solo si la
+plantilla tiene esa sección — AOWD no tiene ninguna de las tres), al
+menos una fila de progreso marcada, la fecha del Día 1, y la firma del
+alumno — bloquean "Generar y descargar" con mensajes en rojo junto a
+cada sección si faltan (`recordConfig.js`, `validateRecordConfig()`,
+con tests unitarios exhaustivos). "Versión en línea" y "Open Water
+Diver" vienen premarcados por defecto (pedido explícito), así que en
+la práctica casi nunca hace falta tocarlos.
+
+**6. Ajustes visuales del PDF — reescritura de `pdfFill.js`.** Los
+valores ya no se escriben con `form.getTextField(...).setText()`: se
+dibujan a mano (`page.drawText`, igual que ya hacían las firmas) para
+poder controlarlos del todo, pedido explícito del usuario:
+- **Mayúscula, color de marca (`#0F766E`, el TEAL de Ocean Flow) en vez
+  del negro de la plantilla, fuente Helvetica** (estándar de PDF, sin
+  incrustar un archivo de fuente aparte, visualmente próxima a la
+  fuente sans-serif de las plantillas reales).
+- **Centrado y por encima de la línea impresa**, nunca tapado por
+  ella — posición calculada desde el rectángulo real de cada campo
+  (mismo dato ya usado para las firmas).
+- **Firmas más grandes** (`SIGNATURE_BOOST = 1.7`, sin el tope de
+  escala ×1 que tenían antes) — pedido explícito ("apenas se ven... si
+  parte de la firma cae sobre la línea, no pasa nada").
+Verificado renderizando el PDF real generado (`pdftoppm`), no solo
+asumido — ver captura en la sesión, texto e iniciales en mayúscula
+teal bien centrados, firmas claramente más visibles que antes.
+
+**7. Fechas por fila de progreso (corregido 2026-09-02, mismo día,
+tras feedback directo del usuario).** El primer corte de este punto
+agrupaba las filas de progreso en fechas de "Día 1"/"Día 2"/"Día 3"
+compartidas — el usuario aclaró que su petición original era otra:
+**cada item del progreso del curso lleva su propio campo de fecha,
+seteable a mano justo ahí**, sin ningún agrupado por día. Se ha
+revertido el agrupado por completo:
+  - `templateFieldMaps.js` pierde el campo `day` de `progressRow()` —
+    ya no agrupa nada, cada fila es independiente.
+  - `recordConfig.js`: `config.dayDates` (por día) pasa a ser
+    `config.rowDates` (por índice de fila). La confirmación de examen
+    final (OWD/SC-DD/SC-EAN) también gana su propia fecha manual
+    (`examConfirmedDate`) en vez de derivarse sola del "último día
+    activo" — mismo criterio de "cada item marcado lleva su fecha" que
+    el resto de filas, más simple que mantener un caso especial. Cada
+    inmersión de especialidad completada de AOWD (combo, ver punto 8)
+    también gana su propia fecha (`specialtyDives[i].date`).
+  - `StudentRecordSheet.jsx`: cada fila de progreso (`ProgressRowToggle`)
+    muestra su propio `DatePicker` (con el botón "Hoy" del punto 9) en
+    cuanto se marca, en vez de una sección "Fechas" aparte al principio
+    de la hoja. Validación por fila: si una fila está marcada y le
+    falta la fecha, aviso justo debajo de esa fila.
+  - Las dos preguntas que quedaban "pendientes de confirmar" en el
+    primer corte (agrupación de OW5/OW6 y de Sesiones Académicas de
+    AOWD) **quedan resueltas por descarte** — al no existir ya ningún
+    agrupado por día, no hay nada que confirmar.
+  - Fecha de las firmas: sigue siendo siempre la fecha de generación
+    del PDF (`generatedAtLabel`), sin cambios — no es un "item de
+    progreso", es la fecha real en que se firma el documento.
+  - Verificado de nuevo end-to-end con `scripts/mobile-check-training-records.mjs`
+    (actualizado al nuevo flujo: un tap "Hoy" por fila) y con el PDF
+    real renderizado — cada fila del documento generado muestra su
+    propia fecha correctamente.
+
+**8. Combo de aventuras de Advanced (AOWD).** Tabla nueva
+`training_record_adventures` (migración `0010`, sembrada con las 6
+aventuras que dio el usuario: Flotabilidad perfecta, Buceo nocturno,
+Computador de buceo, Barco hundido, Identificación de peces,
+Corrientes) — nunca hardcodeadas en código (convención 1 de
+CLAUDE.md). El campo de texto libre de "Nombre de la especialidad" se
+sustituye por un `Select` con estas opciones. Elegir una aventura
+marca automáticamente esa fila como completada (fecha del Día 2); la
+fila de "sesión en la piscina" se deja siempre sin usar desde este
+combo, pedido explícito ("rellenaremos solo la opción de Inmersión...
+3, 4 y 5").
+
+**9. Selector de fecha compartido mejorado.** `DatePicker` en
+`shared.jsx` (usado en toda la app, no solo aquí) gana un botón "Hoy"
+al principio del panel — un toque para el caso más común con
+diferencia (fecha de curso = hoy o muy reciente) — y las celdas de día
+pasan de 36px a 40px de alto, más cerca del objetivo táctil mínimo de
+la convención 7. Mejora hecha en el componente base, no duplicada
+localmente, pedido explícito del usuario.
+
+**10. Persistencia entre recargas.** El roster completo (alumnos,
+configuración de cada uno, PDF ya generado en bytes) se guarda en
+`sessionStorage` (`oceanpulse:trainingRecordsSession`, PDF
+codificado en base64) y se restaura al montar — sobrevive a recargar
+la página, pedido explícito del usuario ("si tengo alumnos y/o
+documentos generados, mantenerlos"). Sigue sin sobrevivir a cerrar la
+pestaña ni la sesión — mismo criterio de "efímero" que ya regía este
+módulo, solo ampliado de "mientras dure la instancia de React" a
+"mientras dure la pestaña del navegador".
+
+**11. Estado vacío con enlace.** "Todavía no has añadido ningún
+alumno." + un enlace de texto "Añade tu primer alumno" (además del
+FAB) que abre la misma hoja de creación.
+
+**12. Bug real corregido en desarrollo** (encontrado montando el
+punto 3, no reportado por el usuario): sembrar la configuración de un
+alumno solo en un `useEffect` (después del primer render) reventaba la
+pantalla entera al abrir plantillas con inmersiones de especialidad
+(AOWD) — su JSX ya lee `specialtyDives[i]` en ese primer render, antes
+de que el efecto llegara a rellenarlo. Corregido sembrando también con
+inicializadores perezosos de `useState`. Test de regresión con la
+plantilla AOWD real (no mockeada) — confirmado que falla sin el fix.
+
+**Respuesta a la pregunta del usuario ("¿cuáles más podrías procesar
+como plantilla?"):** hoy solo las mismas 4 (OWD, AOWD, SC-DD, SC-EAN)
+son procesables — son las únicas con campos de formulario PDF
+rellenables de verdad. Las otras 6 (BD, SC-LV, SC-NV, SC-PB, SC-RR,
+SC-SR) siguen sin ningún campo interactivo en el PDF original; la
+regla de fechas para BD que dio el usuario queda anotada arriba para
+cuando se aborden, pero construirlas requiere el enfoque de
+superposición de texto por coordenadas que se decidió no hacer todavía
+(ver "hallazgo" original de esta misma Fase 5).
+
+**Verificación:** `npm run test` (622/622) y `npm run build` en verde.
+`scripts/mobile-check-training-records.mjs` reescrito de arriba a
+abajo para el nuevo flujo (Chromium + iPhone 14 Pro Max) — recorrido
+real completo: perfil del instructor con firma → crear alumno → elegir
+plantilla → fechas con "Hoy" → confirmación de examen → firma del
+alumno → generar → PDF y JPG descargados → recargar página → roster
+sigue ahí. Sin errores de consola. PDF real renderizado a imagen
+(`pdftoppm`) y revisado a mano: mayúscula/color/centrado/firmas
+correctos.
+
+**Decisiones cerradas con el usuario 2026-09-02 (sesión anterior,
+siguen vigentes):**
+- **Acceso en la navegación:** se queda dentro de Configuración, mismo
+  patrón que Escuelas/Cursos/Tarifas — confirmado, no se cambia nada.
+- **Las 6 plantillas sin campos de formulario rellenables** (BD, SC-LV,
+  SC-NV, SC-PB, SC-RR, SC-SR): quedan fuera del generador (no se
+  construye el enfoque de superponer texto por coordenadas). Pedido
+  explícito del usuario: movidas a un directorio separado dentro del
+  mismo bucket de Storage para que las revise aparte —
+  `pending-review/<CÓDIGO>/...` dentro de `training-record-templates`
+  (antes vivían junto a las 4 activas, cada una en su propia carpeta
+  `<CÓDIGO>/`). `training_record_templates.storage_path` actualizado a
+  la ruta nueva para las 6 filas; `status` sigue en
+  `pending_validation` sin cambios — es un reordenamiento físico en
+  Storage para revisión humana, no un cambio de comportamiento de la
+  app (ya filtraba por `status = 'active'`, así que estas 6 nunca se
+  ofrecían de todos modos). Nada de código tocado: todo el código que
+  lee `storage_path` lo hace dinámicamente desde la fila de la tabla,
+  no con una ruta hardcodeada.
+
+**Queda pendiente:**
+
+1. **Confirmar 2 supuestos de agrupación de fechas** (ver punto 7
+   arriba): a qué día pertenecen las filas opcionales OW5/OW6 de OWD
+   (se les dio un Día 3 propio, no descrito en el encargo), y si
+   "Sesiones Académicas" de AOWD va de verdad con el Día 1 (supuesto,
+   no confirmado explícitamente).
+2. El pipeline de análisis automático de plantillas nuevas (lo que
    subiría un admin en el futuro) sigue explícitamente fuera de
    alcance hasta que la interfaz de generación esté terminada, tal
    como pedía el encargo original.
+3. Las 6 plantillas sin campos de formulario (BD y el resto) siguen sin
+   abordar — la regla de fechas de BD que dio el usuario en este lote
+   ya queda anotada para cuando se decida construirlas.
+4. Fusión a `develop`: sigue pendiente de revisión y aprobación
+   explícita del usuario, como el resto de esta rama.
+
+### Técnica validada para las 6 plantillas sin campos de formulario (2026-09-02, sin wiring todavía)
+
+El usuario pidió explícitamente añadir campos a las 6 plantillas sin
+AcroForm (BD, SC-LV, SC-NV, SC-PB, SC-RR, SC-SR), con verificación
+visual por plantilla antes de darla por buena (no adivinar coordenadas
+a ojo, mismo criterio de rigor que ya regía las 4 plantillas con
+campos). Técnica desarrollada y validada con **SC-LV** como piloto:
+
+- **Extracción real de coordenadas** (`scripts/extract-flat-template-rects.mjs`):
+  usa `page.getOperatorList()`
+  de pdfjs-dist para parsear el content stream real del PDF y localizar
+  cada recuadro gris relleno (`setFillRGBColor` ~`#f1f1f2` seguido de
+  `constructPath` con un rectángulo simple) — no una medición a ojo
+  sobre la imagen renderizada. pdfjs-dist ya optimiza un rectángulo
+  simple relleno a un único `constructPath` cuyo tercer argumento es
+  directamente `[minX, minY, maxX, maxY]`.
+- **Verificación visual** (`scripts/render-flat-template-rects-overlay.mjs`):
+  renderiza la página real y numera cada recuadro extraído encima de su
+  posición — confirmado pixel-perfecto contra las 36 cajas de SC-LV
+  (ver `training-records-debug/SC-LV-rects-overlay.png`, no
+  versionado). Mismo patrón de fila de 4 columnas (Iniciales del
+  Alumno/Fecha/Iniciales del Instructor/Número SSI Pro) que las
+  plantillas ya soportadas — filas: Sesiones Académicas, Habilidades en
+  Piscina (opcional), Inmersión 1, Inmersión 2, Inmersión Adicional
+  (opcional), Confirmación de Examen Final; firmas alumno/tutor/
+  instructor con sus 2 filas.
+- **Checkboxes de versión de examen** ("Versión Impresa"/"Versión
+  Online"): SC-LV no los dibuja como rectángulo relleno (son solo
+  contorno), así que no los captura la extracción anterior. Posición
+  derivada por patrón desde una plantilla real ya soportada (SC-DD:
+  hueco de 5.4pt entre el borde derecho del checkbox de 6×6pt y el
+  inicio del texto de la etiqueta, aplicado a la posición real del
+  texto de SC-LV vía `page.getTextContent()`) — menor confianza que las
+  filas de datos (extracción exacta) pero igual de defendible que
+  cualquier posición ya usada en producción, no una suposición sin
+  referencia.
+
+**Por qué no se ha hecho el wiring todavía** (`templateFieldMaps.js`
+con un tipo de campo "rect" en vez de nombre de campo AcroForm, soporte
+en `pdfFill.js` para dibujar checkboxes a mano cuando no hay
+`form.getCheckBox()` real, entrada en la configuración compartida del
+Generador + tests): el Bloque 5 del mismo job nocturno reconstruyó la
+pantalla del generador de arriba a abajo justo después de esto (ver
+"Actualización 2026-09-03" más abajo) — conectar las 6 plantillas
+contra la pantalla vieja, ya sustituida, habría sido trabajo tirado.
+Los datos de coordenadas de SC-LV (`training-records-debug/SC-LV-rects.json`,
+no versionado) se conservan para reutilizarlos cuando se haga el
+wiring real, contra la pantalla NUEVA (configuración compartida por
+listado), con las 5 plantillas restantes y la misma técnica ya
+validada. Sigue sin abordar.
+
+### ✅ Actualización 2026-09-03 (job nocturno por lotes, Bloque 5 — rediseño de concepto)
+
+Cambio de arquitectura pedido explícitamente por el usuario, corrigiendo
+el diseño "una plantilla+configuración por alumno" del lote anterior
+(2026-09-02): **"no es una configuración de Training Record por
+alumno, es una configuración de Training Record para un listado de
+alumnos"**.
+
+- La configuración del documento (plantilla, filas de progreso con su
+  fecha cada una, versión de examen, certificación, confirmación de
+  examen, inmersiones de especialidad de AOWD) se rellena **una única
+  vez**, directamente en la pantalla del Generador — deja de vivir
+  dentro de la hoja de cada alumno.
+- `StudentRecordSheet.jsx` se retira; `StudentQuickEntrySheet.jsx`
+  (nuevo) es una hoja mínima con solo lo que varía de un alumno a
+  otro: nombre, apellidos, iniciales (calculadas) y firma (+ firma de
+  tutor, opcional, conservada del lote anterior — no explícitamente
+  mencionada en el encargo de este bloque, pero es un dato claramente
+  ligado al alumno, no a la configuración compartida, así que se
+  mantuvo ahí en vez de descartarla).
+- `recordConfig.js`: `validateRecordConfig()` deja de exigir firma
+  (era el único dato "por alumno" que quedaba mezclado en la
+  configuración compartida); `validateStudentFields()` (nueva) valida
+  cada alumno por separado. `buildFillData()` toma las firmas del
+  propio alumno, no de la configuración.
+- "Generar para todos los alumnos": un único botón rellena el
+  documento de TODOS los alumnos del listado de golpe, descargando la
+  plantilla una sola vez y reutilizándola para cada uno.
+- Descarga/compartir: se mantienen los iconos individuales por fila
+  (PDF/JPG/Compartir, ya construidos en el lote anterior) y se añade
+  una sección "Todo el listado" — descargar todo en PDF, todo en JPG
+  (secuencial con una pausa entre cada descarga; varios navegadores
+  bloquean descargas simultáneas disparadas de golpe), o compartir
+  todo a la vez vía Web Share API con varios ficheros adjuntos (si el
+  navegador lo soporta — mismo criterio de "el icono ni aparece si no
+  hay soporte" que ya regía el compartir individual).
+- Alumnos con datos incompletos (falta firma, nombre...) se marcan con
+  un aviso visual en la propia fila del listado, en vez de fallar en
+  silencio o bloquear sin explicación al pulsar "Generar".
+
+**Verificación:** `npm run test` (616/616) y `npm run build` en verde.
+`scripts/mobile-check-training-records.mjs` reescrito para el nuevo
+flujo (Chromium + iPhone 14 Pro Max): configurar una vez, añadir 2
+alumnos, generar los 2 de golpe, descargar PDF de uno y JPG de otro,
+recargar la página y comprobar que el listado completo (config +
+alumnos + documentos ya generados) sigue ahí.
+
+### ✅ Actualización 2026-09-03 (continuación) — rediseño visual completo, KPIs de Home/Movimientos, y fusión con Release-V1
+
+Tras el rediseño de concepto (arriba), pedido explícito del usuario a
+mitad de sesión de rediseñar el estilado del generador entero (commit
+`d5609ea`): fechas de cada item de progreso compactas en una fila,
+icono de editar sustituido por "Regenerar TR" individual por alumno,
+card de datos de instructor (avatar, iniciales, SSI PRO Number,
+firma), curso a certificar + cambiar plantilla en la misma línea, y
+"Todo el listado" con PDF/JPG/compartir más visual.
+
+De la misma noche, ya integrados en esta rama: KPIs de Home movidos a
+primera posición (Bloque 9), acceso a Training Records desde una
+tarjeta en Home en vez de dentro de Configuración (Bloque 10), y los 3
+KPIs animados de Mi trabajo/Movimientos (Generado/Pendiente/Cobrado
+este mes, Bloque 11).
+
+Dos bugs reales reportados por el usuario probando en su iPhone
+(Safari), ambos corregidos:
+- Firmar en el pad de firma podía cerrar la hoja y devolver al menú de
+  Configuración — reforzado el bloqueo de scroll de `useBodyScrollLock`
+  (ahora bloquea también `<html>`, no solo `<body>`) y añadido
+  `overscroll-behavior-y: none` a nivel de documento.
+- Editar un alumno o añadir uno nuevo podía bloquear la UI con la hoja
+  estirándose hacia arriba — causa: `max-h-[85dvh]` se recalcula en
+  vivo con la barra de Safari y podía desajustarse durante el bloqueo
+  de scroll; cambiado a `max-h-[85svh]` (conservador, nunca se pasa
+  del viewport visible).
+- Descargar un PDF/JPG fallaba en Safari con "Error de
+  WebKitBlobResource" — `downloadBytes()` revocaba el `blob:` URL en
+  el mismo tick que el clic de descarga; Safari gestiona la descarga
+  de forma asíncrona (a diferencia de Chrome) y revocar tan pronto
+  cortaba la descarga a mitad. Arreglado retrasando la revocación 1s.
+
+**Fusión con `Release-V1`:** esta rama (`feature/training-records`) se
+fusiona con `Release-V1` esta misma noche. Colisión de numeración de
+migraciones ya resuelta antes de fusionar: esta rama tenía
+`0009-datos-instructor-perfil.sql`/`0010-firma-instructor-y-aventuras.sql`,
+pero `Release-V1` ya tenía sus propios `0009-invitation-links.sql`/
+`0010-avisos-generalizados.sql` con contenido distinto — renumeradas a
+`0011`/`0012` (siguientes libres tras el `0008` de plantillas de
+Training Records, que no colisionaba). Ninguna migración ya aplicada a
+TEST se re-ejecutó ni se deshizo — solo se renombraron los ficheros y
+sus referencias cruzadas.
 
 ## Fase 6 — Slides y avisos (🟡 en curso)
 

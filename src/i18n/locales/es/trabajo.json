@@ -128,5 +128,10 @@
       "rateAdded": "Tarifa añadida",
       "rateSaveError": "No se pudo guardar la tarifa. Inténtalo de nuevo."
     }
+  },
+  "kpis": {
+    "generatedThisMonth": "Generado este mes",
+    "pendingToCollect": "Pendiente de cobrar",
+    "collectedThisMonth": "Cobrado este mes"
   }
 }

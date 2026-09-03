@@ -238,6 +238,10 @@
     "datasets": {
       "label": "Datasets iniciales",
       "description": "Configuración clonada al crear una cuenta"
+    },
+    "trainingRecords": {
+      "label": "Training Records",
+      "description": "Genera registros de progreso SSI firmados por alumno"
     }
   },
   "menu": {

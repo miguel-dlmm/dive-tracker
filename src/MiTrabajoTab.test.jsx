@@ -85,15 +85,30 @@ function mixedDataset() {
 describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
   beforeEach(() => localStorage.clear());
 
-  it("por defecto muestra los pendientes de los 3 tipos, con la cabecera limitada a lo que te deben (sin el ajuste negativo)", () => {
-    renderMiTrabajo(mixedDataset());
+  it("por defecto muestra los pendientes de los 3 tipos, con el KPI 'Pendiente de cobrar' limitado a lo que te deben (sin el ajuste negativo)", () => {
+    // KPI animado en céntimos (useCountUp, motion.js) — un waitFor con
+    // timeout fijo resultó frágil bajo carga (toda la suite a la vez):
+    // el conteo necesita llegar prácticamente al 100% de su propia
+    // duración para que Math.round() coincida exacto con el céntimo (a
+    // diferencia de un KPI entero pequeño, que ya redondea bien mucho
+    // antes de terminar). Forzar prefers-reduced-motion aquí hace que
+    // useCountUp fije el valor final de un solo golpe, sin animación —
+    // determinista, sin depender de reloj real ni de la carga de la
+    // máquina que ejecuta el test.
+    const original = window.matchMedia;
+    window.matchMedia = () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} });
+    try {
+      renderMiTrabajo(mixedDataset());
 
-    expect(screen.getByRole("button", { name: "Pendientes · 3" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByText(money("30,00 €"))).toBeInTheDocument(); // cabecera: 20 (curso) + 10 (comisión), sin el ajuste
-    expect(screen.getByText(money("20,00 €"))).toBeInTheDocument();
-    expect(screen.getByText(money("10,00 €"))).toBeInTheDocument();
-    expect(screen.getByText(money("15,00 €"))).toBeInTheDocument(); // el ajuste sí aparece en la lista
-    expect(screen.getByText("con Ana", { exact: false })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Pendientes · 3" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByText(money("30,00 €"))).toBeInTheDocument(); // KPI: 20 (curso) + 10 (comisión), sin el ajuste
+      expect(screen.getByText(money("20,00 €"))).toBeInTheDocument();
+      expect(screen.getByText(money("10,00 €"))).toBeInTheDocument();
+      expect(screen.getByText(money("15,00 €"))).toBeInTheDocument(); // el ajuste sí aparece en la lista
+      expect(screen.getByText("con Ana", { exact: false })).toBeInTheDocument();
+    } finally {
+      window.matchMedia = original;
+    }
   });
 
   it("un ajuste negativo pendiente ofrece 'Marcar liquidado' en vez de 'Confirmar cobro'", () => {

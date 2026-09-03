@@ -10,5 +10,9 @@
     "studentsThisMonth": "Alumnos este mes",
     "coursesTotal": "Cursos impartidos",
     "referredThisMonth": "Captados este mes"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "subtitle": "Genera el registro de progreso SSI de cada alumno, firmado y listo para entregar"
   }
 }

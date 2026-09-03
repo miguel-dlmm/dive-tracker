@@ -171,8 +171,21 @@ export function Sheet({ open, onClose, children, className = "", zIndexClass = "
           animate={{ opacity: 1, transition: { duration: reducedMotion ? 0.01 : DURATION.sm } }}
           exit={{ opacity: 0, transition: { duration: reducedMotion ? 0.01 : DURATION.sm } }}
         >
+          {/* 85svh, no 85dvh: bug real reportado en Training Records (la
+              hoja "se estiraba hacia arriba" y bloqueaba la UI al
+              abrirla). dvh se recalcula en directo según la barra de
+              Safari se oculte/muestre — pero mientras esta hoja está
+              abierta, useBodyScrollLock bloquea el scroll de fondo, así
+              que ese gesto que decide si la barra se oculta no debería
+              dispararse; si aun así Safari recalcula dvh de forma
+              inconsistente durante el cambio a position:fixed del
+              body-lock, la hoja puede crecer más allá del viewport
+              visible. svh (small viewport height, siempre con la barra
+              visible) es el valor conservador que nunca se pasa, cueste
+              lo que cueste de espacio vacío de más cuando la barra sí
+              está oculta. */}
           <motion.div
-            className={`flex max-h-[85dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-xl bg-white shadow-xl ${className}`}
+            className={`flex max-h-[85svh] w-full max-w-3xl flex-col overflow-hidden rounded-t-xl bg-white shadow-xl ${className}`}
             variants={sheetVariants(reducedMotion)}
             initial="initial" animate="animate" exit="exit"
             drag="y"
@@ -190,7 +203,23 @@ export function Sheet({ open, onClose, children, className = "", zIndexClass = "
             >
               <span className="h-1.5 w-10 rounded-full bg-gray-300" />
             </div>
-            <div className="overflow-y-auto px-4 pt-1" style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}>
+            {/* overscroll-contain: mitigación para un bug reportado en
+                iOS Safari real ("al pintar la firma se me recarga la
+                página al menú de Configuración") — al arrastrar dentro de
+                un canvas de firma cerca del borde superior de esta hoja,
+                el rebote de scroll podía encadenarse hacia el documento y
+                disparar el pull-to-refresh nativo de Safari, que recarga
+                la página entera y pierde el estado de React (la hoja
+                abierta). El usuario confirmó que seguía pasando con solo
+                esto — se reforzó con dos capas más (ver
+                acquireScrollLock en este mismo archivo, que ahora
+                también bloquea <html>, no solo <body>; y
+                overscroll-behavior-y en src/index.css a nivel de
+                documento entero). No verificado en un iPhone físico real
+                (límite conocido de este entorno, ver CLAUDE.md "8.
+                Verificación UX/UI") — sigue siendo mitigación de mejor
+                esfuerzo, ahora en tres capas en vez de una. */}
+            <div className="overflow-y-auto overscroll-contain px-4 pt-1" style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}>
               {children}
             </div>
           </motion.div>
@@ -466,7 +495,13 @@ function parseDateStr(s) {
   return { y, m: m - 1, d };
 }
 
-export function DatePicker({ value, onChange, placeholder }) {
+// ariaLabel (opcional): nombre accesible del botón cuando debe ser más
+// descriptivo que el placeholder visible — p.ej. un DatePicker angosto que
+// muestra un placeholder corto ("Fecha") pero necesita distinguirse de
+// otros iguales en la misma pantalla para lectores de pantalla (ver
+// ProgressRowToggle en trainingRecords/TrainingRecordsTab.jsx). Por
+// defecto sigue siendo el propio placeholder, igual que siempre.
+export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
   const { t, months, weekdays } = useCalendarLabels();
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const parsed = parseDateStr(value);
@@ -494,6 +529,13 @@ export function DatePicker({ value, onChange, placeholder }) {
     onChange(`${viewY}-${pad2(viewM + 1)}-${pad2(d)}`);
     setOpen(false);
   };
+  // Aparte de selectDay: usa el año/mes REALES de hoy, no viewY/viewM —
+  // si el usuario ya navegó a otro mes, selectDay(today.getDate())
+  // seleccionaría ese día en el mes que se está viendo, no en el de hoy.
+  const selectToday = () => {
+    onChange(`${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`);
+    setOpen(false);
+  };
   const goPrev = () => { if (viewM === 0) { setViewM(11); setViewY(viewY - 1); } else setViewM(viewM - 1); };
   const goNext = () => { if (viewM === 11) { setViewM(0); setViewY(viewY + 1); } else setViewM(viewM + 1); };
 
@@ -505,17 +547,29 @@ export function DatePicker({ value, onChange, placeholder }) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={placeholder || t("datePicker.defaultAriaLabel")}
+        aria-label={ariaLabel || placeholder || t("datePicker.defaultAriaLabel")}
         className={`${inputCls} flex min-h-11 w-full items-center gap-1.5 text-left`}
       >
         <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
-        <span className={parsed ? "text-gray-800" : "text-gray-400"}>{display}</span>
+        <span className={`min-w-0 flex-1 truncate ${parsed ? "text-gray-800" : "text-gray-400"}`}>{display}</span>
       </button>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-64 p-3">
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-72 p-3">
+        {/* Acceso directo a "Hoy" — el caso más común con diferencia (una
+            fecha de curso casi siempre es la de hoy o un día muy reciente),
+            un toque en vez de navegar el calendario. Vive en el componente
+            compartido, no en cada pantalla que lo usa. */}
+        <button
+          type="button"
+          onClick={selectToday}
+          className="mb-2 flex min-h-9 w-full items-center justify-center gap-1.5 rounded-md text-xs font-medium"
+          style={{ backgroundColor: "#F0FDFA", color: TEAL }}
+        >
+          {t("datePicker.today")}
+        </button>
         <div className="mb-2 flex items-center justify-between">
-          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
           <span className="text-sm font-semibold text-gray-800">{months[viewM]} {viewY}</span>
-          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
         </div>
         <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
           {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}
@@ -532,7 +586,7 @@ export function DatePicker({ value, onChange, placeholder }) {
                 aria-label={d ? t("datePicker.dayAriaLabel", { day: d, month: months[viewM] }) : undefined}
                 aria-selected={isSelected || undefined}
                 onClick={() => d && selectDay(d)}
-                className="flex h-9 items-center justify-center rounded-md text-xs transition-colors"
+                className="flex h-10 items-center justify-center rounded-md text-xs transition-colors"
                 style={isSelected ? { backgroundColor: TEAL, color: "white", fontWeight: 600 } : isToday ? { color: TEAL, fontWeight: 600 } : { color: d ? "#374151" : "transparent" }}
               >
                 {d || ""}
@@ -1306,6 +1360,14 @@ function acquireScrollLock() {
     s.left = "0";
     s.right = "0";
     s.overflow = "hidden";
+    // <html>, no solo <body>: bug real reportado en iOS Safari (dibujar
+    // en el pad de firma podía "recargar" la app entera) — el rebote
+    // elástico nativo de Safari puede seguir colándose en el
+    // documentElement aunque <body> ya esté en position:fixed, porque
+    // ese fixed solo saca a <body> del flujo de scroll normal, no
+    // bloquea el propio scroll/bounce de <html> como contenedor
+    // superior. Bloquear los dos a la vez es la técnica robusta.
+    document.documentElement.style.overflow = "hidden";
   }
   scrollLockCount += 1;
 }
@@ -1318,6 +1380,7 @@ function releaseScrollLock() {
     s.left = "";
     s.right = "";
     s.overflow = "";
+    document.documentElement.style.overflow = "";
     // jsdom (tests) no implementa scrollTo — no es un fallo real, solo
     // ruido en la consola de test si no se protege.
     try { window.scrollTo(0, savedScrollY); } catch { /* no-op */ }
@@ -1548,7 +1611,14 @@ export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }
   );
 }
 
-export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, deleteDisabledReason }) {
+// extraActions (opcional): acciones propias de una pantalla concreta que no
+// encajan en Editar/Eliminar (p. ej. "Descargar de nuevo" en Training
+// Records) — cada una {label, icon, onClick, disabled?}. Se listan ANTES de
+// Editar/Eliminar (orden de menú estándar: lo más usado/positivo arriba, lo
+// destructivo abajo). Evita que cada pantalla con una necesidad extra tenga
+// que inventar su propio menú de "⋯" desde cero — RowMenu ya es el patrón
+// compartido de "más opciones" en Mi trabajo/Configuración/Tarifas.
+export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, deleteDisabledReason, extraActions = [] }) {
   const { t } = useTranslation("common");
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   // Cierra el menú "⋯" en el mismo instante en que se CONFIRMA el borrado
@@ -1577,7 +1647,18 @@ export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, d
       >
         <MoreVertical size={17} aria-hidden="true" />
       </button>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align="right" role="menu" className="w-36 overflow-hidden py-1">
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align="right" role="menu" className="w-44 overflow-hidden py-1">
+        {extraActions.map(({ label, icon, onClick, disabled }) => (
+          <button
+            key={label}
+            type="button" role="menuitem"
+            disabled={disabled}
+            onClick={() => { setOpen(false); onClick(); }}
+            className="flex min-h-11 w-full items-center gap-2 px-3 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {icon} {label}
+          </button>
+        ))}
         <button
           type="button" role="menuitem"
           onClick={() => { setOpen(false); onEdit(); }}

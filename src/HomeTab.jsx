@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { TrendingUp, TrendingDown, Minus, GraduationCap, Award, Handshake } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, GraduationCap, Award, Handshake, ChevronRight } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { Money, formatMoney, MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries, comparePeriods } from "./rateCalc";
@@ -73,7 +73,7 @@ function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary, onOpenTrainingRecords }) {
   const { t } = useTranslation("home");
   const translatedTypeMeta = useTranslatedMovementTypeMeta(t);
   const reducedMotion = usePrefersReducedMotion();
@@ -327,6 +327,37 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           </div>
         )}
       </button>
+
+      {/* 5. Training Records — cierre de la pantalla (Bloque 10, job
+          nocturno 2026-09-03, pedido explícito: "mover el enlace al
+          generador de Training Records a la Home"). Antes solo se
+          llegaba a través de Configuración, donde competía visualmente
+          con Escuelas/Cursos/Tarifas pese a ser la funcionalidad más
+          nueva y de más peso de la app (ver WhatsNew.jsx, Bloque 8, que
+          ya la anuncia como titular) — se elimina del menú de
+          Configuración (ver ConfigTab.jsx, HIDDEN_SECTIONS) y gana su
+          propia tarjeta, con el mismo lenguaje visual de icono+chevron
+          que ya usa Ayuda/Configuración para una fila con destino claro.
+          onOpenTrainingRecords (App.jsx) escribe la sección en
+          sessionStorage vía setStoredSection() y cambia de pestaña —
+          ConfigTab la recoge en su primer render, sin pasar por su
+          propio menú. */}
+      {onOpenTrainingRecords && (
+        <button
+          type="button"
+          onClick={onOpenTrainingRecords}
+          className="flex w-full min-h-[64px] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left transition-transform active:scale-[0.98]"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
+            <Award size={19} style={{ color: TEAL }} aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold" style={{ color: NAVY }}>{t("trainingRecordsCard.title")}</span>
+            <span className="block truncate text-xs text-gray-400">{t("trainingRecordsCard.subtitle")}</span>
+          </span>
+          <ChevronRight size={18} className="shrink-0 text-gray-300" aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }

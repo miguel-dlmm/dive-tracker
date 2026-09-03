@@ -118,14 +118,18 @@ async function main() {
       consoleIssues.push("[whats-new] El swipe hacia la derecha no volvió a la diapositiva anterior");
     }
 
+    // Acotado a `dialog`, con exact:true: sin esto, "Siguiente" también
+    // matchea "Mes siguiente" (calendario de Home montado detrás del
+    // diálogo) — el strict-mode error resultante quedaba silenciado por
+    // .catch(() => false), así que el bucle nunca se ejecutaba de verdad.
     let guard = 0;
-    while (await page.getByRole("button", { name: "Siguiente" }).isVisible().catch(() => false) && guard < 10) {
-      await page.getByRole("button", { name: "Siguiente" }).tap();
+    while (await dialog.getByRole("button", { name: "Siguiente", exact: true }).isVisible().catch(() => false) && guard < 10) {
+      await dialog.getByRole("button", { name: "Siguiente", exact: true }).tap();
       await page.waitForTimeout(250);
       guard += 1;
     }
     await shot(page, "whats-new-ultima-diapositiva");
-    await page.getByRole("button", { name: "Empezar" }).tap();
+    await dialog.getByRole("button", { name: "Empezar", exact: true }).tap();
     await page.waitForTimeout(200);
   } else {
     console.log("  (no apareció — ya se había marcado como vista para esta cuenta)");

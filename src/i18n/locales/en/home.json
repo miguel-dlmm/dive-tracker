@@ -10,5 +10,9 @@
     "studentsThisMonth": "Students this month",
     "coursesTotal": "Courses taught",
     "referredThisMonth": "Referred this month"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "subtitle": "Generate each student's signed SSI progress record, ready to hand over"
   }
 }
