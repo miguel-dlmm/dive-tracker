@@ -112,6 +112,29 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     }
   });
 
+  // pendingTotals (MiTrabajoTab.jsx) no filtra por mes — a diferencia de
+  // Generado/Cobrado, "Pendiente de cobrar" es deuda acumulada de
+  // siempre. Este tooltip es el único de los 3 KPIs: aclara justo esa
+  // diferencia, para que la cifra no parezca "no cuadrar" en cuanto hay
+  // algo sin cobrar de un mes anterior.
+  it("'Pendiente de cobrar' tiene un tooltip que avisa de que incluye pendientes de meses anteriores; los otros dos KPIs no lo tienen", async () => {
+    const user = userEvent.setup();
+    renderMiTrabajo(mixedDataset());
+
+    const tooltipText = "No es solo de este mes: aquí se junta todo lo que aún tienes pendiente de cobrar, aunque sea de hace tiempo.";
+    expect(screen.queryByText(tooltipText)).not.toBeInTheDocument();
+
+    // Solo el KPI "Pendiente de cobrar" lleva el icono de info — Generado
+    // y Cobrado se quedan igual que antes.
+    expect(screen.getAllByRole("button", { name: /^Info:/ })).toHaveLength(1);
+
+    await user.click(screen.getByRole("button", { name: "Info: Pendiente de cobrar" }));
+    expect(screen.getByText(tooltipText)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Ocultar info: Pendiente de cobrar" }));
+    expect(screen.queryByText(tooltipText)).not.toBeInTheDocument();
+  });
+
   it("un ajuste negativo pendiente ofrece 'Marcar liquidado' en vez de 'Confirmar cobro'", () => {
     renderMiTrabajo(mixedDataset());
     expect(screen.getByRole("button", { name: /Marcar liquidado/ })).toBeInTheDocument();
