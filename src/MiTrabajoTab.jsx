@@ -95,11 +95,15 @@ const HEIGHT_DELAY_MS = 60;
 const HEIGHT_MS = 220;
 const EXIT_MS = HEIGHT_DELAY_MS + HEIGHT_MS + 30; // margen antes de disparar el borrado real
 
-function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onEdit, onDelete, animPhase }) {
+function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onEdit, onDelete, onUndoDelete, animPhase }) {
   const { t } = useTranslation("trabajo");
   const isAjuste = entry._source === "companeros";
   const negative = isAjuste && entry.total < 0;
   const amountColor = isAjuste ? (negative ? CORAL : GREEN) : NAVY;
+  // Usado tanto por el itemLabel del menú "⋯" como por el mensaje de
+  // confirmación del borrado (deleteConfirmMessage) — una única fuente,
+  // sin calcular la misma frase dos veces.
+  const deleteItemLabel = isAjuste ? t("rowMenu.adjustmentWith", { name: entry.colleague_name }) : t("rowMenu.courseAt", { activity: entry.activity, school: entry.school });
 
   // Animación de salida: colapsar altura+opacidad+desplazamiento ANTES de
   // borrar de verdad, no al revés — deleteRow() actualiza el estado en
@@ -237,7 +241,13 @@ function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onE
               {isPending ? <Check size={14} aria-hidden="true" /> : <RotateCcw size={13} aria-hidden="true" />}
               {actionLabel(entry, isPending, t)}
             </button>
-            <RowMenu onEdit={onEdit} onDelete={handleDelete} itemLabel={isAjuste ? t("rowMenu.adjustmentWith", { name: entry.colleague_name }) : t("rowMenu.courseAt", { activity: entry.activity, school: entry.school })} />
+            <RowMenu
+              onEdit={onEdit}
+              onDelete={handleDelete}
+              itemLabel={deleteItemLabel}
+              deleteConfirmMessage={t("rowMenu.deleteConfirmMessage", { item: deleteItemLabel })}
+              deleteSuccessAction={{ label: t("rowMenu.undoAction"), onClick: onUndoDelete }}
+            />
           </div>
         </div>
       </div>
@@ -539,6 +549,26 @@ export default function MiTrabajoTab({
     }
   };
 
+  // Deshacer un borrado (Bloque baja lógica de movimientos, 2026-09-04) —
+  // mismo mecanismo de "Deshacer" que toggleStatus (acción en el toast de
+  // DeleteButton, ver RowMenu más abajo), pero al revés: restoreRow limpia
+  // deleted_at y recarga la tabla entera (ver useSupabaseTable.js), así
+  // que aquí no hace falta reconstruir la fila a mano — solo decidir si,
+  // con los filtros/pestaña EN VIVO (liveRef, mismo criterio que
+  // changeStatus), la fila recuperada debe entrar animada en la lista
+  // activa.
+  const undoDelete = async (entry) => {
+    const key = entryKey(entry);
+    try {
+      await tableFor(entry._source).restoreRow(entry.id);
+      const { filters: liveFilters, statusFilter: liveTab } = liveRef.current;
+      if (matchesEntryFilters(entry, liveFilters) && matchesActiveTab(entry.status, liveTab)) markEntering(key);
+      toast?.success(t("rowMenu.deleteUndoneToast"));
+    } catch {
+      toast?.error(t("rowMenu.deleteUndoError"));
+    }
+  };
+
   // "Cobrar" es el término correcto para el caso normal (Curso, Comisión,
   // Ajuste a tu favor), pero un Ajuste con importe negativo es una deuda
   // TUYA — ahí no "cobras", liquidas (mismo matiz que ya distingue
@@ -770,6 +800,7 @@ export default function MiTrabajoTab({
                     onToggle={() => toggleStatus(e)}
                     onEdit={() => setSheetRequest({ type: e._source, editingEntry: e })}
                     onDelete={() => tableFor(e._source).deleteRow(e.id)}
+                    onUndoDelete={() => undoDelete(e)}
                     animPhase={rowAnim[entryKey(e)]}
                   />
                 </React.Fragment>

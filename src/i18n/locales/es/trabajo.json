@@ -18,7 +18,11 @@
   },
   "rowMenu": {
     "adjustmentWith": "el ajuste con {{name}}",
-    "courseAt": "{{activity}} en {{school}}"
+    "courseAt": "{{activity}} en {{school}}",
+    "deleteConfirmMessage": "Vas a eliminar {{item}}. Tendrás unos segundos para deshacerlo desde el aviso.",
+    "undoAction": "Deshacer",
+    "deleteUndoneToast": "Recuperado",
+    "deleteUndoError": "No se pudo deshacer. Inténtalo de nuevo."
   },
   "tabs": {
     "pending": "Pendientes",

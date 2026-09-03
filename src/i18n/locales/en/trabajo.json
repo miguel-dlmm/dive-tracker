@@ -18,7 +18,11 @@
   },
   "rowMenu": {
     "adjustmentWith": "the adjustment with {{name}}",
-    "courseAt": "{{activity}} at {{school}}"
+    "courseAt": "{{activity}} at {{school}}",
+    "deleteConfirmMessage": "You're about to delete {{item}}. You'll have a few seconds to undo it from the notice.",
+    "undoAction": "Undo",
+    "deleteUndoneToast": "Restored",
+    "deleteUndoError": "Couldn't undo. Try again."
   },
   "tabs": {
     "pending": "Pending",

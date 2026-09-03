@@ -8,6 +8,7 @@ const rowsHook = (rows) => ({
   insertRow: vi.fn().mockResolvedValue(rows[0]),
   updateRow: vi.fn().mockResolvedValue(rows[0]),
   deleteRow: vi.fn().mockResolvedValue(),
+  restoreRow: vi.fn().mockResolvedValue(),
   bulkUpdateWhere: vi.fn().mockImplementation(async (predicate) => rows.filter(predicate).length),
   setDefault: vi.fn(),
 });
@@ -255,6 +256,26 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     // dispara tras la animación de salida — no es inmediato al confirmar.
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     await waitFor(() => expect(colleaguePayments.deleteRow).toHaveBeenCalledWith("p1"));
+  });
+
+  // Bloque baja lógica de movimientos, 2026-09-04: eliminar deja de ser
+  // destructivo — el toast de confirmación ofrece "Deshacer", que debe
+  // llamar a restoreRow() de la tabla correspondiente (no a insertRow, ni
+  // a un segundo deleteRow) para el registro correcto.
+  it("el toast de eliminar ofrece Deshacer, que restaura el movimiento borrado", async () => {
+    const user = userEvent.setup();
+    const { colleaguePayments } = renderMiTrabajo(mixedDataset());
+
+    await user.click(screen.getAllByLabelText("Más acciones")[0]);
+    await user.click(screen.getByRole("menuitem", { name: /Eliminar/ }));
+    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Eliminar" }));
+
+    await waitFor(() => expect(colleaguePayments.deleteRow).toHaveBeenCalledWith("p1"));
+
+    const undoBtn = await screen.findByRole("button", { name: "Deshacer" });
+    await user.click(undoBtn);
+
+    await waitFor(() => expect(colleaguePayments.restoreRow).toHaveBeenCalledWith("p1"));
   });
 
   it("editar desde el menú '⋯' abre la misma hoja que crear, precargada, y guarda los cambios en la tabla del curso", async () => {
