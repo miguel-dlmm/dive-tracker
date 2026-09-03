@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitForElementToBeRemoved } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RatesTab from "./RatesTab";
 import { TEAL, SUN } from "./colors";
@@ -110,7 +110,11 @@ describe("RatesTab — lista combinada de Curso y Comisión", () => {
     await user.click(screen.getByRole("button", { name: "Tipo" }));
     await user.click(screen.getByRole("option", { name: "Comisión" }));
 
-    expect(screen.queryByText("Open Water")).not.toBeInTheDocument();
+    // La fila filtrada fuera ya no desaparece de golpe (auditoría de estilo
+    // 2026-09-04, listItemVariants/AnimatePresence, mismo vocabulario que
+    // Mi trabajo) — sigue en el DOM durante su animación de salida antes de
+    // desmontarse de verdad.
+    await waitForElementToBeRemoved(() => screen.queryByText("Open Water"));
     expect(screen.getByText("Advanced")).toBeInTheDocument();
   });
 
