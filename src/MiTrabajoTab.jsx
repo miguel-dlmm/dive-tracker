@@ -1,11 +1,12 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2 } from "lucide-react";
+import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2, HelpCircle } from "lucide-react";
 import { motion } from "motion/react";
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   Money, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
   isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab,
+  useFloatingDropdown, FloatingPanel,
 } from "./shared";
 import { buildActivityEntries, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
@@ -301,7 +302,25 @@ function emptyMessage(statusFilter, hasActiveFilters, t) {
 // sola), se renderiza sin animar, igual que ya hace "Generado este mes"
 // en Home para el mismo caso: la app ya acepta esa degradación en vez de
 // intentar animar N monedas en paralelo con un solo hook.
-function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows }) {
+// `tooltip` (opcional, solo lo usa "Pendiente de cobrar" — ver
+// MiTrabajoTab): mismo mecanismo que el hint de Field en shared.jsx
+// (useFloatingDropdown + FloatingPanel, no un tooltip nuevo — convención
+// MVP/reutilización, CLAUDE.md), con el icono a tamaño reducido (11px vs
+// los 13px de Field) para que no compita visualmente con el label ni
+// rompa la simetría de las 3 tarjetas: los otros dos KPIs no llevan
+// icono, así que este debe leerse como "parte del mismo lenguaje visual
+// ya usado en la app" (mismo HelpCircle gris apagado que Field), no como
+// un elemento nuevo — discreto pero reconocible como pulsable.
+// tooltipShowLabel/tooltipHideLabel (aria-label, requeridos junto con
+// `tooltip`): a propósito NO reutilizan common:field.help/hideHelp
+// ("Ayuda"/"Ocultar ayuda") como hace Field — MovementSheet ya usa esos
+// mismos textos genéricos para su propio hint de "Importe" en Ajuste de
+// curso, y ambos pueden convivir en el DOM a la vez (la hoja se abre
+// encima de esta pantalla, no la desmonta). Un aria-label específico
+// ("Info: Pendiente de cobrar") evita esa ambigüedad para lectores de
+// pantalla y de paso es más claro por sí solo.
+function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel }) {
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const entries = Object.entries(totals || {});
   const single = entries.length === 1 ? entries[0] : null;
   const animatedCents = useCountUp(single ? Math.round(single[1] * 100) : 0, { reduced });
@@ -321,7 +340,33 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
           entries.map(([code, amt], i) => <span key={code}>{i > 0 && " + "}<Money amount={amt} code={code} currencyRows={currencyRows} /></span>)
         )}
       </span>
-      <span className="text-[10.5px] font-medium leading-tight text-gray-500">{label}</span>
+      <span className="flex items-center justify-center gap-0.5 text-[10.5px] font-medium leading-tight text-gray-500">
+        {label}
+        {tooltip && (
+          // Mismo truco de objetivo táctil que Field: el icono visual se
+          // queda a tamaño pequeño, pero el botón real que lo envuelve es
+          // absoluto (44×44 efectivos) para no ensanchar la fila de label
+          // y descuadrar la altura de esta tarjeta frente a sus dos
+          // hermanas (convención #7, CLAUDE.md).
+          <span className="relative inline-flex h-3 w-3 shrink-0">
+            <button
+              ref={anchorRef}
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-label={open ? tooltipHideLabel : tooltipShowLabel}
+              className="absolute -inset-[15px] flex items-center justify-center text-gray-400"
+            >
+              <HelpCircle size={11} aria-hidden="true" />
+            </button>
+          </span>
+        )}
+      </span>
+      {tooltip && (
+        <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} className="w-48 max-w-[75vw] px-2.5 py-1.5">
+          <span className="block text-[11px] font-normal italic normal-case text-gray-500">{tooltip}</span>
+        </FloatingPanel>
+      )}
     </motion.div>
   );
 }
@@ -627,7 +672,16 @@ export default function MiTrabajoTab({
     <div className="relative space-y-4 pb-24">
       <div className="grid grid-cols-3 gap-2">
         <MoneyKpiTile icon={TrendingUp} color={TEAL} totals={monthGeneratedTotals} label={t("kpis.generatedThisMonth")} index={0} reduced={reducedMotion} currencyRows={currencies.rows} />
-        <MoneyKpiTile icon={Wallet} color={SUN} totals={pendingTotals} label={t("kpis.pendingToCollect")} index={1} reduced={reducedMotion} currencyRows={currencies.rows} />
+        {/* A diferencia de sus dos hermanos, "Pendiente de cobrar" NO
+            filtra por currentMonthKey (ver pendingTotals más arriba): es
+            deuda pendiente acumulada de siempre, no solo de este mes. Sin
+            aclararlo, la cifra parece "no cuadrar" con Generado/Cobrado
+            (que sí son del mes) en cuanto queda algo sin cobrar de un mes
+            anterior — de ahí el único tooltip de los 3 KPIs. */}
+        <MoneyKpiTile
+          icon={Wallet} color={SUN} totals={pendingTotals} label={t("kpis.pendingToCollect")} index={1} reduced={reducedMotion} currencyRows={currencies.rows}
+          tooltip={t("kpis.pendingTooltip")} tooltipShowLabel={t("kpis.pendingTooltipShow")} tooltipHideLabel={t("kpis.pendingTooltipHide")}
+        />
         <MoneyKpiTile icon={CheckCircle2} color={GREEN} totals={monthCollectedTotals} label={t("kpis.collectedThisMonth")} index={2} reduced={reducedMotion} currencyRows={currencies.rows} />
       </div>
 

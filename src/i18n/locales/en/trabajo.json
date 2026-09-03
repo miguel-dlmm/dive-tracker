@@ -132,6 +132,9 @@
   "kpis": {
     "generatedThisMonth": "Generated this month",
     "pendingToCollect": "Pending to collect",
+    "pendingTooltip": "Not just this month — it adds up everything you still have pending to collect, even older stuff.",
+    "pendingTooltipShow": "Info: Pending to collect",
+    "pendingTooltipHide": "Hide info: Pending to collect",
     "collectedThisMonth": "Collected this month"
   }
 }
