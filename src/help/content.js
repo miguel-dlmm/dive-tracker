@@ -51,6 +51,15 @@
 // "Datasets iniciales" y las menciones a Administración/Usuarios que
 // tenía "Configuración, de un vistazo") — ocultar no es lo mismo que no
 // documentar, así que ese mecanismo dejó de tener sentido aquí.
+// Auditoría 2026-09-04 (este rediseño): "configurar-app" seguía
+// mencionando de pasada el bloque "Administración" (tipos/estados de
+// pago, monedas, colores, usuarios) solo para decir que existe si el
+// usuario es admin — sigue siendo documentar admin, así sea de refilón.
+// Reescrito en help.json para hablar solo de Escuelas/Cursos/Tarifas
+// (BUSINESS_SECTIONS en ConfigTab.jsx), lo único que ve cualquier
+// usuario estándar. src/help/content.test.js escanea ahora todo el
+// texto de Ayuda (ambos idiomas) en busca de vocabulario de admin, para
+// que esto no pueda volver a colarse sin que un test lo detecte.
 export const HELP_CATEGORIES = [
   {
     id: "bienvenida",

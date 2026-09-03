@@ -43,7 +43,7 @@
     "configurar-app": {
       "title": "Set up your app",
       "summary": "Nothing is fixed in the app: schools, courses, rates and payment catalogues are all edited from Settings.",
-      "whatYouCanDo": "Settings is organised into two blocks: what any user maintains (Schools, Courses, Rates) and, if you have an admin role, an \"Administration\" block with catalogues for the whole app (payment types and statuses, currencies, colours, users).",
+      "whatYouCanDo": "Settings is where you maintain your base data: which schools you work with, which courses you teach, and at what rate. All editable, nothing hard-coded.",
       "whenToUseIt": "Before logging your first entry, and afterwards every time you start working with a new school or course, or change a price.",
       "steps": [
         "Go to Settings (gear icon, top right) and tap the section you need.",

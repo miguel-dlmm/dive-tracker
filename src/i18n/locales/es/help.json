@@ -43,7 +43,7 @@
     "configurar-app": {
       "title": "Configurar tu aplicación",
       "summary": "Nada está fijado en la app: escuelas, cursos, tarifas y catálogos de pago se editan desde Configuración.",
-      "whatYouCanDo": "Configuración se organiza en dos bloques: lo que cualquier usuario mantiene (Escuelas, Cursos, Tarifas) y, si tienes rol de administrador, un bloque de \"Administración\" con catálogos de toda la app (tipos y estados de pago, monedas, colores, usuarios).",
+      "whatYouCanDo": "Configuración es donde mantienes tus datos base: qué escuelas trabajan contigo, qué cursos impartes y a qué tarifa. Todo editable, nada fijo en el código.",
       "whenToUseIt": "Antes de registrar tu primer movimiento, y después cada vez que empieces a trabajar con una escuela o curso nuevo, o cambies un precio.",
       "steps": [
         "Entra en Configuración (icono de engranaje, arriba a la derecha) y toca la sección que necesites.",
