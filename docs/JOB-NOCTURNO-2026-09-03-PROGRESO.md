@@ -113,7 +113,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 5 | Training Records — config compartida por listado | ✅ Hecho | `feature/training-records` (desde `Release-V1`) | `3031a96` + `d131ed3` (docs) |
 | 6 | Revisión de todos los textos de la app | ✅ Hecho | `fix/bloque6-revision-textos` (desde `develop`) | `aca9d89` |
 | 7 | Revisión de notificaciones propias (toasts) | ✅ Hecho | `fix/bloque7-toasts` (desde `develop`) | `ed2c5b2` |
-| 8 | Rediseño del slide de novedades (WhatsNew) | ⬜ No empezado | — | — |
+| 8 | Rediseño del slide de novedades (WhatsNew) | ✅ Hecho | `feat/bloque8-whatsnew-releasev1` (desde `Release-V1`) | `8b9f520` |
 | 9 | KPIs de la home a primera posición | ✅ Hecho | `feat/bloque9-kpis-primera-posicion` (desde `Release-V1`) | `ccc622e` |
 | 10 | Rediseño de Home + enlace al generador de Training Records | ⬜ No empezado | — | — |
 | 11 | KPIs animados en Movimientos (Generado este mes / Pendiente de cobrar + 3º a decidir) | ⬜ No empezado | — | — |
@@ -209,11 +209,34 @@ pareciendo un bug — resultó ser el propio timing de la comprobación
 componente. Diagnosticado con una animación de 3s temporal antes de
 concluir que estaba bien; revertido antes de comitear.
 
-**Bloque 8 — Slide de cambios de la release**
-Rediseñar el slide de "qué hay de nuevo" (se ve una vez, tras una
-acción de backend o al iniciar sesión tras un despliegue). Adaptarlo a
-los cambios de Release V1. Sencillo, para alguien con las manos
-mojadas y prisa — un vistazo a las novedades principales.
+**Bloque 8 — Slide de cambios de la release** ✅ Hecho — ver tabla
+arriba. Las 5 diapositivas se reescribieron para hablar de lo que de
+verdad es nuevo en Release V1 (Training Records, idioma ES/EN, KPIs de
+Home, cabecera con menos iconos, cómo reabrir el slide) — el contenido
+anterior hablaba de cambios de `develop` que ya llevaban semanas en
+producción. Se añadió un eyebrow ("Novedades de esta versión").
+
+**Bug real encontrado y arreglado en este bloque (preexistente en
+Release-V1, no algo de esta sesión):** pulsar "Siguiente" en el slide
+dejaba la diapositiva ANTERIOR permanentemente en pantalla — el
+`step` interno sí avanzaba (botones/puntos correctos) pero el
+contenido visible (título/cuerpo) se quedaba congelado en la
+diapositiva vieja para siempre. Reproducido también con el contenido
+ORIGINAL antes de tocar nada, así que no lo causó el cambio de texto.
+Causa: envolver el `motion.div` de cada diapositiva en
+`<AnimatePresence>` (con o sin `mode="wait"`, con o sin `drag`, con o
+sin desplazamiento en `x`) — con motion 13.1.1 + React 19.2.8, el
+`exit` nunca se completaba y `AnimatePresence` nunca desmontaba el
+hijo saliente (confirmado con JS en el navegador: dos elementos
+`#whats-new-title` a la vez). Arreglado quitando `AnimatePresence` del
+todo — se pierde el fundido de SALIDA de la diapositiva vieja (ahora
+desaparece al instante en vez de animar), se mantiene el fundido de
+ENTRADA de la nueva. La suite de test (jsdom) no lo detecta porque no
+reproduce el timing real de la animación en un navegador — todo esto
+se verificó a mano en Chrome. Si se quiere recuperar el fundido de
+salida más adelante, investigar la causa raíz de fondo (versión de
+"motion" vs. modo concurrente de React 19) antes de volver a envolver
+esto en `AnimatePresence`.
 
 **Bloque 10 — Home y acceso al generador**
 Mover el enlace al generador de Training Records a la Home,
