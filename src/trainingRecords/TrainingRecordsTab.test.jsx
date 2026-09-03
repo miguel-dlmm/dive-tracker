@@ -123,9 +123,19 @@ async function selectTemplateAndFillSharedConfig(user) {
   await pickToday(user, "Fecha de examen");
 }
 
-// Añade un alumno con nombre/apellidos/firma vía el FAB "Añadir alumno".
+// Abre la hoja de alta de alumno — el control cambia según si el listado
+// ya tiene algún alumno (2026-09-04, quitado el FAB flotante): con el
+// listado vacío es el enlace "Añade tu primer alumno" del estado vacío;
+// con al menos un alumno ya añadido, es la fila "+ Añadir alumno" al
+// final del propio listado.
+async function openAddStudentSheet(user) {
+  const inlineRow = screen.queryByRole("button", { name: "Añadir alumno" });
+  await user.click(inlineRow || screen.getByRole("button", { name: "Añade tu primer alumno" }));
+}
+
+// Añade un alumno con nombre/apellidos/firma.
 async function addStudent(user, { firstName, lastName }) {
-  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
+  await openAddStudentSheet(user);
   await user.type(screen.getByRole("textbox", { name: "Nombre" }), firstName);
   await user.type(screen.getByRole("textbox", { name: "Apellidos" }), lastName);
   signStudentInOpenSheet();
@@ -173,7 +183,7 @@ it("marca con un aviso al alumno al que le falta la firma, y bloquea Generar sin
   await selectTemplateAndFillSharedConfig(user);
 
   // Alumno sin firmar — guardarlo debe fallar con su propio aviso.
-  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
+  await openAddStudentSheet(user);
   await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ana");
   await user.type(screen.getByRole("textbox", { name: "Apellidos" }), "Garcia");
   await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
@@ -192,7 +202,7 @@ it("'Menor de edad' revela el nombre/firma del tutor y los exige antes de guarda
   renderTab();
   await selectTemplateAndFillSharedConfig(user);
 
-  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
+  await openAddStudentSheet(user);
   expect(screen.queryByRole("textbox", { name: "Nombre del padre/madre/tutor" })).not.toBeInTheDocument();
   const studentHandlerIndex = endStrokeHandlers.length - 1; // solo el del alumno, todavía sin tutor
 

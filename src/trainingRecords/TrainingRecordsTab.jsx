@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2 } from "lucide-react";
 import { supabase } from "../supabaseClient";
-import { useToast, Fab, RowMenu, DatePicker, Select, ConfirmDialog, Avatar } from "../shared";
+import { useToast, RowMenu, DatePicker, Select, ConfirmDialog, Avatar } from "../shared";
 import { resolveAvatar } from "../avatarCatalog";
 import { TEAL } from "../App";
 import { fillTrainingRecordPdf } from "./pdfFill";
@@ -313,7 +313,11 @@ function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf
           {student.initials}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium text-gray-800">{student.firstName} {student.lastName}</span>
+          {/* truncate + title (2026-09-04): un nombre largo no rompe la
+              fila — se corta con "…" y el nombre completo sigue disponible
+              al pasar el puntero (desktop) o, en móvil, tocando la fila
+              abre la edición del alumno, que ya lo muestra entero. */}
+          <span className="block truncate font-medium text-gray-800" title={`${student.firstName} ${student.lastName}`}>{student.firstName} {student.lastName}</span>
           {hasGenerated && <span className="block text-xs text-gray-400">{t("roster.generadoEl", { date: formatGeneratedAt(student.generatedAt, locale) })}</span>}
           {!hasGenerated && hasError && <span className="block text-xs text-red-600">{t("roster.faltanDatos")}</span>}
         </span>
@@ -566,7 +570,11 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   const editingEntry = entrySheet?.mode === "edit" ? students.find((s) => s.id === entrySheet.id) : null;
 
   return (
-    <div className="space-y-5 pb-24">
+    // pb-16 (no pb-24): ya no hay un FAB flotante que necesite ese hueco
+    // extra abajo (2026-09-04, quitado — ver "+ Añadir alumno" dentro del
+    // propio listado) — mismo valor que ProfileTab/ConfigTab, pantallas
+    // igual de "planas" sin botón flotante.
+    <div className="space-y-5 pb-16">
       <p className="text-sm text-gray-500">{t("intro")}</p>
       <InstructorCard profile={profile} instructor={instructor} />
 
@@ -743,6 +751,20 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                     regenerating={regeneratingId === student.id}
                   />
                 ))}
+                {/* "+ Añadir alumno" como fila del propio listado
+                    (2026-09-04, pedido explícito: quitar el FAB flotante —
+                    con la pantalla ya scrollable, un FAB no se lee como
+                    "añadir alumno") — sustituye al Fab de más abajo. */}
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setEntrySheet({ mode: "add" })}
+                    className="flex min-h-11 w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium"
+                    style={{ color: accentColor || TEAL }}
+                  >
+                    <UserPlus size={16} aria-hidden="true" /> {t("roster.anadirAlumno")}
+                  </button>
+                </li>
               </ul>
             )}
           </section>
@@ -770,8 +792,6 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
               </div>
             </section>
           )}
-
-          <Fab onClick={() => setEntrySheet({ mode: "add" })} label={t("roster.anadirAlumno")} color={accentColor || TEAL} icon={UserPlus} />
         </>
       )}
 
