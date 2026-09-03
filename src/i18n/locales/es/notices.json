@@ -8,16 +8,12 @@
     "start": "Empezar",
     "slides": [
       {
-        "title": "Training Records al instante",
-        "body": "Genera el registro de progreso SSI de cada alumno, firmado, en segundos — sin papeleo."
-      },
-      {
         "title": "La app ya habla tu idioma",
         "body": "Cambia entre español e inglés cuando quieras, desde tu perfil."
       },
       {
         "title": "Home, más a mano",
-        "body": "Tus KPIs del mes abren la pantalla, y Training Records ya tiene su propio acceso directo — sin pasar por Configuración."
+        "body": "Tus KPIs del mes abren la pantalla — lo que más consultas, sin tener que bajar."
       },
       {
         "title": "Cabecera más simple",

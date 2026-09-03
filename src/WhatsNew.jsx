@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { X, Award, Languages, TrendingUp, UserCircle, Sparkles } from "lucide-react";
+import { X, Languages, TrendingUp, UserCircle, Sparkles } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
@@ -17,13 +17,18 @@ import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 // los cambios de Release V1"). El contenido anterior (2026-08-30) hablaba
 // de cambios de `develop` (Mi trabajo, Tarifas, Resumen) que ya llevaban
 // semanas en producción para cuando esta rama fuera a desplegarse — nada
-// de eso es "nuevo" en Release V1. Las 5 diapositivas pasan a cubrir lo que
-// SÍ es nuevo en esta rama: Training Records (la funcionalidad de más
-// peso), idioma español/inglés, KPIs de Home reordenados, cabecera con
-// menos iconos, y cómo volver a ver este mismo slide más tarde. Mismo
-// criterio que la reescritura anterior: "instructor en el descanso del
-// barco, con las manos mojadas" — frases cortas, sin tecnicismos, el
-// detalle completo vive en CHANGELOG.md para quien lo quiera.
+// de eso es "nuevo" en Release V1. Mismo criterio que la reescritura
+// anterior: "instructor en el descanso del barco, con las manos
+// mojadas" — frases cortas, sin tecnicismos, el detalle completo vive en
+// CHANGELOG.md para quien lo quiera.
+//
+// Training Records retirado de aquí (y de Ayuda, que nunca llegó a
+// documentarlo) el mismo 2026-09-03, pedido explícito del usuario: no
+// sale en este paquete de Release V1, se desplegará en una versión
+// posterior como feature nueva — no tiene sentido anunciarla antes de
+// que esté disponible de verdad para el usuario final. El código de
+// Training Records en sí (generador, acceso desde Home) sigue en la
+// rama tal cual, solo se retira de los sitios que la ANUNCIAN.
 //
 // Sin capturas de pantalla, mismo motivo que la versión anterior de este
 // archivo: ninguna captura real de esta sesión queda presentable para un
@@ -34,7 +39,6 @@ import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 // notices.json (whatsNew.slides, mismo orden por índice) y se combinan con
 // este array en el componente.
 const SLIDE_ICONS = [
-  { icon: Award, color: TEAL },
   { icon: Languages, color: SUN },
   { icon: TrendingUp, color: GREEN },
   { icon: UserCircle, color: CORAL },

@@ -8,16 +8,12 @@
     "start": "Let's go",
     "slides": [
       {
-        "title": "Training Records in seconds",
-        "body": "Generate each student's signed SSI progress record in seconds — no paperwork."
-      },
-      {
         "title": "The app now speaks your language",
         "body": "Switch between Spanish and English whenever you want, from your profile."
       },
       {
         "title": "Home, closer at hand",
-        "body": "Your monthly KPIs open the screen, and Training Records now has its own direct shortcut — no need to go through Settings."
+        "body": "Your monthly KPIs open the screen — what you check most, without scrolling."
       },
       {
         "title": "A simpler header",

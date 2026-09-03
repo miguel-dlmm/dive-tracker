@@ -235,12 +235,12 @@ describe("AuthGate", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText("Ocean Flow");
-    expect(screen.queryByText("Training Records al instante")).not.toBeInTheDocument();
+    expect(screen.queryByText("La app ya habla tu idioma")).not.toBeInTheDocument();
 
     await user.click(screen.getByLabelText("Ayuda"));
     await user.click(await screen.findByText("Ver qué hay de nuevo en esta versión"));
 
-    expect(await screen.findByText("Training Records al instante")).toBeInTheDocument();
+    expect(await screen.findByText("La app ya habla tu idioma")).toBeInTheDocument();
   });
 
   it("activated_at fijado pero con consentimiento legal pendiente, muestra la pantalla de aceptación legal en vez de la app", () => {
