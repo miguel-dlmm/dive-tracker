@@ -132,6 +132,9 @@
   "kpis": {
     "generatedThisMonth": "Generado este mes",
     "pendingToCollect": "Pendiente de cobrar",
+    "pendingTooltip": "No es solo de este mes: aquí se junta todo lo que aún tienes pendiente de cobrar, aunque sea de hace tiempo.",
+    "pendingTooltipShow": "Info: Pendiente de cobrar",
+    "pendingTooltipHide": "Ocultar info: Pendiente de cobrar",
     "collectedThisMonth": "Cobrado este mes"
   }
 }
