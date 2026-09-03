@@ -6,4 +6,4 @@
 // (ese número de versión no se ha mantenido al día históricamente en este
 // proyecto) ni se genera en build time, para que sea un cambio explícito y
 // revisable, no un efecto secundario silencioso del build.
-export const APP_VERSION = "0.2.0";
+export const APP_VERSION = "1.0.0";

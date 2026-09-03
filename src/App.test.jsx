@@ -225,7 +225,7 @@ describe("AuthGate", () => {
   // localStorage antes de renderizar, para probar la reapertura de verdad
   // en vez de que ya estuviera abierto por no haberse visto todavía).
   it("Fase 4 — 'Ver qué hay de nuevo' en Ayuda reabre el slide de novedades ya visto", async () => {
-    localStorage.setItem("oceanpulse:whatsNewSeen:u1", "0.2.0");
+    localStorage.setItem("oceanpulse:whatsNewSeen:u1", "1.0.0");
     mockUseSession({
       session: SESSION,
       profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },

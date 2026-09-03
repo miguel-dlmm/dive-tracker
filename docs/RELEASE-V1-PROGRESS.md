@@ -32,6 +32,7 @@
 | 6 | Slides y avisos | 🟡 En curso — avisos generalizados, WhatsNew sin tocar (ver detalle) |
 | 7 | Usabilidad, carga y escalabilidad | ✅ Hecho (2026-09-02, análisis documental, sin cambios de código) |
 | 8 | Revisión visual y libro de estilo | ✅ Hecho (2026-09-02, `docs/ESTILO.md` actualizado, sin pulido pixel-a-pixel) |
+| 9 | Cierre de Release V1 y despliegue a PRO | 🟡 En curso (2026-09-03/04) — auditoría de lint hecha y fusionada a `develop`; plan de despliegue a PRO diseñado y aprobado en sus decisiones clave, **nada ejecutado todavía** — ver detalle |
 
 > Ver sección "Análisis de riesgos y decisiones previas al trabajo
 > nocturno" más abajo para el detalle completo de cada fase (riesgo,
@@ -1737,6 +1738,354 @@ mientras el usuario revisa ese PR — ver esa sección).
 
 `npm run test`/`npm run build` en verde (sin cambios de código en esta
 fase, solo documentación).
+
+---
+
+## Fase 9 — Cierre de Release V1 y despliegue a producción (🟡 en curso, 2026-09-03/04)
+
+### Lo hecho
+
+**Auditoría de lint en `Release-V1` y fusión a `develop`** (petición
+explícita: "piensa q después irá a PRO, asique analiza loq se pueda
+corregir y hazlo para luego volver a probar el proceso"):
+
+- `npm run lint` bajado de 245 problemas (229 errores) a 0 errores / 9
+  avisos, todos verificados uno a uno como omisiones seguras de
+  `react-hooks/exhaustive-deps` (la función cerrada sobre el closure
+  depende solo de valores que ya están en el array de dependencias —
+  mismo patrón ya usado en varios sitios de la app).
+- Cambios: 4 reglas de "preparación para React Compiler" desactivadas en
+  `eslint.config.js` con justificación documentada por regla (proyecto
+  no adopta React Compiler); `.vercel` a `globalIgnores`; `vite.config.js`
+  al patrón de globals de Node; imports `React` sin usar eliminados en 7
+  archivos; 6 directivas `eslint-disable` obsoletas convertidas en
+  comentarios normales; `global.` → `globalThis.` en 5 archivos de test
+  restantes; un `eslint-disable-next-line` mal colocado corregido en
+  `DatasetsSection.jsx` (el comentario explicativo de 2 líneas hacía que
+  la directiva no cubriera la línea de código real — solucionado
+  colapsándola a una sola línea inmediatamente antes del código).
+- Commit `82eba44` en `Release-V1`, `npm run test -- --run` (695/695) y
+  `npm run build` en verde, preview de Vercel verificado en navegador
+  headless (badge TEST, sin errores de consola), aviso de despliegue
+  enviado.
+- **Fusión `Release-V1` → `develop`**: confirmado de antemano
+  (`git merge-base --is-ancestor`) que `develop` era ancestro estricto de
+  `Release-V1` → fast-forward limpio, 0 conflictos. `develop` pasó de
+  `1e7b7bd` a `82eba44`. Tests/build en verde también en `develop`,
+  push hecho, preview del entorno TEST (`dive-tracker-three.vercel.app`)
+  verificado en navegador headless. Segundo aviso de despliegue
+  deduplicado solo por idempotencia de `commit_hash` (`already_notified:
+  true`) — comportamiento correcto, mismo commit ya notificado.
+
+### Auditoría de mecanismos de despliegue — resultado
+
+Pedido explícito: "¿se han seguido todos los mecanismos de despliegues
+definidos... changelog actualizado y demás?" Resultado real, contrastado
+contra `ADR-0006`, `ADR-0010`, `ADR-0025` y `CLAUDE.md`:
+
+| Mecanismo | Estado |
+|---|---|
+| Rama efímera → `develop`, tests+build antes de push, Preview verificado | ✅ Seguido en esta fase |
+| `CHANGELOG.md` actualizado por commit (regla de ADR-0010) | ❌ `## Unreleased` vacío desde v0.2.0 (2026-08-30) pese a ~160 commits reales de Release V1 |
+| `package.json` version bump | ❌ Sigue en `0.2.0` |
+| Tag `vX.Y.Z` sobre el commit de release | ❌ No existe tag posterior a `v0.2.0` |
+| `npm run mobile-check` antes de cerrar cambios de UI (CLAUDE.md regla 8) | ⚠️ Sin evidencia de haberse ejecutado esta sesión, con UI extensa de por medio (carnet, KPIs, WhatsNew) |
+| `gh release create` (paso 7, ADR-0010) | ⚠️ Se saltó en v0.2.0 por no tener `gh` CLI — **ahora sí está instalada** (`gh 2.98.0`, confirmado en el entorno), se puede completar esta vez |
+| Protección de rama `main` en GitHub (prevista en ADR-0006) | ⚠️ No configurada (`Branch not protected` vía API) — no bloqueante, mejora aparte |
+| Training Records fuera de este release (instrucción explícita del usuario: "quita todo lo relacionado con TR... porque no saldrá, se desplegará en una versión posterior") | ❌ Solo se quitó de Ayuda/WhatsNew — la tarjeta de Home (`HomeTab.jsx`, bloque `onOpenTrainingRecords`) y la sección de Configuración siguen live en `develop`. Fase 5 de este mismo documento sigue 🟡 en curso (2 supuestos de fecha sin confirmar, 6 plantillas sin campos) |
+| `EMAIL_FROM` en Vercel prod (proyecto `oceanflow`, antes `dive-tracker-exgg`) | ⚠️ Pendiente — pero es una decisión ya tomada por el usuario el 2026-09-02 ("se hace junto al próximo despliegue real a PROD", ver Fase 4/nota de Resend arriba). No es un descuido, es precisamente este momento |
+| Migraciones (`0001`-`0013`) | ℹ️ Todas aditivas, aplicadas solo en TEST, ninguna en producción — esperado, entra en el plan de abajo |
+| `ADR-0025` (tabla `schema_migrations` de seguimiento) | ℹ️ Sigue "Propuesta, sin aprobar" — se ofrece como opción en el plan, no obligatoria |
+
+Verificado además con `vercel env ls` real contra los dos proyectos:
+`oceanflow` (prod) tiene `RESEND_API_KEY`/`APP_URL`/
+`SUPABASE_SERVICE_ROLE_KEY`/`VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`
+ya configuradas — falta solo `EMAIL_FROM`. Dominio de envío
+`oceanflow.money` confirmado `verified` en Resend
+(`scripts/check-resend-domain.local.mjs`). Prod no tiene dominio propio
+en Vercel todavía (`vercel domains ls` → 0), sigue sirviendo desde
+`dive-tracker-exgg.vercel.app`.
+
+### Decisiones tomadas por el usuario (2026-09-04)
+
+Presentadas con `AskUserQuestion`, ambas con recomendación explícita:
+
+1. **Training Records → ocultarlo para este release** (opción
+   recomendada, elegida). Quitar la tarjeta de `HomeTab.jsx` y el acceso
+   a la sección de `ConfigTab.jsx`/`App.jsx` justo antes de fusionar a
+   `main`. Código, migraciones (`0008`, `0011`, `0012`) y tablas quedan
+   intactos — solo se cierran los 2 puntos de entrada. Reversible con un
+   solo commit el día que se decida lanzarlo de verdad.
+2. **Versión de la release → `v1.0.0`** (opción recomendada, elegida).
+   Justificación: "Release V1" es literalmente el nombre de esta
+   iniciativa y su objetivo es "hacer pública la app fuera de usuarios
+   de test" — coincide con el disparador que el propio ADR-0010 fija
+   para `MAJOR` ("el producto declara una superficie estable"), no una
+   `MINOR` más.
+
+### Plan de despliegue a PRO — corregido tras revisión del usuario (2026-09-04)
+
+Pedido explícito del usuario: diseñar el plan (migraciones incluidas)
+sin ejecutar nada. Incluye estrategia de rollback ligera pedida aparte
+("ten en cuenta la operación de rollback completa del despliegue a PRO,
+piensa algo ligero pero eficiente"). El plan original (sección anterior
+de este documento, sustituida aquí) tenía 5 problemas reales detectados
+por el usuario en revisión — corregidos abajo, no solo anotados:
+
+1. **Migraciones "todas aditivas salvo 0002"**: incompleto. `0005` (además
+   de añadir `avatar_icon`/`avatar_color`) también hace
+   `drop column if exists default_currency` en la misma sentencia — se
+   había leído como "solo añade columnas de avatar" y se pasó por alto.
+   Confirmado con grep en `src/`/`server/` de `develop` Y de `main`
+   (código hoy en producción) que ni `password_set` ni `default_currency`
+   se leen ni se escriben en ningún sitio — ambas están tan muertas como
+   se pensaba, pero son 2 migraciones destructivas, no 1.
+2. **Sin backup de producción en ningún punto del plan** — contradice la
+   lección ya fijada de que todo plan de despliegue a PRO debe incluir
+   rollback explícito; un backup es el complemento que faltaba
+   específicamente por 0002/0005 (un DROP COLUMN no lo deshace el
+   rollback de código). Corregido: `scripts/backup-db.mjs` (`npm run
+   backup:db`, ya existente — ver ADR-0017) antes de tocar producción.
+   Confirmado por el usuario 2026-09-04: producción está en plan Free de
+   Supabase, sin backups automáticos ni PITR — el dump manual es el único
+   camino de vuelta, no una capa de refuerzo opcional.
+3. **`scripts/apply-migration.mjs` no puede ejecutarse contra producción**
+   tal como está escrito (paso B.3 del plan original) — exige
+   `SUPABASE_TEST_DB_URL` por diseño, precisamente para que nunca se
+   ejecute contra producción por accidente. Corregido con un script
+   nuevo y separado, `scripts/apply-migration-prod.mjs` (construido
+   2026-09-04): lee `SUPABASE_DB_URL` (misma variable que ya usa
+   `backup-db.mjs`, para no mantener dos cadenas de conexión a la misma
+   base) y exige además el flag explícito `--confirm-production`. El
+   guard de `apply-migration.mjs` (TEST) no se ha tocado.
+4. **Tag `v1.0.0` se creaba sobre `develop` en A.5, antes del merge a
+   `main`** — no apuntaría al commit realmente desplegado. Corregido:
+   el tag se mueve al final del Bloque C, después de verificar el
+   despliegue real. Nota aparte: esto es un hueco real en el propio
+   ADR-0010 (su ordenación de pasos asume que `develop` es la
+   producción, cierto cuando se escribió, ya no); un addendum a esa ADR
+   queda pendiente, deliberadamente para después de este despliegue
+   (ver "Aplazado a después del despliegue" más abajo).
+5. **Checklist post-despliegue solo cubría escritura** (registro,
+   invitaciones, recuperación...) — nada verificaba que los datos reales
+   del usuario siguieran íntegros tras las 13 migraciones antes de crear
+   nada nuevo encima. Corregido: nuevo paso 0 en el Bloque E.
+
+**A. Pre-flight sobre `develop` (antes de tocar `main`)**
+1. ✅ Ocultar Training Records (ver decisión 1 arriba) — hecho
+   2026-09-04: `HomeTab.jsx` deja de recibir `onOpenTrainingRecords`
+   desde `App.jsx` (la tarjeta ya estaba condicionada a esa prop, no
+   hizo falta tocar `HomeTab.jsx`); `ConfigTab.jsx` pierde
+   `HIDDEN_SECTIONS`/`onOpenProfile` y su import de `TrainingRecordsTab`
+   — sin ellos, `allowedSectionKeys` ya no reconoce `"training-records"`
+   aunque algo escribiera esa clave a mano en `sessionStorage`. Ningún
+   archivo de `src/trainingRecords/`, ninguna migración (`0008`, `0011`,
+   `0012`) ni tabla tocados — 100% reversible con un solo commit.
+   Verificado: `npm run lint` (0 errores, mismos 9 avisos preexistentes),
+   `npm run test -- --run` (695/695), `npm run build` en verde, y
+   comprobación manual en navegador (Chromium/Playwright, emulación
+   iPhone 14 Pro Max) confirmando "Training Records" ausente tanto de
+   Home como del menú de Configuración, sin errores de consola.
+2. ✅ `CHANGELOG.md`: `## [1.0.0] - 2026-09-04` redactada, revisada por
+   el usuario y corregida con 2 rondas de feedback — mover todo lo real
+   de Release V1 (multidioma es/en, KPIs de Home reordenados, carnet de
+   instructor, nivel profesional, monedas, registro externo +
+   invitaciones, recuperación de contraseña, política de contraseña
+   reforzada, avisos generalizados, auditoría de lint) de `## Unreleased` a
+   `## [1.0.0] - 2026-09-04` — presentar el borrador para aprobación
+   antes de commitear (regla de CLAUDE.md).
+3. ✅ Bump de versión a `1.0.0` en **dos** sitios, no solo
+   `package.json` — `src/version.js` (`APP_VERSION`) también gatea "Qué
+   hay de nuevo" y su propio comentario exige moverla en el mismo commit
+   que el CHANGELOG. Contenido de `WhatsNew` (namespace `notices`, 4
+   diapositivas) revisado y coherente con lo que de verdad se despliega
+   (sin ninguna mención a Training Records). Ajuste de test necesario:
+   `App.test.jsx` fijaba `"0.2.0"` como versión "ya vista" en
+   `localStorage` para probar la reapertura manual del slide —
+   actualizado a `"1.0.0"` para seguir representando "ya visto en la
+   versión actual", no una versión antigua real.
+4. ✅ `npm run mobile-check` — bloqueado dos veces por causas ajenas a
+   este cambio, ambas diagnosticadas y resueltas sin tocar producto:
+   - La cuenta demo local tenía el idioma en inglés (quedó así de una
+     sesión de prueba anterior de Fase 2) — el script asume español
+     ("Mi trabajo"). Cambiado a español desde Mi perfil antes de
+     reintentar.
+   - El propio script (`scripts/mobile-check.mjs`) tiene una ambigüedad
+     de selector preexistente y real, no introducida por este cambio:
+     varias hojas comparten el aria-label "Cerrar" con el botón de
+     cerrar de un toast (`role="status"`, tarda 3s en autodesaparecer,
+     Bloque 7 de esta misma release) y, en las pantallas secundarias
+     (Ayuda/Configuración), también con el "✕ Cerrar" de la cabecera
+     exterior — confirmado en 2 timings distintos del recorrido. Un
+     primer intento de arreglo genérico rompió otro paso del recorrido
+     (la ambigüedad no es uniforme: unas veces hay que excluir el toast,
+     otras el header, y a veces sí se quiere pulsar el del header) —
+     revertido (`git checkout -- scripts/mobile-check.mjs`) en vez de
+     seguir iterando, para no mezclar una reparación real de tooling
+     (call-site por call-site, 13 sitios) con el trabajo de esta release,
+     tal como pidió el usuario. **Pendiente para después del
+     despliegue**, igual que el addendum de ADR-0010 y el hook de
+     changelog (ver "Aplazado a después del despliegue" abajo).
+   - **Verificación real hecha en su lugar** (Chromium/Playwright,
+     emulación iPhone 14 Pro Max, cuenta demo en español): confirmado
+     que "Training Records" no aparece ni en Home ni en el menú de
+     Configuración, capturas de ambas pantallas revisadas visualmente,
+     cero errores/avisos de consola. Cubre el cambio real de esta sesión;
+     no sustituye el recorrido completo automatizado, que sigue
+     pendiente de que se repare el script.
+5. Commit `chore: preparar release v1.0.0` (CHANGELOG + ambas versiones),
+   push `develop`. **El tag `v1.0.0` NO se crea aquí** — se mueve al
+   final del Bloque C (ver punto 4 corregido más arriba: tagear
+   `develop` antes del merge a `main` apuntaría a un commit que no es el
+   que queda desplegado).
+
+**B. Backup + migraciones — orden corregido: backup → aditivas → catálogo → destructivas aisladas**
+
+1. `SUPABASE_DB_URL=<conexión directa de producción> npm run backup:db`
+   (`scripts/backup-db.mjs`, ya existente, ADR-0017) — **antes de tocar
+   producción con nada**. Confirmado por el usuario: producción en plan
+   Free, sin backups automáticos ni PITR — este dump es el único camino
+   de vuelta si algo depende de una columna que no se detectó.
+2. Opcional, recomendado: `0014-schema-migrations-tracking.sql` (la
+   tabla de `ADR-0025`, 4 líneas — resuelve "qué hay aplicado en cada
+   entorno" de una vez; requiere aprobar esa ADR o al menos este paso
+   suelto).
+3. Las 11 migraciones puramente aditivas (`0001`, `0003`, `0004`, `0006`,
+   `0007`, `0008`, `0009`, `0010`, `0011`, `0012`, `0013`) con
+   `scripts/apply-migration-prod.mjs <archivo> --confirm-production`
+   (script nuevo, construido 2026-09-04 — ver corrección 3 arriba).
+   Verificación por archivo: consulta puntual confirmando que la
+   columna/tabla existe (mismo criterio ya usado al aplicar contra TEST).
+4. **Antes de tocar `0002`/`0005`**: consulta de catálogo (vistas,
+   funciones/triggers, políticas RLS, índices que mencionen
+   `password_set` o `default_currency`) contra el Postgres real de
+   producción — no basta el grep de código de la corrección 1, la
+   lógica también puede vivir en la base de datos. Query preparada en
+   `check-column-deps.sql` (scratchpad de esta sesión). **Bloqueante:
+   parar y enseñar el resultado al usuario antes de ejecutar 0002/0005**
+   — instrucción explícita, no una sugerencia.
+5. `0002` y `0005` al final, aisladas, solo si el paso 4 no encuentra
+   nada — mismo comando que el paso 3, uno por uno, con su propia
+   verificación (`select column_name from information_schema.columns
+   where table_name='profiles' and column_name in ('password_set',
+   'default_currency')` debe devolver 0 filas tras ambas).
+
+**C. Merge y despliegue de código**
+1. `git merge origin/develop` sobre `main` (**no** `--ff-only` — `main`
+   tiene 1 commit propio, el hotfix `58d9b69`, ya backporteado a
+   `develop` con contenido idéntico vía `1e7b7bd` — no debería haber
+   conflicto real, solo una fusión trivial).
+2. `npm run test -- --run` + `npm run build` sobre `main` ya fusionada.
+3. Añadir `EMAIL_FROM=Ocean Flow <no-reply@oceanflow.money>` al proyecto
+   Vercel `oceanflow` (Production).
+4. `git push origin main` → Vercel despliega solo.
+5. Verificación en navegador headless real contra
+   `dive-tracker-exgg.vercel.app`, mismo protocolo ya usado en esta
+   sesión.
+6. **Solo tras el paso 5 en verde**: `git tag -a v1.0.0 -m "v1.0.0"`
+   sobre el commit de merge en `main`, `git push origin main --tags`,
+   `gh release create v1.0.0 --notes-file <extracto del CHANGELOG>`
+   (cierra el paso que se saltó en v0.2.0 por falta de la CLI — ya
+   instalada, `gh 2.98.0`). Corrección 4 de arriba: el tag ahora
+   apunta al commit que de verdad queda desplegado, no a uno de
+   `develop` previo al merge.
+
+**D. Rollback — ligero para las 11 aditivas, distinto para 0002/0005**
+- Código: "Instant Rollback" de Vercel al deployment anterior — segundos,
+  sin tocar Git. Primera opción siempre, válida pase lo que pase con el
+  esquema.
+- Las 11 migraciones aditivas: **no hace falta revertirlas en
+  caliente** — el código anterior sigue funcionando igual con las
+  columnas/tablas nuevas presentes pero sin usar. Rollback de código y
+  de esquema quedan desacoplados por diseño para estas 11.
+- `0002`/`0005` (DROP COLUMN): **no** son additivas y su rollback no
+  está desacoplado del código de la misma forma — si el paso B.4
+  (catálogo) no encuentra nada, el código (viejo y nuevo) nunca las
+  toca, así que Instant Rollback de código sigue siendo seguro; pero si
+  algo se rompe por una de estas dos columnas, la única vuelta atrás
+  real es restaurar desde el backup del paso B.1, no un rollback de
+  código. Por eso van aisladas y al final, con el backup ya hecho antes.
+- Si el problema real está en una migración concreta (de las 11): revertirla
+  aparte, con calma, como una migración nueva de "contract" documentada —
+  nunca en caliente durante el incidente.
+- `git revert` sobre `main` + push como nivel 2 si Instant Rollback no
+  basta; se etiqueta como `v1.0.1` con su entrada `Fixed` en el
+  changelog (mismo patrón que ya define ADR-0010).
+
+**E. Verificación post-despliegue — datos propios primero, luego los flujos que dependen de EMAIL_FROM**
+
+Corrección 5: la checklist original solo cubría flujos de escritura
+(registro, invitaciones...) — nada comprobaba que los datos reales del
+usuario siguieran íntegros tras las 13 migraciones antes de crear nada
+nuevo encima.
+
+0. **Entrar con la cuenta real de siempre del usuario y verificar que
+   sus movimientos, comisiones y perfil siguen intactos** tras las 13
+   migraciones — antes de cualquier otra verificación, antes incluso del
+   test de email. Si algo se rompió al migrar, se detecta aquí, no
+   después de haber creado ya cuentas de prueba encima.
+1. Enviar un email de prueba real vía el nuevo `EMAIL_FROM` de
+   producción y confirmar entrega (200 OK de Resend + llegada real).
+2. Registro externo autoservicio de punta a punta (registro → email de
+   activación → activar → política de contraseña reforzada → consentimiento
+   legal → entra en la app).
+3. Enlace de invitación (superadmin genera → visita → registro → email
+   de activación → activar).
+4. "Crear usuario" (admin) → email de activación → activar.
+5. Recuperación de contraseña → email de recuperación → enlace → nueva
+   contraseña aceptada bajo la política reforzada.
+6. Regenerar enlace de activación / regenerar contraseña (acciones de
+   admin sobre usuarios existentes).
+7. Aviso de despliegue por email a superadmin — el mismo mecanismo que
+   avisa de que el despliegue ya se ha hecho.
+
+### Aplazado a después del despliegue (decisión explícita del usuario, 2026-09-04)
+
+No mezclar cambios de tooling/proceso con la release en curso — se
+retoman una vez v1.0.0 esté desplegada y verificada, no antes:
+- **Addendum a ADR-0010**: su ordenación de pasos (tag sobre `develop`)
+  asume que `develop` es la producción real, cierto cuando se escribió
+  esa ADR, ya no desde que `main` es la producción real (ver
+  "Ramas y entornos", `CLAUDE.md`). Corrección 4 de arriba lo aplica en
+  la práctica para esta release; falta dejarlo escrito en la propia ADR
+  para que la siguiente release no repita el error.
+- **Hook local (`pre-push`) que falle de forma ruidosa si un commit
+  `feat`/`fix` que toca `src/`/`server/` no actualiza `CHANGELOG.md`**
+  — propuesto para que la regla ya existente de ADR-0010 (actualizar el
+  changelog en el mismo commit) deje de depender solo de la disciplina
+  manual, que es justo lo que dejó `## Unreleased` vacío ~160 commits
+  seguidos pese a la regla ya escrita.
+- **Reparar `scripts/mobile-check.mjs`** (ver corrección de A.4 arriba)
+  — la ambigüedad del selector "Cerrar" es real y preexistente, pero
+  arreglarla bien exige clasificar los 13 sitios uno a uno (¿se quiere
+  cerrar la hoja, o la pantalla secundaria entera?), trabajo de tooling
+  aparte del cambio de producto de esta sesión.
+
+### Punto exacto donde se quedó
+
+Bloque A completo (1-5) salvo el propio commit final de A.5 (CHANGELOG +
+versión bump), que se hace junto con el resto de A cuando el usuario dé
+el visto bueno para commitear. **Bloque B bloqueado a propósito**,
+instrucción explícita del usuario: no ejecutar nada de B hasta tener el
+resultado de la consulta de catálogo (paso B.4) sobre `password_set`/
+`default_currency` en producción. Esperando a que el usuario añada
+`SUPABASE_DB_URL` (producción) a `.env.local` — en cuanto avise, ejecutar
+`check-column-deps.sql` (scratchpad de esta sesión) y **parar a enseñar
+el resultado antes de tocar 0002/0005**, tal como se pidió. Bloques C, D
+y E no ejecutados todavía. `scripts/apply-migration-prod.mjs` ya
+construido y con `node --check` en verde, sin usar todavía contra
+producción.
+
+### Verificación
+
+Auditoría de lint (sesión anterior): `npm run test -- --run` (695/695) y
+`npm run build` en verde, tanto en `Release-V1` como en `develop` tras
+el fast-forward. Esta sesión (bloque A): `npm run lint` (0 errores),
+`npm run test -- --run` (695/695), `npm run build` en verde, tras cada
+uno de los cambios de A.1 y A.3. Verificación manual en navegador
+(Chromium/Playwright, iPhone 14 Pro Max) de A.1 y A.4 — ver detalle en
+cada punto arriba. Bloques B, C, D, E sin ejecutar — sin verificación
+posible todavía.
 
 ---
 
