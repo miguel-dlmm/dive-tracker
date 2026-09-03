@@ -122,7 +122,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 14 | Velocidad de la suite de test | ✅ Analizado, mail enviado | — (solo análisis) | — |
 | 15 | Mocks vs. BBDD real en los tests | ✅ Analizado, mail enviado — ya cumple, sin acción | — (solo análisis) | — |
 | 16 | Eficiencia de las propias pruebas de Claude (navegador) | ✅ Analizado, mail enviado | — (solo análisis) | — |
-| 17 | Cobertura de test — ampliar / otros tipos / estándares | ⬜ No empezado | — | — |
+| 17 | Cobertura de test — ampliar / otros tipos / estándares | ✅ Hecho | `fix/bloque17-cobertura-usesupabasetable` (desde `develop`) | `358fa00` |
 | 18 | Monitorización de infraestructura (Vercel/Supabase) | ⬜ No empezado | — | — |
 | final | Análisis de código (eficiencia, robustez, patrones, dependencias...) | ⬜ No empezado | — | — |
 | release | Dejar todo listo para desplegar (sin desplegar) | ⬜ No empezado — depende de que el resto avance y de que el usuario revise/mergee las ramas de arriba | — | — |
@@ -349,9 +349,15 @@ el DOM directamente por JS encontró la causa mucho más rápido que mirar
 capturas. No se ha tocado CLAUDE.md — se ofreció añadir una nota breve,
 a la espera de que el usuario lo confirme.
 
-**Bloque 17 — Cobertura y tipos de test**
-¿Merece la pena ampliar cobertura? ¿Falta algún tipo de test que dé
-robustez? ¿Algún estándar a seguir?
+**Bloque 17 — Cobertura y tipos de test** ✅ Hecho — ver tabla arriba.
+Cubierto el hueco real encontrado en el Bloque 15: `useSupabaseTable.js`
+(el hook de CRUD del que dependen TODAS las pantallas) no tenía test
+propio, solo se probaba de forma indirecta. 12 tests nuevos. El
+estándar de testing del proyecto (CLAUDE.md) ya está bien definido y
+se sigue de forma consistente — no hacía falta un estándar nuevo.
+Valorados y descartados por ahora (proporcional): tests de
+accesibilidad automatizados (axe-core, no urgente hoy) y tests de
+rendimiento/carga (prematuro, ver Bloques 13/14).
 
 **Bloque 18 — Monitorización de infraestructura**
 Estudiar alertas de consumo de recursos en Vercel/Supabase antes de
