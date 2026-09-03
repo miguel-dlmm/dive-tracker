@@ -118,7 +118,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 10 | Rediseño de Home + enlace al generador de Training Records | ✅ Hecho | `feat/bloque10-home-training-records` (desde `feature/training-records`, con el Bloque 9 cherry-picked encima) | `5ff378e` |
 | 11 | KPIs animados en Movimientos (Generado este mes / Pendiente de cobrar + 3º a decidir) | ✅ Hecho | `feat/bloque11-kpis-movimientos` (desde `feat/bloque10-home-training-records`) | `08079f8` |
 | 12 | Análisis de sesión/perfil (eficiencia, robustez) | ✅ Hecho | `fix/bloque12-sesion-perfil` (desde `develop`) | `f1a7576` |
-| 13 | Análisis de build/push/despliegue | ⬜ No empezado | — | — |
+| 13 | Análisis de build/push/despliegue | ✅ Analizado + limpieza real ejecutada, mail enviado | — (solo análisis + `git gc` local) | — |
 | 14 | Velocidad de la suite de test | ⬜ No empezado | — | — |
 | 15 | Mocks vs. BBDD real en los tests | ⬜ No empezado | — | — |
 | 16 | Eficiencia de las propias pruebas de Claude (navegador) | ⬜ No empezado | — | — |
@@ -292,9 +292,28 @@ existe en `develop`** — la pantalla "Mi perfil" solo vive en la rama
 centró en `useSession.js` (compartido por ambas líneas); una revisión
 de la pantalla de perfil en sí necesitaría una rama basada ahí.
 
-**Bloque 13 — Build, push y despliegue**
-¿Cuánto de grande es el proyecto? ¿Se puede optimizar el build/push/
-despliegue? ¿Merece la pena invertir en esto?
+**Bloque 13 — Build, push y despliegue** ✅ Hecho — ver tabla arriba y
+el mail enviado para el detalle completo. Resumen: el proyecto en sí
+es pequeño (784KB / ~9.400 líneas en `src/`, build en ~1.7s, 5
+dependencias de producción) — nada que optimizar ahí, no merece la
+pena invertir. Hallazgo real y ya corregido (sin riesgo, solo local):
+el `.git` local pesaba 352MB por 4 blobs sueltos e inalcanzables (nunca
+comiteados) que coinciden en tamaño exacto con `postgresql.dmg` y los
+instaladores de `gh` CLI que siguen sueltos en el directorio de
+trabajo — alguien hizo `git add` de esos archivos alguna vez y se
+deshizo sin comitear, pero el blob quedó huérfano. `git gc --prune=now`
+lo limpió: 352MB → 2,2MB, verificado con `git fsck --full` (sin
+errores) y `git ls-remote` (remoto intacto) — no tocó ningún commit,
+rama ni el remoto, 100% local y reversible en el sentido de que no
+perdió nada real.
+
+**Pendiente de decisión del usuario, sin tocar:** `postgresql.dmg`
+(267MB) y los instaladores de `gh` (~56MB) siguen sueltos, sin
+trackear, en el directorio de trabajo — no se han borrado por no ser
+archivos de esta sesión. Si se confirma que no hacen falta, borrarlos
+libera ese espacio y evita que un `git add .` futuro repita el mismo
+problema; añadir `*.dmg`/`*.pkg` al `.gitignore` sería una prevención
+barata para el futuro.
 
 **Bloque 14 — Velocidad de la suite de test**
 ¿Se podría paralelizar/optimizar para que vaya más rápido, o es
