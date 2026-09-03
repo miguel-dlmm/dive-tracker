@@ -680,12 +680,18 @@ function UserDetailSheet({
                   mismo cambio y motivo en UserListRow arriba. */}
               <span className="text-gray-700">{lastSignInAt ? shortDate(lastSignInAt) : t("userStatus.nunca")}</span>
             </div>
-            {status === "desactivado" && (
+            {/* Solo se muestra con una fecha real (2026-09-04, pedido
+                explícito) — antes se gateaba en status === "desactivado" y,
+                sin deactivated_at registrado (baja anterior a la migración
+                que añadió esa columna), caía a un aviso placeholder
+                ("fecha no registrada") en vez de ocultar el campo. Gatear
+                directo en deactivatedAt es más simple y evita ese estado
+                intermedio confuso — quien lo necesite ya lo ve en la fila
+                del listado (UserListRow, que sí conserva el aviso). */}
+            {deactivatedAt && (
               <div className="flex items-center justify-between gap-3">
                 <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.baja")}</span>
-                <span className={deactivatedAt ? "text-gray-700" : "italic text-gray-400"}>
-                  {deactivatedAt ? shortDateTime(deactivatedAt, t("userStatus.nunca")) : t("userDetailSheet.fechaNoRegistrada")}
-                </span>
+                <span className="text-gray-700">{shortDateTime(deactivatedAt, t("userStatus.nunca"))}</span>
               </div>
             )}
             {editable && (
