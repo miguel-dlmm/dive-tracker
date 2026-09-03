@@ -149,8 +149,21 @@ export function Sheet({ open, onClose, children, className = "", zIndexClass = "
           animate={{ opacity: 1, transition: { duration: reducedMotion ? 0.01 : DURATION.sm } }}
           exit={{ opacity: 0, transition: { duration: reducedMotion ? 0.01 : DURATION.sm } }}
         >
+          {/* 85svh, no 85dvh: bug real reportado en Training Records (la
+              hoja "se estiraba hacia arriba" y bloqueaba la UI al
+              abrirla). dvh se recalcula en directo según la barra de
+              Safari se oculte/muestre — pero mientras esta hoja está
+              abierta, useBodyScrollLock bloquea el scroll de fondo, así
+              que ese gesto que decide si la barra se oculta no debería
+              dispararse; si aun así Safari recalcula dvh de forma
+              inconsistente durante el cambio a position:fixed del
+              body-lock, la hoja puede crecer más allá del viewport
+              visible. svh (small viewport height, siempre con la barra
+              visible) es el valor conservador que nunca se pasa, cueste
+              lo que cueste de espacio vacío de más cuando la barra sí
+              está oculta. */}
           <motion.div
-            className={`flex max-h-[85dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-xl bg-white shadow-xl ${className}`}
+            className={`flex max-h-[85svh] w-full max-w-3xl flex-col overflow-hidden rounded-t-xl bg-white shadow-xl ${className}`}
             variants={sheetVariants(reducedMotion)}
             initial="initial" animate="animate" exit="exit"
             drag="y"
@@ -175,10 +188,15 @@ export function Sheet({ open, onClose, children, className = "", zIndexClass = "
                 el rebote de scroll podía encadenarse hacia el documento y
                 disparar el pull-to-refresh nativo de Safari, que recarga
                 la página entera y pierde el estado de React (la hoja
-                abierta). No verificado en un iPhone físico real (límite
-                conocido de este entorno, ver CLAUDE.md "8. Verificación
-                UX/UI") — mitigación de mejor esfuerzo, pendiente de
-                confirmar que resuelve el bug del todo. */}
+                abierta). El usuario confirmó que seguía pasando con solo
+                esto — se reforzó con dos capas más (ver
+                acquireScrollLock en este mismo archivo, que ahora
+                también bloquea <html>, no solo <body>; y
+                overscroll-behavior-y en src/index.css a nivel de
+                documento entero). No verificado en un iPhone físico real
+                (límite conocido de este entorno, ver CLAUDE.md "8.
+                Verificación UX/UI") — sigue siendo mitigación de mejor
+                esfuerzo, ahora en tres capas en vez de una. */}
             <div className="overflow-y-auto overscroll-contain px-4 pt-1" style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}>
               {children}
             </div>
@@ -1262,6 +1280,14 @@ function acquireScrollLock() {
     s.left = "0";
     s.right = "0";
     s.overflow = "hidden";
+    // <html>, no solo <body>: bug real reportado en iOS Safari (dibujar
+    // en el pad de firma podía "recargar" la app entera) — el rebote
+    // elástico nativo de Safari puede seguir colándose en el
+    // documentElement aunque <body> ya esté en position:fixed, porque
+    // ese fixed solo saca a <body> del flujo de scroll normal, no
+    // bloquea el propio scroll/bounce de <html> como contenedor
+    // superior. Bloquear los dos a la vez es la técnica robusta.
+    document.documentElement.style.overflow = "hidden";
   }
   scrollLockCount += 1;
 }
@@ -1274,6 +1300,7 @@ function releaseScrollLock() {
     s.left = "";
     s.right = "";
     s.overflow = "";
+    document.documentElement.style.overflow = "";
     // jsdom (tests) no implementa scrollTo — no es un fallo real, solo
     // ruido en la consola de test si no se protege.
     try { window.scrollTo(0, savedScrollY); } catch { /* no-op */ }

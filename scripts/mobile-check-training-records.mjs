@@ -144,13 +144,13 @@ async function main() {
   await page.waitForTimeout(400);
   await shot(page, "instructor-guardado");
 
-  console.log("→ Configuración → Training Records");
+  console.log("→ Home → tarjeta Training Records (Bloque 10 — ya no vive en el menú de Configuración)");
   await page.locator('button[aria-label="Cerrar"]').tap();
   await page.waitForTimeout(300);
-  await page.locator('button[aria-label="Configuración"]').tap();
-  await page.waitForTimeout(250);
-  const trMenuBtn = page.getByRole("button", { name: "Training Records" });
-  if (await trMenuBtn.isVisible().catch(() => false)) { await trMenuBtn.tap(); await page.waitForTimeout(300); }
+  await page.getByRole("button", { name: "Home", exact: true }).tap();
+  await page.waitForTimeout(300);
+  await page.getByText("Training Records", { exact: true }).tap();
+  await page.waitForTimeout(300);
   await shot(page, "training-records-vacio");
 
   if (await page.getByText(/completa tus datos de instructor/i).isVisible().catch(() => false)) {
@@ -240,10 +240,10 @@ async function main() {
   // ConfigTab recuerda la última sección abierta — tras recargar puede
   // reabrir directo en Training Records, sin pasar por el menú de nuevo.
   if (!(await page.getByText("Marta Test Apellido").isVisible().catch(() => false))) {
-    await page.locator('button[aria-label="Configuración"]').tap();
+    await page.getByRole("button", { name: "Home", exact: true }).tap();
     await page.waitForTimeout(250);
-    const trMenuBtn2 = page.getByRole("button", { name: "Training Records" });
-    if (await trMenuBtn2.isVisible().catch(() => false)) { await trMenuBtn2.tap(); await page.waitForTimeout(300); }
+    const trCard2 = page.getByText("Training Records", { exact: true });
+    if (await trCard2.isVisible().catch(() => false)) { await trCard2.tap(); await page.waitForTimeout(300); }
   }
   if (!(await page.getByText("Marta Test Apellido").isVisible().catch(() => false))) {
     issues.push("[training-records] Tras recargar, el alumno generado ya no aparece en el roster");
