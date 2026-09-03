@@ -1048,7 +1048,7 @@ usuario pidió moverlos al perfil real (para que se rellenen una vez y
 sirvan en cualquier dispositivo) y que, si faltan, el generador lo
 bloquee con un aviso y un botón directo a "Mi perfil".
 **Implementado:**
-- Migración aditiva `0009-datos-instructor-perfil.sql` aplicada a TEST
+- Migración aditiva `0011-datos-instructor-perfil.sql` aplicada a TEST
   (columnas `profiles.instructor_initials`/`ssi_pro_number`, nullable,
   rollback documentado en el propio fichero) — el nombre impreso no es
   una columna nueva, se deriva de `first_name`/`last_name`, que ya
@@ -1154,7 +1154,7 @@ enteramente en cliente, nada se persiste en Supabase salvo lo que ya
 persistía: plantillas y perfil del instructor).
 
 **1. Firma del instructor en el perfil.** `profiles.instructor_signature`
-(migración `0010-firma-instructor-y-aventuras.sql`, aplicada a TEST) —
+(migración `0012-firma-instructor-y-aventuras.sql`, aplicada a TEST) —
 se firma una vez en "Mi perfil" → "Datos de instructor" (reutiliza
 `SignatureCapture`, movido de `trainingRecords/` a la raíz de `src/`
 porque ya no es exclusivo de esa pantalla) y se reutiliza en cada

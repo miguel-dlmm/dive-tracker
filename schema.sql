@@ -938,7 +938,7 @@ create policy "admin manage template files" on storage.objects
 
 -- Migración aditiva Release V1, Fase 5 (2026-09-02, datos de instructor en
 -- el perfil) para instalaciones existentes —
--- scripts/migrations/0009-datos-instructor-perfil.sql tiene el mismo DDL,
+-- scripts/migrations/0011-datos-instructor-perfil.sql tiene el mismo DDL,
 -- aplicarlo con scripts/apply-migration.mjs.
 
 -- Catálogo de "aventuras" opcionales para el combo de Advanced Open Water
@@ -967,7 +967,7 @@ on conflict (name) do nothing;
 
 -- Migración aditiva Release V1, Fase 5 (2026-09-02, firma de instructor +
 -- catálogo de aventuras) para instalaciones existentes —
--- scripts/migrations/0010-firma-instructor-y-aventuras.sql tiene el mismo
+-- scripts/migrations/0012-firma-instructor-y-aventuras.sql tiene el mismo
 -- DDL, aplicarlo con scripts/apply-migration.mjs.
 
 -- ---------- Notas de diseño del esquema ----------
