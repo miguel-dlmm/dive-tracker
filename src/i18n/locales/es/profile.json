@@ -44,7 +44,7 @@
   "instructor": {
     "hint": "Se usan para rellenar tus Training Records automáticamente — se guardan aquí una sola vez, no por dispositivo.",
     "card": {
-      "role": "Instructor SSI",
+      "role": "Profesional SSI",
       "roleWithLevel": "SSI {{level}}",
       "noSignature": "Sin firma",
       "signatureAlt": "Firma de {{name}}",

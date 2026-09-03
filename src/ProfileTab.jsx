@@ -307,11 +307,14 @@ function useTrimmedSignature(dataUrl) {
 // oscuro, avatar+nombre a la izquierda, un panel claro a la derecha),
 // pero con identidad propia, no una copia: en vez de un QR (que no
 // tenemos nada que codificar en él), ese hueco lo ocupa la firma real del
-// instructor — es la pieza que de verdad autentica el carnet. onEdit
-// (icono superpuesto, no un link aparte debajo) es la única acción del
-// carnet — sigue disparando exactamente el mismo startEdit() de siempre
-// (ver InstructorSection más abajo), solo cambia DÓNDE vive el botón.
-function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) {
+// instructor — es la pieza que de verdad autentica el carnet. Puramente
+// presentacional — "Editar" vive fuera de este componente, en
+// InstructorSection (mismo link con texto de siempre, ver más abajo): un
+// icono superpuesto en la esquina del carnet se probó primero, pero el
+// usuario lo encontró poco descubrible ("no me gusta ahí colocado,
+// parece difícil de encontrar") y se volvió al patrón ya establecido en
+// el resto de "Mi perfil".
+function InstructorCard({ profile, initials, ssiProNumber, signature }) {
   const { t } = useTranslation("profile");
   const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.nickname;
   const avatar = resolveAvatar(profile);
@@ -339,21 +342,7 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
         style={{ background: "radial-gradient(120% 60% at 15% 0%, rgba(255,255,255,0.16), transparent 60%)" }}
         aria-hidden="true"
       />
-      {/* Editar — icono superpuesto en vez de un link debajo del carnet
-          (pedido explícito: "de una manera estéticamente moderna"),
-          mismo patrón táctil que el resto de la app (círculo visual más
-          pequeño que el objetivo táctil real de 44×44, convención #7,
-          CLAUDE.md). */}
-      <button
-        onClick={onEdit}
-        aria-label={t("instructor.edit")}
-        className="absolute right-1 top-1 z-10 flex h-11 w-11 items-center justify-center text-white"
-      >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
-          <Pencil size={14} aria-hidden="true" />
-        </span>
-      </button>
-      <div className="relative flex items-start justify-between gap-3 pr-8">
+      <div className="relative flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-white/40 bg-white/10">
             <AvatarIcon size={26} style={{ color: avatar.color }} aria-hidden="true" />
@@ -439,8 +428,15 @@ function InstructorSection({ profile, onProfileUpdated }) {
           initials={profile.instructor_initials}
           ssiProNumber={profile.ssi_pro_number}
           signature={profile.instructor_signature}
-          onEdit={startEdit}
         />
+        {/* Editar vuelve a ser un link con texto debajo del carnet, no un
+            icono superpuesto — pedido explícito del usuario tras probarlo:
+            "no me gusta ahí colocado, parece difícil de encontrar". Mismo
+            patrón exacto que el resto de "Mi perfil" (Datos personales,
+            Idioma...), así que ahora es donde ya se espera encontrarlo. */}
+        <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: TEAL }}>
+          <Pencil size={14} aria-hidden="true" /> {t("instructor.edit")}
+        </button>
       </SectionCard>
     );
   }

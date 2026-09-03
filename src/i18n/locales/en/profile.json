@@ -44,7 +44,7 @@
   "instructor": {
     "hint": "Used to auto-fill your Training Records — saved here once, not per device.",
     "card": {
-      "role": "SSI Instructor",
+      "role": "SSI Professional",
       "roleWithLevel": "SSI {{level}}",
       "noSignature": "No signature",
       "signatureAlt": "{{name}}'s signature",

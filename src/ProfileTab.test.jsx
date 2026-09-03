@@ -200,15 +200,15 @@ describe("datos de instructor", () => {
     expect(section.getAllByText("—")).toHaveLength(2);
   });
 
-  it("el carnet refleja el nivel profesional elegido en vez del genérico 'Instructor SSI'", () => {
+  it("el carnet refleja el nivel profesional elegido en vez del genérico 'Profesional SSI'", () => {
     renderProfile({ profile: { ...PROFILE, professional_level: "divemaster" } });
     expect(within(instructorSection()).getByText("SSI Divemaster")).toBeInTheDocument();
-    expect(within(instructorSection()).queryByText("Instructor SSI")).not.toBeInTheDocument();
+    expect(within(instructorSection()).queryByText("Profesional SSI")).not.toBeInTheDocument();
   });
 
-  it("el carnet muestra el genérico 'Instructor SSI' cuando no hay nivel profesional elegido", () => {
+  it("el carnet muestra el genérico 'Profesional SSI' cuando no hay nivel profesional elegido", () => {
     renderProfile();
-    expect(within(instructorSection()).getByText("Instructor SSI")).toBeInTheDocument();
+    expect(within(instructorSection()).getByText("Profesional SSI")).toBeInTheDocument();
   });
 
   it("edita iniciales y número SSI Pro y guarda", async () => {
