@@ -2206,6 +2206,122 @@ trabajo — verificación manual equivalente, mismo criterio que la
 refinamiento de contenido/visual sobre una decisión de IA ya
 documentada en ADR-0011, no una decisión arquitectónica nueva.
 
+**✅ `fix/eslint-sweep-2` — sin cambios.** Re-verificó el estado ya
+auditado (`82eba44`): 0 errores/9 avisos, ninguno de los archivos con
+aviso había cambiado desde esa auditoría. Rama vacía, descartada.
+
+**✅ `fix/tooltip-pendiente-cobrar` — fusionada (`4723dbc`).** Tooltip en
+el KPI "Pendiente de cobrar" de Mi trabajo (icono `HelpCircle` 11px,
+mismo mecanismo `useFloatingDropdown`/`FloatingPanel` que el hint de
+`Field`), confirmando primero que `pendingTotals` de verdad no filtra
+por mes (a diferencia de sus 2 hermanos) antes de escribir la copy.
+`aria-label` propio ("Info: Pendiente de cobrar") en vez de reutilizar
+"Ayuda"/"Ocultar ayuda" de `Field`, para no chocar con el hint de
+Importe de `MovementSheet` si ambos coinciden en el DOM.
+
+**✅ `fix/polish-pequenos` — fusionada (`f9375fc`), 4 commits.** Catálogo
+de avatares a tiburón ballena/manta/tortuga/tiburón/pulpo/pez —
+auditados los 2034 iconos de `lucide-react@1.33.0`: la librería no tiene
+ninguno de tiburón/tiburón ballena/manta/pulpo ni siquiera aproximado,
+así que se documentan sustitutos (`FishSymbol`, `Shell`, `Shrimp`,
+`Snail`) caso a caso en el propio archivo — recomendación explícita del
+agente de revisar esta lista más adelante si la fidelidad visual
+importa. Slide nueva de WhatsNew sobre el carnet de instructor.
+"Último acceso" de Usuarios a solo fecha (reutiliza `shortDate` de
+`shared.jsx`). "Fecha de baja" solo se muestra con un valor real
+(antes aparecía "no registrada" para desactivados de antes de la
+migración 0006).
+
+**✅ `feat/tarifas-vigencia` — fusionada (`1597f54`), migración
+`0015-tarifas-vigencia.sql` (solo TEST).** Índice único parcial
+`(user_id, school, activity) where is_active` en `rates`/
+`commission_rates` — cualquier número de tarifas desactivadas puede
+coexistir, como mucho una activa por escuela+curso. Decisión de
+diseño: "Eliminar" y "Desactivar/Reactivar" quedan como acciones
+distintas (no se repurpuso Delete) porque `deleteRate` ya bloqueaba el
+borrado físico de una tarifa referenciada por movimientos históricos
+(`rateCalc.js` resuelve el importe en vivo con `rates.find()` — borrarla
+dejaría movimientos antiguos sin tarifa) — desactivar no tiene ese
+problema porque la fila sigue existiendo. Desactivadas ocultas por
+defecto, checkbox "Mostrar desactivadas" en el panel de filtros ya
+existente. 3 filas duplicadas reales encontradas y limpiadas en TEST
+(dataset "Ihasia" clonado varias veces sobre la misma cuenta) antes de
+poder crear el índice único.
+
+**✅ `feat/baja-logica-movimientos` — fusionada vía PR #3 (`e4996cb`),
+migración `0016-baja-logica-movimientos.sql`** (renombrada de 0015 —
+colisión real con `feat/tarifas-vigencia`: los dos agentes comprobaron
+el siguiente número libre antes de que ninguno hubiera empujado
+todavía y ambos cogieron 0015; no era un conflicto de git, solo de
+numeración, corregido antes de fusionar). `worklog`/`comisiones`/
+`colleague_payments` ganan `deleted_at`/`created_at`/`updated_at` como
+columnas directas (decisión documentada: sin cardinalidad real que
+justifique una tabla aparte). `useSupabaseTable` gana `options.softDelete`
+(opt-in, sin cambiar ninguna otra tabla) — el filtro `deleted_at is null`
+vive en la carga, así que ningún consumidor (Home/Resumen/Mi
+trabajo/`rateCalc.js`) tiene que acordarse de excluir bajas por su
+cuenta. "Eliminar" ahora ofrece "Deshacer" en el toast (mismo mecanismo
+de acción que ya usa "Confirmar cobro"). **Auditoría (created_by/
+updated_by) evaluada y descartada**, con razón real documentada: bajo
+el modelo RLS actual (`auth.uid() = user_id`, sin ninguna vía de
+admin escribiendo en nombre de otro usuario en estas 3 tablas), esas
+columnas siempre coincidirían con `user_id` — cero información nueva.
+Se reactivaría si se construye edición asistida por admin o
+colaboración multiusuario sobre el mismo movimiento — revisado
+directamente el diff de `useSupabaseTable.js`/`shared.jsx`/`App.jsx`
+antes de fusionar (backward-compatible en los tres, ningún consumidor
+existente cambia de comportamiento).
+
+**✅ `feature/restyling-v1` — pusheada, deliberadamente SIN fusionar,
+pendiente de revisión visual.** Hallazgo real que corrige la premisa
+inicial: Tarifas ya hablaba el lenguaje visual de Mi trabajo (rediseñada
+2026-08-30, sin documentar en `CLAUDE.md`) — los huecos reales eran más
+estrechos (sin animación de alta/baja en su lista, empty-state con
+padding distinto, `EntryTitle` de `shared.jsx` y una copia privada en
+`MiTrabajoTab.jsx` habían divergido en los puntos de color). `HeroTotal`
+de Resumen unificado a `rounded-xl` sin sombra (era el único "número
+héroe" con `rounded-lg`+`shadow-sm`). Confirmado y eliminado código
+muerto real: el esqueleto de carga de Mi trabajo era inalcanzable, y
+`WorkLogTab`/`ComisionesTab`/`CompanerosTab`/`PaymentsTab` siguen sin
+ningún punto de entrada. `docs/ESTILO.md` actualizado con los hallazgos.
+**El Preview Deployment de esta rama no llegó a generarse** — ver hallazgo
+de límite de Vercel más abajo.
+
+**⚠️ Límite de builds de Vercel agotado esta noche (todo el equipo,
+"ocean-pulse1")** — encontrado al revisar por qué el Preview de
+`feature/restyling-v1` no aparecía. Confirmado con
+`gh api repos/.../commits/<sha>/status`: desde el commit `1597f54`
+(fusión de Tarifas, 2026-09-03 ~19:06 UTC) en adelante, **todos** los
+pushes a `develop` devuelven `"Deployment rate limited — retry in 24
+hours"` en los dos proyectos Vercel conectados (`dive-tracker` y
+`oceanflow`), confirmado también en el propio commit del fix de Vitest
+(`3b56f2c`). No es específico de una rama — es un límite de build a
+nivel de cuenta, agotado por el volumen real de pushes de los 8 agentes
+en paralelo. **`main`/producción no está afectado en la práctica**: el
+despliegue real de `v1.0.0` (`a640de4`) ya se completó con éxito antes
+de que el límite se agotara (18:16-18:17 UTC), y no había planeado
+ningún push nuevo a `main` esta noche. Sí significa que **el entorno
+TEST (`dive-tracker-three.vercel.app`, Production Branch = `develop`)
+queda desactualizado a partir de la fusión de Tarifas** — el código está
+correctamente fusionado y empujado a `origin/develop`, solo el build
+automático está bloqueado hasta que el límite se resetee (~24h). No hay
+forma de saltárselo sin pasar a un plan de pago de Vercel — no se ha
+intentado. Cuando se resetee, el siguiente push a `develop` (o un
+redeploy manual desde el dashboard) pondrá TEST al día de golpe con
+todo lo de esta noche.
+
+**✅ Bug de tooling real encontrado y corregido: Vitest recorría
+`.claude/worktrees/**`.** Sin `exclude` explícito, `npm run test` desde
+el checkout principal recogía y ejecutaba también los test files de
+dentro de cada worktree de los 8 agentes — confirmado en vivo: pasó de
+695/696 (1 fallo real, un test lento de renderizado PDF) a 18 fallos
+repartidos en archivos sin relación entre sí (login, perfil,
+configuración, tarifas...) en cuanto había varios worktrees activos a
+la vez. Corregido en `vite.config.js` (`3b56f2c`):
+`exclude: [...configDefaults.exclude, '**/.claude/**']` — sobre la
+base por defecto de Vitest, no en vez de ella. Verificado: 705/705 tras
+el fix, con varios agentes todavía trabajando en paralelo.
+
 ### Verificación
 
 Auditoría de lint (sesión anterior): `npm run test -- --run` (695/695) y
@@ -2217,10 +2333,18 @@ el fast-forward. Bloque A de esta sesión: `npm run lint` (0 errores),
 `https://dive-tracker-exgg.vercel.app` (200, sin badge TEST, sin
 errores de consola salvo el bug de `external_registration_enabled` ya
 descrito). Backup verificado con `pg_restore --list`. Las 13 migraciones
-verificadas una a una por catálogo tras aplicarse. El trabajo de los 8
-agentes en paralelo se verifica por separado, en cada una de sus propias
-ramas (cada uno tiene instrucción de no fusionar sin tests/build en
-verde).
+verificadas una a una por catálogo tras aplicarse. Tras los 8 agentes:
+`npm run test -- --run` (715/716 — el único fallo, un test de
+renderizado PDF de Training Records, confirmado en verde de forma
+aislada, es ruido de carga de máquina, no una regresión) y `npm run
+build` en verde sobre `develop` con todo fusionado salvo restyling
+(deliberadamente aparte) y Training Records (todavía en curso). Se
+revisó a mano el diff real (no solo el resumen del agente) de cada
+fusión con cambios en código compartido (`useSupabaseTable.js`,
+`shared.jsx`, `App.jsx`) antes de aceptarla — varios agentes dispararon
+el clasificador de permisos de Auto Mode al hacer `git push` sobre
+`develop` (acción sensible, revisada caso a caso, sin encontrar nada
+más allá de la propia acción de escritura ya prevista y autorizada).
 
 ---
 
