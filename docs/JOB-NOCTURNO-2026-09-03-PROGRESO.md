@@ -93,16 +93,25 @@ rompe nada hoy (ninguna de las dos está mergeada), pero **al fusionar
 `feature/training-records` contra `Release-V1` hará falta renumerar una
 de las dos series a mano antes de aplicar nada.**
 
+## Prioridad insertada durante la sesión (procesar ANTES que el resto)
+
+El usuario pidió, mientras se trabajaba el Bloque 6, un rediseño del
+generador de Training Records (`feature/training-records`) y pidió
+explícitamente tratarlo como lo primero de la cola pendiente, procesado
+en cuanto se cerrara el bloque en curso. Ver fila "TR-restyle" en la
+tabla de abajo y su texto completo en la sección de textos originales.
+
 ## Estado de los bloques
 
 | # | Bloque | Estado | Rama | Commit |
 |---|---|---|---|---|
+| TR-restyle | Rediseño del generador de Training Records (pedido a mitad de sesión, prioridad máxima) | ⬜ No empezado | `feature/training-records` (continúa la misma rama del Bloque 5) | — |
 | 1 | Estado (notificaciones/styling/libro de estilo) | ✅ Analizado, mail enviado | — (solo análisis) | — |
 | 2 | email_for_nickname / rate limiting | ✅ Analizado, mail enviado, sin implementar (decisión del usuario) | — (solo análisis) | — |
 | 3 | Test roto en `main` (PaymentsTab, fecha relativa) | ✅ Hecho | `fix/paymentstab-test-fecha-relativa` (desde `develop`) | `f808a4d` |
 | 4 | Ajustes rápidos (hint flotante, +/- negativos, último acceso, slide de eliminar) | ✅ Hecho | `fix/bloque4-ajustes-rapidos` (desde `develop`) | `508b920` |
 | 5 | Training Records — config compartida por listado | ✅ Hecho | `feature/training-records` (desde `Release-V1`) | `3031a96` + `d131ed3` (docs) |
-| 6 | Revisión de todos los textos de la app | ⬜ No empezado | — | — |
+| 6 | Revisión de todos los textos de la app | ✅ Hecho | `fix/bloque6-revision-textos` (desde `develop`) | `aca9d89` |
 | 7 | Revisión de notificaciones propias (toasts) | ⬜ No empezado | — | — |
 | 8 | Rediseño del slide de novedades (WhatsNew) | ⬜ No empezado | — | — |
 | 9 | KPIs de la home a primera posición | ✅ Hecho | `feat/bloque9-kpis-primera-posicion` (desde `Release-V1`) | `ccc622e` |
@@ -120,10 +129,60 @@ de las dos series a mano antes de aplicar nada.**
 
 ## Texto original de los bloques pendientes (para no depender del chat)
 
-**Bloque 6 — Revisión de todos los textos**
-Revisar todos los textos de la app: notificaciones de email que se
-envían, textos de botones, ayudas… Objetivo: lenguaje cercano, humano,
-cero máquina, cero formalidad de app financiera obsoleta.
+**TR-restyle — Rediseño del generador de Training Records (prioridad
+máxima, pedido a mitad de sesión, texto literal del usuario)**
+> las fechas del generador de training records, son campos super
+> grandes, a todo lo ancho, quiero algo más pequeño para que cada item
+> del progreso del curso esté en una fila y no en dos como hasta ahora.
+> en la fila del alumno quita el icono del lápiz q ya está en los 3
+> puntos y añade un regenerar TR individual de ese alumno. las opciones
+> finales.. dale una vuelta a la parte de "Todo el listado": descargar
+> PDF, JPG o compartir todo para que sea todo mucho más visual. Rediseña
+> el styling del formulario de generador de training records para q sea
+> más fácil e intuitivo. rediseña también cómo se ven mis datos de
+> instructor, algo como una pequeña "card" con el avatar de mi perfil,
+> nombre, iniciales, SSI PRO Number, firma. que el curso a certificar y
+> cambiar plantilla estén en la misma línea.
+
+Desglose accionable:
+1. Fechas de cada item de progreso del curso: de campo ancho completo a
+   uno más compacto, para que quepan en una sola fila por item (hoy
+   ocupan dos).
+2. Fila de alumno: quitar el icono de lápiz (editar) — ya está
+   duplicado en el menú "⋯". Añadir en su lugar una acción "Regenerar
+   TR" individual para ese alumno.
+3. Sección "Todo el listado" (acciones finales sobre el listado
+   completo): rediseño visual — descargar PDF, descargar JPG, compartir
+   todo. Más visual que el estado actual.
+4. Styling general del formulario del generador: más fácil e intuitivo.
+5. Bloque "mis datos de instructor": convertir en una card compacta con
+   avatar de perfil, nombre, iniciales, SSI PRO Number y firma.
+6. "Curso a certificar" y "Cambiar plantilla": en la misma línea.
+
+Rama: continuar sobre `feature/training-records` (mismo feature que el
+Bloque 5, no una rama nueva — es un refinamiento de la misma pantalla,
+no un bloque conceptual distinto).
+
+**Bloque 6 — Revisión de todos los textos** ✅ Hecho — ver tabla arriba.
+Alcance cubierto: toasts de éxito (quitado "correctamente" — redundante
+con el toast verde) y primera línea del email de bienvenida ("Se te ha
+dado de alta" → "Ya tienes cuenta", menos jerga de RRHH). El resto de
+copy visible (pantallas, Ayuda, mensajes de error) ya tenía tono cercano
+tras la reescritura de Ayuda de 2026-08-29/30 — revisado, sin cambios
+necesarios. Los toasts en sí (diseño/usabilidad, no solo texto) quedan
+para el Bloque 7, que los trata en profundidad.
+
+**Hallazgo colateral del Bloque 6 (no un bloqueo, ya resuelto en su
+rama):** `develop` tiene un test (`PaymentsTab.test.jsx`) que rompe en
+cuanto el reloj real pasa de agosto a septiembre de 2026 — el mismo bug
+ya diagnosticado y arreglado en la rama `fix/paymentstab-test-fecha-relativa`
+(commit `f808a4d`, Bloque 3), pero esa rama sigue sin fusionar a
+`develop`. El Bloque 6 hizo cherry-pick de ese mismo fix para tener
+tests en verde — cualquier bloque nuevo que se abra desde `develop` a
+partir de ahora se topará con el mismo test roto hasta que el usuario
+fusione `fix/paymentstab-test-fecha-relativa` (o el propio Bloque 6) a
+`develop`. Próximos bloques de mantenimiento: cherry-pick del mismo
+commit si hace falta, documentado aquí para no repetir el diagnóstico.
 
 **Bloque 7 — Notificaciones de la propia app**
 Revisar las notificaciones propias (crear registro, eliminar,
@@ -199,15 +258,28 @@ explícitamente.
 ## Cómo continuar en la próxima sesión
 
 1. Leer solo este documento — no hace falta el historial de chat.
-2. Confirmar que las 4 ramas de la tabla de arriba siguen empujadas y
-   sin mergear (`git branch -a`, `git log origin/<rama>..<rama>`).
-3. Seguir con el Bloque 6, en orden, con el mismo protocolo (rama por
-   bloque, commit por unidad, tests+build en verde antes de cada push,
-   mail de aviso tras cada commit).
-4. Bloques de mantenimiento general (6, 7, 11 si no toca Home, 12-18,
+2. Confirmar que las ramas de la tabla de arriba siguen empujadas y sin
+   mergear (`git branch -a`, `git log origin/<rama>..<rama>`).
+3. Si `TR-restyle` sigue en ⬜, es lo primero — el usuario lo pidió con
+   prioridad máxima a mitad de sesión. Se trabaja sobre
+   `feature/training-records` (continuación del Bloque 5, no rama
+   nueva).
+4. Seguir con el Bloque 7 en adelante, en orden, con el mismo protocolo
+   (rama por bloque, commit por unidad, tests+build en verde antes de
+   cada push — recordar el cherry-pick de `f808a4d` si `PaymentsTab.test.jsx`
+   falla por la fecha real, ver "Hallazgo colateral del Bloque 6" arriba
+   —, mail de aviso tras cada commit vía `scripts/_notify.mjs` si la
+   rama nace de `develop`, o `scripts/send-deployment-notice.mjs` si
+   nace de `Release-V1`).
+5. `scripts/_notify.mjs` (no commiteado) ya existe en el working
+   directory de esta sesión — si una sesión nueva no lo encuentra,
+   recrearlo seed con la lógica descrita en "Hallazgo técnico
+   importante" más arriba (inserta en `deployment_notices` + envía por
+   Resend, sin depender de `server/`).
+6. Bloques de mantenimiento general (7, 11 si no toca Home, 12-18,
    final) → rama nueva desde `develop`. Bloques que son Release V1 (8,
-   10, 11 si se hace junto al Bloque 10) → rama nueva desde
-   `Release-V1`.
-5. Al cerrar el job de verdad (todos los bloques + análisis final +
+   10, 11 si se hace junto al Bloque 10, TR-restyle) → misma rama
+   `Release-V1`/`feature/training-records` según corresponda.
+7. Al cerrar el job de verdad (todos los bloques + análisis final +
    release lista para desplegar), actualizar la tabla de arriba y
    enviar el mail resumen definitivo.
