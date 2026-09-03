@@ -468,38 +468,41 @@ sentido evaluar si `Release-V1` ya está lista para su propio proceso
 de release hacia `main`/producción — esa decisión y su alcance
 quedan fuera de lo que este job nocturno debía dejar preparado.
 
-## Cómo continuar en la próxima sesión
+## Cierre del job — 2026-09-03
+
+**Job completado.** Todos los bloques del listado original (6-18),
+más el análisis final, más el rediseño completo de Training Records
+pedido a mitad de sesión, están hechos — cada uno en su propia rama,
+sin fusionar, con tests y build en verde antes de cada push, tal como
+exigía el protocolo. Se envió un email de aviso por bloque durante la
+noche, y el mail resumen definitivo (commit `f9f2b4c`, rama
+`docs/job-nocturno-2026-09-03-progreso`) se envió al cerrar.
+
+No queda trabajo pendiente de este job. Lo único que falta es una
+decisión humana: revisar y fusionar las ramas — ver "Guía de fusión"
+arriba para el orden y las dependencias reales — y decidir sobre las
+4 cuestiones abiertas listadas en esa misma sección superior del
+documento (guardia de secuenciación en `useSession.js`, limpieza de
+archivos sueltos en el working directory, posible adopción de
+`happy-dom`, reglas ESLint de React Compiler).
+
+### Cómo continuar en una futura sesión (si se pide más trabajo)
 
 1. Leer solo este documento — no hace falta el historial de chat.
 2. Confirmar que las ramas de la tabla de arriba siguen empujadas y sin
    mergear (`git branch -a`, `git log origin/<rama>..<rama>`).
-3. `TR-restyle` ya está hecho (commit `d5609ea` en
-   `feature/training-records`) — si algún día se pide seguir tocando esa
-   misma pantalla, continuar sobre esa rama, no una nueva.
-4. Seguir con el Bloque 7 en adelante, en orden, con el mismo protocolo
-   (rama por bloque, commit por unidad, tests+build en verde antes de
-   cada push — recordar el cherry-pick de `f808a4d` si `PaymentsTab.test.jsx`
-   falla por la fecha real, ver "Hallazgo colateral del Bloque 6" arriba
-   —, mail de aviso tras cada commit vía `scripts/_notify.mjs` si la
-   rama nace de `develop`, o `scripts/send-deployment-notice.mjs` si
-   nace de `Release-V1`).
-5. `scripts/_notify.mjs` (no commiteado) ya existe en el working
-   directory de esta sesión — si una sesión nueva no lo encuentra,
-   recrearlo seed con la lógica descrita en "Hallazgo técnico
-   importante" más arriba (inserta en `deployment_notices` + envía por
-   Resend, sin depender de `server/`).
-6. Bloques de mantenimiento general (12-18, final) → rama nueva desde
-   `develop`. Bloques que son Release V1 y NO tocan Home ni Training
-   Records → rama nueva desde `Release-V1`. **Bloque 11 (KPIs
-   animados en Movimientos) toca la MISMA pantalla que Bloque 10 tocó
-   parcialmente y depende de patrones ya usados ahí — construir sobre
-   `feat/bloque10-home-training-records`, no sobre `Release-V1` a
-   secas, para no perder ese trabajo ni duplicar esfuerzo.** Cualquier
-   bloque futuro que dependa de Training Records (el generador en sí,
-   no solo el enlace desde Home) debe partir de
-   `feature/training-records` (o de una rama que ya la incluya, como
-   `feat/bloque10-home-training-records`) — `Release-V1` a secas NO
-   tiene el generador todavía, solo esa rama.
-7. Al cerrar el job de verdad (todos los bloques + análisis final +
-   release lista para desplegar), actualizar la tabla de arriba y
-   enviar el mail resumen definitivo.
+3. Si se pide seguir tocando Training Records, continuar sobre
+   `feature/training-records` (ya incluye el rediseño, commit
+   `d5609ea`), no una rama nueva — `Release-V1` a secas NO tiene el
+   generador todavía.
+4. Para cualquier bloque nuevo: rama por bloque desde `develop` (si es
+   mantenimiento general) o desde `Release-V1`/`feature/training-records`
+   (si toca esa funcionalidad), commit por unidad, tests+build en verde
+   antes de cada push, mail de aviso vía `scripts/_notify.mjs` (ramas
+   `develop`) o `scripts/send-deployment-notice.mjs` (ramas
+   `Release-V1`). Recordar el cherry-pick de `f808a4d` si
+   `PaymentsTab.test.jsx` falla por la fecha relativa, hasta que esa
+   rama se fusione a `develop`.
+5. `scripts/_notify.mjs` (no commiteado a propósito) sigue en el
+   working directory — si una sesión nueva no lo encuentra, recrearlo
+   con la lógica descrita en "Hallazgo técnico importante" más arriba.
