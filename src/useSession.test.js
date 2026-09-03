@@ -551,3 +551,36 @@ describe("onAuthStateChange — session/profile/consents cambian en un único re
     expect(result.current.pendingLegalConsents).toEqual([]);
   });
 });
+
+// Bloque 12, job nocturno 2026-09-03: TOKEN_REFRESHED no debe repetir
+// resolveSessionState entera (getUser + profile + consents) — el perfil y
+// los consentimientos no cambian en un refresco de token, solo el propio
+// token. Un refresh token de una cuenta baneada nunca llega a emitir
+// TOKEN_REFRESHED (falla antes, en el propio endpoint de refresco de
+// GoTrue), así que saltarse resolveSessionState aquí no debilita la
+// detección de baneo.
+describe("onAuthStateChange — TOKEN_REFRESHED no repite la carga de profile/consents", () => {
+  it("actualiza session con el token nuevo sin volver a llamar a getUser/profile/consents", async () => {
+    let authCallback;
+    supabase.auth.onAuthStateChange.mockImplementation((cb) => {
+      authCallback = cb;
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+    const { result } = await renderReadySession({ user_id: "u1", activated_at: "2026-08-01T00:00:00Z" });
+
+    supabase.auth.getUser.mockClear();
+    supabase.from.mockClear();
+    const refreshedSession = { ...FAKE_SESSION, access_token: "nuevo-token" };
+
+    await act(async () => {
+      authCallback("TOKEN_REFRESHED", refreshedSession);
+    });
+
+    expect(result.current.session).toEqual(refreshedSession);
+    expect(supabase.auth.getUser).not.toHaveBeenCalled();
+    expect(supabase.from).not.toHaveBeenCalled();
+    // profile/accountBanned no se tocan — siguen siendo los ya cargados.
+    expect(result.current.profile).toEqual(expect.objectContaining({ user_id: "u1" }));
+    expect(result.current.accountBanned).toBe(false);
+  });
+});
