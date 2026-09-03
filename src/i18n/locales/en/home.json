@@ -6,10 +6,10 @@
   "noCoursesThisMonth": "No courses this month",
   "trendVsPreviousMonth": "{{delta}} vs last month",
   "kpis": {
-    "sectionTitle": "Your impact",
-    "studentsThisMonth": "Students this month",
-    "coursesTotal": "Courses taught",
-    "referredThisMonth": "Referred this month"
+    "sectionTitle": "Your impact this month",
+    "studentsThisMonth": "Students",
+    "coursesTotal": "Courses",
+    "referredThisMonth": "Referred"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

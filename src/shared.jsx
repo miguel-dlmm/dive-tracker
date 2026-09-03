@@ -344,10 +344,18 @@ export function Money({ amount, code, currencyRows, className = "", muted = fals
 // activaría/enfocaría el campo por delegación del <label>.
 export function Field({ label, hint, children }) {
   const { t } = useTranslation("common");
-  const [showHint, setShowHint] = useState(false);
+  // useFloatingDropdown, no un position:absolute casero — el hint anclado
+  // con left:0 y ancho fijo (w-56) se salía de la pantalla en cualquier
+  // campo que cayera en la columna DERECHA de un grid de 2 columnas (bug
+  // real reportado: "Importe" en Ajuste de curso, MovementSheet.jsx, sale
+  // fuera de la pantalla). useFloatingDropdown + FloatingPanel ya resuelven
+  // esto correctamente en Select/DatePicker/RowMenu (maxWidth se calcula
+  // contra el espacio real hasta el borde del viewport) — reutilizarlo aquí
+  // en vez de reinventar el cálculo de posición (convención #7, CLAUDE.md).
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="relative flex items-center gap-0.5 text-xs font-medium text-gray-500">
+      <span className="flex items-center gap-0.5 text-xs font-medium text-gray-500">
         {label}
         {hint && (
           // El objetivo táctil de 44×44 (convención #7, CLAUDE.md) se logra
@@ -364,28 +372,23 @@ export function Field({ label, hint, children }) {
           // el alto de la fila.
           <span className="relative inline-flex h-3.5 w-3.5 shrink-0">
             <button
+              ref={anchorRef}
               type="button"
-              onClick={(e) => { e.preventDefault(); setShowHint((v) => !v); }}
-              aria-expanded={showHint}
-              aria-label={showHint ? t("field.hideHelp") : t("field.help")}
+              onClick={(e) => { e.preventDefault(); setOpen((v) => !v); }}
+              aria-expanded={open}
+              aria-label={open ? t("field.hideHelp") : t("field.help")}
               className="absolute -inset-[15px] flex items-center justify-center text-gray-400"
             >
               <HelpCircle size={13} aria-hidden="true" />
             </button>
           </span>
         )}
-        {/* Flotante (position:absolute), no dentro del flujo del documento —
-            antes era un <span> normal debajo de la etiqueta, así que un
-            hint largo (p. ej. "Importe" en Ajuste de compañeros,
-            MovementSheet.jsx) estiraba esa celda de una fila en grid de 2
-            columnas y descuadraba el formulario frente a la celda vecina.
-            Bug real reportado por el usuario. */}
-        {hint && showHint && (
-          <span className="absolute left-0 top-full z-20 mt-1 w-56 max-w-[75vw] rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-normal italic normal-case text-gray-500 shadow-lg">
-            {hint}
-          </span>
-        )}
       </span>
+      {hint && (
+        <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} className="w-56 max-w-[75vw] px-2.5 py-1.5">
+          <span className="block text-[11px] font-normal italic normal-case text-gray-500">{hint}</span>
+        </FloatingPanel>
+      )}
       {children}
     </label>
   );

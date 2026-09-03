@@ -357,8 +357,12 @@ describe("HomeTab — calendario: total del día seleccionado", () => {
 // Fase 3, Release V1: KPIs animados al final de Home. La cifra hace un
 // conteo ascendente (useCountUp, motion.js) — se espera con waitFor a que
 // termine en vez de asumir que aparece ya resuelta en el primer render.
-describe("HomeTab — KPIs (alumnos este mes, cursos impartidos, captados este mes)", () => {
-  it("alumnos este mes y captados este mes solo cuentan el mes actual; cursos impartidos cuenta todo el histórico", async () => {
+// 2026-09-03, pedido explícito del usuario: título único "Tu impacto este
+// mes" y los 3 KPIs son del mes actual (antes "Cursos impartidos" era un
+// total histórico, deliberadamente distinto de los otros dos — se
+// unifica).
+describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", () => {
+  it("los 3 KPIs cuentan solo el mes actual", async () => {
     renderHome({
       worklog: [
         { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" },
@@ -373,15 +377,15 @@ describe("HomeTab — KPIs (alumnos este mes, cursos impartidos, captados este m
       commissionRates: COMMISSION_RATES,
     });
 
-    expect(screen.getByText("Tu impacto")).toBeInTheDocument();
-    expect(screen.getByText("Alumnos este mes")).toBeInTheDocument();
-    expect(screen.getByText("Cursos impartidos")).toBeInTheDocument();
-    expect(screen.getByText("Captados este mes")).toBeInTheDocument();
+    expect(screen.getByText("Tu impacto este mes")).toBeInTheDocument();
+    expect(screen.getByText("Alumnos")).toBeInTheDocument();
+    expect(screen.getByText("Cursos")).toBeInTheDocument();
+    expect(screen.getByText("Captados")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText("Alumnos este mes").previousSibling).toHaveTextContent("3"); // 2 + 1, solo este mes
-      expect(screen.getByText("Cursos impartidos").previousSibling).toHaveTextContent("3"); // los 3 worklog, histórico
-      expect(screen.getByText("Captados este mes").previousSibling).toHaveTextContent("4"); // solo c1, este mes
+      expect(screen.getByText("Alumnos").previousSibling).toHaveTextContent("3"); // 2 + 1, solo este mes
+      expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("2"); // w1 + w2, solo este mes (w3 es del mes pasado)
+      expect(screen.getByText("Captados").previousSibling).toHaveTextContent("4"); // solo c1, este mes
     }, { timeout: 2000 });
   });
 });

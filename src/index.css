@@ -52,4 +52,29 @@ html, body {
 .animate-help-fade-in {
   animation: helpFadeIn 200ms ease-out;
 }
+/* input[type="color"] (Escuelas/Cursos/Colores de sección en
+   Configuración): por defecto el navegador dibuja el swatch interior con
+   esquinas cuadradas y su propio borde nativo, aunque el <input> tenga
+   border-radius — el redondeado del elemento en sí no se hereda al
+   pseudo-elemento del swatch en Chrome/Safari. Resultado: un rectángulo
+   de esquina recta que desentona con el lenguaje visual redondeado del
+   resto de Ocean Flow (lavado de cara 2026-09-03, pedido explícito del
+   usuario: "el estilado no acaba de cuadrar 100% con el resto de la
+   línea Ocean Flow"). Se fuerza el propio swatch interior a heredar el
+   radio del input. */
+input[type="color"] {
+  border-radius: 6px;
+  overflow: hidden;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border-radius: 6px;
+  border: none;
+}
+input[type="color"]::-moz-color-swatch {
+  border-radius: 6px;
+  border: none;
+}
 @import "tailwindcss";// vercel test

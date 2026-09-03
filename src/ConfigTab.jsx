@@ -1794,7 +1794,15 @@ export default function ConfigTab({ schools, activities, currencies, paymentStat
       <h2 className="-mt-1 text-base font-semibold" style={{ color: NAVY }}>{currentSectionI18nKey && t(`sections.${currentSectionI18nKey}.label`)}</h2>
 
       {section === "escuelas" && (
-        <CrudTable createLabel={t("crud.nuevaEscuela")} editLabel={t("crud.editarEscuela")} table={schools} hasDefault
+        // colorizeText: mismo tratamiento que Cursos (lavado de cara
+        // 2026-09-03, pedido explícito del usuario: "el estilado no acaba
+        // de cuadrar 100% con el resto de Ocean Flow") — antes Escuelas
+        // tenía el nombre en gris neutro mientras Cursos, misma pantalla
+        // hermana con el mismo CrudTable, coloreaba el nombre con su
+        // propio color. Se unifica en vez de decidir cuál de las dos
+        // "estaba bien", porque las dos ya eran igual de válidas por
+        // separado — la inconsistencia estaba en que difirieran entre sí.
+        <CrudTable createLabel={t("crud.nuevaEscuela")} editLabel={t("crud.editarEscuela")} table={schools} hasDefault colorizeText
           fields={[{ key: "name", label: t("crud.nombreCampo") }, { key: "color", label: t("crud.colorCampo"), type: "color", required: false }]} />
       )}
       {section === "cursos" && (
