@@ -28,7 +28,7 @@
     "primeros-pasos": {
       "title": "Empezar a usar Ocean Flow",
       "summary": "Una vuelta rápida por las tres pantallas principales antes de registrar tu primer movimiento.",
-      "whatYouCanDo": "Ocean Flow te ayuda a llevar el control de tus ingresos como instructor freelance: las clases que impartes, las comisiones que generas por clientes referidos y los ajustes económicos con otros instructores — todo bajo un mismo concepto, \"movimiento\".",
+      "whatYouCanDo": "Ocean Flow te ayuda a llevar el control de tus ingresos como instructor freelance. Bajo un mismo concepto, \"movimiento\", agrupa las clases que impartes, las comisiones por clientes referidos y los ajustes económicos con otros instructores.",
       "whenToUseIt": "La primera vez que abres la app, o cuando quieras recordar para qué sirve cada pantalla.",
       "steps": [
         "Home: cuánto tienes pendiente de cobrar, un widget con tus deudas más antiguas, el calendario del mes y un acceso directo para crear un movimiento.",
@@ -36,7 +36,9 @@
         "Resumen: tu balance por el periodo que elijas, con la posibilidad de profundizar por escuela, por curso o por comisiones."
       ],
       "tips": [
-        "El orden natural para una cuenta nueva es: 1) Configurar tu aplicación (escuelas, cursos, tarifas), 2) Registrar un movimiento de cada tipo que uses, 3) Cobrar — uno cuando te paguen, todos de golpe si revisas periódicamente. Cada uno de esos tres pasos tiene su propia guía en \"Quiero...\" más abajo."
+        "Para una cuenta nueva, empieza por \"Configurar tu aplicación\" (escuelas, cursos, tarifas).",
+        "Sigue registrando un movimiento de cada tipo que vayas a usar.",
+        "Termina cobrando: uno cuando te paguen, o todos de golpe si revisas periódicamente. Cada paso tiene su propia guía en \"Quiero...\" más abajo."
       ],
       "expectedResult": "Sabes qué pantalla usar para cada situación y en qué orden seguir para dejar la app lista para tu día a día."
     },
@@ -96,7 +98,7 @@
     "consultar-generado": {
       "title": "Consultar cuánto has generado",
       "summary": "Un vistazo rápido en Home, o el detalle completo por el periodo que elijas en Resumen.",
-      "whatYouCanDo": "\"Generado este mes\" en Home te da la cifra del mes en curso, con un indicio de si vas mejor o peor que el mes anterior, sin salir de la pantalla principal. Tocarla te lleva directo a Resumen, que va más allá: cualquier periodo, comparado con el anterior, y con la posibilidad de profundizar por escuela o por curso.",
+      "whatYouCanDo": "\"Generado este mes\" en Home te da la cifra del mes en curso, con un indicio de si vas mejor o peor que el mes anterior. Tocarla te lleva directo a Resumen, que va más allá: cualquier periodo, comparado con el anterior, y con la posibilidad de profundizar por escuela o por curso.",
       "whenToUseIt": "Home, para un vistazo rápido al entrar en la app. Resumen, cuando quieras un periodo distinto al mes actual o entender de dónde viene el dinero.",
       "steps": [
         "En Home, la tarjeta \"Generado este mes\" ya está siempre visible, sin tocar nada — y tocarla te lleva a Resumen para profundizar.",
@@ -159,7 +161,7 @@
     "perfil-referencia": {
       "title": "Mi perfil, de un vistazo",
       "summary": "Tu avatar, tus datos, tu moneda favorita y tu contraseña — todo en un mismo sitio, accesible desde tu nombre en la cabecera.",
-      "whatYouCanDo": "Toca tu avatar o tu nickname, arriba a la derecha en cualquier pantalla, para entrar en Mi perfil: cambiar tu avatar (icono y color), editar nombre/apellidos/nickname, elegir tu moneda favorita, cambiar tu contraseña, y eliminar tu cuenta si alguna vez lo necesitas.",
+      "whatYouCanDo": "Toca tu avatar o tu nickname (arriba a la derecha en cualquier pantalla) para entrar en Mi perfil: tu identidad, tu moneda favorita y tu contraseña, todo en un mismo sitio.",
       "whenToUseIt": "Cuando quieras personalizar tu cuenta, corregir un dato, o cambiar la contraseña sin tener que cerrar sesión y pasar por \"olvidé mi contraseña\".",
       "steps": [
         "Toca el avatar/nickname de la cabecera para entrar en Mi perfil.",

@@ -28,7 +28,7 @@
     "primeros-pasos": {
       "title": "Getting started with Ocean Flow",
       "summary": "A quick tour of the three main screens before you log your first entry.",
-      "whatYouCanDo": "Ocean Flow helps you keep track of your income as a freelance instructor: the classes you teach, the commissions you earn from referred clients, and the money adjustments with other instructors — all under one concept, \"entry\".",
+      "whatYouCanDo": "Ocean Flow helps you keep track of your income as a freelance instructor. Under one concept, \"entry\", it groups the classes you teach, the commissions you earn from referred clients, and the money adjustments with other instructors.",
       "whenToUseIt": "The first time you open the app, or whenever you want a reminder of what each screen is for.",
       "steps": [
         "Home: how much you have pending to collect, a widget with your oldest debts, the month's calendar, and a shortcut to create an entry.",
@@ -36,7 +36,9 @@
         "Summary: your balance for whichever period you pick, with the option to drill down by school, by course, or by commissions."
       ],
       "tips": [
-        "The natural order for a new account is: 1) Set up your app (schools, courses, rates), 2) Log one entry of each type you use, 3) Collect — one at a time as you get paid, or all at once if you check in periodically. Each of these three steps has its own guide in \"I want to...\" below."
+        "For a new account, start with \"Set up your app\" (schools, courses, rates).",
+        "Then log one entry of each type you'll use.",
+        "Finish by collecting: one at a time as you get paid, or all at once if you check in periodically. Each step has its own guide in \"I want to...\" below."
       ],
       "expectedResult": "You know which screen to use for each situation, and in what order, so the app is ready for your day-to-day."
     },
@@ -96,7 +98,7 @@
     "consultar-generado": {
       "title": "Check how much you've earned",
       "summary": "A quick glance on Home, or the full detail for whichever period you choose in Summary.",
-      "whatYouCanDo": "\"Earned this month\" on Home gives you the current month's figure, with a hint of whether you're doing better or worse than last month, without leaving the main screen. Tapping it takes you straight to Summary, which goes further: any period, compared with the previous one, with the option to drill down by school or by course.",
+      "whatYouCanDo": "\"Earned this month\" on Home gives you the current month's figure, with a hint of whether you're doing better or worse than last month. Tapping it takes you straight to Summary, which goes further: any period, compared with the previous one, with the option to drill down by school or by course.",
       "whenToUseIt": "Home, for a quick glance when you open the app. Summary, when you want a period other than the current month or want to understand where the money is coming from.",
       "steps": [
         "On Home, the \"Earned this month\" card is always visible, no need to tap anything — and tapping it takes you to Summary to dig deeper.",
@@ -159,7 +161,7 @@
     "perfil-referencia": {
       "title": "My profile, at a glance",
       "summary": "Your avatar, your details, your favourite currency and your password — all in one place, reachable from your name in the header.",
-      "whatYouCanDo": "Tap your avatar or your nickname, top right on any screen, to go into My profile: change your avatar (icon and colour), edit first name/last name/nickname, choose your favourite currency, change your password, and delete your account if you ever need to.",
+      "whatYouCanDo": "Tap your avatar or your nickname (top right on any screen) to go into My profile: your identity, your favourite currency and your password, all in one place.",
       "whenToUseIt": "Whenever you want to personalise your account, fix a detail, or change your password without having to sign out and go through \"forgot my password\".",
       "steps": [
         "Tap the avatar/nickname in the header to go into My profile.",
