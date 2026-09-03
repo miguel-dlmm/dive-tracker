@@ -8,10 +8,6 @@
     "mensaje": "Before generating, complete your instructor details (name, initials, SSI Pro number and signature) in your profile.",
     "boton": "Go to my profile"
   },
-  "instructorSummary": {
-    "datos": "Initials {{initials}} · SSI Pro {{number}}",
-    "firmaAlt": "Instructor signature"
-  },
   "roster": {
     "titulo": "Students",
     "hint": "Each student only adds their name, initials and signature — everything else is already set up above.",

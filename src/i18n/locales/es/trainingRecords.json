@@ -8,10 +8,6 @@
     "mensaje": "Antes de generar, completa tus datos de instructor (nombre, iniciales, número SSI Pro y firma) en tu perfil.",
     "boton": "Ir a mi perfil"
   },
-  "instructorSummary": {
-    "datos": "Iniciales {{initials}} · SSI Pro {{number}}",
-    "firmaAlt": "Firma del instructor"
-  },
   "roster": {
     "titulo": "Alumnos",
     "hint": "Cada alumno solo aporta su nombre, iniciales y firma — el resto ya está configurado arriba.",

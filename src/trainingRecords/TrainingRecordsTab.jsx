@@ -2,9 +2,13 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2, Info } from "lucide-react";
 import { supabase } from "../supabaseClient";
-import { useToast, RowMenu, DatePicker, Select, ConfirmDialog, Avatar } from "../shared";
-import { resolveAvatar } from "../avatarCatalog";
+import { useToast, RowMenu, DatePicker, Select, ConfirmDialog } from "../shared";
 import { TEAL } from "../App";
+// Reutiliza el MISMO carnet editable que "Mi perfil" → "Datos de
+// instructor" (2026-09-04, pedido explícito: "una única fuente de
+// verdad, no dos copias") — en vez de una tarjeta compacta propia de
+// esta pantalla, editable solo aquí y desincronizada del perfil real.
+import { InstructorCardEditable } from "../ProfileTab";
 import { fillTrainingRecordPdf } from "./pdfFill";
 import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
 import { buildDefaultConfig, validateRecordConfig, validateStudentFields, buildFillData, availableAdventureOptions } from "./recordConfig";
@@ -120,29 +124,6 @@ function canShareFiles(files) {
 
 function formatGeneratedAt(timestamp, locale) {
   return new Date(timestamp).toLocaleString(locale === "en" ? "en-GB" : "es-ES", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-}
-
-// Card de instructor (rediseño 2026-09-03, pedido explícito del usuario:
-// "algo como una pequeña card con el avatar de mi perfil, nombre,
-// iniciales, SSI PRO Number, firma") — sustituye a la única línea de texto
-// anterior. El avatar reutiliza exactamente el mismo icono/color que "Mi
-// perfil" (resolveAvatar), nunca una foto: mismo criterio que el resto de
-// la app (ver avatarCatalog.js).
-function InstructorCard({ profile, instructor }) {
-  const { t } = useTranslation("trainingRecords");
-  const { icon, color } = resolveAvatar(profile);
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3">
-      <Avatar icon={icon} color={color} size={44} />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-gray-800">{instructor.namePrinted}</p>
-        <p className="text-xs text-gray-500">{t("instructorSummary.datos", { initials: instructor.initials, number: instructor.number })}</p>
-      </div>
-      {instructor.signature && (
-        <img src={instructor.signature} alt={t("instructorSummary.firmaAlt")} className="h-9 w-16 shrink-0 rounded border border-gray-100 bg-white object-contain" />
-      )}
-    </div>
-  );
 }
 
 function InstructorMissingNotice({ onOpenProfile }) {
@@ -356,7 +337,7 @@ function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf
   );
 }
 
-export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile }) {
+export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile, onProfileUpdated }) {
   const { t, i18n } = useTranslation("trainingRecords");
   const toast = useToast();
   const [templates, setTemplates] = useState([]);
@@ -576,7 +557,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     // igual de "planas" sin botón flotante.
     <div className="space-y-5 pb-16">
       <p className="text-sm text-gray-500">{t("intro")}</p>
-      <InstructorCard profile={profile} instructor={instructor} />
+      <InstructorCardEditable profile={profile} onProfileUpdated={onProfileUpdated} />
 
       <section>
         <div className="mb-2 flex items-center justify-between gap-2">

@@ -402,7 +402,17 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
 // PersonalDataSection. El nombre impreso no se pide aquí — se deriva de
 // first_name/last_name, que ya tiene su propia sección arriba, evita
 // pedir el mismo dato dos veces.
-function InstructorSection({ profile, onProfileUpdated }) {
+//
+// Extraído como InstructorCardEditable (2026-09-04, pedido explícito):
+// "los datos del instructor en TR deben ser el mismo carnet que en Mi
+// Perfil, editable desde ahí también, y cualquier edición actualiza Mi
+// Perfil — una única fuente de verdad, no dos copias". Toda la lógica de
+// ver/editar/guardar vive aquí, una sola vez — TrainingRecordsTab.jsx la
+// importa y la usa directamente, sin duplicar ni el carnet ni el
+// formulario de edición. SectionCard (el chrome propio de "Mi perfil") se
+// queda fuera a propósito, para que un consumidor sin esa cabecera
+// (Training Records) no herede un título/borde que no le corresponde.
+export function InstructorCardEditable({ profile, onProfileUpdated }) {
   const { t } = useTranslation("profile");
   const toast = useToast();
   const [editing, setEditing] = useState(false);
@@ -436,21 +446,18 @@ function InstructorSection({ profile, onProfileUpdated }) {
 
   if (!editing) {
     return (
-      <SectionCard id="instructor-section" title={t("sections.instructor")}>
-        <p className="mb-3 text-xs text-gray-400">{t("instructor.hint")}</p>
-        <InstructorCard
-          profile={profile}
-          initials={profile.instructor_initials}
-          ssiProNumber={profile.ssi_pro_number}
-          signature={profile.instructor_signature}
-          onEdit={startEdit}
-        />
-      </SectionCard>
+      <InstructorCard
+        profile={profile}
+        initials={profile.instructor_initials}
+        ssiProNumber={profile.ssi_pro_number}
+        signature={profile.instructor_signature}
+        onEdit={startEdit}
+      />
     );
   }
 
   return (
-    <SectionCard id="instructor-section" title={t("sections.instructor")}>
+    <div className="rounded-2xl border border-gray-200 bg-white p-4">
       <div className="grid grid-cols-2 gap-2">
         <Field label={t("instructor.initialsLabel")}>
           <input value={initials} onChange={(e) => setInitials(e.target.value.toUpperCase())} className={`${inputCls} w-full`} />
@@ -470,6 +477,16 @@ function InstructorSection({ profile, onProfileUpdated }) {
       <div className="mt-3">
         <EditActions onSave={save} onCancel={() => setEditing(false)} saveLabel={saving ? t("instructor.saving") : t("instructor.save")} />
       </div>
+    </div>
+  );
+}
+
+function InstructorSection({ profile, onProfileUpdated }) {
+  const { t } = useTranslation("profile");
+  return (
+    <SectionCard id="instructor-section" title={t("sections.instructor")}>
+      <p className="mb-3 text-xs text-gray-400">{t("instructor.hint")}</p>
+      <InstructorCardEditable profile={profile} onProfileUpdated={onProfileUpdated} />
     </SectionCard>
   );
 }
