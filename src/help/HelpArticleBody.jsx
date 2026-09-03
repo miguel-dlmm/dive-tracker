@@ -1,4 +1,3 @@
-import React from "react";
 import { Lightbulb, CheckCircle2 } from "lucide-react";
 import { TEAL } from "../App";
 import HelpStep from "./HelpStep";

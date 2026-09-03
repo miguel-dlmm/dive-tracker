@@ -1,4 +1,3 @@
-import React from "react";
 import { Wallet, Plus } from "lucide-react";
 import { MoneyLine } from "./shared";
 

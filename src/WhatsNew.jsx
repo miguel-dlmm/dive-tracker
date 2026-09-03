@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Briefcase, Coins, TrendingUp, Hand, ShieldCheck } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";

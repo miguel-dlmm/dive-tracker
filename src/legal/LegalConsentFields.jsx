@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { FileText } from "lucide-react";
 import { NAVY, TEAL } from "../App";
 import LegalDocumentViewer from "../LegalDocumentViewer";

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import * as Icons from "lucide-react";
 import { TEAL } from "./App";
 import { ExpandableCard } from "./shared";

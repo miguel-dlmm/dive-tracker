@@ -1,5 +1,3 @@
-import React from "react";
-
 // Un paso numerado de la sección "Pasos" de un artículo.
 // image: { src, alt } opcional — capturas reales generadas con
 // scripts/capture-help-screenshots.mjs (ver content.js).
