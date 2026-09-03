@@ -120,7 +120,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 12 | Análisis de sesión/perfil (eficiencia, robustez) | ✅ Hecho | `fix/bloque12-sesion-perfil` (desde `develop`) | `f1a7576` |
 | 13 | Análisis de build/push/despliegue | ✅ Analizado + limpieza real ejecutada, mail enviado | — (solo análisis + `git gc` local) | — |
 | 14 | Velocidad de la suite de test | ✅ Analizado, mail enviado | — (solo análisis) | — |
-| 15 | Mocks vs. BBDD real en los tests | ⬜ No empezado | — | — |
+| 15 | Mocks vs. BBDD real en los tests | ✅ Analizado, mail enviado — ya cumple, sin acción | — (solo análisis) | — |
 | 16 | Eficiencia de las propias pruebas de Claude (navegador) | ⬜ No empezado | — | — |
 | 17 | Cobertura de test — ampliar / otros tipos / estándares | ⬜ No empezado | — | — |
 | 18 | Monitorización de infraestructura (Vercel/Supabase) | ⬜ No empezado | — | — |
@@ -325,10 +325,17 @@ instalada ni probada, sería el primer sitio donde mirar. Revisar de
 nuevo si la suite crece mucho, si se añade CI, o si el propio usuario
 empieza a notar la espera como una molestia real.
 
-**Bloque 15 — Mocks en los tests**
-¿Se usan mocks o llamadas reales a BBDD en los tests? Deberían ser
-mocks. Si no lo son, justificar antes de tocar nada — el usuario lo
-revisa antes de actuar.
+**Bloque 15 — Mocks en los tests** ✅ Hecho — ver mail enviado. Ya
+cumple: los 18 archivos de test son 100% mocks, cero llamadas reales a
+Supabase (verificado buscando referencias a variables de entorno
+reales — cero resultados). La arquitectura de props (cada pantalla
+recibe `{rows, insertRow...}` ya resuelto, el hook se llama una vez en
+App.jsx) hace que la mayoría de tests ni necesite mockear
+`supabaseClient` explícitamente. Solo 3 archivos tocan Supabase
+directo (`useSupabaseTable.js`, `useSession.js`, `ConfigTab.jsx`); los
+2 con test propio lo mockean correctamente. Sin acción — nada que
+tocar. Hallazgo aparte para el Bloque 17: `useSupabaseTable.js` no
+tiene test propio, solo se verifica indirectamente.
 
 **Bloque 16 — Pruebas propias de Claude**
 ¿Se puede hacer más eficiente cómo Claude prueba contra el navegador?
