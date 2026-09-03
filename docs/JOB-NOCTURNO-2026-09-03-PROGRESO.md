@@ -124,8 +124,8 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 16 | Eficiencia de las propias pruebas de Claude (navegador) | ✅ Analizado, mail enviado | — (solo análisis) | — |
 | 17 | Cobertura de test — ampliar / otros tipos / estándares | ✅ Hecho | `fix/bloque17-cobertura-usesupabasetable` (desde `develop`) | `358fa00` |
 | 18 | Monitorización de infraestructura (Vercel/Supabase) | ✅ Hecho | `docs/bloque18-monitorizacion-infra` (desde `Release-V1`) | `acde0de` |
-| final | Análisis de código (eficiencia, robustez, patrones, dependencias...) | ⬜ No empezado | — | — |
-| release | Dejar todo listo para desplegar (sin desplegar) | ⬜ No empezado — depende de que el resto avance y de que el usuario revise/mergee las ramas de arriba | — | — |
+| final | Análisis de código (eficiencia, robustez, patrones, dependencias...) | ✅ Hecho | `chore/bloque-final-analisis-codigo` (desde `develop`) | `effb61a` |
+| release | Dejar todo listo para desplegar (sin desplegar) | ✅ Todos los bloques hechos — ver "Guía de fusión" más abajo. Ningún merge ejecutado (regla del job) | — | — |
 
 ## Texto original de los bloques pendientes (para no depender del chat)
 
@@ -368,20 +368,105 @@ ambos análisis completos enviados por email. Sin acceso a los
 dashboards reales desde esta sesión: es una recomendación de qué
 configurar a mano, pendiente de que el usuario lo haga.
 
-**Bloque final — Análisis de código**
-Eficiencia, robustez, usabilidad, reutilización, buenas prácticas,
-dependencias externas locales, patrones de diseño, optimización,
-documentación (ni exceso ni defecto), y cualquier otro análisis
-pertinente. Mejoras que no comprometan estabilidad → implementar
-directo. Las más controvertidas → dejar la propuesta y la elegida por
-escrito, sin implementar. Toda esta parte, en una rama aparte sin
-mergear hasta revisión.
+**Bloque final — Análisis de código** ✅ Hecho — ver tabla arriba y el
+mail enviado. `npm run lint` pasaba de 95 problemas (82 errores, 13
+avisos) a 37, todos revisados uno a uno (no corregidos a ciegas):
+imports de React sin usar (21 archivos, el runtime automático de JSX
+ya no lo necesita), 20 `global is not defined` en un test (sustituido
+por `globalThis`), una regla nueva (`react-hooks/set-state-in-effect`)
+desactivada por marcar como error el patrón "fetch al montar" correcto
+y usado en toda la app, y un caso real de mutar un ref durante el
+render en `MiTrabajoTab.jsx` (movido a un `useEffect`). Los 37
+problemas restantes quedan documentados como revisados y no-bugs
+(arquitectura deliberada de `shared.jsx`, dependencias de `useMemo` ya
+cubiertas por otras, o comprobaciones de React Compiler que este
+proyecto no usa). Dependencias: 5 de producción, 17 de desarrollo,
+todas usadas, sin bloat.
 
-**Release final**
-Dejar todo listo para que el usuario solo tenga que desplegar al
-volver — usando todo lo ya mergeado contra `Release V1`. No ejecutar el
-despliegue real (`main`/producción) sin que el usuario lo pida
-explícitamente.
+**Propuesta controvertida, sin implementar:** ¿desactivar también las
+reglas de preparación para React Compiler en `eslint.config.js`? Se
+deja para que el usuario decida — no es un bug, es una postura de
+herramientas con trade-offs reales en ambos sentidos (detalle en el
+mail).
+
+**Pendientes de decisión consolidados de todo el job (12-18 + final,
+para no rebuscar en cada email):** (1) Bloque 12 — posible condición
+de carrera en `useSession.js`; (2) Bloque 13 — borrar `postgresql.dmg`
+y los instaladores de `gh` sueltos (~323MB); (3) Bloque 14 — adoptar
+`happy-dom` si la suite se nota lenta de verdad algún día; (4) este
+bloque — postura sobre las reglas de React Compiler.
+
+**Release final** ✅ Todos los bloques del encargo (6-18 + final)
+están hechos, cada uno en su propia rama, sin fusionar — tal como
+pedía el encargo ("cada bloque en su propia rama, sin mergear hasta
+revisión"). No se ha ejecutado ningún merge ni ningún despliegue real.
+Lo que sigue es una guía de fusión para cuando el usuario revise y
+decida qué mergear y en qué orden — no una acción ya hecha.
+
+### Guía de fusión — orden recomendado y por qué
+
+Dos líneas de ramas independientes, cada una debe fusionarse en su
+propio destino:
+
+**Hacia `develop`** (bloques de mantenimiento general, sin
+dependencias entre sí — se pueden revisar y fusionar en cualquier
+orden, o todos juntos):
+- `fix/paymentstab-test-fecha-relativa` (Bloque 3, sesión anterior)
+- `fix/bloque4-ajustes-rapidos` (Bloque 4, sesión anterior)
+- `fix/bloque6-revision-textos` (Bloque 6)
+- `fix/bloque7-toasts` (Bloque 7)
+- `fix/bloque12-sesion-perfil` (Bloque 12)
+- `fix/bloque17-cobertura-usesupabasetable` (Bloque 17)
+- `chore/bloque-final-analisis-codigo` (Bloque final)
+
+  **Aviso real:** varias de estas ramas (Bloque 6, 7, 12, 17, final)
+  llevan cada una su propio cherry-pick del mismo commit
+  (`f808a4d`, el fix de fecha relativa de `PaymentsTab.test.jsx`) —
+  necesario porque `fix/paymentstab-test-fecha-relativa` (Bloque 3)
+  seguía sin fusionar a `develop` cuando se crearon. Al fusionar
+  **`fix/paymentstab-test-fecha-relativa` primero**, cualquier fusión
+  posterior de las otras ramas debería resolver ese fragmento como
+  "ya aplicado" sin conflicto real (mismo contenido) — si git no lo
+  detecta solo, es un conflicto trivial de descartar (quedarse con la
+  versión ya en `develop`), no algo que requiera revisar la lógica.
+
+**Hacia `Release-V1`** (bloques de la funcionalidad nueva — **estas
+SÍ tienen dependencias reales entre sí, fusionar en este orden
+exacto**):
+1. `feature/training-records` (Bloque 5 + rediseño TR — la base:
+   introduce el generador de Training Records, que no existe en
+   `Release-V1` todavía)
+2. `feat/bloque9-kpis-primera-posicion` (Bloque 9 — toca `HomeTab.jsx`
+   de forma independiente; puede fusionarse antes o después del punto
+   1 sin conflicto real, ambas tocan Home pero en zonas distintas del
+   archivo)
+3. `feat/bloque8-whatsnew-releasev1` (Bloque 8 — independiente de las
+   dos anteriores)
+4. `feat/bloque10-home-training-records` (Bloque 10 — **depende de
+   1 y 2**: se construyó sobre `feature/training-records` con el
+   commit de `feat/bloque9-kpis-primera-posicion` ya incluido
+   mediante cherry-pick. Fusionar DESPUÉS de 1 y 2, no antes)
+5. `feat/bloque11-kpis-movimientos` (Bloque 11 — **depende de 4**: se
+   construyó encima de `feat/bloque10-home-training-records`.
+   Fusionar en último lugar de este grupo)
+6. `docs/bloque18-monitorizacion-infra` (Bloque 18 — solo
+   documentación, sin dependencias de código; puede fusionarse en
+   cualquier momento)
+
+  **Aviso real ya documentado (ver "Hallazgo técnico importante" al
+  principio de este documento):** `feature/training-records` tiene
+  `scripts/migrations/0009-datos-instructor-perfil.sql` y
+  `0010-firma-instructor-y-aventuras.sql`; `Release-V1` YA tiene sus
+  propios `0009-invitation-links.sql` y `0010-avisos-generalizados.sql`
+  — **renumerar una de las dos series a mano antes de aplicar
+  cualquier migración**, la fusión de código en sí no lo resuelve
+  sola.
+
+**Después de fusionar ambos grupos:** `Release-V1` queda con todo el
+trabajo de esta noche integrado. En ese punto (y no antes) tiene
+sentido evaluar si `Release-V1` ya está lista para su propio proceso
+de release hacia `main`/producción — esa decisión y su alcance
+quedan fuera de lo que este job nocturno debía dejar preparado.
 
 ## Cómo continuar en la próxima sesión
 
