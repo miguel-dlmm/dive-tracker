@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { X, Languages, TrendingUp, UserCircle, Sparkles } from "lucide-react";
+import { X, Languages, TrendingUp, UserCircle, IdCard, Sparkles } from "lucide-react";
 import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
@@ -35,6 +35,12 @@ import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 // usuario real (cuenta "dev-bypass", datos de prueba). Iconografía + color
 // coherente con el resto de la app cumple igual el objetivo ("muy
 // visual") sin ese riesgo.
+//
+// Diapositiva "Mi perfil" añadida 2026-09-04 (ya en producción sin
+// anunciar desde Release V1: carnet de instructor, datos personales,
+// nivel profesional, moneda favorita, contraseña, borrado de cuenta).
+// Ángulo elegido: el carnet — es lo más visual y lo único realmente nuevo
+// como concepto (el resto son campos de datos, no una pieza de UI nueva).
 // icon/color no son traducibles — título/cuerpo de cada diapositiva viven en
 // notices.json (whatsNew.slides, mismo orden por índice) y se combinan con
 // este array en el componente.
@@ -42,6 +48,10 @@ const SLIDE_ICONS = [
   { icon: Languages, color: SUN },
   { icon: TrendingUp, color: GREEN },
   { icon: UserCircle, color: CORAL },
+  // Mi perfil / carnet de instructor (2026-09-04) — se inserta antes de la
+  // diapositiva de cierre ("Repásalo cuando quieras"), que se queda última
+  // a propósito porque es un meta-mensaje sobre el propio WhatsNew.
+  { icon: IdCard, color: TEAL },
   { icon: Sparkles, color: NAVY },
 ];
 
