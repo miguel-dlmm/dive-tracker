@@ -1,4 +1,3 @@
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { Lightbulb, CheckCircle2 } from "lucide-react";
 import { TEAL } from "../App";

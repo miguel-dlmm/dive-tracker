@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Check, RotateCcw, SlidersHorizontal, PartyPopper } from "lucide-react";
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
-  Money, Field, Select, MultiSelect, DateRangePicker, DeleteButton, ConfirmDialog, colorFor,
+  Money, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
   isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab,
 } from "./shared";
 import { buildActivityEntries, buildIncomeEntries } from "./rateCalc";
@@ -384,7 +384,16 @@ export default function MiTrabajoTab({
   // valor obsoleto. Un ref actualizado en cada render evita esa condición
   // de carrera sin depender de que el usuario no haya tocado nada.
   const liveRef = useRef({ filters, statusFilter });
-  liveRef.current = { filters, statusFilter };
+  // Se actualiza en un efecto (tras el commit), no durante el propio
+  // render — mutar un ref mientras se renderiza es una violación real de
+  // las reglas de React (linter, Bloque final del job nocturno
+  // 2026-09-03), aunque en la práctica no causara ningún bug observable
+  // aquí: solo se LEE más tarde, desde `changeStatus`, nunca durante este
+  // mismo render. Sin dependencias — debe correr tras cada render, igual
+  // que la asignación directa que sustituye.
+  useEffect(() => {
+    liveRef.current = { filters, statusFilter };
+  });
   const matchesActiveTab = (status, tab) =>
     tab === "pendientes" ? isPendingStatus(status, paymentStatuses.rows) : !isPendingStatus(status, paymentStatuses.rows);
 

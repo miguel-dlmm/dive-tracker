@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Pencil, X } from "lucide-react";
 import { TEAL, CORAL, GREEN } from "./App";
-import { inputCls, formatMoney, Money, Field, Select, CurrencySearchSelect, colorFor, StatusPill, ListFilterBar, applyListFilters, DeleteButton, DatePicker, MoneyInput, EditActions, useToast } from "./shared";
+import { inputCls, Money, Field, Select, CurrencySearchSelect, colorFor, StatusPill, ListFilterBar, applyListFilters, DeleteButton, DatePicker, MoneyInput, EditActions, useToast } from "./shared";
 
 // schools / activities / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates: { rows: [...] } — para filtrar actividades relevantes de cada escuela

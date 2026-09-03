@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import * as Icons from "lucide-react";
@@ -8,7 +8,7 @@ import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, Chev
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./colors";
-import { DURATION, panelVariants, sheetVariants, listItemVariants, usePrefersReducedMotion } from "./motion";
+import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, usePrefersReducedMotion } from "./motion";
 
 export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
 
@@ -22,6 +22,8 @@ const ToastContext = createContext(null);
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  const reducedMotion = usePrefersReducedMotion();
+  const dismiss = useCallback((id) => setToasts((t) => t.filter((x) => x.id !== id)), []);
   // action opcional ({ label, onClick }) — para acciones rápidas de un
   // toque que conviene poder deshacer sin frenar el flujo (p. ej. marcar
   // un cobro por error): el toast en sí ya es la capa de seguridad, no un
@@ -30,8 +32,8 @@ export function ToastProvider({ children }) {
   const push = useCallback((type, message, action) => {
     const id = Math.random().toString(36).slice(2);
     setToasts((t) => [...t, { id, type, message, action }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), action ? 5000 : 3000);
-  }, []);
+    setTimeout(() => dismiss(id), action ? 5000 : 3000);
+  }, [dismiss]);
   const api = useMemo(() => ({
     success: (m, opts) => push("success", m, opts?.action),
     error: (m, opts) => push("error", m, opts?.action),
@@ -47,28 +49,48 @@ export function ToastProvider({ children }) {
       <div
         className="pointer-events-none fixed inset-x-0 z-[60] flex flex-col items-center gap-2 px-4"
         style={{ top: "calc(env(safe-area-inset-top) + 5rem)" }}
-        aria-live="polite" aria-atomic="true"
+        aria-live="polite"
       >
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            role="status"
-            className="pointer-events-auto flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-lg"
-            style={{ backgroundColor: t.type === "success" ? GREEN : CORAL }}
-          >
-            {t.type === "success" ? <Check size={15} aria-hidden="true" /> : <X size={15} aria-hidden="true" />}
-            {t.message}
-            {t.action && (
+        {/* Revisión de diseño y usabilidad (Bloque 7, job nocturno
+            2026-09-03): antes aparecía/desaparecía sin transición (único
+            elemento de feedback de la app fuera del vocabulario de motion
+            ya usado en hojas/filas/paneles) y no había forma de cerrarlo
+            antes de que expirase su propio timer — molesto si el mensaje
+            tapa algo que el usuario quiere mirar ya. aria-atomic movido a
+            CADA toast (antes en el contenedor entero: un toast nuevo hacía
+            que un lector de pantalla releyera TODOS los toasts visibles,
+            no solo el nuevo). */}
+        <AnimatePresence>
+          {toasts.map((t) => (
+            <motion.div
+              key={t.id}
+              {...toastVariants(reducedMotion)}
+              role="status" aria-atomic="true"
+              className="pointer-events-auto flex items-center gap-2 rounded-lg py-2.5 pl-4 pr-2 text-sm font-medium text-white shadow-lg"
+              style={{ backgroundColor: t.type === "success" ? GREEN : CORAL }}
+            >
+              {t.type === "success" ? <Check size={15} aria-hidden="true" /> : <X size={15} aria-hidden="true" />}
+              {t.message}
+              {t.action && (
+                <button
+                  type="button"
+                  onClick={() => { t.action.onClick(); dismiss(t.id); }}
+                  className="-my-1 ml-1 rounded px-1.5 py-1 text-sm font-semibold underline underline-offset-2"
+                >
+                  {t.action.label}
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => { t.action.onClick(); setToasts((ts) => ts.filter((x) => x.id !== t.id)); }}
-                className="-my-1 ml-1 rounded px-1.5 py-1 text-sm font-semibold underline underline-offset-2"
+                onClick={() => dismiss(t.id)}
+                aria-label="Cerrar"
+                className="-my-1 ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full opacity-80"
               >
-                {t.action.label}
+                <X size={13} aria-hidden="true" />
               </button>
-            )}
-          </div>
-        ))}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </ToastContext.Provider>
   );
@@ -296,7 +318,7 @@ export function Field({ label, hint, children }) {
   const [showHint, setShowHint] = useState(false);
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="flex items-center gap-0.5 text-xs font-medium text-gray-500">
+      <span className="relative flex items-center gap-0.5 text-xs font-medium text-gray-500">
         {label}
         {hint && (
           // El objetivo táctil de 44×44 (convención #7, CLAUDE.md) se logra
@@ -323,8 +345,18 @@ export function Field({ label, hint, children }) {
             </button>
           </span>
         )}
+        {/* Flotante (position:absolute), no dentro del flujo del documento —
+            antes era un <span> normal debajo de la etiqueta, así que un
+            hint largo (p. ej. "Importe" en Ajuste de compañeros,
+            MovementSheet.jsx) estiraba esa celda de una fila en grid de 2
+            columnas y descuadraba el formulario frente a la celda vecina.
+            Bug real reportado por el usuario. */}
+        {hint && showHint && (
+          <span className="absolute left-0 top-full z-20 mt-1 w-56 max-w-[75vw] rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-normal italic normal-case text-gray-500 shadow-lg">
+            {hint}
+          </span>
+        )}
       </span>
-      {hint && showHint && <span className="-mt-0.5 text-[11px] italic text-gray-400">{hint}</span>}
       {children}
     </label>
   );
@@ -684,7 +716,18 @@ export function DateRangePicker({ from, to, onChange }) {
 // Input de importe: mientras escribes, número plano y libre; al perder el
 // foco, se muestra formateado con separador de miles (es-ES). Así el campo
 // de Tarifa/Importe también respeta el separador, no solo la visualización.
-export function MoneyInput({ value, onChange, className = "", placeholder, "aria-label": ariaLabel }) {
+// allowNegative: el teclado numérico que iOS Safari muestra para
+// inputMode="decimal" NO tiene tecla de signo menos (limitación conocida
+// de la plataforma, no de esta app) — escribir un negativo a mano es
+// imposible ahí. Bug real reportado por el usuario en "Ajuste de
+// compañeros" (MovementSheet.jsx), el único uso de MoneyInput donde un
+// negativo tiene sentido (pagas tú al compañero). En vez de cambiar el
+// comportamiento de TODOS los usos de MoneyInput (tarifas, importes de
+// curso... siempre positivos), un botón +/- opcional junto al campo
+// permite invertir el signo sin depender de esa tecla — el usuario
+// sigue pudiendo teclear "-" a mano donde el teclado sí la tenga
+// (Android, escritorio), esto es un camino alternativo, no un reemplazo.
+export function MoneyInput({ value, onChange, className = "", placeholder, "aria-label": ariaLabel, allowNegative = false }) {
   const [editing, setEditing] = useState(false);
   const [raw, setRaw] = useState(value != null && value !== "" ? String(value) : "");
 
@@ -695,8 +738,15 @@ export function MoneyInput({ value, onChange, className = "", placeholder, "aria
   const display = editing
     ? raw
     : (value !== "" && value != null ? Number(value).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "");
+  const isNegative = Number(value) < 0;
 
-  return (
+  const toggleSign = () => {
+    const flipped = -Number(value || 0);
+    setRaw(String(flipped));
+    onChange(String(flipped));
+  };
+
+  const input = (
     <input
       type="text"
       inputMode="decimal"
@@ -710,8 +760,24 @@ export function MoneyInput({ value, onChange, className = "", placeholder, "aria
         onChange(v);
       }}
       onBlur={() => setEditing(false)}
-      className={`${inputCls} w-full ${className}`}
+      className={`${inputCls} w-full ${allowNegative ? "pl-10" : ""} ${className}`}
     />
+  );
+
+  if (!allowNegative) return input;
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={toggleSign}
+        aria-label={isNegative ? "Cambiar a positivo" : "Cambiar a negativo"}
+        className="absolute inset-y-0 left-0 flex min-h-11 w-11 items-center justify-center text-base font-semibold text-gray-500"
+      >
+        {isNegative ? "−" : "+"}
+      </button>
+      {input}
+    </div>
   );
 }
 

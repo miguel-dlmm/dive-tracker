@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Briefcase, Coins, TrendingUp, Hand, ShieldCheck } from "lucide-react";

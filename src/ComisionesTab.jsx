@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Pencil, X } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import { inputCls, formatMoney, Money, Field, Select, CurrencySearchSelect, MoneyInput, ListFilterBar, applyListFilters, colorFor, StatusPill, DeleteButton, DatePicker, EditActions, AppLoading, EntryTitle, useToast } from "./shared";

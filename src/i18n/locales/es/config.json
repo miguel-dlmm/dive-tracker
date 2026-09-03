@@ -40,7 +40,7 @@
     "cerrar": "Cerrar",
     "guardar": "Guardar",
     "cambiosGuardados": "Cambios guardados",
-    "anadidoCorrectamente": "Añadido correctamente",
+    "anadidoCorrectamente": "Añadido",
     "noSePudoGuardar": "No se pudo guardar. Inténtalo de nuevo.",
     "noSePudoGuardarCambio": "No se pudo guardar el cambio.",
     "estadoPredeterminadoRazon": "Es el estado predeterminado (representa \"pendiente\") — marca otro como predeterminado antes de eliminar este"
@@ -84,6 +84,7 @@
   },
   "userListRow": {
     "alta": "Alta: {{date}}",
+    "ultimoAcceso": "Último acceso: {{date}}",
     "baja": "Baja: {{date}}",
     "fechaNoRegistrada": "fecha no registrada"
   },
@@ -123,7 +124,7 @@
     "soloSuperadminCrear": "Solo un superadmin puede crear usuarios.",
     "noSePudoCrear": "No se pudo crear el usuario.",
     "usuarioCreadoSinEmail": "Usuario creado (el email no se pudo enviar)",
-    "usuarioCreadoCorrectamente": "Usuario creado correctamente",
+    "usuarioCreadoCorrectamente": "Usuario creado",
     "enlaceCopiado": "Enlace copiado",
     "noSePudoCopiar": "No se pudo copiar. Selecciónalo a mano.",
     "noSePudoEnviarEmailTitulo": "No se pudo enviar el email",
@@ -156,7 +157,7 @@
     "sinResultados": "Sin resultados.",
     "soloSuperadminRol": "Solo un superadmin puede cambiar el rol de admin de otra cuenta.",
     "noSePudoActualizarRol": "No se pudo actualizar el rol.",
-    "rolActualizado": "Rol actualizado correctamente",
+    "rolActualizado": "Rol actualizado",
     "soloSuperadminEliminar": "Solo un superadmin puede eliminar usuarios.",
     "noSePudoEliminar": "No se pudo eliminar el usuario.",
     "usuarioEliminado": "Usuario eliminado",

@@ -40,7 +40,7 @@
     "cerrar": "Close",
     "guardar": "Save",
     "cambiosGuardados": "Changes saved",
-    "anadidoCorrectamente": "Added successfully",
+    "anadidoCorrectamente": "Added",
     "noSePudoGuardar": "Couldn't save. Please try again.",
     "noSePudoGuardarCambio": "Couldn't save the change.",
     "estadoPredeterminadoRazon": "This is the default status (represents \"pending\") — set another one as default before deleting this"
@@ -84,6 +84,7 @@
   },
   "userListRow": {
     "alta": "Joined: {{date}}",
+    "ultimoAcceso": "Last access: {{date}}",
     "baja": "Deactivated: {{date}}",
     "fechaNoRegistrada": "date not recorded"
   },
@@ -123,7 +124,7 @@
     "soloSuperadminCrear": "Only a superadmin can create users.",
     "noSePudoCrear": "Couldn't create the user.",
     "usuarioCreadoSinEmail": "User created (the email couldn't be sent)",
-    "usuarioCreadoCorrectamente": "User created successfully",
+    "usuarioCreadoCorrectamente": "User created",
     "enlaceCopiado": "Link copied",
     "noSePudoCopiar": "Couldn't copy. Select it manually.",
     "noSePudoEnviarEmailTitulo": "Couldn't send the email",
@@ -156,7 +157,7 @@
     "sinResultados": "No results.",
     "soloSuperadminRol": "Only a superadmin can change another account's admin role.",
     "noSePudoActualizarRol": "Couldn't update the role.",
-    "rolActualizado": "Role updated successfully",
+    "rolActualizado": "Role updated",
     "soloSuperadminEliminar": "Only a superadmin can delete users.",
     "noSePudoEliminar": "Couldn't delete the user.",
     "usuarioEliminado": "User deleted",

@@ -452,3 +452,41 @@ describe("AppShell — siembra de estados de pago por defecto", () => {
     expect(insertRow).not.toHaveBeenCalled();
   });
 });
+
+// Backlog: "Sembrar payment_statuses (Pending/Paid) en el alta +
+// autoservicio del instructor" — una cuenta (nueva o ya existente) sin
+// ningún estado de pago los recibe solos al cargar la app, sin migración
+// (INSERT normal vía el cliente, ya permitido por la RLS "own rows" que
+// la tabla ya tiene).
+describe("AppShell — siembra de estados de pago por defecto", () => {
+  const ACTIVATED_PROFILE = { user_id: "u1", activated_at: "2026-01-01T00:00:00Z", nickname: "ada" };
+
+  function tableHook(rows = [], overrides = {}) {
+    return { rows, loaded: true, insertRow: vi.fn(), updateRow: vi.fn(), deleteRow: vi.fn(), bulkUpdateWhere: vi.fn(), setDefault: vi.fn(), ...overrides };
+  }
+
+  it("con payment_statuses vacío, inserta Pendiente (por defecto) y Cobrado", async () => {
+    const insertRow = vi.fn().mockResolvedValue({});
+    useSupabaseTable.mockImplementation((table) => (
+      table === "payment_statuses" ? tableHook([], { insertRow }) : tableHook([])
+    ));
+    mockUseSession({ session: SESSION, profile: ACTIVATED_PROFILE });
+
+    render(<App />);
+
+    await waitFor(() => expect(insertRow).toHaveBeenCalledWith({ name: "Pendiente", is_default: true, color: "#D97706" }));
+    expect(insertRow).toHaveBeenCalledWith({ name: "Cobrado", color: "#10B981" });
+  });
+
+  it("con payment_statuses ya con filas, no inserta nada", async () => {
+    const insertRow = vi.fn();
+    useSupabaseTable.mockImplementation((table) => (
+      table === "payment_statuses" ? tableHook([{ id: "s1", name: "Pendiente", is_default: true }], { insertRow }) : tableHook([])
+    ));
+    mockUseSession({ session: SESSION, profile: ACTIVATED_PROFILE });
+
+    render(<App />);
+
+    expect(insertRow).not.toHaveBeenCalled();
+  });
+});

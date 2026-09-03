@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { motion } from "motion/react";
+import { motion, useAnimationControls } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
@@ -486,16 +486,28 @@ function shortDateTime(iso, neverLabel) {
 // pierde la posibilidad de eliminar por no poder arrastrar. Con
 // `prefers-reduced-motion`, el arrastre se desactiva del todo y solo
 // queda ese camino sin gestos.
+const SWIPE_SPRING = { type: "spring", stiffness: 500, damping: 40 };
+
 function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
   const { t } = useTranslation("config");
   const [open, setOpen] = useState(false);
   const reduced = usePrefersReducedMotion();
+  // controls, no solo el prop `animate` ligado a `open`: si se arrastra
+  // poco (por debajo del umbral) y se suelta, `open` no cambia de valor
+  // (false -> false), así que un `animate={{x: open ? -80 : 0}}` ligado
+  // solo al estado no dispara ninguna animación nueva — Motion compara el
+  // OBJETIVO, no la posición visual real tras soltar, y la fila se queda
+  // a mitad de camino de donde se soltó el dedo, sin volver a cerrarse.
+  // Bug real reportado por el usuario. Llamar a controls.start(...)
+  // explícitamente en onDragEnd fuerza el snap siempre, cambie o no el
+  // estado.
+  const controls = useAnimationControls();
   if (reduced) return children;
   return (
     <div className="relative overflow-hidden">
       <div className="absolute inset-y-0 right-0 w-20" style={{ backgroundColor: CORAL }}>
         <button
-          onClick={() => { setOpen(false); onDelete(); }}
+          onClick={() => { setOpen(false); controls.start({ x: 0, transition: SWIPE_SPRING }); onDelete(); }}
           aria-label={deleteLabel}
           tabIndex={open ? 0 : -1}
           aria-hidden={!open}
@@ -510,9 +522,13 @@ function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
         dragConstraints={{ left: -80, right: 0 }}
         dragElastic={0.08}
         dragMomentum={false}
-        animate={{ x: open ? -80 : 0 }}
-        transition={{ type: "spring", stiffness: 500, damping: 40 }}
-        onDragEnd={(_, info) => setOpen(info.offset.x < -40)}
+        animate={controls}
+        initial={{ x: 0 }}
+        onDragEnd={(_, info) => {
+          const shouldOpen = info.offset.x < -40;
+          setOpen(shouldOpen);
+          controls.start({ x: shouldOpen ? -80 : 0, transition: SWIPE_SPRING });
+        }}
         className="relative bg-white"
       >
         {children}
@@ -521,7 +537,7 @@ function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
   );
 }
 
-function UserListRow({ user, status, deactivatedAt, onOpen }) {
+function UserListRow({ user, status, lastSignInAt, deactivatedAt, onOpen }) {
   const { t } = useTranslation("config");
   return (
     <button
@@ -544,7 +560,10 @@ function UserListRow({ user, status, deactivatedAt, onOpen }) {
         </p>
       </div>
       <div className="shrink-0 text-right text-xs text-gray-400">
-        <div>{t("userListRow.alta", { date: shortDate(user.created_at) })}</div>
+        {/* Último acceso en vez de fecha de alta (pedido explícito del
+            usuario) — "cuándo se dio de alta" dice poco de si la cuenta
+            sigue viva; "cuándo entró por última vez" sí. */}
+        <div>{t("userListRow.ultimoAcceso", { date: shortDateTime(lastSignInAt, t("userStatus.nunca")) })}</div>
         {status === "desactivado" && (
           <div className="mt-0.5 italic">{t("userListRow.baja", { date: deactivatedAt ? shortDate(deactivatedAt) : t("userListRow.fechaNoRegistrada") })}</div>
         )}
@@ -1454,6 +1473,7 @@ function UsersDirectory({ profile }) {
               <UserListRow
                 user={p}
                 status={userStatus(activeByUser[p.user_id] ?? true, activatedAtByUser[p.user_id])}
+                lastSignInAt={lastSignInByUser[p.user_id] ?? null}
                 deactivatedAt={deactivatedAtByUser[p.user_id]}
                 onOpen={setOpenUserId}
               />

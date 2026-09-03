@@ -17,7 +17,7 @@
   "deleteButton": {
     "defaultLabel": "Eliminar",
     "defaultItemLabel": "este elemento",
-    "deletedToast": "Eliminado correctamente",
+    "deletedToast": "Eliminado",
     "errorToast": "No se pudo eliminar. Inténtalo de nuevo.",
     "confirmTitle": "¿Eliminar este registro?",
     "confirmMessage": "Vas a eliminar {{item}}. Esta acción no se puede deshacer."

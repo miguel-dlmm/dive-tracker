@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle } from "lucide-react";

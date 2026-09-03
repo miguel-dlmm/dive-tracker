@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
 import { TrendingUp, TrendingDown, Minus, GraduationCap, Award, Handshake } from "lucide-react";

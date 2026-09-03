@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PaymentsTab from "./PaymentsTab";
 import { ToastProvider } from "./shared";
@@ -162,6 +162,21 @@ describe("PaymentsTab — liquidación agrupada por escuela", () => {
 
     const [desde] = screen.getAllByLabelText("Sin límite");
     await user.click(desde);
+    // El calendario abre en el mes REAL de hoy (sin valor todavía, ver
+    // DatePicker en shared.jsx), no en el de los datos de prueba
+    // (2026-08-10, fijo) — hay que navegar hasta agosto de 2026 antes de
+    // poder pulsar el día. Número de clics calculado en tiempo de
+    // ejecución en vez de fijo a mano: este mismo test se rompió porque
+    // asumía que "hoy" seguiría siendo agosto de 2026 para siempre (bug
+    // reportado en main, ver docs/BACKLOG.md) — con el cálculo dinámico
+    // no vuelve a pasar según avance el reloj real.
+    const target = new Date(2026, 7, 1); // agosto 2026 (mes 7, 0-indexado)
+    const now = new Date();
+    const monthsDiff = (now.getFullYear() - target.getFullYear()) * 12 + (now.getMonth() - target.getMonth());
+    const navButton = monthsDiff >= 0 ? "Mes anterior" : "Mes siguiente";
+    for (let i = 0; i < Math.abs(monthsDiff); i++) {
+      await user.click(screen.getByRole("button", { name: navButton }));
+    }
     await user.click(screen.getByRole("button", { name: "10 de Agosto" }));
 
     expect(screen.getByText("PADI Cozumel")).toBeInTheDocument();

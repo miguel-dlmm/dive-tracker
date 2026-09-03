@@ -11,7 +11,7 @@ export const ACTIVATION_EMAIL_COPY = {
     preheader: "Entra y crea tu contraseña para empezar.",
     title: "Bienvenido/a a Ocean Flow",
     greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
-    intro: "Se te ha dado de alta en Ocean Flow, la herramienta que usamos para llevar el control de clases, comisiones y pagos.",
+    intro: "Ya tienes cuenta en Ocean Flow, la herramienta que usamos para llevar el control de clases, comisiones y pagos.",
     ctaLabel: "Entrar en Ocean Flow",
     securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu propia contraseña.",
     expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",

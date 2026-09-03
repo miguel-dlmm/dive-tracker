@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { Plus, Minus, X, Check, Loader2, StickyNote, GraduationCap, Handshake, Users } from "lucide-react";
@@ -384,7 +384,7 @@ export default function MovementSheet({
                         label={t("sheet.fields.amount", { currency: form.currency })}
                         hint={t("sheet.fields.amountHint")}
                       >
-                        <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder={t("sheet.fields.amountPlaceholder")} />
+                        <MoneyInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} placeholder={t("sheet.fields.amountPlaceholder")} allowNegative />
                       </Field>
                     </div>
                   ) : (

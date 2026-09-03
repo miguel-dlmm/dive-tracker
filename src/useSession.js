@@ -146,7 +146,23 @@ export function useSession() {
       if (resolved.banned) setAccountBanned(true);
       setLoading(false);
     });
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      // TOKEN_REFRESHED (Bloque 12, job nocturno 2026-09-03): GoTrue
+      // refresca el access token en segundo plano cada ~1h mientras la
+      // pestaña sigue abierta — antes, cada refresco disparaba
+      // resolveSessionState entera (getUser() + profile + consents, 3
+      // peticiones de red) aunque ni el perfil ni los consentimientos
+      // cambien nunca en un refresco de token. Basta con actualizar
+      // `session` con el token nuevo. La detección de baneo no se
+      // debilita: un refresh token de una cuenta baneada ya falla en el
+      // propio endpoint de refresco de GoTrue (nunca llega a emitir
+      // TOKEN_REFRESHED) — la garantía de resolveSessionState en cada
+      // llamada de auth.* sigue intacta, solo evita repetirla aquí donde
+      // ya está implícita en el propio evento.
+      if (event === "TOKEN_REFRESHED" && newSession) {
+        setSession(newSession);
+        return;
+      }
       const resolved = await resolveSessionState(newSession);
       setSession(resolved.session);
       setProfile(resolved.profile);
