@@ -307,14 +307,20 @@ function useTrimmedSignature(dataUrl) {
 // oscuro, avatar+nombre a la izquierda, un panel claro a la derecha),
 // pero con identidad propia, no una copia: en vez de un QR (que no
 // tenemos nada que codificar en él), ese hueco lo ocupa la firma real del
-// instructor — es la pieza que de verdad autentica el carnet. Puramente
-// presentacional — "Editar" vive fuera de este componente, en
-// InstructorSection (mismo link con texto de siempre, ver más abajo): un
-// icono superpuesto en la esquina del carnet se probó primero, pero el
-// usuario lo encontró poco descubrible ("no me gusta ahí colocado,
-// parece difícil de encontrar") y se volvió al patrón ya establecido en
-// el resto de "Mi perfil".
-function InstructorCard({ profile, initials, ssiProNumber, signature }) {
+// instructor — es la pieza que de verdad autentica el carnet.
+//
+// "Editar" — tercer intento de ubicación, tras feedback del usuario en
+// vivo dos veces seguidas: (1) icono superpuesto en la esquina del
+// carnet — descartado, poco descubrible ("no me gusta ahí colocado,
+// parece difícil de encontrar"); (2) link de texto suelto DEBAJO del
+// carnet — descartado también: "quiero el editar integrado". Pedido
+// explícito de la vuelta siguiente: "otra ubicación en el carnet,
+// integrado". Solución: un pie adjunto al propio carnet (mismo
+// contenedor, mismas esquinas redondeadas, sin hueco entre ambos) pero
+// en blanco sólido en vez de fundirse con el degradado — sigue siendo
+// parte visual del carnet, pero con el contraste y el ancho completo
+// que antes le faltaban al icono pequeño para destacar como acción.
+function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) {
   const { t } = useTranslation("profile");
   const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.nickname;
   const avatar = resolveAvatar(profile);
@@ -329,53 +335,62 @@ function InstructorCard({ profile, initials, ssiProNumber, signature }) {
   const roleText = professionalLabel ? t("instructor.card.roleWithLevel", { level: professionalLabel }) : t("instructor.card.role");
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl p-4 shadow-md"
-      style={{ background: `linear-gradient(135deg, ${NAVY} 0%, ${TEAL} 65%, ${AQUA} 100%)` }}
-    >
-      {/* Barrido diagonal sutil — la única concesión "decorativa" a
-          parecer un carnet físico (efecto laminado/holograma), sin
-          imágenes ni dependencias nuevas: un solo gradiente radial
-          semitransparente encima del fondo. */}
+    <div className="overflow-hidden rounded-2xl shadow-md">
       <div
-        className="pointer-events-none absolute inset-0"
-        style={{ background: "radial-gradient(120% 60% at 15% 0%, rgba(255,255,255,0.16), transparent 60%)" }}
-        aria-hidden="true"
-      />
-      <div className="relative flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-white/40 bg-white/10">
-            <AvatarIcon size={26} style={{ color: avatar.color }} aria-hidden="true" />
+        className="relative p-4"
+        style={{ background: `linear-gradient(135deg, ${NAVY} 0%, ${TEAL} 65%, ${AQUA} 100%)` }}
+      >
+        {/* Barrido diagonal sutil — la única concesión "decorativa" a
+            parecer un carnet físico (efecto laminado/holograma), sin
+            imágenes ni dependencias nuevas: un solo gradiente radial
+            semitransparente encima del fondo. */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "radial-gradient(120% 60% at 15% 0%, rgba(255,255,255,0.16), transparent 60%)" }}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-white/40 bg-white/10">
+              <AvatarIcon size={26} style={{ color: avatar.color }} aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="line-clamp-2 text-base font-bold leading-tight text-white">{fullName}</p>
+              <p className="text-[10.5px] font-semibold uppercase tracking-wider text-white/70">{roleText}</p>
+            </div>
+          </div>
+          {/* Firma en vez de QR — pedido explícito del usuario. */}
+          <div className="flex h-16 w-24 shrink-0 flex-col items-center justify-center rounded-lg bg-white/95 p-1.5">
+            {trimmedSignature ? (
+              <img src={trimmedSignature} alt={t("instructor.card.signatureAlt", { name: fullName })} className="h-full w-full object-contain" />
+            ) : (
+              <span className="px-1 text-center text-[9px] font-medium leading-tight text-gray-400">{t("instructor.card.noSignature")}</span>
+            )}
+          </div>
+        </div>
+        <div className="relative mt-4 flex items-end justify-between border-t border-white/15 pt-3">
+          <div className="flex gap-5">
+            <div>
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-white/55">{t("instructor.card.initialsLabel")}</p>
+              <p className="text-sm font-bold tabular-nums text-white">{initials || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-white/55">{t("instructor.card.numberLabel")}</p>
+              <p className="text-sm font-bold tabular-nums text-white">{ssiProNumber || "—"}</p>
+            </div>
+          </div>
+          <span className="flex items-center gap-1 text-white/40" aria-hidden="true">
+            <Waves size={16} />
           </span>
-          <div className="min-w-0">
-            <p className="line-clamp-2 text-base font-bold leading-tight text-white">{fullName}</p>
-            <p className="text-[10.5px] font-semibold uppercase tracking-wider text-white/70">{roleText}</p>
-          </div>
-        </div>
-        {/* Firma en vez de QR — pedido explícito del usuario. */}
-        <div className="flex h-16 w-24 shrink-0 flex-col items-center justify-center rounded-lg bg-white/95 p-1.5">
-          {trimmedSignature ? (
-            <img src={trimmedSignature} alt={t("instructor.card.signatureAlt", { name: fullName })} className="h-full w-full object-contain" />
-          ) : (
-            <span className="px-1 text-center text-[9px] font-medium leading-tight text-gray-400">{t("instructor.card.noSignature")}</span>
-          )}
         </div>
       </div>
-      <div className="relative mt-4 flex items-end justify-between border-t border-white/15 pt-3">
-        <div className="flex gap-5">
-          <div>
-            <p className="text-[9px] font-semibold uppercase tracking-wider text-white/55">{t("instructor.card.initialsLabel")}</p>
-            <p className="text-sm font-bold tabular-nums text-white">{initials || "—"}</p>
-          </div>
-          <div>
-            <p className="text-[9px] font-semibold uppercase tracking-wider text-white/55">{t("instructor.card.numberLabel")}</p>
-            <p className="text-sm font-bold tabular-nums text-white">{ssiProNumber || "—"}</p>
-          </div>
-        </div>
-        <span className="flex items-center gap-1 text-white/40" aria-hidden="true">
-          <Waves size={16} />
-        </span>
-      </div>
+      <button
+        onClick={onEdit}
+        className="flex min-h-11 w-full items-center justify-center gap-1.5 bg-white text-sm font-semibold transition-colors active:bg-gray-50"
+        style={{ color: TEAL }}
+      >
+        <Pencil size={14} aria-hidden="true" /> {t("instructor.edit")}
+      </button>
     </div>
   );
 }
@@ -428,15 +443,8 @@ function InstructorSection({ profile, onProfileUpdated }) {
           initials={profile.instructor_initials}
           ssiProNumber={profile.ssi_pro_number}
           signature={profile.instructor_signature}
+          onEdit={startEdit}
         />
-        {/* Editar vuelve a ser un link con texto debajo del carnet, no un
-            icono superpuesto — pedido explícito del usuario tras probarlo:
-            "no me gusta ahí colocado, parece difícil de encontrar". Mismo
-            patrón exacto que el resto de "Mi perfil" (Datos personales,
-            Idioma...), así que ahora es donde ya se espera encontrarlo. */}
-        <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: TEAL }}>
-          <Pencil size={14} aria-hidden="true" /> {t("instructor.edit")}
-        </button>
       </SectionCard>
     );
   }
