@@ -563,8 +563,12 @@ function UserListRow({ user, status, lastSignInAt, deactivatedAt, onOpen }) {
       <div className="shrink-0 text-right text-xs text-gray-400">
         {/* Último acceso en vez de fecha de alta (pedido explícito del
             usuario) — "cuándo se dio de alta" dice poco de si la cuenta
-            sigue viva; "cuándo entró por última vez" sí. */}
-        <div>{t("userListRow.ultimoAcceso", { date: shortDateTime(lastSignInAt, t("userStatus.nunca")) })}</div>
+            sigue viva; "cuándo entró por última vez" sí. Solo fecha, sin
+            hora (2026-09-04, pedido explícito): la hora exacta no aporta
+            nada para reconocer de un vistazo si una cuenta sigue viva,
+            solo añade ruido. Reutiliza shortDate de shared.jsx en vez de
+            shortDateTime, que sigue usándose para "Fecha de baja". */}
+        <div>{t("userListRow.ultimoAcceso", { date: lastSignInAt ? shortDate(lastSignInAt) : t("userStatus.nunca") })}</div>
         {status === "desactivado" && (
           <div className="mt-0.5 italic">{t("userListRow.baja", { date: deactivatedAt ? shortDate(deactivatedAt) : t("userListRow.fechaNoRegistrada") })}</div>
         )}
@@ -672,7 +676,9 @@ function UserDetailSheet({
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.ultimoAcceso")}</span>
-              <span className="text-gray-700">{shortDateTime(lastSignInAt, t("userStatus.nunca"))}</span>
+              {/* Solo fecha, sin hora (2026-09-04, pedido explícito) — ver
+                  mismo cambio y motivo en UserListRow arriba. */}
+              <span className="text-gray-700">{lastSignInAt ? shortDate(lastSignInAt) : t("userStatus.nunca")}</span>
             </div>
             {status === "desactivado" && (
               <div className="flex items-center justify-between gap-3">
