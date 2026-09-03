@@ -123,7 +123,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 15 | Mocks vs. BBDD real en los tests | ✅ Analizado, mail enviado — ya cumple, sin acción | — (solo análisis) | — |
 | 16 | Eficiencia de las propias pruebas de Claude (navegador) | ✅ Analizado, mail enviado | — (solo análisis) | — |
 | 17 | Cobertura de test — ampliar / otros tipos / estándares | ✅ Hecho | `fix/bloque17-cobertura-usesupabasetable` (desde `develop`) | `358fa00` |
-| 18 | Monitorización de infraestructura (Vercel/Supabase) | ⬜ No empezado | — | — |
+| 18 | Monitorización de infraestructura (Vercel/Supabase) | ✅ Hecho | `docs/bloque18-monitorizacion-infra` (desde `Release-V1`) | `acde0de` |
 | final | Análisis de código (eficiencia, robustez, patrones, dependencias...) | ⬜ No empezado | — | — |
 | release | Dejar todo listo para desplegar (sin desplegar) | ⬜ No empezado — depende de que el resto avance y de que el usuario revise/mergee las ramas de arriba | — | — |
 
@@ -359,11 +359,14 @@ Valorados y descartados por ahora (proporcional): tests de
 accesibilidad automatizados (axe-core, no urgente hoy) y tests de
 rendimiento/carga (prematuro, ver Bloques 13/14).
 
-**Bloque 18 — Monitorización de infraestructura**
-Estudiar alertas de consumo de recursos en Vercel/Supabase antes de
-abrir el registro público. Añadir un análisis de monitorización junto
-al de escalabilidad ya hecho antes; devolver ambos completos por email
-y documentarlos.
+**Bloque 18 — Monitorización de infraestructura** ✅ Hecho — ver tabla
+arriba. Addendum a la Fase 7 de `docs/RELEASE-V1-PROGRESS.md` (junto
+al análisis de escalabilidad ya hecho): alertas recomendadas en
+Supabase (BBDD al 80% de 500MB, egress al 80%) y Vercel (invocaciones
+de funciones, ancho de banda) antes de abrir el registro público —
+ambos análisis completos enviados por email. Sin acceso a los
+dashboards reales desde esta sesión: es una recomendación de qué
+configurar a mano, pendiente de que el usuario lo haga.
 
 **Bloque final — Análisis de código**
 Eficiencia, robustez, usabilidad, reutilización, buenas prácticas,
