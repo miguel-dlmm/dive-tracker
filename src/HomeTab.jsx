@@ -206,7 +206,47 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         </div>
       </div>
 
-      {/* 2. Pendiente de cobrar — información financiera principal, la más
+      {/* 2. Training Records (2026-09-04, pedido explícito: "el generador de
+          TR es una herramienta de uso frecuente, colócalo más arriba y con
+          un estilo acorde a la Home") — rediseñada más prominente y subida
+          justo debajo de los KPIs (antes cerraba la pantalla, compitiendo
+          por atención con "Generado este mes"). Mismo lenguaje visual que
+          el resto de tarjetas de Home (rounded-xl, tinte de color de
+          marca), pero con más peso — icono más grande en badge circular
+          con el propio TEAL de fondo (no solo un 10% de opacidad como el
+          resto de filas de icono+chevron) y un borde sutil a juego, para
+          que destaque como acceso directo a una herramienta, no como una
+          fila más de ajustes.
+          onOpenTrainingRecords (App.jsx) escribe la sección en
+          sessionStorage vía setStoredSection() y cambia de pestaña —
+          ConfigTab la recoge en su primer render, sin pasar por su propio
+          menú.
+          ⚠️ DESCONECTADA A PROPÓSITO en este release (Fase 9,
+          docs/RELEASE-V1-PROGRESS.md): App.jsx ya no pasa
+          onOpenTrainingRecords, así que este bloque entero no se
+          renderiza nunca en el build real — queda listo para reactivarse
+          con un cambio de una sola línea en App.jsx cuando se decida
+          publicar Training Records. No añadir la prop en App.jsx sin
+          aprobación explícita. */}
+      {onOpenTrainingRecords && (
+        <button
+          type="button"
+          onClick={onOpenTrainingRecords}
+          className="flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-transform active:scale-[0.98]"
+          style={{ borderColor: `${TEAL}40`, background: `linear-gradient(135deg, ${TEAL}17 0%, ${TEAL}05 100%)` }}
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: TEAL }}>
+            <Award size={22} className="text-white" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold" style={{ color: NAVY }}>{t("trainingRecordsCard.title")}</span>
+            <span className="block text-xs text-gray-500">{t("trainingRecordsCard.subtitle")}</span>
+          </span>
+          <ChevronRight size={20} className="shrink-0" style={{ color: TEAL }} aria-hidden="true" />
+        </button>
+      )}
+
+      {/* 3. Pendiente de cobrar — información financiera principal, la más
           visible de la pantalla. Integra también el acceso rápido de
           creación (botón "+" a la derecha, onQuickAdd): antes era una fila
           aparte debajo de esta tarjeta, con el mismo ancho y casi el mismo
@@ -228,7 +268,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         onQuickAdd={() => onQuickCreate("ganado")}
       />
 
-      {/* 3. Calendario del mes — revisión de jerarquía 2026-08-29 (ver
+      {/* 4. Calendario del mes — revisión de jerarquía 2026-08-29 (ver
           docs/ADR/0004, addendum): antes iba en tercer y último lugar,
           después de "Generado este mes", cuando en la práctica un día
           normal no acumula demasiados movimientos distintos (el propio
@@ -271,7 +311,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         />
       </div>
 
-      {/* 4. Generado este mes — información secundaria de cierre, no la
+      {/* 5. Generado este mes — información secundaria de cierre, no la
           protagonista: una cifra que solo se consulta, complementaria al
           propio calendario de arriba (que ya muestra qué días tuvieron
           actividad). "Generado" y no "Ganado" porque cuenta las 3 fuentes
@@ -329,37 +369,6 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           </div>
         )}
       </button>
-
-      {/* 5. Training Records — cierre de la pantalla (Bloque 10, job
-          nocturno 2026-09-03, pedido explícito: "mover el enlace al
-          generador de Training Records a la Home"). Antes solo se
-          llegaba a través de Configuración, donde competía visualmente
-          con Escuelas/Cursos/Tarifas pese a ser la funcionalidad más
-          nueva y de más peso de la app (ver WhatsNew.jsx, Bloque 8, que
-          ya la anuncia como titular) — se elimina del menú de
-          Configuración (ver ConfigTab.jsx, HIDDEN_SECTIONS) y gana su
-          propia tarjeta, con el mismo lenguaje visual de icono+chevron
-          que ya usa Ayuda/Configuración para una fila con destino claro.
-          onOpenTrainingRecords (App.jsx) escribe la sección en
-          sessionStorage vía setStoredSection() y cambia de pestaña —
-          ConfigTab la recoge en su primer render, sin pasar por su
-          propio menú. */}
-      {onOpenTrainingRecords && (
-        <button
-          type="button"
-          onClick={onOpenTrainingRecords}
-          className="flex w-full min-h-[64px] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left transition-transform active:scale-[0.98]"
-        >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
-            <Award size={19} style={{ color: TEAL }} aria-hidden="true" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold" style={{ color: NAVY }}>{t("trainingRecordsCard.title")}</span>
-            <span className="block truncate text-xs text-gray-400">{t("trainingRecordsCard.subtitle")}</span>
-          </span>
-          <ChevronRight size={18} className="shrink-0 text-gray-300" aria-hidden="true" />
-        </button>
-      )}
     </div>
   );
 }
