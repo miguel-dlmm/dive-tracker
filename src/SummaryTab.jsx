@@ -210,7 +210,14 @@ function HeroTotal({ label, period, color, total, previousTotal, canCompare, cur
   const cmp = canCompare ? comparePeriods(total, previousTotal) : null;
 
   return (
-    <div className="rounded-lg p-4 text-white shadow-sm" style={{ backgroundColor: color }}>
+    // rounded-xl, sin sombra (auditoría de estilo 2026-09-04) — misma
+    // familia de "tarjeta con la cifra protagonista, fondo de color sólido"
+    // que PendingCollectionCard (Home/Mi trabajo) y los KpiTile de
+    // Home/Mi trabajo: esta tarjeta era la única con rounded-lg+shadow-sm,
+    // un desvío accidental de ese lenguaje visual (radio distinto, y la
+    // única sombra de un elemento no elevado — el resto de "shadow-*" de la
+    // app son overlays reales: hojas, diálogos, toasts, menús flotantes).
+    <div className="rounded-xl p-4 text-white" style={{ backgroundColor: color }}>
       <div className="text-xs font-medium opacity-80">{label} — {period}</div>
       <div className="mt-1 text-3xl font-bold tabular-nums"><MoneyLine totals={total} currencyRows={currencyRows} /></div>
       {cmp && (
