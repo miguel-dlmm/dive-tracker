@@ -25,8 +25,11 @@ export function buildDefaultConfig(templateMap) {
     rowDates: {},
     examVersion: templateMap?.examVersion ? "online" : null, // premarcado Online — pedido explícito del usuario.
     upgrade: templateMap?.upgradeCheckboxes ? "openWaterDiver" : null,
-    courseVariant: null,
-    examConfirmed: false,
+    // EAN32 premarcado (2026-09-04, pedido explícito) — la variante más
+    // habitual con diferencia, mismo criterio que "Online" en examVersion.
+    courseVariant: templateMap?.courseVariant ? "ean32" : null,
+    // "Fecha de examen" (2026-09-04): ya no hay casilla de confirmación,
+    // solo la fecha — ver examConfirmedDate. `examConfirmed` se retira.
     examConfirmedDate: null,
     specialtyDives: (templateMap?.optionalSpecialtyDives || []).map(() => ({ adventureId: null, adventureName: "", completed: false, date: null })),
   };
@@ -49,32 +52,64 @@ export function validateRecordConfig(templateMap, config) {
   });
   if (Object.keys(rowDateErrors).length > 0) errors.rowDates = rowDateErrors;
 
+  // AOWD (única plantilla con aventuras electivas): "ALL AOWD fields
+  // become obligatory" (2026-09-04, pedido explícito) — las 3 aventuras
+  // electivas dejan de ser realmente opcionales, hay que elegir una en
+  // cada una (y su fecha), no solo rellenar la fecha si se elige.
   const specialtyDateErrors = {};
-  (templateMap.optionalSpecialtyDives || []).forEach((_, i) => {
-    const dive = config.specialtyDives?.[i];
-    if (dive?.adventureId && !dive.date) specialtyDateErrors[i] = "Falta la fecha de esta inmersión.";
+  (templateMap.optionalSpecialtyDives || []).forEach((dive, i) => {
+    const values = config.specialtyDives?.[i];
+    if (!values?.adventureId) specialtyDateErrors[i] = `Elige una aventura para "${dive.label}".`;
+    else if (!values.date) specialtyDateErrors[i] = "Falta la fecha de esta aventura.";
   });
   if (Object.keys(specialtyDateErrors).length > 0) errors.specialtyDates = specialtyDateErrors;
 
   if (templateMap.examVersion && !config.examVersion) errors.examVersion = "Elige la versión del examen.";
   if (templateMap.upgradeCheckboxes && !config.upgrade) errors.upgrade = "Elige la certificación.";
-  if (templateMap.examConfirmation) {
-    if (!config.examConfirmed) errors.examConfirmation = "Confirma que se ha completado el examen final.";
-    else if (!config.examConfirmedDate) errors.examConfirmationDate = "Falta la fecha de la confirmación de examen.";
-  }
+  // "Fecha de examen" (2026-09-04): campo de fecha obligatorio, sin
+  // casilla de confirmación previa.
+  if (templateMap.examConfirmation && !config.examConfirmedDate) errors.examConfirmationDate = "Falta la fecha de examen.";
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
 // Validación de los datos propios de UN alumno — nombre, apellidos,
 // iniciales y firma. Se llama una vez por alumno del listado antes de
 // generar en lote.
+//
+// `isMinor` (2026-09-04, pedido explícito de OW, aplicado a cualquier
+// plantilla — el dato de "es menor de edad" no depende de qué curso se
+// certifique): cuando el alumno es menor, el nombre y la firma del padre/
+// madre/tutor pasan de opcionales a obligatorios. Cuando NO lo es, esos
+// dos campos ni se piden (ver StudentQuickEntrySheet.jsx, que los oculta
+// del todo cuando la casilla está sin marcar).
 export function validateStudentFields(student) {
   const errors = {};
   if (!student.firstName?.trim()) errors.firstName = "El nombre es obligatorio.";
   if (!student.lastName?.trim()) errors.lastName = "Los apellidos son obligatorios.";
   if (!student.initials?.trim()) errors.initials = "Las iniciales son obligatorias.";
   if (!student.studentSignature) errors.studentSignature = "Falta la firma del alumno.";
+  if (student.isMinor) {
+    if (!student.guardianName?.trim()) errors.guardianName = "Falta el nombre del padre, madre o tutor.";
+    if (!student.guardianSignature) errors.guardianSignature = "Falta la firma del padre, madre o tutor.";
+  }
   return { valid: Object.keys(errors).length === 0, errors };
+}
+
+// Exclusión cruzada entre los desplegables de aventura electiva de AOWD
+// (2026-09-04, pedido explícito: una vez elegida una aventura en un
+// desplegable, deja de estar disponible en los otros — la misma aventura
+// no puede certificarse dos veces en un mismo Training Record). Lógica
+// pura, sin depender de la lista real de Supabase, para poder probarla
+// sin red — usada por TrainingRecordsTab.jsx al construir las opciones de
+// cada Select.
+export function availableAdventureOptions(adventures, specialtyDives, currentIndex) {
+  const chosenElsewhere = new Set(
+    (specialtyDives || [])
+      .filter((_, i) => i !== currentIndex)
+      .map((dive) => dive?.adventureId)
+      .filter(Boolean)
+  );
+  return (adventures || []).filter((a) => !chosenElsewhere.has(a.id));
 }
 
 function rowValues(studentInitials, dateIso, instructor) {

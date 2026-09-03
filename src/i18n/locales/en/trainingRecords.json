@@ -8,12 +8,9 @@
     "mensaje": "Before generating, complete your instructor details (name, initials, SSI Pro number and signature) in your profile.",
     "boton": "Go to my profile"
   },
-  "instructorSummary": {
-    "datos": "Initials {{initials}} · SSI Pro {{number}}",
-    "firmaAlt": "Instructor signature"
-  },
   "roster": {
     "titulo": "Students",
+    "hint": "Each student only adds their name, initials and signature — everything else is already set up above.",
     "vacio": "You haven't added any student yet.",
     "anadirPrimerAlumno": "Add your first student",
     "anadirAlumno": "Add student",
@@ -37,10 +34,11 @@
   "studentForm": {
     "nuevoAlumno": "New student",
     "editarAlumno": "Edit student",
+    "hint": "Just what changes from one student to the next — the course and its dates were already set once for the whole list.",
     "nombre": "First name",
     "apellidos": "Last name",
+    "menorDeEdad": "Minor",
     "tutor": "Parent/guardian's full name",
-    "tutorHint": "Optional — only if it applies to this student.",
     "iniciales": "Initials",
     "inicialesHint": "Calculated automatically — you can correct them if needed.",
     "plantilla": "Course to certify",
@@ -61,8 +59,11 @@
     "cerrar": "Close",
     "fechaDeFila": "Date: {{label}}",
     "elegirFechaCorta": "Date",
+    "configCompartidaHint": "This is filled in ONCE for the whole class. Each student only adds their name, initials and signature, further down in \"Students\".",
     "progreso": "Course progress",
-    "inmersionesEspecialidad": "Specialty dives",
+    "progresoHint": "Check off what's already done — grey rows are required to certify the course.",
+    "obligatorio": "Required",
+    "aventuras": "Adventures",
     "elegirAventura": "Choose an adventure",
     "versionExamen": "Exam version",
     "examenImpreso": "Printed",
