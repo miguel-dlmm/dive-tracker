@@ -186,7 +186,25 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
 
   return (
     <div className="space-y-4">
-      {/* 1. Pendiente de cobrar — información financiera principal, la más
+      {/* 1. KPIs — Fase 3, Release V1 ("algún KPI interesante en formato
+          animado y chulo"). Movido a primera posición (job nocturno,
+          Bloque 9, pedido explícito del usuario) — antes cerraba la
+          pantalla; tres ángulos no financieros de "cómo me está yendo"
+          (financiero lo cubren las dos tarjetas de más abajo). Conteo
+          ascendente + entrada escalonada (KpiTile, arriba) en vez de
+          aparecer estáticas de golpe. */}
+      <div>
+        <h2 className="mb-2 px-0.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          {t("kpis.sectionTitle")}
+        </h2>
+        <div className="grid grid-cols-3 gap-2">
+          <KpiTile icon={GraduationCap} color={TEAL} value={peopleTrainedThisMonth} label={t("kpis.studentsThisMonth")} index={0} reduced={reducedMotion} />
+          <KpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
+          <KpiTile icon={Handshake} color={GREEN} value={referredThisMonth} label={t("kpis.referredThisMonth")} index={2} reduced={reducedMotion} />
+        </div>
+      </div>
+
+      {/* 2. Pendiente de cobrar — información financiera principal, la más
           visible de la pantalla. Integra también el acceso rápido de
           creación (botón "+" a la derecha, onQuickAdd): antes era una fila
           aparte debajo de esta tarjeta, con el mismo ancho y casi el mismo
@@ -208,7 +226,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         onQuickAdd={() => onQuickCreate("ganado")}
       />
 
-      {/* 2. Calendario del mes — revisión de jerarquía 2026-08-29 (ver
+      {/* 3. Calendario del mes — revisión de jerarquía 2026-08-29 (ver
           docs/ADR/0004, addendum): antes iba en tercer y último lugar,
           después de "Generado este mes", cuando en la práctica un día
           normal no acumula demasiados movimientos distintos (el propio
@@ -251,7 +269,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         />
       </div>
 
-      {/* 3. Generado este mes — información secundaria de cierre, no la
+      {/* 4. Generado este mes — información secundaria de cierre, no la
           protagonista: una cifra que solo se consulta, complementaria al
           propio calendario de arriba (que ya muestra qué días tuvieron
           actividad). "Generado" y no "Ganado" porque cuenta las 3 fuentes
@@ -309,25 +327,6 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           </div>
         )}
       </button>
-
-      {/* 4. KPIs — Fase 3, Release V1 ("algún KPI interesante en formato
-          animado y chulo"). Cierre de la pantalla, no protagonista: tres
-          ángulos no financieros de "cómo me está yendo" (financiero ya lo
-          cubren las dos tarjetas de arriba), pensados para sensación de
-          trayectoria/logro más que para consultarse a diario — por eso van
-          al final, no compitiendo con Pendiente/Calendario por la primera
-          mirada. Conteo ascendente + entrada escalonada (KpiTile, arriba)
-          en vez de aparecer estáticas de golpe. */}
-      <div>
-        <h2 className="mb-2 px-0.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
-          {t("kpis.sectionTitle")}
-        </h2>
-        <div className="grid grid-cols-3 gap-2">
-          <KpiTile icon={GraduationCap} color={TEAL} value={peopleTrainedThisMonth} label={t("kpis.studentsThisMonth")} index={0} reduced={reducedMotion} />
-          <KpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
-          <KpiTile icon={Handshake} color={GREEN} value={referredThisMonth} label={t("kpis.referredThisMonth")} index={2} reduced={reducedMotion} />
-        </div>
-      </div>
     </div>
   );
 }
