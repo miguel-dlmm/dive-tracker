@@ -1,13 +1,14 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, RotateCcw, SlidersHorizontal, PartyPopper } from "lucide-react";
+import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2 } from "lucide-react";
+import { motion } from "motion/react";
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
 import {
   Money, Field, Select, MultiSelect, DateRangePicker, DeleteButton, ConfirmDialog, colorFor,
   isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab,
 } from "./shared";
 import { buildActivityEntries, buildIncomeEntries } from "./rateCalc";
-import PendingCollectionCard from "./PendingCollectionCard";
+import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import MovementSheet from "./MovementSheet";
 
 // "Cobrados" se limita a los últimos 10 — mismo criterio que Pagos, ver
@@ -288,6 +289,43 @@ function emptyMessage(statusFilter, hasActiveFilters, t) {
   return hasActiveFilters ? t("emptyMessage.paidWithFilters") : t("emptyMessage.paidNoFilters");
 }
 
+// Pastilla superior sustituida por 3 KPIs animados (Bloque 11, job
+// nocturno 2026-09-03, pedido explícito: "solo cantidades, no nº de
+// movimientos"). Mismo lenguaje visual/de motion que KpiTile en
+// HomeTab.jsx (fade+slide-up escalonado, EASE.enter/DURATION.md), pero
+// animando un IMPORTE en vez de un entero — useCountUp trabaja en
+// céntimos internamente (Math.round en cada frame) para que el último
+// fotograma coincida exacto con el importe real, no un entero redondeado
+// que perdería los decimales de una cifra de dinero. Con más de una
+// moneda a la vez (caso raro — un instructor casi siempre cobra en una
+// sola), se renderiza sin animar, igual que ya hace "Generado este mes"
+// en Home para el mismo caso: la app ya acepta esa degradación en vez de
+// intentar animar N monedas en paralelo con un solo hook.
+function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows }) {
+  const entries = Object.entries(totals || {});
+  const single = entries.length === 1 ? entries[0] : null;
+  const animatedCents = useCountUp(single ? Math.round(single[1] * 100) : 0, { reduced });
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
+      className="flex flex-col items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 py-4 text-center"
+    >
+      <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+        <Icon size={17} style={{ color }} aria-hidden="true" />
+      </span>
+      <span className="text-base font-bold tabular-nums" style={{ color: NAVY }}>
+        {entries.length === 0 ? "—" : single ? (
+          <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
+        ) : (
+          entries.map(([code, amt], i) => <span key={code}>{i > 0 && " + "}<Money amount={amt} code={code} currencyRows={currencyRows} /></span>)
+        )}
+      </span>
+      <span className="text-[10.5px] font-medium leading-tight text-gray-500">{label}</span>
+    </motion.div>
+  );
+}
+
 // schools / activities / paymentTypes / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates / commissionRates / worklog / comisiones / colleaguePayments: { rows: [...], insertRow, updateRow, deleteRow, bulkUpdateWhere }
 // accentColor: color de sección (nav_sections), para el FAB y el botón "Guardar" de la hoja (ver MovementSheet)
@@ -299,10 +337,11 @@ function emptyMessage(statusFilter, hasActiveFilters, t) {
 export default function MiTrabajoTab({
   schools, activities, paymentTypes, paymentStatuses, currencies,
   rates, commissionRates, worklog, comisiones, colleaguePayments,
-  accentColor = TEAL, userId = null, onOpenPayments,
+  accentColor = TEAL, userId = null,
 }) {
   const { t } = useTranslation("trabajo");
   const toast = useToast();
+  const reducedMotion = usePrefersReducedMotion();
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
 
   const activityColor = (name) => colorFor(activities.rows, name, "#374151");
@@ -355,7 +394,31 @@ export default function MiTrabajoTab({
     incomeEntries.filter((e) => isPendingStatus(e.status, paymentStatuses.rows)).forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
     return map;
   }, [incomeEntries, paymentStatuses.rows]);
-  const pendingIncomeCount = incomeEntries.filter((e) => isPendingStatus(e.status, paymentStatuses.rows)).length;
+
+  // KPIs de cabecera (Bloque 11, job nocturno 2026-09-03, sustituyen a la
+  // pastilla "Pendiente de cobrar" que antes vivía aquí sola) — "YYYY-MM"
+  // como string, nunca new Date(e.date).getMonth(): mismo bug de zona
+  // horaria ya corregido en HomeTab.jsx/SummaryTab.jsx (una fecha sin
+  // hora se parsea como medianoche UTC; en cualquier huso negativo cae en
+  // el día/mes anterior en local). "Generado" cuenta pendiente + cobrado
+  // del mes (ya lo generaste, te lo hayan pagado o no) — mismo criterio
+  // que "Generado este mes" en Home; "Cobrado" es su contraparte: solo lo
+  // que YA has cobrado este mes, el tercer ángulo (dinero real en mano,
+  // no solo generado) que completa el cuadro sin repetir los KPIs no
+  // financieros que ya tiene Home (alumnos/cursos/captados).
+  const currentMonthKey = todayStr().slice(0, 7);
+  const monthGeneratedTotals = useMemo(() => {
+    const map = {};
+    incomeEntries.filter((e) => e.date.slice(0, 7) === currentMonthKey).forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
+    return map;
+  }, [incomeEntries, currentMonthKey]);
+  const monthCollectedTotals = useMemo(() => {
+    const map = {};
+    incomeEntries
+      .filter((e) => e.date.slice(0, 7) === currentMonthKey && !isPendingStatus(e.status, paymentStatuses.rows))
+      .forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
+    return map;
+  }, [incomeEntries, currentMonthKey, paymentStatuses.rows]);
 
   const tableFor = (source) => (source === "ganado" ? worklog : source === "comision" ? comisiones : colleaguePayments);
   // Sin esto, la pantalla mostraba "Estás al día — nada pendiente" durante
@@ -553,7 +616,11 @@ export default function MiTrabajoTab({
 
   return (
     <div className="relative space-y-4 pb-24">
-      <PendingCollectionCard totals={pendingTotals} count={pendingIncomeCount} currencyRows={currencies.rows} color={SUN} onPress={onOpenPayments} />
+      <div className="grid grid-cols-3 gap-2">
+        <MoneyKpiTile icon={TrendingUp} color={TEAL} totals={monthGeneratedTotals} label={t("kpis.generatedThisMonth")} index={0} reduced={reducedMotion} currencyRows={currencies.rows} />
+        <MoneyKpiTile icon={Wallet} color={SUN} totals={pendingTotals} label={t("kpis.pendingToCollect")} index={1} reduced={reducedMotion} currencyRows={currencies.rows} />
+        <MoneyKpiTile icon={CheckCircle2} color={GREEN} totals={monthCollectedTotals} label={t("kpis.collectedThisMonth")} index={2} reduced={reducedMotion} currencyRows={currencies.rows} />
+      </div>
 
       <div className="flex items-center gap-5 border-b border-gray-200">
         {[["pendientes", `${t("tabs.pending")}${pendingAll.length > 0 ? ` · ${pendingAll.length}` : ""}`], ["cobrados", t("tabs.paid")]].map(([key, label]) => (
