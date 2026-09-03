@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
+import { configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -97,6 +98,19 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: './vitest.setup.js',
       globals: true,
+      // Sin esto, Vitest recorre también .claude/worktrees/** (checkouts
+      // completos de git worktree para agentes en paralelo, cada uno con
+      // su propio node_modules) y ejecuta sus tests A LA VEZ que los del
+      // propio checkout — encontrado en vivo la noche del despliegue de
+      // v1.0.0 (2026-09-04): con 8 agentes trabajando en paralelo, `npm
+      // run test` desde el checkout principal recogía y ejecutaba también
+      // los test files de dentro de cada worktree, multiplicando la carga
+      // real varias veces y provocando timeouts en tests sin ninguna
+      // relación con el cambio real (contención de CPU, no un bug). El
+      // exclude por defecto de Vitest ya cubre node_modules/dist/.git,
+      // pero no .claude — se añade explícitamente sobre esa base, no en
+      // vez de ella (configDefaults.exclude, no una lista inventada).
+      exclude: [...configDefaults.exclude, '**/.claude/**'],
     },
   }
 })

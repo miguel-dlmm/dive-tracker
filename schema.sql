@@ -306,12 +306,24 @@ create table if not exists rates (
   -- interfaz como "Alta: <fecha>" (RatesTab.jsx), mismo criterio que
   -- profiles.created_at en Usuarios. Ver docs/ADR/0019.
   created_at timestamptz not null default now(),
+  -- Baja lógica (2026-09-04, ver scripts/migrations/0015): false = tarifa
+  -- desactivada, oculta por defecto en RatesTab.jsx pero conservada para
+  -- que los movimientos ya guardados que la referenciaron sigan
+  -- calculando su importe (rateCalc.js). Fuera del índice único de abajo.
+  is_active boolean not null default true,
   user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table rates enable row level security;
 drop policy if exists "allow all" on rates;
 create policy "own rows" on rates for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Como mucho una tarifa ACTIVA por escuela+curso y usuario — cualquier
+-- número de tarifas desactivadas (histórico de precios) puede coexistir.
+-- Índice parcial, no un unique(...) de tabla, precisamente para que
+-- desactivar libere el hueco sin tocar las filas desactivadas.
+create unique index if not exists rates_active_school_activity_unique
+  on public.rates (user_id, school, activity) where is_active;
 
 -- Lo que cobras por traer un cliente que hace la actividad con otra persona.
 create table if not exists commission_rates (
@@ -322,12 +334,25 @@ create table if not exists commission_rates (
   rate numeric not null,
   currency text not null default 'EUR',
   created_at timestamptz not null default now(), -- ver nota en rates.created_at
+  is_active boolean not null default true, -- ver nota en rates.is_active
   user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table commission_rates enable row level security;
 drop policy if exists "allow all" on commission_rates;
 create policy "own rows" on commission_rates for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create unique index if not exists commission_rates_active_school_activity_unique
+  on public.commission_rates (user_id, school, activity) where is_active;
+
+-- Migración aditiva (2026-09-04) para instalaciones existentes —
+-- scripts/migrations/0015-tarifas-vigencia.sql tiene el mismo DDL, más la
+-- limpieza previa de duplicados reales que este bloque no repite:
+--
+--   alter table public.rates add column if not exists is_active boolean not null default true;
+--   alter table public.commission_rates add column if not exists is_active boolean not null default true;
+--   create unique index if not exists rates_active_school_activity_unique on public.rates (user_id, school, activity) where is_active;
+--   create unique index if not exists commission_rates_active_school_activity_unique on public.commission_rates (user_id, school, activity) where is_active;
 
 -- ---------- Movimientos ----------
 
