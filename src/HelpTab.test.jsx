@@ -141,3 +141,45 @@ describe("HelpTab — 'Ver qué hay de nuevo'", () => {
     expect(onShowWhatsNew).toHaveBeenCalledTimes(1);
   });
 });
+
+// Rediseño 2026-09-04 ("Ayuda fácil de entender"): las capturas de
+// pantalla reales (dataset de prueba "ihasia", cuenta dev-bypass) se
+// retiraron por completo — ver comentario en content.js. Guarda de
+// regresión: ningún artículo debe volver a renderizar una imagen,
+// aunque alguien reintroduzca `stepImages` sin darse cuenta del motivo
+// por el que se quitó.
+describe("HelpTab — sin capturas de pantalla", () => {
+  it("ningún artículo (de los que antes llevaban imagen) renderiza un <img>", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<HelpTab navSections={navSections} />);
+
+    const categoriesThatHadImages = [
+      /Primeros pasos/,
+      /Configurar tu aplicación/,
+      /Registrar un movimiento/,
+      /Cobrar movimientos pendientes/,
+      /Consultar cuánto has generado/,
+    ];
+    for (const name of categoriesThatHadImages) {
+      await user.click(screen.getByRole("button", { name }));
+      expect(container.querySelector("img")).not.toBeInTheDocument();
+    }
+  });
+});
+
+// Los pasos y el bloque "Qué puedes hacer" heredan el color de la
+// sección (nav_sections), igual que ya hacía el icono de cabecera de la
+// categoría — parte del rediseño 2026-09-04 para que cada categoría se
+// lea como un bloque de color coherente, no solo un acento suelto.
+describe("HelpTab — los pasos heredan el color de la sección", () => {
+  it("el numerito del primer paso usa el color de nav_sections para esa categoría", async () => {
+    const user = userEvent.setup();
+    const coloredSections = { rows: [{ key: "trabajo", color: "#123456" }] };
+    render(<HelpTab navSections={coloredSections} />);
+
+    await user.click(screen.getByRole("button", { name: /^Mi trabajo/ }));
+
+    const stepOne = screen.getAllByText("1").find((el) => el.tagName === "SPAN");
+    expect(stepOne).toHaveStyle({ color: "#123456" });
+  });
+});
