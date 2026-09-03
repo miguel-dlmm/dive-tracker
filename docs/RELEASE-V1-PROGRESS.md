@@ -32,7 +32,7 @@
 | 6 | Slides y avisos | 🟡 En curso — avisos generalizados, WhatsNew sin tocar (ver detalle) |
 | 7 | Usabilidad, carga y escalabilidad | ✅ Hecho (2026-09-02, análisis documental, sin cambios de código) |
 | 8 | Revisión visual y libro de estilo | ✅ Hecho (2026-09-02, `docs/ESTILO.md` actualizado, sin pulido pixel-a-pixel) |
-| 9 | Cierre de Release V1 y despliegue a PRO | 🟡 En curso (2026-09-03/04) — auditoría de lint hecha y fusionada a `develop`; plan de despliegue a PRO diseñado y aprobado en sus decisiones clave, **nada ejecutado todavía** — ver detalle |
+| 9 | Cierre de Release V1 y despliegue a PRO | 🟡 En curso (2026-09-03/04) — **v1.0.0 desplegado en producción**, 13 migraciones aplicadas y verificadas, `main` en `a640de4`; **sin taguear** (bug preexistente de registro externo encontrado en la verificación, migración `0014` lista pero pendiente de aprobación, y verificación de datos reales pendiente del usuario) — ver detalle |
 
 > Ver sección "Análisis de riesgos y decisiones previas al trabajo
 > nocturno" más abajo para el detalle completo de cada fase (riesgo,
@@ -2061,31 +2061,113 @@ retoman una vez v1.0.0 esté desplegada y verificada, no antes:
   cerrar la hoja, o la pantalla secundaria entera?), trabajo de tooling
   aparte del cambio de producto de esta sesión.
 
+### ✅ Despliegue a PRO ejecutado (2026-09-04, madrugada) — desplegado, sin taguear
+
+Catálogo de producción consultado (vistas/funciones/triggers/RLS/índices
+sobre `password_set`/`default_currency`): 0 resultados, verificado con un
+control positivo (`is_superadmin`, 3 coincidencias reales) para confirmar
+que la consulta funciona. Con eso, el usuario aprobó seguir sin esperar
+("sigue con el plan... sin esperarme").
+
+**Bloque A** — commits `1b10f31` (CHANGELOG + version bump + oculta
+Training Records) y `dd44a7c` (`apply-migration-prod.mjs`) en `develop`,
+push hecho.
+
+**Bloque B** — ejecutado en orden: `pg_dump`/`pg_restore` instalados
+(faltaban, Homebrew `postgresql@17` — la 16 no sirve, producción corre
+17.6). Backup (`backups/ocean-flow-2026-09-03.dump`, 297 KB) verificado
+con `pg_restore --list` (495 entradas TOC, exit 0, 5 tablas clave
+presentes). Las 11 migraciones aditivas aplicadas y verificadas por
+catálogo, una a una. `0002` y `0005` aplicadas al final, aisladas,
+verificadas (`password_set`/`default_currency` ya no existen;
+`avatar_icon`/`avatar_color` sí). Las 13 migraciones de esta iniciativa
+están en producción.
+
+**Bloque C** — merge `develop` → `main` sin conflictos (`a640de4`), tests
+695/695 y build en verde sobre `main` fusionada. `EMAIL_FROM` añadido a
+Vercel `oceanflow`/Production con la CLI (acceso confirmado). Push a
+`main` → Vercel desplegó solo, `dive-tracker-exgg.vercel.app` responde
+200, sin badge TEST, login renderiza.
+
+**Bug real encontrado en la verificación (no de esta noche, preexistente)
+y corregido parcialmente**: la RPC `public.external_registration_enabled()`
+no existía en producción (error de consola real, PGRST202) —
+"registro externo" (ADR-0023) es de un ciclo de release anterior a la
+numeración de migraciones (0001+), se aplicó a mano en TEST en su
+momento pero nunca llegó a producción; `schema.sql` ya lo documentaba
+como pendiente de ejecutar a mano. Comprobado de forma sistemática
+(cada función/tabla de `schema.sql` contra el catálogo real de
+producción): es el ÚNICO objeto que falta, nada más. Migración
+`0014-registro-externo-produccion.sql` escrita y comiteada en `develop`
+(`ab85768`) con el DDL exacto, pero **NO aplicada** — el clasificador de
+permisos de Claude Code la bloqueó por no ser parte de las migraciones
+ya aprobadas explícitamente esta noche (0001-0013). No se intentó
+saltar ese bloqueo.
+
+**Por eso, siguiendo tu propia instrucción ("si algo quedó en duda, deja
+el despliegue hecho pero sin taguear y dímelo"): el despliegue está
+hecho y en producción, pero NO se ha taggeado `v1.0.0` ni ejecutado
+`gh release create`.**
+
 ### Punto exacto donde se quedó
 
-Bloque A completo (1-5) salvo el propio commit final de A.5 (CHANGELOG +
-versión bump), que se hace junto con el resto de A cuando el usuario dé
-el visto bueno para commitear. **Bloque B bloqueado a propósito**,
-instrucción explícita del usuario: no ejecutar nada de B hasta tener el
-resultado de la consulta de catálogo (paso B.4) sobre `password_set`/
-`default_currency` en producción. Esperando a que el usuario añada
-`SUPABASE_DB_URL` (producción) a `.env.local` — en cuanto avise, ejecutar
-`check-column-deps.sql` (scratchpad de esta sesión) y **parar a enseñar
-el resultado antes de tocar 0002/0005**, tal como se pidió. Bloques C, D
-y E no ejecutados todavía. `scripts/apply-migration-prod.mjs` ya
-construido y con `node --check` en verde, sin usar todavía contra
-producción.
+Pendiente, todo para revisión humana (avisado por email en cada hito,
+4 correos vía `scripts/_notify.mjs`):
+1. Revisar y aprobar `scripts/migrations/0014-registro-externo-produccion.sql`
+   (aditiva, ya escrita, ya committeada) — aplicar con
+   `node --env-file=.env.local scripts/apply-migration-prod.mjs scripts/migrations/0014-registro-externo-produccion.sql --confirm-production`.
+2. Verificar tus datos reales (movimientos, comisiones, perfil) tras las
+   13 migraciones — pedido explícitamente que lo hicieras tú por la
+   mañana, no verificado por mí más allá de la comprobación técnica de
+   catálogo.
+3. Con 1 y 2 resueltos: `git tag -a v1.0.0 -m "v1.0.0"` sobre `a640de4`
+   (el commit ya en `main`), `git push origin main --tags`,
+   `gh release create v1.0.0`.
+4. `docs/ADR/0006-...md` ya actualizado (commit `769c224`, `develop`) con
+   la nueva regla de rama `release/*` obligatoria para fusionar con
+   `main` a partir de ahora — la fusión de esta noche fue la última bajo
+   el proceso antiguo (`ADR-0010` sin rama de release).
+
+### Trabajo overnight adicional — 8 agentes en paralelo, cada uno en su rama
+
+Tras cerrar el despliegue, se lanzaron 8 agentes en paralelo (mismo
+patrón que Fase 2, "reparto en 9 agentes"), cada uno en su propio
+worktree/rama desde `develop`, con instrucción de testear+buildear antes
+de fusionar y avisar por email al terminar: auditoría ESLint completa
+(`fix/eslint-sweep-2`), ajustes pequeños — avatares, slide de Mi perfil
+en WhatsNew, "Último acceso" solo fecha, fecha de baja solo si
+desactivado (`fix/polish-pequenos`), tooltip en KPI "Pendiente de
+cobrar" (`feat/tooltip-pendiente-cobrar`), Tarifas — unicidad
+escuela-curso + baja lógica + ocultar desactivadas (`feat/tarifas-vigencia`,
+migración solo en TEST), baja lógica de movimientos + fecha de
+alta/modificación + UNDO, con evaluación de auditoría en rama aparte sin
+fusionar (`feat/baja-logica-movimientos`, migración solo en TEST), Ayuda
+rediseñada (`feat/ayuda-dinamica`), restyling global — **rama pusheada,
+deliberadamente SIN fusionar a `develop`**, para revisión visual antes
+de integrarla (`feature/restyling-v1`), y el bloque grande de
+correcciones de Training Records — general + OW + AOW + Deep Diving +
+EAN (`fix/training-records-usabilidad`, con cuidado explícito de no
+reexponer el punto de entrada oculto). El "mini carnet" pedido ya
+estaba construido y desplegado (`ProfileTab.jsx`, `InstructorCard`) —
+no se relanzó un agente para eso. Resultado de cada uno pendiente de
+sus propios emails de finalización — actualizar esta sección cuando
+lleguen.
 
 ### Verificación
 
 Auditoría de lint (sesión anterior): `npm run test -- --run` (695/695) y
 `npm run build` en verde, tanto en `Release-V1` como en `develop` tras
-el fast-forward. Esta sesión (bloque A): `npm run lint` (0 errores),
-`npm run test -- --run` (695/695), `npm run build` en verde, tras cada
-uno de los cambios de A.1 y A.3. Verificación manual en navegador
-(Chromium/Playwright, iPhone 14 Pro Max) de A.1 y A.4 — ver detalle en
-cada punto arriba. Bloques B, C, D, E sin ejecutar — sin verificación
-posible todavía.
+el fast-forward. Bloque A de esta sesión: `npm run lint` (0 errores),
+`npm run test -- --run` (695/695), `npm run build` en verde. Bloque C:
+`npm run test -- --run` (695/695) y `npm run build` en verde sobre
+`main` fusionada, verificación real contra
+`https://dive-tracker-exgg.vercel.app` (200, sin badge TEST, sin
+errores de consola salvo el bug de `external_registration_enabled` ya
+descrito). Backup verificado con `pg_restore --list`. Las 13 migraciones
+verificadas una a una por catálogo tras aplicarse. El trabajo de los 8
+agentes en paralelo se verifica por separado, en cada una de sus propias
+ramas (cada uno tiene instrucción de no fusionar sin tests/build en
+verde).
 
 ---
 
