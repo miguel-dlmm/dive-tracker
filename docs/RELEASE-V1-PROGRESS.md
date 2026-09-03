@@ -2153,6 +2153,59 @@ no se relanzó un agente para eso. Resultado de cada uno pendiente de
 sus propios emails de finalización — actualizar esta sección cuando
 lleguen.
 
+**✅ `feat/ayuda-dinamica` (Ayuda rediseñada) — fusionada a `develop`.**
+Petición explícita del usuario: "veo mucho texto... facilidad de uso y
+facilidad de entendimiento, imágenes, paso a paso de las cosas...
+intenta huir de textos largos, complicados", con autonomía total de
+diseño ("no sé, imagina, inventa, innova, diseña"). La estructura
+"Quiero.../Funcionalidades" + acordeón de `ExpandableCard` (ADR-0011)
+ya era sólida — no se rehizo la IA. Cambios reales, en 4 commits:
+
+1. **Se retiran las 5 capturas de pantalla reales** (`stepImages`,
+   `public/help/*.png`, `scripts/capture-help-screenshots.mjs`): aunque
+   recortaban la cabecera para ocultar la cuenta de desarrollo, el
+   cuerpo seguía mostrando datos reales del dataset de prueba "ihasia"
+   (importes, nombres de escuela/curso) — mismo motivo por el que
+   WhatsNew.jsx nunca ha usado capturas. Los PNG además quedaban
+   servidos como assets públicos aunque nada los referenciara.
+2. **Los pasos numerados y el bloque "Qué puedes hacer" pasan a usar el
+   color de la sección** (`accentColor`, `nav_sections`) en vez de gris
+   neutro — cada categoría se lee como un bloque de color coherente,
+   reutilizando la convención 2 de `CLAUDE.md` en vez de una paleta
+   nueva. "Qué puedes hacer" y "Cuándo usarlo" se funden en una sola
+   tarjeta con dos filas icono+texto (antes dos tarjetas gemelas
+   apiladas) — menos "muro" visual con la misma información.
+3. **Auditoría de contenido admin — incumplimiento real encontrado y
+   corregido**: "configurar-app" mencionaba de pasada el bloque
+   "Administración" (tipos/estados de pago, monedas, colores, usuarios)
+   solo para decir que existía si el usuario era admin — sigue siendo
+   documentar admin, así sea de refilón, contra la regla 1 de "Reglas
+   permanentes — Release V1". Reescrito para hablar solo de
+   Escuelas/Cursos/Tarifas. `src/help/content.test.js` (nuevo) escanea
+   ahora todo el texto de Ayuda, en los dos idiomas, en busca de
+   vocabulario de admin/superadmin — guarda de regresión permanente,
+   no solo un fix puntual.
+4. **Frases más cortas** donde el texto original comprimía demasiado en
+   una sola oración (el resumen de "Primeros pasos", el consejo del
+   orden "1) 2) 3)" separado en tres consejos independientes, dos
+   coletillas redundantes en "Consultar cuánto has generado" y "Mi
+   perfil, de un vistazo").
+
+No se tocó la IA (se evaluó explícitamente reorganizar y se descartó —
+"Quiero.../Funcionalidades" sigue siendo la estructura correcta ahora
+que la app tiene multidioma/invitaciones/carnet, no había una razón
+real para cambiarla). Sin contenido nuevo de Training Records (sigue
+oculto en este release) ni de admin/superadmin en ningún artículo,
+nuevo o existente. `npm run test -- --run` (en verde, incluye 4
+pruebas nuevas de Ayuda) y `npm run build` en verde; verificación visual real con
+Playwright + Chromium (emulación iPhone 14 Pro Max, dev-bypass) sobre
+`npm run dev` — sin errores de consola, capturas revisadas a mano
+(`Ayuda no cubierta por scripts/mobile-check.mjs`, que solo recorre Mi
+trabajo — verificación manual equivalente, mismo criterio que la
+"Limitaciones" de la regla 8 de `CLAUDE.md`). Sin ADR nuevo: es un
+refinamiento de contenido/visual sobre una decisión de IA ya
+documentada en ADR-0011, no una decisión arquitectónica nueva.
+
 ### Verificación
 
 Auditoría de lint (sesión anterior): `npm run test -- --run` (695/695) y
