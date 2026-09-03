@@ -112,7 +112,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 4 | Ajustes rápidos (hint flotante, +/- negativos, último acceso, slide de eliminar) | ✅ Hecho | `fix/bloque4-ajustes-rapidos` (desde `develop`) | `508b920` |
 | 5 | Training Records — config compartida por listado | ✅ Hecho | `feature/training-records` (desde `Release-V1`) | `3031a96` + `d131ed3` (docs) |
 | 6 | Revisión de todos los textos de la app | ✅ Hecho | `fix/bloque6-revision-textos` (desde `develop`) | `aca9d89` |
-| 7 | Revisión de notificaciones propias (toasts) | ⬜ No empezado | — | — |
+| 7 | Revisión de notificaciones propias (toasts) | ✅ Hecho | `fix/bloque7-toasts` (desde `develop`) | `ed2c5b2` |
 | 8 | Rediseño del slide de novedades (WhatsNew) | ⬜ No empezado | — | — |
 | 9 | KPIs de la home a primera posición | ✅ Hecho | `feat/bloque9-kpis-primera-posicion` (desde `Release-V1`) | `ccc622e` |
 | 10 | Rediseño de Home + enlace al generador de Training Records | ⬜ No empezado | — | — |
@@ -195,10 +195,19 @@ fusione `fix/paymentstab-test-fecha-relativa` (o el propio Bloque 6) a
 `develop`. Próximos bloques de mantenimiento: cherry-pick del mismo
 commit si hace falta, documentado aquí para no repetir el diagnóstico.
 
-**Bloque 7 — Notificaciones de la propia app**
-Revisar las notificaciones propias (crear registro, eliminar,
-confirmaciones…): revisión de diseño y usabilidad; si se te ocurre algo
-mejor, implementarlo sin perder funcionalidad.
+**Bloque 7 — Notificaciones de la propia app** ✅ Hecho — ver tabla
+arriba. Añadido: animación de entrada/salida (antes aparecía/
+desaparecía sin transición, único elemento de feedback fuera del
+vocabulario de motion ya usado en hojas/filas/paneles), botón de
+cierre manual, y fix de accesibilidad (aria-atomic por toast en vez de
+en el contenedor entero). Test nuevo (`Toast.test.jsx`) para un
+componente que no tenía cobertura propia. Nota para la próxima
+sesión: durante la verificación manual en Chrome, varias lecturas de
+`getComputedStyle` vía JS devolvieron opacity:0 de forma consistente,
+pareciendo un bug — resultó ser el propio timing de la comprobación
+(antes o después de la transición real de ~0.2s), no un fallo del
+componente. Diagnosticado con una animación de 3s temporal antes de
+concluir que estaba bien; revertido antes de comitear.
 
 **Bloque 8 — Slide de cambios de la release**
 Rediseñar el slide de "qué hay de nuevo" (se ve una vez, tras una
