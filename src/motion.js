@@ -63,6 +63,21 @@ export function sheetVariants(reduced = false) {
   };
 }
 
+// Toast (shared.jsx, ToastProvider) — entra/sale con el mismo par
+// enter/exit que el resto de feedback de la app, en vez del pop-in/pop-out
+// instantáneo que tenía antes (revisión de notificaciones, Bloque 7 del
+// job nocturno 2026-09-03: la propia app anima hojas y filas, pero el
+// toast, que es feedback puro, se quedaba fuera de ese vocabulario).
+// Desplazamiento vertical pequeño porque el toast ya vive fijo arriba de
+// la pantalla — no necesita el desplazamiento lateral de listItemVariants.
+export function toastVariants(reduced = false) {
+  return {
+    initial: { opacity: 0, y: -12, scale: 0.95 },
+    animate: { opacity: 1, y: 0, scale: 1, transition: { duration: d(reduced, DURATION.sm), ease: EASE.enter } },
+    exit: { opacity: 0, y: -8, scale: 0.95, transition: { duration: d(reduced, DURATION.xs), ease: EASE.exit } },
+  };
+}
+
 // prefers-reduced-motion — cualquier componente que anime debe consultar
 // esto y, si es true, usar duraciones ~0 en vez de desactivar la
 // funcionalidad (el estado final debe seguir siendo el mismo).
