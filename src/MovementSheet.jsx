@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { Plus, Minus, X, Check, Loader2, StickyNote, GraduationCap, Handshake, Users } from "lucide-react";
 import { TEAL, SUN, CORAL, GREEN } from "./App";

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Waves, Loader2, Eye, EyeOff, Check } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
 import { inputCls, Field } from "./shared";

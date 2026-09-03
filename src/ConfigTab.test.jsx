@@ -1,4 +1,4 @@
-import { render, screen, within, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConfigTab from "./ConfigTab";
 
@@ -109,7 +109,7 @@ describe("ConfigTab — la sub-sección abierta sobrevive a una recarga", () => 
     supabase.rpc.mockResolvedValue({ data: [], error: null });
     supabase.auth.getSession.mockResolvedValue({ data: { session: { access_token: "tok" } } });
     supabase.from.mockReturnValue({ select: vi.fn().mockResolvedValue({ data: [], error: null }) });
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
 
     const adminProfile = { user_id: "u1", is_admin: true, is_superadmin: false };
     const { unmount } = render(<ConfigTab {...baseProps({ profile: adminProfile })} />);
@@ -266,7 +266,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("muestra 'Activo' en la fila para una cuenta sin banned_until y ya activada (activated_at presente)", async () => {
     const user = userEvent.setup();
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null } }) });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null } }) });
 
     await openUsuarios(user);
 
@@ -276,7 +276,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("muestra 'Pendiente' para una cuenta sin banned_until pero nunca activada (activated_at null)", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null } }) });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null } }) });
 
     await openUsuarios(user);
 
@@ -285,7 +285,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("desactivar (desde el switch de la hoja de detalle) pide confirmación y llama a /api/set-user-active con active:false", async () => {
     const user = userEvent.setup();
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
       .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", active: false }) }) // set-user-active
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: {} }) }); // list-user-status tras reload
@@ -301,7 +301,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
     await user.click(screen.getByRole("button", { name: "Desactivar", exact: true }));
 
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/set-user-active", expect.objectContaining({
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/set-user-active", expect.objectContaining({
       body: JSON.stringify({ target_user_id: "target-1", active: false }),
     })));
   });
@@ -309,7 +309,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("regenerar enlace (cuenta pendiente) pide confirmación, llama a /api/regenerate-activation-link y muestra el enlace devuelto", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
       .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", action_link: "https://app.example/activate?token_hash=abc" }) }) // regenerate-activation-link
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
@@ -322,7 +322,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await user.click(screen.getByRole("button", { name: "Regenerar enlace" }));
     await user.click(screen.getByRole("button", { name: "Generar enlace" }));
 
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/regenerate-activation-link", expect.objectContaining({
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/regenerate-activation-link", expect.objectContaining({
       body: JSON.stringify({ target_user_id: "target-1" }),
     })));
     expect(await screen.findByText(/https:\/\/app\.example\/activate/)).toBeInTheDocument();
@@ -330,7 +330,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("regenerar contraseña pide confirmación, llama a /api/regenerate-password y muestra el enlace devuelto", async () => {
     const user = userEvent.setup();
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
       .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", action_link: "https://app.example/activate?token_hash=xyz" }) }) // regenerate-password
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
@@ -343,7 +343,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await user.click(screen.getByRole("button", { name: "Regenerar contraseña" }));
     await user.click(screen.getByRole("button", { name: "Regenerar", exact: true }));
 
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/regenerate-password", expect.objectContaining({
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/regenerate-password", expect.objectContaining({
       body: JSON.stringify({ target_user_id: "target-1" }),
     })));
     expect(await screen.findByText(/https:\/\/app\.example\/activate/)).toBeInTheDocument();
@@ -351,7 +351,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("eliminar (desde la hoja de detalle) pide confirmación danger y llama a /api/delete-user", async () => {
     const user = userEvent.setup();
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) });
 
@@ -365,14 +365,14 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
     await user.click(screen.getByRole("button", { name: "Eliminar", exact: true }));
 
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledWith("/api/delete-user", expect.objectContaining({
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/delete-user", expect.objectContaining({
       body: JSON.stringify({ target_user_id: "target-1" }),
     })));
   });
 
   it("la hoja de detalle se cierra sola tras eliminar correctamente (la cuenta ya no existe)", async () => {
     const user = userEvent.setup();
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
       .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }); // delete-user
 
@@ -396,7 +396,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       ],
       error: null,
     });
-    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
 
     render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
     await user.click(screen.getByText("Usuarios"));
@@ -412,7 +412,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   // de listado solo debe haberse llamado una vez (la carga inicial).
   it("eliminar un usuario actualiza el listado en el sitio, sin volver a pedir admin_list_profiles()", async () => {
     const user = userEvent.setup();
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) });
 
@@ -434,7 +434,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   describe("arrastrar para eliminar (atajo adicional a la hoja de detalle)", () => {
     it("expone la acción de eliminar de la fila para un usuario normal", async () => {
       const user = userEvent.setup();
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
       await openUsuarios(user);
       // El botón revelado lleva aria-hidden mientras la fila no está
       // arrastrada (no debe aparecer en el árbol de accesibilidad hasta
@@ -447,7 +447,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     it("no expone la acción de eliminar sobre la propia cuenta del superadmin", async () => {
       const user = userEvent.setup();
       supabase.rpc.mockResolvedValue({ data: [SUPERADMIN_PROFILE_ROW], error: null });
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
 
       render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
       await user.click(screen.getByText("Usuarios"));
@@ -462,7 +462,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
         data: [{ ...TARGET_PROFILE_ROW, is_superadmin: true, nickname: "otro-admin" }],
         error: null,
       });
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
 
       render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
       await user.click(screen.getByText("Usuarios"));
@@ -492,7 +492,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
     it("un usuario normal activo no lleva icono de rol", async () => {
       const user = userEvent.setup();
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
       await openUsuarios(user);
       expect(screen.queryByLabelText("Administrador")).not.toBeInTheDocument();
       expect(screen.queryByLabelText("Superadmin")).not.toBeInTheDocument();
@@ -501,7 +501,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     it("un admin lleva el icono 'Administrador' junto al nickname", async () => {
       const user = userEvent.setup();
       supabase.rpc.mockResolvedValue({ data: [{ ...TARGET_PROFILE_ROW, is_admin: true }], error: null });
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
 
       render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
       await user.click(screen.getByText("Usuarios"));
@@ -513,7 +513,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     it("un superadmin lleva el icono 'Superadmin', no el de 'Administrador'", async () => {
       const user = userEvent.setup();
       supabase.rpc.mockResolvedValue({ data: [SUPERADMIN_PROFILE_ROW], error: null });
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
 
       render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
       await user.click(screen.getByText("Usuarios"));
