@@ -1,30 +1,31 @@
 {
   "whatsNew": {
     "close": "Close",
+    "eyebrow": "What's new in this version",
     "slideTablist": "Slide",
     "back": "Back",
     "next": "Next",
     "start": "Let's go",
     "slides": [
       {
-        "title": "My work, all in one place",
-        "body": "Courses, commissions and adjustments with colleagues, in a single list — no more jumping between three screens for the same thing."
+        "title": "Training Records in seconds",
+        "body": "Generate each student's signed SSI progress record in seconds — no paperwork."
       },
       {
-        "title": "Rates, with the same look as My work",
-        "body": "Type, date added and currency, all at a glance on every rate — no extra fields to fill in each time."
+        "title": "The app now speaks your language",
+        "body": "Switch between Spanish and English whenever you want, from your profile."
       },
       {
-        "title": "Summary, easier to explore",
-        "body": "Tap any period on the strip up top to jump to it, and any course to see where the money comes from."
+        "title": "What you check most, right up top",
+        "body": "On Home, what you've earned and what's pending get top billing — no need to go looking for them."
       },
       {
-        "title": "Swipe, not just tap",
-        "body": "Close sheets and go back in Settings and Help by swiping — just like any app you're already used to."
+        "title": "A simpler header",
+        "body": "\"Sign out\" now lives in My profile — fewer icons up top, more room for what you use every day."
       },
       {
-        "title": "More stable end to end",
-        "body": "Fixed several things under the hood: the bottom bar, end-of-month totals, and user management."
+        "title": "Revisit it whenever you want",
+        "body": "Find this again from Help → \"What's new\", any time you like."
       }
     ]
   },
