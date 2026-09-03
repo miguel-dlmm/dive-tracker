@@ -117,7 +117,7 @@ tabla de abajo y su texto completo en la sección de textos originales.
 | 9 | KPIs de la home a primera posición | ✅ Hecho | `feat/bloque9-kpis-primera-posicion` (desde `Release-V1`) | `ccc622e` |
 | 10 | Rediseño de Home + enlace al generador de Training Records | ✅ Hecho | `feat/bloque10-home-training-records` (desde `feature/training-records`, con el Bloque 9 cherry-picked encima) | `5ff378e` |
 | 11 | KPIs animados en Movimientos (Generado este mes / Pendiente de cobrar + 3º a decidir) | ✅ Hecho | `feat/bloque11-kpis-movimientos` (desde `feat/bloque10-home-training-records`) | `08079f8` |
-| 12 | Análisis de sesión/perfil (eficiencia, robustez) | ⬜ No empezado | — | — |
+| 12 | Análisis de sesión/perfil (eficiencia, robustez) | ✅ Hecho | `fix/bloque12-sesion-perfil` (desde `develop`) | `f1a7576` |
 | 13 | Análisis de build/push/despliegue | ⬜ No empezado | — | — |
 | 14 | Velocidad de la suite de test | ⬜ No empezado | — | — |
 | 15 | Mocks vs. BBDD real en los tests | ⬜ No empezado | — | — |
@@ -277,10 +277,20 @@ Arreglado forzando `prefers-reduced-motion` con un mock local de
 bloque anima OTRO importe de dinero con `useCountUp`, aplicar el mismo
 patrón desde el principio en su test.
 
-**Bloque 12 — Sesión y perfil**
-Qué eficiencias, mejoras y robustez se pueden añadir a la gestión de
-sesión y perfil (contempla optimización). Buscar referencias/patrones
-de mercado, innovar, reutilizar código.
+**Bloque 12 — Sesión y perfil** ✅ Hecho — ver tabla arriba. Implementado:
+`TOKEN_REFRESHED` ya no repite `resolveSessionState` entera (getUser +
+profile + consents, 3 peticiones de red) en cada refresco automático de
+token de GoTrue (~1h con la pestaña abierta) — solo actualiza el token.
+La detección de baneo no se debilita (un refresh token de cuenta
+baneada nunca llega a emitir ese evento). Análisis completo enviado por
+email, con un hallazgo SIN implementar (posible condición de carrera
+entre la carga inicial y `onAuthStateChange` al montar — patrón
+conocido, pero no confirmado en este SDK; se deja para que el usuario
+decida si blindarlo). **Nota para sesiones futuras: `ProfileTab.jsx` no
+existe en `develop`** — la pantalla "Mi perfil" solo vive en la rama
+`Release-V1`/`feature/training-records` (Fase 4). Este bloque se
+centró en `useSession.js` (compartido por ambas líneas); una revisión
+de la pantalla de perfil en sí necesitaría una rama basada ahí.
 
 **Bloque 13 — Build, push y despliegue**
 ¿Cuánto de grande es el proyecto? ¿Se puede optimizar el build/push/
