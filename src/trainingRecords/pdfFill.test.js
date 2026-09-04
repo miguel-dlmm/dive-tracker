@@ -265,3 +265,83 @@ describe("fillTrainingRecordPdf", () => {
     ).resolves.toBeInstanceOf(Uint8Array);
   });
 });
+
+// Segundo modo de direccionamiento de campo (Release V1, Fase 5 —
+// "plantillas restantes", 2026-09-04): BD/SC-LV/SC-NV/SC-PB/SC-RR/SC-SR no
+// tienen NINGÚN campo de formulario — un "field" ahí es
+// { rect: {x,y,width,height} } en vez de un nombre de campo AcroForm (ver
+// isRectField/resolveRect en pdfFill.js). Estos tests cubren ese modo
+// contra un PDF completamente en blanco (sin AcroForm), sin repetir la
+// casuística de buildFillOperations (ya cubierta arriba, es agnóstica al
+// modo — solo pasa el "field" que le da templateFieldMaps.js).
+describe("fillTrainingRecordPdf — plantillas sin AcroForm (campos por coordenadas)", () => {
+  const RECT_TEMPLATE = {
+    sourcePdfPage: 1,
+    fields: {
+      firstName: { rect: { x: 10, y: 260, width: 100, height: 14 } },
+      lastName: { rect: { x: 10, y: 240, width: 100, height: 14 } },
+    },
+    sessionRows: [
+      {
+        studentInitials: { rect: { x: 10, y: 200, width: 30, height: 14 } },
+        date: { rect: { x: 45, y: 200, width: 30, height: 14 } },
+        instructorInitials: { rect: { x: 80, y: 200, width: 30, height: 14 } },
+        instructorNumber: { rect: { x: 115, y: 200, width: 30, height: 14 } },
+      },
+    ],
+    examVersion: {
+      printed: { rect: { x: 10, y: 170, width: 6, height: 6 } },
+      online: { rect: { x: 30, y: 170, width: 6, height: 6 } },
+    },
+    signatures: {
+      student: { rect: { x: 10, y: 40, width: 80, height: 30 } },
+      studentDate: { rect: { x: 100, y: 40, width: 60, height: 14 } },
+    },
+  };
+
+  async function buildBlankPdf() {
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.addPage([300, 300]);
+    return pdfDoc.save();
+  }
+
+  it("rellena texto y dibuja la firma sobre un PDF sin ningún AcroForm, sin crear uno nuevo", async () => {
+    const blankBytes = await buildBlankPdf();
+    const filledBytes = await fillTrainingRecordPdf(blankBytes, RECT_TEMPLATE, {
+      firstName: "Ana", lastName: "Garcia",
+      sessionRows: [{ studentInitials: "AG", date: "01/09/26", instructorInitials: "JD", instructorNumber: "12345" }],
+      examVersion: "online",
+      generatedAtLabel: "02/09/26",
+      signatures: { studentPng: TINY_PNG },
+    });
+
+    const resultDoc = await PDFDocument.load(filledBytes);
+    expect(resultDoc.getForm().getFields()).toHaveLength(0);
+    expect(resultDoc.getPageCount()).toBe(1);
+  });
+
+  it("no falla si faltan bloques opcionales (sin firma, sin versión de examen)", async () => {
+    const blankBytes = await buildBlankPdf();
+    await expect(
+      fillTrainingRecordPdf(blankBytes, RECT_TEMPLATE, { firstName: "Ana", lastName: "Garcia" })
+    ).resolves.toBeInstanceOf(Uint8Array);
+  });
+
+  // La casilla por coordenadas no existe como objeto interactivo — marcarla
+  // significa dibujar una "X" encima del recuadro impreso; no marcarla no
+  // dibuja nada (el recuadro vacío ya es parte del arte estático). Sin
+  // inspección de píxeles disponible en este entorno de test, se usa el
+  // tamaño del PDF resultante como proxy razonable de "se dibujó algo de
+  // más" — mismo criterio de honestidad que el resto de este archivo: no
+  // afirma más de lo que comprueba.
+  it("marcar una casilla por coordenadas dibuja algo de más que dejarla sin marcar", async () => {
+    const blankBytes = await buildBlankPdf();
+    const checkedBytes = await fillTrainingRecordPdf(blankBytes, RECT_TEMPLATE, {
+      firstName: "A", lastName: "B", examVersion: "online",
+    });
+    const uncheckedBytes = await fillTrainingRecordPdf(blankBytes, RECT_TEMPLATE, {
+      firstName: "A", lastName: "B",
+    });
+    expect(checkedBytes.length).toBeGreaterThan(uncheckedBytes.length);
+  });
+});

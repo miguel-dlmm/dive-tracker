@@ -53,6 +53,62 @@ function progressRow(base, { optional = false, fixed = false, label } = {}) {
   };
 }
 
+// ---------------------------------------------------------------------
+// Plantillas SIN AcroForm (BD, SC-LV, SC-NV, SC-PB, SC-RR, SC-SR) —
+// Release V1, Fase 5, "plantillas restantes" (2026-09-04). Estas 6 no
+// tienen ningún campo de formulario interactivo, solo recuadros grises
+// impresos como arte estático — así que aquí un "field" es
+// { rect: {x,y,width,height} } en vez de un string P(id) (ver
+// isRectField/resolveRect en pdfFill.js). Coordenadas en puntos PDF
+// (origen abajo-izquierda), extraídas de verdad del content stream real
+// del PDF con scripts/extract-flat-template-rects.mjs — nunca a ojo — y
+// verificadas visualmente una a una contra el PDF real con
+// scripts/render-flat-template-rects-overlay.mjs antes de incorporarlas
+// aquí (ver docs/RELEASE-V1-PROGRESS.md, Fase 5, técnica validada con
+// SC-LV como piloto). Los datos crudos de cada plantilla quedan en
+// training-records-debug/<CÓDIGO>-rects.json y -rects-overlay.png (no
+// versionados) por si hace falta volver a contrastarlos.
+const R = (x, y, width, height) => ({ rect: { x, y, width, height } });
+
+// Fila de progreso por coordenadas — mismo significado que progressRow()
+// de arriba (Iniciales del Alumno/Fecha/Iniciales del Instructor/Número
+// SSI Pro), pero cada sub-campo es un rect real en vez de un P(id).
+// `instructorNumber` es opcional: SC-RR tiene varias filas de solo 3
+// recuadros impresos (sin "Número SSI Pro"), confirmado visualmente, no
+// un olvido — cuando `cells` solo trae 3 posiciones, ese sub-campo se deja
+// sin mapear y pdfFill.js simplemente no dibuja nada ahí (mismo criterio
+// que un valor vacío, ver pushIfValue).
+function rectRow(cells, { optional = false, fixed = false, label } = {}) {
+  const [si, date, ii, inum] = cells;
+  const row = {
+    label,
+    optional,
+    fixed,
+    studentInitials: R(...si),
+    date: R(...date),
+    instructorInitials: R(...ii),
+  };
+  if (inum) row.instructorNumber = R(...inum);
+  return row;
+}
+
+// Bloque de firmas por coordenadas, mismo layout en las 6 plantillas
+// (verificado en cada una): fila 1 = alumno + fecha | nombre del
+// instructor (en imprenta) + fecha; fila 2 = padre/madre/tutor + fecha |
+// firma del instructor + número SSI Pro.
+function rectSignatures([student, studentDate, instructorNamePrinted, instructorDate, parent, parentDate, instructor, instructorNumber]) {
+  return {
+    student: R(...student),
+    studentDate: R(...studentDate),
+    instructorNamePrinted: R(...instructorNamePrinted),
+    instructorDate: R(...instructorDate),
+    parent: R(...parent),
+    parentDate: R(...parentDate),
+    instructor: R(...instructor),
+    instructorNumber: R(...instructorNumber),
+  };
+}
+
 export const TEMPLATE_FIELD_MAPS = {
   OWD: {
     name: "Open Water Diver",
@@ -220,4 +276,34 @@ export const TEMPLATE_FIELD_MAPS = {
       instructorNumber: P("36027043-1"),
     },
   },
+
+  // Sin AcroForm — ver bloque de arriba. Verificado visualmente con
+  // training-records-debug/BD-rects-overlay.png (2026-09-04): curso corto
+  // de una sola sesión, sin versión de examen (es un cuestionario V/F, sin
+  // checkbox impresa/online) y sin ninguna fila marcada "(opcional)" en el
+  // PDF real — las 3 filas de progreso y la confirmación del cuestionario
+  // se dejan `optional:false` (premarcadas, aún así desmarcables), mismo
+  // criterio por defecto que SC-DD/SC-EAN.
+  BD: {
+    name: "Basic Diver",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 647.65, 51.75, 17], [101.25, 647.65, 51.75, 17], [162, 647.65, 51.75, 17], [222.75, 647.65, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[40.5, 584.192, 51.75, 17], [101.25, 584.192, 51.75, 17], [162, 584.192, 51.75, 17], [222.75, 584.192, 51.75, 17]], { label: "Habilidades de Buceo en Piscina/Aguas Confinadas Completadas" }),
+      rectRow([[40.5, 520.734, 51.75, 17], [101.25, 520.734, 51.75, 17], [162, 520.734, 51.75, 17], [222.75, 520.734, 51.75, 17]], { label: "Introducción al Buceo en Aguas Abiertas Completado" }),
+    ],
+    // El PDF no tiene checkbox de "versión impresa/online" — es un
+    // cuestionario verdadero/falso que el instructor revisa con el
+    // participante, ver la fila de confirmación de abajo.
+    examConfirmation: rectRow([[319.5, 204.748, 51.75, 17], [380.25, 204.748, 51.75, 17], [441, 204.748, 51.75, 17], [501.75, 204.748, 51.75, 17]], { label: "Confirmación del Cuestionario" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
+
 };
