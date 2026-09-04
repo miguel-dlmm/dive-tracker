@@ -5,7 +5,7 @@ import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle 
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { supabase } from "./supabaseClient";
-import { ToastProvider, AppLoading, useScrolled, Avatar } from "./shared";
+import { ToastProvider, AppLoading, useScrolled, Avatar, ErrorBoundary } from "./shared";
 import { resolveAvatar } from "./avatarCatalog";
 import EnvironmentIndicator from "./EnvironmentIndicator";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
@@ -408,6 +408,11 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
         animate={{ opacity: 1, y: 0, transition: { duration: reducedMotion ? 0.01 : DURATION.sm, ease: EASE.enter } }}
         exit={{ opacity: 0, y: -4, transition: { duration: reducedMotion ? 0.01 : DURATION.xs, ease: EASE.exit } }}
       >
+      {/* ErrorBoundary dentro del motion.div con key={tab} (no fuera): un
+          error real en una pantalla deja el resto de la app (cabecera,
+          navegación) intacto, y cambiar de pestaña remonta la key y
+          limpia el error solo, sin lógica de reset propia que mantener. */}
+      <ErrorBoundary>
         {tab === "home" && (
           <HomeTab
             worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
@@ -466,6 +471,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
           />
         )}
         {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
+      </ErrorBoundary>
       </motion.div>
       </AnimatePresence>
       </main>
