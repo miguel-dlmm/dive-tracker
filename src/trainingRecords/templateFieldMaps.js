@@ -418,4 +418,44 @@ export const TEMPLATE_FIELD_MAPS = {
       [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
     ]),
   },
+
+  // Verificado visualmente con training-records-debug/SC-RR-rects-overlay.png
+  // + recortes ampliados (training-records-debug/SC-RR-crop.png, 2026-09-04)
+  // — layout genuinamente distinto al resto de las 6: NO es la fila
+  // habitual de 4 columnas (Iniciales del Alumno/Fecha/Iniciales del
+  // Instructor/Número SSI Pro). Cada fila de progreso aquí son solo 3
+  // recuadros impresos (sin "Número SSI Pro" — confirmado visualmente
+  // ampliando la zona, no es un descuido), y hay 7 filas repartidas en 2
+  // columnas de la página en vez de una sola columna vertical: Sesiones
+  // Académicas, confirmación de examen, Sesión de aplicación práctica de
+  // Oxígeno, de DEA, de RCP/Primeros Auxilios, y 3 filas idénticas bajo
+  // "Actualización de React Right completada" (el propio PDF repite la
+  // misma fila 3 veces bajo un único encabezado, sin distinguir cada una —
+  // se etiquetan aquí "1/2/3" únicamente para diferenciarlas en la UI, no
+  // es un significado añadido).
+  "SC-RR": {
+    name: "React Right",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 641.862, 171, 17], [40.5, 593.595, 171, 17], [40.5, 545.327, 171, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[311, 394.434, 75, 17], [395, 394.434, 75, 17], [479, 394.434, 75, 17]], { label: "Sesión de Aplicación Práctica — Oxígeno" }),
+      rectRow([[310.17, 297.911, 75, 17], [394.17, 297.911, 75, 17], [478.17, 297.911, 75, 17]], { label: "Sesión de Aplicación Práctica — DEA" }),
+      rectRow([[40.5, 164.357, 75, 17], [124.5, 164.357, 75, 17], [208.5, 164.357, 75, 17]], { label: "Sesión de Aplicación Práctica — RCP/Primeros Auxilios" }),
+      rectRow([[311, 238.419, 75, 17], [395, 238.419, 75, 17], [479, 238.419, 75, 17]], { label: "Actualización de React Right Completada (1)" }),
+      rectRow([[311, 201.388, 75, 17], [395, 201.388, 75, 17], [479, 201.388, 75, 17]], { label: "Actualización de React Right Completada (2)" }),
+      rectRow([[311, 164.357, 75, 17], [395, 164.357, 75, 17], [479, 164.357, 75, 17]], { label: "Actualización de React Right Completada (3)" }),
+    ],
+    examVersion: { printed: R(273.9015, 668.73, 6, 6), online: R(448.5225, 668.73, 6, 6) },
+    // Fila de 3 recuadros (sin Número SSI Pro), igual que las demás de esta
+    // plantilla — no la habitual de 4.
+    examConfirmation: rectRow([[231, 545.02, 93.5, 17], [345.5, 545.02, 93.5, 17], [460, 545.02, 93.5, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
 };
