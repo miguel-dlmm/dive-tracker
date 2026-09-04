@@ -390,4 +390,32 @@ export const TEMPLATE_FIELD_MAPS = {
       [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
     ]),
   },
+
+  // Verificado visualmente con training-records-debug/SC-SR-rects-overlay.png
+  // (2026-09-04) — mismo patrón, 7 filas de progreso (3 de piscina + 3 de
+  // aguas abiertas + 1 adicional opcional) en vez de las 2+1 habituales.
+  "SC-SR": {
+    name: "Diver Stress & Rescue",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 647.65, 51.75, 17], [101.25, 647.65, 51.75, 17], [162, 647.65, 51.75, 17], [222.75, 647.65, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[40.5, 584.381, 51.75, 17], [101.25, 584.381, 51.75, 17], [162, 584.381, 51.75, 17], [222.75, 584.381, 51.75, 17]], { label: "Piscina/Aguas Confinadas 1 Completada" }),
+      rectRow([[40.5, 521.111, 51.75, 17], [101.25, 521.111, 51.75, 17], [162, 521.111, 51.75, 17], [222.75, 521.111, 51.75, 17]], { label: "Piscina/Aguas Confinadas 2 Completada" }),
+      rectRow([[40.5, 457.842, 51.75, 17], [101.25, 457.842, 51.75, 17], [162, 457.842, 51.75, 17], [222.75, 457.842, 51.75, 17]], { label: "Piscina/Aguas Confinadas 3 Completada" }),
+      rectRow([[40.5, 394.572, 51.75, 17], [101.25, 394.572, 51.75, 17], [162, 394.572, 51.75, 17], [222.75, 394.572, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada" }),
+      rectRow([[40.5, 331.303, 51.75, 17], [101.25, 331.303, 51.75, 17], [162, 331.303, 51.75, 17], [222.75, 331.303, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
+      rectRow([[40.5, 268.034, 51.75, 17], [101.25, 268.034, 51.75, 17], [162, 268.034, 51.75, 17], [222.75, 268.034, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 3 Completada" }),
+      rectRow([[40.5, 204.764, 51.75, 17], [101.25, 204.764, 51.75, 17], [162, 204.764, 51.75, 17], [222.75, 204.764, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 362.8077, 6, 6), online: R(342.3975, 307.7731, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.638, 51.75, 17], [380.25, 204.638, 51.75, 17], [441, 204.638, 51.75, 17], [501.75, 204.638, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
 };
