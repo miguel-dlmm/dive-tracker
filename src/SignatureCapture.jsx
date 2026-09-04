@@ -53,6 +53,21 @@ export default function SignatureCapture({ label, value, onChange, optionalHint 
       </div>
       <canvas
         ref={canvasRef}
+        // stopPropagation en touchstart/touchmove/touchend (bug real,
+        // 2026-09-04): signature_pad llama a preventDefault() en sus
+        // propios listeners nativos pero nunca a stopPropagation() — el
+        // toque sigue burbujeando por encima del canvas. Cuando esta
+        // pantalla vive dentro de un contenedor con useSwipeBack
+        // (motion.js) — hoy Configuración/Ayuda, "deslizar a la derecha
+        // = atrás" — un trazo de firma con componente horizontal hacia
+        // la derecha (cualquier firma normal) se leía TAMBIÉN como el
+        // gesto de "volver", devolviendo de golpe al menú de
+        // Configuración a mitad de firmar. Cortar la burbuja aquí evita
+        // que el gesto de dibujar se confunda nunca con el de navegar,
+        // sea cual sea el contenedor donde se use este componente.
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
         className="h-28 w-full touch-none rounded-md border border-gray-200 bg-gray-50"
         role="img"
         aria-label={value ? t("signature.firmadoAria", { label }) : t("signature.sinFirmarAria", { label })}

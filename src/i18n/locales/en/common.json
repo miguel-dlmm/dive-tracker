@@ -1,5 +1,10 @@
 {
   "loading": { "defaultLabel": "Loading" },
+  "errorBoundary": {
+    "title": "Oops, something went sideways",
+    "body": "This screen ran into an unexpected problem. It's nothing you did — try reloading and it should be back to normal.",
+    "reload": "Reload"
+  },
   "movementTypes": {
     "ganado": "Course",
     "comision": "Commission",
