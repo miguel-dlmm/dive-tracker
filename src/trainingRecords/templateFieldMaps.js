@@ -53,6 +53,62 @@ function progressRow(base, { optional = false, fixed = false, label } = {}) {
   };
 }
 
+// ---------------------------------------------------------------------
+// Plantillas SIN AcroForm (BD, SC-LV, SC-NV, SC-PB, SC-RR, SC-SR) —
+// Release V1, Fase 5, "plantillas restantes" (2026-09-04). Estas 6 no
+// tienen ningún campo de formulario interactivo, solo recuadros grises
+// impresos como arte estático — así que aquí un "field" es
+// { rect: {x,y,width,height} } en vez de un string P(id) (ver
+// isRectField/resolveRect en pdfFill.js). Coordenadas en puntos PDF
+// (origen abajo-izquierda), extraídas de verdad del content stream real
+// del PDF con scripts/extract-flat-template-rects.mjs — nunca a ojo — y
+// verificadas visualmente una a una contra el PDF real con
+// scripts/render-flat-template-rects-overlay.mjs antes de incorporarlas
+// aquí (ver docs/RELEASE-V1-PROGRESS.md, Fase 5, técnica validada con
+// SC-LV como piloto). Los datos crudos de cada plantilla quedan en
+// training-records-debug/<CÓDIGO>-rects.json y -rects-overlay.png (no
+// versionados) por si hace falta volver a contrastarlos.
+const R = (x, y, width, height) => ({ rect: { x, y, width, height } });
+
+// Fila de progreso por coordenadas — mismo significado que progressRow()
+// de arriba (Iniciales del Alumno/Fecha/Iniciales del Instructor/Número
+// SSI Pro), pero cada sub-campo es un rect real en vez de un P(id).
+// `instructorNumber` es opcional: SC-RR tiene varias filas de solo 3
+// recuadros impresos (sin "Número SSI Pro"), confirmado visualmente, no
+// un olvido — cuando `cells` solo trae 3 posiciones, ese sub-campo se deja
+// sin mapear y pdfFill.js simplemente no dibuja nada ahí (mismo criterio
+// que un valor vacío, ver pushIfValue).
+function rectRow(cells, { optional = false, fixed = false, label } = {}) {
+  const [si, date, ii, inum] = cells;
+  const row = {
+    label,
+    optional,
+    fixed,
+    studentInitials: R(...si),
+    date: R(...date),
+    instructorInitials: R(...ii),
+  };
+  if (inum) row.instructorNumber = R(...inum);
+  return row;
+}
+
+// Bloque de firmas por coordenadas, mismo layout en las 6 plantillas
+// (verificado en cada una): fila 1 = alumno + fecha | nombre del
+// instructor (en imprenta) + fecha; fila 2 = padre/madre/tutor + fecha |
+// firma del instructor + número SSI Pro.
+function rectSignatures([student, studentDate, instructorNamePrinted, instructorDate, parent, parentDate, instructor, instructorNumber]) {
+  return {
+    student: R(...student),
+    studentDate: R(...studentDate),
+    instructorNamePrinted: R(...instructorNamePrinted),
+    instructorDate: R(...instructorDate),
+    parent: R(...parent),
+    parentDate: R(...parentDate),
+    instructor: R(...instructor),
+    instructorNumber: R(...instructorNumber),
+  };
+}
+
 export const TEMPLATE_FIELD_MAPS = {
   OWD: {
     name: "Open Water Diver",
@@ -219,5 +275,187 @@ export const TEMPLATE_FIELD_MAPS = {
       instructor: P("36027043-0"),
       instructorNumber: P("36027043-1"),
     },
+  },
+
+  // Sin AcroForm — ver bloque de arriba. Verificado visualmente con
+  // training-records-debug/BD-rects-overlay.png (2026-09-04): curso corto
+  // de una sola sesión, sin versión de examen (es un cuestionario V/F, sin
+  // checkbox impresa/online) y sin ninguna fila marcada "(opcional)" en el
+  // PDF real — las 3 filas de progreso y la confirmación del cuestionario
+  // se dejan `optional:false` (premarcadas, aún así desmarcables), mismo
+  // criterio por defecto que SC-DD/SC-EAN.
+  BD: {
+    name: "Basic Diver",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 647.65, 51.75, 17], [101.25, 647.65, 51.75, 17], [162, 647.65, 51.75, 17], [222.75, 647.65, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[40.5, 584.192, 51.75, 17], [101.25, 584.192, 51.75, 17], [162, 584.192, 51.75, 17], [222.75, 584.192, 51.75, 17]], { label: "Habilidades de Buceo en Piscina/Aguas Confinadas Completadas" }),
+      rectRow([[40.5, 520.734, 51.75, 17], [101.25, 520.734, 51.75, 17], [162, 520.734, 51.75, 17], [222.75, 520.734, 51.75, 17]], { label: "Introducción al Buceo en Aguas Abiertas Completado" }),
+    ],
+    // El PDF no tiene checkbox de "versión impresa/online" — es un
+    // cuestionario verdadero/falso que el instructor revisa con el
+    // participante, ver la fila de confirmación de abajo.
+    examConfirmation: rectRow([[319.5, 204.748, 51.75, 17], [380.25, 204.748, 51.75, 17], [441, 204.748, 51.75, 17], [501.75, 204.748, 51.75, 17]], { label: "Confirmación del Cuestionario" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
+
+  // Verificado visualmente con training-records-debug/SC-LV-rects-overlay.png
+  // (2026-09-04) — plantilla piloto de la técnica (ver
+  // docs/RELEASE-V1-PROGRESS.md, Fase 5, "Técnica validada..."). Checkboxes
+  // de versión de examen: el PDF no las dibuja como recuadro relleno (solo
+  // contorno), así que no las captura la extracción de rects — posición
+  // derivada por patrón desde una plantilla con AcroForm real (SC-DD: hueco
+  // de 5.4pt entre el borde derecho del checkbox de 6×6pt y el inicio del
+  // texto de la etiqueta, constante confirmada exacta contra SC-DD),
+  // aplicada a la posición real del texto de esta plantilla via
+  // page.getTextContent().
+  "SC-LV": {
+    name: "Night & Limited Visibility",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 627.473, 51.75, 17], [101.25, 627.473, 51.75, 17], [162, 627.473, 51.75, 17], [222.75, 627.473, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[40.5, 521.72, 51.75, 17], [101.25, 521.72, 51.75, 17], [162, 521.72, 51.75, 17], [222.75, 521.72, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", optional: true }),
+      rectRow([[40.5, 415.967, 51.75, 17], [101.25, 415.967, 51.75, 17], [162, 415.967, 51.75, 17], [222.75, 415.967, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada" }),
+      rectRow([[40.5, 310.213, 51.75, 17], [101.25, 310.213, 51.75, 17], [162, 310.213, 51.75, 17], [222.75, 310.213, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
+      rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 419.1378, 6, 6), online: R(342.3975, 343.6479, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.716, 51.75, 17], [380.25, 204.716, 51.75, 17], [441, 204.716, 51.75, 17], [501.75, 204.716, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
+
+  // Verificado visualmente con training-records-debug/SC-NV-rects-overlay.png
+  // (2026-09-04) — mismo layout exacto que SC-LV, ver esa entrada para el
+  // criterio de checkboxes.
+  "SC-NV": {
+    name: "Navigation",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 627.473, 51.75, 17], [101.25, 627.473, 51.75, 17], [162, 627.473, 51.75, 17], [222.75, 627.473, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[40.5, 521.72, 51.75, 17], [101.25, 521.72, 51.75, 17], [162, 521.72, 51.75, 17], [222.75, 521.72, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", optional: true }),
+      rectRow([[40.5, 415.967, 51.75, 17], [101.25, 415.967, 51.75, 17], [162, 415.967, 51.75, 17], [222.75, 415.967, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada" }),
+      rectRow([[40.5, 310.213, 51.75, 17], [101.25, 310.213, 51.75, 17], [162, 310.213, 51.75, 17], [222.75, 310.213, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
+      rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 391.9896, 6, 6), online: R(342.3975, 326.4176, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.841, 51.75, 17], [380.25, 204.841, 51.75, 17], [441, 204.841, 51.75, 17], [501.75, 204.841, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
+
+  // Verificado visualmente con training-records-debug/SC-PB-rects-overlay.png
+  // (2026-09-04) — mismo layout que SC-LV/SC-NV; la única diferencia real
+  // es el texto de las etiquetas (esta plantilla alterna piscina/aguas
+  // abiertas en las 2 inmersiones principales, el PDF las etiqueta con el
+  // texto partido en 2 líneas — "Inmersión de formación en piscina/aguas
+  // confinadas o aguas abiertas N completada").
+  "SC-PB": {
+    name: "Perfect Buoyancy",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 639.718, 51.75, 17], [101.25, 639.718, 51.75, 17], [162, 639.718, 51.75, 17], [222.75, 639.718, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[40.5, 558.453, 51.75, 17], [101.25, 558.453, 51.75, 17], [162, 558.453, 51.75, 17], [222.75, 558.453, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", optional: true }),
+      rectRow([[40.5, 440.455, 51.75, 17], [101.25, 440.455, 51.75, 17], [162, 440.455, 51.75, 17], [222.75, 440.455, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas 1 Completada" }),
+      rectRow([[40.5, 322.457, 51.75, 17], [101.25, 322.457, 51.75, 17], [162, 322.457, 51.75, 17], [222.75, 322.457, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas 2 Completada" }),
+      rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas Adicional Completada", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 419.1378, 6, 6), online: R(342.3975, 343.6479, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.716, 51.75, 17], [380.25, 204.716, 51.75, 17], [441, 204.716, 51.75, 17], [501.75, 204.716, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
+
+  // Verificado visualmente con training-records-debug/SC-SR-rects-overlay.png
+  // (2026-09-04) — mismo patrón, 7 filas de progreso (3 de piscina + 3 de
+  // aguas abiertas + 1 adicional opcional) en vez de las 2+1 habituales.
+  "SC-SR": {
+    name: "Diver Stress & Rescue",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 647.65, 51.75, 17], [101.25, 647.65, 51.75, 17], [162, 647.65, 51.75, 17], [222.75, 647.65, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[40.5, 584.381, 51.75, 17], [101.25, 584.381, 51.75, 17], [162, 584.381, 51.75, 17], [222.75, 584.381, 51.75, 17]], { label: "Piscina/Aguas Confinadas 1 Completada" }),
+      rectRow([[40.5, 521.111, 51.75, 17], [101.25, 521.111, 51.75, 17], [162, 521.111, 51.75, 17], [222.75, 521.111, 51.75, 17]], { label: "Piscina/Aguas Confinadas 2 Completada" }),
+      rectRow([[40.5, 457.842, 51.75, 17], [101.25, 457.842, 51.75, 17], [162, 457.842, 51.75, 17], [222.75, 457.842, 51.75, 17]], { label: "Piscina/Aguas Confinadas 3 Completada" }),
+      rectRow([[40.5, 394.572, 51.75, 17], [101.25, 394.572, 51.75, 17], [162, 394.572, 51.75, 17], [222.75, 394.572, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada" }),
+      rectRow([[40.5, 331.303, 51.75, 17], [101.25, 331.303, 51.75, 17], [162, 331.303, 51.75, 17], [222.75, 331.303, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
+      rectRow([[40.5, 268.034, 51.75, 17], [101.25, 268.034, 51.75, 17], [162, 268.034, 51.75, 17], [222.75, 268.034, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 3 Completada" }),
+      rectRow([[40.5, 204.764, 51.75, 17], [101.25, 204.764, 51.75, 17], [162, 204.764, 51.75, 17], [222.75, 204.764, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 362.8077, 6, 6), online: R(342.3975, 307.7731, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.638, 51.75, 17], [380.25, 204.638, 51.75, 17], [441, 204.638, 51.75, 17], [501.75, 204.638, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
+
+  // Verificado visualmente con training-records-debug/SC-RR-rects-overlay.png
+  // + recortes ampliados (training-records-debug/SC-RR-crop.png, 2026-09-04)
+  // — layout genuinamente distinto al resto de las 6: NO es la fila
+  // habitual de 4 columnas (Iniciales del Alumno/Fecha/Iniciales del
+  // Instructor/Número SSI Pro). Cada fila de progreso aquí son solo 3
+  // recuadros impresos (sin "Número SSI Pro" — confirmado visualmente
+  // ampliando la zona, no es un descuido), y hay 7 filas repartidas en 2
+  // columnas de la página en vez de una sola columna vertical: Sesiones
+  // Académicas, confirmación de examen, Sesión de aplicación práctica de
+  // Oxígeno, de DEA, de RCP/Primeros Auxilios, y 3 filas idénticas bajo
+  // "Actualización de React Right completada" (el propio PDF repite la
+  // misma fila 3 veces bajo un único encabezado, sin distinguir cada una —
+  // se etiquetan aquí "1/2/3" únicamente para diferenciarlas en la UI, no
+  // es un significado añadido).
+  "SC-RR": {
+    name: "React Right",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 641.862, 171, 17], [40.5, 593.595, 171, 17], [40.5, 545.327, 171, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[311, 394.434, 75, 17], [395, 394.434, 75, 17], [479, 394.434, 75, 17]], { label: "Sesión de Aplicación Práctica — Oxígeno" }),
+      rectRow([[310.17, 297.911, 75, 17], [394.17, 297.911, 75, 17], [478.17, 297.911, 75, 17]], { label: "Sesión de Aplicación Práctica — DEA" }),
+      rectRow([[40.5, 164.357, 75, 17], [124.5, 164.357, 75, 17], [208.5, 164.357, 75, 17]], { label: "Sesión de Aplicación Práctica — RCP/Primeros Auxilios" }),
+      rectRow([[311, 238.419, 75, 17], [395, 238.419, 75, 17], [479, 238.419, 75, 17]], { label: "Actualización de React Right Completada (1)" }),
+      rectRow([[311, 201.388, 75, 17], [395, 201.388, 75, 17], [479, 201.388, 75, 17]], { label: "Actualización de React Right Completada (2)" }),
+      rectRow([[311, 164.357, 75, 17], [395, 164.357, 75, 17], [479, 164.357, 75, 17]], { label: "Actualización de React Right Completada (3)" }),
+    ],
+    examVersion: { printed: R(273.9015, 668.73, 6, 6), online: R(448.5225, 668.73, 6, 6) },
+    // Fila de 3 recuadros (sin Número SSI Pro), igual que las demás de esta
+    // plantilla — no la habitual de 4.
+    examConfirmation: rectRow([[231, 545.02, 93.5, 17], [345.5, 545.02, 93.5, 17], [460, 545.02, 93.5, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
   },
 };

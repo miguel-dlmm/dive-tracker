@@ -2362,13 +2362,46 @@ de código fuente, no como arreglo confirmado en un iPhone real** —
 reportado así explícitamente por el agente, sin reclamar más de lo
 verificado.
 
-**❌ No completado: las 6 plantillas de Training Records restantes.**
-Necesitan descargar los PDF reales de Supabase Storage y verificar
-visualmente las coordenadas extraídas (`scripts/extract-flat-template-rects.mjs`
-+ overlay) antes de darlas por buenas — el propio historial de este
-proyecto trata esa verificación como obligatoria para un documento de
-certificación, así que el agente no adivinó coordenadas sin
-credenciales de Storage. Sigue pendiente, sin fecha.
+**✅ Actualización 2026-09-04 (mañana) — las 6 plantillas restantes
+activadas.** `feat/training-records-plantillas-restantes`, fusionada
+(`e7412c2`). Con acceso a Supabase Storage, un segundo agente construyó
+de verdad el modo de relleno por coordenadas que las 6 necesitaban
+(`BD`, `SC-LV`, `SC-NV`, `SC-PB`, `SC-RR`, `SC-SR`) — no era rellenar
+datos en un patrón ya existente, `pdfFill.js` solo sabía dirigirse a
+campos de AcroForm real (los 4 activos: OWD/AOWD/SC-DD/SC-EAN). Añadido
+`isRectField()`/`resolveRect()`: un "field" en `templateFieldMaps.js`
+ahora puede ser el string de siempre (AcroForm) o
+`{ rect: {x,y,width,height} }` (coordenadas reales extraídas del
+content stream del PDF, nunca a ojo) — `drawFieldText`/
+`computeSignaturePlacement` no necesitan saber cuál de los dos modos
+produjo el rect, así que las 4 plantillas ya activas siguen exactamente
+igual. Nuevo `drawCheckboxMark()` para dibujar la marca de una casilla
+sin campo AcroForm (el cuadrado en sí ya está impreso, solo se dibuja
+la "X" cuando está marcada).
+
+**Disciplina de verificación seguida de verdad, no solo declarada**:
+cada plantilla pasó por extracción real de coordenadas
+(`extract-flat-template-rects.mjs`) → overlay visual
+(`render-flat-template-rects-overlay.mjs`) → relleno de prueba real
+generado y renderizado → revisión visual de las imágenes antes de
+marcar la fila `active` en TEST. Verificado independientemente antes de
+aceptar la fusión: `SC-RR-filled.png` inspeccionada a mano (la más
+compleja, layout de 3 columnas distinto al resto, sin número de
+instructor) — casillas, fechas, iniciales y firmas correctamente
+colocadas. `training_record_templates` en TEST: las 10 filas ya
+`active`. `pdfFill.js`/`templateFieldMaps.js` con tests nuevos para el
+modo de coordenadas, sin tocar el comportamiento de las 4 plantillas ya
+activas. 754/754 tests y build en verde sobre `develop`. `git diff`
+sobre `App.jsx`/`ConfigTab.jsx` confirmado vacío — el punto de entrada
+sigue oculto. `CHANGELOG.md` actualizado por el propio agente (exigido
+ahora por el hook de pre-push), dejando explícito que no hay ningún
+cambio de comportamiento visible para ningún usuario todavía (TR sigue
+sin punto de entrada).
+
+Con esto, **las 10 plantillas del generador de Training Records están
+completas y verificadas** — lo único que falta para que el usuario
+final las vea es la decisión, ya tomada para v1.0.0, de mantener la
+sección oculta hasta una versión posterior.
 
 ### Verificación
 

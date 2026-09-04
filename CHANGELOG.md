@@ -4,6 +4,15 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- (Interno, sin punto de acceso visible en la app todavía — ver
+  CLAUDE.md) Generador de Training Records: las 6 plantillas SSI que no
+  tienen campos de formulario rellenable (Basic Diver, Night & Limited
+  Visibility, Navigation, Perfect Buoyancy, React Right, Diver Stress &
+  Rescue) ya se pueden generar, con un segundo modo de relleno por
+  coordenadas verificadas visualmente contra cada PDF real. Sin ningún
+  cambio de comportamiento visible para ningún usuario todavía.
+
 ## [1.0.0] - 2026-09-04
 
 ### Added
