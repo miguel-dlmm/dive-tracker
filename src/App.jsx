@@ -20,7 +20,7 @@ import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
-import ConfigTab, { clearStoredSection } from "./ConfigTab";
+import ConfigTab, { clearStoredSection, setStoredSection } from "./ConfigTab";
 import CompanerosTab from "./CompanerosTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
@@ -415,6 +415,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             onQuickCreate={startHomeCreate}
             onOpenPending={() => changeTab("trabajo")}
             onOpenSummary={() => changeTab("summary")}
+            onOpenTrainingRecords={() => { setStoredSection("training-records"); changeTab("config"); }}
           />
         )}
         {tab === "log" && (
@@ -447,6 +448,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             schools={schools} activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
             navSections={navSections} appConfig={appConfig} profile={profile} onClose={closeSecondary}
+            onOpenProfile={() => changeTab("perfil")}
           />
         )}
         {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} />}
