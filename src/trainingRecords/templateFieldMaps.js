@@ -306,4 +306,35 @@ export const TEMPLATE_FIELD_MAPS = {
     ]),
   },
 
+  // Verificado visualmente con training-records-debug/SC-LV-rects-overlay.png
+  // (2026-09-04) — plantilla piloto de la técnica (ver
+  // docs/RELEASE-V1-PROGRESS.md, Fase 5, "Técnica validada..."). Checkboxes
+  // de versión de examen: el PDF no las dibuja como recuadro relleno (solo
+  // contorno), así que no las captura la extracción de rects — posición
+  // derivada por patrón desde una plantilla con AcroForm real (SC-DD: hueco
+  // de 5.4pt entre el borde derecho del checkbox de 6×6pt y el inicio del
+  // texto de la etiqueta, constante confirmada exacta contra SC-DD),
+  // aplicada a la posición real del texto de esta plantilla via
+  // page.getTextContent().
+  "SC-LV": {
+    name: "Night & Limited Visibility",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 627.473, 51.75, 17], [101.25, 627.473, 51.75, 17], [162, 627.473, 51.75, 17], [222.75, 627.473, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[40.5, 521.72, 51.75, 17], [101.25, 521.72, 51.75, 17], [162, 521.72, 51.75, 17], [222.75, 521.72, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", optional: true }),
+      rectRow([[40.5, 415.967, 51.75, 17], [101.25, 415.967, 51.75, 17], [162, 415.967, 51.75, 17], [222.75, 415.967, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada" }),
+      rectRow([[40.5, 310.213, 51.75, 17], [101.25, 310.213, 51.75, 17], [162, 310.213, 51.75, 17], [222.75, 310.213, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
+      rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 419.1378, 6, 6), online: R(342.3975, 343.6479, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.716, 51.75, 17], [380.25, 204.716, 51.75, 17], [441, 204.716, 51.75, 17], [501.75, 204.716, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
 };
