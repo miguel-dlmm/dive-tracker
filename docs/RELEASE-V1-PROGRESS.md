@@ -2109,24 +2109,64 @@ el despliegue hecho pero sin taguear y dímelo"): el despliegue está
 hecho y en producción, pero NO se ha taggeado `v1.0.0` ni ejecutado
 `gh release create`.**
 
-### Punto exacto donde se quedó
+### ✅ Actualización 2026-09-04 (mañana) — migración 0014 aprobada y aplicada, sesión extendida durante el día
 
-Pendiente, todo para revisión humana (avisado por email en cada hito,
-4 correos vía `scripts/_notify.mjs`):
-1. Revisar y aprobar `scripts/migrations/0014-registro-externo-produccion.sql`
-   (aditiva, ya escrita, ya committeada) — aplicar con
-   `node --env-file=.env.local scripts/apply-migration-prod.mjs scripts/migrations/0014-registro-externo-produccion.sql --confirm-production`.
-2. Verificar tus datos reales (movimientos, comisiones, perfil) tras las
-   13 migraciones — pedido explícitamente que lo hicieras tú por la
-   mañana, no verificado por mí más allá de la comprobación técnica de
-   catálogo.
-3. Con 1 y 2 resueltos: `git tag -a v1.0.0 -m "v1.0.0"` sobre `a640de4`
+El usuario aprobó `0014` esta mañana; aplicada contra producción y
+verificada (RPC + columna presentes, sitio real sin errores de
+consola). Pidió además: dejar constancia de causa/solución del límite
+de Vercel (para que no vuelva a pasar), redesplegar Training Records
+con todos sus cambios, procesar las plantillas restantes, y seguir
+trabajando el resto del día en todo lo pendiente mientras él está fuera
+— autorización explícita para continuar de forma autónoma, con aviso
+por email de cada cosa completada.
+
+Hecho en esa ventana (además de lo ya registrado más abajo):
+- Causa real del límite de Vercel encontrada (cada push, de cualquier
+  rama, disparaba build en los 2 proyectos conectados) y corregida
+  (`vercel.json`, `git.deploymentEnabled: {develop, main}` — commit
+  `430f928`). `.vercelignore` añadido (instaladores sueltos bloqueaban
+  `vercel deploy` manual). Confirmado que `vercel deploy` manual sí
+  funciona aunque la integración de Git siga limitada (cuotas
+  distintas) — usado para generar 2 Preview reales: restyling
+  (`https://dive-tracker-hsp462lcx-ocean-pulse1.vercel.app`) y Training
+  Records con todas las correcciones de anoche, luego actualizada de
+  nuevo con las 6 plantillas nuevas
+  (`https://dive-tracker-17r6j1hxo-ocean-pulse1.vercel.app`).
+- ADR-0010 actualizada (addendum, commit `d2b4d5c`): la secuencia de
+  tag/release corregida para reflejar `release/*` de `ADR-0006`.
+- Hook de pre-push nuevo (`scripts/hooks/pre-push`, mismo commit):
+  bloquea cualquier futuro commit `feat`/`fix` sobre `src`/`server` sin
+  `CHANGELOG.md` actualizado — la causa raíz de que quedara vacío ~160
+  commits, ahora con enforcement real, no solo la regla escrita.
+  Activado solo con `npm install` (`postinstall`).
+- Las 6 plantillas restantes de Training Records activadas (ver más
+  abajo, sección propia) — el generador ya cubre las 10 plantillas.
+- `scripts/mobile-check.mjs` reparado de verdad (commit `f300487`): la
+  ambigüedad real de "Cerrar" (aplazada la noche anterior por mezclar
+  tooling con la release) resuelta con intención explícita en los 13
+  puntos del recorrido que la tocan — primera vez que el script termina
+  limpio de principio a fin, 47 capturas, 0 errores/avisos de consola.
+  Usado para verificar visualmente el tooltip de "Pendiente de cobrar"
+  y el resto de cambios de la noche.
+- `docs/BACKLOG.md`: retirado un ítem ya resuelto (test de
+  `PaymentsTab` con fecha hardcodeada, corregido en algún commit de la
+  noche anterior, confirmado ejecutando el test).
+
+**Sigue pendiente, para revisión humana** (avisado por email en cada
+hito, 9 correos en total vía `scripts/_notify.mjs` entre anoche y esta
+mañana):
+1. Verificar tus datos reales (movimientos, comisiones, perfil) tras
+   las 13+1 migraciones — pedido explícitamente que lo hicieras tú, no
+   verificado más allá de la comprobación técnica de catálogo.
+2. Con eso resuelto: `git tag -a v1.0.0 -m "v1.0.0"` sobre `a640de4`
    (el commit ya en `main`), `git push origin main --tags`,
    `gh release create v1.0.0`.
-4. `docs/ADR/0006-...md` ya actualizado (commit `769c224`, `develop`) con
-   la nueva regla de rama `release/*` obligatoria para fusionar con
-   `main` a partir de ahora — la fusión de esta noche fue la última bajo
-   el proceso antiguo (`ADR-0010` sin rama de release).
+3. Decisión sobre `feature/restyling-v1` (revisar la Preview, fusionar
+   o pedir ajustes) — sin fusionar a propósito.
+4. El alias estable `dive-tracker-three.vercel.app` (TEST) sigue con el
+   build automático de la integración de Git bloqueado hasta que el
+   límite se resetee (~19h UTC del 2026-09-04) — no bloquea nada, las
+   Preview manuales de arriba cubren la revisión mientras tanto.
 
 ### Trabajo overnight adicional — 8 agentes en paralelo, cada uno en su rama
 
