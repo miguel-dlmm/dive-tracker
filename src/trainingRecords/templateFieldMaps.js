@@ -362,4 +362,32 @@ export const TEMPLATE_FIELD_MAPS = {
       [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
     ]),
   },
+
+  // Verificado visualmente con training-records-debug/SC-PB-rects-overlay.png
+  // (2026-09-04) — mismo layout que SC-LV/SC-NV; la única diferencia real
+  // es el texto de las etiquetas (esta plantilla alterna piscina/aguas
+  // abiertas en las 2 inmersiones principales, el PDF las etiqueta con el
+  // texto partido en 2 líneas — "Inmersión de formación en piscina/aguas
+  // confinadas o aguas abiertas N completada").
+  "SC-PB": {
+    name: "Perfect Buoyancy",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 639.718, 51.75, 17], [101.25, 639.718, 51.75, 17], [162, 639.718, 51.75, 17], [222.75, 639.718, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[40.5, 558.453, 51.75, 17], [101.25, 558.453, 51.75, 17], [162, 558.453, 51.75, 17], [222.75, 558.453, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", optional: true }),
+      rectRow([[40.5, 440.455, 51.75, 17], [101.25, 440.455, 51.75, 17], [162, 440.455, 51.75, 17], [222.75, 440.455, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas 1 Completada" }),
+      rectRow([[40.5, 322.457, 51.75, 17], [101.25, 322.457, 51.75, 17], [162, 322.457, 51.75, 17], [222.75, 322.457, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas 2 Completada" }),
+      rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas Adicional Completada", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 419.1378, 6, 6), online: R(342.3975, 343.6479, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.716, 51.75, 17], [380.25, 204.716, 51.75, 17], [441, 204.716, 51.75, 17], [501.75, 204.716, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
 };
