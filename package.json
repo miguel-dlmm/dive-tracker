@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "postinstall": "git config core.hooksPath scripts/hooks || true",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",

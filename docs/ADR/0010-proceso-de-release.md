@@ -101,23 +101,58 @@ commit exacto.
 
 ### Cómo se promueve y se etiqueta
 
+**Addendum 2026-09-04 (release `v1.0.0`):** los pasos 5-8 de abajo daban
+por hecho que `develop` es la producción real — cierto cuando se escribió
+esta ADR, ya no desde que `ADR-0006` creó `main` como producción pública
+separada (2026-08-30) y, sobre todo, desde que esa misma ADR añadió la
+rama `release/*` obligatoria para llegar a `main` (2026-09-04, ver
+"Rama `release/*`" en `ADR-0006`). Corregido aquí para que el próximo
+release lo siga bien, sin tener que releer el historial de chat:
+
+- **El tag `vX.Y.Z` marca el commit que de verdad queda desplegado en
+  producción — hoy eso es `main`, no `develop`.** Taguear sobre
+  `develop` (paso 5 original) apuntaría a un commit que nunca es el que
+  sirve `oceanflow`/`dive-tracker-exgg.vercel.app`.
+- **Pasos 3-4 (mover el CHANGELOG, bump de versión) viven en la rama
+  `release/vX.Y.Z`** (`ADR-0006`), no directamente sobre `develop` —
+  excepción real, no una regla nueva: `v1.0.0` los hizo directamente
+  sobre `develop` porque `ADR-0006` todavía no exigía `release/*` en ese
+  momento del proceso; a partir de ahora sí.
+- **El tag (paso 5) y el `gh release create` (paso 7) se mueven a
+  después de fusionar `release/vX.Y.Z` sobre `main` y verificar el
+  despliegue real** — nunca antes, para no marcar como "v1.0.0" un
+  commit que ni siquiera ha llegado a producción todavía si algo falla
+  en la verificación.
+- **El paso 8 ("Vercel despliega solo") ya no es automático sin más**:
+  desde el mismo `v1.0.0` (`ADR-0006`, `vercel.json`/`git.deploymentEnabled`),
+  solo `develop`/`main` disparan build automático al hacer push — el
+  push a `main` sigue desplegando solo, sin acción manual, pero
+  cualquier rama de trabajo (incluida `release/*` mientras se prepara)
+  ya no genera un Preview por sí sola; si hace falta revisarla antes de
+  fusionar, se dispara a mano con `vercel deploy`.
+
+Secuencia corregida:
+
 1. Fusionar cada `feature/*`/`fix/*` ya lista a `develop` (flujo normal
    de `ADR-0006`, sin cambios).
-2. Sobre `develop` actualizada: `npm run test && npm run build` (y
-   `npm run mobile-check` si hubo cambios de UI — CLAUDE.md, regla 8).
-3. Mover el contenido de `## Unreleased` de `CHANGELOG.md` a
-   `## [X.Y.Z] - YYYY-MM-DD`, con `X.Y.Z` decidido según la tabla de
-   arriba.
-4. Commit de ese cambio de changelog (`chore: preparar release vX.Y.Z`,
-   mismo patrón que `daab817` en el historial actual).
-5. `git tag -a vX.Y.Z -m "vX.Y.Z"` sobre ese commit exacto de `develop`.
-6. `git push origin develop --tags`.
+2. Crear `release/vX.Y.Z` desde `develop` actualizado (`ADR-0006`).
+3. Sobre `release/vX.Y.Z`: mover `## Unreleased` de `CHANGELOG.md` a
+   `## [X.Y.Z] - YYYY-MM-DD` (`X.Y.Z` según la tabla de arriba), bump de
+   versión, `npm run test && npm run build` (y `npm run mobile-check` si
+   hubo cambios de UI — CLAUDE.md, regla 8). Commit
+   `chore: preparar release vX.Y.Z`.
+4. Fusionar `release/vX.Y.Z` sobre `main` (`ADR-0006`), `npm run test &&
+   npm run build` sobre `main` ya fusionada, `git push origin main` →
+   despliegue automático.
+5. Verificar el despliegue real (navegador headless contra la URL de
+   producción, sin errores de consola).
+6. **Solo si el paso 5 sale limpio**: `git tag -a vX.Y.Z -m "vX.Y.Z"`
+   sobre el commit de `main` recién desplegado, `git push origin main
+   --tags`.
 7. `gh release create vX.Y.Z --notes-file <extracto del CHANGELOG>` —
    espejo en GitHub del mismo texto, no notas autogeneradas.
-8. **Despliegue**: ninguna acción manual — Vercel ya despliega
-   automáticamente cualquier push a `develop` (Production Branch hoy).
-   El tag marca qué commit corresponde a qué versión desplegada, no
-   dispara el despliegue por sí mismo.
+8. Borrar `release/vX.Y.Z` (local y remoto) una vez fusionada — rama
+   efímera, no queda colgada (`ADR-0006`).
 
 ### Validaciones mínimas obligatorias antes de etiquetar
 
