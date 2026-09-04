@@ -1,5 +1,10 @@
 {
   "loading": { "defaultLabel": "Cargando" },
+  "errorBoundary": {
+    "title": "Uy, algo se ha torcido",
+    "body": "Esta pantalla ha dado un problema inesperado. No es nada que hayas hecho tú — prueba a recargar y debería volver a la normalidad.",
+    "reload": "Recargar"
+  },
   "movementTypes": {
     "ganado": "Curso",
     "comision": "Comisión",

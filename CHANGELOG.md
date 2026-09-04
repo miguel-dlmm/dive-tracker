@@ -12,6 +12,20 @@ Registro de cambios relevantes de Ocean Flow.
   Rescue) ya se pueden generar, con un segundo modo de relleno por
   coordenadas verificadas visualmente contra cada PDF real. Sin ningún
   cambio de comportamiento visible para ningún usuario todavía.
+- Red de seguridad general ante errores de render: un `ErrorBoundary`
+  envuelve el contenido de cada pestaña, así que si una pantalla falla
+  de forma inesperada se ve una tarjeta de aviso con botón de recargar
+  en vez de una pantalla en blanco, y cabecera/navegación siguen
+  funcionando.
+
+### Fixed
+- (Interno, Training Records) Al firmar en la hoja de alta de alumno,
+  un trazo de firma con componente horizontal hacia la derecha (una
+  firma normal) podía interpretarse también como el gesto de "deslizar
+  para volver" del contenedor de Configuración, devolviendo de golpe al
+  menú de Configuración a mitad de firmar. `signature_pad` nunca corta
+  la propagación del toque tras dibujar; ahora sí se corta en el propio
+  lienzo de firma.
 
 ## [1.0.0] - 2026-09-04
 

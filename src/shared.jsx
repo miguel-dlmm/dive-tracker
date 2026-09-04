@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
-import { useTranslation } from "react-i18next";
+import { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext, Component } from "react";
+import { useTranslation, withTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import * as Icons from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
@@ -120,6 +120,55 @@ export function AppLoading({ iconName = "Waves", color = TEAL, size = 40, label 
     </div>
   );
 }
+
+// Red de seguridad ante un error de render no previsto (Bug real,
+// 2026-09-04): sin esto, cualquier excepción durante el render de una
+// pantalla desmontaba TODO el árbol de React sin ningún aviso — pantalla
+// en blanco total, sin cabecera ni forma de recuperarse salvo recargar a
+// mano. Encontrado con una plantilla de Training Records de una preview
+// desactualizada (RPC devolvía un valor que el código de esa build no
+// sabía interpretar), pero la falta de red de seguridad es un problema
+// real independiente de esa causa concreta — cualquier error futuro no
+// previsto tendría el mismo efecto en cualquier pantalla.
+//
+// Clase, no función: los error boundaries de React exigen
+// getDerivedStateFromError/componentDidCatch, sin equivalente en hooks
+// todavía. withTranslation() (HOC, no el hook useTranslation) es la
+// forma estándar de dar acceso a t() a un componente de clase.
+class ErrorBoundaryBase extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, info) {
+    console.error("ErrorBoundary — error de render no capturado:", error, info?.componentStack);
+  }
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    const { t } = this.props;
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-6 text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${CORAL}1A` }}>
+          <LifeBuoy size={26} style={{ color: CORAL }} aria-hidden="true" />
+        </span>
+        <h2 className="text-base font-bold" style={{ color: NAVY }}>{t("errorBoundary.title")}</h2>
+        <p className="max-w-xs text-sm text-gray-500">{t("errorBoundary.body")}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-1 flex min-h-11 items-center rounded-md px-4 text-sm font-semibold text-white"
+          style={{ backgroundColor: TEAL }}
+        >
+          {t("errorBoundary.reload")}
+        </button>
+      </div>
+    );
+  }
+}
+export const ErrorBoundary = withTranslation("common")(ErrorBoundaryBase);
 
 // Avatar circular icono+color (Bloque 5, 2026-09-01) — icon/color ya
 // resueltos por avatarCatalog.js (resolveAvatar), este componente solo
