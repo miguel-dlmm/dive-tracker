@@ -337,4 +337,29 @@ export const TEMPLATE_FIELD_MAPS = {
       [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
     ]),
   },
+
+  // Verificado visualmente con training-records-debug/SC-NV-rects-overlay.png
+  // (2026-09-04) — mismo layout exacto que SC-LV, ver esa entrada para el
+  // criterio de checkboxes.
+  "SC-NV": {
+    name: "Navigation",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 627.473, 51.75, 17], [101.25, 627.473, 51.75, 17], [162, 627.473, 51.75, 17], [222.75, 627.473, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[40.5, 521.72, 51.75, 17], [101.25, 521.72, 51.75, 17], [162, 521.72, 51.75, 17], [222.75, 521.72, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", optional: true }),
+      rectRow([[40.5, 415.967, 51.75, 17], [101.25, 415.967, 51.75, 17], [162, 415.967, 51.75, 17], [222.75, 415.967, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada" }),
+      rectRow([[40.5, 310.213, 51.75, 17], [101.25, 310.213, 51.75, 17], [162, 310.213, 51.75, 17], [222.75, 310.213, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
+      rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 391.9896, 6, 6), online: R(342.3975, 326.4176, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.841, 51.75, 17], [380.25, 204.841, 51.75, 17], [441, 204.841, 51.75, 17], [501.75, 204.841, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
 };
