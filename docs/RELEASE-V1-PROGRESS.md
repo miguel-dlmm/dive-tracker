@@ -2152,21 +2152,39 @@ Hecho en esa ventana (además de lo ya registrado más abajo):
   `PaymentsTab` con fecha hardcodeada, corregido en algún commit de la
   noche anterior, confirmado ejecutando el test).
 
-**Sigue pendiente, para revisión humana** (avisado por email en cada
-hito, 9 correos en total vía `scripts/_notify.mjs` entre anoche y esta
-mañana):
+**✅ Resuelto — límite de Vercel reseteado** (confirmado ~19h UTC del
+2026-09-04, vía `gh api .../commits/.../status`): `dive-tracker-three.vercel.app`
+vuelve a autodesplegar en cada push a `develop`, verificado en vivo sin
+errores de consola.
+
+**✅ `preview/training-records-review` — pusheada a `origin` y
+redesplegada** (pedido explícito del usuario: "mergea la rama de TR
+[...] para tenerlo y probar todo en una rama"). Ya no es una rama de
+un solo uso solo en local: `git fetch`/`checkout
+preview/training-records-review` la trae en cualquier máquina.
+Actualizada con todo `develop` (las 10 plantillas, el fix de
+mobile-check, todo lo demás) antes de pushear — 754/754 tests y build
+en verde. Sigue siendo la ÚNICA rama con el punto de entrada de
+Training Records reactivado (`App.jsx`/`ConfigTab.jsx`) — `develop`/
+`main` lo mantienen oculto, sin cambios. Preview manual:
+`https://dive-tracker-ojfwgfk1w-ocean-pulse1.vercel.app`.
+
+**Sigue pendiente, para revisión humana** (9+ correos vía
+`scripts/_notify.mjs` entre anoche y esta mañana):
 1. Verificar tus datos reales (movimientos, comisiones, perfil) tras
    las 13+1 migraciones — pedido explícitamente que lo hicieras tú, no
    verificado más allá de la comprobación técnica de catálogo.
 2. Con eso resuelto: `git tag -a v1.0.0 -m "v1.0.0"` sobre `a640de4`
    (el commit ya en `main`), `git push origin main --tags`,
    `gh release create v1.0.0`.
-3. Decisión sobre `feature/restyling-v1` (revisar la Preview, fusionar
-   o pedir ajustes) — sin fusionar a propósito.
-4. El alias estable `dive-tracker-three.vercel.app` (TEST) sigue con el
-   build automático de la integración de Git bloqueado hasta que el
-   límite se resetee (~19h UTC del 2026-09-04) — no bloquea nada, las
-   Preview manuales de arriba cubren la revisión mientras tanto.
+3. Decisión sobre `feature/restyling-v1` — revisada por el usuario
+   ("no veo diferencias"), confirmado que es real pero deliberadamente
+   pequeño (3 ajustes: esquinas/sombra de la tarjeta de Resumen,
+   animación de alta/baja en Tarifas, padding del estado vacío) — el
+   hallazgo real de la auditoría fue que Tarifas ya hablaba el lenguaje
+   visual de Mi trabajo, así que no hacía falta un rediseño grande.
+   Pendiente de que el usuario decida: fusionar tal cual, o pedir un
+   pase más ambicioso como una tarea aparte.
 
 ### Trabajo overnight adicional — 8 agentes en paralelo, cada uno en su rama
 
