@@ -44,6 +44,26 @@ mkdirSync(OUT_DIR, { recursive: true });
 const headed = process.argv.includes("--headed");
 const BASE_URL = process.env.MOBILE_CHECK_URL || "http://localhost:5173";
 
+// El aria-label "Cerrar" lo comparten hasta 3 controles distintos que
+// pueden coexistir en pantalla a la vez: el botón de cerrar de una
+// hoja/modal, el "✕ Cerrar" de la cabecera exterior en Ayuda/Configuración
+// (App.jsx, sale de la pantalla secundaria entera — un <header> único en
+// toda la app, confirmado por grep) y el de un toast (role="status",
+// ToastProvider en shared.jsx, tarda 3-5s en autodesaparecer). Dos
+// locators con intención explícita en vez de uno solo con exclusiones
+// ad-hoc — encontrado depurando este script (2026-09-04): las hojas no
+// viven siempre dentro de <main> (algunas de Home no), así que
+// `getByRole("main")...` fallaba ahí con "0 elementos" en vez de
+// desambiguar; por exclusión de ascendencia (nunca dentro de <header> ni
+// de un toast) funciona sin depender de en qué contenedor se monte cada
+// hoja en concreto.
+function sheetCloseButton(page) {
+  return page.locator('xpath=//button[@aria-label="Cerrar" and not(ancestor::*[@role="status"]) and not(ancestor::header)]');
+}
+function headerCloseButton(page) {
+  return page.locator("header").getByRole("button", { name: "Cerrar", exact: true });
+}
+
 const consoleIssues = [];
 let shotCount = 0;
 async function shot(page, label) {
@@ -158,7 +178,7 @@ async function main() {
   }
 
   console.log("→ Cerrar el formulario sin guardar: debe quedarse en Home, no navegar a Mi trabajo");
-  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await sheetCloseButton(page).tap();
   await page.waitForTimeout(200);
   const activeTabAfterCancel = await page.locator('nav button[aria-current="page"]').textContent();
   if (activeTabAfterCancel?.trim() !== "Home") {
@@ -196,7 +216,7 @@ async function main() {
   if (activeTabWithDaySheetOpen?.trim() !== "Home") {
     consoleIssues.push(`[nav] Al abrir el formulario desde un día del calendario de Home, la pestaña activa pasó a ser "${activeTabWithDaySheetOpen?.trim()}" — debe seguir en Home mientras se rellena`);
   }
-  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await sheetCloseButton(page).tap();
   await page.waitForTimeout(200);
   // El día tocado navega a Mi trabajo (mismo flujo que el FAB) — volver a
   // Home antes de continuar, para que el resto del recorrido no dependa
@@ -222,7 +242,7 @@ async function main() {
   console.log("→ Mi trabajo -> Ayuda -> Cerrar: debe volver a Mi trabajo, no a Home");
   await page.locator('button[aria-label="Ayuda"]').tap();
   await page.waitForTimeout(300);
-  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await headerCloseButton(page).tap();
   await page.waitForTimeout(300);
   const activeTabAfterAyuda = await page.locator('nav button[aria-current="page"]').textContent();
   if (activeTabAfterAyuda?.trim() !== "Mi trabajo") {
@@ -316,7 +336,7 @@ async function main() {
   await shot(page, "nota-autoexpandida");
 
   console.log("→ Cerrar hoja");
-  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await sheetCloseButton(page).tap();
   await page.waitForTimeout(200);
 
   console.log("→ Cobrados: menú '⋯' y borrado con animación");
@@ -447,7 +467,7 @@ async function main() {
   await page.mouse.wheel(0, -500);
 
   console.log("→ Ayuda: cerrar con 'X' con una categoría desplegada y reabrir debe volver al índice plegado (feedback 2026-08-30, segunda vuelta) — recargar (no probado aquí, ver ConfigTab/HelpTab.test.jsx) sí la conservaría");
-  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await headerCloseButton(page).tap();
   await page.waitForTimeout(300);
   await page.locator('button[aria-label="Ayuda"]').tap();
   await page.waitForTimeout(300);
@@ -455,7 +475,7 @@ async function main() {
   if (stillExpandedAfterReopen !== "false") {
     consoleIssues.push("[ayuda] Cerrar con 'X' y reabrir Ayuda no volvió a mostrar el índice plegado (la categoría seguía desplegada).");
   }
-  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await headerCloseButton(page).tap();
   await page.waitForTimeout(300);
   await page.locator('button[aria-label="Configuración"]').tap();
   await page.waitForTimeout(300);
@@ -478,7 +498,7 @@ async function main() {
       consoleIssues.push("[configuracion] 'Editar' en Escuelas no abrió la hoja esperada ('Editar escuela').");
     }
     await shot(page, "configuracion-escuelas-editar-hoja");
-    await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+    await sheetCloseButton(page).tap();
     await page.waitForTimeout(200);
   }
 
@@ -487,9 +507,9 @@ async function main() {
   await shot(page, "configuracion-escuelas-nueva-hoja");
   // Dos botones "Cerrar" en pantalla a la vez aquí: el "✕ Cerrar" de la
   // cabecera exterior (sale de Configuración entera) y el de la propia
-  // hoja de alta (solo la cierra a ella) — se escoge el de <main>, que es
-  // el de la hoja, no el de <header>.
-  await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+  // hoja de alta (solo la cierra a ella) — sheetCloseButton excluye el
+  // de <header>, así que resuelve al de la hoja.
+  await sheetCloseButton(page).tap();
   await page.waitForTimeout(200);
   // "Configuración" también es el texto de la cabecera exterior (que
   // cierra la pantalla entera) — el "‹ Configuración" de vuelta al menú
@@ -521,7 +541,7 @@ async function main() {
   await shot(page, "configuracion-tarifas-tras-recargar");
 
   console.log("→ Configuración: cerrar con 'X' desde dentro de Tarifas y reabrir debe volver al menú principal, no a Tarifas (feedback 2026-08-30, segunda vuelta — distinto de recargar, probado justo arriba, que sí la conserva)");
-  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await headerCloseButton(page).tap();
   await page.waitForTimeout(200);
   await page.locator('button[aria-label="Configuración"]').tap();
   await page.waitForTimeout(200);
@@ -552,7 +572,7 @@ async function main() {
         consoleIssues.push("[tarifas] 'Editar' no abrió la hoja de edición esperada ('Editar tarifa de ...').");
       }
       await shot(page, "configuracion-tarifas-editar-hoja");
-      await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+      await sheetCloseButton(page).tap();
       await page.waitForTimeout(150);
     } else {
       await page.keyboard.press("Escape");
@@ -579,7 +599,7 @@ async function main() {
     }
     await shot(page, "configuracion-tarifas-nueva-hoja-comision");
   }
-  await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await sheetCloseButton(page).tap();
   await page.waitForTimeout(150);
 
   await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
@@ -607,7 +627,7 @@ async function main() {
         await firstRow.tap();
         await page.waitForTimeout(200);
         await shot(page, "configuracion-usuarios-detalle");
-        await page.getByRole("main").getByRole("button", { name: "Cerrar", exact: true }).tap();
+        await sheetCloseButton(page).tap();
         await page.waitForTimeout(150);
       } else {
         console.log("  (sin usuarios en la lista para abrir el detalle — omitido)");
@@ -620,11 +640,15 @@ async function main() {
     console.log("  (grupo Administración no visible — cuenta sin rol admin/superadmin, esperado si no se usó dev-bypass con esos permisos)");
   }
 
-  await page.getByRole("button", { name: "Cerrar", exact: true }).tap();
+  await headerCloseButton(page).tap();
   await page.waitForTimeout(300);
 
   console.log("→ Cerrar sesión (bypass, tras la recarga de antes): debe volver al login normal, no volver a autenticarse sola");
-  await page.locator('button[aria-label="Cerrar sesión"]').tap();
+  // "Cerrar sesión" vive en Mi perfil desde Fase 4 (Release V1) — ya no es
+  // un icono suelto en la cabecera (ver ProfileTab.jsx, SignOutSection).
+  await page.locator('button[aria-label="Mi perfil"]').tap();
+  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: "Cerrar sesión", exact: true }).tap();
   try {
     await page.getByLabel("Email o nickname").waitFor({ timeout: 8000 });
     console.log("  (pantalla de login normal visible tras cerrar sesión — correcto)");
