@@ -2606,3 +2606,39 @@ solo como historial de la cola.
   con `position: absolute`, sin ocupar espacio en el flujo) — corrige
   el problema en el único sitio real donde vivía, sin tocar
   `MovementSheet.jsx`.
+
+- **✅ Bug de Training Records: firmar en la hoja de alta de alumno
+  devolvía a Configuración a mitad de firma (2026-09-04/05).** Causa
+  real: `signature_pad` nunca llama a `stopPropagation()` en sus
+  listeners nativos de touch, así que un trazo de firma con componente
+  horizontal hacia la derecha se confundía con el gesto de
+  `useSwipeBack` (deslizar a la derecha = atrás) del contenedor de
+  Configuración, donde vive Training Records. No era una regresión de
+  código perdido — es un bug preexistente que nunca se había topado
+  con este gesto hasta ahora, porque Training Records nunca se había
+  probado de principio a fin con gestos táctiles reales (los tests
+  anteriores usaban ratón, que no dispara eventos touch). Arreglado en
+  `SignatureCapture.jsx` con `stopPropagation()` en
+  `onTouchStart/Move/End` del lienzo — verificado antes/después con
+  simulación de touch-drag real (CDP). De paso se añadió un
+  `ErrorBoundary` general por pestaña (`shared.jsx` + `App.jsx`) como
+  red de seguridad ante cualquier fallo de render futuro (antes, un
+  error así dejaba la app entera en blanco). Mergeado en `develop`
+  (commit `cbe1759`) y en `preview/training-records-review` (commit
+  `1f5e787`), 754/754 tests y build correctos en ambas ramas.
+  E2E real de las 10 plantillas (seleccionar → rellenar progreso →
+  añadir alumno → firmar con touch real → generar): 7/10 verificadas
+  de punta a punta sin ningún fallo (AOWD, BD, SC-LV, SC-NV, SC-PB,
+  SC-SR, SC-RR) — firma nunca expulsó a Configuración, generación
+  limpia, cero errores de consola. Las otras 3 (OWD, SC-DD, SC-EAN) no
+  se completaron por una limitación del propio script de pruebas (el
+  selector de fecha no abría el calendario en el primer clic, antes de
+  llegar a la firma) — no es una reproducción del bug real, solo
+  quedaron sin verificar en esta pasada.
+  Además, `vercel deploy` manual por CLI resultó bloqueado por Vercel
+  ("commit author doesn't have permission to create deployments for
+  this project" — la identidad de git local no está verificada como
+  miembro del equipo `OceanPulse`); solucionado añadiendo
+  `preview/training-records-review` a `deploymentEnabled` en
+  `vercel.json` (mismo patrón que `develop`/`main`), dejando que el
+  propio push a GitHub dispare el deploy en vez del CLI.
