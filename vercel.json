@@ -2,7 +2,8 @@
   "git": {
     "deploymentEnabled": {
       "develop": true,
-      "main": true
+      "main": true,
+      "preview/training-records-review": true
     }
   }
 }
