@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
 import { TrendingUp, TrendingDown, Minus, GraduationCap, Award, Handshake, ChevronRight } from "lucide-react";
-import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
+import { TEAL, SUN, GREEN, CORAL, BRAND_NAVY } from "./App";
 import { Money, formatMoney, MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries, comparePeriods } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
@@ -67,7 +67,7 @@ function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
       <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
         <Icon size={17} style={{ color }} aria-hidden="true" />
       </span>
-      <span className="text-xl font-bold tabular-nums" style={{ color: NAVY }}>{count}</span>
+      <span className="text-xl font-bold tabular-nums" style={{ color: BRAND_NAVY }}>{count}</span>
       <span className="text-[10.5px] font-medium leading-tight text-gray-500">{label}</span>
     </motion.div>
   );
@@ -213,8 +213,8 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           por atención con "Generado este mes"). Mismo lenguaje visual que
           el resto de tarjetas de Home (rounded-xl, tinte de color de
           marca), pero con más peso — icono más grande en badge circular
-          con el propio TEAL de fondo (no solo un 10% de opacidad como el
-          resto de filas de icono+chevron) y un borde sutil a juego, para
+          con el propio BRAND_NAVY de fondo (no solo un 10% de opacidad
+          como el resto de filas de icono+chevron) y un borde sutil a juego, para
           que destaque como acceso directo a una herramienta, no como una
           fila más de ajustes.
           onOpenTrainingRecords (App.jsx) escribe la sección en
@@ -233,16 +233,16 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           type="button"
           onClick={onOpenTrainingRecords}
           className="flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-transform active:scale-[0.98]"
-          style={{ borderColor: `${TEAL}40`, background: `linear-gradient(135deg, ${TEAL}17 0%, ${TEAL}05 100%)` }}
+          style={{ borderColor: `${BRAND_NAVY}40`, background: `linear-gradient(135deg, ${BRAND_NAVY}17 0%, ${BRAND_NAVY}05 100%)` }}
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: TEAL }}>
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: BRAND_NAVY }}>
             <Award size={22} className="text-white" aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold" style={{ color: NAVY }}>{t("trainingRecordsCard.title")}</span>
+            <span className="block text-sm font-bold" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</span>
             <span className="block text-xs text-gray-500">{t("trainingRecordsCard.subtitle")}</span>
           </span>
-          <ChevronRight size={20} className="shrink-0" style={{ color: TEAL }} aria-hidden="true" />
+          <ChevronRight size={20} className="shrink-0" style={{ color: BRAND_NAVY }} aria-hidden="true" />
         </button>
       )}
 
@@ -295,7 +295,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           year={calendarCursor.year}
           month={calendarCursor.month}
           entries={calendarEntries}
-          dotColor={TEAL}
+          dotColor={BRAND_NAVY}
           currencyRows={currencies.rows}
           activityColor={activityColor}
           caption={t("calendarCaption")}
@@ -341,10 +341,10 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         className="w-full rounded-xl border border-gray-200 bg-white p-4 text-left transition-transform active:scale-[0.98]"
       >
         <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-          <TrendingUp size={14} style={{ color: TEAL }} aria-hidden="true" />
+          <TrendingUp size={14} style={{ color: BRAND_NAVY }} aria-hidden="true" />
           {t("generatedThisMonth")}
         </div>
-        <div className="mt-1 text-2xl font-bold tabular-nums" style={{ color: NAVY }}>
+        <div className="mt-1 text-2xl font-bold tabular-nums" style={{ color: BRAND_NAVY }}>
           {Object.keys(monthTotals).length === 0 ? (
             "—"
           ) : (
