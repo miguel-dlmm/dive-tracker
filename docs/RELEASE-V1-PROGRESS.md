@@ -28,7 +28,7 @@
 | 2 | Multidioma | ✅ Hecho (2026-09-01, noche) |
 | 3 | KPIs en la home | ✅ Hecho (2026-09-01, noche) |
 | 4 | Cabecera y notificaciones | ✅ Hecho (2026-09-01/02, noche) |
-| 5 | Sistema de Training Records | 🟡 En curso — pestaña única, fechas por plantilla, firma de instructor, validación y ajustes visuales del PDF construidos y verificados; rediseño completo del generador y 2 correcciones reales de Safari iOS ya aplicadas (ver detalle); quedan 2 supuestos de fecha por confirmar y las 6 plantillas sin campos |
+| 5 | Sistema de Training Records | ✅ Hecho — 10/10 plantillas completas y verificadas (ver detalle, 2026-09-05); oculto para v1.0.0 por decisión del usuario y **reactivado de forma permanente el 2026-09-06** ("ya irá a la próxima release") en `feature/activar-training-records` |
 | 6 | Slides y avisos | 🟡 En curso — avisos generalizados, WhatsNew sin tocar (ver detalle) |
 | 7 | Usabilidad, carga y escalabilidad | ✅ Hecho (2026-09-02, análisis documental, sin cambios de código) |
 | 8 | Revisión visual y libro de estilo | ✅ Hecho (2026-09-02, `docs/ESTILO.md` actualizado, sin pulido pixel-a-pixel) |
@@ -2679,3 +2679,39 @@ solo como historial de la cola.
   - `docs/ADR/0020-migraciones-supabase-y-separacion-test.md` sigue
     sin comitear a propósito — instrucción explícita del usuario de
     mantenerlo pendiente de aprobación, no tocarlo todavía.
+
+- **✅ Reversión de la decisión de ocultar Training Records
+  (2026-09-06).** La decisión de ocultarlo para v1.0.0 (Fase 9, más
+  arriba) fue siempre explícita como temporal ("se desplegará en una
+  versión posterior") — el usuario confirma ahora que esa versión
+  posterior es la siguiente release y pide reactivarlo de forma
+  permanente. Rama `feature/activar-training-records` (creada desde
+  `develop`): se restaura exactamente el código que había antes del
+  commit `1b10f31` que lo ocultó — `HIDDEN_SECTIONS` en `ConfigTab.jsx`
+  (Training Records sigue sin listarse en el menú de Configuración,
+  pero es una sección real; Home la abre directamente, patrón sin
+  cambios desde el Bloque 10) y `onOpenTrainingRecords`/`onOpenProfile`
+  de vuelta en `App.jsx`. **No** se hizo con `git revert 1b10f31` — ese
+  commit mezclaba el ocultamiento con el bump de versión a 1.0.0 y el
+  ajuste de `App.test.jsx`, y revertirlo entero deshacía también esas
+  dos cosas (verificado: `package.json`/`version.js` volvían a
+  `0.2.0`). Se aplicaron a mano solo los dos archivos relevantes.
+  Verificado: 754/754 tests y build en verde; comprobación manual real
+  en Chromium (emulación iPhone 14 Pro Max) de principio a fin —
+  Mi perfil (firma capturada e instructor guardado), tarjeta de
+  Training Records visible en Home, apertura de la sección, selección
+  de plantilla "Open Water Diver" — sin ningún error de consola.
+  `npm run mobile-check:training-records` llegó hasta el mismo punto
+  (Mi perfil completo con capturas) y se topó con la ambigüedad de
+  selector "Cerrar" ya documentada y aplazada en el punto 4 de la
+  sección "Pre-flight" de Fase 9 más arriba — no es una regresión de
+  este cambio, es el mismo bug preexistente del script.
+  - **Hallazgo lateral de bundle:** reactivar Training Records añade
+    ~467KB al chunk principal (`pdf-lib`, usado síncronamente desde
+    `pdfFill.js`) más un chunk aparte de 431KB (`pdfToJpg.js`, ya
+    cargado de forma perezosa) y un worker de 2,2MB de `pdfjs-dist`
+    (no bloquea la carga inicial, se pide solo al generar/exportar).
+    Documentado junto con el hallazgo de `lucide-react` en
+    `docs/REDISENO-V2-PROGRESS.md` — el usuario decide si el
+    code-splitting de `pdf-lib` se aborda también en la Fase 2 del
+    rediseño o se deja aparte.
