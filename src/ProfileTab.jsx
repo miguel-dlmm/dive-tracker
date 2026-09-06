@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
-import { NAVY, TEAL, AQUA, CORAL } from "./colors";
+import { CORAL, BRAND_NAVY, BRAND_SKY } from "./colors";
 import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
 import { AVATAR_ICONS, AVATAR_COLORS, AVATAR_ICON_MAP, resolveAvatar } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
@@ -36,7 +36,7 @@ function friendlyProfileError(err, t) {
 function SectionCard({ title, children, id }) {
   return (
     <div id={id} className="rounded-lg border border-gray-200 bg-white p-4 scroll-mt-20">
-      <h3 className="mb-3 text-sm font-semibold" style={{ color: NAVY }}>{title}</h3>
+      <h3 className="mb-3 text-sm font-semibold" style={{ color: BRAND_NAVY }}>{title}</h3>
       {children}
     </div>
   );
@@ -158,7 +158,7 @@ function AvatarPicker({ profile, onProfileUpdated }) {
         <Avatar icon={preview.icon} color={preview.color} size={72} />
         <span
           className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-white"
-          style={{ backgroundColor: TEAL }}
+          style={{ backgroundColor: BRAND_NAVY }}
         >
           <Pencil size={12} aria-hidden="true" />
         </span>
@@ -178,7 +178,7 @@ function AvatarPicker({ profile, onProfileUpdated }) {
               >
                 <span
                   className="flex h-8 w-8 items-center justify-center rounded-full"
-                  style={{ backgroundColor: c.value, outline: draftColor === c.value ? `2px solid ${NAVY}` : "none", outlineOffset: 2 }}
+                  style={{ backgroundColor: c.value, outline: draftColor === c.value ? `2px solid ${BRAND_NAVY}` : "none", outlineOffset: 2 }}
                 >
                   {draftColor === c.value && <Check size={14} className="text-white" aria-hidden="true" />}
                 </span>
@@ -260,7 +260,7 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
           <p><span className="text-gray-400">{t("personalData.nicknameLine")}</span> {profile.nickname}</p>
           <p><span className="text-gray-400">{t("personalData.professionalLine")}</span> {PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === profile.professional_level)?.label || "—"}</p>
         </div>
-        <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: TEAL }}>
+        <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: BRAND_NAVY }}>
           <Pencil size={14} aria-hidden="true" /> {t("personalData.edit")}
         </button>
       </SectionCard>
@@ -387,7 +387,7 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
     <div className="overflow-hidden rounded-2xl shadow-md">
       <div
         className="relative p-4"
-        style={{ background: `linear-gradient(135deg, ${NAVY} 0%, ${TEAL} 65%, ${AQUA} 100%)` }}
+        style={{ background: `linear-gradient(135deg, ${BRAND_NAVY} 0%, ${BRAND_SKY} 120%)` }}
       >
         {/* Barrido diagonal sutil — la única concesión "decorativa" a
             parecer un carnet físico (efecto laminado/holograma), sin
@@ -436,7 +436,7 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
       <button
         onClick={onEdit}
         className="flex min-h-11 w-full items-center justify-center gap-1.5 bg-white text-sm font-semibold transition-colors active:bg-gray-50"
-        style={{ color: TEAL }}
+        style={{ color: BRAND_NAVY }}
       >
         <Pencil size={14} aria-hidden="true" /> {t("instructor.edit")}
       </button>
@@ -720,10 +720,10 @@ function PasswordSection() {
         </div>
       </Field>
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
-        <span className="flex items-center gap-1" style={{ color: lengthOk ? TEAL : "#9CA3AF" }}>
+        <span className="flex items-center gap-1" style={{ color: lengthOk ? BRAND_NAVY : "#9CA3AF" }}>
           {lengthOk && <Check size={12} aria-hidden="true" />} {t("password.minLength")}
         </span>
-        <span className="flex items-center gap-1" style={{ color: matchOk ? TEAL : "#9CA3AF" }}>
+        <span className="flex items-center gap-1" style={{ color: matchOk ? BRAND_NAVY : "#9CA3AF" }}>
           {matchOk && <Check size={12} aria-hidden="true" />} {t("password.matches")}
         </span>
       </div>
@@ -734,7 +734,7 @@ function PasswordSection() {
       <button
         onClick={save} disabled={!canSave}
         className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white disabled:opacity-50"
-        style={{ backgroundColor: TEAL }}
+        style={{ backgroundColor: BRAND_NAVY }}
       >
         {saving && <Loader2 size={15} className="animate-spin" aria-hidden="true" />} {t("password.submit")}
       </button>

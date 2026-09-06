@@ -314,7 +314,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   if (!loaded) {
     return (
       <div className="flex h-dvh items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
-        <AppLoading iconName={logoIcon} color={TEAL} />
+        <AppLoading iconName={logoIcon} color={BRAND_NAVY} />
       </div>
     );
   }
@@ -763,7 +763,7 @@ function AuthGate() {
   if (loading || (DEV_AUTH_BYPASS && bypassPending && !session)) {
     return (
       <div className="flex h-dvh items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
-        <AppLoading color={TEAL} />
+        <AppLoading color={BRAND_NAVY} />
       </div>
     );
   }

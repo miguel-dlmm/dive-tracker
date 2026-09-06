@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle } from "lucide-react";
-import { TEAL } from "./App";
+import { TEAL, BRAND_NAVY } from "./App";
 import { ExpandableCard } from "./shared";
 import { useSwipeBack } from "./motion";
 import { HELP_CATEGORIES } from "./help/content";
@@ -130,7 +130,7 @@ export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
           onClick={onShowWhatsNew}
           className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700"
         >
-          <Sparkles size={16} style={{ color: TEAL }} aria-hidden="true" />
+          <Sparkles size={16} style={{ color: BRAND_NAVY }} aria-hidden="true" />
           {t("whatsNewReplay")}
         </button>
       )}

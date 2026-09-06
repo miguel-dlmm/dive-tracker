@@ -6,7 +6,7 @@ import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, Chev
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
-import { NAVY, TEAL, SUN, CORAL, GREEN } from "./colors";
+import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./colors";
 import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, usePrefersReducedMotion } from "./motion";
 import { AVATAR_ICON_MAP } from "./avatarCatalog";
 
@@ -123,7 +123,7 @@ export function useToast() {
 // fondo, otra a opacidad completa recortada por la animación), en vez
 // de dos copias coloreadas distinto del mismo icono.
 // =================================================================
-export function AppLoading({ iconName = "Logo", color = TEAL, size = 40, label }) {
+export function AppLoading({ iconName = "Logo", color = BRAND_NAVY, size = 40, label }) {
   const { t } = useTranslation("common");
   const statusProps = { role: "status", "aria-label": label || t("loading.defaultLabel") };
   if (iconName === "Logo") {
@@ -184,7 +184,7 @@ class ErrorBoundaryBase extends Component {
         <span className="flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${CORAL}1A` }}>
           <LifeBuoy size={26} style={{ color: CORAL }} aria-hidden="true" />
         </span>
-        <h2 className="text-base font-bold" style={{ color: NAVY }}>{t("errorBoundary.title")}</h2>
+        <h2 className="text-base font-bold" style={{ color: BRAND_NAVY }}>{t("errorBoundary.title")}</h2>
         <p className="max-w-xs text-sm text-gray-500">{t("errorBoundary.body")}</p>
         <button
           type="button"
@@ -1133,7 +1133,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
             <ChevronLeft size={18} aria-hidden="true" />
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold" style={{ color: NAVY }}>{CAL_MONTHS[month]} {year}</span>
+            <span className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{CAL_MONTHS[month]} {year}</span>
             {!isCurrentMonth && onGoToday && (
               <button
                 type="button"
@@ -1206,7 +1206,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
                 </span>
               )}
               {d && (
-                <span className="h-1 w-1 rounded-full" style={{ backgroundColor: NAVY, opacity: isToday ? 1 : 0 }} aria-hidden="true" />
+                <span className="h-1 w-1 rounded-full" style={{ backgroundColor: BRAND_NAVY, opacity: isToday ? 1 : 0 }} aria-hidden="true" />
               )}
             </button>
           );
@@ -1643,7 +1643,7 @@ export function FloatingPanel({ open, pos, panelRef, matchWidth = true, align = 
 // cuál está abierta para persistirlo en sessionStorage (ver HelpTab.jsx,
 // "recargar mantiene la pantalla actual") y para que el gesto de "atrás"
 // sepa qué colapsar.
-export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = NAVY, defaultOpen = false, open: controlledOpen, onToggle, children }) {
+export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = BRAND_NAVY, defaultOpen = false, open: controlledOpen, onToggle, children }) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;

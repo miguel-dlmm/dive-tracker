@@ -21,6 +21,10 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Resumen, Tarifas, Configuración, Ayuda y Mi perfil** adoptan el
+  color de marca nuevo (cifras, botones, filtros activos, iconos de
+  menú, selector de icono de carga). El carnet de instructor estrena
+  además un degradado de dos tonos de marca.
 - **Mi trabajo** adopta el color de marca nuevo en los KPIs, las
   pestañas activas, "Filtrar"/"Cobrar todos"/"Confirmar cobro" y los
   importes de curso/comisión.

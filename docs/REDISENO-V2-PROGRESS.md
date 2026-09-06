@@ -269,11 +269,65 @@ Tree-shaking de iconos, catálogo de avatares ampliado, carrusel.
   sigue el orden original: Home → Mi trabajo → Resumen → Tarifas →
   Configuración/Ayuda.
 
-## Cómo continuar (próxima sesión)
+## Bloque 3 — Resto de pantallas + fundamentos compartidos (2026-09-06)
 
-Pendiente: Home → Mi trabajo → Resumen → Tarifas → Configuración/Ayuda,
-migrando cada pantalla de `NAVY`/`TEAL`/etc. a los tokens de marca
-nuevos (`BRAND_NAVY`/`BRAND_SKY`) donde corresponda, más el refactor de
-`AppLoading` para poder usar el logo real en el spinner en vez de un
-icono de `lucide-react`. Mi perfil y la cabecera/navegación global ya
-están resueltos (ver bloques 1 y 2 arriba).
+A petición explícita del usuario ("prueba paquetes más grandes de
+mejoras acumuladas, ahorra commits"), este bloque cierra de una vez
+toda la migración de color pendiente en vez de ir pantalla a pantalla
+con un commit cada una:
+
+- **Resumen** (`SummaryTab.jsx`): cifra de "Total combinado" (fondo
+  sólido, antes un `NAVY` distinto del resto de la app), pestaña "Total"
+  activa, mes seleccionado en la tendencia, `ExpandableCard` de "Por
+  escuela"/"Calendario". Sin tocar los colores por fuente
+  (Curso/Comisión/Ajuste — categóricos, `SOURCE_META`/`MOVEMENT_TYPE_META`).
+- **Tarifas** (`RatesTab.jsx`): importe de cada tarifa, contador "N
+  tarifas", "Filtrar" activo, color de respaldo de la hoja de alta.
+- **Configuración** (`ConfigTab.jsx`, el archivo más grande, 17 usos):
+  FAB genérico de `CrudTable`, botones "Guardar"/"Copiar enlace"/
+  "Enviar invitación"/"+ Nuevo usuario", icono de rol admin, "Editar"/
+  "Regenerar enlace" de un usuario, estado activo del selector de icono
+  de carga (incluida su vista previa, ya con el logo real de fondo),
+  badge de icono de cada fila del menú principal (antes `#F0FDFA` fijo,
+  ahora `${BRAND_NAVY}1A`, coherente con el resto), botón "‹ volver" y
+  título de sección. Sin tocar el fallback de `sectionColor` (sigue
+  siendo `TEAL`, como en Mi trabajo/Ayuda — solo se usa si una sección
+  no tiene color propio en `nav_sections`).
+- **Ayuda** (`HelpTab.jsx`): icono de "Ver qué hay de nuevo".
+- **Mi perfil** (`ProfileTab.jsx`, no estaba en el plan original pero
+  comparte código con Configuración): título de cada tarjeta, badge de
+  editar sobre el avatar, aro de selección de color, "Editar" del
+  carnet, botón de guardar contraseña, aciertos de requisito de
+  contraseña. El degradado del carnet de instructor (antes NAVY→TEAL→
+  AQUA, tres colores de la paleta antigua) pasa a un degradado de dos
+  tonos de marca (`BRAND_NAVY` → `BRAND_SKY`, con el segundo stop más
+  allá del 100% para que el azul claro nunca sature del todo la esquina
+  y el texto blanco del carnet mantenga contraste).
+- **Fundamentos compartidos** (`shared.jsx`): título de `ErrorBoundary`,
+  cabecera mes/año y punto de "hoy" de `MonthCalendar`, color por
+  defecto de `ExpandableCard` — al vivir en la librería de componentes,
+  este cambio se propaga solo a cualquier pantalla que ya use estos
+  componentes. `AppLoading` cambia también su color por defecto
+  (`BRAND_NAVY` en vez de `TEAL`) para los iconos de `lucide-react`
+  alternativos al logo real.
+- Ningún color categórico (colores por tipo de movimiento, colores de
+  entidad de negocio vía `colorFor`) se ha tocado en ningún archivo —
+  mismo criterio que en Home/Mi trabajo.
+
+Verificado: `npm run lint` (0 errores), `npm run test -- --run`
+(754/754), `npm run build` (correcto) una única vez para todo el
+bloque, más verificación visual real en navegador de las 5 pantallas
+(Resumen, Tarifas, Configuración, Ayuda, Mi perfil) — sin errores de
+consola en ninguna.
+
+## Estado de la Fase 2
+
+**Completa.** Las 4 pantallas del plan original (Home, Mi trabajo,
+Resumen, Tarifas) más Configuración/Ayuda/Mi perfil ya usan los tokens
+de marca nuevos donde corresponde. Pendiente real, no de esta
+iniciativa: nada bloqueante — quedan como ideas de roadmap ya
+documentadas en `docs/DESIGN-SYSTEM.md` §9 (dark mode, blur real,
+code-splitting de `pdf-lib`) y el refactor de `AppLoading` para animar
+el logo real también con los iconos alternativos de `lucide-react`
+(hoy solo la opción "Logo" usa la imagen real, el resto del catálogo
+sigue siendo iconos coloreados).

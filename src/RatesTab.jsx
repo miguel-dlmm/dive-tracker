@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus, Check, X, Search, SlidersHorizontal, GraduationCap, Handshake, Eye, EyeOff } from "lucide-react";
-import { NAVY, TEAL } from "./App";
+import { BRAND_NAVY, TEAL } from "./App";
 import {
   inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, MoneyInput,
   EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate,
@@ -252,7 +252,7 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
     await tableFor(r._source).deleteRow(r.id);
   };
 
-  const sheetTypeColor = TYPE_META[creating]?.color || NAVY;
+  const sheetTypeColor = TYPE_META[creating]?.color || BRAND_NAVY;
 
   return (
     <div className="relative space-y-4 pb-16">
@@ -261,7 +261,7 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
           onClick={() => setFiltersOpen((o) => !o)}
           aria-expanded={filtersOpen}
           className={`flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors ${filtersOpen ? "border-transparent text-white" : "border-gray-200 bg-white text-gray-600"}`}
-          style={filtersOpen ? { backgroundColor: TEAL } : {}}
+          style={filtersOpen ? { backgroundColor: BRAND_NAVY } : {}}
         >
           <SlidersHorizontal size={15} aria-hidden="true" /> {t("filter.button")}{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
         </button>
@@ -317,7 +317,7 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
 
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div className="border-b border-gray-100 px-4 py-3">
-          <h3 className="text-sm font-semibold" style={{ color: NAVY }}>{t("list.count", { count: filtered.length })}</h3>
+          <h3 className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{t("list.count", { count: filtered.length })}</h3>
         </div>
 
         <div>
@@ -367,8 +367,8 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
               <motion.div key={r.id} {...listItemVariants(reducedMotion)} className={`border-l-4 px-4 py-3.5 text-sm ${!isRateActive(r) ? "opacity-50" : ""}`} style={{ borderColor: TYPE_META[r._source].color }}>
                 <div className="flex items-start justify-between gap-2">
                   <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
-                  <span className="shrink-0 font-semibold tabular-nums" style={{ color: NAVY }}>
-                    <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: NAVY }} />
+                  <span className="shrink-0 font-semibold tabular-nums" style={{ color: BRAND_NAVY }}>
+                    <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: BRAND_NAVY }} />
                   </span>
                 </div>
                 <div className="mt-1.5 flex items-center justify-between gap-2">

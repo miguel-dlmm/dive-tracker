@@ -5,7 +5,7 @@ import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, Tren
 import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr, ExpandableCard } from "./shared";
 import { listItemVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
 import { buildEntriesBySource, comparePeriods } from "./rateCalc";
-import { NAVY, CORAL, GREEN } from "./App";
+import { BRAND_NAVY, CORAL, GREEN } from "./App";
 
 // Rediseño 2026-08-29 (ver docs/ADR/0009-rediseno-resumen.md): Resumen deja
 // de mostrar todo a la vez (antes: calendario global + total + 2 desgloses,
@@ -180,7 +180,7 @@ function RankedList({ rows, currencyRows, textColor, emptyLabel, expandedKey, on
             </span>
             <span className="flex shrink-0 items-center gap-2 tabular-nums">
               {!r.allColleague && <span className="text-xs text-gray-400">{fmtInt(r.people)}p</span>}
-              <span className="font-semibold" style={{ color: NAVY }}><MoneyLine totals={r.totals} currencyRows={currencyRows} /></span>
+              <span className="font-semibold" style={{ color: BRAND_NAVY }}><MoneyLine totals={r.totals} currencyRows={currencyRows} /></span>
             </span>
           </button>
           {onToggle && (
@@ -425,7 +425,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   // exista una segunda escuela, en vez de mostrar una comparación de un
   // único elemento consigo mismo.
   const hasMultipleSchools = schools.rows.length > 1;
-  const sourceColor = source === "total" ? NAVY : SOURCE_META[source].color;
+  const sourceColor = source === "total" ? BRAND_NAVY : SOURCE_META[source].color;
   const sourceLabel = source === "total" ? t("totalCombined") : t("totalOf", { source: SOURCE_META[source].label });
 
   // buildEntriesBySource (rateCalc.js): antes duplicado byte a byte aquí y
@@ -582,7 +582,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   // solo daba el total combinado, sin decir de dónde venía.
   const renderActivityTypes = (activityName) => {
     const rows = groupSum(periodEntries.filter((e) => e.activity === activityName), (e) => SOURCE_META[e._source]?.label || e._source, { withPeople: true });
-    return <RankedList rows={rows} currencyRows={currencies.rows} textColor={(label) => SOURCE_TYPE_COLOR[label] || NAVY} emptyLabel={t("empty.noMovementsInPeriod")} />;
+    return <RankedList rows={rows} currencyRows={currencies.rows} textColor={(label) => SOURCE_TYPE_COLOR[label] || BRAND_NAVY} emptyLabel={t("empty.noMovementsInPeriod")} />;
   };
 
   return (
@@ -622,7 +622,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
                 animate={{ opacity: 1, y: 0, transition: { duration: reducedMotion ? 0.01 : DURATION.xs, ease: EASE.enter } }}
                 exit={{ opacity: 0, y: reducedMotion ? 0 : -6, transition: { duration: reducedMotion ? 0.01 : DURATION.xs, ease: EASE.exit } }}
                 className="block truncate text-center text-sm font-semibold tabular-nums"
-                style={{ color: NAVY }}
+                style={{ color: BRAND_NAVY }}
               >
                 {label}
               </motion.span>
@@ -661,7 +661,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
             key={key}
             onClick={() => setSource(key)}
             className="min-h-9 rounded-md px-3.5 text-sm font-medium transition-colors"
-            style={source === key ? { backgroundColor: key === "total" ? NAVY : SOURCE_META[key].color, color: "white" } : { color: "#6B7280" }}
+            style={source === key ? { backgroundColor: key === "total" ? BRAND_NAVY : SOURCE_META[key].color, color: "white" } : { color: "#6B7280" }}
           >
             {l}
           </button>
@@ -689,7 +689,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
           hereda el defaultOpen cuando "Por escuela" no está, para que
           la pantalla no se quede con todo colapsado de entrada. */}
       {hasMultipleSchools && (
-        <ExpandableCard title={t("sections.bySchool")} icon={Building2} iconColor={NAVY} defaultOpen>
+        <ExpandableCard title={t("sections.bySchool")} icon={Building2} iconColor={BRAND_NAVY} defaultOpen>
           <RankedList
             rows={globalBySchool}
             currencyRows={currencies.rows}
@@ -765,7 +765,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
       )}
 
       {granularity === "mensual" && (
-        <ExpandableCard title={t("sections.calendar")} icon={Calendar} iconColor={NAVY}>
+        <ExpandableCard title={t("sections.calendar")} icon={Calendar} iconColor={BRAND_NAVY}>
           <MonthCalendar
             year={year}
             month={unitIndex}

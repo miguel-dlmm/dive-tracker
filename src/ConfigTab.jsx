@@ -6,7 +6,7 @@ import {
   ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
   Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2, Award,
 } from "lucide-react";
-import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
+import { TEAL, GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
 import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle } from "./shared";
 import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
@@ -195,7 +195,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
         {filteredRows.length === 0 && <li className="px-4 py-6 text-center text-sm text-gray-400">{t("crudTable.sinResultados")}</li>}
       </ul>
 
-      <Fab onClick={openCreateSheet} label={createLabel} color={TEAL} />
+      <Fab onClick={openCreateSheet} label={createLabel} color={BRAND_NAVY} />
 
       <Sheet open={sheetOpen} onClose={closeSheet}>
         <div className="mb-1 flex items-center justify-between">
@@ -221,7 +221,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
         <button
           onClick={submitSheet}
           className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"
-          style={{ backgroundColor: TEAL }}
+          style={{ backgroundColor: BRAND_NAVY }}
         >
           {editingRow ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />} {t("crudTable.guardar")}
         </button>
@@ -235,7 +235,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
 // llamaba "Secciones"/"Colores de sección": desde que Movimientos tiene su
 // propia identidad visual por tipo (barra lateral de cada tarjeta, colores
 // fijos de marca — ver rowAccent en MiTrabajoTab.jsx, deliberadamente NO
-// configurable, mismo criterio que NAVY/TEAL/CORAL/GREEN), "sección" se
+// configurable, mismo criterio que BRAND_NAVY/CORAL/GREEN), "sección" se
 // había vuelto ambiguo: esto no es eso, es el color de cada área de la
 // navegación (pestaña + botón de "+ Nuevo"), no el de los tipos de
 // movimiento dentro de Mi trabajo.
@@ -293,14 +293,14 @@ function GeneralSettings({ appConfig }) {
             key={name}
             onClick={() => setIcon(name)}
             className="flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium"
-            style={row.logo_icon === name ? { borderColor: TEAL, backgroundColor: "#F0FDFA", color: TEAL } : { borderColor: "#E5E7EB", color: "#4B5563" }}
+            style={row.logo_icon === name ? { borderColor: BRAND_NAVY, backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY } : { borderColor: "#E5E7EB", color: "#4B5563" }}
           >
             {name}
           </button>
         ))}
       </div>
       <div className="flex items-center gap-3 rounded-md bg-gray-50 p-4">
-        <AppLoading iconName={row.logo_icon} color={TEAL} size={32} />
+        <AppLoading iconName={row.logo_icon} color={BRAND_NAVY} size={32} />
         <span className="text-xs text-gray-400">{t("generalSettings.vistaPrevia")}</span>
       </div>
 
@@ -441,7 +441,7 @@ function StatusBadge({ status }) {
 function RoleIcon({ isAdmin, isSuperadmin }) {
   const { t } = useTranslation("config");
   if (isSuperadmin) return <ShieldCheck size={14} className="shrink-0" style={{ color: SUN }} role="img" aria-label={t("roleIcon.superadmin")} />;
-  if (isAdmin) return <Shield size={14} className="shrink-0" style={{ color: NAVY }} role="img" aria-label={t("roleIcon.admin")} />;
+  if (isAdmin) return <Shield size={14} className="shrink-0" style={{ color: BRAND_NAVY }} role="img" aria-label={t("roleIcon.admin")} />;
   return null;
 }
 
@@ -699,7 +699,7 @@ function UserDetailSheet({
               </div>
             )}
             {editable && (
-              <button onClick={startEditProfile} className="flex min-h-9 items-center gap-1 text-xs font-semibold" style={{ color: TEAL }}>
+              <button onClick={startEditProfile} className="flex min-h-9 items-center gap-1 text-xs font-semibold" style={{ color: BRAND_NAVY }}>
                 <Pencil size={13} aria-hidden="true" /> {t("userDetailSheet.editarDatos")}
               </button>
             )}
@@ -722,7 +722,7 @@ function UserDetailSheet({
           {status === "pendiente" && editable && (
             <p className="text-xs text-gray-400">
               {t("userDetailSheet.pendienteTexto")}{" "}
-              <button onClick={() => onRequestRegenerateLink(user)} disabled={actionBusy} className="font-semibold underline disabled:opacity-40" style={{ color: TEAL }}>
+              <button onClick={() => onRequestRegenerateLink(user)} disabled={actionBusy} className="font-semibold underline disabled:opacity-40" style={{ color: BRAND_NAVY }}>
                 {t("userDetailSheet.regenerarEnlace")}
               </button>
             </p>
@@ -803,7 +803,7 @@ function ActivationLinkPanel({ open, title: titleProp, description: descriptionP
         <button
           onClick={copyLink}
           className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white"
-          style={{ backgroundColor: TEAL }}
+          style={{ backgroundColor: BRAND_NAVY }}
         >
           <Copy size={15} aria-hidden="true" /> {t("activationLinkPanel.copiarEnlace")}
         </button>
@@ -969,7 +969,7 @@ function CreateUserSheet({ open, onClose, onCreated }) {
           <button
             onClick={copyLink}
             className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-medium text-white"
-            style={{ backgroundColor: TEAL }}
+            style={{ backgroundColor: BRAND_NAVY }}
           >
             {t("createUserSheet.copiarEnlace")}
           </button>
@@ -1049,7 +1049,7 @@ function CreateUserSheet({ open, onClose, onCreated }) {
         onClick={submit}
         disabled={submitting}
         className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-        style={{ backgroundColor: TEAL }}
+        style={{ backgroundColor: BRAND_NAVY }}
       >
         <UserPlus size={16} /> {submitting ? t("createUserSheet.creando") : t("createUserSheet.crearUsuario")}
       </button>
@@ -1454,7 +1454,7 @@ function UsersDirectory({ profile }) {
           <button
             onClick={() => setSheetOpen(true)}
             className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-white"
-            style={{ backgroundColor: TEAL }}
+            style={{ backgroundColor: BRAND_NAVY }}
           >
             <UserPlus size={15} aria-hidden="true" /> {t("usersDirectory.crearUsuario")}
           </button>
@@ -1751,7 +1751,7 @@ function ConfigMenuGroup({ title, items, onSelect }) {
             onClick={() => onSelect(key)}
             className="flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: "#F0FDFA", color: TEAL }}>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }}>
               <Icon size={18} aria-hidden="true" />
             </span>
             <span className="min-w-0 flex-1">
@@ -1809,11 +1809,11 @@ export default function ConfigTab({ schools, activities, currencies, paymentStat
       <button
         onClick={() => setSection(null)}
         className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium"
-        style={{ color: TEAL }}
+        style={{ color: BRAND_NAVY }}
       >
         <ChevronLeft size={18} aria-hidden="true" /> {t("menu.configuracion")}
       </button>
-      <h2 className="-mt-1 text-base font-semibold" style={{ color: NAVY }}>{currentSectionI18nKey && t(`sections.${currentSectionI18nKey}.label`)}</h2>
+      <h2 className="-mt-1 text-base font-semibold" style={{ color: BRAND_NAVY }}>{currentSectionI18nKey && t(`sections.${currentSectionI18nKey}.label`)}</h2>
 
       {section === "escuelas" && (
         // colorizeText: mismo tratamiento que Cursos (lavado de cara
