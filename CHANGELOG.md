@@ -19,6 +19,9 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Mi trabajo** adopta el color de marca nuevo en los KPIs, las
+  pestañas activas, "Filtrar"/"Cobrar todos"/"Confirmar cobro" y los
+  importes de curso/comisión.
 - **Home** adopta el color de marca nuevo en los KPIs, la cifra de
   "Generado este mes" y el punto de "hoy" del calendario.
 - **Nuevo logo de Ocean Flow** en la cabecera, el favicon, el icono de

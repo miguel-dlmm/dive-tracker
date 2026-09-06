@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "re
 import { useTranslation } from "react-i18next";
 import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2, HelpCircle } from "lucide-react";
 import { motion } from "motion/react";
-import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
+import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./App";
 import {
   Money, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
   isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab, EntryTitle,
@@ -52,8 +52,8 @@ function actionLabel(entry, isPending, t) {
 // misma nota de ADR-0005 sobre jerarquía de acciones).
 // Acento por tipo (borde izquierdo, discreto) — para escanear la lista
 // de un vistazo sin abrir cada fila. Curso/Comisión usan un color fijo de
-// marca por tipo (TEAL/SUN, igual criterio que NAVY/CORAL/GREEN de más
-// abajo — identidad de la app, no dato de negocio configurable). Ajuste
+// marca por tipo (TEAL/SUN, igual criterio que BRAND_NAVY/CORAL/GREEN de
+// más abajo — identidad de la app, no dato de negocio configurable). Ajuste
 // reutiliza el color que ya tenía el importe (CORAL/GREEN según signo):
 // esa distinción de "quién debe a quién" ya era más valiosa que un color
 // de tipo uniforme, no había que sustituirla.
@@ -83,7 +83,7 @@ function EntryRow({ entry, activityColor, schoolColor, currencyRows, isPending, 
   const { t } = useTranslation("trabajo");
   const isAjuste = entry._source === "companeros";
   const negative = isAjuste && entry.total < 0;
-  const amountColor = isAjuste ? (negative ? CORAL : GREEN) : NAVY;
+  const amountColor = isAjuste ? (negative ? CORAL : GREEN) : BRAND_NAVY;
   // Usado tanto por el itemLabel del menú "⋯" como por el mensaje de
   // confirmación del borrado (deleteConfirmMessage) — una única fuente,
   // sin calcular la misma frase dos veces.
@@ -226,7 +226,7 @@ function EntryRow({ entry, activityColor, schoolColor, currencyRows, isPending, 
             <button
               onClick={onToggle}
               className="flex min-h-9 items-center gap-1 rounded px-1.5 text-xs font-semibold transition-colors"
-              style={{ color: isPending ? TEAL : "#6B7280" }}
+              style={{ color: isPending ? BRAND_NAVY : "#6B7280" }}
             >
               {isPending ? <Check size={14} aria-hidden="true" /> : <RotateCcw size={13} aria-hidden="true" />}
               {actionLabel(entry, isPending, t)}
@@ -332,7 +332,7 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
       <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
         <Icon size={17} style={{ color }} aria-hidden="true" />
       </span>
-      <span className="text-base font-bold tabular-nums" style={{ color: NAVY }}>
+      <span className="text-base font-bold tabular-nums" style={{ color: BRAND_NAVY }}>
         {entries.length === 0 ? "—" : single ? (
           <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
         ) : (
@@ -707,7 +707,7 @@ export default function MiTrabajoTab({
             onClick={() => setStatusFilter(key)}
             aria-pressed={statusFilter === key}
             className="min-h-11 border-b-2 pb-2 text-[15px] font-semibold transition-colors"
-            style={statusFilter === key ? { borderColor: TEAL, color: NAVY } : { borderColor: "transparent", color: "#9CA3AF" }}
+            style={statusFilter === key ? { borderColor: BRAND_NAVY, color: BRAND_NAVY } : { borderColor: "transparent", color: "#9CA3AF" }}
           >
             {label}
           </button>
@@ -719,17 +719,17 @@ export default function MiTrabajoTab({
           onClick={() => setFiltersOpen((o) => !o)}
           aria-expanded={filtersOpen}
           className={`flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors ${filtersOpen ? "border-transparent text-white" : "border-gray-200 bg-white text-gray-600"}`}
-          style={filtersOpen ? { backgroundColor: TEAL } : {}}
+          style={filtersOpen ? { backgroundColor: BRAND_NAVY } : {}}
         >
           <SlidersHorizontal size={15} aria-hidden="true" /> {t("filter.label")}{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
         </button>
         {statusFilter === "pendientes" && pendingAll.length > 0 && (
-          <button onClick={() => setConfirmingCollectAll(true)} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
+          <button onClick={() => setConfirmingCollectAll(true)} className="min-h-9 text-xs font-semibold" style={{ color: BRAND_NAVY }}>
             {t("collectAll.button")}
           </button>
         )}
         {statusFilter === "cobrados" && paidAll.length > 0 && (
-          <button onClick={() => setConfirmingMarkAllPending(true)} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
+          <button onClick={() => setConfirmingMarkAllPending(true)} className="min-h-9 text-xs font-semibold" style={{ color: BRAND_NAVY }}>
             {t("markAllPending.button")}
           </button>
         )}
@@ -813,7 +813,7 @@ export default function MiTrabajoTab({
             {statusFilter === "pendientes" && !hasActiveFilters && <PartyPopper size={26} className="text-gray-300" aria-hidden="true" />}
             <p className="text-sm text-gray-400">{emptyMessage(statusFilter, hasActiveFilters, t)}</p>
             {hasActiveFilters && (
-              <button onClick={clearFilters} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
+              <button onClick={clearFilters} className="min-h-9 text-xs font-semibold" style={{ color: BRAND_NAVY }}>
                 {t("filter.clear")}
               </button>
             )}
