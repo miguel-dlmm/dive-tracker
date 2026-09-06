@@ -21,6 +21,15 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Configuración** ya no muestra "Configuración" dos veces en la
+  cabecera al entrar en una sección (una para cerrar, otra para volver
+  atrás): ahora hay una única cabecera, igual que en Ayuda — ✕ solo en
+  el menú principal, ‹ y el nombre de la sección al entrar en una.
+- **KPIs más compactos** en Home y Mi trabajo: icono y cifra comparten
+  fila en vez de apilarse en 3 filas centradas, la etiqueta pasa a su
+  propia fila debajo — mismas 3 tarjetas, menos alto.
+- Últimos restos de verde en cabeceras sin sección propia (login, "Qué
+  hay de nuevo", Ayuda/Configuración) corregidos al navy de marca.
 - **Calendario**: ya se puede deslizar hacia los lados para cambiar de
   mes, no solo con las flechas — igual que cualquier calendario nativo
   de móvil.

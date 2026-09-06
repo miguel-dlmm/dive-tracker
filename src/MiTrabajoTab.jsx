@@ -327,19 +327,21 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex flex-col items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 py-4 text-center"
+      className="flex flex-col gap-1 rounded-xl border border-gray-200 bg-white px-2.5 py-2.5"
     >
-      <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
-        <Icon size={17} style={{ color }} aria-hidden="true" />
-      </span>
-      <span className="text-base font-bold tabular-nums" style={{ color: BRAND_NAVY }}>
-        {entries.length === 0 ? "—" : single ? (
-          <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
-        ) : (
-          entries.map(([code, amt], i) => <span key={code}>{i > 0 && " + "}<Money amount={amt} code={code} currencyRows={currencyRows} /></span>)
-        )}
-      </span>
-      <span className="flex items-center justify-center gap-0.5 text-[10.5px] font-medium leading-tight text-gray-500">
+      <div className="flex items-center gap-1.5">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+          <Icon size={13} style={{ color }} aria-hidden="true" />
+        </span>
+        <span className="min-w-0 truncate text-base font-bold tabular-nums" style={{ color: BRAND_NAVY }}>
+          {entries.length === 0 ? "—" : single ? (
+            <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
+          ) : (
+            entries.map(([code, amt], i) => <span key={code}>{i > 0 && " + "}<Money amount={amt} code={code} currencyRows={currencyRows} /></span>)
+          )}
+        </span>
+      </div>
+      <span className="flex items-center gap-0.5 text-[10.5px] font-medium leading-tight text-gray-500">
         {label}
         {tooltip && (
           // Mismo truco de objetivo táctil que Field: el icono visual se

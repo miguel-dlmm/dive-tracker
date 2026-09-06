@@ -436,3 +436,85 @@ code-splitting de `pdf-lib`) y el refactor de `AppLoading` para animar
 el logo real también con los iconos alternativos de `lucide-react`
 (hoy solo la opción "Logo" usa la imagen real, el resto del catálogo
 sigue siendo iconos coloreados).
+
+## Bloque 3 — Ronda de feedback real sobre Fase 3 (2026-09-06/07)
+
+Tras probar la Preview, el usuario reportó tres cosas concretas
+("la cabecera de ayuda y configuración sigue en verde... me chirría
+como se abren ayuda y configuración... en los KPIS, ¿más compacta?").
+
+**3.1 — Verde residual en cabeceras sin `nav_sections` propio.**
+`sectionColor(tab)` caía a `|| TEAL` cuando la pestaña no tenía fila en
+`nav_sections` (login, WhatsNew, cabeceras de Ayuda/Configuración) —
+una decisión de una sesión anterior que asumía que era un caso raro.
+En la práctica se disparaba constantemente en pantallas reales. Cambiado
+el fallback a `|| BRAND_NAVY` en `App.jsx`, `ConfigTab.jsx` y
+`HelpTab.jsx`; corregidas también las filas de `nav_sections` en la
+base de datos TEST que aún guardaban el teal antiguo.
+
+**3.2 — Rediseño de la navegación de Configuración.** El problema real:
+al entrar en una sección (p. ej. Escuelas), la cabecera mostraba
+"Configuración" DOS veces — una vez como botón de cerrar (✕, vuelve a
+Home) y otra vez como breadcrumb interno de "‹ Configuración" (vuelve
+al menú). Confuso y redundante. Solución: se elimina el breadcrumb
+interno de `ConfigTab` por completo; el estado "en qué sección estoy"
+se eleva al header global de `App.jsx` vía un callback
+(`onSectionChange`). Ahora hay una única cabecera: `✕ Configuración` en
+el menú raíz, `‹ Escuelas` (o la sección que sea) dentro de una
+sección — patrón estándar de navegación jerárquica (X solo en la raíz
+real, flecha-atrás en cualquier otro nivel, título mostrado una sola
+vez). Mismo patrón que ya usaba Ayuda, ahora consistente entre ambas.
+4 tests de `ConfigTab.test.jsx` que verificaban la estructura antigua
+(breadcrumb + `<h2>`) se reescribieron para verificar el nuevo contrato
+(`onSectionChange` llamado con `{label, onBack}` / `null`).
+
+**3.3 — KPIs más compactos.** Las tarjetas KPI de Home (`KpiTile`) y Mi
+trabajo (`MoneyKpiTile`) apilaban icono/cifra/etiqueta en 3 filas
+centradas — ver captura del feedback: fila de 3 tarjetas junto a la
+lista ocupaba demasiado alto. Cambiado a icono+cifra en una sola fila
+(icono más pequeño, `size 13` en círculo de `24px`) y la etiqueta en su
+propia fila a todo el ancho debajo — mismo patrón en ambas pantallas.
+Verificado con capturas reales (viewport iPhone 14 Pro Max emulado):
+las 3 tarjetas de Home y las 3 de Mi trabajo (incluida la de
+"Pendiente de cobrar" con su tooltip) se ven correctamente, sin
+desbordamiento de texto ni errores de consola.
+
+**Verificado**: `npm run lint` 0 errores (10 avisos, el nuevo es el
+`useEffect` de `onSectionChange`/`t` en `ConfigTab.jsx`, mismo patrón
+tolerado que otros avisos existentes) · `npm run test -- --run` 754/754
+· `npm run build` correcto · navegación real en Chrome (viewport
+iPhone 14 Pro Max) para las 3 correcciones.
+
+## Fase 4 — Ronda de correcciones y features pendientes (2026-09-07)
+
+**Estado: 🔄 en curso.** El usuario encargó un lote grande antes de
+desconectar por la noche, con instrucción explícita de resolverlo todo
+sin pararse a pedir aprobación (autorización cubierta también por
+`git push`/commits de este lote — ver memoria de sesión
+`no-confirmations-when-user-unavailable`). Lista de encargo, cada item
+se cierra aquí según se resuelve:
+
+1. ⬜ Bug: en Mi trabajo, cuando la lista está 100% vacía desaparece el
+   menú inferior.
+2. ⬜ La navegación por deslizar del calendario (Bloque 1, Fase 3)
+   debería estar animada (hoy el cambio de mes es instantáneo).
+3. ⬜ Rediseñar visualmente el input de `DatePicker` — no encaja con
+   Ocean Flow, se pide algo más estético/redondeado/usable.
+4. ⬜ El generador de Training Records debe dejar de vivir "dentro" de
+   Configuración y ser una feature independiente; volver atrás siempre
+   debe volver a Home.
+5. ⬜ Cargar datos reales de prueba para el usuario demo: varias
+   escuelas, tarifas y movimientos en varios meses pasados y futuros,
+   cifras redondas.
+6. ⬜ Barrido final de pendientes de rediseño, si queda alguno.
+7. ⬜ Probar generación de Training Records end-to-end para todas las
+   plantillas — el usuario reporta un error en iOS Safari/iPhone 14 Pro
+   Max.
+8. ⬜ Logo más grande en login, loading y carnet del instructor (apenas
+   se ve hoy).
+9. ⬜ El icono del engranaje de Configuración debe reflejar
+   abierto/cerrado igual que ya hace el de Ayuda.
+
+Cada item se documenta con su propio sub-apartado (qué se encontró, qué
+se hizo, cómo se verificó) según se va cerrando, siguiendo el mismo
+formato que los bloques anteriores.

@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConfigTab from "./ConfigTab";
 
@@ -69,17 +69,24 @@ describe("ConfigTab — menú agrupado", () => {
     expect(screen.getByText("Monedas")).toBeInTheDocument();
   });
 
-  it("entrar en una sección muestra 'Configuración' para volver, y volver restaura el menú", async () => {
+  it("entrar en una sección informa a onSectionChange (para la cabecera global), y volver restaura el menú", async () => {
+    // Rediseño de navegación 2026-09-06: ConfigTab ya no dibuja su propia
+    // miga de pan/título ("‹ Configuración" + h2) — informa a quien la usa
+    // vía onSectionChange, y es la cabecera global (App.jsx) la que
+    // muestra "‹ [Sección]". Aquí se prueba el contrato (la llamada y su
+    // onBack), no un texto que ya no existe en este componente.
     const user = userEvent.setup();
-    render(<ConfigTab {...baseProps()} />);
+    const onSectionChange = vi.fn();
+    render(<ConfigTab {...baseProps()} onSectionChange={onSectionChange} />);
 
     await user.click(screen.getByText("Escuelas"));
-    expect(screen.getByRole("heading", { name: "Escuelas" })).toBeInTheDocument();
     expect(screen.queryByText("Cursos")).not.toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: "Escuelas" }));
 
-    await user.click(screen.getByText("Configuración"));
+    act(() => { onSectionChange.mock.calls.at(-1)[0].onBack(); });
+
     expect(screen.getByText("Cursos")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Escuelas" })).not.toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(null);
   });
 });
 
@@ -92,14 +99,19 @@ describe("ConfigTab — menú agrupado", () => {
 describe("ConfigTab — la sub-sección abierta sobrevive a una recarga", () => {
   it("recargar dentro de Tarifas reabre directamente en Tarifas, no en el menú", async () => {
     const user = userEvent.setup();
-    const { unmount } = render(<ConfigTab {...baseProps()} />);
+    const onSectionChange = vi.fn();
+    const { unmount } = render(<ConfigTab {...baseProps()} onSectionChange={onSectionChange} />);
     await user.click(screen.getByText("Tarifas"));
-    expect(screen.getByRole("heading", { name: "Tarifas" })).toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: "Tarifas" }));
 
     unmount();
-    render(<ConfigTab {...baseProps()} />);
+    onSectionChange.mockClear();
+    render(<ConfigTab {...baseProps()} onSectionChange={onSectionChange} />);
 
-    expect(screen.getByRole("heading", { name: "Tarifas" })).toBeInTheDocument();
+    // El efecto de onSectionChange corre también al montar (no solo al
+    // cambiar `section`), para que reabrir ya dentro de una sección
+    // guardada muestre la cabecera correcta desde el primer render.
+    expect(onSectionChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: "Tarifas" }));
     expect(screen.queryByText("Escuelas")).not.toBeInTheDocument();
   });
 
@@ -111,15 +123,17 @@ describe("ConfigTab — la sub-sección abierta sobrevive a una recarga", () => 
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
 
     const adminProfile = { user_id: "u1", is_admin: true, is_superadmin: false };
-    const { unmount } = render(<ConfigTab {...baseProps({ profile: adminProfile })} />);
+    const onSectionChange = vi.fn();
+    const { unmount } = render(<ConfigTab {...baseProps({ profile: adminProfile })} onSectionChange={onSectionChange} />);
     await user.click(screen.getByText("Usuarios"));
-    expect(screen.getByRole("heading", { name: "Usuarios" })).toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: "Usuarios" }));
 
     unmount();
-    render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: false, is_superadmin: false } })} />);
+    onSectionChange.mockClear();
+    render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: false, is_superadmin: false } })} onSectionChange={onSectionChange} />);
 
     expect(screen.getByText("Escuelas")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Usuarios" })).not.toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(null);
   });
 });
 
@@ -154,13 +168,15 @@ describe("ConfigTab — gesto de deslizar hacia la derecha = atrás, recursivo",
   it("deslizar dentro de una sección vuelve al menú, sin llamar a onClose", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    const { container } = render(<ConfigTab {...baseProps()} onClose={onClose} />);
+    const onSectionChange = vi.fn();
+    const { container } = render(<ConfigTab {...baseProps()} onClose={onClose} onSectionChange={onSectionChange} />);
     await user.click(screen.getByText("Escuelas"));
-    expect(screen.getByRole("heading", { name: "Escuelas" })).toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: "Escuelas" }));
 
     swipeRight(container.firstChild);
 
     expect(screen.getByText("Cursos")).toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(null);
     expect(onClose).not.toHaveBeenCalled();
   });
 });

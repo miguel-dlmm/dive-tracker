@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle } from "lucide-react";
+import { Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle, ChevronLeft } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { supabase } from "./supabaseClient";
@@ -268,10 +268,22 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
     && currencies.loaded && rates.loaded && commissionRates.loaded && worklog.loaded
     && comisiones.loaded && colleaguePayments.loaded && navSections.loaded && appConfig.loaded;
 
-  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
+  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || BRAND_NAVY;
   const avatar = resolveAvatar(profile);
   const bottomTabActive = PRIMARY_TABS.some((tabItem) => tabItem.id === tab) ? tab : null;
   const isSecondary = SECONDARY_TABS.includes(tab);
+  // Rediseño de navegación 2026-09-06 — antes Configuración dibujaba su
+  // propia miga de pan interna ("‹ Configuración") ADEMÁS de esta cabecera
+  // global ("✕ Configuración"), con el mismo nombre repetido dos veces.
+  // ConfigTab.jsx informa aquí, vía onSectionChange, cuándo está dentro de
+  // una sección — la cabecera global pasa a ser la única barra de
+  // navegación ("‹ [Sección]" en vez de "✕ Configuración"), patrón
+  // estándar de una sola barra jerárquica. Se resetea a null en cuanto se
+  // sale de "config" para que otra pestaña nunca herede un override ajeno.
+  const [configSectionHeader, setConfigSectionHeader] = useState(null);
+  useEffect(() => {
+    if (tab !== "config") setConfigSectionHeader(null);
+  }, [tab]);
   // Cerrar Configuración/Ayuda (la "X" de la cabecera, y el gesto de
   // "atrás" de cada una en su nivel más externo — ver ConfigTab.jsx/
   // HelpTab.jsx) siempre vuelve al INICIO de esa pantalla la próxima vez
@@ -356,9 +368,19 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             // HelpTab.jsx, "de índice a guía viva" — pero el razonamiento
             // de fondo, "capa encima" vs. "un paso más adentro", se
             // mantiene igual para las dos.)
-            <button onClick={closeSecondary} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label={t("aria.close")}>
-              <X size={20} style={{ color: BRAND_NAVY }} aria-hidden="true" />
-              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{t(`secondaryTitles.${tab}`)}</h1>
+            <button
+              onClick={configSectionHeader ? configSectionHeader.onBack : closeSecondary}
+              className="-m-2 flex min-h-11 items-center gap-2 p-2"
+              aria-label={configSectionHeader ? t("aria.back") : t("aria.close")}
+            >
+              {configSectionHeader ? (
+                <ChevronLeft size={20} style={{ color: BRAND_NAVY }} aria-hidden="true" />
+              ) : (
+                <X size={20} style={{ color: BRAND_NAVY }} aria-hidden="true" />
+              )}
+              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: BRAND_NAVY }}>
+                {configSectionHeader ? configSectionHeader.label : t(`secondaryTitles.${tab}`)}
+              </h1>
             </button>
           ) : (
             // 2026-08-30: la marca se unifica en "Ocean Flow" — antes
@@ -457,7 +479,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             schools={schools} activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
             navSections={navSections} appConfig={appConfig} profile={profile} onClose={closeSecondary}
-            onOpenProfile={() => changeTab("perfil")}
+            onOpenProfile={() => changeTab("perfil")} onSectionChange={setConfigSectionHeader}
           />
         )}
         {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} />}

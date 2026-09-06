@@ -12,6 +12,7 @@
   },
   "aria": {
     "close": "Close",
+    "back": "Back",
     "goHome": "Go to Home",
     "help": "Help",
     "config": "Settings",

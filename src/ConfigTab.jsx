@@ -3,10 +3,10 @@ import { useTranslation } from "react-i18next";
 import { motion, useAnimationControls } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
-  ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
+  ChevronRight, Building2, GraduationCap, Coins,
   Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2, Award,
 } from "lucide-react";
-import { TEAL, GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
+import { GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
 import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle } from "./shared";
 import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
@@ -1772,7 +1772,7 @@ function ConfigMenuGroup({ title, items, onSelect }) {
 // onClose (opcional): cierra Configuración entera (mismo handler que la "X"
 // de la cabecera, ver App.jsx) — lo dispara el gesto de "atrás" cuando ya
 // estamos en el menú principal, sin ninguna sección abierta (ver backProps).
-export default function ConfigTab({ schools, activities, currencies, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose, onOpenProfile }) {
+export default function ConfigTab({ schools, activities, currencies, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose, onOpenProfile, onSectionChange }) {
   const { t } = useTranslation("config");
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
   const isSuperadmin = !!profile?.is_superadmin;
@@ -1786,13 +1786,35 @@ export default function ConfigTab({ schools, activities, currencies, paymentStat
     if (next) { try { sessionStorage.setItem(CONFIG_SECTION_KEY, next); } catch { /* no-op */ } }
     else clearStoredSection();
   };
-  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
+  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || BRAND_NAVY;
   const currentSectionI18nKey = [...BUSINESS_SECTIONS, ...HIDDEN_SECTIONS, ...ADMIN_SECTIONS, ...SUPERADMIN_SECTIONS].find((s) => s.key === section)?.i18nKey;
   // Deslizar hacia la derecha = "atrás", recursivo (feedback explícito
   // 2026-08-30: "no como una excepción, no como un truco, no como una
   // interacción aislada"): dentro de una sección, vuelve al menú; ya en el
   // menú, cierra Configuración entera — el mismo gesto en cualquier nivel.
   const backProps = useSwipeBack(section == null ? onClose : () => setSection(null));
+  // Rediseño de navegación 2026-09-06 (feedback explícito del usuario: "al
+  // entrar en una sección aparece dos veces Configuración, una para cerrar
+  // la sección y otra para navegar atrás... no me convence"). Antes había
+  // TRES filas de cabecera a la vez: la cabecera global ("✕ Configuración",
+  // App.jsx), la miga de pan propia de aquí ("‹ Configuración") y el título
+  // h2 de la sección — con "Configuración" escrito dos veces. Se colapsan
+  // en una sola: este efecto informa a App.jsx de qué mostrar en SU cabecera
+  // (nada especial en el menú; "‹ [Sección]" dentro de una), y esta pantalla
+  // deja de dibujar su propia miga de pan y su propio h2 — la cabecera
+  // global pasa a ser la única fuente de "dónde estoy y cómo vuelvo",
+  // patrón estándar de navegación jerárquica (una sola barra, nunca dos a
+  // la vez). Corre también al montar (no solo al cambiar `section`) para
+  // que reabrir directamente en una sección ya guardada en sessionStorage
+  // muestre la cabecera correcta desde el primer render.
+  useEffect(() => {
+    if (!onSectionChange) return;
+    if (section == null) { onSectionChange(null); return; }
+    onSectionChange({
+      label: currentSectionI18nKey ? t(`sections.${currentSectionI18nKey}.label`) : "",
+      onBack: () => setSection(null),
+    });
+  }, [section, currentSectionI18nKey]);
 
   if (section == null) {
     return (
@@ -1804,17 +1826,11 @@ export default function ConfigTab({ schools, activities, currencies, paymentStat
     );
   }
 
+  // Sin miga de pan ni título propios aquí — la cabecera global (App.jsx)
+  // ya los muestra ("‹ [Sección]"), ver el efecto de onSectionChange más
+  // arriba. Una sola barra de navegación, no dos a la vez.
   return (
     <div className="space-y-3" {...backProps}>
-      <button
-        onClick={() => setSection(null)}
-        className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium"
-        style={{ color: BRAND_NAVY }}
-      >
-        <ChevronLeft size={18} aria-hidden="true" /> {t("menu.configuracion")}
-      </button>
-      <h2 className="-mt-1 text-base font-semibold" style={{ color: BRAND_NAVY }}>{currentSectionI18nKey && t(`sections.${currentSectionI18nKey}.label`)}</h2>
-
       {section === "escuelas" && (
         // colorizeText: mismo tratamiento que Cursos (lavado de cara
         // 2026-09-03, pedido explícito del usuario: "el estilado no acaba

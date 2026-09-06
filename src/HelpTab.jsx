@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle } from "lucide-react";
-import { TEAL, BRAND_NAVY } from "./App";
+import { BRAND_NAVY } from "./App";
 import { ExpandableCard } from "./shared";
 import { useSwipeBack } from "./motion";
 import { HELP_CATEGORIES } from "./help/content";
@@ -90,7 +90,7 @@ export function clearStoredHelpOpen() {
 
 export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
   const { t } = useTranslation("help");
-  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
+  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || BRAND_NAVY;
   const [openId, setOpenIdState] = useState(readStoredOpen);
   const setOpenId = (id) => {
     setOpenIdState(id);
