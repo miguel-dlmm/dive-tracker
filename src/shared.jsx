@@ -21,7 +21,9 @@ import { AVATAR_ICON_MAP } from "./avatarCatalog";
 // añade aquí también.
 const LOADING_ICONS = { Waves, Anchor, Sailboat, LifeBuoy, Fish, Compass };
 
-export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
+// focus: borde navy de marca + halo sky suave (docs/DESIGN-SYSTEM.md §6.3)
+// — antes un gris genérico sin relación con la marca nueva.
+export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-[#00335A] focus-visible:ring-2 focus-visible:ring-[#81ADD0] focus-visible:ring-offset-1";
 
 // =================================================================
 // Toasts — mensaje genérico de confirmación/error para cualquier
@@ -245,7 +247,7 @@ export function Sheet({ open, onClose, children, className = "", zIndexClass = "
     <AnimatePresence>
       {open && (
         <motion.div
-          className={`fixed inset-0 ${zIndexClass} flex items-end justify-center bg-black/25`}
+          className={`fixed inset-0 ${zIndexClass} flex items-end justify-center bg-[#191919]/45`}
           onClick={onClose}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, transition: { duration: reducedMotion ? 0.01 : DURATION.sm } }}
@@ -265,7 +267,7 @@ export function Sheet({ open, onClose, children, className = "", zIndexClass = "
               lo que cueste de espacio vacío de más cuando la barra sí
               está oculta. */}
           <motion.div
-            className={`flex max-h-[85svh] w-full max-w-3xl flex-col overflow-hidden rounded-t-xl bg-white shadow-xl ${className}`}
+            className={`flex max-h-[85svh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[20px] bg-white shadow-xl ${className}`}
             variants={sheetVariants(reducedMotion)}
             initial="initial" animate="animate" exit="exit"
             drag="y"

@@ -348,6 +348,31 @@ Ya ejecutados y verificados en la base de datos TEST (ver commits de
 esta fase) — pendientes solo en producción, el día que se decida
 publicar este rediseño ahí.
 
+## Bloque 4 — Primer paso de controles finos (2026-09-06)
+
+Arranque de la parte de §4/§6 de `docs/DESIGN-SYSTEM.md` que quedaba
+sin propagar (radios, foco, elevación) — no exhaustivo todavía, dos
+cambios de alto impacto por vivir en componentes compartidos:
+
+- **`Sheet`** (`shared.jsx`): esquinas superiores de `rounded-t-xl`
+  (12px) a `radius-sheet` (20px, valor arbitrario de Tailwind — no hay
+  utilidad exacta en la escala por defecto); fondo del backdrop de
+  `bg-black/25` (negro genérico) a `bg-[#191919]/45` (`brand-ink`,
+  coherente con el resto de la marca). Cascada automática a toda hoja
+  de la app (Home, Mi trabajo, Tarifas, Configuración...).
+- **`inputCls`** (`shared.jsx`, reusado por `Field`/`Select`/
+  `MultiSelect`/`SearchSelect`/`DatePicker`/`MoneyInput`): borde de
+  foco de `focus:border-gray-400` (gris genérico) a `focus:border-
+  [#00335A]` + halo `focus-visible:ring-[#81ADD0]` (antes sin color de
+  anillo definido) — mismo criterio de §6.3.
+
+**Sin hacer todavía** (alcance real, no bloqueante): normalizar el
+radio de cada botón individual (`rounded-md` en decenas de sitios,
+6px, frente al `radius-control` de 10px del libro de estilo) — coste
+alto (tocar cada botón) para una diferencia visual de 4px, se deja
+fuera de esta fase por relación esfuerzo/beneficio baja salvo que se
+pida explícitamente.
+
 ## Justificación final del diseño
 
 Añadida como sección nueva ("08 — Justificación") al mismo Artifact del

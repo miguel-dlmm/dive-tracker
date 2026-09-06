@@ -21,6 +21,9 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Hojas inferiores** (crear/editar en cualquier pantalla) con esquinas
+  más redondeadas y fondo de marca al abrirse; **campos de formulario**
+  con el foco ya en los colores nuevos.
 - **Últimos rincones en verde ya al navy de marca**: login/registro/
   recuperar contraseña, "Qué hay de nuevo", el FAB y la pestaña activa
   de Mi trabajo, y los iconos de categoría de Ayuda (estos últimos
