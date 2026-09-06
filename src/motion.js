@@ -173,3 +173,38 @@ export function useSwipeBack(onBack, { enabled = true } = {}) {
     },
   };
 }
+
+// Hermano bidireccional de useSwipeBack (rediseño estructural 2026-09-06,
+// primer caso real que lo necesita: navegar mes anterior/siguiente en
+// MonthCalendar deslizando, no solo con las flechas — patrón nativo de
+// cualquier calendario de móvil, iOS/Android incluidos). Mismo umbral y
+// misma lógica de "predominantemente horizontal" que useSwipeBack, para
+// que el gesto se sienta igual de "correcto" en toda la app en vez de
+// inventar un segundo criterio de sensibilidad. Deslizar hacia la
+// izquierda (dedo va de derecha a izquierda) = "siguiente", igual que
+// pasar página; hacia la derecha = "anterior".
+export function useSwipeHorizontal({ onSwipeLeft, onSwipeRight, enabled = true } = {}) {
+  const reduced = usePrefersReducedMotion();
+  const active = enabled && !reduced && (typeof onSwipeLeft === "function" || typeof onSwipeRight === "function");
+  const startRef = useRef(null);
+
+  if (!active) return {};
+
+  return {
+    onTouchStart: (e) => {
+      const t = e.touches[0];
+      startRef.current = { x: t.clientX, y: t.clientY };
+    },
+    onTouchEnd: (e) => {
+      const start = startRef.current;
+      startRef.current = null;
+      if (!start) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - start.x;
+      const dy = t.clientY - start.y;
+      if (Math.abs(dx) < 70 || Math.abs(dx) <= Math.abs(dy) * 1.5) return;
+      if (dx < 0) onSwipeLeft?.();
+      else onSwipeRight?.();
+    },
+  };
+}

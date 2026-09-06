@@ -21,6 +21,9 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Calendario**: ya se puede deslizar hacia los lados para cambiar de
+  mes, no solo con las flechas — igual que cualquier calendario nativo
+  de móvil.
 - **Hojas inferiores** (crear/editar en cualquier pantalla) con esquinas
   más redondeadas y fondo de marca al abrirse; **campos de formulario**
   con el foco ya en los colores nuevos.

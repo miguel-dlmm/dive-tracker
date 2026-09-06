@@ -373,6 +373,48 @@ alto (tocar cada botón) para una diferencia visual de 4px, se deja
 fuera de esta fase por relación esfuerzo/beneficio baja salvo que se
 pida explícitamente.
 
+## Fase 3 — Rediseño estructural (arrancada 2026-09-06)
+
+Distinta de la Fase 2 (identidad de marca): el usuario preguntó
+explícitamente "¿no queda nada más del rediseño?" y confirmó que sí
+quería entrar en la parte más ambiciosa del encargo original —
+"cambiar todo de sitio, calendarios, inputs, bloques/acciones
+nuevas" — que hasta ahora no se había tocado (la Fase 2 fue
+deliberadamente conservadora: solo color/logo, cero cambios de layout
+o de comportamiento).
+
+**Criterio explícito para esta fase**: no inventar cambios porque "hay
+que cambiar algo" — cada pieza necesita una justificación real (un
+problema de uso concreto, o un patrón ya establecido en la propia app
+que falta extender), igual que el resto de la iniciativa. Auditar cada
+área nombrada (calendarios, inputs, navegación de Configuración) para
+encontrar huecos reales en vez de asumir que todo necesita cambiar —
+varias de esas áreas (tipos de input de `MoneyInput`, patrón FAB+Sheet)
+ya estaban bien resueltas de sesiones anteriores.
+
+### Bloque 1 — Deslizar para cambiar de mes en el calendario
+
+**Hueco real encontrado**: `MonthCalendar` solo navegaba con las
+flechas ‹/› — sin gesto de deslizar, el único patrón de navegación de
+calendario que le faltaba frente a cualquier calendario nativo de
+móvil (iOS/Android). La propia app ya usa gestos de deslizar en otros
+sitios (`useSwipeBack` en Configuración/Ayuda, arrastrar para cerrar
+en `Sheet`) — no era un patrón nuevo para el proyecto, solo le faltaba
+aplicarse aquí.
+
+**Qué se hizo**: `useSwipeHorizontal` (nuevo, `motion.js`) — hermano
+bidireccional de `useSwipeBack`, mismo umbral y misma lógica de
+"predominantemente horizontal" (no duplicar un segundo criterio de
+sensibilidad). `MonthCalendar` lo usa solo cuando el caller ya ofrece
+`onPrevMonth`/`onNextMonth` (Home y Resumen) — deslizar a la izquierda
+avanza de mes, a la derecha retrocede, igual convención que pasar
+página. Respeta `prefers-reduced-motion` (se desactiva del todo, las
+flechas siguen ahí).
+
+Verificado con eventos táctiles reales (CDP, no un drag de ratón):
+ambas direcciones cambian de mes correctamente, y tocar un día para
+crear un movimiento sigue funcionando igual — sin errores de consola.
+
 ## Justificación final del diseño
 
 Añadida como sección nueva ("08 — Justificación") al mismo Artifact del

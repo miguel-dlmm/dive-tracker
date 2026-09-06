@@ -7,7 +7,7 @@ import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, Chev
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
 import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./colors";
-import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, usePrefersReducedMotion } from "./motion";
+import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, usePrefersReducedMotion, useSwipeHorizontal } from "./motion";
 import { AVATAR_ICON_MAP } from "./avatarCatalog";
 
 // Catálogo cerrado del icono de carga configurable (GeneralSettings,
@@ -1117,8 +1117,16 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
     }));
   };
 
+  // Deslizar el calendario entero cambia de mes (rediseño estructural
+  // 2026-09-06) — solo si el propio caller ofrece navegación de mes
+  // (onPrevMonth/onNextMonth, igual condición que las flechas de abajo);
+  // Resumen y Home ya las pasan, cualquier uso futuro sin ellas no gana
+  // el gesto tampoco, en vez de fallar en silencio contra un handler que
+  // no existe.
+  const swipeMonthProps = useSwipeHorizontal({ onSwipeLeft: onNextMonth, onSwipeRight: onPrevMonth, enabled: !!(onPrevMonth || onNextMonth) });
+
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
+    <div className="rounded-lg border border-gray-200 bg-white p-4" {...swipeMonthProps}>
       {/* Encima de los días de la semana, dentro de la propia tarjeta —
           antes vivía como un párrafo aparte debajo de todo el calendario
           (feedback 2026-08-30: se leía como una nota a pie de página, no
