@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
 import { X, Languages, TrendingUp, UserCircle, IdCard, Sparkles } from "lucide-react";
-import { NAVY, TEAL, SUN, GREEN, CORAL, BRAND_NAVY } from "./App";
+import { TEAL, SUN, GREEN, CORAL, BRAND_NAVY } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 
@@ -52,7 +52,7 @@ const SLIDE_ICONS = [
   // diapositiva de cierre ("Repásalo cuando quieras"), que se queda última
   // a propósito porque es un meta-mensaje sobre el propio WhatsNew.
   { icon: IdCard, color: TEAL },
-  { icon: Sparkles, color: NAVY },
+  { icon: Sparkles, color: BRAND_NAVY },
 ];
 
 const SWIPE_THRESHOLD = 60;
@@ -131,7 +131,7 @@ export default function WhatsNew({ onClose }) {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${slide.color}1A` }}>
               <Icon size={26} style={{ color: slide.color }} aria-hidden="true" />
             </div>
-            <h2 id="whats-new-title" className="mb-2 text-base font-bold" style={{ color: NAVY }}>{slide.title}</h2>
+            <h2 id="whats-new-title" className="mb-2 text-base font-bold" style={{ color: BRAND_NAVY }}>{slide.title}</h2>
             <p className="text-sm leading-relaxed text-gray-500">{slide.body}</p>
           </motion.div>
         </div>

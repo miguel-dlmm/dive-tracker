@@ -505,7 +505,7 @@ se cierra aquí según se resuelve:
    Configuración y ser una feature independiente; volver atrás siempre
    debe volver a Home — ver 4.4.
 5. ✅ Cargar datos reales de prueba para el usuario demo — ver 4.7.
-6. ⬜ Barrido final de pendientes de rediseño, si queda alguno.
+6. ✅ Barrido final de pendientes de rediseño — ver 4.9.
 7. 🔶 Probar generación de Training Records end-to-end — ver 4.8.
    Parcialmente cerrado: la generación en sí queda verificada y sin
    regresiones; el error concreto de iOS Safari/iPhone 14 Pro Max NO se
@@ -764,3 +764,42 @@ real (limitación ya documentada en `CLAUDE.md` §8: Playwright+WebKit
 cuelga aquí) ni un iPhone físico — para cerrar este punto de verdad hace
 falta el texto exacto del error o una captura de pantalla del usuario,
 que no quedó registrado antes de que se desconectara.
+
+### 4.9 — Barrido final de pendientes de rediseño
+
+Auditoría dirigida, no una revisión pantalla a pantalla completa —
+buscando específicamente el mismo patrón de fallo que ya había costado
+varias rondas de feedback esta noche (verde/navy antiguo sobreviviendo
+en rincones no revisados):
+
+- **`TEAL` literal en `WorkLogTab.jsx`/`ComisionesTab.jsx`/
+  `CompanerosTab.jsx`/`PaymentsTab.jsx`**: confirmado que estos 4
+  archivos son código MUERTO en la práctica — `App.jsx` documenta
+  explícitamente (línea ~55) que las pestañas "log"/"comisiones"/
+  "colegas" ya no tienen ningún punto de entrada en la UI desde la
+  unificación en Mi trabajo (`docs/ADR/0005`), y "pagos" tampoco desde
+  que "Cobrar todos" + filtro por escuela en Mi trabajo cubre su
+  función. Se dejan tal cual a propósito — recolorearlos no cambiaría
+  nada visible y tocar código muerto sin necesidad real es la
+  complejidad que las reglas del proyecto piden evitar.
+- **`NAVY` (el navy antiguo, `#0F172A`, pre-rebrand) en vez de
+  `BRAND_NAVY` (`#00335A`) — real y visible, sí corregido**: 7 archivos
+  alcanzables lo seguían usando en texto/iconos: `AcceptLegalScreen`,
+  `CreatePasswordScreen`, `ForcedPasswordUpdateScreen`,
+  `ForgotPasswordScreen`, `ResetPasswordScreen`, `RegisterScreen`
+  (título de cada pantalla) y `WhatsNew.jsx` (un icono de categoría y
+  el título de cada slide de "Qué hay de nuevo"). Mismo patrón que el
+  resto de la migración de esta noche: el logo/icono de esas pantallas
+  ya se había pasado a `BRAND_NAVY` en una sesión anterior, pero el
+  texto del título se quedó atrás. Todas estas pantallas ya importaban
+  `BRAND_NAVY` para otra cosa — cambio mecánico de una palabra, import
+  de `NAVY` retirado donde quedaba sin uso.
+- Barrido de hex literales (`#0F766E`, el valor real de `TEAL`) por si
+  algún sitio lo hardcodeaba saltándose la constante: ninguno.
+
+**Verificado**: `npm run lint` 0 errores, `npm run test -- --run`
+754/754, `npm run build` correcto. Capturas reales de "Qué hay de
+nuevo" (Ayuda → Ver qué hay de nuevo) recorriendo las 5 diapositivas:
+el título y el icono de la diapositiva "Repásalo cuando quieras" pasan
+del navy oscuro antiguo al navy de marca — confirmado con zoom sobre el
+icono. Sin errores de consola.

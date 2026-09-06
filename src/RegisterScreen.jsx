@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, ArrowLeft, MailCheck } from "lucide-react";
-import { NAVY, BG, BODY_FONT, BRAND_NAVY } from "./App";
+import { BG, BODY_FONT, BRAND_NAVY } from "./App";
 import { inputCls, Field, Select } from "./shared";
 import { useToast } from "./shared";
 import i18n, { setStoredLanguage, SUPPORTED_LANGUAGES } from "./i18n";
@@ -124,7 +124,7 @@ export default function RegisterScreen({ onBack, inviteToken }) {
               <ArrowLeft size={16} aria-hidden="true" /> {t("register.backToLogin")}
             </button>
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: NAVY }}>{t("register.title")}</h2>
+              <h2 className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{t("register.title")}</h2>
               <p className="mt-1 text-xs text-gray-500">{t("register.description")}</p>
             </div>
             <Field label={t("register.languageLabel")}>

@@ -21,6 +21,9 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- Últimos restos del navy antiguo (pre-rebrand) al navy de marca:
+  títulos de login/registro/recuperar contraseña/aceptar términos y
+  "Qué hay de nuevo".
 - **Logo más visible** en el login/registro/recuperar contraseña, en la
   pantalla de carga al abrir la app y en la marca de agua del carnet de
   instructor (apenas se distinguía).

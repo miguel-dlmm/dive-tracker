@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
-import { NAVY, BRAND_NAVY, BG, BODY_FONT } from "./App";
+import { BRAND_NAVY, BG, BODY_FONT } from "./App";
 import LegalConsentFields from "./legal/LegalConsentFields";
 import { PasswordField, RequirementRow } from "./auth/PasswordFields";
 import { PASSWORD_MIN_LENGTH, hasUppercase, hasSymbol } from "./passwordPolicy";
@@ -52,7 +52,7 @@ export default function CreatePasswordScreen({ onSubmit }) {
           </div>
           <div className="text-center leading-tight">
             <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: BRAND_NAVY }}>{t("createPassword.eyebrow")}</p>
-            <h1 className="mt-1 text-lg font-bold tracking-tight" style={{ color: NAVY }}>{t("createPassword.title")}</h1>
+            <h1 className="mt-1 text-lg font-bold tracking-tight" style={{ color: BRAND_NAVY }}>{t("createPassword.title")}</h1>
           </div>
         </div>
 
