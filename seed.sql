@@ -29,8 +29,10 @@ insert into currencies (code, name, symbol, is_default) values
   ('THB', 'Baht tailandés', '฿', true)
 on conflict (code) do nothing;
 
--- app_config: fila única obligatoria
-insert into app_config (id, logo_icon) values (true, 'Waves')
+-- app_config: fila única obligatoria. 'Logo' = logo real de Ocean Flow
+-- (rediseño 2026-09-06), no un icono de lucide-react — ver AppLoading
+-- en shared.jsx.
+insert into app_config (id, logo_icon) values (true, 'Logo')
 on conflict (id) do nothing;
 
 -- nav_sections: claves usadas hoy en el código (App.jsx, sectionColor) —

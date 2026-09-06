@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Waves, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { NAVY, TEAL, BG, BODY_FONT } from "./App";
 import LegalConsentFields from "./legal/LegalConsentFields";
 
@@ -37,7 +37,7 @@ export default function AcceptLegalScreen({ onSubmit }) {
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
-            <Waves size={22} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
+            <img src="/brand/logo-mark-navy.png" alt="" width={22} height={22} aria-hidden="true" />
           </div>
           <div className="text-center leading-tight">
             <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>{t("acceptLegal.eyebrow")}</p>

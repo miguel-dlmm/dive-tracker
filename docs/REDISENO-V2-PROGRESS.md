@@ -191,14 +191,89 @@ cambio (todas tocan `avatarCatalog.js`/`ProfileTab.jsx`/`shared.jsx`/
 
 ## Fase 2 — Propagación a pantallas (arrancada 2026-09-06)
 
-**Estado: 🟡 en curso.** Primer bloque implementado (iconografía/avatar,
-ver arriba) directamente en `feature/rediseno-v2`, sin esperar al orden
-original (logo/cabecera → Home → ...). El resto de la fase sigue el plan
-de abajo.
+**Estado: 🟡 en curso.** Dos bloques implementados hasta ahora:
+
+### Bloque 1 — Iconografía/avatar (ver "Hallazgo lateral" arriba)
+
+Tree-shaking de iconos, catálogo de avatares ampliado, carrusel.
+
+### Bloque 2 — Logo, cabecera y navegación global
+
+- **Logo real en la cabecera**: sustituye el icono `Waves` de
+  `lucide-react` por el logo entregado. Como el logo solo existe como
+  foto/JPEG (sin vectorial disponible — el usuario lo confirmó
+  explícitamente al preguntarle), se recortó el símbolo con Pillow
+  (fondo blanco → transparencia real, no solo blanco puro) y se usa
+  como `<img>` en `public/brand/logo-mark-navy.png`. Documentado en el
+  propio código (`App.jsx`) para sustituir por un `<svg>` real en
+  cuanto exista un vectorial oficial.
+- **Favicon/iconos PWA/OG image generados** (antes placeholders que ni
+  siquiera existían como archivo, según `CLAUDE.md`): `icon-192.png`/
+  `icon-512.png`/`og-image.png` a partir del logo (fondo navy + símbolo
+  blanco, mismo criterio de "tile de marca" para los tres). `icon.svg`
+  (favicon) pasa a ser un SVG que envuelve el PNG en base64 — evita
+  tocar el `<link rel="icon" type="image/svg+xml">` de `index.html`
+  mientras no haya vectorial real. `theme-color` (index.html y
+  manifest.json) actualizado al navy nuevo (`#00335A`).
+- **Tokens de marca nuevos** en `src/colors.js`: `BRAND_NAVY`,
+  `BRAND_SKY`, `BRAND_INK` — añadidos sin tocar `NAVY`/`TEAL`/etc.
+  existentes (esos se migran pantalla a pantalla, no de golpe). Usados
+  hoy solo en la cabecera (wordmark + iconos de "cerrar"/Ayuda/
+  Configuración).
+- **Indicador de pestaña activa** en la navegación inferior (§7.1 de
+  `docs/DESIGN-SYSTEM.md`, patrón Material 3 Navigation Bar): píldora
+  de fondo `BRAND_SKY` tras el icono+etiqueta activos — el color del
+  propio icono lo sigue decidiendo `sectionColor()` (dato de negocio,
+  convención #2 de `CLAUDE.md`), la píldora es un "estás aquí" genérico
+  aparte, no una repintada del acento de sección.
+- Corregido de paso un error real de lint nuevo (`react-hooks/
+  static-components`, no estaba en la lista de reglas ya desactivadas
+  de `eslint.config.js`): `iconByName()` no puede llamarse como función
+  en el punto donde se asigna la etiqueta JSX — se añadió
+  `AVATAR_ICON_MAP` (objeto plano) en `avatarCatalog.js`, mismo patrón
+  ya usado por `LOADING_ICONS`/`CATEGORY_ICONS`.
+- **Ampliado a petición explícita del usuario** ("revisa que los
+  loadings también se actualizan con el logo y todas las posibles
+  referencias") — auditoría completa de `Waves` en todo `src/`:
+  - **`AppLoading` (spinner genérico, `shared.jsx`)**: nueva opción
+    `"Logo"` — el logo real, no un icono de `lucide-react`. Como es un
+    PNG (sin vectorial, no se puede recolorear con `color` como un
+    icono de stroke), el efecto de "relleno" se consigue superponiendo
+    dos copias de la imagen (una atenuada de fondo, otra recortada por
+    la animación) en vez de dos copias coloreadas distinto del mismo
+    icono — mismo `oceanFill` de siempre. `"Logo"` pasa a ser el valor
+    por defecto: `ICON_OPTIONS` (`ConfigTab.jsx`) lo añade primero,
+    `App.jsx` lo usa como fallback si no hay fila de configuración, y
+    `schema.sql`/`seed.sql` lo fijan como default para instalaciones
+    nuevas. La fila real de `app_config` en la base de datos TEST
+    actual también se actualizó a `"Logo"` (dato, no esquema — un
+    `UPDATE` de una fila, ejecutado con un script de un solo uso y
+    borrado después) para que el efecto sea visible ya, no solo en
+    instalaciones futuras.
+  - **Las 7 pantallas de autenticación** (Login, Registro, Olvidé mi
+    contraseña, Restablecer contraseña, Crear contraseña, Actualización
+    forzada de contraseña, Aceptar términos legales) mostraban el mismo
+    icono `Waves` como marca antes de iniciar sesión — todas pasan al
+    logo real. Las 3 que además muestran el texto "Ocean Flow" (Login,
+    Registro, Olvidé mi contraseña) actualizan también ese texto a
+    `BRAND_NAVY`, igual que la cabecera.
+  - **Watermark del carnet de instructor** (`InstructorCard`,
+    `ProfileTab.jsx`): el `Waves` decorativo en la esquina del carnet
+    pasa a `logo-mark-white.png` (variante blanca del logo, nueva —
+    fondo del carnet es oscuro).
+  - Verificado uno por uno en navegador real (login, spinner con la
+    animación de relleno, watermark del carnet) — sin errores de
+    consola en ningún caso.
+- **No tocado todavía** (a propósito, fuera del alcance de este
+  bloque): ningún color interior de pantalla (`TEAL`/`CORAL`/etc.) — eso
+  sigue el orden original: Home → Mi trabajo → Resumen → Tarifas →
+  Configuración/Ayuda.
 
 ## Cómo continuar (próxima sesión)
 
-Pendiente: logo/cabecera/navegación global (máximo impacto visual,
-mínimo riesgo funcional) y luego Home → Mi trabajo → Resumen → Tarifas
-→ Configuración/Ayuda (Mi perfil ya está resuelto, ver bloque de
-iconografía/avatar arriba). Nada de esto se ha tocado todavía.
+Pendiente: Home → Mi trabajo → Resumen → Tarifas → Configuración/Ayuda,
+migrando cada pantalla de `NAVY`/`TEAL`/etc. a los tokens de marca
+nuevos (`BRAND_NAVY`/`BRAND_SKY`) donde corresponda, más el refactor de
+`AppLoading` para poder usar el logo real en el spinner en vez de un
+icono de `lucide-react`. Mi perfil y la cabecera/navegación global ya
+están resueltos (ver bloques 1 y 2 arriba).

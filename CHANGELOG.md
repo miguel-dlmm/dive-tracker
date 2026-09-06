@@ -19,6 +19,11 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Nuevo logo de Ocean Flow** en la cabecera, el favicon, el icono de
+  la app, la pantalla de carga, el login/registro/recuperar contraseña
+  y el carnet de instructor — primer paso visible del rediseño de
+  marca. La pestaña activa de la navegación inferior ahora se marca con
+  una píldora de fondo, más fácil de distinguir de un vistazo.
 - **Más opciones de avatar**, de 6 a 14, con iconografía real de mar y
   buceo (ancla, brújula, salvavidas, velero...) además de los animales
   marinos de siempre — y ahora se eligen deslizando en un carrusel en

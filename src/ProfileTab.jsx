@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, Waves, ChevronLeft, ChevronRight } from "lucide-react";
+import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { NAVY, TEAL, AQUA, CORAL } from "./colors";
 import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
-import { AVATAR_ICONS, AVATAR_COLORS, resolveAvatar, iconByName } from "./avatarCatalog";
+import { AVATAR_ICONS, AVATAR_COLORS, AVATAR_ICON_MAP, resolveAvatar } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
 import i18n, { setStoredLanguage } from "./i18n";
 import { computeInitials } from "./computeInitials";
@@ -373,7 +373,7 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
   const { t } = useTranslation("profile");
   const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.nickname;
   const avatar = resolveAvatar(profile);
-  const AvatarIcon = iconByName(avatar.icon);
+  const AvatarIcon = AVATAR_ICON_MAP[avatar.icon] || AVATAR_ICON_MAP.Fish;
   const trimmedSignature = useTrimmedSignature(signature);
   // Nivel profesional real (Divemaster/Instructor, ver "Datos
   // personales") en vez del texto fijo "Instructor SSI" de antes —
@@ -428,8 +428,8 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
               <p className="text-sm font-bold tabular-nums text-white">{ssiProNumber || "—"}</p>
             </div>
           </div>
-          <span className="flex items-center gap-1 text-white/40" aria-hidden="true">
-            <Waves size={16} />
+          <span className="flex items-center gap-1 opacity-40" aria-hidden="true">
+            <img src="/brand/logo-mark-white.png" alt="" width={16} height={16} />
           </span>
         </div>
       </div>

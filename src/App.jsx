@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle } from "lucide-react";
+import { Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { supabase } from "./supabaseClient";
@@ -9,7 +9,7 @@ import { ToastProvider, AppLoading, useScrolled, Avatar, ErrorBoundary } from ".
 import { resolveAvatar } from "./avatarCatalog";
 import EnvironmentIndicator from "./EnvironmentIndicator";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
-import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG } from "./colors";
+import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG, BRAND_NAVY, BRAND_SKY, BRAND_INK } from "./colors";
 import LoginScreen from "./LoginScreen";
 import ForgotPasswordScreen from "./ForgotPasswordScreen";
 import ResetPasswordScreen from "./ResetPasswordScreen";
@@ -44,7 +44,7 @@ import i18n, { setStoredLanguage } from "./i18n";
 // arriba junto al resto). Se re-exportan aquí para que el resto de la app
 // siga importando "./App" como siempre, sin tocar ningún import existente.
 // ---------------------------------------------------------------
-export { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG };
+export { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG, BRAND_NAVY, BRAND_SKY, BRAND_INK };
 
 export const DISPLAY_FONT = "'Inter', sans-serif";
 export const BODY_FONT = "'Inter', sans-serif";
@@ -300,7 +300,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
     if (DEV_AUTH_BYPASS) disableDevBypass();
     onSignOut();
   };
-  const logoIcon = appConfig.rows[0]?.logo_icon || "Waves";
+  const logoIcon = appConfig.rows[0]?.logo_icon || "Logo";
   // La cabecera acompaña siempre al usuario (ver rediseño de navegación
   // global) — antes se quedaba en flujo normal y desaparecía al hacer
   // scroll en cualquier lista larga, dejando Ayuda/Configuración/Cerrar
@@ -357,7 +357,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             // de fondo, "capa encima" vs. "un paso más adentro", se
             // mantiene igual para las dos.)
             <button onClick={closeSecondary} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label={t("aria.close")}>
-              <X size={20} style={{ color: NAVY }} aria-hidden="true" />
+              <X size={20} style={{ color: BRAND_NAVY }} aria-hidden="true" />
               <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{t(`secondaryTitles.${tab}`)}</h1>
             </button>
           ) : (
@@ -369,19 +369,23 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             // "Ocean Flow" es el nombre de marca — no se traduce en
             // ningún idioma, igual que cualquier nombre propio de producto.
             <button onClick={() => changeTab("home")} className="-m-2 flex min-h-11 items-center gap-2.5 p-2" aria-label={t("aria.goHome")}>
-              <Waves size={20} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
-              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: NAVY }}>Ocean Flow</h1>
+              {/* Logo real del rediseño (2026-09-06) — PNG, no SVG: el logo
+                  solo se entregó como foto/JPEG, sin fuente vectorial
+                  disponible (ver docs/DESIGN-SYSTEM.md §1.1). Sustituir por
+                  un <svg> real en cuanto exista un vectorial oficial. */}
+              <img src="/brand/logo-mark-navy.png" alt="" width={22} height={22} aria-hidden="true" />
+              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: BRAND_NAVY }}>Ocean Flow</h1>
             </button>
           )}
           <div className="flex items-center gap-1">
             {tab !== "help" && (
               <button onClick={() => changeTab("help")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label={t("aria.help")}>
-                <HelpCircle size={20} style={{ color: NAVY }} aria-hidden="true" />
+                <HelpCircle size={20} style={{ color: BRAND_NAVY }} aria-hidden="true" />
               </button>
             )}
             {tab !== "config" && (
               <button onClick={() => changeTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label={t("aria.config")}>
-                <Settings size={20} style={{ color: NAVY }} aria-hidden="true" />
+                <Settings size={20} style={{ color: BRAND_NAVY }} aria-hidden="true" />
               </button>
             )}
             {profile?.nickname && tab !== "perfil" && (
@@ -497,8 +501,19 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
                 className="flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-2 transition-colors"
                 style={{ color: active ? c : "#9CA3AF" }}
               >
-                <Icon size={19} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-                <span className="text-[10.5px] font-medium">{t(`tabs.${tabItem.id}`)}</span>
+                {/* Indicador de pestaña activa (rediseño 2026-09-06,
+                    docs/DESIGN-SYSTEM.md §7.1) — píldora de fondo tras el
+                    icono+etiqueta activos, patrón del Navigation Bar de
+                    Material 3. Fondo siempre sky-tintado (BRAND_SKY),
+                    independiente del color de sección: es un "estás aquí"
+                    genérico, no una repintada del acento de la sección. */}
+                <span
+                  className="flex flex-col items-center gap-0.5 rounded-full px-3 py-1 transition-colors"
+                  style={{ backgroundColor: active ? `${BRAND_SKY}26` : "transparent" }}
+                >
+                  <Icon size={19} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
+                  <span className="text-[10.5px] font-medium">{t(`tabs.${tabItem.id}`)}</span>
+                </span>
               </button>
             );
           })}

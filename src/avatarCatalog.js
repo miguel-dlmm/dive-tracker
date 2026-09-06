@@ -21,8 +21,10 @@ import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN } from "./colors";
 // ellos ya usados y aceptados como iconografía de marca en otro sitio de la
 // app (ICON_OPTIONS del icono de carga, ConfigTab.jsx: Anchor, Compass,
 // LifeBuoy, Sailboat) — mismo lenguaje visual, no uno nuevo.
-// Waves sigue sin estar aquí: es el icono de la propia app (favicon,
-// login, spinner — ver EnvironmentIndicator.jsx/index.html), no un avatar.
+// Waves sigue sin estar aquí: sigue siendo una opción del icono de carga
+// configurable (ICON_OPTIONS, ConfigTab.jsx), no un avatar. El favicon/
+// login/spinner ya no son Waves de todos modos — son el logo real desde
+// el rediseño 2026-09-06 (ver docs/DESIGN-SYSTEM.md §1.1).
 export const AVATAR_ICONS = [
   { name: "Fish", Icon: Fish },
   { name: "FishSymbol", Icon: FishSymbol },
@@ -49,8 +51,20 @@ export const AVATAR_COLORS = [
   { name: "sun", value: SUN },
 ];
 
+// Mapa plano nombre→componente, derivado de AVATAR_ICONS — expuesto aparte
+// (no solo la función de abajo) porque `react-hooks/static-components`
+// marca como error asignar a una variable usada como etiqueta JSX el
+// resultado de LLAMAR a una función (aunque sea pura y determinista, como
+// esta) durante el render; un acceso a objeto plano sí lo acepta — mismo
+// motivo por el que LOADING_ICONS (shared.jsx) y CATEGORY_ICONS
+// (HelpTab.jsx) son objetos, no funciones. Cualquier `<Icon />` que
+// dependa de un nombre de icono del catálogo de avatares debe usar este
+// mapa directamente (`AVATAR_ICON_MAP[name] || AVATAR_ICON_MAP.Fish`),
+// nunca `iconByName(name)` (se mantiene solo para código no-JSX).
+export const AVATAR_ICON_MAP = Object.fromEntries(AVATAR_ICONS.map((a) => [a.name, a.Icon]));
+
 export function iconByName(name) {
-  return AVATAR_ICONS.find((a) => a.name === name)?.Icon || AVATAR_ICONS[0].Icon;
+  return AVATAR_ICON_MAP[name] || AVATAR_ICON_MAP.Fish;
 }
 
 // Resuelve un icono/color por defecto deterministas a partir del nickname —

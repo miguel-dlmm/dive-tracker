@@ -8,7 +8,7 @@ import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, Chev
 // desarrollo, no solo una fragilidad teórica).
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./colors";
 import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, usePrefersReducedMotion } from "./motion";
-import { iconByName } from "./avatarCatalog";
+import { AVATAR_ICON_MAP } from "./avatarCatalog";
 
 // Catálogo cerrado del icono de carga configurable (GeneralSettings,
 // ConfigTab.jsx, ICON_OPTIONS) — imports nombrados en vez de `import * as
@@ -115,13 +115,32 @@ export function useToast() {
 // Loading genérico de la app — un icono que "se rellena" en bucle.
 // El icono es configurable desde Configuración (tabla app_config),
 // para poder cambiarlo por el logo oficial cuando esté listo, sin
-// tocar código.
+// tocar código. Rediseño 2026-09-06: "Logo" ya es esa opción — el logo
+// real, no un icono de lucide-react. Como es un PNG (sin vectorial
+// disponible, ver docs/DESIGN-SYSTEM.md §1.1) no se puede recolorear
+// con `color` como los iconos de stroke; el mismo efecto de "relleno"
+// se consigue superponiendo dos copias de la imagen (una atenuada de
+// fondo, otra a opacidad completa recortada por la animación), en vez
+// de dos copias coloreadas distinto del mismo icono.
 // =================================================================
-export function AppLoading({ iconName = "Waves", color = TEAL, size = 40, label }) {
+export function AppLoading({ iconName = "Logo", color = TEAL, size = 40, label }) {
   const { t } = useTranslation("common");
+  const statusProps = { role: "status", "aria-label": label || t("loading.defaultLabel") };
+  if (iconName === "Logo") {
+    return (
+      <div className="flex flex-col items-center gap-3" {...statusProps}>
+        <div className="relative" style={{ width: size, height: size }}>
+          <img src="/brand/logo-mark-navy.png" width={size} height={size} alt="" aria-hidden="true" style={{ opacity: 0.2 }} />
+          <div className="absolute inset-0" style={{ animation: "oceanFill 1.6s ease-in-out infinite" }}>
+            <img src="/brand/logo-mark-navy.png" width={size} height={size} alt="" aria-hidden="true" />
+          </div>
+        </div>
+      </div>
+    );
+  }
   const Icon = LOADING_ICONS[iconName] || Waves;
   return (
-    <div className="flex flex-col items-center gap-3" role="status" aria-label={label || t("loading.defaultLabel")}>
+    <div className="flex flex-col items-center gap-3" {...statusProps}>
       <div className="relative" style={{ width: size, height: size }}>
         <Icon size={size} style={{ color: "#E5E7EB" }} strokeWidth={2} aria-hidden="true" />
         <div className="absolute inset-0" style={{ animation: "oceanFill 1.6s ease-in-out infinite" }}>
@@ -188,7 +207,7 @@ export const ErrorBoundary = withTranslation("common")(ErrorBoundaryBase);
 // duplicaba la resolución con `import * as Icons`, ver LOADING_ICONS
 // más arriba para el porqué de quitarlo).
 export function Avatar({ icon, color = TEAL, size = 36 }) {
-  const Icon = iconByName(icon);
+  const Icon = AVATAR_ICON_MAP[icon] || AVATAR_ICON_MAP.Fish;
   return (
     <span
       className="inline-flex shrink-0 items-center justify-center rounded-full"

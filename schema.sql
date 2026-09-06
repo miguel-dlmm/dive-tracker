@@ -267,7 +267,7 @@ create policy "admin write" on nav_sections for all using (public.is_admin(auth.
 -- representaba el concepto correcto — ver migración de arquitectura.)
 create table if not exists app_config (
   id boolean primary key default true,
-  logo_icon text not null default 'Waves',
+  logo_icon text not null default 'Logo',
   -- Si "Regístrate" aparece en el login (ver ADR-0023). Off por defecto:
   -- una instalación nueva nunca expone alta pública sin que un superadmin
   -- lo active a propósito.

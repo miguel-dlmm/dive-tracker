@@ -260,9 +260,12 @@ function SectionColors({ navSections }) {
   );
 }
 
-// Ajustes generales — hoy solo el icono del loading (configurable para
-// poder cambiarlo por el logo oficial cuando esté listo, sin tocar código).
-const ICON_OPTIONS = ["Waves", "Anchor", "Sailboat", "LifeBuoy", "Fish", "Compass"];
+// Ajustes generales — hoy solo el icono del loading. "Logo" (rediseño
+// 2026-09-06) es ya el logo real de Ocean Flow, no un icono de
+// lucide-react — el resto de opciones siguen disponibles como
+// alternativa deliberada (mismo criterio de siempre: configurable sin
+// tocar código, ver AppLoading en shared.jsx).
+const ICON_OPTIONS = ["Logo", "Waves", "Anchor", "Sailboat", "LifeBuoy", "Fish", "Compass"];
 
 function GeneralSettings({ appConfig }) {
   const { t } = useTranslation("config");

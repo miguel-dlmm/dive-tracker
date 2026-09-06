@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Waves, Loader2 } from "lucide-react";
-import { NAVY, TEAL, BG, BODY_FONT } from "./App";
+import { Loader2 } from "lucide-react";
+import { TEAL, BG, BODY_FONT, BRAND_NAVY } from "./App";
 import { inputCls, Field } from "./shared";
 import { ACCOUNT_DEACTIVATED_MESSAGE } from "./useSession";
 
@@ -39,8 +39,8 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
     <div className="flex min-h-dvh items-center justify-center px-5" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-2">
-          <Waves size={28} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
-          <h1 className="text-lg font-bold tracking-tight" style={{ color: NAVY }}>Ocean Flow</h1>
+          <img src="/brand/logo-mark-navy.png" alt="" width={28} height={28} aria-hidden="true" />
+          <h1 className="text-lg font-bold tracking-tight" style={{ color: BRAND_NAVY }}>Ocean Flow</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">

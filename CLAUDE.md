@@ -45,8 +45,11 @@ compañeros, Tarifas, Resumen).
 ## Ramas y entornos
 
 Modelo completo en `docs/ADR/0006-estrategia-de-ramas-y-entornos.md`. Hoy:
-`main` es la producción real (proyecto Vercel `dive-tracker-exgg`,
-`dive-tracker-exgg.vercel.app`) y `develop` es la rama de
+`main` es la producción real (proyecto Vercel `dive-tracker-exgg` —
+renombrado a "oceanflow" en el dashboard de Vercel en algún momento
+tras el rebrand, confirmado con `vercel project ls` el 2026-09-06; el
+dominio sigue siendo `dive-tracker-exgg.vercel.app`, sin cambios) y
+`develop` es la rama de
 integración/preparación, que además hace de entorno TEST de facto para el
 proyecto Vercel `dive-tracker` (`dive-tracker-three.vercel.app`), con su
 propio Supabase separado del de producción — ver "Indicador visual de
