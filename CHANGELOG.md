@@ -18,6 +18,15 @@ Registro de cambios relevantes de Ocean Flow.
   en vez de una pantalla en blanco, y cabecera/navegación siguen
   funcionando.
 
+### Changed
+- Pequeña auditoría de unificación visual (ver `docs/ESTILO.md`): Tarifas
+  ya anima la alta/baja de cada fila y su estado vacío pasa al mismo
+  tratamiento centrado que Mi trabajo; Resumen unifica la tarjeta
+  "HeroTotal" con el resto de tarjetas de cifra protagonista; Mi trabajo
+  y Tarifas consolidan el título de cada fila (escuela + curso) en un
+  único componente compartido, y se retira un esqueleto de carga de Mi
+  trabajo que nunca llegaba a pintarse en la práctica.
+
 ### Fixed
 - (Interno, Training Records) Al firmar en la hoja de alta de alumno,
   un trazo de firma con componente horizontal hacia la derecha (una

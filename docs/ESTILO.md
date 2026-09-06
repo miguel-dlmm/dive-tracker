@@ -171,3 +171,84 @@ revisados en el bloque 14 y dejados aparte a propósito:
   "listas con una fila por elemento", pero una es de solo lectura con
   expansión in-place y comparación de periodo, la otra es CRUD completo
   con hoja de edición — ninguna gana nada compartiendo implementación.
+
+## Auditoría de unificación visual 2026-09-04 — hallazgos y decisiones
+
+Primera pasada explícita de la "fase de unificación visual global" que
+`CLAUDE.md` deja anunciada en "Cosas que NO existen todavía". Alcance:
+Tarifas, Resumen, Home y primitivas compartidas (`shared.jsx`/`motion.js`)
+— Ayuda y Configuración/WhatsNew/avatarCatalog quedan fuera a propósito
+(otro trabajo en paralelo la misma noche). Metodología: lectura completa
+de `MovementSheet.jsx`/`MiTrabajoTab.jsx` (la referencia de calidad) y de
+las pantallas candidatas, más un recorrido visual real (Chromium,
+viewport iPhone 14 Pro Max) para confirmar cada hallazgo antes de tocar
+código — ver rama `feature/restyling-v1` (no fusionada a `develop`,
+pendiente de revisión visual humana).
+
+- **Tarifas ya hablaba el mismo idioma que Mi trabajo** (rediseño
+  2026-08-30, ver comentario en `RatesTab.jsx`) — la sospecha inicial de
+  que "predata el rediseño" no se confirmó: fila con acento de color,
+  FAB+Sheet, filtro colapsable, todo ya alineado. Los huecos reales eran
+  más finos: sin animación de alta/baja de fila (la única lista con
+  alta/baja de toda la app sin ninguna transición) y un estado vacío con
+  un padding distinto al "sin resultados" neutro ya usado en Mi trabajo.
+  Corregido: las filas de Tarifas ahora usan `AnimatePresence` +
+  `listItemVariants` (motion.js) — el mismo vocabulario que ya usan
+  `ExpandableCard` y el desglose de Resumen para "algo que entra/sale de
+  una lista" — y el estado vacío pasa a `flex flex-col items-center gap-2
+  px-4 py-10 text-center`, igual que la variante neutra de Mi trabajo. Se
+  descarta deliberadamente reutilizar la coreografía de animación a medida
+  de `EntryRow` en Mi trabajo (colapso de alto con retraso, toggle de
+  estado, "Deshacer" desde el toast): resuelve un problema que Tarifas no
+  tiene (una fila que puede moverse entre dos pestañas visibles a la vez)
+  y extraerla habría sido complejidad sin necesidad real (convención #3,
+  `CLAUDE.md`) — `listItemVariants` ya cubre el caso entero de Tarifas
+  (borrar es definitivo, sin "Deshacer").
+- **`EntryTitle` (shared.jsx) vs. `EntryRowTitle` (antes privado de
+  `MiTrabajoTab.jsx`)**: mismo propósito exacto (curso arriba coloreado
+  por actividad, escuela abajo en gris), con un desvío accidental — solo
+  `EntryTitle` pintaba los puntos de color junto a cada línea. Tarifas ya
+  usaba el componente compartido; Mi trabajo tenía su propia copia sin
+  puntos. Consolidado: `MiTrabajoTab.jsx` pasa a usar `EntryTitle`
+  también, con un `schoolSuffix` opcional nuevo (" · con {nombre}" para
+  un Ajuste de curso) — mismo componente, mismo aspecto, en las dos
+  pantallas que muestran "curso + escuela" fila a fila.
+- **Tarjeta "cifra protagonista"**: `PendingCollectionCard` (Home/Mi
+  trabajo), `KpiTile`/`MoneyKpiTile` (Home/Mi trabajo) y la tarjeta
+  "Generado este mes" (Home) comparten `rounded-xl`, sin sombra — el
+  `HeroTotal` de Resumen (mismo rol: la cifra más grande y protagonista
+  de la pantalla) era el único con `rounded-lg` + `shadow-sm`, un desvío
+  accidental. Unificado a `rounded-xl`, sin sombra. Confirmado por
+  auditoría completa (`grep` de `rounded-*`/`shadow-*` en todas las
+  pantallas activas): `rounded-lg` sigue siendo, y se mantiene, el
+  estándar de "contenedor de lista/sección" (Mi trabajo, Tarifas, Resumen,
+  Mi perfil, Configuración, `ExpandableCard`...); `rounded-xl` queda
+  reservado para esta familia concreta de "tarjeta con una única cifra
+  protagonista". `shadow-*` en el resto de la app se reserva para
+  overlays reales que se elevan sobre el resto del contenido (hojas,
+  diálogos, toasts, menús flotantes) — ninguna tarjeta en flujo normal
+  debería llevar sombra.
+- **Esqueleto de carga muerto en Mi trabajo**: `MiTrabajoTab.jsx` tenía un
+  esqueleto `animate-pulse` para el instante "sin datos todavía" de
+  `worklog`/`comisiones`/`colleaguePayments`/`rates`/`commissionRates`.
+  Auditando por qué Tarifas no tenía uno equivalente se confirmó que
+  nunca podía tener sentido añadirlo: `App.jsx` ya bloquea el render de
+  CUALQUIER pestaña (con su propio `<AppLoading/>` de pantalla completa)
+  hasta que esas mismas tablas —y varias más— están cargadas, y
+  `useSupabaseTable` nunca vuelve a poner `loaded` a `false` una vez
+  cargada. El esqueleto de Mi trabajo era código inalcanzable en la
+  práctica desde que existe ese gate en `App.jsx`; se retira en vez de
+  replicarlo en Tarifas. Lección para cualquier pantalla nueva: un
+  esqueleto de carga local solo tiene sentido si esa pantalla puede
+  renderizarse ANTES de que `App.jsx` ya haya esperado sus propias
+  tablas — hoy ninguna lo necesita.
+- **`WorkLogTab.jsx`/`ComisionesTab.jsx`/`CompanerosTab.jsx`/
+  `PaymentsTab.jsx` son código muerto**, no candidatos a esta ni a
+  ninguna futura pasada de restyling — confirmado en `App.jsx`
+  (`PRIMARY_TABS`/`SECONDARY_TABS`): siguen montados por `tab === "log"`/
+  `"comisiones"`/`"colegas"`/`"pagos"`, pero ninguna de esas rutas tiene ya
+  un punto de entrada real en la UI (Mi trabajo las sustituyó, ver
+  ADR-0005; "pagos" quedó cubierto por "Cobrar todos" + filtro). Se
+  mantienen solo "por si hiciera falta revertir" (comentario ya existente
+  en `App.jsx`). Cualquier sesión futura que audite consistencia visual
+  puede saltárselas sin volver a comprobarlo.

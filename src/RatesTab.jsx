@@ -1,11 +1,13 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { motion, AnimatePresence } from "motion/react";
 import { Plus, Check, X, Search, SlidersHorizontal, GraduationCap, Handshake, Eye, EyeOff } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import {
   inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, MoneyInput,
   EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate,
 } from "./shared";
+import { listItemVariants, usePrefersReducedMotion } from "./motion";
 
 // Baja lógica (2026-09-04, ver scripts/migrations/0015-tarifas-vigencia.sql):
 // `is_active` puede faltar en una fila si el objeto viene de un test/mock
@@ -52,6 +54,7 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
   const { t } = useTranslation("rates");
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
   const toast = useToast();
+  const reducedMotion = usePrefersReducedMotion();
 
   const tableFor = (source) => (source === "ganado" ? rates : commissionRates);
   const entriesForSource = (source) => (source === "ganado" ? worklog.rows : comisiones.rows);
@@ -318,52 +321,75 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
         </div>
 
         <div>
-          {filtered.length === 0 && <p className="px-4 py-6 text-center text-sm text-gray-400">{t("list.empty")}</p>}
-          {filtered.map((r) => (
-            // Vuelta explícita al lenguaje de EntryRow en Mi trabajo
-            // (feedback 2026-08-30, tercera vuelta: "no quiero seguir con
-            // la versión de una sola línea... quiero que vuelva a una
-            // presentación más parecida a Movimientos" — la versión de una
-            // sola línea de la vuelta anterior queda descartada, no
-            // conservada como alternativa). Borde izquierdo de color por
-            // tipo, título+importe arriba, metadato (fecha de alta + tipo,
-            // mismo formato "fecha · tipo" que la fila de Movimientos)
-            // + RowMenu abajo — misma estructura de dos líneas, no una
-            // tercera variante propia de Tarifas. Sin "divide-y" entre
-            // filas (feedback explícito, cuarta vuelta): la línea de
-            // separación entre cards ya se descartó en Mi trabajo por
-            // ruido visual — el borde izquierdo de color y el propio
-            // padding ya distinguen una fila de la siguiente.
-            // Fila desactivada: opacidad reducida (mismo criterio que
-            // fila/opción deshabilitada en el resto de la app,
-            // disabled:opacity-30/40) + "· Desactivada" en el metadato —
-            // solo se ve cuando showInactive está activo, ya que si no la
-            // propia lista las filtra fuera.
-            <div key={r.id} className={`border-l-4 px-4 py-3.5 text-sm ${!isRateActive(r) ? "opacity-50" : ""}`} style={{ borderColor: TYPE_META[r._source].color }}>
-              <div className="flex items-start justify-between gap-2">
-                <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
-                <span className="shrink-0 font-semibold tabular-nums" style={{ color: NAVY }}>
-                  <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: NAVY }} />
-                </span>
-              </div>
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <span className="truncate text-xs text-gray-400">
-                  {t("list.createdOn", { date: shortDate(r.created_at), type: t(`common:movementTypes.${r._source}`) })}
-                  {!isRateActive(r) && ` · ${t("list.inactive")}`}
-                </span>
-                <RowMenu
-                  onEdit={() => startEdit(r)}
-                  onDelete={() => deleteRate(r)}
-                  itemLabel={t("rowMenu.itemLabel", { school: r.school, activity: r.activity })}
-                  extraActions={[{
-                    label: isRateActive(r) ? t("rowMenu.deactivate") : t("rowMenu.reactivate"),
-                    icon: isRateActive(r) ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />,
-                    onClick: () => toggleActive(r),
-                  }]}
-                />
-              </div>
+          {/* Vacío: mismo tratamiento neutro que Mi trabajo (centrado,
+              py-10 — auditoría de estilo 2026-09-04, antes py-6 sin
+              centrar verticalmente, un desvío accidental de la misma
+              "sin resultados" que ESTILO.md ya documenta como estado
+              neutro). Sin icono (a diferencia de "estás al día" en Mi
+              trabajo): un catálogo vacío no es una buena noticia que
+              confirmar, solo una lista sin filas todavía. */}
+          {filtered.length === 0 && (
+            <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+              <p className="text-sm text-gray-400">{t("list.empty")}</p>
             </div>
-          ))}
+          )}
+          {/* AnimatePresence + listItemVariants (motion.js) — mismo
+              vocabulario de "fila de lista que entra/sale" que ya usan
+              ExpandableCard y el desglose de Resumen (auditoría de estilo
+              2026-09-04): antes una fila desaparecía de golpe al borrarla,
+              la única lista con alta/baja de la app sin ninguna
+              transición. No se toca la coreografía a medida de Mi trabajo
+              (colapso de alto con retraso, toggle de estado, "Deshacer")
+              — mucho más compleja por motivos propios (cambiar de pestaña
+              sin perder la fila) que Tarifas no tiene: aquí borrar es
+              definitivo, listItemVariants ya cubre el caso entero. */}
+          <AnimatePresence initial={false}>
+            {filtered.map((r) => (
+              // Vuelta explícita al lenguaje de EntryRow en Mi trabajo
+              // (feedback 2026-08-30, tercera vuelta: "no quiero seguir con
+              // la versión de una sola línea... quiero que vuelva a una
+              // presentación más parecida a Movimientos" — la versión de una
+              // sola línea de la vuelta anterior queda descartada, no
+              // conservada como alternativa). Borde izquierdo de color por
+              // tipo, título+importe arriba, metadato (fecha de alta + tipo,
+              // mismo formato "fecha · tipo" que la fila de Movimientos)
+              // + RowMenu abajo — misma estructura de dos líneas, no una
+              // tercera variante propia de Tarifas. Sin "divide-y" entre
+              // filas (feedback explícito, cuarta vuelta): la línea de
+              // separación entre cards ya se descartó en Mi trabajo por
+              // ruido visual — el borde izquierdo de color y el propio
+              // padding ya distinguen una fila de la siguiente.
+              // Fila desactivada: opacidad reducida (mismo criterio que
+              // fila/opción deshabilitada en el resto de la app,
+              // disabled:opacity-30/40) + "· Desactivada" en el metadato —
+              // solo se ve cuando showInactive está activo, ya que si no la
+              // propia lista las filtra fuera.
+              <motion.div key={r.id} {...listItemVariants(reducedMotion)} className={`border-l-4 px-4 py-3.5 text-sm ${!isRateActive(r) ? "opacity-50" : ""}`} style={{ borderColor: TYPE_META[r._source].color }}>
+                <div className="flex items-start justify-between gap-2">
+                  <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
+                  <span className="shrink-0 font-semibold tabular-nums" style={{ color: NAVY }}>
+                    <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: NAVY }} />
+                  </span>
+                </div>
+                <div className="mt-1.5 flex items-center justify-between gap-2">
+                  <span className="truncate text-xs text-gray-400">
+                    {t("list.createdOn", { date: shortDate(r.created_at), type: t(`common:movementTypes.${r._source}`) })}
+                    {!isRateActive(r) && ` · ${t("list.inactive")}`}
+                  </span>
+                  <RowMenu
+                    onEdit={() => startEdit(r)}
+                    onDelete={() => deleteRate(r)}
+                    itemLabel={t("rowMenu.itemLabel", { school: r.school, activity: r.activity })}
+                    extraActions={[{
+                      label: isRateActive(r) ? t("rowMenu.deactivate") : t("rowMenu.reactivate"),
+                      icon: isRateActive(r) ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />,
+                      onClick: () => toggleActive(r),
+                    }]}
+                  />
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </div>
 
