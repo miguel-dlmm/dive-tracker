@@ -320,6 +320,16 @@ bloque, más verificación visual real en navegador de las 5 pantallas
 (Resumen, Tarifas, Configuración, Ayuda, Mi perfil) — sin errores de
 consola en ninguna.
 
+## Justificación final del diseño
+
+Añadida como sección nueva ("08 — Justificación") al mismo Artifact del
+libro de estilo (no un documento aparte) — cierra el encargo original
+("justificación del diseño elegido apoyada en lo investigado"): qué
+decía la intuición vs. qué dijo la fuente en las 4 decisiones grandes,
+por qué se mantuvieron Inter/la navegación/los tokens de tema oscuro
+sin construir, cómo salió el hallazgo de bundle de investigar (no de
+buscarlo), y una tabla de qué se entregó vs. qué queda.
+
 ## Estado de la Fase 2
 
 **Completa.** Las 4 pantallas del plan original (Home, Mi trabajo,
