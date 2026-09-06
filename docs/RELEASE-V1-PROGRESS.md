@@ -2642,3 +2642,40 @@ solo como historial de la cola.
   `preview/training-records-review` a `deploymentEnabled` en
   `vercel.json` (mismo patrón que `develop`/`main`), dejando que el
   propio push a GitHub dispare el deploy en vez del CLI.
+
+- **✅ Cierre de mecánica de release v1.0.0 + fusión de `feature/restyling-v1` (2026-09-06).** Pedido
+  explícito del usuario ("crea todo lo relacionado con el código ya en
+  producción... está todo validado"):
+  - Tag `v1.0.0` creado sobre `a640de4` (HEAD real de `main`) y
+    publicado con `gh release create` — los dos huecos que quedaban
+    abiertos en la auditoría de mecanismos de despliegue de más arriba
+    ("Tag `vX.Y.Z`" y "`gh release create`") ya están cerrados.
+    Protección de rama `main` sigue sin configurar, a petición expresa
+    del usuario de no entrar en eso ahora.
+  - `feature/restyling-v1` (4 commits: consolidación de `EntryTitle` en
+    Mi trabajo/Tarifas, animación de alta/baja de fila en Tarifas,
+    unificación de `HeroTotal` en Resumen, auditoría de estilo en
+    `ESTILO.md`) fusionada a `develop`. 2 conflictos reales resueltos a
+    mano en `RatesTab.jsx` (combinar la animación+empty-state de
+    restyling con el toggle activar/desactivar tarifa que llegó
+    después) y `MiTrabajoTab.jsx` (combinar `EntryTitle`+`schoolColor`
+    de restyling con el tooltip de "Pendiente de cobrar" y el
+    "Deshacer" de borrado que llegaron después) — el resto del archivo
+    lo fusionó git solo, sin conflicto. 754/754 tests y build en verde
+    tras resolver.
+  - `preview/training-records-review` revisada: el fix de firma +
+    ErrorBoundary ya estaba en `develop` (commit `cbe1759`); lo único
+    que queda sin fusionar es el commit que reactiva el punto de
+    entrada de Training Records para revisión visual (`bb4737c`) — se
+    deja fuera a propósito, fusionarlo revertiría la decisión ya
+    tomada de ocultar TR en este release.
+  - Limpieza: 5 de los 8 worktrees de agentes overnight en
+    `.claude/worktrees/` eliminados (ya fusionados, sin cambios
+    pendientes); 3 siguen bloqueados por una sesión de Claude Code
+    distinta todavía activa en esta máquina (PID real verificado) —
+    no se tocan mientras esa sesión siga viva. Borrados también los
+    instaladores sueltos en la raíz (`gh_2.79.0_macOS_amd64.pkg`,
+    `gh_2.98.0_macOS_amd64/`, `postgresql.dmg`), ajenos al proyecto.
+  - `docs/ADR/0020-migraciones-supabase-y-separacion-test.md` sigue
+    sin comitear a propósito — instrucción explícita del usuario de
+    mantenerlo pendiente de aprobación, no tocarlo todavía.
