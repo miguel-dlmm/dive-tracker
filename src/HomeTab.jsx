@@ -225,10 +225,13 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           como el resto de filas de icono+chevron) y un borde sutil a juego, para
           que destaque como acceso directo a una herramienta, no como una
           fila más de ajustes.
-          onOpenTrainingRecords (App.jsx) escribe la sección en
-          sessionStorage vía setStoredSection() y cambia de pestaña —
-          ConfigTab la recoge en su primer render, sin pasar por su propio
-          menú.
+          onOpenTrainingRecords (App.jsx) simplemente cambia a la pestaña
+          secundaria "training-records" (rediseño de navegación 2026-09-07:
+          antes se abría "dentro" de Configuración vía setStoredSection(),
+          así que su "‹ atrás" real acababa en el menú de Configuración —
+          una pantalla que ni siquiera la lista. Ahora es independiente,
+          al mismo nivel que Ayuda/Configuración/Mi perfil, y cerrar
+          siempre vuelve aquí, a Home).
           Reactivado de forma permanente el 2026-09-06 (decisión del
           usuario: "ya irá a la próxima release" — ver
           docs/RELEASE-V1-PROGRESS.md, Fase 9 y el bloque de reversión

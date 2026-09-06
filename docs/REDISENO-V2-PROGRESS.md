@@ -494,15 +494,16 @@ sin pararse a pedir aprobación (autorización cubierta también por
 `no-confirmations-when-user-unavailable`). Lista de encargo, cada item
 se cierra aquí según se resuelve:
 
-1. ⬜ Bug: en Mi trabajo, cuando la lista está 100% vacía desaparece el
-   menú inferior.
-2. ⬜ La navegación por deslizar del calendario (Bloque 1, Fase 3)
-   debería estar animada (hoy el cambio de mes es instantáneo).
-3. ⬜ Rediseñar visualmente el input de `DatePicker` — no encaja con
-   Ocean Flow, se pide algo más estético/redondeado/usable.
-4. ⬜ El generador de Training Records debe dejar de vivir "dentro" de
+1. ✅ Bug: en Mi trabajo, cuando la lista está 100% vacía desaparece el
+   menú inferior — ver 4.1 (corrección aplicada, verificación final
+   pendiente de dispositivo real).
+2. ✅ La navegación por deslizar del calendario (Bloque 1, Fase 3)
+   debería estar animada — ver 4.2.
+3. ✅ Rediseñar visualmente el input de `DatePicker` — ver 4.3
+   (incluye también `DateRangePicker`, mismo componente base).
+4. ✅ El generador de Training Records debe dejar de vivir "dentro" de
    Configuración y ser una feature independiente; volver atrás siempre
-   debe volver a Home.
+   debe volver a Home — ver 4.4.
 5. ⬜ Cargar datos reales de prueba para el usuario demo: varias
    escuelas, tarifas y movimientos en varios meses pasados y futuros,
    cifras redondas.
@@ -518,3 +519,114 @@ se cierra aquí según se resuelve:
 Cada item se documenta con su propio sub-apartado (qué se encontró, qué
 se hizo, cómo se verificó) según se va cerrando, siguiendo el mismo
 formato que los bloques anteriores.
+
+### 4.1 — Menú inferior "perdido" en pantallas con poco contenido
+
+**Diagnóstico**: no se encontró ningún código de la app que oculte
+`<nav>` condicionalmente (siempre se renderiza en `App.jsx`, fuera de
+cualquier condicional de datos) — descartada esa hipótesis tras revisar
+`App.jsx` y `MiTrabajoTab.jsx` a fondo. El patrón encaja con un bug real
+y documentado de iOS Safari: con `viewport-fit=cover` pero sin
+`interactive-widget=resizes-content`, cuando una pantalla no tiene
+contenido que desplazar, Safari mantiene su propia barra de
+herramientas inferior expandida (no hay scroll que la colapse) y ancla
+los elementos `position: fixed` al viewport de LAYOUT (el que asume la
+barra de Safari ya colapsada) en vez de al viewport VISUAL real — el
+menú queda anclado por debajo del área realmente visible, tapado tras
+la barra de Safari. En una pantalla con contenido de sobra para
+desplazar, el usuario colapsa la barra sin darse cuenta y el bug nunca
+se manifiesta — coincide exactamente con el patrón reportado.
+
+**Qué se hizo**: añadido `interactive-widget=resizes-content` al meta
+`viewport` de `index.html` (Safari 16.4+/Chrome 108+, parte del
+estándar CSS Viewport/WICG Interactive Widget) — le pide al navegador
+que redimensione el viewport CSS cuando su propia barra cambia de
+tamaño, en vez de dejar un viewport "grande" fijo detrás del cual
+puede quedar oculto un elemento `fixed`.
+
+**Verificación pendiente en dispositivo real**: esta clase de bug es
+específica del motor/compositor de Safari — no reproducible con
+Playwright + Chromium (la limitación ya documentada de
+`scripts/mobile-check.mjs` en `CLAUDE.md`, sección 8). No se puede
+cerrar como "verificado" hasta confirmar en un iPhone real que el menú
+ya no desaparece con Mi trabajo sin movimientos.
+
+### 4.2 — Calendario: animar el deslizar/las flechas de mes
+
+`monthSlideVariants` (nuevo, `motion.js`) — cuadrícula de días con
+transición de deslizamiento (entra desde el lado por el que se avanza,
+sale por el contrario), usando el patrón documentado de Motion
+`custom` en `<AnimatePresence>` para que la dirección de salida no se
+quede "un paso atrás" si se alterna avanzar/retroceder rápido.
+Aplicado en `MonthCalendar` (`shared.jsx`) tanto a las flechas ‹/› como
+al gesto de deslizar (mismo estado `monthDirection`, una sola fuente de
+verdad). Verificado en Chrome (clic en flecha ›): transición visible sin
+saltos, la cuadrícula de destino resultante correcta, sin errores de
+consola. El propio gesto táctil de deslizar no se pudo probar con las
+herramientas de automatización disponibles (usan eventos de ratón, no
+táctiles) — comparte la lógica exacta de las flechas, ya verificadas.
+
+### 4.3 — Rediseño visual de DatePicker/DateRangePicker
+
+**Encontrado**: ambos reutilizaban `inputCls`, el mismo rectángulo
+`rounded-md` (6px) + borde gris genérico de cualquier campo de texto,
+con el icono de calendario suelto en gris — sin nada que los distinga
+como un control de fecha "de marca". Además varios objetivos táctiles
+por debajo del mínimo de 44px de la convención 7 de `CLAUDE.md`: el
+botón "Hoy" (36px), las flechas de mes dentro del panel (32px) y las
+celdas de día (36-40px).
+
+**Qué se hizo**: campo cerrado con borde `navy-100` (`#CCDBE6`) y radio
+de 10px (`radius-control`, ya documentado en `docs/DESIGN-SYSTEM.md`
+§4 pero sin aplicar aquí), icono de calendario en una chip circular
+tintada de marca (mismo lenguaje visual que los iconos de KPI/filas de
+menú de esta misma ronda). Dentro del panel: "Hoy" pasa a píldora
+completa de 44px, flechas de mes a círculos de 44px, celdas de día a
+círculos de 44px (mismo patrón que la cuadrícula principal de
+`MonthCalendar`, no un tercer vocabulario). El panel flotante
+compartido (`FloatingPanel`, usado también por Select/MultiSelect/
+SearchSelect) no se tocó — cambio con propósito, no una revisión global
+no pedida.
+
+**Verificado**: capturas reales en el formulario de "Nuevo curso
+impartido" (campo Fecha) y en "Filtrar" de Mi trabajo (Periodo,
+`DateRangePicker`) — ambos selectores abren, seleccionan fecha/rango
+correctamente (incluida la banda de rango intermedio) y cierran sin
+errores de consola.
+
+### 4.4 — Training Records, feature independiente de Configuración
+
+**Encontrado**: aunque el enlace ya se había retirado del MENÚ de
+Configuración en una sesión anterior (Bloque 10, job nocturno
+2026-09-03) y la tarjeta de Home la abre directamente, por dentro seguía
+viviendo como una "sección oculta" MÁS de `ConfigTab` — `App.jsx`
+literalmente hacía `setStoredSection("training-records")` y
+`changeTab("config")`. El síntoma real: dentro de Training Records, el
+"‹ atrás" de la cabecera (tras el rediseño de navegación de
+Configuración de este mismo lote, 4.1-4.3 de la Fase 3) volvía al MENÚ
+de Configuración — una pantalla que ni siquiera la lista, confusa por
+aparecer de la nada.
+
+**Qué se hizo**: Training Records pasa a ser su propia pestaña
+secundaria en `App.jsx` (`SECONDARY_TABS`), al mismo nivel que Ayuda/
+Configuración/Mi perfil, con su propia cabecera "✕ Training Records"
+independiente. `closeSecondary` gana un caso especial solo para esta
+pestaña: cierra siempre a Home (`changeTab("home")`), a diferencia de
+Ayuda/Configuración/Mi perfil, que vuelven a `returnTab` (la pestaña
+primaria desde la que se entró) — pedido explícito del usuario ("volver
+atrás será volver a la home siempre"), justificado porque es una
+herramienta puntual con un único punto de entrada (la tarjeta de Home),
+no una capa de navegación general. Retirado todo el código ahora muerto
+en `ConfigTab.jsx`: `HIDDEN_SECTIONS`, la función `setStoredSection`
+(sin más llamadores), el render de `TrainingRecordsTab` dentro de esta
+pantalla, el import del componente, el icono `Award` (ya sin uso) y la
+entrada de traducción huérfana `sections.trainingRecords` en
+`config.json` (es/en).
+
+**Verificado**: navegación real en Chrome — Home → tarjeta "Training
+Records" abre la pantalla con cabecera propia "✕ Training Records"
+(no "‹ Configuración" ni doble título); cerrar con ✕ vuelve a Home;
+Configuración sigue funcionando con su propio menú (Escuelas/Cursos/
+Tarifas, sin la entrada de Training Records, que nunca debía listarse
+ahí) — sin errores de consola en ningún punto. `npm run lint` 0 errores,
+`npm run test -- --run` 754/754, `npm run build` correcto.

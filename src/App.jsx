@@ -20,7 +20,8 @@ import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
-import ConfigTab, { clearStoredSection, setStoredSection } from "./ConfigTab";
+import ConfigTab, { clearStoredSection } from "./ConfigTab";
+import TrainingRecordsTab from "./trainingRecords/TrainingRecordsTab";
 import CompanerosTab from "./CompanerosTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
@@ -72,7 +73,16 @@ const PRIMARY_TABS = [
 // punto de entrada en la UI — ver docs/ADR/0005 (Mi trabajo cubre su
 // función con "Cobrar todos" + filtro por escuela).
 // Título resuelto en render vía t(`secondaryTitles.${tab}`) (namespace "app").
-const SECONDARY_TABS = ["config", "help", "pagos", "perfil"];
+// "training-records" se sumó aquí el 2026-09-07 (feedback explícito: "el
+// generador Training Records sigue navegando bajo configuración, debería
+// ser una feature independiente") — antes se abría "dentro" de la pestaña
+// "config" (setStoredSection("training-records") + changeTab("config")),
+// así que su "‹ atrás" real era el MENÚ de Configuración, una pantalla que
+// ni siquiera lo lista (ver HomeTab.jsx para el detalle del cambio). Ahora
+// es una pestaña secundaria más, al mismo nivel que Ayuda/Configuración/Mi
+// perfil — ver closeSecondary más abajo para el único comportamiento
+// propio que conserva (cerrar siempre vuelve a Home, nunca a `returnTab`).
+const SECONDARY_TABS = ["config", "help", "pagos", "perfil", "training-records"];
 
 // Recuerda la pestaña activa y a cuál "volver" desde una pantalla
 // secundaria — corrige de raíz dos problemas reales, no dos parches
@@ -296,6 +306,12 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   const closeSecondary = () => {
     if (tab === "config") clearStoredSection();
     if (tab === "help") clearStoredHelpOpen();
+    // Training Records es una herramienta puntual abierta siempre desde
+    // Home (pedido explícito: "volver atrás será volver a la home
+    // siempre") — a diferencia de Ayuda/Configuración/Mi perfil, que
+    // vuelven a la pestaña primaria desde la que se entró, esta ignora
+    // `returnTab` a propósito.
+    if (tab === "training-records") { changeTab("home"); return; }
     changeTab(returnTab);
   };
   // Cerrar sesión — Fase 4, Release V1 (rediseño de cabecera): antes vivía
@@ -446,7 +462,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             onQuickCreate={startHomeCreate}
             onOpenPending={() => changeTab("trabajo")}
             onOpenSummary={() => changeTab("summary")}
-            onOpenTrainingRecords={() => { setStoredSection("training-records"); changeTab("config"); }}
+            onOpenTrainingRecords={() => changeTab("training-records")}
           />
         )}
         {tab === "log" && (
@@ -479,7 +495,13 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             schools={schools} activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
             navSections={navSections} appConfig={appConfig} profile={profile} onClose={closeSecondary}
-            onOpenProfile={() => changeTab("perfil")} onSectionChange={setConfigSectionHeader}
+            onSectionChange={setConfigSectionHeader}
+          />
+        )}
+        {tab === "training-records" && (
+          <TrainingRecordsTab
+            profile={profile} accentColor={sectionColor("trabajo")}
+            onOpenProfile={() => changeTab("perfil")} onProfileUpdated={onProfileUpdated}
           />
         )}
         {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} />}

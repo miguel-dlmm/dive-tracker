@@ -4,7 +4,7 @@ import { motion, useAnimationControls } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, Building2, GraduationCap, Coins,
-  Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2, Award,
+  Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2,
 } from "lucide-react";
 import { GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
 import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle } from "./shared";
@@ -13,7 +13,6 @@ import { supabase } from "./supabaseClient";
 import i18n from "./i18n";
 import RatesTab from "./RatesTab";
 import DatasetsSection from "./DatasetsSection";
-import TrainingRecordsTab from "./trainingRecords/TrainingRecordsTab";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
 
@@ -1678,25 +1677,14 @@ const BUSINESS_SECTIONS = [
 // "Per Person" — ver RatesTab.jsx/MovementSheet.jsx); su DROP real es el
 // paso 3-5 de esa misma ADR, deliberadamente no hecho en este cambio
 // (solo frontend, sin migraciones).
-// "Training Records" retirado del MENÚ de Configuración (Bloque 10, job
-// nocturno 2026-09-03, pedido explícito: "mover el enlace al generador a
-// la Home") pero sigue siendo una sección real por dentro — Home la abre
-// directamente vía setStoredSection() (exportado al final del archivo),
-// sin pasar por este menú. Separada de BUSINESS_SECTIONS para que
-// ConfigMenuGroup no la liste, pero SÍ la reconozcan tanto el guard de
-// sessionStorage (allowedSectionKeys) como el título de cabecera de la
-// vista de sección (currentSectionI18nKey) — sin esto, entrar desde Home
-// mostraría una pantalla con el título en blanco, o el guard rechazaría
-// el valor guardado por no estar en ninguna lista de secciones válidas.
-// Estuvo oculta entera para el lanzamiento de v1.0.0 (decisión del
-// usuario 2026-09-04, ver docs/RELEASE-V1-PROGRESS.md Fase 9) y se
-// reactiva de forma permanente el 2026-09-06 (decisión del usuario:
-// "ya irá a la próxima release") — las 10 plantillas del generador ya
-// estaban completas y verificadas antes de ocultarla, ver Fase 5/9 del
-// mismo documento.
-const HIDDEN_SECTIONS = [
-  { key: "training-records", i18nKey: "trainingRecords", icon: Award },
-];
+// "Training Records" vivió aquí como una "sección oculta" de Configuración
+// (Bloque 10, job nocturno 2026-09-03) desde que se movió su enlace a
+// Home — real por dentro pero fuera del menú visible. Se retira del todo
+// el 2026-09-07 (feedback explícito: "sigue navegando bajo configuración,
+// debería ser una feature independiente"): ahora es su propia pestaña
+// secundaria en App.jsx, al mismo nivel que esta pantalla, no una sección
+// más de ella — ver App.jsx (SECONDARY_TABS, closeSecondary) y
+// HomeTab.jsx para el detalle completo del cambio.
 const ADMIN_SECTIONS = [
   { key: "estados-pago", i18nKey: "estadosPago", icon: Flag },
   { key: "monedas", i18nKey: "monedas", icon: DollarSign },
@@ -1728,15 +1716,6 @@ function readStoredSection() {
 }
 export function clearStoredSection() {
   try { sessionStorage.removeItem(CONFIG_SECTION_KEY); } catch { /* no-op */ }
-}
-// Exportado para Home (Bloque 10): entrar directo a una sección de
-// Configuración desde fuera de este archivo sin duplicar la clave de
-// sessionStorage — se llama justo antes de navegar a la pestaña
-// "config" (ver App.jsx, onOpenTrainingRecords), para que el
-// `useState(() => readStoredSection())` de ConfigTab la recoja ya en su
-// primer render.
-export function setStoredSection(key) {
-  try { sessionStorage.setItem(CONFIG_SECTION_KEY, key); } catch { /* no-op */ }
 }
 
 function ConfigMenuGroup({ title, items, onSelect }) {
@@ -1772,11 +1751,11 @@ function ConfigMenuGroup({ title, items, onSelect }) {
 // onClose (opcional): cierra Configuración entera (mismo handler que la "X"
 // de la cabecera, ver App.jsx) — lo dispara el gesto de "atrás" cuando ya
 // estamos en el menú principal, sin ninguna sección abierta (ver backProps).
-export default function ConfigTab({ schools, activities, currencies, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose, onOpenProfile, onSectionChange }) {
+export default function ConfigTab({ schools, activities, currencies, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose, onSectionChange }) {
   const { t } = useTranslation("config");
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
   const isSuperadmin = !!profile?.is_superadmin;
-  const allowedSectionKeys = [...BUSINESS_SECTIONS, ...HIDDEN_SECTIONS, ...(isAdmin ? ADMIN_SECTIONS : []), ...(isSuperadmin ? SUPERADMIN_SECTIONS : [])].map((s) => s.key);
+  const allowedSectionKeys = [...BUSINESS_SECTIONS, ...(isAdmin ? ADMIN_SECTIONS : []), ...(isSuperadmin ? SUPERADMIN_SECTIONS : [])].map((s) => s.key);
   const [section, setSectionState] = useState(() => {
     const stored = readStoredSection();
     return allowedSectionKeys.includes(stored) ? stored : null;
@@ -1787,7 +1766,7 @@ export default function ConfigTab({ schools, activities, currencies, paymentStat
     else clearStoredSection();
   };
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || BRAND_NAVY;
-  const currentSectionI18nKey = [...BUSINESS_SECTIONS, ...HIDDEN_SECTIONS, ...ADMIN_SECTIONS, ...SUPERADMIN_SECTIONS].find((s) => s.key === section)?.i18nKey;
+  const currentSectionI18nKey = [...BUSINESS_SECTIONS, ...ADMIN_SECTIONS, ...SUPERADMIN_SECTIONS].find((s) => s.key === section)?.i18nKey;
   // Deslizar hacia la derecha = "atrás", recursivo (feedback explícito
   // 2026-08-30: "no como una excepción, no como un truco, no como una
   // interacción aislada"): dentro de una sección, vuelve al menú; ya en el
@@ -1854,7 +1833,6 @@ export default function ConfigTab({ schools, activities, currencies, paymentStat
           accentColor={sectionColor("rates")}
         />
       )}
-      {section === "training-records" && <TrainingRecordsTab profile={profile} accentColor={sectionColor("trabajo")} onOpenProfile={onOpenProfile} />}
       {isAdmin && section === "estados-pago" && (
         <CrudTable createLabel={t("crud.nuevoEstadoPago")} editLabel={t("crud.editarEstadoPago")} table={paymentStatuses} hasDefault protectDefaultFromDelete
           fields={[{ key: "name", label: t("crud.nombreCampo") }, { key: "color", label: t("crud.colorCampo"), type: "color", required: false }]} />

@@ -7,7 +7,7 @@ import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, Chev
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
 import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./colors";
-import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, usePrefersReducedMotion, useSwipeHorizontal } from "./motion";
+import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, monthSlideVariants, usePrefersReducedMotion, useSwipeHorizontal } from "./motion";
 import { AVATAR_ICON_MAP } from "./avatarCatalog";
 
 // Catálogo cerrado del icono de carga configurable (GeneralSettings,
@@ -636,6 +636,16 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
 
   return (
     <>
+      {/* Rediseño 2026-09-07 (feedback explícito: "no me ajusta nada con
+          el diseño Ocean Flow, quiero algo más estético, redondeado,
+          usable") — antes reutilizaba `inputCls` tal cual, el mismo
+          rectángulo gris que cualquier campo de texto, con el icono de
+          calendario suelto en gris. Ahora el icono vive en su propia
+          "chip" circular tintada de marca (mismo lenguaje visual que los
+          iconos de los KPI y de las filas de menú de esta misma ronda de
+          rediseño) y el borde pasa a `navy-100` (`docs/DESIGN-SYSTEM.md`
+          §3.2), con radio de 10px (`radius-control`, mismo documento §4)
+          en vez del `rounded-md` genérico de 6px de cualquier input. */}
       <button
         ref={anchorRef}
         type="button"
@@ -643,32 +653,43 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={ariaLabel || placeholder || t("datePicker.defaultAriaLabel")}
-        className={`${inputCls} flex min-h-11 w-full items-center gap-1.5 text-left`}
+        className="flex min-h-11 w-full items-center gap-2 rounded-[10px] border bg-white px-2.5 py-1.5 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#81ADD0] focus-visible:ring-offset-1"
+        style={{ borderColor: open ? BRAND_NAVY : "#CCDBE6" }}
       >
-        <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
+          <CalendarIcon size={14} style={{ color: BRAND_NAVY }} aria-hidden="true" />
+        </span>
         <span className={`min-w-0 flex-1 truncate ${parsed ? "text-gray-800" : "text-gray-400"}`}>{display}</span>
       </button>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-72 p-3">
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-72 rounded-xl p-3">
         {/* Acceso directo a "Hoy" — el caso más común con diferencia (una
             fecha de curso casi siempre es la de hoy o un día muy reciente),
             un toque en vez de navegar el calendario. Vive en el componente
-            compartido, no en cada pantalla que lo usa. */}
+            compartido, no en cada pantalla que lo usa. Píldora completa
+            (`rounded-full`) en vez de rectángulo — mismo lenguaje que
+            cualquier chip/acceso rápido de la app — y `min-h-11` en vez de
+            `min-h-9` (36px): quedaba por debajo del objetivo táctil mínimo
+            de 44px de la convención 7 de CLAUDE.md. */}
         <button
           type="button"
           onClick={selectToday}
-          className="mb-2 flex min-h-9 w-full items-center justify-center gap-1.5 rounded-md text-xs font-medium"
+          className="mb-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full text-sm font-semibold"
           style={{ backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }}
         >
           {t("datePicker.today")}
         </button>
         <div className="mb-2 flex items-center justify-between">
-          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
-          <span className="text-sm font-semibold text-gray-800">{months[viewM]} {viewY}</span>
-          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          <span className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{months[viewM]} {viewY}</span>
+          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
         </div>
         <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
           {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}
         </div>
+        {/* Celdas de día: círculo dentro de un objetivo táctil de 44px
+            (h-11), no un rectángulo `rounded-md` plano — mismo patrón que
+            la cuadrícula de MonthCalendar (más abajo en este archivo), en
+            vez de un segundo vocabulario visual propio del selector. */}
         <div className="grid grid-cols-7 gap-0.5">
           {cells.map((d, i) => {
             const isSelected = d && parsed && parsed.y === viewY && parsed.m === viewM && parsed.d === d;
@@ -681,10 +702,20 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
                 aria-label={d ? t("datePicker.dayAriaLabel", { day: d, month: months[viewM] }) : undefined}
                 aria-selected={isSelected || undefined}
                 onClick={() => d && selectDay(d)}
-                className="flex h-10 items-center justify-center rounded-md text-xs transition-colors"
-                style={isSelected ? { backgroundColor: BRAND_NAVY, color: "white", fontWeight: 600 } : isToday ? { color: BRAND_NAVY, fontWeight: 600 } : { color: d ? "#374151" : "transparent" }}
+                className="flex h-11 items-center justify-center transition-transform active:scale-90"
               >
-                {d || ""}
+                {d && (
+                  <span
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-xs"
+                    style={isSelected
+                      ? { backgroundColor: BRAND_NAVY, color: "white", fontWeight: 600 }
+                      : isToday
+                      ? { border: `1.5px solid ${BRAND_NAVY}`, color: BRAND_NAVY, fontWeight: 600 }
+                      : { color: "#374151" }}
+                  >
+                    {d}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -789,17 +820,22 @@ export function DateRangePicker({ from, to, onChange }) {
 
   return (
     <div ref={anchorRef}>
-      <div className={`${inputCls} flex min-h-11 w-full items-stretch gap-0 p-0`}>
-        <button type="button" onClick={openFrom} aria-label={t("dateRangePicker.fromAriaLabel")} className="flex flex-1 items-center gap-1.5 truncate px-2.5 text-left">
-          <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
+      {/* Mismo rediseño que DatePicker (feedback 2026-09-07): borde
+          navy-100, radio de 10px en vez del `rounded-md` genérico, icono
+          en su propia chip circular tintada de marca. */}
+      <div className="flex min-h-11 w-full items-stretch gap-0 rounded-[10px] border bg-white p-0" style={{ borderColor: "#CCDBE6" }}>
+        <button type="button" onClick={openFrom} aria-label={t("dateRangePicker.fromAriaLabel")} className="flex flex-1 items-center gap-2 truncate py-1.5 pl-2 pr-1.5 text-left">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
+            <CalendarIcon size={13} style={{ color: BRAND_NAVY }} aria-hidden="true" />
+          </span>
           <span className={`truncate text-sm ${from ? "text-gray-800" : "text-gray-400"}`}>{from ? formatDMY(from) : t("dateRangePicker.from")}</span>
         </button>
         <span className="flex items-center text-gray-300" aria-hidden="true"><ArrowRight size={13} /></span>
-        <button type="button" onClick={openTo} aria-label={t("dateRangePicker.toAriaLabel")} className="flex flex-1 items-center truncate px-2.5 text-left">
+        <button type="button" onClick={openTo} aria-label={t("dateRangePicker.toAriaLabel")} className="flex flex-1 items-center truncate py-1.5 pl-1.5 pr-2.5 text-left">
           <span className={`truncate text-sm ${to ? "text-gray-800" : "text-gray-400"}`}>{to ? formatDMY(to) : t("dateRangePicker.to")}</span>
         </button>
       </div>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("dateRangePicker.pickerAriaLabel")} className="w-72 max-w-[90vw] p-3">
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("dateRangePicker.pickerAriaLabel")} className="w-72 max-w-[90vw] rounded-xl p-3">
         <p className="mb-2 text-xs font-medium text-gray-500">
           {step === "from" ? t("dateRangePicker.chooseStart") : mode === "range" ? t("dateRangePicker.chooseEnd") : t("dateRangePicker.chooseDate")}
         </p>
@@ -808,7 +844,7 @@ export function DateRangePicker({ from, to, onChange }) {
             {presets.map((p) => (
               <button
                 key={p.key} type="button" onClick={() => applyPreset(p)}
-                className="rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
+                className="min-h-8 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
               >
                 {p.label}
               </button>
@@ -816,13 +852,18 @@ export function DateRangePicker({ from, to, onChange }) {
           </div>
         )}
         <div className="mb-2 flex items-center justify-between">
-          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
-          <span className="text-sm font-semibold text-gray-800">{months[viewM]} {viewY}</span>
-          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          <span className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{months[viewM]} {viewY}</span>
+          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
         </div>
         <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
           {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}
         </div>
+        {/* h-11 (44px, convención 7 de CLAUDE.md) en vez de h-9 (36px) —
+            el endpoint sigue siendo un círculo (borderRadius 9999) y el
+            tramo intermedio del rango sigue siendo un rectángulo continuo
+            de lado a lado (sin redondear), para no perder la lectura de
+            "banda seleccionada" entre las dos fechas. */}
         <div className="grid grid-cols-7 gap-0.5">
           {cells.map((d, i) => {
             if (!d) return <div key={i} />;
@@ -835,11 +876,11 @@ export function DateRangePicker({ from, to, onChange }) {
                 type="button" key={i} onClick={() => selectDay(dateStr)}
                 aria-label={t("datePicker.dayAriaLabel", { day: d, month: months[viewM] })}
                 aria-selected={isEndpoint || undefined}
-                className="flex h-9 items-center justify-center text-xs transition-colors"
+                className="flex h-11 items-center justify-center text-xs transition-colors"
                 style={
                   isEndpoint ? { backgroundColor: BRAND_NAVY, color: "white", fontWeight: 600, borderRadius: 9999 }
                   : inRange ? { backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }
-                  : isToday ? { color: BRAND_NAVY, fontWeight: 600 }
+                  : isToday ? { border: `1.5px solid ${BRAND_NAVY}`, color: BRAND_NAVY, fontWeight: 600, borderRadius: 9999 }
                   : { color: "#374151" }
                 }
               >
@@ -851,7 +892,7 @@ export function DateRangePicker({ from, to, onChange }) {
         {mode === "range" && step === "to" && (
           <button
             type="button" onClick={() => setOpen(false)}
-            className="mt-2 w-full rounded-md py-2 text-xs font-semibold text-white"
+            className="mt-2 min-h-11 w-full rounded-full py-2 text-sm font-semibold text-white"
             style={{ backgroundColor: BRAND_NAVY }}
           >
             {t("dateRangePicker.okFrom", { date: formatDMY(from) })}
@@ -1123,7 +1164,15 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   // Resumen y Home ya las pasan, cualquier uso futuro sin ellas no gana
   // el gesto tampoco, en vez de fallar en silencio contra un handler que
   // no existe.
-  const swipeMonthProps = useSwipeHorizontal({ onSwipeLeft: onNextMonth, onSwipeRight: onPrevMonth, enabled: !!(onPrevMonth || onNextMonth) });
+  // Dirección de la última navegación de mes (1 = avanzar, -1 = retroceder)
+  // — determina de qué lado entra/sale la cuadrícula en monthSlideVariants.
+  // Se fija tanto al deslizar como al pulsar una flecha, para que ambos
+  // gestos animen igual (antes solo cambiaba el mes al instante, sin
+  // transición, la única navegación de la app que "saltaba").
+  const [monthDirection, setMonthDirection] = useState(1);
+  const goPrevMonth = () => { setMonthDirection(-1); onPrevMonth?.(); };
+  const goNextMonth = () => { setMonthDirection(1); onNextMonth?.(); };
+  const swipeMonthProps = useSwipeHorizontal({ onSwipeLeft: goNextMonth, onSwipeRight: goPrevMonth, enabled: !!(onPrevMonth || onNextMonth) });
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4" {...swipeMonthProps}>
@@ -1136,7 +1185,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
         <div className="mb-2 flex items-center justify-between">
           <button
             type="button"
-            onClick={onPrevMonth}
+            onClick={goPrevMonth}
             aria-label={t("calendar.prevMonth")}
             className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
           >
@@ -1156,7 +1205,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           </div>
           <button
             type="button"
-            onClick={onNextMonth}
+            onClick={goNextMonth}
             aria-label={t("calendar.nextMonth")}
             className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
           >
@@ -1170,7 +1219,16 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
       <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-gray-400">
         {CAL_WEEKDAYS.map((w, i) => <div key={i}>{w}</div>)}
       </div>
-      <div className="grid grid-cols-7 gap-1">
+      <AnimatePresence mode="popLayout" initial={false} custom={monthDirection}>
+      <motion.div
+        key={monthKey_}
+        custom={monthDirection}
+        variants={monthSlideVariants(reducedMotion)}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="grid grid-cols-7 gap-1"
+      >
         {cells.map((d, i) => {
           const list = d ? dayList(d) : [];
           const hasActivity = d && list.length > 0;
@@ -1221,7 +1279,8 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
             </button>
           );
         })}
-      </div>
+      </motion.div>
+      </AnimatePresence>
 
       {legend && legend.length > 0 && (
         <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1.5 border-t border-gray-100 pt-3">

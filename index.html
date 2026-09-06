@@ -3,8 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <!-- viewport-fit=cover es necesario para que env(safe-area-inset-*)
-         funcione en iPhone (notch / barra inferior) -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+         funcione en iPhone (notch / barra inferior). interactive-widget=
+         resizes-content (Safari 16.4+/Chrome 108+, WICG Interactive Widget)
+         corrige un bug real reportado: en una pantalla con muy poco
+         contenido (p. ej. Mi trabajo sin movimientos), Safari mantiene su
+         barra de herramientas inferior expandida al no haber nada que
+         desplazar, y la barra de navegación `fixed` de la app queda anclada
+         al viewport de layout (que asume la barra de Safari colapsada) en
+         vez de al viewport visual real — el menú "desaparece" tapado tras
+         la barra de Safari. Con resizes-content el navegador redimensiona
+         el viewport CSS cuando su propia barra cambia de tamaño, así que
+         los elementos `fixed` siempre se recalculan contra el área
+         realmente visible. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 
     <title>Ocean Flow — Control de ingresos para instructores de buceo</title>
     <meta name="description" content="Ocean Flow: registra tus clases de buceo, comisiones y pagos por escuela, con resumen mensual y anual." />

@@ -78,6 +78,29 @@ export function toastVariants(reduced = false) {
   };
 }
 
+// Cuadrícula de días de MonthCalendar al cambiar de mes (deslizar o flechas,
+// rediseño estructural 2026-09-06/07: el gesto de deslizar cambiaba de mes
+// al instante, sin transición, la única navegación de la app que "saltaba"
+// en vez de animarse). direction > 0 = avanzar (el mes nuevo entra desde la
+// derecha, el anterior sale por la izquierda), direction < 0 = retroceder —
+// misma convención de paginación que un carrusel o un libro.
+//
+// initial/exit son funciones de `custom` (no valores fijos) a propósito:
+// el mes que SALE ya está montado con la `direction` de la navegación
+// anterior, así que si se alternara avanzar/retroceder, un valor fijo
+// calculado en el momento del render dejaría su animación de salida un
+// paso por detrás. Pasando `custom` al propio <AnimatePresence> (no solo
+// al <motion.div>), Motion sobrescribe el custom de los hijos que están
+// saliendo con el valor actual — el patrón documentado de Motion para
+// carruseles con dirección variable.
+export function monthSlideVariants(reduced = false) {
+  return {
+    initial: (direction) => ({ opacity: 0, x: direction > 0 ? 20 : -20 }),
+    animate: { opacity: 1, x: 0, transition: { duration: d(reduced, DURATION.sm), ease: EASE.enter } },
+    exit: (direction) => ({ opacity: 0, x: direction > 0 ? -20 : 20, transition: { duration: d(reduced, DURATION.xs), ease: EASE.exit } }),
+  };
+}
+
 // prefers-reduced-motion — cualquier componente que anime debe consultar
 // esto y, si es true, usar duraciones ~0 en vez de desactivar la
 // funcionalidad (el estado final debe seguir siendo el mismo).

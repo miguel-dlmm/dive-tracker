@@ -8,7 +8,8 @@
     "config": "Configuración",
     "help": "Ayuda",
     "pagos": "Pagos",
-    "perfil": "Mi perfil"
+    "perfil": "Mi perfil",
+    "training-records": "Training Records"
   },
   "aria": {
     "close": "Cerrar",

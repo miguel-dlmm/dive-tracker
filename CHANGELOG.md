@@ -21,6 +21,16 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Training Records** ya es una función independiente, accesible solo
+  desde su tarjeta en Home: antes se abría "dentro" de Configuración
+  (su flecha "‹ atrás" acababa llevando al menú de Configuración);
+  ahora tiene su propia cabecera y cerrarla siempre vuelve a Home.
+- **DatePicker y el selector de rango de fechas (Periodo)**, con un
+  diseño más acorde a Ocean Flow: campo con borde e icono de marca,
+  más redondeado, y "Hoy"/flechas/celdas de día ya cumplen el objetivo
+  táctil mínimo de 44px.
+- **Calendario**: el cambio de mes (flechas o deslizar) ya se anima en
+  vez de saltar al instante.
 - **Configuración** ya no muestra "Configuración" dos veces en la
   cabecera al entrar en una sección (una para cerrar, otra para volver
   atrás): ahora hay una única cabecera, igual que en Ayuda — ✕ solo en
@@ -69,6 +79,9 @@ Registro de cambios relevantes de Ocean Flow.
   trabajo que nunca llegaba a pintarse en la práctica.
 
 ### Fixed
+- El menú inferior podía quedar oculto tras la propia barra de Safari en
+  una pantalla con poco contenido (p. ej. Mi trabajo sin movimientos) —
+  el navegador no tenía nada que desplazar para colapsar su barra.
 - (Interno, Training Records) Al firmar en la hoja de alta de alumno,
   un trazo de firma con componente horizontal hacia la derecha (una
   firma normal) podía interpretarse también como el gesto de "deslizar
