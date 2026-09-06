@@ -221,13 +221,11 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           sessionStorage vía setStoredSection() y cambia de pestaña —
           ConfigTab la recoge en su primer render, sin pasar por su propio
           menú.
-          ⚠️ DESCONECTADA A PROPÓSITO en este release (Fase 9,
-          docs/RELEASE-V1-PROGRESS.md): App.jsx ya no pasa
-          onOpenTrainingRecords, así que este bloque entero no se
-          renderiza nunca en el build real — queda listo para reactivarse
-          con un cambio de una sola línea en App.jsx cuando se decida
-          publicar Training Records. No añadir la prop en App.jsx sin
-          aprobación explícita. */}
+          Reactivado de forma permanente el 2026-09-06 (decisión del
+          usuario: "ya irá a la próxima release" — ver
+          docs/RELEASE-V1-PROGRESS.md, Fase 9 y el bloque de reversión
+          justo debajo). Estuvo desconectado a propósito solo para el
+          lanzamiento de v1.0.0. */}
       {onOpenTrainingRecords && (
         <button
           type="button"
