@@ -504,9 +504,7 @@ se cierra aquí según se resuelve:
 4. ✅ El generador de Training Records debe dejar de vivir "dentro" de
    Configuración y ser una feature independiente; volver atrás siempre
    debe volver a Home — ver 4.4.
-5. ⬜ Cargar datos reales de prueba para el usuario demo: varias
-   escuelas, tarifas y movimientos en varios meses pasados y futuros,
-   cifras redondas.
+5. ✅ Cargar datos reales de prueba para el usuario demo — ver 4.7.
 6. ⬜ Barrido final de pendientes de rediseño, si queda alguno.
 7. ⬜ Probar generación de Training Records end-to-end para todas las
    plantillas — el usuario reporta un error en iOS Safari/iPhone 14 Pro
@@ -676,3 +674,43 @@ el engranaje desaparece y el `?` de Ayuda sigue visible; dentro de Ayuda
 ocurre lo contrario. Si en el dispositivo real del usuario se ve distinto,
 lo más probable es una build cacheada antigua (Service Worker/PWA), no
 un hueco en el código actual — a confirmar con una recarga forzada.
+
+### 4.7 — Datos reales de prueba para la cuenta demo (TEST)
+
+**Estado de partida**: la cuenta demo (nickname "demo", Supabase TEST)
+ya tenía 2 escuelas, 105 worklog y 41 comisiones — pero todo concentrado
+entre junio y el 4 de septiembre de 2026 (nunca futuro, generado por
+`scripts/seed-demo-records.js` en una sesión anterior), y las
+`commission_rates` con decimales aleatorios (13.5, 16.41, 24.33...) —
+imposibles de verificar de cabeza, justo lo contrario de lo pedido.
+
+**Qué se hizo** — nuevo script puntual
+`scripts/seed-fase4-datos-reales.mjs` (documentado como herramienta de
+desarrollo, no parte de la app real, mismo criterio que
+`seed-demo-records.js`), sin borrar ni tocar ningún worklog/comisiones
+ya existente:
+- Redondeadas las 9 `commission_rates` con decimales a cifras enteras
+  limpias (10/15/20/25).
+- Nueva escuela **"Blue Manta"**, con 3 tarifas y 3 comisiones propias,
+  en cifras redondas desde el origen (900/2200/400 THB tarifa,
+  20/25/10 THB comisión).
+- 35 worklog + 8 comisiones nuevos, repartidos en 6 meses: 3 pasados
+  adicionales (marzo/abril/mayo 2026, antes de que empezaran los datos
+  ya existentes) y 3 futuros (octubre/noviembre/diciembre 2026,
+  inexistentes hasta ahora). Los futuros se marcan siempre "Pending"
+  — no tiene sentido un curso futuro ya cobrado.
+- Resultado: 3 escuelas, 10 meses continuos con datos (marzo→diciembre
+  2026), toda tarifa/comisión en cifras enteras.
+
+**Verificado**: navegación real en Chrome — calendario de Home
+navegado hasta octubre y diciembre 2026 (meses futuros), con días de
+actividad reales; Resumen muestra diciembre 2026 con "Blue Manta:
+800,00 ฿ / 2p" (400 THB × 2 personas, cifra limpia verificable a mano)
+y "Ihasia" en el mismo mes; KPI "Pendiente de cobrar" de Home
+actualizado a la cifra combinada nueva — sin errores de consola en
+ningún punto del recorrido.
+
+**Nota para producción**: ninguna — este script solo se ejecutó contra
+el Supabase de TEST (`VITE_ENVIRONMENT=test`, verificado antes de
+correrlo), es contenido de prueba de la cuenta demo, no hay nada que
+replicar en producción.
