@@ -19,6 +19,8 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Home** adopta el color de marca nuevo en los KPIs, la cifra de
+  "Generado este mes" y el punto de "hoy" del calendario.
 - **Nuevo logo de Ocean Flow** en la cabecera, el favicon, el icono de
   la app, la pantalla de carga, el login/registro/recuperar contraseña
   y el carnet de instructor — primer paso visible del rediseño de
