@@ -22,8 +22,9 @@ investigado.
 
 ## Fase 1 — Investigación + Libro de estilo v1 (2026-09-06)
 
-**Estado: ✅ entregado, pendiente de validación humana antes de pasar a
-Fase 2 (propagación a pantallas).**
+**Estado: ✅ cerrada — libro de estilo y commit aprobados por el usuario
+(commit `edf64c8` en `feature/rediseno-v2`, sin fusionar ni pushear).
+Lista para empezar Fase 2 en una próxima sesión.**
 
 ### Qué se hizo
 
