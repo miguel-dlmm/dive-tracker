@@ -487,7 +487,9 @@ iPhone 14 Pro Max) para las 3 correcciones.
 
 ## Fase 4 — Ronda de correcciones y features pendientes (2026-09-07)
 
-**Estado: 🔄 en curso.** El usuario encargó un lote grande antes de
+**Estado: ✅ cerrada — 8 de 9 items completos y verificados, 1
+parcialmente cerrado por falta de información (ver item 7).** El
+usuario encargó un lote grande antes de
 desconectar por la noche, con instrucción explícita de resolverlo todo
 sin pararse a pedir aprobación (autorización cubierta también por
 `git push`/commits de este lote — ver memoria de sesión
@@ -803,3 +805,39 @@ nuevo" (Ayuda → Ver qué hay de nuevo) recorriendo las 5 diapositivas:
 el título y el icono de la diapositiva "Repásalo cuando quieras" pasan
 del navy oscuro antiguo al navy de marca — confirmado con zoom sobre el
 icono. Sin errores de consola.
+
+## Cierre de la Fase 4 — para la próxima sesión
+
+Los 5 commits de esta fase ya están en `feature/rediseno-v2`, pusheados
+a GitHub (autorización previa del usuario, que se desconectó antes de
+que terminara el lote): `1cefc8b`, `0f09337`, `839f277`, `eb7108b`,
+`08ec86b`, `f75b725`.
+
+**8 de los 9 items del encargo, completos y verificados** (lint 0
+errores, 754/754 tests, build correcto, en cada commit; navegación real
+en Chrome/iPhone 14 Pro Max emulado para cada cambio visual). El único
+que no se pudo cerrar del todo:
+
+- **Item 7 (error de Training Records en iOS Safari/iPhone 14 Pro
+  Max)**: la generación en sí queda verificada sin regresiones (las 10
+  plantillas estructuralmente correctas, la familia de campos
+  rellenables y la de coordenadas probadas de extremo a extremo, el fix
+  histórico de descarga de Safari sigue aplicado en los tres caminos de
+  descarga). Lo que falta es información que solo puede dar el usuario:
+  el texto exacto del error o una captura de pantalla — sin eso no hay
+  forma de reproducirlo ni diagnosticarlo en este entorno (sin
+  Safari/WebKit real ni un iPhone físico disponibles aquí). Primera
+  pregunta obligada de la próxima sesión si el tema sigue abierto.
+
+**Pendiente para el despliegue a producción** (además de lo ya anotado
+tras la Fase 3, sección "⚠️ Pendiente para el despliegue a producción"
+más arriba): ninguna fila nueva de base de datos que replicar — los
+datos de la Fase 4 (escuela "Blue Manta", commission_rates redondeadas,
+meses pasados/futuros) son solo contenido de prueba de la cuenta demo
+de TEST, no algo que exista en producción ni deba tocarse ahí.
+
+**Verificación pendiente en dispositivo real** (no se puede cerrar como
+"hecho" sin ello, ambas ya señaladas en sus propios apartados): el fix
+de `interactive-widget=resizes-content` para el menú inferior (4.1) y
+el tamaño de logo en login/registro/recuperar contraseña (4.5, el
+bypass de desarrollo impide verlas en este entorno).
