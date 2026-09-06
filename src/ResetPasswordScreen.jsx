@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
-import { NAVY, TEAL, BG, BODY_FONT } from "./App";
+import { NAVY, BRAND_NAVY, BG, BODY_FONT } from "./App";
 import { PasswordField, RequirementRow } from "./auth/PasswordFields";
 import { PASSWORD_MIN_LENGTH, hasUppercase, hasSymbol } from "./passwordPolicy";
 
@@ -53,11 +53,11 @@ export default function ResetPasswordScreen({ onSubmit }) {
     <div className="flex min-h-dvh items-start justify-center px-5 py-10" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
             <img src="/brand/logo-mark-navy.png" alt="" width={22} height={22} aria-hidden="true" />
           </div>
           <div className="text-center leading-tight">
-            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>{t("resetPassword.eyebrow")}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: BRAND_NAVY }}>{t("resetPassword.eyebrow")}</p>
             <h1 className="mt-1 text-lg font-bold tracking-tight" style={{ color: NAVY }}>{t("resetPassword.title")}</h1>
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function ResetPasswordScreen({ onSubmit }) {
             type="submit"
             disabled={!canSubmit}
             className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ backgroundColor: TEAL }}
+            style={{ backgroundColor: BRAND_NAVY }}
           >
             {loading && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
             {t("resetPassword.submit")}

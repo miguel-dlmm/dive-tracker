@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
-import { TEAL, BG, BODY_FONT, BRAND_NAVY } from "./App";
+import { BG, BODY_FONT, BRAND_NAVY } from "./App";
 import { inputCls, Field } from "./shared";
 import { ACCOUNT_DEACTIVATED_MESSAGE } from "./useSession";
 
@@ -65,7 +65,7 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
           </Field>
 
           {onForgotPassword && (
-            <button type="button" onClick={onForgotPassword} className="-my-2 flex min-h-11 items-center text-xs font-medium" style={{ color: TEAL }}>
+            <button type="button" onClick={onForgotPassword} className="-my-2 flex min-h-11 items-center text-xs font-medium" style={{ color: BRAND_NAVY }}>
               {t("login.forgotPassword")}
             </button>
           )}
@@ -77,7 +77,7 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
             type="submit"
             disabled={loading}
             className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white disabled:opacity-70"
-            style={{ backgroundColor: TEAL }}
+            style={{ backgroundColor: BRAND_NAVY }}
           >
             {loading && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
             {t("login.submit")}
@@ -86,7 +86,7 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
           {onRegister && (
             <p className="text-center text-xs text-gray-500">
               {t("login.firstTime")}{" "}
-              <button type="button" onClick={onRegister} className="-my-2 inline-flex min-h-11 items-center font-medium" style={{ color: TEAL }}>
+              <button type="button" onClick={onRegister} className="-my-2 inline-flex min-h-11 items-center font-medium" style={{ color: BRAND_NAVY }}>
                 {t("login.register")}
               </button>
             </p>

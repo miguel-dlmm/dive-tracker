@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Rocket, ExternalLink } from "lucide-react";
-import { NAVY, TEAL } from "./colors";
+import { BRAND_NAVY } from "./colors";
 import { supabase } from "./supabaseClient";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
@@ -108,11 +108,11 @@ export default function DeploymentNotice({ userId, profileCreatedAt }) {
             initial={{ opacity: 0, y: reduced ? 0 : 8 }}
             animate={{ opacity: 1, y: 0, transition: { duration: reduced ? 0.01 : DURATION.sm, ease: EASE.enter } }}
           >
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
-              <Rocket size={26} style={{ color: TEAL }} aria-hidden="true" />
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
+              <Rocket size={26} style={{ color: BRAND_NAVY }} aria-hidden="true" />
             </div>
-            <p className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide" style={{ color: TEAL }}>{t("deploymentNotice.eyebrow")}</p>
-            <h2 id="deployment-notice-title" className="mb-2 text-center text-base font-bold" style={{ color: NAVY }}>{notice.summary}</h2>
+            <p className="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide" style={{ color: BRAND_NAVY }}>{t("deploymentNotice.eyebrow")}</p>
+            <h2 id="deployment-notice-title" className="mb-2 text-center text-base font-bold" style={{ color: BRAND_NAVY }}>{notice.summary}</h2>
             <p className="mb-3 text-center text-[11px] text-gray-400">
               {t("deploymentNotice.branchLabel")} <span className="font-medium text-gray-600">{notice.branch}</span>
               {" · "}{t("deploymentNotice.commitLabel")} <span className="font-mono">{notice.commit_hash?.slice(0, 7)}</span>
@@ -137,7 +137,7 @@ export default function DeploymentNotice({ userId, profileCreatedAt }) {
             )}
 
             <p className="mb-3 text-sm text-gray-600">
-              <span className="font-semibold" style={{ color: NAVY }}>{t("deploymentNotice.uiChangesLabel")}</span>{" "}
+              <span className="font-semibold" style={{ color: BRAND_NAVY }}>{t("deploymentNotice.uiChangesLabel")}</span>{" "}
               {notice.has_ui_changes ? (notice.ui_changes_note || t("deploymentNotice.uiChangesYes")) : t("deploymentNotice.uiChangesNo")}
             </p>
 
@@ -187,7 +187,7 @@ export default function DeploymentNotice({ userId, profileCreatedAt }) {
           <button
             onClick={dismiss}
             className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-semibold text-white"
-            style={{ backgroundColor: TEAL }}
+            style={{ backgroundColor: BRAND_NAVY }}
           >
             {t("deploymentNotice.understood")}
           </button>

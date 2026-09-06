@@ -320,6 +320,34 @@ bloque, más verificación visual real en navegador de las 5 pantallas
 (Resumen, Tarifas, Configuración, Ayuda, Mi perfil) — sin errores de
 consola en ninguna.
 
+## ⚠️ Pendiente para el despliegue a producción — cambios de DATOS, no de código
+
+Dos ajustes de esta iniciativa viven en la **base de datos**, no en el
+código — `schema.sql`/`seed.sql` ya quedaron actualizados para
+instalaciones nuevas, pero la base de datos de producción real (la de
+`main`, separada de la de TEST) ya tiene sus propias filas y no se
+actualiza sola al fusionar esta rama. Antes de dar por cerrado el
+despliegue de este rediseño a producción, ejecutar ahí también:
+
+1. **`app_config.logo_icon`** → `'Logo'` (antes `'Waves'`), para que el
+   spinner de carga use el logo real en vez del icono genérico:
+   ```sql
+   update app_config set logo_icon = 'Logo' where id = true;
+   ```
+2. **`nav_sections.color`** de `trabajo`/`log`/`comisiones` → `#00335A`
+   (antes `#0F766E`/`#0E7C7B`, el teal viejo heredado de antes del
+   rediseño) — afecta al FAB de Mi trabajo, su pestaña activa, y los
+   iconos de categoría de Ayuda que comparten el mismo color de
+   sección. `colegas` (`#64748B`, gris) no se toca — nunca fue el teal
+   de marca, es un color real y distinto:
+   ```sql
+   update nav_sections set color = '#00335A' where key in ('trabajo', 'log', 'comisiones');
+   ```
+
+Ya ejecutados y verificados en la base de datos TEST (ver commits de
+esta fase) — pendientes solo en producción, el día que se decida
+publicar este rediseño ahí.
+
 ## Justificación final del diseño
 
 Añadida como sección nueva ("08 — Justificación") al mismo Artifact del

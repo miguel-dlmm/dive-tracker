@@ -21,6 +21,11 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Últimos rincones en verde ya al navy de marca**: login/registro/
+  recuperar contraseña, "Qué hay de nuevo", el FAB y la pestaña activa
+  de Mi trabajo, y los iconos de categoría de Ayuda (estos últimos
+  porque el color de sección en Configuración → Navegación pasa
+  también al navy nuevo, no solo por código).
 - **Resumen, Tarifas, Configuración, Ayuda y Mi perfil** adoptan el
   color de marca nuevo (cifras, botones, filtros activos, iconos de
   menú, selector de icono de carga). El carnet de instructor estrena

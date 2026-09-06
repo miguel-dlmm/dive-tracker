@@ -190,7 +190,7 @@ class ErrorBoundaryBase extends Component {
           type="button"
           onClick={() => window.location.reload()}
           className="mt-1 flex min-h-11 items-center rounded-md px-4 text-sm font-semibold text-white"
-          style={{ backgroundColor: TEAL }}
+          style={{ backgroundColor: BRAND_NAVY }}
         >
           {t("errorBoundary.reload")}
         </button>
@@ -206,7 +206,7 @@ export const ErrorBoundary = withTranslation("common")(ErrorBoundaryBase);
 // helper que usa el resto de la app, nunca un lookup propio (antes
 // duplicaba la resolución con `import * as Icons`, ver LOADING_ICONS
 // más arriba para el porqué de quitarlo).
-export function Avatar({ icon, color = TEAL, size = 36 }) {
+export function Avatar({ icon, color = BRAND_NAVY, size = 36 }) {
   const Icon = AVATAR_ICON_MAP[icon] || AVATAR_ICON_MAP.Fish;
   return (
     <span
@@ -338,7 +338,7 @@ export function ConfirmDialog({ open, title, message, onConfirm, onCancel, loadi
             onClick={onConfirm}
             disabled={loading}
             className="flex min-h-11 items-center gap-1.5 rounded-md px-3.5 text-sm font-medium text-white disabled:opacity-70"
-            style={{ backgroundColor: danger ? CORAL : TEAL }}
+            style={{ backgroundColor: danger ? CORAL : BRAND_NAVY }}
           >
             {loading && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}
             {confirmLabel || t("confirmDialog.defaultConfirmLabel")}
@@ -355,7 +355,7 @@ export function EditActions({ onSave, onCancel, saveLabel }) {
   const { t } = useTranslation("common");
   return (
     <div className="flex justify-end gap-2">
-      <button onClick={onSave} className="flex min-h-9 items-center gap-1 rounded-lg px-3 text-xs font-medium text-white" style={{ backgroundColor: TEAL }}>
+      <button onClick={onSave} className="flex min-h-9 items-center gap-1 rounded-lg px-3 text-xs font-medium text-white" style={{ backgroundColor: BRAND_NAVY }}>
         <Check size={13} aria-hidden="true" /> {saveLabel || t("editActions.defaultSaveLabel")}
       </button>
       <button onClick={onCancel} className="min-h-9 rounded-lg border border-gray-200 px-3 text-xs font-medium text-gray-500">
@@ -655,7 +655,7 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
           type="button"
           onClick={selectToday}
           className="mb-2 flex min-h-9 w-full items-center justify-center gap-1.5 rounded-md text-xs font-medium"
-          style={{ backgroundColor: "#F0FDFA", color: TEAL }}
+          style={{ backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }}
         >
           {t("datePicker.today")}
         </button>
@@ -680,7 +680,7 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
                 aria-selected={isSelected || undefined}
                 onClick={() => d && selectDay(d)}
                 className="flex h-10 items-center justify-center rounded-md text-xs transition-colors"
-                style={isSelected ? { backgroundColor: TEAL, color: "white", fontWeight: 600 } : isToday ? { color: TEAL, fontWeight: 600 } : { color: d ? "#374151" : "transparent" }}
+                style={isSelected ? { backgroundColor: BRAND_NAVY, color: "white", fontWeight: 600 } : isToday ? { color: BRAND_NAVY, fontWeight: 600 } : { color: d ? "#374151" : "transparent" }}
               >
                 {d || ""}
               </button>
@@ -835,9 +835,9 @@ export function DateRangePicker({ from, to, onChange }) {
                 aria-selected={isEndpoint || undefined}
                 className="flex h-9 items-center justify-center text-xs transition-colors"
                 style={
-                  isEndpoint ? { backgroundColor: TEAL, color: "white", fontWeight: 600, borderRadius: 9999 }
-                  : inRange ? { backgroundColor: "#F0FDFA", color: "#0F766E" }
-                  : isToday ? { color: TEAL, fontWeight: 600 }
+                  isEndpoint ? { backgroundColor: BRAND_NAVY, color: "white", fontWeight: 600, borderRadius: 9999 }
+                  : inRange ? { backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }
+                  : isToday ? { color: BRAND_NAVY, fontWeight: 600 }
                   : { color: "#374151" }
                 }
               >
@@ -850,7 +850,7 @@ export function DateRangePicker({ from, to, onChange }) {
           <button
             type="button" onClick={() => setOpen(false)}
             className="mt-2 w-full rounded-md py-2 text-xs font-semibold text-white"
-            style={{ backgroundColor: TEAL }}
+            style={{ backgroundColor: BRAND_NAVY }}
           >
             {t("dateRangePicker.okFrom", { date: formatDMY(from) })}
           </button>
@@ -948,7 +948,7 @@ const CAL_NEUTRAL = "#94A3B8";
 // previo a la unificación en Mi trabajo, ADR-0005, que ya usa "Curso"/
 // "Ajuste"; encontrado como bug real de datos desincronizados, no solo de
 // estilo, al auditar Home). Curso/Comisión tienen color de marca fijo
-// (TEAL/SUN, igual que en MiTrabajoTab); Ajuste no tiene uno propio en
+// (BRAND_NAVY/SUN, igual que en MiTrabajoTab); Ajuste no tiene uno propio en
 // ningún sitio de la app — su color depende del signo del importe (ver
 // rowAccent en MiTrabajoTab) — así que aquí usa el neutro del propio
 // calendario en vez de inventarle una identidad de marca que no tiene.
@@ -1832,7 +1832,7 @@ export function Select({ value, onChange, options, placeholder, label, className
             aria-selected={value === o}
             onClick={() => { onChange(o); setOpen(false); }}
             className="flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
-            style={value === o ? { color: TEAL, backgroundColor: "#F0FDFA" } : { color: "#374151" }}
+            style={value === o ? { color: BRAND_NAVY, backgroundColor: `${BRAND_NAVY}1A` } : { color: "#374151" }}
           >
             {o}
             {value === o && <Check size={14} />}
@@ -1888,7 +1888,7 @@ export function MultiSelect({ value = [], onChange, options, placeholder }) {
             >
               <span
                 className="flex h-4 w-4 shrink-0 items-center justify-center rounded border"
-                style={checked ? { backgroundColor: TEAL, borderColor: TEAL } : { borderColor: "#D1D5DB" }}
+                style={checked ? { backgroundColor: BRAND_NAVY, borderColor: BRAND_NAVY } : { borderColor: "#D1D5DB" }}
               >
                 {checked && <Check size={12} className="text-white" aria-hidden="true" />}
               </span>
@@ -2064,7 +2064,7 @@ export function EntryTitle({ school, activity, schoolColor, activityColor, schoo
 // Switch on/off genérico — extraído de ConfigTab.jsx (Bloque 4, 2026-09-01)
 // al necesitarlo también DatasetsSection.jsx: hasta entonces vivía privado
 // ahí, usado solo por "Permitir registro externo".
-export function BooleanToggle({ checked, onChange, disabled, ariaLabel, color = TEAL }) {
+export function BooleanToggle({ checked, onChange, disabled, ariaLabel, color = BRAND_NAVY }) {
   return (
     <button
       type="button"
@@ -2155,7 +2155,7 @@ export function ChipGroup({ value, onChange, options }) {
             onClick={() => onChange(o)}
             className="min-h-11 rounded border px-3 py-1.5 text-sm font-medium transition-colors"
             style={active
-              ? { backgroundColor: "#F0FDFA", borderColor: TEAL, color: TEAL }
+              ? { backgroundColor: `${BRAND_NAVY}1A`, borderColor: BRAND_NAVY, color: BRAND_NAVY }
               : { backgroundColor: "white", borderColor: "#E5E7EB", color: "#4B5563" }}
           >
             {o}

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
 import { X, Languages, TrendingUp, UserCircle, IdCard, Sparkles } from "lucide-react";
-import { NAVY, TEAL, SUN, GREEN, CORAL } from "./App";
+import { NAVY, TEAL, SUN, GREEN, CORAL, BRAND_NAVY } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
 
@@ -141,7 +141,7 @@ export default function WhatsNew({ onClose }) {
             <span
               key={i}
               className="h-1.5 rounded-full transition-all"
-              style={{ width: i === step ? 16 : 6, backgroundColor: i === step ? TEAL : "#E5E7EB" }}
+              style={{ width: i === step ? 16 : 6, backgroundColor: i === step ? BRAND_NAVY : "#E5E7EB" }}
             />
           ))}
         </div>
@@ -158,7 +158,7 @@ export default function WhatsNew({ onClose }) {
           <button
             onClick={() => (isLast ? onClose() : setStep((s) => s + 1))}
             className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-semibold text-white"
-            style={{ backgroundColor: TEAL }}
+            style={{ backgroundColor: BRAND_NAVY }}
           >
             {isLast ? t("whatsNew.start") : t("whatsNew.next")}
           </button>

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { Plus, Minus, X, Check, Loader2, StickyNote, GraduationCap, Handshake, Users } from "lucide-react";
-import { TEAL, SUN, CORAL, GREEN } from "./App";
+import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./App";
 import {
   inputCls, formatMoney, Field, Select, MoneyInput,
   DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency,
@@ -419,8 +419,8 @@ export default function MovementSheet({
                       </Field>
                       <Field label={t("sheet.fields.total")}>
                         {preview ? (
-                          <div className="flex h-11 flex-col justify-center rounded-md px-2.5" style={{ backgroundColor: "#F0FDFA" }}>
-                            <span className="text-sm font-semibold tabular-nums" style={{ color: TEAL }}>
+                          <div className="flex h-11 flex-col justify-center rounded-md px-2.5" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
+                            <span className="text-sm font-semibold tabular-nums" style={{ color: BRAND_NAVY }}>
                               {formatMoney(preview.total, preview.currency, currencies.rows)}
                             </span>
                             <span className="text-[10px] leading-tight text-gray-400">

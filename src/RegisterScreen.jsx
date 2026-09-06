@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, ArrowLeft, MailCheck } from "lucide-react";
-import { NAVY, TEAL, BG, BODY_FONT, BRAND_NAVY } from "./App";
+import { NAVY, BG, BODY_FONT, BRAND_NAVY } from "./App";
 import { inputCls, Field, Select } from "./shared";
 import { useToast } from "./shared";
 import i18n, { setStoredLanguage, SUPPORTED_LANGUAGES } from "./i18n";
@@ -104,12 +104,12 @@ export default function RegisterScreen({ onBack, inviteToken }) {
 
         {sent ? (
           <div className="flex flex-col items-center gap-3 rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
-            <MailCheck size={28} style={{ color: TEAL }} aria-hidden="true" />
+            <MailCheck size={28} style={{ color: BRAND_NAVY }} aria-hidden="true" />
             <p className="text-sm text-gray-700">{t("register.confirmationMessage")}</p>
             <button
               onClick={onBack}
               className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white"
-              style={{ backgroundColor: TEAL }}
+              style={{ backgroundColor: BRAND_NAVY }}
             >
               {t("register.backToLogin")}
             </button>
@@ -160,7 +160,7 @@ export default function RegisterScreen({ onBack, inviteToken }) {
               type="submit"
               disabled={loading || nicknameHasAt}
               className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white disabled:opacity-70"
-              style={{ backgroundColor: TEAL }}
+              style={{ backgroundColor: BRAND_NAVY }}
             >
               {loading && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
               {t("register.submit")}
