@@ -506,9 +506,12 @@ se cierra aquí según se resuelve:
    debe volver a Home — ver 4.4.
 5. ✅ Cargar datos reales de prueba para el usuario demo — ver 4.7.
 6. ⬜ Barrido final de pendientes de rediseño, si queda alguno.
-7. ⬜ Probar generación de Training Records end-to-end para todas las
-   plantillas — el usuario reporta un error en iOS Safari/iPhone 14 Pro
-   Max.
+7. 🔶 Probar generación de Training Records end-to-end — ver 4.8.
+   Parcialmente cerrado: la generación en sí queda verificada y sin
+   regresiones; el error concreto de iOS Safari/iPhone 14 Pro Max NO se
+   ha podido reproducir ni diagnosticar en este entorno — necesita el
+   texto/captura exacta del error, que el usuario no dejó antes de
+   desconectar.
 8. ✅ Logo más grande en login, loading y carnet del instructor — ver
    4.5.
 9. ✅ Ya satisfecho sin cambio de código — ver 4.6 (verificación
@@ -714,3 +717,50 @@ ningún punto del recorrido.
 el Supabase de TEST (`VITE_ENVIRONMENT=test`, verificado antes de
 correrlo), es contenido de prueba de la cuenta demo, no hay nada que
 replicar en producción.
+
+### 4.8 — Generación de Training Records end-to-end, todas las plantillas
+
+**Verificación estructural (las 10 plantillas)**:
+`scripts/verify-training-record-field-maps.mjs` — cada campo referenciado
+en `templateFieldMaps.js` existe de verdad en el PDF real de Supabase
+Storage, sin duplicados ni typos, en las 10 plantillas (4 con campos de
+formulario rellenable: OWD/AOWD/SC-DD/SC-EAN; 6 por coordenadas exactas:
+BD/SC-LV/SC-NV/SC-PB/SC-SR/SC-RR).
+
+**Verificación end-to-end real, familia "campos rellenable"** (OWD) vía
+`npm run mobile-check:training-records` (Chromium + iPhone 14 Pro Max) —
+recorrido completo real: perfil de instructor, elegir plantilla,
+progreso con fecha por fila (`DatePicker` ya rediseñado, sin problema),
+2 alumnos con firma, generar los 2 PDF, descargar PDF y JPG
+individuales, recargar página y comprobar que el roster persiste. El
+script llevaba tres bugs SIN RELACIÓN con el trabajo de esta noche
+(arrastrados de una revisión de copy/UI de 2026-09-04 que nunca se
+volvió a ejecutar contra él): un selector `aria-label="Cerrar"`
+ambiguo con el de un toast, un checkbox "Confirmación de Examen Final"
+que ya no existe (ahora es solo una fecha, "Fecha de examen"), la
+etiqueta "Añadir alumno" cuando el listado está vacío en realidad dice
+"Añade tu primer alumno", y una espera de 300ms tras recargar
+insuficiente frente a la carga real de Supabase. Los cuatro, corregidos
+en el propio script — con eso, pasa limpio, sin avisos de consola.
+
+**Verificación manual, familia "por coordenadas"** (Basic Diver) — en el
+propio navegador: plantilla, 3 fechas de progreso + fecha de
+confirmación del cuestionario, alumno con firma, "Generar para todos
+los alumnos" → "Registros generados correctamente", sin errores de
+consola.
+
+**Lo que NO se ha podido verificar: el error concreto reportado en iOS
+Safari/iPhone 14 Pro Max real.** Revisado el código de descarga
+(`downloadBytes`, `TrainingRecordsTab.jsx`) por si hubiera una regresión
+del bug ya conocido y corregido en el pasado ("No se ha podido completar
+la operación (Error de WebKitBlobResource)", ver el comentario ya
+existente junto a `downloadBytes`): la revocación diferida del blob URL
+(`setTimeout(..., 1000)`, en vez de revocar en el mismo tick) se aplica
+de forma consistente a la descarga individual de PDF, a la de JPG y al
+bucle de "Descargar todo" — los tres pasan por la misma función, no hay
+una ruta que se quedara sin el fix. No se encontró ninguna otra pista
+concreta sin más información. Este entorno no puede abrir Safari/WebKit
+real (limitación ya documentada en `CLAUDE.md` §8: Playwright+WebKit
+cuelga aquí) ni un iPhone físico — para cerrar este punto de verdad hace
+falta el texto exacto del error o una captura de pantalla del usuario,
+que no quedó registrado antes de que se desconectara.
