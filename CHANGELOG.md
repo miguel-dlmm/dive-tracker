@@ -21,6 +21,9 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Logo más visible** en el login/registro/recuperar contraseña, en la
+  pantalla de carga al abrir la app y en la marca de agua del carnet de
+  instructor (apenas se distinguía).
 - **Training Records** ya es una función independiente, accesible solo
   desde su tarjeta en Home: antes se abría "dentro" de Configuración
   (su flecha "‹ atrás" acababa llevando al menú de Configuración);

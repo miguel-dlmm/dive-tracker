@@ -428,8 +428,12 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
               <p className="text-sm font-bold tabular-nums text-white">{ssiProNumber || "—"}</p>
             </div>
           </div>
-          <span className="flex items-center gap-1 opacity-40" aria-hidden="true">
-            <img src="/brand/logo-mark-white.png" alt="" width={16} height={16} />
+          {/* Marca de agua del carnet — subida de 16px/40% opacidad a
+              24px/55% (feedback explícito: "apenas se ve") sin llegar a
+              competir con iniciales/nº SSI, que siguen siendo el foco
+              real de esta fila. */}
+          <span className="flex items-center gap-1 opacity-55" aria-hidden="true">
+            <img src="/brand/logo-mark-white.png" alt="" width={24} height={24} />
           </span>
         </div>
       </div>

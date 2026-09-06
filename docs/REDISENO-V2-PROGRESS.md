@@ -511,10 +511,10 @@ se cierra aquí según se resuelve:
 7. ⬜ Probar generación de Training Records end-to-end para todas las
    plantillas — el usuario reporta un error en iOS Safari/iPhone 14 Pro
    Max.
-8. ⬜ Logo más grande en login, loading y carnet del instructor (apenas
-   se ve hoy).
-9. ⬜ El icono del engranaje de Configuración debe reflejar
-   abierto/cerrado igual que ya hace el de Ayuda.
+8. ✅ Logo más grande en login, loading y carnet del instructor — ver
+   4.5.
+9. ✅ Ya satisfecho sin cambio de código — ver 4.6 (verificación
+   directa, no una tarea pendiente).
 
 Cada item se documenta con su propio sub-apartado (qué se encontró, qué
 se hizo, cómo se verificó) según se va cerrando, siguiendo el mismo
@@ -630,3 +630,49 @@ Configuración sigue funcionando con su propio menú (Escuelas/Cursos/
 Tarifas, sin la entrada de Training Records, que nunca debía listarse
 ahí) — sin errores de consola en ningún punto. `npm run lint` 0 errores,
 `npm run test -- --run` 754/754, `npm run build` correcto.
+
+### 4.5 — Logo más grande (login, loading, carnet)
+
+Tres puntos concretos, cada uno con su propio tamaño de partida y
+tratamiento — no un único valor global:
+- **Login/Registro/Recuperar contraseña** (mismo bloque "hero" repetido
+  en los tres): 28px → 44px. Se dejan fuera a propósito
+  `AcceptLegalScreen`/`ForcedPasswordUpdateScreen`/`ResetPasswordScreen`
+  — usan un patrón distinto (icono de 22px dentro de una insignia
+  circular de 48px, no una imagen suelta) y no se nombraron en el
+  feedback; agrandar solo el icono ahí desencajaría con el círculo que
+  lo envuelve.
+- **Loading** (arranque de la app: sesión resolviéndose y datos
+  cargando tras iniciar sesión, `App.jsx`): 40px (valor por defecto de
+  `AppLoading`) → 64px, en las dos pantallas de carga a toda página.
+  Los usos internos más pequeños (guardando una tarifa, cargando una
+  lista dentro de una sección) no son "el loading" que describía el
+  feedback — un momento puntual y reconocible, no cualquier spinner —
+  así que se quedan igual.
+- **Carnet de instructor** (`ProfileTab.jsx`, marca de agua):
+  16px/40% opacidad → 24px/55% — el punto más literal del feedback
+  ("apenas se ve"); sigue sin competir con iniciales/nº SSI, el
+  contenido real de esa fila.
+
+**Verificado**: capturas reales del loading de arranque (64px, visible y
+proporcionado) y del carnet en Mi perfil (marca de agua claramente más
+visible, ampliada con zoom). Login/Registro/Recuperar contraseña NO se
+pudieron capturar en este entorno: el bypass de login de desarrollo
+inicia sesión automáticamente antes de que la pantalla llegue a
+pintarse, así que no hay forma de verlas renderizadas en este dev server
+— cambio de solo dos props (`width`/`height`) sobre una imagen ya
+existente en un layout `flex flex-col items-center`, riesgo mínimo, pero
+queda pendiente de confirmar visualmente la próxima vez que se pruebe
+sin el bypass activo (o en el iPhone real).
+
+### 4.6 — Icono de Configuración reflejando abierto/cerrado
+
+**Ya satisfecho sin tocar código.** Comprobado en el propio `App.jsx`:
+el icono de Ayuda (`?`) se oculta con `{tab !== "help" && (...)}` y el
+de Configuración (engranaje) se oculta con `{tab !== "config" && (...)}`
+— exactamente la misma regla, simétrica, ya existía para los dos antes
+de esta sesión. Verificado en vivo con capturas: dentro de Configuración
+el engranaje desaparece y el `?` de Ayuda sigue visible; dentro de Ayuda
+ocurre lo contrario. Si en el dispositivo real del usuario se ve distinto,
+lo más probable es una build cacheada antigua (Service Worker/PWA), no
+un hueco en el código actual — a confirmar con una recarga forzada.
