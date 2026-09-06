@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import * as Icons from "lucide-react";
+import { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle } from "lucide-react";
 import { TEAL } from "./App";
 import { ExpandableCard } from "./shared";
 import { useSwipeBack } from "./motion";
 import { HELP_CATEGORIES } from "./help/content";
 import HelpArticleBody from "./help/HelpArticleBody";
+
+// Catálogo cerrado de iconos de categoría (help/content.js, campo `icon`)
+// — imports nombrados en vez de `import * as Icons from "lucide-react"`,
+// mismo hallazgo de bundle que en shared.jsx (ver LOADING_ICONS ahí). Si
+// se añade una categoría con un icono nuevo en content.js, se añade aquí
+// también.
+const CATEGORY_ICONS = { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle };
 
 // Combina el texto traducido (namespace "help", claves `articles.<id>.*`)
 // con el id del artículo en content.js para dar a HelpArticleBody el
@@ -123,7 +130,7 @@ export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
           onClick={onShowWhatsNew}
           className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700"
         >
-          <Icons.Sparkles size={16} style={{ color: TEAL }} aria-hidden="true" />
+          <Sparkles size={16} style={{ color: TEAL }} aria-hidden="true" />
           {t("whatsNewReplay")}
         </button>
       )}
@@ -139,7 +146,7 @@ export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
             )}
             <div className="space-y-2">
               {rows.map((category) => {
-                const Icon = Icons[category.icon] || Icons.HelpCircle;
+                const Icon = CATEGORY_ICONS[category.icon] || HelpCircle;
                 const color = sectionColor(category.sectionKey);
                 const article = resolveArticle(category.articles[0], t);
                 return (

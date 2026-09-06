@@ -15,6 +15,8 @@
     "closeAvatarPicker": "Cerrar selector de avatar",
     "colorLabel": "Color {{name}}",
     "iconLabel": "Icono {{name}}",
+    "previousIcon": "Icono anterior",
+    "nextIcon": "Siguiente icono",
     "save": "Guardar",
     "saving": "Guardando…",
     "cancel": "Cancelar",

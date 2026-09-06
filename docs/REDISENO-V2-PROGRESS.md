@@ -129,12 +129,76 @@ para el detalle completo con coste estimado. Resumen:
   gama baja de Android sin medir todavía; revisar con datos reales de
   rendimiento antes de activarlo. Esfuerzo S una vez medido.
 
-## Cómo continuar (próxima sesión / próxima fase)
+## Hallazgo lateral (2026-09-06) — bundle de producción, implementado ya como arranque de Fase 2
 
-**Fase 2 propuesta: propagación del libro de estilo a las pantallas**,
-pantalla a pantalla, empezando por el logo/cabecera/navegación global
-(máximo impacto visual, mínimo riesgo funcional) y siguiendo por Home →
-Mi trabajo → Resumen → Tarifas → Configuración/Perfil/Ayuda. No
-empezar la Fase 2 sin que el usuario haya dado el visto bueno explícito
-al libro de estilo v1 (`docs/DESIGN-SYSTEM.md` + Artifact) — instrucción
-explícita del encargo original ("enséñamelo antes de propagarlo").
+Al revisar el aviso de "chunk >500kB" del build (fuera del alcance
+original de esta iniciativa, pero descubierto investigándolo a fondo a
+petición del usuario), se confirmó con análisis real de sourcemap
+(no solo el aviso genérico de Vite) que **`lucide-react` aporta el 36%
+del peso del bundle aunque la app solo usa 64 iconos de los más de 1000
+que tiene la librería**. Causa exacta: `shared.jsx`, `ProfileTab.jsx` y
+`HelpTab.jsx` hacen `import * as Icons from "lucide-react"` y resuelven
+el icono por nombre en runtime (`Icons[nombreGuardadoEnSupabase]`) —
+necesario porque el nombre viene de datos, pero eso bloquea el
+tree-shaking de la librería entera. Confirmado también que `pdf-lib`/
+`pdfjs-dist` (Training Records) **no** están en el bundle hoy —
+correctamente eliminados porque esa pantalla no tiene punto de entrada
+en la UI; si se reactiva Training Records en el futuro, aplicar la
+misma disciplina ahí (`src/trainingRecords/pdfToJpg.js` también usa
+`import * as pdfjsLib`, mismo patrón de riesgo, hoy irrelevante porque
+es código inalcanzable).
+
+**Decisión del usuario, actualizada:** en vez de aplazarlo a cuando le
+tocara el turno a Mi perfil, adelantarlo y hacerlo ya como primer
+bloque de implementación de Fase 2. Las 3 tareas resueltas en el mismo
+cambio (todas tocan `avatarCatalog.js`/`ProfileTab.jsx`/`shared.jsx`/
+`HelpTab.jsx`):
+
+1. **✅ Tree-shaking arreglado.** Los 3 `import * as Icons from
+   "lucide-react"` (`shared.jsx`, `ProfileTab.jsx`, `HelpTab.jsx`)
+   sustituidos por mapas explícitos de iconos nombrados:
+   `LOADING_ICONS` en `shared.jsx` (mismas 6 claves que `ICON_OPTIONS`
+   de `ConfigTab.jsx`), `CATEGORY_ICONS` en `HelpTab.jsx` (mismas
+   claves que los `icon:` de `help/content.js`), y `Avatar`
+   (`shared.jsx`) más `InstructorCard` (`ProfileTab.jsx`) pasan a
+   reusar `iconByName()` de `avatarCatalog.js` en vez de resolver el
+   nombre por su cuenta — elimina también la duplicación que ya se
+   había detectado. **Resultado real, medido con build**: 1,59MB →
+   968KB minificado (**−39%**, mejor que el ~1,0-1,1MB estimado).
+   754/754 tests y build en verde; verificado además en navegador real
+   (loading, Ayuda, avatar) sin ningún error de consola.
+2. **✅ Catálogo de avatares ampliado de 6 a 14.** Se relaja el
+   criterio de `docs/ESTILO.md` (2026-09-04) de "solo animales marinos
+   reales" a "iconografía real de mar/buceo" — y de paso se retiran las
+   4 sustituciones forzadas que ya estaban documentadas como débiles
+   (Shrimp haciendo de tiburón ballena, Snail de manta, Shell de pulpo,
+   FishSymbol de tiburón): ahora cada icono representa lo que su
+   nombre dice, ninguno finge ser un animal que no es. Los 6 animales
+   reales se mantienen (representándose a sí mismos) y se añaden 8
+   iconos de mar/buceo: Anchor, Compass, LifeBuoy, Sailboat, ShipWheel,
+   Bubbles, TreePalm, Droplets — 4 de ellos ya eran iconografía de
+   marca aceptada en otro sitio de la app (`ICON_OPTIONS` del icono de
+   carga), así que no es un lenguaje visual nuevo.
+3. **✅ Selector de avatar en carrusel horizontal.** Sustituye el
+   `grid grid-cols-3` estático (que con 14 iconos habría crecido a 5
+   filas) por `IconCarousel` (nuevo, local a `ProfileTab.jsx` — se
+   extrae a `shared.jsx` si aparece un segundo uso real): una sola fila
+   con scroll-snap + flechas prev/siguiente, altura constante
+   independientemente del tamaño del catálogo. Documentado en
+   `docs/DESIGN-SYSTEM.md` §6 como patrón "Selector en carrusel
+   horizontal". Textos de accesibilidad de las flechas nuevos en
+   `profile.json` (es/en): `avatar.previousIcon`/`avatar.nextIcon`.
+
+## Fase 2 — Propagación a pantallas (arrancada 2026-09-06)
+
+**Estado: 🟡 en curso.** Primer bloque implementado (iconografía/avatar,
+ver arriba) directamente en `feature/rediseno-v2`, sin esperar al orden
+original (logo/cabecera → Home → ...). El resto de la fase sigue el plan
+de abajo.
+
+## Cómo continuar (próxima sesión)
+
+Pendiente: logo/cabecera/navegación global (máximo impacto visual,
+mínimo riesgo funcional) y luego Home → Mi trabajo → Resumen → Tarifas
+→ Configuración/Ayuda (Mi perfil ya está resuelto, ver bloque de
+iconografía/avatar arriba). Nada de esto se ha tocado todavía.

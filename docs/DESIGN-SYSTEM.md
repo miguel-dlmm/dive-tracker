@@ -350,6 +350,23 @@ de que existe; se añade aquí. Backdrop: `brand-ink` al 45% de opacidad
 (no un negro genérico — el fondo del overlay también "habla" en el
 color de marca).
 
+### 6.8 Selector en carrusel horizontal (nuevo, implementado 2026-09-06)
+
+Patrón para elegir un valor de un catálogo cerrado cuando ese catálogo
+puede crecer: una sola fila con `scroll-snap-x`/`snap-mandatory` +
+flechas prev/siguiente a los lados, en vez de un grid que crece en
+filas verticales según el tamaño del catálogo. Mantiene siempre la
+misma altura — importante en el contexto de uso real de Ocean Flow
+(pantallas cortas, poco tiempo entre inmersiones, CLAUDE.md regla 3).
+Primer uso real: selector de icono de avatar (`ProfileTab.jsx`,
+`IconCarousel`, 14 opciones) — antes un `grid grid-cols-3` que con más
+de 6 iconos habría crecido a 5 filas. Botones prev/siguiente 44×44,
+icono 16px, deshabilitados visualmente (no ocultos) cuando no hay más
+que desplazar en esa dirección. Extraer a `shared.jsx` como componente
+compartido en cuanto aparezca un segundo caso real (convención de
+"extraer solo cuando exista necesidad real", CLAUDE.md sección 3) — hoy
+solo tiene un uso, se mantiene local a propósito.
+
 ## 7. Iconografía
 
 Se mantiene `lucide-react` (ya en uso, catálogo amplio, coherente con la
@@ -387,10 +404,23 @@ icono es más difícil de percibir de un vistazo que un bloque de fondo.
 - Ningún icono cambia de significado según el color de la pantalla que
   lo usa: "papelera = eliminar" y "check = confirmado/positivo" son
   fijos en toda la app, no reinterpretables por pantalla.
-- Catálogos cerrados (avatares, icono de carga configurable): sin
-  cambios — decisión ya tomada y documentada en `docs/ESTILO.md`, el
-  tamaño del catálogo lo sigue decidiendo lo que existe de verdad en
-  `lucide-react`, no un número redondo.
+- Catálogo del icono de carga configurable: sin cambios (6 iconos,
+  `ICON_OPTIONS` de `ConfigTab.jsx`) — decisión ya tomada, el tamaño lo
+  sigue decidiendo lo que existe de verdad en `lucide-react`, no un
+  número redondo.
+- **Catálogo de avatares, ampliado 2026-09-06** (implementado, ver
+  `docs/REDISENO-V2-PROGRESS.md`): de 6 a 14 iconos. El criterio de
+  `docs/ESTILO.md` (2026-09-04, "solo animales marinos reales") se
+  relaja a "iconografía real de mar/buceo" — se retiran las 4
+  sustituciones forzadas que ya estaban documentadas como débiles
+  (Shrimp de tiburón ballena, Snail de manta, Shell de pulpo,
+  FishSymbol de tiburón: ninguna tenía relación visual real con el
+  animal que decía representar). Cada icono pasa a representar lo que
+  su nombre dice: 6 animales reales (Fish, FishSymbol, Turtle, Shrimp,
+  Snail, Shell) + 8 de mar/buceo (Anchor, Compass, LifeBuoy, Sailboat,
+  ShipWheel, Bubbles, TreePalm, Droplets) — 4 de estos últimos ya eran
+  iconografía de marca aceptada en `ICON_OPTIONS` del icono de carga,
+  mismo lenguaje visual, no uno nuevo.
 
 ## 8. Tema oscuro — preparado, no construido en v1
 

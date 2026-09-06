@@ -1,14 +1,25 @@
 import { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext, Component } from "react";
 import { useTranslation, withTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
-import * as Icons from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, Waves, Anchor, Sailboat, Compass, Fish } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
 import { NAVY, TEAL, SUN, CORAL, GREEN } from "./colors";
 import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, usePrefersReducedMotion } from "./motion";
+import { iconByName } from "./avatarCatalog";
+
+// Catálogo cerrado del icono de carga configurable (GeneralSettings,
+// ConfigTab.jsx, ICON_OPTIONS) — imports nombrados en vez de `import * as
+// Icons from "lucide-react"` (hallazgo de bundle, rediseño 2026-09-06,
+// docs/REDISENO-V2-PROGRESS.md): ese wildcard obligaba a incluir la
+// librería de iconos entera en el bundle de producción (36% del peso
+// final) para poder resolver un icono por nombre en runtime, aunque la
+// app solo usa un puñado de nombres reales. Debe tener exactamente las
+// mismas claves que ICON_OPTIONS — si se añade un icono nuevo ahí, se
+// añade aquí también.
+const LOADING_ICONS = { Waves, Anchor, Sailboat, LifeBuoy, Fish, Compass };
 
 export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
 
@@ -108,7 +119,7 @@ export function useToast() {
 // =================================================================
 export function AppLoading({ iconName = "Waves", color = TEAL, size = 40, label }) {
   const { t } = useTranslation("common");
-  const Icon = Icons[iconName] || Icons.Waves;
+  const Icon = LOADING_ICONS[iconName] || Waves;
   return (
     <div className="flex flex-col items-center gap-3" role="status" aria-label={label || t("loading.defaultLabel")}>
       <div className="relative" style={{ width: size, height: size }}>
@@ -172,11 +183,12 @@ export const ErrorBoundary = withTranslation("common")(ErrorBoundaryBase);
 
 // Avatar circular icono+color (Bloque 5, 2026-09-01) — icon/color ya
 // resueltos por avatarCatalog.js (resolveAvatar), este componente solo
-// dibuja. Mismo lookup dinámico por nombre que AppLoading, con el mismo
-// respaldo a Waves si el nombre no existe en el catálogo (nunca un hueco
-// en blanco).
+// dibuja. iconByName() (avatarCatalog.js) resuelve el nombre — mismo
+// helper que usa el resto de la app, nunca un lookup propio (antes
+// duplicaba la resolución con `import * as Icons`, ver LOADING_ICONS
+// más arriba para el porqué de quitarlo).
 export function Avatar({ icon, color = TEAL, size = 36 }) {
-  const Icon = Icons[icon] || Icons.Waves;
+  const Icon = iconByName(icon);
   return (
     <span
       className="inline-flex shrink-0 items-center justify-center rounded-full"

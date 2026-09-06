@@ -19,6 +19,11 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Más opciones de avatar**, de 6 a 14, con iconografía real de mar y
+  buceo (ancla, brújula, salvavidas, velero...) además de los animales
+  marinos de siempre — y ahora se eligen deslizando en un carrusel en
+  vez de una rejilla fija, para que el selector no ocupe más pantalla
+  al haber más opciones.
 - Pequeña auditoría de unificación visual (ver `docs/ESTILO.md`): Tarifas
   ya anima la alta/baja de cada fila y su estado vacío pasa al mismo
   tratamiento centrado que Mi trabajo; Resumen unifica la tarjeta

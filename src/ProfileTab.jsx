@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, Waves } from "lucide-react";
-import * as Icons from "lucide-react";
+import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, Waves, ChevronLeft, ChevronRight } from "lucide-react";
 import { NAVY, TEAL, AQUA, CORAL } from "./colors";
 import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
-import { AVATAR_ICONS, AVATAR_COLORS, resolveAvatar } from "./avatarCatalog";
+import { AVATAR_ICONS, AVATAR_COLORS, resolveAvatar, iconByName } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
 import i18n, { setStoredLanguage } from "./i18n";
 import { computeInitials } from "./computeInitials";
@@ -39,6 +38,66 @@ function SectionCard({ title, children, id }) {
     <div id={id} className="rounded-lg border border-gray-200 bg-white p-4 scroll-mt-20">
       <h3 className="mb-3 text-sm font-semibold" style={{ color: NAVY }}>{title}</h3>
       {children}
+    </div>
+  );
+}
+
+// Selector de icono en carrusel horizontal (rediseño 2026-09-06,
+// docs/DESIGN-SYSTEM.md §6) — sustituye al `grid grid-cols-3` estático de
+// antes. Con 6 iconos, un grid de 3 columnas ya ocupaba 2 filas dentro del
+// panel inline de Mi perfil; al ampliar el catálogo de avatares a 14
+// (ver avatarCatalog.js) un grid habría crecido a 5 filas, alargando la
+// pantalla mucho más de lo que pide el contexto de uso real (manos
+// mojadas, poco tiempo entre inmersiones — CLAUDE.md regla 3). Un
+// carrusel de una sola fila con scroll-snap mantiene siempre la misma
+// altura, tenga el catálogo 6 iconos o 60. Solo hay un uso hoy (avatares);
+// si aparece un segundo caso real, esto se extrae a shared.jsx (convención
+// de "extraer solo cuando exista necesidad real", CLAUDE.md sección 3).
+function IconCarousel({ icons, value, onChange, color, disabled, labelFor, prevLabel, nextLabel }) {
+  const scrollerRef = useRef(null);
+  const scrollBy = (dir) => {
+    scrollerRef.current?.scrollBy({ left: dir * 96, behavior: "smooth" });
+  };
+  return (
+    <div className="relative flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => scrollBy(-1)}
+        aria-label={prevLabel}
+        disabled={disabled}
+        className="flex h-11 w-6 shrink-0 items-center justify-center text-gray-400 disabled:opacity-50"
+      >
+        <ChevronLeft size={16} aria-hidden="true" />
+      </button>
+      <div
+        ref={scrollerRef}
+        className="flex flex-1 snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth py-0.5"
+        style={{ scrollbarWidth: "none" }}
+      >
+        {icons.map(({ name, Icon }) => (
+          <button
+            key={name}
+            type="button"
+            onClick={() => onChange(name)}
+            aria-label={labelFor(name)}
+            aria-pressed={value === name}
+            disabled={disabled}
+            className="flex h-14 w-14 shrink-0 snap-center items-center justify-center rounded-md border disabled:opacity-50"
+            style={{ borderColor: value === name ? color : "#E5E7EB", backgroundColor: value === name ? `${color}1A` : "white" }}
+          >
+            <Icon size={20} style={{ color: value === name ? color : "#9CA3AF" }} aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => scrollBy(1)}
+        aria-label={nextLabel}
+        disabled={disabled}
+        className="flex h-11 w-6 shrink-0 items-center justify-center text-gray-400 disabled:opacity-50"
+      >
+        <ChevronRight size={16} aria-hidden="true" />
+      </button>
     </div>
   );
 }
@@ -126,21 +185,11 @@ function AvatarPicker({ profile, onProfileUpdated }) {
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {AVATAR_ICONS.map(({ name, Icon }) => (
-              <button
-                key={name}
-                onClick={() => setDraftIcon(name)}
-                aria-label={t("avatar.iconLabel", { name })}
-                aria-pressed={draftIcon === name}
-                disabled={saving}
-                className="flex min-h-11 items-center justify-center rounded-md border disabled:opacity-50"
-                style={{ borderColor: draftIcon === name ? draftColor : "#E5E7EB", backgroundColor: draftIcon === name ? `${draftColor}1A` : "white" }}
-              >
-                <Icon size={18} style={{ color: draftIcon === name ? draftColor : "#9CA3AF" }} aria-hidden="true" />
-              </button>
-            ))}
-          </div>
+          <IconCarousel
+            icons={AVATAR_ICONS} value={draftIcon} onChange={setDraftIcon} color={draftColor} disabled={saving}
+            labelFor={(name) => t("avatar.iconLabel", { name })}
+            prevLabel={t("avatar.previousIcon")} nextLabel={t("avatar.nextIcon")}
+          />
           <EditActions onSave={save} onCancel={cancel} saveLabel={saving ? t("avatar.saving") : t("avatar.save")} />
         </div>
       )}
@@ -324,7 +373,7 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
   const { t } = useTranslation("profile");
   const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.nickname;
   const avatar = resolveAvatar(profile);
-  const AvatarIcon = Icons[avatar.icon] || Icons.Waves;
+  const AvatarIcon = iconByName(avatar.icon);
   const trimmedSignature = useTrimmedSignature(signature);
   // Nivel profesional real (Divemaster/Instructor, ver "Datos
   // personales") en vez del texto fijo "Instructor SSI" de antes —

@@ -1,53 +1,43 @@
-import { Fish, FishSymbol, Turtle, Shrimp, Snail, Shell } from "lucide-react";
+import { Fish, FishSymbol, Turtle, Shrimp, Snail, Shell, Anchor, Compass, LifeBuoy, Sailboat, ShipWheel, Bubbles, TreePalm, Droplets } from "lucide-react";
 import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN } from "./colors";
 
-// Catálogo cerrado de avatares (Bloque 5) — mismo criterio que el icono de
+// Catálogo cerrado de avatares (Bloque 5, ampliado 2026-09-06 dentro del
+// rediseño — ver docs/DESIGN-SYSTEM.md §7) — mismo criterio que el icono de
 // carga de la app (GeneralSettings, ConfigTab.jsx): iconos de lucide-react
 // + colores de marca, nunca una imagen subida por el usuario. Evita
 // moderación de contenido y almacenamiento de ficheros para algo que, en
 // una app de un único instructor por cuenta, no necesita ser una foto real.
 //
-// Lista pedida explícitamente (2026-09-04): tiburón ballena, manta,
-// tortuga, tiburón, pulpo y el primer pez del listado anterior. Auditoría
-// completa de los 2034 iconos de lucide-react@1.33.0 (grep sobre
-// node_modules/lucide-react/dist/esm/icons, no solo por nombre obvio):
-// la fauna marina real disponible en esta librería es, en su totalidad,
-// Fish, FishSymbol, Turtle, Shrimp, Snail y Shell — no existe ningún icono
-// de tiburón, tiburón ballena, manta/raya ni pulpo, ni siquiera uno
-// genérico con esa silueta (confirma y amplía lo que ya decía este mismo
-// comentario en la versión anterior del catálogo, que solo había
-// comprobado ballena/delfín/pulpo/cangrejo/tiburón/estrella/medusa).
-// Como la lista pedida son 6 animales distintos y solo 2 tienen icono real
-// (Turtle para tortuga, Fish para "el primer pez" — se mantiene igual),
-// los otros 4 usan el icono real más parecido disponible, documentado caso
-// por caso abajo en vez de dejarlos sin avatar. Son sustituciones de
-// compromiso, no representaciones fieles — reportado al usuario para que
-// decida si las acepta, cambia la lista por animales que sí existen en
-// lucide-react, o se encarga un set de iconos SVG a medida (cambio mayor,
-// fuera del alcance de este ajuste).
+// Criterio anterior (2026-09-04): "solo animales marinos reales", fijado en
+// 6 porque lucide-react@1.33.0 no tiene más de 6 iconos de fauna marina de
+// verdad — 4 de esos 6 eran sustituciones de compromiso sin relación visual
+// real con el animal pedido (Shrimp haciendo de tiburón ballena, Snail de
+// manta, Shell de pulpo, FishSymbol de tiburón), documentadas en su momento
+// como "débiles" y pendientes de revisar. Criterio nuevo (2026-09-06): se
+// amplía a "iconografía real de mar/buceo", no solo fauna — cada icono
+// representa lo que su nombre dice, ninguno finge ser un animal que no es.
+// Los 6 animales se quedan (representándose a sí mismos, no a la lista
+// original de 2026-09-04) y se añaden 8 iconos de mar/buceo genuinos, 4 de
+// ellos ya usados y aceptados como iconografía de marca en otro sitio de la
+// app (ICON_OPTIONS del icono de carga, ConfigTab.jsx: Anchor, Compass,
+// LifeBuoy, Sailboat) — mismo lenguaje visual, no uno nuevo.
 // Waves sigue sin estar aquí: es el icono de la propia app (favicon,
 // login, spinner — ver EnvironmentIndicator.jsx/index.html), no un avatar.
 export const AVATAR_ICONS = [
-  // Tiburón ballena: sin icono ni aproximación real en la librería. Shrimp
-  // es el único que queda libre tras repartir los demás — sin ninguna
-  // relación visual ni de especie, es un último recurso para no dejar el
-  // hueco vacío. Candidato más claro a revisar si se decide otra cosa.
-  { name: "Shrimp", Icon: Shrimp },
-  // Manta (raya): mismo caso que el tiburón ballena, sin ninguna
-  // aproximación real disponible — Snail es el último icono marino que
-  // queda libre, sin relación visual ni de especie.
-  { name: "Snail", Icon: Snail },
-  { name: "Turtle", Icon: Turtle },
-  // Tiburón: FishSymbol es el pez más estilizado/afilado de los dos que
-  // hay en la librería — la aproximación menos mala a un perfil de
-  // depredador, aunque no es un tiburón.
-  { name: "FishSymbol", Icon: FishSymbol },
-  // Pulpo: Shell es lo más cercano por familia (ambos son moluscos/
-  // invertebrados marinos), pero no se parece visualmente a un pulpo —
-  // sustitución débil, documentada como tal.
-  { name: "Shell", Icon: Shell },
-  // Primer pez del catálogo anterior — se mantiene sin cambios.
   { name: "Fish", Icon: Fish },
+  { name: "FishSymbol", Icon: FishSymbol },
+  { name: "Turtle", Icon: Turtle },
+  { name: "Shrimp", Icon: Shrimp },
+  { name: "Snail", Icon: Snail },
+  { name: "Shell", Icon: Shell },
+  { name: "Anchor", Icon: Anchor },
+  { name: "Compass", Icon: Compass },
+  { name: "LifeBuoy", Icon: LifeBuoy },
+  { name: "Sailboat", Icon: Sailboat },
+  { name: "ShipWheel", Icon: ShipWheel },
+  { name: "Bubbles", Icon: Bubbles },
+  { name: "TreePalm", Icon: TreePalm },
+  { name: "Droplets", Icon: Droplets },
 ];
 
 export const AVATAR_COLORS = [
