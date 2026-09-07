@@ -2986,3 +2986,51 @@ llegó a git): `animate()` de Motion se llama con el `deltaY` correcto y
 devuelve un controlador de animación real de la librería. 804/804
 tests (suite completa, incluye los 3 nuevos), lint 0 errores, build
 correcto.
+
+### 11.4 — Emails: logo real (no `Waves`) y ajuste de tono
+
+Retoma el tercer pendiente de la cola: "en los emails sigue llegando el
+logo antiguo de waves, haz una revisión completa y ajusta diseño y
+textos según la línea Ocean Flow y el libro de estilos".
+
+**Auditoría de `server/email/`** (2 plantillas reales — activación/
+bienvenida/reset y aviso de despliegue interno — comparten un único
+envoltorio, `emailLayout.js`, ver su propio comentario de cabecera):
+
+- **Logo (el hallazgo real, ya corregido)**: `emailLayout.js` seguía
+  pintando el icono `Waves` de lucide-react como SVG inline en la
+  cabecera — se escribió (Bloque 7, 2026-09-01) ANTES de que el
+  rediseño v2 sustituyera `Waves` por el logo real en toda la app
+  visible (Bloque 2 de esta misma iniciativa, 2026-09-06) y quedó fuera
+  de esa migración por vivir en un árbol de código aparte
+  (`server/email/`, deliberadamente independiente de `src/` para no
+  acoplar el envío de emails a Vite/React). `logoMarkSvg()` (nueva,
+  sustituye a `wavesIconSvg()`) usa los mismos paths exactos de
+  `public/brand/logo-mark-navy.svg` — mismo símbolo que el favicon, el
+  loading y el carnet de instructor.
+- **Colores**: ya estaban al día — `BRAND_NAVY` (`#063256`) y `BG`
+  (`#F7F8F8`) de `emailLayout.js` ya coincidían exactamente con los de
+  `src/colors.js` desde una corrección de la Fase 7 (7.5) de esta misma
+  iniciativa. No hacía falta ningún cambio aquí.
+- **Tono de los textos**: 4 de las 5 variantes de copy de activación
+  (`signup`/`external_signup`/`password_reset_request` ya sonaban
+  cercanas; se ajustan las 2 que se quedaban más frías/pasivas que sus
+  hermanas — `reactivation` ("Tu cuenta... ha sido reactivada" → "¡Buenas
+  noticias! Tu cuenta... ya está activa de nuevo") y `password_reset`
+  ("Se ha invalidado tu contraseña anterior..." → "Hemos restablecido tu
+  contraseña... — crea una nueva con el siguiente enlace", evita además
+  la palabra "invalidado", más jerga técnica que producto). El email de
+  aviso de despliegue (`deploymentNoticeEmailTemplate.js`) no se toca en
+  tono — es contenido interno solo para superadmin (commits, tests,
+  build), no le aplica la regla de tono de producto de Release V1.
+
+**Verificado**: comentarios de código que seguían citando "icono Waves"
+actualizados en los 3 ficheros que lo mencionaban. 34/34 tests de
+`server/email/` (ninguno dependía de los paths SVG concretos, solo de
+que exista un `<svg>` y el texto "Ocean Flow" — descripción del test
+actualizada igualmente). 804/804 tests (suite completa), lint 0
+errores, build correcto. Verificado además renderizando
+`renderActivationEmailHtml` a un HTML real y abriéndolo en el navegador
+(archivo temporal en `public/`, generado y borrado en el mismo paso, sin
+llegar a git): el logo se ve nítido y completo, sin paths rotos ni
+recortados.

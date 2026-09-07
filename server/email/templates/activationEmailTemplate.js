@@ -37,7 +37,7 @@ export const ACTIVATION_EMAIL_COPY = {
     preheader: "Entra y crea tu contraseña para volver a acceder.",
     title: "Bienvenido/a de nuevo a Ocean Flow",
     greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
-    intro: "Tu cuenta en Ocean Flow ha sido reactivada.",
+    intro: "¡Buenas noticias! Tu cuenta en Ocean Flow ya está activa de nuevo.",
     ctaLabel: "Entrar en Ocean Flow",
     securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu propia contraseña.",
     expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
@@ -48,7 +48,7 @@ export const ACTIVATION_EMAIL_COPY = {
     preheader: "Crea tu nueva contraseña para volver a acceder.",
     title: "Restablece tu contraseña",
     greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
-    intro: "Se ha invalidado tu contraseña anterior en Ocean Flow. Usa el siguiente enlace para crear una nueva.",
+    intro: "Hemos restablecido tu contraseña en Ocean Flow — crea una nueva con el siguiente enlace.",
     ctaLabel: "Crear nueva contraseña",
     securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu nueva contraseña.",
     expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
@@ -76,8 +76,8 @@ export const ACTIVATION_EMAIL_COPY = {
 // sobre todo) no soportan Flexbox/Grid ni <style> externo, así que este
 // template no puede reutilizar las clases Tailwind del resto de la app —
 // es su propio sistema reducido, coherente en color/tipografía con el
-// resto de la app (mismo BRAND_NAVY, mismo icono Waves que el login —
-// ver emailLayout.js). Una sola columna, mobile-first.
+// resto de la app (mismo BRAND_NAVY, mismo logo real que el resto de la
+// app — ver emailLayout.js). Una sola columna, mobile-first.
 export function renderActivationEmailHtml({ firstName, actionLink, copy = ACTIVATION_EMAIL_COPY.signup }) {
   const safeName = escapeHtml(firstName);
   const safeLink = escapeHtml(actionLink);

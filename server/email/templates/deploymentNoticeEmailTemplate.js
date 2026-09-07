@@ -2,7 +2,7 @@ import { renderEmailShell, escapeHtml, BRAND_NAVY } from "./emailLayout.js";
 
 // Email de "aviso de despliegue" para el superadmin (ADR-0024/0025) —
 // mismo envoltorio visual que el resto de emails transaccionales
-// (emailLayout.js: icono Waves, colores de marca), pero forma de
+// (emailLayout.js: logo real, colores de marca), pero forma de
 // contenido distinta a propósito: no es un CTA de "un solo uso", es un
 // resumen de lo que cambió en un commit.
 //

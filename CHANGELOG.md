@@ -271,6 +271,9 @@ Registro de cambios relevantes de Ocean Flow.
   la cifra ya no se parte nunca; en su lugar se oculta el icono cuando
   hace falta, decidido midiendo de verdad el espacio disponible en el
   propio dispositivo en vez de adivinar un umbral fijo.
+- Los emails (bienvenida, recuperar contraseña, reactivar cuenta...)
+  seguían mostrando el icono antiguo de olas en la cabecera — ahora
+  muestran el logo real de Ocean Flow, igual que el resto de la app.
 
 ## [1.0.0] - 2026-09-04
 
