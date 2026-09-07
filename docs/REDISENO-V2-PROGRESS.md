@@ -1059,3 +1059,50 @@ oscuro visible, sin invisibilidad blanco-sobre-blanco), tipo "Curso"/
 Mi trabajo/Home, calendario y listado con los nuevos meses (incluida
 2027-02, cruzando el año), KPI de importe largo legible sin cortes. Sin
 errores de consola en ningún punto.
+
+## Fase 7 — Tercera ronda de correcciones (2026-09-07)
+
+Ocho encargos nuevos, cada uno con su propio commit y su propio Preview
+Deployment — pedido explícito del usuario ("trátalo como los anteriores
+trabajos en lote, por separado con commit y preview").
+
+### 7.1 — Bug real: email de recuperación de contraseña a la URL equivocada
+
+**Diagnóstico confirmado** (no una suposición): `generateActivationLink`
+(`server/users/activationLink.js`), compartida por alta/reactivación/
+regenerar-contraseña-por-admin/recuperación autoservicio, construía
+SIEMPRE el enlace con `process.env.APP_URL` — una única URL fija por
+proyecto Vercel. Cualquier Preview Deployment de rama (una URL única por
+PR, distinta de `APP_URL`) generaba enlaces que apuntaban a un
+despliegue distinto de aquel desde el que se pidió el restablecimiento
+— mismo backend de Supabase (todos los Preview de este proyecto
+comparten TEST), pero dominio equivocado, exactamente el síntoma
+reportado ("me lleva a la URL de test, no a la de preview").
+
+**Corrección**: `generateActivationLink` gana un parámetro `baseUrl`
+opcional que, cuando se pasa, gana sobre `APP_URL` — sin cambiar el
+comportamiento de ningún llamador que no lo pase (alta/reactivación/
+regenerar-contraseña siguen usando `APP_URL` exactamente igual que
+antes; solo se tocó el camino reportado roto). `handleRequestPasswordReset`
+(`requestPasswordReset.js`) y su adaptador Vercel
+(`api/request-password-reset.js`) lo pasan a partir de
+`req.headers.host` — el dominio REAL de la petición entrante, que sí
+varía por despliegue (producción/TEST/cualquier Preview), a diferencia
+de `APP_URL`.
+
+**Hallazgo relacionado, no corregido — a decidir**: `createUser.js`/
+`regenerateActivationLink.js`/`regeneratePassword.js`/
+`generateInvitationLink.js` comparten la misma `generateActivationLink`
+y el mismo patrón de `APP_URL` fijo — sufrirían el mismo bug si un
+superadmin usa esas funciones desde un Preview Deployment de rama en
+vez de la URL fija de TEST. No se tocan en este commit (fuera del
+alcance de lo reportado, y son flujos de administración, no
+autoservicio) — queda para una decisión explícita si se quiere aplicar
+el mismo `baseUrl` ahí también.
+
+**Verificado**: `npm run lint` 0 errores, `npm run test -- --run`
+758/758 (4 tests nuevos: `baseUrl` pasa correctamente end-to-end desde
+`requestPasswordReset` y gana sobre `APP_URL` en `activationLink`),
+`npm run build` correcto. No se pudo probar el envío de email real
+contra un Preview Deployment real desde este entorno (sin acceso a
+Vercel/Resend en producción) — a confirmar en el próximo Preview.

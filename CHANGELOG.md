@@ -110,6 +110,9 @@ Registro de cambios relevantes de Ocean Flow.
   trabajo que nunca llegaba a pintarse en la práctica.
 
 ### Fixed
+- (Interno) El email de "olvidé mi contraseña" podía llevar a la URL
+  fija de TEST en vez de al Preview Deployment concreto desde el que se
+  pidió — ya usa el dominio real de la petición.
 - El KPI "Pendiente de cobrar" (Mi trabajo) podía seguir cortando la
   cifra con importes de 6 cifras — el tamaño de letra ya se ajusta a lo
   largo que sea el número.
