@@ -30,6 +30,8 @@ Registro de cambios relevantes de Ocean Flow.
   alumno una detrás de otra.
 - Mi perfil: campos opcionales de fecha de nacimiento y país de
   residencia en "Datos personales".
+- (Interno, seguridad) El registro externo ya está protegido contra
+  altas masivas automatizadas (Vercel BotID).
 
 ### Changed
 - **Icono de carga (logo)**: ahora solo la parte que parece una ola sube
