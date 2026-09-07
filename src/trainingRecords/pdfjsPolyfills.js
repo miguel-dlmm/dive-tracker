@@ -1,36 +1,51 @@
 // Polyfills que pdfjs-dist necesita para no reventar al cargarse en un
-// Safari/iOS todavía sin las dos APIs de JS muy recientes que da por
-// hechas — investigado leyendo el código fuente real de la dependencia
-// instalada (node_modules/pdfjs-dist/build/pdf.mjs), no adivinado, porque
-// no hay forma de verificar esto en un Safari real desde este entorno
-// (ver docs/RELEASE-V1-PROGRESS.md, Fase 5, y CLAUDE.md sobre
-// mobile-check — WebKit no arranca aquí).
+// Safari/iOS todavía sin las APIs de JS muy recientes que da por hechas —
+// investigado leyendo el código fuente real de la dependencia instalada
+// (node_modules/pdfjs-dist/build/pdf.mjs y pdf.worker.mjs), no adivinado,
+// porque no hay forma de verificar esto en un Safari real desde este
+// entorno (ver docs/RELEASE-V1-PROGRESS.md, Fase 5, y CLAUDE.md sobre
+// mobile-check — WebKit no arranca aquí). El usuario sí pudo probar en un
+// iPhone real y pegar la consola completa (2026-09-07) — los tres errores
+// exactos que reportó son justo las piezas que este archivo cubre.
 //
 // 1. `Promise.withResolvers()` (ES2024) — pdfjs-dist 6.x lo usa en CADA
 //    llamada a getDocument() (PDFDocumentLoadingTask, campos de clase
 //    `_capability`/`_setupCapability`). Soportado en Safari solo desde la
-//    17.4 (marzo 2024) — en cualquier iOS anterior, exportar a JPG
-//    lanzaría "Promise.withResolvers is not a function" en el momento
-//    exacto de generar la imagen, con o sin el fix ya existente del
-//    import() dinámico en TrainingRecordsTab.jsx (ese fix solo evita que
-//    rompa TODA la app; no hace que la exportación en sí funcione en un
-//    Safari antiguo).
-// 2. `Iterator.prototype.join` — pdf.mjs comprueba
+//    17.4 (marzo 2024).
+// 2. `Iterator.prototype.join` — pdf.mjs/pdf.worker.mjs comprueban
 //    `typeof Iterator.prototype.join !== "function"` al cargarse, para
-//    rellenarlo si falta (línea ~797 de pdf.mjs). Esa comprobación da por
-//    hecho que el propio global `Iterator` YA EXISTE (Iterator Helpers,
-//    una propuesta de TC39 más reciente todavía que Promise.withResolvers
-//    — Safari la incorporó en la 18.4, marzo 2025). En un motor sin
-//    Iterator Helpers, `Iterator` ni siquiera está definido como global,
-//    así que la propia comprobación de pdfjs-dist lanza
-//    "Can't find variable: Iterator" ANTES de llegar a su propio
-//    parcheo — esto es justo el bug ya encontrado y corregido una vez
-//    (ver RELEASE-V1-PROGRESS.md, "pantalla en blanco en Safari") pero
-//    limitado entonces a evitar que ese chunk cargara en el bundle
-//    principal, sin arreglar la exportación en sí para un Safari real
-//    por debajo de esas versiones. Aquí se ataja también
-//    Promise.withResolvers, la otra pieza que necesitaba el mismo
-//    tratamiento.
+//    rellenarlo si falta. Esa comprobación da por hecho que el propio
+//    global `Iterator` YA EXISTE (Iterator Helpers, una propuesta de TC39
+//    más reciente todavía que Promise.withResolvers — Safari la
+//    incorporó en la 18.4, marzo 2025). En un motor sin Iterator Helpers,
+//    `Iterator` ni siquiera está definido como global, así que la propia
+//    comprobación de pdfjs-dist lanza "Can't find variable: Iterator"
+//    ANTES de llegar a su propio parcheo.
+// 3. `Promise.try()` (propuesta TC39 más reciente todavía, sin fecha de
+//    Safari confirmada a día de hoy) — usado dentro de MessageHandler
+//    (`#onMessage`, pdf.mjs Y pdf.worker.mjs) para invocar la acción
+//    registrada de cada mensaje. Bug real reportado 2026-09-07 en un
+//    iPhone real: "TypeError: Promise.try is not a function" dentro del
+//    propio worker (pdfjs-dist.js:7503) — y, como consecuencia directa
+//    (no un segundo bug aparte), un "DataCloneError" en pdf.mjs:8717
+//    (LoopbackPort.postMessage, la ruta de "fake worker" a la que
+//    pdfjs-dist cae cuando el worker real deja de responder bien): al
+//    reventar el worker real por el Promise.try que falta, pdfjs-dist
+//    intenta su mecanismo de recuperación automática (ejecutar todo en
+//    el hilo principal simulando mensajes con structuredClone en vez de
+//    postMessage a un hilo real), y ESE camino de recuperación también
+//    tropieza. Arreglar el Promise.try que falta evita que el worker
+//    real llegue a fallar, así que nunca hace falta ese camino de
+//    recuperación — un único parche soluciona los dos errores.
+//
+// CRÍTICO: estas tres piezas hacen falta en DOS sitios, no solo uno — el
+// hilo principal (pdf.mjs, ya cubierto aplicando esto sobre `globalThis`
+// más abajo) Y el propio worker (pdf.worker.mjs), que corre en su PROPIO
+// ámbito global aislado (`self` dentro del worker) sin heredar nada de lo
+// que se parchee en la página. Ver pdfWorkerEntry.js, que aplica esto
+// mismo dentro del worker antes de cargar el pdf.worker.mjs real — sin
+// eso, el hilo principal quedaría arreglado pero el worker seguiría
+// reventando exactamente igual.
 //
 // applyPdfjsPolyfills() es lógica pura sobre un `target` (por defecto
 // globalThis) — separada así, igual que buildFillOperations/
@@ -65,6 +80,17 @@ export function applyPdfjsPolyfills(target = globalThis) {
     // que este proyecto ejecuta de pdfjs-dist).
     target.Iterator = function Iterator() {};
     target.Iterator.prototype = {};
+  }
+
+  if (typeof target.Promise.try !== "function") {
+    // Semántica real de la propuesta: ejecuta fn(...args) de forma
+    // síncrona pero envuelve CUALQUIER resultado (valor, promesa, o un
+    // throw síncrono) en una promesa — es lo que pdfjs-dist necesita de
+    // esto (invocar el handler de un mensaje sin que un throw síncrono
+    // se salga de la cadena de promesas).
+    target.Promise.try = function ptry(fn, ...args) {
+      return new target.Promise((resolve) => resolve(fn(...args)));
+    };
   }
 }
 

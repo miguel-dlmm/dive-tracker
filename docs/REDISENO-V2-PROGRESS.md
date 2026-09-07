@@ -1100,6 +1100,78 @@ alcance de lo reportado, y son flujos de administración, no
 autoservicio) — queda para una decisión explícita si se quiere aplicar
 el mismo `baseUrl` ahí también.
 
+### 7.2 — Bug real confirmado: generación de JPG rota en Safari (worker sin parchear)
+
+El bloque 5.8 (Fase 5) ya había endurecido `toBlob` y desactivado el
+`ImageDecoder` de WebCodecs por un fallo real distinto en Safari, pero
+dejó explícitamente sin confirmar la causa de un tercer fallo — no había
+forma de reproducirlo sin un Safari/WebKit real (ver CLAUDE.md §8, el
+motor WebKit de Playwright cuelga en este entorno). Esta vez el usuario
+pegó la consola completa de un iPhone real, con los tres errores
+literales:
+
+```
+[Error] DataCloneError: The object can not be cloned. — pdf.mjs:8717
+[Error] Unhandled Promise Rejection: TypeError: Promise.try is not a function.
+    (In 'Promise.try(action, data.data)', 'Promise.try' is undefined)
+    #onMessage (pdfjs-dist.js:7503)
+```
+
+**Diagnóstico**, esta vez sí confirmado leyendo el código fuente real de
+`node_modules/pdfjs-dist` (no adivinado): `MessageHandler#onMessage`
+llama a `Promise.try(action, data.data)` dentro del **Web Worker** de
+pdfjs-dist — una propuesta TC39 sin fecha de soporte confirmada en
+Safari. Al no existir, el worker revienta antes de procesar el primer
+mensaje real; pdfjs-dist cae entonces a su mecanismo automático de
+recuperación ("fake worker" en el propio hilo principal, vía
+`LoopbackPort`), que relaya mensajes con `structuredClone()` nativo del
+navegador — y ese camino de recuperación también falla
+(`DataCloneError`) sobre el payload que intenta clonar. Los dos errores
+de consola no son dos bugs independientes: el segundo es la consecuencia
+automática del primero. Arreglar el `Promise.try` que falta evita que el
+worker real llegue a fallar, así que el camino de recuperación nunca se
+activa — un único parche resuelve ambos.
+
+**Por qué el parche de polyfills ya existente (`pdfjsPolyfills.js`,
+aplicado sobre `globalThis` en el hilo principal desde Fase 5) no
+bastaba**: un Web Worker corre en su propio ámbito global aislado
+(`self` dentro del worker, un objeto global distinto del de la página) —
+no hereda nada de lo que se parchea en el hilo principal. El worker
+necesita sus propios parches, aplicados dentro de él mismo, antes de que
+el código real de `pdf.worker.mjs` se evalúe.
+
+**Corrección**:
+1. `applyPdfjsPolyfills` gana un tercer parche, `Promise.try` (además de
+   los dos ya existentes de Fase 5, `Promise.withResolvers` e
+   `Iterator`), con 4 tests unitarios nuevos.
+2. Nuevo archivo `src/trainingRecords/pdfWorkerEntry.js`: el punto de
+   entrada real del worker a partir de ahora — aplica los parches sobre
+   `self` y solo DESPUÉS carga el `pdf.worker.mjs` real, con un `import()`
+   dinámico (uno estático se izaría por encima de la aplicación de los
+   parches, ya que las declaraciones `import` en ESM se evalúan en el
+   orden en que aparecen en el archivo, antes que cualquier otro código).
+3. `pdfToJpg.js` apunta `GlobalWorkerOptions.workerSrc` a este archivo
+   nuevo en vez de al `pdf.worker.mjs` de la dependencia directamente,
+   usando el sufijo especial de Vite para Web Workers (`?worker&url`, no
+   un simple `?url`) — con `?url` a secas, Vite trataba el `import()`
+   dinámico de dentro como un módulo más a bundlear en el chunk que lo
+   importa, y el chunk de 2,2MB del worker real desaparecía del build por
+   completo (detectado con `ls dist/assets` antes de dar el cambio por
+   bueno; con `?worker&url` el chunk vuelve a generarse aparte,
+   verificado también inspeccionando su contenido).
+
+**Verificación**: 762/762 tests, lint 0 errores, build con el chunk del
+worker (`pdfWorkerEntry-*.js`, ~1,19MB) confirmado presente y con el
+contenido esperado (parches primero, código real de pdf.worker.mjs
+después, auto-registro correcto). Prueba manual en Chromium (motor real
+de Safari no disponible en este entorno, ver limitación de
+`mobile-check` en CLAUDE.md §8): generación de PDF y de JPG para un
+alumno de prueba, ambas sin errores de consola — sanity check de que la
+reestructuración del worker (archivo nuevo, sufijo `?worker&url`) no
+rompe nada en un navegador que ya soporta `Promise.try` de forma nativa,
+antes de confiar en que también corrige el caso real de Safari que no se
+puede probar aquí directamente.
+
 **Verificado**: `npm run lint` 0 errores, `npm run test -- --run`
 758/758 (4 tests nuevos: `baseUrl` pasa correctamente end-to-end desde
 `requestPasswordReset` y gana sobre `APP_URL` en `activationLink`),

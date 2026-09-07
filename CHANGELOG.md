@@ -129,6 +129,12 @@ Registro de cambios relevantes de Ocean Flow.
   menú de Configuración a mitad de firmar. `signature_pad` nunca corta
   la propagación del toque tras dibujar; ahora sí se corta en el propio
   lienzo de firma.
+- (Interno, Training Records) La generación de PDF/JPG fallaba en
+  Safari real ("Promise.try is not a function" seguido de un
+  DataCloneError) porque el Web Worker de pdfjs-dist corre en su propio
+  ámbito global, sin heredar los polyfills ya aplicados al hilo
+  principal — ahora se le aplican los mismos dentro de él antes de
+  cargar su código real.
 
 ## [1.0.0] - 2026-09-04
 

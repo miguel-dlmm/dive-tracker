@@ -1,10 +1,27 @@
 // Este import va SIEMPRE antes que "pdfjs-dist" — pone los polyfills que
-// esa dependencia necesita (Promise.withResolvers, Iterator) antes de que
-// su propio código se evalúe por primera vez. Ver pdfjsPolyfills.js para
-// el porqué exacto (Safari por debajo de la 17.4/18.4 según la API).
+// esa dependencia necesita (Promise.withResolvers, Iterator, Promise.try)
+// antes de que su propio código se evalúe por primera vez, EN EL HILO
+// PRINCIPAL. Ver pdfjsPolyfills.js para el porqué exacto (Safari por
+// debajo de la 17.4/18.4/sin Promise.try según la API).
 import "./pdfjsPolyfills";
 import * as pdfjsLib from "pdfjs-dist";
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
+// pdfWorkerEntry.js, NO "pdfjs-dist/build/pdf.worker.mjs?url" directamente
+// (bug real reportado 2026-09-07, iPhone real) — el worker corre en su
+// propio ámbito global, así que necesita los mismos polyfills aplicados
+// DENTRO de él, no solo en la página; ver pdfWorkerEntry.js y la nota
+// larga de pdfjsPolyfills.js para el análisis completo.
+// "?worker&url", NO solo "?url" — un simple `?url` sobre un .js normal
+// hace que Vite lo trate como un módulo más a bundlear dentro del chunk
+// que lo importa (el `import()` dinámico de pdf.worker.mjs de dentro
+// dejaba de generar su propio chunk de worker: el bug quedaba
+// "arreglado" en el código pero el worker real de 2,2MB desaparecía del
+// build, verificado con `ls dist/assets` antes de dar esto por bueno).
+// El sufijo especial de Vite para Web Workers (`?worker&url`) sí trata
+// el archivo como el punto de entrada de un worker aparte, con su propio
+// grafo de módulos empaquetado — igual tratamiento que ya recibía
+// pdf.worker.mjs directamente antes de este cambio, solo que ahora sobre
+// este archivo intermedio.
+import pdfWorkerUrl from "./pdfWorkerEntry.js?worker&url";
 
 // Exportación a JPG del Training Record ya generado (Release V1, Fase 5) —
 // pedido explícito del encargo original, deferido varias sesiones por no
