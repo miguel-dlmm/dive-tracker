@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { X, Languages, TrendingUp, UserCircle, IdCard, Sparkles } from "lucide-react";
 import { TEAL, SUN, GREEN, CORAL, BRAND_NAVY } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
-import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
+import { usePrefersReducedMotion, monthSlideVariants, useSwipeHorizontal } from "./motion";
 
 // Píldora de novedades — no un manual: pocas frases por diapositiva,
 // navegable con "Siguiente"/"Atrás", puntos, o deslizando lateralmente
@@ -55,11 +55,15 @@ const SLIDE_ICONS = [
   { icon: Sparkles, color: BRAND_NAVY },
 ];
 
-const SWIPE_THRESHOLD = 60;
-
 export default function WhatsNew({ onClose }) {
   const { t } = useTranslation("notices");
   const [step, setStep] = useState(0);
+  // direction: misma idea que monthDirection en MonthCalendar
+  // (shared.jsx) — de qué lado entra/sale cada diapositiva en
+  // monthSlideVariants, para que "Atrás" siempre deslice al revés que
+  // "Siguiente"/deslizar hacia la izquierda, sea cual sea el punto de
+  // partida.
+  const [direction, setDirection] = useState(1);
   const reduced = usePrefersReducedMotion();
   useEscapeClose(true, onClose);
   useBodyScrollLock(true);
@@ -71,6 +75,24 @@ export default function WhatsNew({ onClose }) {
   const slide = slides[step];
   const Icon = slide.icon;
   const isLast = step === slides.length - 1;
+  const goNext = () => { setDirection(1); setStep((s) => s + 1); };
+  const goBack = () => { setDirection(-1); setStep((s) => s - 1); };
+  // Deslizar con el dedo (2026-09-07, "revisa la animación del slider,
+  // ahora mismo se ve rara") — antes usaba el `drag`/`dragElastic`
+  // integrado de Motion directamente sobre la diapositiva animada, a la
+  // vez que un <AnimatePresence> alrededor: combinación que dejaba la
+  // diapositiva ANTERIOR permanentemente en el DOM al avanzar (bug real
+  // ya documentado más abajo, en el JSX) — nunca se pudo arreglar sin
+  // quitar el fundido de salida del todo. useSwipeHorizontal (motion.js)
+  // es el mismo hook ya usado por el calendario de Home/Resumen para su
+  // propio slide de mes: gesto nativo por eventos de touch (confirma el
+  // swipe AL SOLTAR, sin arrastre en vivo), sin pelearse con
+  // AnimatePresence — mismo lenguaje de "deslizar" que el resto de la
+  // app, no un tercer mecanismo.
+  const swipeProps = useSwipeHorizontal({
+    onSwipeLeft: () => { if (!isLast) goNext(); },
+    onSwipeRight: () => { if (step > 0) goBack(); },
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
@@ -94,46 +116,40 @@ export default function WhatsNew({ onClose }) {
           </button>
         </div>
 
-        {/* Bug real encontrado y arreglado en el Bloque 8 (job nocturno
-            2026-09-03), preexistente en Release-V1 desde antes de esta
-            sesión — no introducido por el cambio de contenido de más
-            arriba: envolver este motion.div en <AnimatePresence
-            mode="wait"> (o incluso sin mode, en modo "sync" por defecto)
-            dejaba la diapositiva ANTERIOR permanentemente en el DOM al
-            avanzar — dos elementos #whats-new-title a la vez, el visible
-            siempre el viejo, aunque los puntos/botones (que leen `step`
-            directo, sin pasar por la animación) ya mostraran la
-            diapositiva nueva. Confirmado con motion 13.1.1 + React
-            19.2.8: ni quitar `mode="wait"`, ni desactivar `drag`, ni
-            quitar el desplazamiento en `x` de animate/exit lo arreglaban
-            — solo quitar AnimatePresence. Se pierde el fundido de SALIDA
-            de la diapositiva vieja (React la desmonta al instante, sin
-            animar) pero se mantiene el fundido de ENTRADA de la nueva
-            (motion.div sigue animando `initial`→`animate` en cualquier
-            montaje, con o sin AnimatePresence) — mejor un cambio abrupto
-            que una pantalla rota. Ver docs/BACKLOG.md para investigar la
-            causa raíz de fondo (versión de "motion", modo concurrente de
-            React 19) si se quiere recuperar el fundido de salida más
-            adelante. */}
-        <div className="min-h-[220px] touch-pan-y overflow-hidden px-6 pb-2 text-center">
-          <motion.div
-            key={step}
-            drag={reduced ? false : "x"}
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.7}
-            onDragEnd={(_e, info) => {
-              if (info.offset.x < -SWIPE_THRESHOLD && !isLast) setStep((s) => s + 1);
-              else if (info.offset.x > SWIPE_THRESHOLD && step > 0) setStep((s) => s - 1);
-            }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { duration: reduced ? 0.01 : DURATION.sm, ease: EASE.enter } }}
-          >
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${slide.color}1A` }}>
-              <Icon size={26} style={{ color: slide.color }} aria-hidden="true" />
-            </div>
-            <h2 id="whats-new-title" className="mb-2 text-base font-bold" style={{ color: BRAND_NAVY }}>{slide.title}</h2>
-            <p className="text-sm leading-relaxed text-gray-500">{slide.body}</p>
-          </motion.div>
+        {/* Bug real (Bloque 8, job nocturno 2026-09-03): un <AnimatePresence>
+            normal (sync o mode="wait") alrededor de esta diapositiva dejaba
+            la ANTERIOR permanentemente en el DOM al avanzar — dos elementos
+            #whats-new-title a la vez, el visible siempre el viejo. La causa
+            real (encontrada al retomar esto, 2026-09-07, "revisa la
+            animación del slider, se ve rara"): no era AnimatePresence en
+            sí, sino combinarlo con el `drag`/`dragElastic` integrado de
+            Motion en el MISMO elemento — la misma combinación que
+            MonthCalendar (shared.jsx) SÍ resuelve bien, pero ahí el gesto
+            de deslizar nunca usa `drag` de Motion, usa eventos de touch
+            nativos (useSwipeHorizontal) sin tocar la posición del elemento
+            mientras se arrastra. Aplicado aquí el mismo patrón —
+            AnimatePresence con `mode="popLayout"` (el que ya usa
+            MonthCalendar, nunca probado aquí hasta ahora) + swipeProps
+            nativo en vez de `drag` — recupera el slide lateral real
+            (entra/sale por el lado correcto según `direction`) sin
+            reproducir el bug. */}
+        <div className="min-h-[220px] touch-pan-y overflow-hidden px-6 pb-2 text-center" {...swipeProps}>
+          <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+            <motion.div
+              key={step}
+              custom={direction}
+              variants={monthSlideVariants(reduced)}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${slide.color}1A` }}>
+                <Icon size={26} style={{ color: slide.color }} aria-hidden="true" />
+              </div>
+              <h2 id="whats-new-title" className="mb-2 text-base font-bold" style={{ color: BRAND_NAVY }}>{slide.title}</h2>
+              <p className="text-sm leading-relaxed text-gray-500">{slide.body}</p>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         <div className="flex items-center justify-center gap-1.5 py-4" role="tablist" aria-label={t("whatsNew.slideTablist")}>
@@ -149,14 +165,14 @@ export default function WhatsNew({ onClose }) {
         <div className="flex gap-2 border-t border-gray-100 p-3">
           {step > 0 && (
             <button
-              onClick={() => setStep((s) => s - 1)}
+              onClick={goBack}
               className="min-h-11 flex-1 rounded-md border border-gray-200 text-sm font-medium text-gray-600"
             >
               {t("whatsNew.back")}
             </button>
           )}
           <button
-            onClick={() => (isLast ? onClose() : setStep((s) => s + 1))}
+            onClick={() => (isLast ? onClose() : goNext())}
             className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-semibold text-white"
             style={{ backgroundColor: BRAND_NAVY }}
           >

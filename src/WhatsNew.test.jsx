@@ -19,6 +19,26 @@ describe("WhatsNew", () => {
     await waitFor(() => expect(screen.getByRole("heading").textContent).not.toBe(firstTitle));
   });
 
+  // Regresión (Bloque 8, job nocturno 2026-09-03): un <AnimatePresence>
+  // mal combinado con el `drag` de Motion dejaba la diapositiva ANTERIOR
+  // permanentemente en el DOM al avanzar — dos títulos a la vez PARA
+  // SIEMPRE, no solo mientras dura la transición de salida (eso sí es
+  // normal e intencionado: es justo lo que anima la salida). Se
+  // reintrodujo AnimatePresence el 2026-09-07 (mode="popLayout" + swipe
+  // nativo en vez de drag, ver WhatsNew.jsx) para recuperar el slide
+  // lateral; este test comprueba que, pasada la animación, vuelve a
+  // quedar un único heading — nunca dos de forma permanente.
+  it("tras avanzar dos veces, no quedan dos headings permanentemente en el DOM (no reaparece el bug de la diapositiva duplicada)", async () => {
+    const user = userEvent.setup();
+    render(<WhatsNew onClose={vi.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: "Siguiente" }));
+    await waitFor(() => expect(screen.getAllByRole("heading")).toHaveLength(1));
+
+    await user.click(screen.getByRole("button", { name: "Siguiente" }));
+    await waitFor(() => expect(screen.getAllByRole("heading")).toHaveLength(1));
+  });
+
   it("'Atrás' vuelve a la diapositiva anterior", async () => {
     const user = userEvent.setup();
     render(<WhatsNew onClose={vi.fn()} />);

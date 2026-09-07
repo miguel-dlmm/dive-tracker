@@ -141,6 +141,9 @@ Registro de cambios relevantes de Ocean Flow.
   y menos de trámite ("Únete a Ocean Flow" en vez de "Crea tu cuenta").
 
 ### Fixed
+- "Qué hay de nuevo" (Ayuda) vuelve a deslizar de verdad entre
+  diapositivas, en vez de solo aparecer con un fundido — un bug real
+  había obligado a quitar esa animación antes.
 - Training Records: "Versión del examen", "Certificación" y los
   checkboxes de "Progreso del curso" seguían con el tono verde anterior
   al rediseño — ahora usan el mismo azul marino que el resto de la

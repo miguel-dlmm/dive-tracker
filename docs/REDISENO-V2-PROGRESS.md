@@ -3275,3 +3275,51 @@ prácticamente sin cambio, +1KB — `ProfileTab.jsx` ya se cargaba en el
 bundle principal desde `App.jsx`, importar `countryOptionsFor` desde
 ahí no añade peso nuevo). No verificado en navegador real: mismo motivo
 que 12.3 (bypass de login), verificación apoyada en los tests.
+
+### 12.5 — WhatsNew: recupera el slide lateral real (era solo un fundido)
+
+Pedido: "revisa la animación del slider de WhatsNew, ahora mismo se ve
+rara". El propio código ya documentaba por qué: un bug real (Bloque 8,
+2026-09-03) obligó a QUITAR `AnimatePresence` por completo — combinada
+con `mode="wait"` o sin `mode` (sync), la diapositiva ANTERIOR se
+quedaba para siempre en el DOM al avanzar. Sin `AnimatePresence`, la
+diapositiva vieja se desmonta al instante (React, sin animar) y la
+nueva solo hace un fundido de entrada — nada se desliza lateralmente,
+de ahí que "se viera rara" comparado con cualquier otro slider de la
+app (el calendario de Home/Resumen sí desliza de verdad).
+
+**Causa real encontrada (no solo "quitar y ya")**: `MonthCalendar`
+(`shared.jsx`) usa `AnimatePresence` con la MISMA librería/versión y
+SÍ funciona bien — la diferencia real es que WhatsNew combinaba
+`AnimatePresence` con el `drag`/`dragElastic` INTEGRADO de Motion sobre
+la propia diapositiva animada, mientras que `MonthCalendar` nunca usa
+`drag` de Motion para su gesto de deslizar: usa `useSwipeHorizontal`
+(motion.js), eventos de touch nativos que no tocan la posición del
+elemento durante el gesto, solo disparan un callback al soltar. Mezclar
+`drag` con `AnimatePresence` en el mismo elemento es un caso límite
+documentado del propio Motion — coincide con el bug real observado.
+
+**Qué se hizo**: se reintroduce `AnimatePresence` con `mode="popLayout"`
+(el mismo que ya usa `MonthCalendar`, nunca probado en WhatsNew) +
+`monthSlideVariants` (mismo par duración/easing que el resto de la
+app, no un tercer vocabulario) + `custom={direction}` (nuevo estado,
+misma idea que `monthDirection`: "Atrás" siempre desliza al revés que
+"Siguiente"/deslizar a la izquierda). El `drag` integrado de Motion se
+sustituye por `useSwipeHorizontal` — mismo hook, mismo criterio de
+umbral/gesto que ya usa el calendario, un swipe nativo que confirma AL
+SOLTAR (sin arrastre en vivo/elástico) en vez del `dragElastic`
+anterior.
+
+**Verificado**: test nuevo en `WhatsNew.test.jsx` — tras avanzar dos
+veces, comprueba que nunca queda más de un `heading` en el DOM de forma
+permanente (justo el test que habría fallado con el bug original; se
+confirmó primero que SÍ falla en el instante exacto del clic — el
+solapamiento normal e intencionado de la propia animación de salida —
+antes de envolverlo en `waitFor` para comprobar el estado ya asentado,
+no el transitorio). Los 4 tests ya existentes de navegación siguen
+pasando sin cambios. 815/815 tests (suite completa), lint 0 errores,
+build correcto. Confirmado además en Chrome real (Ayuda → Ver qué hay
+de nuevo): "Siguiente" desliza de verdad lateralmente (capturada la
+transición a medio camino, ambas diapositivas visibles brevemente,
+resuelto limpio a una sola al asentarse), "Atrás" desliza en el sentido
+contrario, sin errores de consola.
