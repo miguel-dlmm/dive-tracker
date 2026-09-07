@@ -3691,3 +3691,36 @@ material obsoleto.
 con este cambio pero confirmando que nada se rompió al borrar los 2
 SVG), lint 0 errores, build correcto tras `rm -rf dist && npm run
 build`.
+
+### 12.12 — Guía de marca para la diseñadora (redes/materiales)
+
+**Pedido**: "prepara una guía corta (CTAs, servicios, presentación de
+Ocean Flow) para mi diseñadora" — material de referencia para diseñar
+piezas de redes sociales.
+
+**Implementado**: guía publicada como página (Artifact), no como
+documento markdown suelto — pensada para que la diseñadora la abra y
+trabaje directamente sobre ella. Contenido íntegramente sacado de
+fuentes reales del propio proyecto, sin inventar mensajes nuevos:
+- **Elevator pitch y público objetivo**: de `docs/PRODUCT.md`
+  ("instructor de buceo freelance", los 4 problemas que resuelve).
+- **Tono de voz**: de las reglas permanentes de Release V1 en
+  `CLAUDE.md` (cercano, joven y fresco sin perder profesionalidad,
+  nunca mensajes de máquina, contexto de "manos mojadas").
+- **Paleta**: los 5 colores de marca reales de `src/colors.js`
+  (`BRAND_NAVY #063256`, `BRAND_SKY #8AACCE`, `TEAL #0F766E`,
+  `CORAL #C2542F`, `GREEN #15803D`), con su rol de uso real en la app.
+- **Tipografía**: Inter, única familia (convención #10 de `CLAUDE.md`)
+  — la guía explicita que nunca se combina con una segunda fuente.
+- **Logo**: el SVG vectorial real (`public/brand/logo-mark-navy.svg`),
+  con reglas de uso mínimas (versión blanca sobre fondo oscuro, margen,
+  no estirar/rotar).
+- **Funcionalidades**: las 6 reales de la app (Registro, Comisiones,
+  Compañeros, Tarifas, Resumen, Training Records), cada una con un
+  mensaje corto en el mismo tono, no una lista técnica.
+- **CTAs y frases ya validadas**: el tagline real del login ("Bucea
+  más. Gestiona menos.") y el copy real de la pantalla de registro
+  ("Deja el cuaderno y las notas sueltas..."), reutilizables tal cual.
+
+Sin código de la app tocado — entregable puramente de contenido/diseño,
+sin tests/lint/build aplicables.
