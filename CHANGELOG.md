@@ -155,6 +155,9 @@ Registro de cambios relevantes de Ocean Flow.
 - El KPI "Pendiente de cobrar" (Mi trabajo) podía quedar demasiado
   pegado al margen derecho de la tarjeta con una cifra grande, y su
   tooltip se acorta.
+- Los 3 KPIs de Mi trabajo reducen u ocultan su icono juntos (nunca solo
+  uno) cuando alguna de las 3 cifras crece demasiado, para dejarle sitio
+  al número.
 - Tarifas: "Mostrar desactivadas" ya no está escondido dentro de
   "Filtrar" (siempre visible junto al contador de la lista), y una
   tarifa desactivada se reconoce ahora por su propio fondo, no solo por

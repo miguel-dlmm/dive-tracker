@@ -1769,3 +1769,38 @@ criterio "manos mojadas" de `CLAUDE.md`.
 largo del tooltip), lint 0 errores, build correcto; comprobación visual
 en navegador con datos de prueba reales (117.477,40 ฿) — margen
 correcto y tooltip con el texto nuevo.
+
+### 9.4 — KPIs de Mi trabajo: icono responsive, consistente entre los 3
+
+Pedido explícito: "si crece mucho la cifra de los KPIs de movimientos se
+llegan a salir incluso de la box. hacer responsive para q si el número
+es muy grande el icono se reduzca o a partir de cierto tamaños incluso
+desaparezca. si desaparece en uno, desaparecerá en todos".
+
+**Decisión compartida entre los 3, no por tarjeta**: `kpiIconTierFor`
+(nueva función pura, exportada) decide el nivel del icono
+("normal"/"small"/"hidden") según la longitud del texto ya formateado
+— pero se calcula UNA vez, sobre la cifra MÁS LARGA de las 3 totales
+(`Generado`/`Pendiente`/`Cobrado`), no cada `MoneyKpiTile` mirando solo
+la suya. El resultado (`kpiIconTier`, `useMemo` en el componente
+principal) se pasa como prop `iconTier` a las 3 tarjetas por igual —
+si una sola cifra crece lo bastante, las 3 cambian de tamaño de icono
+juntas, nunca solo la que tiene el número grande, para no romper la
+alineación entre ellas.
+
+**Umbrales** (longitud del texto formateado, incluye símbolo de moneda
+y separadores): ≤14 caracteres → icono normal (28px); 15-20 → icono
+reducido (20px, círculo e icono más pequeños); >20 → icono oculto del
+todo, liberando el ancho completo de la fila para la cifra. Capa
+adicional a la solución de la Fase 8.1 (permitir partir la cifra en dos
+líneas): para el caso ya extremo en el que ni así cabe con el icono
+delante, no la sustituye.
+
+**Verificación**: 777/777 tests (3 nuevos en `kpiIconTierFor`, fijan
+los 3 umbrales exactos), lint 0 errores, build correcto; comprobación
+visual en navegador — con los datos de prueba reales actuales (12
+caracteres, nivel "normal") las 3 tarjetas siguen mostrando su icono
+sin cambios, confirmando que el mecanismo no rompe el caso normal. No
+se ha podido generar en este entorno una cifra de prueba real que
+alcance el nivel "small"/"hidden" (los umbrales exactos están fijados
+por el test unitario, que sí los ejerce directamente).

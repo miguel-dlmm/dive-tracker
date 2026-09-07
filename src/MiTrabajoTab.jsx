@@ -4,7 +4,7 @@ import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, C
 import { motion } from "motion/react";
 import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./App";
 import {
-  Money, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
+  Money, formatMoney, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
   isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab, EntryTitle,
   useFloatingDropdown, FloatingPanel,
 } from "./shared";
@@ -336,7 +336,34 @@ function emptyMessage(statusFilter, hasActiveFilters, t) {
 // encima de esta pantalla, no la desmonta). Un aria-label específico
 // ("Info: Pendiente de cobrar") evita esa ambigüedad para lectores de
 // pantalla y de paso es más claro por sí solo.
-function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel }) {
+// Texto ya formateado de un KPI de dinero — misma lógica que renderiza
+// MoneyKpiTile, extraída aquí para poder MEDIR la longitud antes de
+// montar los 3 KPI a la vez (ver kpiIconTierFor más abajo), sin duplicar el
+// criterio de "una sola moneda" vs "varias unidas con + ".
+function moneyKpiText(totals, currencyRows) {
+  const entries = Object.entries(totals || {});
+  if (entries.length === 0) return "—";
+  if (entries.length === 1) return formatMoney(entries[0][1], entries[0][0], currencyRows);
+  return entries.map(([code, amt]) => formatMoney(amt, code, currencyRows)).join(" + ");
+}
+
+// Tamaño del icono de cada KPI, según lo larga que sea la cifra MÁS
+// LARGA de los 3 (no la de cada tarjeta por separado) — Fase 9,
+// 2026-09-07, pedido explícito: "hacer responsive para q si el número
+// es muy grande el icono se reduzca o... incluso desaparezca. si
+// desaparece en uno, desaparecerá en todos". Verificado con datos
+// reales de prueba en dev-bypass (ver comentario de MoneyKpiTile sobre
+// por qué la cifra ya puede partirse en dos líneas — esto es la capa
+// siguiente, para el caso ya extremo en el que ni así cabe con el icono
+// delante). "small" reduce el icono; "hidden" lo retira del todo,
+// liberando el ancho completo de la fila para la cifra.
+export function kpiIconTierFor(longestText) {
+  if (longestText.length > 20) return "hidden";
+  if (longestText.length > 14) return "small";
+  return "normal";
+}
+
+function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel, iconTier = "normal" }) {
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const entries = Object.entries(totals || {});
   const single = entries.length === 1 ? entries[0] : null;
@@ -379,11 +406,21 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
           1-2 dígitos de un KPI simple. items-start, no items-center: la
           cifra puede ocupar dos líneas (ver amountSizeCls arriba), así
           que el icono se alinea con la primera línea, no con el centro
-          vertical del bloque entero. */}
+          vertical del bloque entero.
+          iconTier ("normal"/"small"/"hidden", ver kpiIconTierFor arriba):
+          calculado sobre las 3 cifras a la vez, no cada tarjeta por su
+          cuenta — si una cifra crece tanto que hace falta reducir u
+          ocultar el icono, las 3 tarjetas cambian juntas, para no romper
+          la alineación entre ellas con solo una distinta. */}
       <div className="flex items-start gap-1.5">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
-          <Icon size={16} style={{ color }} aria-hidden="true" />
-        </span>
+        {iconTier !== "hidden" && (
+          <span
+            className={`flex shrink-0 items-center justify-center rounded-full ${iconTier === "small" ? "h-5 w-5" : "h-7 w-7"}`}
+            style={{ backgroundColor: `${color}1A` }}
+          >
+            <Icon size={iconTier === "small" ? 12 : 16} style={{ color }} aria-hidden="true" />
+          </span>
+        )}
         <span className={`w-full min-w-0 ${amountSizeCls} font-bold leading-tight tabular-nums`} style={{ color: BRAND_NAVY }}>
           {entries.length === 0 ? "—" : single ? (
             <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
@@ -736,10 +773,19 @@ export default function MiTrabajoTab({
   const [sheetRequest, setSheetRequest] = useState(null);
   const fabVisible = useHideFabOnScroll();
 
+  // Nivel de icono compartido por los 3 KPI a la vez (ver kpiIconTier) —
+  // se mide sobre la cifra más larga de las 3, no cada una por separado.
+  const kpiIconTier = useMemo(() => {
+    const longest = [monthGeneratedTotals, pendingTotals, monthCollectedTotals]
+      .map((totals) => moneyKpiText(totals, currencies.rows))
+      .reduce((max, text) => (text.length > max.length ? text : max), "");
+    return kpiIconTierFor(longest);
+  }, [monthGeneratedTotals, pendingTotals, monthCollectedTotals, currencies.rows]);
+
   return (
     <div className="relative space-y-4 pb-24">
       <div className="grid grid-cols-3 gap-2">
-        <MoneyKpiTile icon={TrendingUp} color={TEAL} totals={monthGeneratedTotals} label={t("kpis.generatedThisMonth")} index={0} reduced={reducedMotion} currencyRows={currencies.rows} />
+        <MoneyKpiTile icon={TrendingUp} color={TEAL} totals={monthGeneratedTotals} label={t("kpis.generatedThisMonth")} index={0} reduced={reducedMotion} currencyRows={currencies.rows} iconTier={kpiIconTier} />
         {/* A diferencia de sus dos hermanos, "Pendiente de cobrar" NO
             filtra por currentMonthKey (ver pendingTotals más arriba): es
             deuda pendiente acumulada de siempre, no solo de este mes. Sin
@@ -749,8 +795,9 @@ export default function MiTrabajoTab({
         <MoneyKpiTile
           icon={Wallet} color={SUN} totals={pendingTotals} label={t("kpis.pendingToCollect")} index={1} reduced={reducedMotion} currencyRows={currencies.rows}
           tooltip={t("kpis.pendingTooltip")} tooltipShowLabel={t("kpis.pendingTooltipShow")} tooltipHideLabel={t("kpis.pendingTooltipHide")}
+          iconTier={kpiIconTier}
         />
-        <MoneyKpiTile icon={CheckCircle2} color={GREEN} totals={monthCollectedTotals} label={t("kpis.collectedThisMonth")} index={2} reduced={reducedMotion} currencyRows={currencies.rows} />
+        <MoneyKpiTile icon={CheckCircle2} color={GREEN} totals={monthCollectedTotals} label={t("kpis.collectedThisMonth")} index={2} reduced={reducedMotion} currencyRows={currencies.rows} iconTier={kpiIconTier} />
       </div>
 
       <div className="flex items-center gap-5 border-b border-gray-200">
