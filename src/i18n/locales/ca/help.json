@@ -1,0 +1,194 @@
+{
+  "emptyState": "Encara no hi ha contingut d'ajuda.",
+  "whatsNewReplay": "Veure què hi ha de nou en aquesta versió",
+  "groupLabels": {
+    "quiero": "Vull...",
+    "funcionalidades": "Funcionalitats"
+  },
+  "sections": {
+    "whatYouCanDo": "Què pots fer",
+    "whenToUseIt": "Quan fer-lo servir",
+    "steps": "Passos",
+    "tips": "Consells i errors habituals",
+    "expectedResult": "Resultat esperat"
+  },
+  "categories": {
+    "bienvenida": { "label": "Primers passos", "description": "Què és Ocean Flow i com s'organitza" },
+    "quiero-configurar": { "label": "Configurar la teva aplicació", "description": "Escoles, cursos, tarifes i catàlegs" },
+    "quiero-crear-movimiento": { "label": "Registrar un moviment", "description": "Un curs impartit, una comissió o un ajust" },
+    "quiero-cobrar": { "label": "Cobrar moviments pendents", "description": "Marca com a cobrat, un a un o tots de cop" },
+    "quiero-consultar-generado": { "label": "Consultar quant has generat", "description": "D'una ullada, o en detall per període" },
+    "func-mi-trabajo": { "label": "La meva feina", "description": "Crea, edita, cobra i elimina moviments" },
+    "func-resumen": { "label": "Resum", "description": "Ullada ràpida i profunditat a demanda" },
+    "func-configuracion": { "label": "Configuració", "description": "El menú, i què hi ha a cada secció" },
+    "func-perfil": { "label": "El meu perfil", "description": "Avatar, dades, moneda preferida i contrasenya" },
+    "func-filtros": { "label": "Filtres i cerca", "description": "El mateix patró a tota l'app" }
+  },
+  "articles": {
+    "primeros-pasos": {
+      "title": "Comença a fer servir Ocean Flow",
+      "summary": "Una volta ràpida per les tres pantalles principals abans de registrar el teu primer moviment.",
+      "whatYouCanDo": "Ocean Flow t'ajuda a portar el control dels teus ingressos com a instructor freelance. Sota un mateix concepte, \"moviment\", agrupa les classes que imparteixes, les comissions per clients referits i els ajustos econòmics amb altres instructors.",
+      "whenToUseIt": "La primera vegada que obres l'app, o quan vulguis recordar per a què serveix cada pantalla.",
+      "steps": [
+        "Home: quant tens pendent de cobrar, un widget amb els teus deutes més antics, el calendari del mes i un accés directe per crear un moviment.",
+        "La meva feina: la llista completa dels teus moviments (cursos, comissions i ajustos), per crear-los, editar-los, cobrar-los o eliminar-los.",
+        "Resum: el teu balanç pel període que triïs, amb la possibilitat d'aprofundir per escola, per curs o per comissions."
+      ],
+      "tips": [
+        "Per a un compte nou, comença per \"Configurar la teva aplicació\" (escoles, cursos, tarifes).",
+        "Continua registrant un moviment de cada tipus que facis servir.",
+        "Acaba cobrant: un quan et paguin, o tots de cop si ho revises periòdicament. Cada pas té la seva pròpia guia a \"Vull...\" més avall."
+      ],
+      "expectedResult": "Saps quina pantalla fer servir per a cada situació i en quin ordre seguir per deixar l'app llesta per al teu dia a dia."
+    },
+    "configurar-app": {
+      "title": "Configurar la teva aplicació",
+      "summary": "Res no és fix a l'app: escoles, cursos, tarifes i catàlegs de pagament s'editen des de Configuració.",
+      "whatYouCanDo": "Configuració és on mantens les teves dades base: quines escoles treballen amb tu, quins cursos imparteixes i a quina tarifa. Tot editable, res fix al codi.",
+      "whenToUseIt": "Abans de registrar el teu primer moviment, i després cada vegada que comencis a treballar amb una escola o curs nou, o canviïs un preu.",
+      "steps": [
+        "Entra a Configuració (icona d'engranatge, a dalt a la dreta) i toca la secció que necessitis.",
+        "Dona d'alta les teves Escoles i Cursos primer — una Tarifa sempre relaciona una escola amb un curs, per tant cal que existeixin tots dos abans.",
+        "Dins d'una secció, prem el botó \"+\" flotant per crear; \"‹ Configuració\" et torna al menú.",
+        "Toca el color d'una fila per personalitzar-lo, i l'estrella per marcar-la com a preferida."
+      ],
+      "tips": [
+        "Una escola, curs o moneda marcada com a preferida apareix preseleccionada als formularis de creació.",
+        "Tancar Configuració (la \"✕\" de la capçalera) et torna sempre a la pestanya des de la qual vas entrar."
+      ],
+      "expectedResult": "L'escola, el curs o la tarifa nova estan disponibles a l'instant en crear un moviment — amb això ja pots continuar amb \"Registrar un moviment\"."
+    },
+    "crear-movimiento": {
+      "title": "Crear un moviment",
+      "summary": "El mateix formulari serveix per a un curs impartit, una comissió o un ajust amb un company — cada tipus té els seus propis camps.",
+      "whatYouCanDo": "\"Afegeix moviment\" és l'únic accés de creació de tota l'app — el mateix formulari et deixa triar el tipus, no cal encertar un botó diferent per a cada cas.",
+      "whenToUseIt": "Just després de fer una classe, en tancar una comissió, o quan acordis un ajust amb un altre instructor.",
+      "steps": [
+        "Prem \"Afegeix moviment\": el botó \"+\" de la targeta \"Pendent de cobrar\" a Home, el mateix botó tocant un dia del calendari de Home, o el \"+\" flotant de La meva feina.",
+        "A dalt del formulari, tria el tipus: Curs impartit, Comissió o Ajust de curs.",
+        "Curs impartit: escola, curs, data i nombre de persones — la tarifa per curs calcula l'import tota sola.",
+        "Comissió: igual que un curs, però per a un client que has referit i que forma un altre instructor — fa servir la seva pròpia tarifa de comissió, no la del curs.",
+        "Ajust de curs: no depèn de cap tarifa — indica tu mateix l'import (positiu si et deuen, negatiu si tu deus) i amb quin company és l'ajust.",
+        "Desa. Si vas obrir el formulari des de Home, veuràs el moviment a La meva feina just després de desar."
+      ],
+      "tips": [
+        "Si encara no existeix una tarifa per a aquella escola + curs, el formulari et deixa crear-la al vol sense sortir de la pantalla (\"Afegeix tarifa\") — només s'aplica a Curs i Comissió, un Ajust mai necessita tarifa.",
+        "Cancel·lar o tancar el formulari sense desar no crea res — pots obrir-lo i tancar-lo sense por de deixar moviments a mig fer."
+      ],
+      "expectedResult": "El moviment apareix a La meva feina, dins de \"Pendents\", i se suma a \"Generat aquest mes\" a Home (excepte un Ajust en contra teva, que no compta com a generat)."
+    },
+    "cobrar-movimientos": {
+      "title": "Marcar moviments com a cobrats",
+      "summary": "Controla què tens pendent de cobrar i actualitza l'estat tan bon punt et paguin — un a un, o tots alhora.",
+      "whatYouCanDo": "Cada moviment té un estat (pendent o cobrat). Canviar-lo és immediat, amb un sol toc, amb l'opció de desfer si t'equivoques. Ho pots fer moviment a moviment, o de cop sobre tota la llista visible.",
+      "whenToUseIt": "Tan bon punt una escola o un company et paga (un a un), o de cop quan ho revises periòdicament i ja t'han pagat diversos pendents alhora.",
+      "steps": [
+        "Per cobrar-ne un: entra a La meva feina (la pestanya \"Pendents\" s'obre per defecte) i prem \"Confirma el cobrament\" a la seva fila (o \"Marca com a liquidat\" si és un ajust en contra teva).",
+        "La targeta \"Pendent de cobrar\" de Home et porta directament a aquesta mateixa pestanya — un toc des de la pantalla principal.",
+        "Per cobrar-ne diversos alhora: a La meva feina, fes servir \"Cobra-ho tot\" a dalt de la llista — afecta tot el que estigui visible en aquell moment.",
+        "Abans de \"Cobra-ho tot\", fes servir \"Filtra\" (per data, escola, curs o tipus) per acotar la llista a exactament el que vols cobrar de cop."
+      ],
+      "tips": [
+        "Un avís amb \"Desfés\" apareix després de cada canvi — tens uns segons per revertir-lo sense haver de tornar a buscar el moviment.",
+        "\"Cobra-ho tot\" demana confirmació abans d'aplicar-se — no hi ha \"Desfés\" per al lot complet, a diferència de cobrar un a un."
+      ],
+      "expectedResult": "El moviment (o tots els filtrats) passa a la pestanya \"Cobrats\" i el seu import deixa de comptar a \"Pendent de cobrar\" de Home."
+    },
+    "consultar-generado": {
+      "title": "Consultar quant has generat",
+      "summary": "Una ullada ràpida a Home, o el detall complet pel període que triïs a Resum.",
+      "whatYouCanDo": "\"Generat aquest mes\" a Home et dona la xifra del mes en curs, amb un indici de si vas millor o pitjor que el mes anterior. Tocar-la et porta directament a Resum, que va més enllà: qualsevol període, comparat amb l'anterior, i amb la possibilitat d'aprofundir per escola o per curs.",
+      "whenToUseIt": "Home, per a una ullada ràpida en entrar a l'app. Resum, quan vulguis un període diferent al mes actual o entendre d'on ve el diner.",
+      "steps": [
+        "A Home, la targeta \"Generat aquest mes\" ja és sempre visible, sense tocar res — i tocar-la et porta a Resum per aprofundir.",
+        "A Resum, tria la granularitat i el període al control de dalt (mensual, trimestral, semestral, anual o un interval personalitzat) i, si vols, el tipus (Curs, Comissió o Ajust).",
+        "La targeta principal mostra el total del període i quant ha canviat respecte al període anterior.",
+        "Toca \"Per escola\", \"Per curs\", \"Comissions\", \"Ajustos de curs\" o \"Calendari\" per aprofundir — cadascun es desplega només si ho demanes."
+      ],
+      "tips": [
+        "Dins de \"Per escola\", toca una escola per veure'n el desglossament per curs allà mateix, sense canviar de pantalla.",
+        "La comparació amb el període anterior no apareix si barreges més d'una moneda en el mateix període — evita mostrar un càlcul que no seria exacte."
+      ],
+      "expectedResult": "Tens una xifra de balanç del període triat, amb el detall d'on ve cada ingrés si el necessites."
+    },
+    "mi-trabajo-referencia": {
+      "title": "La meva feina, d'una ullada",
+      "summary": "La llista completa dels teus moviments — cursos, comissions i ajustos — amb les seves accions.",
+      "whatYouCanDo": "La meva feina unifica el que abans eren tres pantalles separades (Registre, Comissions i Companys) en un únic lloc, agrupat per estat de cobrament.",
+      "whenToUseIt": "És la teva pantalla de feina diària — crear, revisar, cobrar i editar moviments.",
+      "steps": [
+        "Pendents / Cobrats: les dues pestanyes de dalt, amb el total pendent a la targeta superior.",
+        "\"Filtra\": acota la llista per període, escola, curs o tipus de moviment.",
+        "A cada fila: \"Confirma el cobrament\"/\"Marca com a pendent\" per canviar l'estat, i el menú \"⋯\" per Edita o Elimina.",
+        "El botó \"+\" flotant obre el mateix formulari de creació que la resta de l'app."
+      ],
+      "tips": [
+        "\"Cobra-ho tot\"/\"Marca-ho tot com a pendent\" operen sobre la llista visible — amb filtres actius, només afecta el filtrat.",
+        "Eliminar demana confirmació i anima la sortida de la fila, perquè vegis exactament què has esborrat."
+      ],
+      "expectedResult": "Trobes i actualitzes qualsevol moviment sense sortir d'aquesta pantalla."
+    },
+    "resumen-referencia": {
+      "title": "Resum, d'una ullada",
+      "summary": "Un únic total protagonista a dalt; tota la resta es desplega només si ho demanes.",
+      "whatYouCanDo": "Resum combina una resposta ràpida (el total del període, comparat amb l'anterior) amb targetes plegables per a qui vulgui aprofundir.",
+      "whenToUseIt": "Per entendre com va un període, comparar escoles o cursos, o repassar comissions i ajustos amb companys.",
+      "steps": [
+        "Tria la granularitat (mensual, trimestral, semestral, anual o personalitzat); la franja de períodes de sota navega sola — toca'n qualsevol per recentrar-t'hi.",
+        "Filtra per tipus (Total, Curs, Comissió o Ajust) amb el segmentat de sota.",
+        "La targeta principal mostra el total i, quan té sentit calcular-la, la comparació amb el període anterior.",
+        "Toca qualsevol targeta (Per escola, Per curs, Comissions, Ajustos de curs, Calendari) per desplegar-la."
+      ],
+      "tips": [
+        "Amb més d'una escola, \"Per escola\" comença desplegada per ser la pregunta més freqüent després del total; amb una de sola, aquest apartat no apareix (no hi hauria res a comparar) i és \"Per curs\" qui comença desplegada. Les altres sempre comencen tancades.",
+        "Dins de \"Per escola\", toca una escola per veure'n el desglossament per curs sense sortir de la targeta."
+      ],
+      "expectedResult": "Tens la xifra que buscaves, amb tant o tan poc detall com hagis demanat."
+    },
+    "configuracion-referencia": {
+      "title": "Configuració, d'una ullada",
+      "summary": "El menú on mantens les teves dades base: escoles, cursos i tarifes.",
+      "whatYouCanDo": "Escoles, Cursos i Tarifes — els catàlegs que fas servir en registrar un moviment a La meva feina.",
+      "whenToUseIt": "Per mantenir les teves dades base al dia: afegir una escola nova, un curs nou, o ajustar una tarifa.",
+      "steps": [
+        "Toca qualsevol fila del menú per entrar a aquella secció; \"‹ Configuració\" torna al menú.",
+        "Escoles i Cursos es creen mitjançant el botó \"+\" flotant, igual que a La meva feina.",
+        "Tarifes mostra Curs i Comissió en una única llista (el tipus es tria com a filtre, o en crear, dins del mateix full) — el mateix patró visual que La meva feina."
+      ],
+      "expectedResult": "Trobes qualsevol catàleg o ajust sense haver de recordar en quina pestanya vivia abans."
+    },
+    "perfil-referencia": {
+      "title": "El meu perfil, d'una ullada",
+      "summary": "El teu avatar, les teves dades, la teva moneda preferida i la teva contrasenya — tot en un mateix lloc, accessible des del teu nom a la capçalera.",
+      "whatYouCanDo": "Toca el teu avatar o el teu nickname (a dalt a la dreta a qualsevol pantalla) per entrar a El meu perfil: la teva identitat, la teva moneda preferida i la teva contrasenya, tot en un mateix lloc.",
+      "whenToUseIt": "Quan vulguis personalitzar el teu compte, corregir una dada, o canviar la contrasenya sense haver de tancar sessió i passar per \"he oblidat la contrasenya\".",
+      "steps": [
+        "Toca l'avatar/nickname de la capçalera per entrar a El meu perfil.",
+        "El llapis sobre l'avatar obre el selector d'icona i color — el canvi es desa en triar, sense botó \"Desa\" a part.",
+        "\"Edita\" a Dades personals obre nom, cognoms i nickname; el nickname no pot portar \"@\" ni coincidir amb el d'un altre compte.",
+        "La moneda preferida s'utilitza com a reserva a Ajust de curs quan no hi ha una tarifa que la determini — la resta de moviments sempre fan servir la moneda de la seva pròpia tarifa."
+      ],
+      "tips": [
+        "Canviar la contrasenya aquí no et demana la contrasenya actual — si ja ets dins de l'app, es confia que la sessió activa és suficient.",
+        "Eliminar el teu compte és permanent i esborra totes les teves dades — per confirmar-ho has d'escriure la paraula CANCEL·LA, així no s'esborra res per un toc accidental."
+      ],
+      "expectedResult": "El teu compte reflecteix l'avatar, les dades i la moneda que triïs, i pots canviar la teva contrasenya quan vulguis sense sortir de l'app."
+    },
+    "filtros-referencia": {
+      "title": "Filtrar i cercar",
+      "summary": "La meva feina, Tarifes i els catàlegs de Configuració comparteixen el mateix patró de filtres.",
+      "whatYouCanDo": "Un botó \"Filtra\" (amb el nombre de filtres actius) desplega un panell amb els camps disponibles — període, escola, curs, tipus... — en comptes de mostrar-los sempre a sobre de la llista.",
+      "whenToUseIt": "Quan la llista té massa elements per revisar-los tots a la vista.",
+      "steps": [
+        "Prem \"Filtra\" per desplegar el panell de camps disponibles en aquella pantalla.",
+        "Tria'n un o diversos — el filtre de curs admet selecció múltiple.",
+        "\"Neteja els filtres\" apareix tan bon punt n'hi ha almenys un actiu."
+      ],
+      "tips": [
+        "El cercador dels catàlegs (Cursos, Monedes) filtra mentre escrius, sense distingir majúscules ni accents."
+      ],
+      "expectedResult": "La llista mostra només el que t'interessa, sense perdre de vista quants filtres tens actius."
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "whatsNew": {
+    "close": "Tanca",
+    "eyebrow": "Novetats d'aquesta versió",
+    "slideTablist": "Diapositiva",
+    "back": "Enrere",
+    "next": "Següent",
+    "start": "Comença",
+    "slides": [
+      {
+        "title": "L'app ja parla el teu idioma",
+        "body": "Canvia entre espanyol i anglès quan vulguis, des del teu perfil."
+      },
+      {
+        "title": "Home, més a mà",
+        "body": "Els teus KPI del mes (alumnes, cursos, captats) són ara el primer que veus en obrir Home."
+      },
+      {
+        "title": "Capçalera més senzilla",
+        "body": "\"Tanca la sessió\" viu ara a El meu perfil — menys icones a dalt, més espai per al que uses cada dia."
+      },
+      {
+        "title": "El teu carnet d'instructor",
+        "body": "El meu perfil ara té el teu propi carnet: nivell professional, dades personals i moneda preferida, tot en un mateix lloc."
+      },
+      {
+        "title": "Repassa-ho quan vulguis",
+        "body": "Torna a aquestes novetats des d'Ajuda → \"Veure què hi ha de nou\", sense esperar el proper canvi."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Tanca",
+    "eyebrow": "Nou desplegament",
+    "branchLabel": "Branca",
+    "commitLabel": "commit",
+    "technicalChanges": "Canvis tècnics",
+    "functionalChanges": "Canvis de funcionalitat",
+    "uiChangesLabel": "Canvis d'UI:",
+    "uiChangesYes": "Sí",
+    "uiChangesNo": "No",
+    "stepsHeading": "Què provar / què fer",
+    "testsLabel": "Tests:",
+    "buildLabel": "Build:",
+    "notReported": "no reportat",
+    "previewCommit": "Previsualització del commit",
+    "previewCommitEmpty": "Previsualització del commit: encara sense previsualització",
+    "previewIntegrated": "Previsualització integrada (Release-V1)",
+    "previewIntegratedEmpty": "Previsualització integrada: encara sense previsualització",
+    "understood": "Entesos"
+  }
+}

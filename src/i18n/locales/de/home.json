@@ -1,0 +1,24 @@
+{
+  "calendarCaption": "Tippe auf einen Tag für Details, oder auf einen leeren Tag, um eine Buchung hinzuzufügen",
+  "activeSchoolThisMonth": "Aktivste Schule",
+  "activeSchoolCount_one": "{{count}} Buchung diesen Monat",
+  "activeSchoolCount_other": "{{count}} Buchungen diesen Monat",
+  "activeSchoolCountAndOthers_one": "{{count}} Buchung · {{schools}} Schulen diesen Monat",
+  "activeSchoolCountAndOthers_other": "{{count}} Buchungen · {{schools}} Schulen diesen Monat",
+  "noActivityThisMonth": "Keine Aktivität diesen Monat",
+  "kpis": {
+    "sectionTitle": "Deine Bilanz diesen Monat",
+    "studentsThisMonth": "Teilnehmer",
+    "coursesTotal": "Kurse",
+    "referredThisMonth": "Geworben"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "subtitle": "Erstelle das SSI-Fortschrittsprotokoll jedes Teilnehmers, signiert und versandbereit"
+  },
+  "installBanner": {
+    "title": "Installiere Ocean Flow auf deinem Handy",
+    "subtitle": "Öffne sie wie eine App, ohne über den Browser zu gehen",
+    "dismiss": "Nicht mehr anzeigen"
+  }
+}

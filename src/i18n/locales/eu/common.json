@@ -1,0 +1,92 @@
+{
+  "loading": { "defaultLabel": "Kargatzen" },
+  "errorBoundary": {
+    "title": "Ai, zerbait gaizki joan da",
+    "body": "Pantaila honek ustekabeko arazo bat izan du. Ez da zure errua — saiatu berriro kargatzen, normaltasunera itzuli beharko litzateke.",
+    "reload": "Birkargatu"
+  },
+  "movementTypes": {
+    "ganado": "Ikastaroa",
+    "comision": "Komisioa",
+    "companeros": "Doikuntza"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "Kobratzeke",
+    "empty": "Ez dago ezer zain",
+    "count_one": "Ordainketa {{count}} zain",
+    "count_other": "{{count}} ordainketa zain",
+    "addMovement": "Gehitu mugimendua"
+  },
+  "confirmDialog": { "cancel": "Utzi", "defaultConfirmLabel": "Ezabatu" },
+  "editActions": { "defaultSaveLabel": "Gorde", "cancel": "Utzi" },
+  "deleteButton": {
+    "defaultLabel": "Ezabatu",
+    "defaultItemLabel": "elementu hau",
+    "deletedToast": "Ezabatuta",
+    "errorToast": "Ezin izan da ezabatu. Saiatu berriro.",
+    "confirmTitle": "Erregistro hau ezabatu nahi duzu?",
+    "confirmMessage": "{{item}} ezabatzera zoaz. Ekintza hau ezin da desegin."
+  },
+  "field": { "hideHelp": "Ezkutatu laguntza", "help": "Laguntza" },
+  "calendar": {
+    "months": ["Urtarrila", "Otsaila", "Martxoa", "Apirila", "Maiatza", "Ekaina", "Uztaila", "Abuztua", "Iraila", "Urria", "Azaroa", "Abendua"],
+    "weekdays": ["A", "A", "A", "O", "O", "L", "I"],
+    "prevMonth": "Aurreko hilabetea",
+    "nextMonth": "Hurrengo hilabetea",
+    "prevYear": "Aurreko urtea",
+    "nextYear": "Hurrengo urtea",
+    "today": "Gaur"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "Data",
+    "defaultAriaLabel": "Aukeratu data bat",
+    "pickerAriaLabel": "Data hautatzailea",
+    "dayAriaLabel": "{{day}} {{month}}",
+    "today": "Gaur",
+    "yesterday": "Atzo",
+    "tomorrow": "Bihar",
+    "dayBeforeYesterday": "Herenegun"
+  },
+  "dateRangePicker": {
+    "from": "Hemendik",
+    "to": "Hona arte",
+    "fromAriaLabel": "Hasiera data",
+    "toAriaLabel": "Amaiera data",
+    "pickerAriaLabel": "Tarte hautatzailea",
+    "chooseStart": "Aukeratu hasiera data",
+    "chooseEnd": "Aukeratu amaiera data",
+    "chooseDate": "Aukeratu data bat",
+    "okFrom": "Ados — {{date}} datatik aurrera bakarrik",
+    "presets": { "today": "Gaur", "thisWeek": "Aste honetan", "thisMonth": "Hilabete honetan", "last30Days": "Azken 30 egunak" }
+  },
+  "monthCalendar": {
+    "addOnDay": "Gehitu mugimendua {{day}} {{month}} egunean",
+    "addOnDayToday": "Gehitu mugimendua {{day}} {{month}} egunean (gaur)",
+    "dayToday": "{{day}} {{month}} (gaur)",
+    "closeDayDetail": "Itxi eguneko xehetasuna",
+    "dayHeading": "{{day}} {{month}} eguna",
+    "generatedOnDay": "Egun horretan sortua",
+    "table": { "course": "Ikastaroa", "comment": "Iruzkina", "people": "Pertsonak", "amount": "Zenbatekoa" }
+  },
+  "select": { "placeholder": "Aukeratu..." },
+  "multiSelect": { "placeholder": "Denak", "clearSelection": "Garbitu hautaketa", "selectedCount": "{{count}} hautatuta" },
+  "searchSelect": { "placeholder": "Bilatu...", "ariaLabel": "Bilatu", "noResults": "Emaitzarik ez" },
+  "currencySearchSelect": { "placeholder": "Bilatu dibisa..." },
+  "listFilterBar": {
+    "from": "Hemendik",
+    "to": "Hona arte",
+    "school": "Eskola",
+    "activity": "Jarduera",
+    "noLimit": "Mugarik gabe",
+    "all": "Denak",
+    "clearFilters": "Garbitu iragazkiak"
+  },
+  "rowMenu": { "moreActions": "Ekintza gehiago", "edit": "Editatu", "delete": "Ezabatu" },
+  "statusSwitch": { "ariaLabel": "Egoera: {{value}}. Sakatu {{next}} egoerara aldatzeko", "title": "{{value}} — klikatu \"{{next}}\" egoerara aldatzeko" },
+  "signature": {
+    "opcional": "aukerakoa",
+    "borrar": "Ezabatu",
+    "firmadoAria": "{{label}}: sinatuta",
+    "sinFirmarAria": "{{label}}: sinatu gabe"
+  }
+}

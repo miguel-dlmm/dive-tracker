@@ -1,0 +1,41 @@
+{
+  "months": {
+    "long": ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+    "short": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+  },
+  "granularity": {
+    "mensual": "Monat",
+    "trimestral": "Quartal",
+    "semestral": "Halbjahr",
+    "anual": "Jahr",
+    "personalizado": "Zeitraum"
+  },
+  "granularityLabel": "Granularität des Zeitraums",
+  "quarterAbbr": "Q",
+  "halfYearAbbr": "H",
+  "trend": {
+    "heading": "Verlauf — tippe auf einen Zeitraum, um zu navigieren",
+    "goTo": "Zu {{period}}",
+    "currentSuffix": " (aktueller Zeitraum)"
+  },
+  "from": "Von",
+  "to": "Bis",
+  "chooseRange": "Zeitraum wählen",
+  "total": "Gesamt",
+  "totalCombined": "Gesamtsumme kombiniert",
+  "totalOf": "Gesamt {{source}}",
+  "trendVsPreviousPeriod": "{{delta}} gegenüber dem vorherigen Zeitraum",
+  "sections": {
+    "bySchool": "Nach Schule",
+    "byActivity": "Nach Kurs",
+    "commissions": "Provisionen",
+    "colleagueAdjustments": "Kursausgleiche",
+    "calendar": "Kalender"
+  },
+  "empty": {
+    "noData": "Keine Daten.",
+    "noCoursesInPeriod": "Keine Kurse in diesem Zeitraum.",
+    "noMovementsInPeriod": "Keine Buchungen in diesem Zeitraum.",
+    "noColleagueAdjustmentsInPeriod": "Keine Kursausgleiche in diesem Zeitraum."
+  }
+}

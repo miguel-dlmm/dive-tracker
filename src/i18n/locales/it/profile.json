@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "personalData": "Dati personali",
+    "instructor": "Dati istruttore",
+    "favoriteCurrency": "Valuta preferita",
+    "language": "Lingua",
+    "security": "Sicurezza",
+    "privacy": "Privacy"
+  },
+  "signOut": {
+    "button": "Esci"
+  },
+  "avatar": {
+    "changeAvatar": "Cambia avatar",
+    "closeAvatarPicker": "Chiudi selettore avatar",
+    "colorLabel": "Colore {{name}}",
+    "iconLabel": "Icona {{name}}",
+    "previousIcon": "Icona precedente",
+    "nextIcon": "Icona successiva",
+    "save": "Salva",
+    "saving": "Salvataggio…",
+    "cancel": "Annulla",
+    "toastSuccess": "Avatar aggiornato",
+    "toastError": "Impossibile salvare l'avatar. Riprova."
+  },
+  "personalData": {
+    "nameLine": "Nome:",
+    "nicknameLine": "Nickname:",
+    "professionalLine": "Professionale:",
+    "birthDateLine": "Data di nascita:",
+    "countryLine": "Paese di residenza:",
+    "edit": "Modifica",
+    "nameLabel": "Nome",
+    "lastNameLabel": "Cognome",
+    "nicknameLabel": "Nickname",
+    "professionalLabel": "Professionale",
+    "professionalPlaceholder": "Non scelto",
+    "birthDateLabel": "Data di nascita",
+    "countryLabel": "Paese di residenza",
+    "countryPlaceholder": "Scegli un paese",
+    "nicknameAtError": "Non può contenere \"@\".",
+    "save": "Salva",
+    "saving": "Salvataggio…",
+    "toastSuccess": "Profilo aggiornato",
+    "errors": {
+      "nicknameTaken": "Questo nickname è già in uso.",
+      "nicknameAt": "Il nickname non può contenere \"@\".",
+      "generic": "Impossibile salvare. Riprova."
+    }
+  },
+  "instructor": {
+    "hint": "Si usano per compilare automaticamente i tuoi Training Records — si salvano qui una sola volta, non per dispositivo.",
+    "card": {
+      "role": "Professionista SSI",
+      "roleWithLevel": "SSI {{level}}",
+      "noSignature": "Nessuna firma",
+      "signatureAlt": "Firma di {{name}}",
+      "initialsLabel": "Iniziali",
+      "numberLabel": "SSI PRO"
+    },
+    "signatureLabel": "La tua firma",
+    "edit": "Modifica",
+    "initialsLabel": "Iniziali",
+    "numberLabel": "Numero SSI Pro",
+    "save": "Salva",
+    "saving": "Salvataggio…",
+    "toastSuccess": "Dati istruttore aggiornati",
+    "toastError": "Impossibile salvare i dati istruttore. Riprova."
+  },
+  "currency": {
+    "hint": "Si usa come valuta predefinita in Rettifica di corso, quando non c'è una tariffa che la determini. Gli altri movimenti usano sempre la valuta della loro tariffa.",
+    "placeholder": "Non scelta — usa la valuta predefinita dell'app",
+    "toastSuccess": "Valuta preferita aggiornata"
+  },
+  "language": {
+    "placeholder": "Seleziona una lingua",
+    "toastSuccess": "Lingua aggiornata",
+    "toastError": "Impossibile cambiare lingua. Riprova."
+  },
+  "password": {
+    "currentLabel": "Password attuale",
+    "newLabel": "Nuova password",
+    "confirmLabel": "Conferma password",
+    "showCurrent": "Mostra password attuale",
+    "hideCurrent": "Nascondi password attuale",
+    "show": "Mostra password",
+    "hide": "Nascondi password",
+    "minLength": "Minimo 8 caratteri",
+    "matches": "Le password coincidono",
+    "submit": "Cambia password",
+    "toastSuccess": "Password aggiornata",
+    "toastError": "Impossibile cambiare la password. Riprova.",
+    "wrongCurrent": "Password attuale errata."
+  },
+  "deleteAccount": {
+    "confirmWord": "ANNULLA",
+    "description": "Eliminare il tuo account cancella il tuo accesso e tutti i tuoi dati da Ocean Flow in modo permanente: scuole, corsi, tariffe, registro delle lezioni, commissioni e rettifiche con colleghi. Non viene conservata alcuna copia. Questa azione non si può annullare.",
+    "button": "Elimina il mio account",
+    "confirmTitle": "Eliminare il tuo account?",
+    "confirmMessage": "Stai per eliminare l'account \"{{nickname}}\" e tutti i suoi dati in modo permanente. Non potrai annullare questa azione.",
+    "continue": "Continua",
+    "finalCheckTitle": "Ultimo controllo",
+    "typeWordPrefix": "Scrivi",
+    "typeWordSuffix": "per confermare che vuoi eliminare il tuo account in modo permanente.",
+    "typeWordAriaLabel": "Scrivi {{word}} per confermare",
+    "back": "Indietro",
+    "deleteButton": "Elimina account",
+    "toastSuccess": "Account eliminato",
+    "genericError": "Impossibile eliminare l'account. Riprova.",
+    "networkError": "Impossibile eliminare l'account. Controlla la tua connessione e riprova."
+  }
+}

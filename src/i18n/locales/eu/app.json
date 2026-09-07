@@ -1,0 +1,25 @@
+{
+  "tabs": {
+    "home": "Hasiera",
+    "trabajo": "Nire lana",
+    "summary": "Laburpena"
+  },
+  "secondaryTitles": {
+    "config": "Ezarpenak",
+    "help": "Laguntza",
+    "pagos": "Ordainketak",
+    "perfil": "Nire profila",
+    "training-records": "Training Records",
+    "install-app": "Instalatu aplikazioa"
+  },
+  "aria": {
+    "close": "Itxi",
+    "back": "Atzera",
+    "goHome": "Joan Hasierara",
+    "help": "Laguntza",
+    "config": "Ezarpenak",
+    "profile": "Nire profila",
+    "signOut": "Saioa itxi",
+    "mainNav": "Nabigazio nagusia"
+  }
+}

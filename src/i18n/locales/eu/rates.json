@@ -1,0 +1,52 @@
+{
+  "filter": {
+    "button": "Iragazi",
+    "type": "Mota",
+    "typeAll": "Denak",
+    "school": "Eskola",
+    "schoolAll": "Denak",
+    "course": "Ikastaroa",
+    "courseAll": "Denak",
+    "clear": "Garbitu iragazkiak",
+    "showInactive": "Erakutsi desaktibatuak"
+  },
+  "search": {
+    "placeholder": "Bilatu",
+    "ariaLabel": "Bilatu tarifa"
+  },
+  "list": {
+    "count": "{{count}} tarifa",
+    "empty": "Emaitzarik ez.",
+    "createdOn": "Alta: {{date}} · {{type}}",
+    "inactive": "Desaktibatuta"
+  },
+  "fab": "Tarifa berria",
+  "sheet": {
+    "editTitle": "Editatu {{school}} - {{activity}} tarifa",
+    "createTitle": "{{type}} tarifa berria",
+    "close": "Itxi",
+    "typeTablistLabel": "Tarifa mota",
+    "hintGanado": "Zuk ikastaroa emateagatik kobratzen duzuna.",
+    "hintComision": "Bezero bat ekarrarazteagatik kobratzen duzuna.",
+    "school": "Eskola",
+    "course": "Ikastaroa",
+    "rateLabel": "Tarifa · {{currency}}",
+    "save": "Gorde"
+  },
+  "toasts": {
+    "saved": "Aldaketak gordeta",
+    "added": "Tarifa gehituta",
+    "saveError": "Ezin izan da gorde. Saiatu berriro.",
+    "duplicate": "Eskola eta ikastaro honetarako jada baduzu tarifa aktibo bat. Desaktibatu beste bat sortu aurretik.",
+    "reactivateBlocked": "Ezin da berraktibatu: eskola eta ikastaro honetarako badago dagoeneko beste tarifa aktibo bat.",
+    "deactivated": "Tarifa desaktibatuta",
+    "reactivated": "Tarifa berraktibatuta"
+  },
+  "deleteInUse_one": "Ezin da ezabatu: erregistro {{count}}(e)k tarifa hau erabiltzen du.",
+  "deleteInUse_other": "Ezin da ezabatu: {{count}} erregistrok tarifa hau erabiltzen dute.",
+  "rowMenu": {
+    "itemLabel": "{{school}} - {{activity}} tarifa",
+    "deactivate": "Desaktibatu",
+    "reactivate": "Berraktibatu"
+  }
+}

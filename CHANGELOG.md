@@ -5,6 +5,10 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Added
+- **Cinco idiomas nuevos**: francés, italiano, alemán, catalán y
+  euskera, junto a español e inglés — toda la interfaz, incluida la
+  Política de Privacidad y los Términos de Uso, elegibles desde Mi
+  perfil (y desde el alta de usuario para superadmin/registro).
 - **Ayuda**: los 3 artículos más básicos ("Registrar un movimiento",
   "Cobrar movimientos pendientes", "Configurar tu aplicación") ya
   incluyen un GIF animado con el flujo real, además del paso a paso en

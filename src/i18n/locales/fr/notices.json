@@ -1,0 +1,52 @@
+{
+  "whatsNew": {
+    "close": "Fermer",
+    "eyebrow": "Nouveautés de cette version",
+    "slideTablist": "Diapositive",
+    "back": "Précédent",
+    "next": "Suivant",
+    "start": "Commencer",
+    "slides": [
+      {
+        "title": "L'app parle déjà votre langue",
+        "body": "Passez de l'espagnol à l'anglais quand vous voulez, depuis votre profil."
+      },
+      {
+        "title": "Accueil, plus pratique",
+        "body": "Vos indicateurs du mois (élèves, cours, parrainages) sont maintenant la première chose que vous voyez en ouvrant l'accueil."
+      },
+      {
+        "title": "En-tête plus simple",
+        "body": "\"Se déconnecter\" se trouve maintenant dans Mon profil — moins d'icônes en haut, plus de place pour ce que vous utilisez chaque jour."
+      },
+      {
+        "title": "Votre carte d'instructeur",
+        "body": "Mon profil a maintenant sa propre carte : niveau professionnel, données personnelles et devise favorite, tout au même endroit."
+      },
+      {
+        "title": "Revoyez-le quand vous voulez",
+        "body": "Retrouvez ces nouveautés depuis Aide → \"Voir les nouveautés\", sans attendre le prochain changement."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Fermer",
+    "eyebrow": "Nouveau déploiement",
+    "branchLabel": "Branche",
+    "commitLabel": "commit",
+    "technicalChanges": "Changements techniques",
+    "functionalChanges": "Changements fonctionnels",
+    "uiChangesLabel": "Changements d'interface :",
+    "uiChangesYes": "Oui",
+    "uiChangesNo": "Non",
+    "stepsHeading": "Quoi tester / quoi faire",
+    "testsLabel": "Tests :",
+    "buildLabel": "Build :",
+    "notReported": "non rapporté",
+    "previewCommit": "Aperçu du commit",
+    "previewCommitEmpty": "Aperçu du commit : pas encore d'aperçu",
+    "previewIntegrated": "Aperçu intégré (Release-V1)",
+    "previewIntegratedEmpty": "Aperçu intégré : pas encore d'aperçu",
+    "understood": "Compris"
+  }
+}

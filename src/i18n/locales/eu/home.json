@@ -1,0 +1,24 @@
+{
+  "calendarCaption": "Sakatu egun bat xehetasunak ikusteko, edo egun huts bat mugimendu bat gehitzeko",
+  "activeSchoolThisMonth": "Eskolarik aktiboena",
+  "activeSchoolCount_one": "Mugimendu {{count}} hilabete honetan",
+  "activeSchoolCount_other": "{{count}} mugimendu hilabete honetan",
+  "activeSchoolCountAndOthers_one": "Mugimendu {{count}} · {{schools}} eskola hilabete honetan",
+  "activeSchoolCountAndOthers_other": "{{count}} mugimendu · {{schools}} eskola hilabete honetan",
+  "noActivityThisMonth": "Ez dago jarduerarik hilabete honetan",
+  "kpis": {
+    "sectionTitle": "Zure eragina hilabete honetan",
+    "studentsThisMonth": "Ikasleak",
+    "coursesTotal": "Ikastaroak",
+    "referredThisMonth": "Erakarritakoak"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "subtitle": "Sortu ikasle bakoitzaren SSI aurrerapen-erregistroa, sinatuta eta emateko prest"
+  },
+  "installBanner": {
+    "title": "Instalatu Ocean Flow zure mugikorrean",
+    "subtitle": "Ireki aplikazio gisa, arakatzailetik pasatu gabe",
+    "dismiss": "Ez erakutsi berriro"
+  }
+}

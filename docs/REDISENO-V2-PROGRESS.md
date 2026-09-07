@@ -4323,3 +4323,108 @@ correcto — `dist/help/*.gif` confirmado en el build real. Confirmado en
 Chrome real: el artículo "Registrar un movimiento" muestra su GIF
 (carga diferida — `loading="lazy"`, tarda un instante en aparecer tras
 expandir, esperado), sin errores de consola.
+
+### 12.21 — Cinco idiomas nuevos: francés, italiano, alemán, catalán y euskera (último punto de la cola)
+
+Punto final explícitamente puesto en cola por el usuario ("para poner al
+final de la cola"), trabajado en modo autónomo tras el aviso de que se
+iba a dormir ("intenta avanzar todo lo posible... mockea, aísla
+problemas y continúa pero no me puedes preguntar hasta q yo te diga q he
+vuelto"). El usuario pidió verificar explícitamente si catalán y euskera
+eran viables — respuesta más abajo.
+
+**Alcance**: los 13 ficheros de namespace por idioma que ya existían
+para `es`/`en` (`common`, `auth`, `app`, `home`, `trabajo`, `summary`,
+`config`, `profile`, `help`, `notices`, `rates`, `trainingRecords`,
+`installApp` — 1281 líneas en total por idioma en `es`), traducidos
+íntegros a los 5 idiomas nuevos: 65 ficheros JSON nuevos bajo
+`src/i18n/locales/{fr,it,de,ca,eu}/`. `auth.json` incluye la Política de
+Privacidad y los Términos de Uso completos, con el mismo patrón de
+placeholder `[PENDIENTE: ...]` que ya usaba `es` (`[EN ATTENTE: ...]`,
+`[IN ATTESA: ...]`, `[AUSSTEHEND: ...]`, `[PENDENT: ...]`, `[ZAIN: ...]`
+respectivamente) — esos huecos siguen sin rellenar en ningún idioma,
+tarea aparte ya conocida, no de esta sesión. `config.json` (contenido de
+administración) se tradujo también íntegro — la regla de "la Ayuda nunca
+documenta funcionalidades de admin" (CLAUDE.md, Release V1) aplica al
+contenido de la guía de Ayuda, no a las cadenas de la propia interfaz de
+administración, que ya existía en `es`/`en`.
+
+**Terminología por idioma** (glosario interno para mantener
+consistencia entre los 65 ficheros): movimiento → mouvement/movimento/
+Buchung/moviment/mugimendua; Escuela → École/Scuola/Schule/Escola/
+Eskola; Curso → Cours/Corso/Kurs/Curs/Ikastaroa; Comisión → Commission/
+Commissione/Provision/Comissió/Komisioa; Ajuste → Ajustement/Rettifica/
+Ausgleich/Ajust/Doikuntza; Pendiente → En attente/In attesa/Ausstehend/
+Pendent/Zain; Cobrado → Encaissé/Incassato/Kassiert (con "erhalten"
+también en algunas cadenas)/Cobrat/Kobratuta; Mi trabajo → Mon activité/
+Il mio lavoro/Meine Arbeit/La meva feina/Nire lana.
+
+**Infraestructura**: `src/i18n/index.js` — 65 imports nuevos, `fr`/`it`/
+`de`/`ca`/`eu` añadidos al objeto `resources` (mismo patrón `{ common,
+auth, app, ... }` por idioma) y a `SUPPORTED_LANGUAGES`. Los 3 sitios
+donde el idioma se elegía desde un array/objeto hardcodeado en UI se
+actualizaron con las 5 etiquetas nuevas en su propio idioma nativo
+(convención ya establecida — "Español"/"English" nunca se traducen entre
+sí): `ConfigTab.jsx` (`LANGUAGE_OPTIONS`, hoja de alta de usuario por
+superadmin), `ProfileTab.jsx` (`LANGUAGE_OPTIONS`, selector en Mi
+perfil), `RegisterScreen.jsx` (`LANGUAGE_NATIVE_NAME`, objeto — el
+`<Select>` ya recorría `SUPPORTED_LANGUAGES` dinámicamente, solo hacía
+falta añadir las etiquetas).
+
+**Bug real encontrado y corregido — bloqueaba guardar el idioma
+nuevo**: al probar el selector en Mi perfil (cuenta demo de TEST), elegir
+"Euskara" devolvía el toast de error "No se pudo cambiar el idioma.
+Inténtalo de nuevo." `profiles.language` tenía un `check (language in
+('es', 'en'))` desde la migración 0007 (`scripts/migrations/0007-idioma-perfil.sql`)
+— el cliente (i18next) acepta cualquier código nuevo sin problema, pero
+Supabase rechazaba el `UPDATE` a nivel de base de datos. Corregido con
+una migración nueva, aditiva y no destructiva (ninguna fila existente
+cambia, solo se amplía la lista de valores permitidos):
+`scripts/migrations/0018-idiomas-adicionales.sql` — sustituye el check
+por `check (language in ('es', 'en', 'fr', 'it', 'de', 'ca', 'eu'))`.
+Aplicada contra Supabase TEST con `node --env-file=.env.local
+scripts/apply-migration.mjs scripts/migrations/0018-idiomas-adicionales.sql`
+(el mismo script que ya se niega a ejecutar contra nada que no sea
+`SUPABASE_TEST_DB_URL`). `schema.sql` actualizado para reflejar el nuevo
+check y documentar la migración para instalaciones existentes, mismo
+patrón que las migraciones anteriores. **Pendiente, fuera de alcance
+autónomo**: aplicar la misma migración contra producción antes de que la
+release llegue allí — no se ha tocado producción esta sesión (regla
+general de la iniciativa: nada de alto riesgo sin supervisión humana).
+Rollback documentado en la cabecera del propio fichero de migración.
+
+**Respuesta a la pregunta del usuario — ¿son viables catalán y
+euskera?**: sí, ambos son técnicamente viables sin ninguna limitación —
+i18next es agnóstico del idioma, y la base de datos ya queda preparada
+con este punto. La diferencia real está en la confianza de la
+traducción, no en la viabilidad técnica: catalán es una lengua románica
+muy cercana al español/francés/italiano ya traducidos, con terminología
+de software bien asentada — confianza alta, comparable a los otros 4
+idiomas. Euskera (euskara) es una lengua aislada, sin relación con
+ninguna otra lengua europea, de morfología aglutinante y con un sistema
+de casos ergativo-absolutivo — no hay ningún atajo de "derivar del
+español" como sí lo hay entre las lenguas románicas entre sí. La
+traducción de esta sesión sigue las convenciones ya asentadas de
+localización de software en euskera batua (euskera unificado, el
+estándar de facto en interfaces — mismo criterio que usan Google, KDE,
+GNOME, Mozilla en sus localizaciones), pero **se recomienda revisión por
+un hablante nativo antes de que euskera llegue a usuarios reales** — a
+diferencia de los otros 4 idiomas, donde el riesgo de un matiz mal
+traducido es bajo. No es un bloqueador para tener euskera disponible en
+TEST/producción — es una recomendación de calidad antes de darlo por
+"terminado" de cara a un usuario vascoparlante real.
+
+**Verificado**: 65/65 ficheros JSON válidos (`json.load` de Python sobre
+cada uno — detectó y permitió corregir una coma sobrante en
+`eu/trabajo.json` antes de seguir). 824/824 tests, lint 0 errores
+(mismos 10 warnings ya auditados), build correcto. Verificado en Chrome
+real contra la cuenta demo de TEST: los 7 idiomas aparecen en el
+selector de Mi perfil, euskera (el de más riesgo) se probó a fondo —
+Home, Mi trabajo y Ayuda (incluida la expansión de un artículo con GIF)
+renderizan íntegros, sin ninguna clave sin traducir visible y sin
+errores de consola. Cuenta demo devuelta a español al terminar la
+verificación, para no dejarla en un estado distinto al habitual.
+
+**Con esto se cierra la cola pendiente** que abrió esta sesión — no
+quedan puntos pendientes en `docs/REDISENO-V2-PROGRESS.md` a fecha de
+este cierre.

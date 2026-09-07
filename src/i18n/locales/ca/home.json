@@ -1,0 +1,24 @@
+{
+  "calendarCaption": "Toca un dia per veure'n el detall, o un de buit per afegir un moviment",
+  "activeSchoolThisMonth": "Escola més activa",
+  "activeSchoolCount_one": "{{count}} moviment aquest mes",
+  "activeSchoolCount_other": "{{count}} moviments aquest mes",
+  "activeSchoolCountAndOthers_one": "{{count}} moviment · {{schools}} escoles aquest mes",
+  "activeSchoolCountAndOthers_other": "{{count}} moviments · {{schools}} escoles aquest mes",
+  "noActivityThisMonth": "Sense activitat aquest mes",
+  "kpis": {
+    "sectionTitle": "El teu impacte aquest mes",
+    "studentsThisMonth": "Alumnes",
+    "coursesTotal": "Cursos",
+    "referredThisMonth": "Captats"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "subtitle": "Genera el registre de progrés SSI de cada alumne, signat i llest per lliurar"
+  },
+  "installBanner": {
+    "title": "Instal·la Ocean Flow al teu mòbil",
+    "subtitle": "Obre-la com una app, sense passar pel navegador",
+    "dismiss": "No tornis a mostrar-ho"
+  }
+}

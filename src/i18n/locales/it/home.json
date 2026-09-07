@@ -1,0 +1,24 @@
+{
+  "calendarCaption": "Tocca un giorno per vedere il dettaglio, o uno vuoto per aggiungere un movimento",
+  "activeSchoolThisMonth": "Scuola più attiva",
+  "activeSchoolCount_one": "{{count}} movimento questo mese",
+  "activeSchoolCount_other": "{{count}} movimenti questo mese",
+  "activeSchoolCountAndOthers_one": "{{count}} movimento · {{schools}} scuole questo mese",
+  "activeSchoolCountAndOthers_other": "{{count}} movimenti · {{schools}} scuole questo mese",
+  "noActivityThisMonth": "Nessuna attività questo mese",
+  "kpis": {
+    "sectionTitle": "Il tuo impatto questo mese",
+    "studentsThisMonth": "Allievi",
+    "coursesTotal": "Corsi",
+    "referredThisMonth": "Portati"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "subtitle": "Genera il registro di progressione SSI di ogni allievo, firmato e pronto da consegnare"
+  },
+  "installBanner": {
+    "title": "Installa Ocean Flow sul tuo cellulare",
+    "subtitle": "Aprila come un'app, senza passare dal browser",
+    "dismiss": "Non mostrare più"
+  }
+}

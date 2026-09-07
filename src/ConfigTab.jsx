@@ -954,6 +954,11 @@ const emptyUserForm = { email: "", first_name: "", last_name: "", nickname: "" }
 const LANGUAGE_OPTIONS = [
   { code: "es", label: "Español" },
   { code: "en", label: "English" },
+  { code: "fr", label: "Français" },
+  { code: "it", label: "Italiano" },
+  { code: "de", label: "Deutsch" },
+  { code: "ca", label: "Català" },
+  { code: "eu", label: "Euskara" },
 ];
 
 // Hoja de creación de usuario — solo visible/usable para superadmin (ver

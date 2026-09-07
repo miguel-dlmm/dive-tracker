@@ -1,0 +1,52 @@
+{
+  "whatsNew": {
+    "close": "Schließen",
+    "eyebrow": "Neuigkeiten dieser Version",
+    "slideTablist": "Folie",
+    "back": "Zurück",
+    "next": "Weiter",
+    "start": "Los geht's",
+    "slides": [
+      {
+        "title": "Die App spricht jetzt deine Sprache",
+        "body": "Wechsle jederzeit zwischen Spanisch und Englisch, direkt in deinem Profil."
+      },
+      {
+        "title": "Home, griffbereiter",
+        "body": "Deine KPIs des Monats (Teilnehmer, Kurse, geworben) sind jetzt das Erste, was du beim Öffnen von Home siehst."
+      },
+      {
+        "title": "Einfachere Kopfzeile",
+        "body": "\"Abmelden\" befindet sich jetzt in Mein Profil — weniger Symbole oben, mehr Platz für das, was du täglich nutzt."
+      },
+      {
+        "title": "Dein Instructor-Ausweis",
+        "body": "Mein Profil hat jetzt deinen eigenen Ausweis: Berufslevel, persönliche Daten und bevorzugte Währung, alles an einem Ort."
+      },
+      {
+        "title": "Sieh es dir jederzeit wieder an",
+        "body": "Kehre zu diesen Neuigkeiten über Hilfe → \"Neuigkeiten ansehen\" zurück, ohne auf die nächste Version zu warten."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Schließen",
+    "eyebrow": "Neues Release",
+    "branchLabel": "Branch",
+    "commitLabel": "Commit",
+    "technicalChanges": "Technische Änderungen",
+    "functionalChanges": "Funktionale Änderungen",
+    "uiChangesLabel": "UI-Änderungen:",
+    "uiChangesYes": "Ja",
+    "uiChangesNo": "Nein",
+    "stepsHeading": "Was zu testen / zu tun ist",
+    "testsLabel": "Tests:",
+    "buildLabel": "Build:",
+    "notReported": "nicht gemeldet",
+    "previewCommit": "Vorschau des Commits",
+    "previewCommitEmpty": "Vorschau des Commits: noch keine Vorschau",
+    "previewIntegrated": "Integrierte Vorschau (Release-V1)",
+    "previewIntegratedEmpty": "Integrierte Vorschau: noch keine Vorschau",
+    "understood": "Verstanden"
+  }
+}

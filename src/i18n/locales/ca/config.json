@@ -1,0 +1,266 @@
+{
+  "datasets": {
+    "copySuffix": "còpia",
+    "summary_one": "Configuració inicial (escoles, cursos i tarifes) que es clona a cada compte nou. {{count}} actiu de {{total}}.",
+    "summary_other": "Configuració inicial (escoles, cursos i tarifes) que es clona a cada compte nou. {{count}} actius de {{total}}.",
+    "inactive": "Inactiu",
+    "setDefault": "Marca com a predeterminat",
+    "setDefaultAria": "Marca \"{{label}}\" com a predeterminat",
+    "duplicate": "Duplica",
+    "duplicateAria": "Duplica \"{{label}}\"",
+    "activeAria": "Dataset \"{{label}}\" actiu",
+    "deleteItemLabel": "el dataset \"{{label}}\"",
+    "empty": "Encara no hi ha datasets.",
+    "fab": "Nou dataset",
+    "sheetTitle": "Nou dataset",
+    "sheetHint": "Neix buit i inactiu — duplica'n un d'existent si vols partir de contingut ja carregat.",
+    "nameLabel": "Nom",
+    "create": "Crea",
+    "toasts": {
+      "created": "Dataset creat — afegeix-hi contingut abans d'activar-lo",
+      "duplicated": "\"{{newLabel}}\" creat amb el mateix contingut que \"{{sourceLabel}}\"",
+      "duplicateError": "No s'ha pogut duplicar. Torna-ho a provar.",
+      "keyTaken": "Ja existeix un dataset amb aquesta clau.",
+      "createError": "No s'ha pogut crear. Torna-ho a provar.",
+      "updateError": "No s'ha pogut actualitzar."
+    },
+    "errors": {
+      "isDefault": "És el dataset predeterminat — marca'n un altre com a predeterminat abans d'eliminar aquest.",
+      "lastOne": "No pots eliminar l'únic dataset — el registre extern i l'alta manual en necessiten com a mínim un."
+    }
+  },
+  "crudTable": {
+    "buscarPlaceholder": "Cerca...",
+    "buscarAria": "Cerca",
+    "cambiarColor": "Canvia el color",
+    "favorita": "Preferida",
+    "marcarPredeterminado": "Marca com a predeterminat",
+    "esteElemento": "aquest element",
+    "sinResultados": "Sense resultats.",
+    "cerrar": "Tanca",
+    "guardar": "Desa",
+    "cambiosGuardados": "Canvis desats",
+    "anadidoCorrectamente": "Afegit",
+    "noSePudoGuardar": "No s'ha pogut desar. Torna-ho a provar.",
+    "noSePudoGuardarCambio": "No s'ha pogut desar el canvi.",
+    "estadoPredeterminadoRazon": "És l'estat predeterminat (representa \"pendent\") — marca'n un altre com a predeterminat abans d'eliminar aquest"
+  },
+  "sectionColors": {
+    "descripcion": "S'utilitzen a la barra de navegació i als botons de crear registre de cada àrea."
+  },
+  "generalSettings": {
+    "iconoCarga": "Icona de càrrega",
+    "descripcion": "S'utilitza a l'animació de \"carregant\" de tota l'app. Quan tingueu el logo oficial d'Ocean Flow, aviseu-me i el substitueixo per la icona real en comptes d'aquesta llista.",
+    "iconoActualizado": "Icona actualitzada",
+    "noSePudoGuardar": "No s'ha pogut desar. Torna-ho a provar.",
+    "vistaPrevia": "Vista prèvia"
+  },
+  "externalRegistration": {
+    "titulo": "Permet el registre extern",
+    "descripcion": "Mostra \"Registra't\" al login perquè qualsevol pugui crear el seu propi compte.",
+    "activado": "Registre extern activat",
+    "desactivado": "Registre extern desactivat",
+    "noSePudoGuardar": "No s'ha pogut desar. Torna-ho a provar."
+  },
+  "roleCheckbox": {
+    "rolProtegido": "{{label}} — rol de sistema protegit, no editable",
+    "si": "sí",
+    "no": "no",
+    "etiquetaAria": "{{label}}: {{value}}"
+  },
+  "roleIcon": {
+    "superadmin": "Superadmin",
+    "admin": "Administrador"
+  },
+  "userStatus": {
+    "activo": "Actiu",
+    "pendiente": "Pendent",
+    "desactivado": "Desactivat",
+    "nunca": "Mai"
+  },
+  "swipeToDelete": {
+    "eliminar": "Elimina",
+    "eliminarA": "Elimina {{nickname}}"
+  },
+  "userListRow": {
+    "alta": "Alta: {{date}}",
+    "ultimoAcceso": "Últim accés: {{date}}",
+    "baja": "Baixa: {{date}}",
+    "fechaNoRegistrada": "data no registrada"
+  },
+  "userDetailSheet": {
+    "cerrar": "Tanca",
+    "nombre": "Nom",
+    "apellidos": "Cognoms",
+    "nickname": "Nickname",
+    "editarDatos": "Edita les dades",
+    "email": "Correu",
+    "altaLabel": "Alta",
+    "ultimoAcceso": "Últim accés",
+    "movimientos": "Moviments",
+    "ultimaActividad": "Última activitat",
+    "baja": "Baixa",
+    "estado": "Estat",
+    "activarUsuario": "Activa l'usuari",
+    "desactivarUsuario": "Desactiva l'usuari",
+    "pendienteTexto": "Pendent que la persona obri l'enllaç i creï la seva contrasenya.",
+    "regenerarEnlace": "Regenera l'enllaç",
+    "admin": "Admin",
+    "superadmin": "Superadmin",
+    "regenerarContrasena": "Regenera la contrasenya",
+    "eliminarUsuario": "Elimina l'usuari"
+  },
+  "activationLinkPanel": {
+    "cerrar": "Tanca",
+    "enlaceCopiado": "Enllaç copiat",
+    "noSePudoCopiar": "No s'ha pogut copiar. Selecciona'l manualment.",
+    "copiarEnlace": "Copia l'enllaç",
+    "simularEnvioMock": "Simula l'enviament correcte (mock)",
+    "mockEmailEnviado": "(Mock) Correu enviat correctament"
+  },
+  "createUserSheet": {
+    "cerrar": "Tanca",
+    "noSePudieronCargarDatasets": "No s'han pogut carregar els datasets disponibles.",
+    "camposObligatorios": "El correu, el nickname i el dataset inicial són obligatoris.",
+    "soloSuperadminCrear": "Només un superadmin pot crear usuaris.",
+    "noSePudoCrear": "No s'ha pogut crear l'usuari.",
+    "usuarioCreadoSinEmail": "Usuari creat (el correu no s'ha pogut enviar)",
+    "usuarioCreadoCorrectamente": "Usuari creat",
+    "enlaceCopiado": "Enllaç copiat",
+    "noSePudoCopiar": "No s'ha pogut copiar. Selecciona'l manualment.",
+    "noSePudoEnviarEmailTitulo": "No s'ha pogut enviar el correu",
+    "noSePudoEnviarEmailDescripcion": "No s'ha pogut enviar el correu d'activació. Pots compartir aquest enllaç manualment.",
+    "copiarEnlace": "Copia l'enllaç",
+    "simularEnvioMock": "Simula l'enviament correcte (mock)",
+    "mockUsuarioCreado": "(Mock) Usuari creat i correu enviat correctament",
+    "titulo": "Crea un usuari",
+    "email": "Correu",
+    "nombre": "Nom",
+    "apellidos": "Cognoms",
+    "nickname": "Nickname",
+    "datasetInicial": "Dataset inicial",
+    "cargando": "Carregant…",
+    "seleccionaDataset": "Selecciona un dataset",
+    "sinDatasets": "No hi ha datasets disponibles",
+    "idioma": "Idioma",
+    "nota": "El dataset triat carrega automàticament escoles, cursos, tarifes, comissions i catàlegs de pagament inicials. La persona rebrà un correu amb un enllaç d'un sol ús per entrar i crear la seva pròpia contrasenya.",
+    "creando": "Creant…",
+    "crearUsuario": "Crea l'usuari"
+  },
+  "usersDirectory": {
+    "buscarPlaceholder": "Cerca...",
+    "buscarAria": "Cerca usuaris",
+    "leyendaEstadoAria": "Què significa cada color d'estat",
+    "crearUsuario": "Crea un usuari",
+    "noSePudoCargarListado": "No s'ha pogut carregar el llistat d'usuaris.",
+    "errorDesconocido": "Error desconegut",
+    "errorCargarListado": "No s'ha pogut carregar el llistat: {{error}}",
+    "cargandoUsuarios": "Carregant usuaris…",
+    "sinResultados": "Sense resultats.",
+    "soloSuperadminRol": "Només un superadmin pot canviar el rol d'admin d'un altre compte.",
+    "noSePudoActualizarRol": "No s'ha pogut actualitzar el rol.",
+    "rolActualizado": "Rol actualitzat",
+    "soloSuperadminEliminar": "Només un superadmin pot eliminar usuaris.",
+    "noSePudoEliminar": "No s'ha pogut eliminar l'usuari.",
+    "usuarioEliminado": "Usuari eliminat",
+    "soloSuperadminActivar": "Només un superadmin pot activar o desactivar usuaris.",
+    "noSePudoActualizarEstado": "No s'ha pogut actualitzar l'estat.",
+    "usuarioDesactivado": "Usuari desactivat",
+    "soloSuperadminEnlace": "Només un superadmin pot activar comptes o regenerar-ne l'enllaç d'accés.",
+    "noSePudoGenerarEnlace": "No s'ha pogut generar l'enllaç.",
+    "enlaceGeneradoSinEmail": "Enllaç generat (el correu no s'ha pogut enviar a {{nickname}})",
+    "enlaceActivacionTitulo": "Enllaç d'activació generat",
+    "enlaceActivacionDescripcion": "Comparteix aquest enllaç amb {{nickname}}. Continuarà apareixent com a \"Pendent\" fins que el faci servir per crear la seva contrasenya.",
+    "emailActivacionEnviado": "Correu d'activació enviat a {{nickname}}",
+    "soloSuperadminContrasena": "Només un superadmin pot regenerar la contrasenya d'un altre compte.",
+    "noSePudoRegenerarContrasena": "No s'ha pogut regenerar la contrasenya.",
+    "contrasenaRegeneradaSinEmail": "Contrasenya regenerada (el correu no s'ha pogut enviar a {{nickname}})",
+    "contrasenaRegeneradaTitulo": "Contrasenya regenerada",
+    "contrasenaRegeneradaDescripcion": "La contrasenya anterior de {{nickname}} ja no és vàlida. Comparteix aquest enllaç perquè en creï una de nova — el compte torna a \"Pendent\" fins llavors.",
+    "contrasenaRegeneradaEmailEnviado": "Contrasenya regenerada i correu enviat a {{nickname}}",
+    "nicknameVacio": "El nickname no pot quedar buit.",
+    "datosActualizados": "Dades actualitzades",
+    "noSePudieronGuardarCambios": "No s'han pogut desar els canvis.",
+    "cambiarRolAdminTitulo": "Canvia el rol d'admin",
+    "usuarioLabel": "Usuari: {{nickname}}",
+    "adminLabel": "Admin: {{from}} → {{to}}",
+    "confirmar": "Confirma",
+    "eliminarUsuarioTitulo": "Elimina l'usuari",
+    "eliminarUsuarioMensaje": "S'eliminarà el compte de <strong>{{nickname}}</strong> i totes les seves dades (escoles, tarifes, moviments...) de forma permanent. Aquesta acció no es pot desfer.",
+    "eliminarUsuarioAlternativa": "Si només vols revocar-li l'accés conservant les seves dades, fes servir \"Desactiva\" en el seu lloc.",
+    "eliminar": "Elimina",
+    "desactivarUsuarioTitulo": "Desactiva l'usuari",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> deixarà de poder iniciar sessió. Totes les seves dades (escoles, tarifes, moviments...) es conserven intactes — pots reactivar-lo quan vulguis generant-li un enllaç d'activació nou.",
+    "desactivar": "Desactiva",
+    "generarEnlaceTitulo": "Genera l'enllaç d'activació",
+    "generarEnlaceMensaje": "Es generarà un enllaç nou d'un sol ús per a <strong>{{nickname}}</strong>. Qualsevol enllaç anterior deixa de funcionar. El compte no obté accés fins que el completi.",
+    "generarEnlace": "Genera l'enllaç",
+    "regenerarContrasenaTitulo": "Regenera la contrasenya",
+    "regenerarContrasenaMensaje": "La contrasenya actual de <strong>{{nickname}}</strong> deixarà de funcionar de seguida. Haurà de crear-ne una de nova des d'un enllaç d'activació nou — les seves dades no es veuen afectades.",
+    "regenerar": "Regenera",
+    "generarInvitacion": "Genera l'enllaç d'invitació",
+    "soloSuperadminInvitacion": "Només un superadmin pot generar enllaços d'invitació.",
+    "noSePudoGenerarInvitacion": "No s'ha pogut generar l'enllaç d'invitació.",
+    "enlaceInvitacionTitulo": "Enllaç d'invitació",
+    "enlaceInvitacionDescripcion": "Vàlid 24 hores i d'un sol ús. Comparteix-lo amb la persona que vulguis convidar — podrà registrar-se encara que el registre extern estigui tancat."
+  },
+  "sections": {
+    "escuelas": {
+      "label": "Escoles",
+      "description": "On imparteixes, amb el seu color"
+    },
+    "cursos": {
+      "label": "Cursos",
+      "description": "Què imparteixes, amb el seu color"
+    },
+    "tarifas": {
+      "label": "Tarifes",
+      "description": "Quant cobres per escola i curs"
+    },
+    "estadosPago": {
+      "label": "Estats de pagament",
+      "description": "Pendent, cobrat..."
+    },
+    "monedas": {
+      "label": "Monedes",
+      "description": "Catàleg disponible a tota l'app"
+    },
+    "navegacion": {
+      "label": "Colors de navegació",
+      "description": "Identitat visual de cada àrea"
+    },
+    "ajustes": {
+      "label": "Ajustos generals",
+      "description": "Icona de càrrega de l'app"
+    },
+    "usuarios": {
+      "label": "Usuaris",
+      "description": "Comptes amb accés a l'app"
+    },
+    "datasets": {
+      "label": "Datasets inicials",
+      "description": "Configuració clonada en crear un compte"
+    }
+  },
+  "menu": {
+    "administracion": "Administració",
+    "superadmin": "Superadmin",
+    "configuracion": "Configuració"
+  },
+  "crud": {
+    "nuevaEscuela": "Nova escola",
+    "editarEscuela": "Edita l'escola",
+    "nombreCampo": "Nom",
+    "colorCampo": "Color",
+    "nuevoCurso": "Nou curs",
+    "editarCurso": "Edita el curs",
+    "nuevoEstadoPago": "Nou estat de pagament",
+    "editarEstadoPago": "Edita l'estat de pagament",
+    "nuevaMoneda": "Nova moneda",
+    "editarMoneda": "Edita la moneda",
+    "monedasDescripcion": "Tria aquí la moneda de reserva de tota l'app: s'utilitza quan un usuari encara no ha triat la seva pròpia moneda preferida a El meu perfil. No és una preferència personal — és la que s'aplica per defecte a qualsevol compte nou.",
+    "monedaPorDefectoApp": "Predeterminada de l'app",
+    "codigoCampo": "Codi (p. ex. EUR)",
+    "simboloCampo": "Símbol"
+  }
+}

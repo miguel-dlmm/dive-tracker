@@ -1,0 +1,52 @@
+{
+  "whatsNew": {
+    "close": "Chiudi",
+    "eyebrow": "Novità di questa versione",
+    "slideTablist": "Diapositiva",
+    "back": "Indietro",
+    "next": "Avanti",
+    "start": "Inizia",
+    "slides": [
+      {
+        "title": "L'app ora parla la tua lingua",
+        "body": "Passa da spagnolo a inglese quando vuoi, dal tuo profilo."
+      },
+      {
+        "title": "Home, più a portata di mano",
+        "body": "I tuoi KPI del mese (allievi, corsi, portati) sono ora la prima cosa che vedi aprendo Home."
+      },
+      {
+        "title": "Intestazione più semplice",
+        "body": "\"Esci\" ora si trova in Il mio profilo — meno icone in alto, più spazio per quello che usi ogni giorno."
+      },
+      {
+        "title": "Il tuo tesserino di istruttore",
+        "body": "Il mio profilo ha ora il tuo tesserino personale: livello professionale, dati personali e valuta preferita, tutto in un posto."
+      },
+      {
+        "title": "Rivedile quando vuoi",
+        "body": "Torna a queste novità da Aiuto → \"Vedi le novità\", senza aspettare il prossimo aggiornamento."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Chiudi",
+    "eyebrow": "Nuovo rilascio",
+    "branchLabel": "Ramo",
+    "commitLabel": "commit",
+    "technicalChanges": "Modifiche tecniche",
+    "functionalChanges": "Modifiche funzionali",
+    "uiChangesLabel": "Modifiche UI:",
+    "uiChangesYes": "Sì",
+    "uiChangesNo": "No",
+    "stepsHeading": "Cosa provare / cosa fare",
+    "testsLabel": "Test:",
+    "buildLabel": "Build:",
+    "notReported": "non riportato",
+    "previewCommit": "Anteprima del commit",
+    "previewCommitEmpty": "Anteprima del commit: nessuna anteprima ancora",
+    "previewIntegrated": "Anteprima integrata (Release-V1)",
+    "previewIntegratedEmpty": "Anteprima integrata: nessuna anteprima ancora",
+    "understood": "Capito"
+  }
+}

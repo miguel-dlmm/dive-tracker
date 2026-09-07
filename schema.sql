@@ -92,12 +92,13 @@ create table if not exists public.profiles (
   -- desactivar, y regenerateActivationLink.js la limpia a null al
   -- reactivar (quitar el baneo) — mismo criterio que activated_at.
   deactivated_at timestamptz,
-  -- Idioma preferido de la interfaz (Release V1 Fase 2, multidioma
-  -- es/en). 'es' por defecto en todo alta nueva (registro, alta admin) —
-  -- regla del documento maestro de la iniciativa. check limita a los 2
-  -- idiomas soportados hoy; ampliar la lista es un check nuevo, no una
+  -- Idioma preferido de la interfaz (Release V1 Fase 2, multidioma,
+  -- ampliado en la migración 0018-idiomas-adicionales.sql). 'es' por
+  -- defecto en todo alta nueva (registro, alta admin) — regla del
+  -- documento maestro de la iniciativa. check limita a los idiomas
+  -- soportados hoy; ampliar la lista es un check nuevo, no una
   -- migración de datos.
-  language text not null default 'es' check (language in ('es', 'en')),
+  language text not null default 'es' check (language in ('es', 'en', 'fr', 'it', 'de', 'ca', 'eu')),
   -- Datos de instructor para el generador de Training Records (Release V1
   -- Fase 5, 2026-09-02) — viven en el perfil, no en localStorage por
   -- dispositivo, para que se rellenen una vez y sirvan en cualquier sesión.
@@ -141,6 +142,11 @@ create table if not exists public.profiles (
 --     check (language in ('es', 'en'));
 --
 -- (scripts/migrations/0007-idioma-perfil.sql tiene el mismo DDL)
+
+-- Migración aditiva Release V1 (2026-09-08, francés/italiano/alemán/
+-- catalán/euskera) para instalaciones existentes —
+-- scripts/migrations/0018-idiomas-adicionales.sql tiene el mismo DDL,
+-- aplicarlo con scripts/apply-migration.mjs.
 
 -- Migración aditiva Bloque 11 (2026-09-01) para instalaciones existentes:
 --
