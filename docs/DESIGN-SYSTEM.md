@@ -19,17 +19,36 @@
 
 Marca de agua/ala formando una "F" dentro de un círculo abierto — dos
 trazos curvos que evocan a la vez una ola y el movimiento de una aleta.
-Entregado en 4 combinaciones de color (los dos JPG originales,
+Entregado originalmente en 4 combinaciones de color (los dos JPG,
 `WhatsApp Image 2026-09-06 at 16.57.00.jpeg` y su variante con
 wordmark, en la raíz del repo — valores muestreados a nivel de píxel,
 no estimados a ojo):
 
+**Vectorial real, entregado 2026-09-07 (Fase 7):** dos archivos SVG
+(`Logos Ocean Flow-01.svg`/`-02.svg`, hojas de presentación con la marca
+sobre los 4 fondos + wordmark en tipografía custom) sustituyen a los
+JPG como fuente del símbolo — `public/brand/logo-mark-navy.svg` y
+`logo-mark-white.svg` (usados por `<img>` en toda la app desde este
+commit) se extrajeron de ahí, path a path, sin redibujar.
+
+**Corrección de `BRAND_NAVY`/`BRAND_SKY` aplicada** (mismo día, tras
+confirmación explícita del usuario): el navy/sky exactos del vectorial
+(`#063256`/`#8AACCE`) diferían ligeramente de los valores anteriores
+(`#00335A`/`#81ADD0`, muestreados por píxel de los JPG más abajo — la
+única fuente disponible en su momento). `src/colors.js` y todo lo que
+duplicaba el valor literal (`index.html`, `manifest.json`,
+`server/email/templates/emailLayout.js`, los dos usos de Tailwind
+arbitrario en `shared.jsx`, y el propio SVG del símbolo) se corrigieron
+a los valores exactos del vectorial — contraste WCAG re-verificado
+en §3.3, sin cambios de resultado (diferencia de centésimas en cada
+ratio).
+
 | Fondo | Color del símbolo | Uso |
 |---|---|---|
-| Sky blue `#81ADD0` | Blanco `#FFFFFF` | Superficies de marca claras (splash, onboarding, tarjetas destacadas) |
-| Negro cálido `#191919` | Sky blue `#81ADD0` | Superficies oscuras — confirma que la marca contempla tema oscuro (ver §8) |
-| Blanco `#FFFFFF` | Navy `#00335A` | Uso por defecto: cabecera, favicon, cualquier fondo claro |
-| Navy `#00335A` | Blanco `#FFFFFF` | Superficies de marca oscuras (footer de emails, splash alternativo) |
+| Sky blue `#8AACCE` | Blanco `#FFFFFF` | Superficies de marca claras (splash, onboarding, tarjetas destacadas) |
+| Negro cálido `#191919` | Sky blue `#8AACCE` | Superficies oscuras — confirma que la marca contempla tema oscuro (ver §8) |
+| Blanco `#FFFFFF` | Navy `#063256` | Uso por defecto: cabecera, favicon, cualquier fondo claro |
+| Navy `#063256` | Blanco `#FFFFFF` | Superficies de marca oscuras (footer de emails, splash alternativo) |
 
 **Wordmark:** "ocean flow" en minúsculas, trazo redondeado propio del
 logotipo (no es una fuente del sistema — es rotulación custom). **No se
@@ -112,12 +131,13 @@ permitido para texto no numérico.
 
 ## 3. Color
 
-### 3.1 Primitivos (de la marca, extraídos por muestreo real de píxel)
+### 3.1 Primitivos (de la marca — valores exactos del vectorial real,
+ver §1.1; hasta el 2026-09-07 venían de muestreo de píxel sobre JPG)
 
 | Token | Hex | Rol |
 |---|---|---|
-| `brand-navy` | `#00335A` | Primario — texto de marca, iconos, CTA principal |
-| `brand-sky` | `#81ADD0` | Secundario — superficies, fondos decorativos, estados "info" suaves |
+| `brand-navy` | `#063256` | Primario — texto de marca, iconos, CTA principal |
+| `brand-sky` | `#8AACCE` | Secundario — superficies, fondos decorativos, estados "info" suaves |
 | `brand-ink` | `#191919` | Casi-negro — texto de máximo contraste, base de tema oscuro futuro |
 | `brand-white` | `#FFFFFF` | Base — fondos claros, texto sobre navy |
 
@@ -134,20 +154,33 @@ simple de Tailwind/Radix (escalas 50→900 por mezcla lineal con blanco/negro),
 
 ```
 navy-50   #E6EDF2   fondo de tarjeta info sobre blanco
-navy-100  #CCDBE6   borde/división sutil
+navy-100  #D2DAE1   borde/división sutil
 navy-300  #6690AD   3.41:1 sobre blanco → solo UI/iconos grandes, nunca texto body
-navy-500  #00335A   ← brand-navy — 12.95:1 sobre blanco, texto principal
+navy-500  #063256   ← brand-navy — 13.14:1 sobre blanco, texto principal
 navy-700  #002440   15.83:1 sobre blanco — texto de máximo peso visual
 navy-900  #001526   base de superficie en tema oscuro futuro
 
 sky-50    #F1F6FA   fondo de chip/pill "info" muy suave
 sky-100   #E3ECF5   fondo de fila seleccionada en desplegables
 sky-300   #ABC6DE   9.93:1 sobre ink #191919 — texto secundario en tema oscuro
-sky-500   #81ADD0   ← brand-sky — 7.39:1 sobre ink, 2.38:1 sobre blanco (ver §3.3)
+sky-500   #8AACCE   ← brand-sky — 7.43:1 sobre ink, 2.37:1 sobre blanco (ver §3.3)
 sky-700   #5C82A3   4.06:1 sobre blanco → válido solo como UI/borde, no texto body
 
 muted-600 #3D5C73   7.05:1 sobre blanco — texto secundario en tema claro (sustituye al gris neutro "sin marca" que usaría cualquier app)
 ```
+
+**Corrección 2026-09-07 (Fase 7, 7.5):** `navy-500`/`sky-500` (= las
+propias `brand-navy`/`brand-sky`) se corrigieron a los valores exactos
+del vectorial real del logo — ver nota en §1.1. `navy-100` también se
+recalculó (es la única tonalidad derivada que se usa de verdad en
+código, `shared.jsx` — ver §3.1 arriba) con la misma proporción de
+mezcla que antes, sobre la nueva base. El resto de tonalidades
+derivadas (`navy-50/300/700/900`, `sky-50/100/300/700`, `muted-600`) NO
+se regeneran en esta corrección — ninguna se usa hoy en código real
+(son especificación para cuando se implemente el resto de esta escala),
+y la diferencia que arrastrarían de la base anterior es imperceptible;
+regenerarlas todas a mano sin necesidad real de código sería trabajo
+sin beneficio medible (principio de producto #1, `docs/PRODUCT.md`).
 
 `muted-600` es la pieza que evita el error típico de "texto secundario
 = gris Tailwind por defecto": es un navy desaturado, no un gris neutro —
@@ -160,13 +193,13 @@ Calculado con la fórmula real de luminancia relativa de WCAG, no a ojo:
 
 | Par | Ratio | Resultado |
 |---|---|---|
-| `brand-navy` sobre `brand-white` | 12.95:1 | ✅ Texto normal (AA y AAA) |
+| `brand-navy` sobre `brand-white` | 13.14:1 | ✅ Texto normal (AA y AAA) |
 | `brand-ink` sobre `brand-white` | 17.58:1 | ✅ Texto normal (AA y AAA) |
 | `muted-600` sobre `brand-white` | 7.05:1 | ✅ Texto normal (AA y AAA) |
-| `brand-sky` sobre `brand-navy` | 5.44:1 | ✅ Texto normal AA |
-| `brand-ink` sobre `brand-sky` | 7.39:1 | ✅ Texto normal AA |
+| `brand-sky` sobre `brand-navy` | 5.55:1 | ✅ Texto normal AA |
+| `brand-ink` sobre `brand-sky` | 7.43:1 | ✅ Texto normal AA |
 | `sky-300` sobre `brand-ink` | 9.93:1 | ✅ Texto normal AA (tema oscuro) |
-| **`brand-white` sobre `brand-sky`** | **2.38:1** | ❌ No pasa ni el mínimo de elementos grandes (3:1) |
+| **`brand-white` sobre `brand-sky`** | **2.37:1** | ❌ No pasa ni el mínimo de elementos grandes (3:1) |
 
 **Regla de uso derivada:** `brand-sky` nunca lleva texto/iconos blancos
 encima salvo el logotipo (WCAG exime explícitamente a logotipos del

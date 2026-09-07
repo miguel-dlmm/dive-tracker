@@ -21,14 +21,23 @@ export const GREEN = "#15803D";
 export const SUN = "#B45309";
 export const BG = "#F7F8F8";
 
-// Paleta de marca del rediseño (docs/DESIGN-SYSTEM.md §3.1), extraída por
-// muestreo de píxel real del logo entregado — no estimada a ojo. Tokens
-// nuevos, añadidos sin tocar los de arriba: la migración de cada pantalla
-// a esta paleta es progresiva (Fase 2 del rediseño, ver
+// Paleta de marca del rediseño (docs/DESIGN-SYSTEM.md §3.1). Tokens nuevos,
+// añadidos sin tocar los de arriba: la migración de cada pantalla a esta
+// paleta es progresiva (Fase 2 del rediseño, ver
 // docs/REDISENO-V2-PROGRESS.md), pantalla a pantalla, no un cambio de golpe
 // en todos los usos existentes de NAVY/TEAL/etc.
-export const BRAND_NAVY = "#00335A";
-export const BRAND_SKY = "#81ADD0";
+//
+// BRAND_NAVY/BRAND_SKY corregidos 2026-09-07 (Fase 7, 7.5) a los valores
+// exactos del vectorial real del logo (`#063256`/`#8AACCE`) — hasta
+// entonces venían de un muestreo de píxel sobre un JPG exportado del
+// logo (`#00335A`/`#81ADD0`), la única fuente disponible en ese momento;
+// ahora que existe el SVG original, sus valores son la fuente más
+// precisa y sustituyen a la estimación por muestreo. Diferencia mínima
+// (pocas unidades por canal, contraste WCAG re-verificado sin cambios
+// de resultado — ver docs/DESIGN-SYSTEM.md §3.3), pero real: se corrige
+// en vez de mantener una aproximación ahora que hay un valor exacto.
+export const BRAND_NAVY = "#063256";
+export const BRAND_SKY = "#8AACCE";
 export const BRAND_INK = "#191919";
 
 // Paleta curada compartida por dos selectores de color distintos —

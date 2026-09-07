@@ -23,7 +23,7 @@ const LOADING_ICONS = { Waves, Anchor, Sailboat, LifeBuoy, Fish, Compass };
 
 // focus: borde navy de marca + halo sky suave (docs/DESIGN-SYSTEM.md §6.3)
 // — antes un gris genérico sin relación con la marca nueva.
-export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-[#00335A] focus-visible:ring-2 focus-visible:ring-[#81ADD0] focus-visible:ring-offset-1";
+export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-[#063256] focus-visible:ring-2 focus-visible:ring-[#8AACCE] focus-visible:ring-offset-1";
 
 // =================================================================
 // Toasts — mensaje genérico de confirmación/error para cualquier
@@ -118,10 +118,12 @@ export function useToast() {
 // El icono es configurable desde Configuración (tabla app_config),
 // para poder cambiarlo por el logo oficial cuando esté listo, sin
 // tocar código. Rediseño 2026-09-06: "Logo" ya es esa opción — el logo
-// real, no un icono de lucide-react. Como es un PNG (sin vectorial
-// disponible, ver docs/DESIGN-SYSTEM.md §1.1) no se puede recolorear
-// con `color` como los iconos de stroke; el mismo efecto de "relleno"
-// se consigue superponiendo dos copias de la imagen (una atenuada de
+// real, no un icono de lucide-react. Es un <img> apuntando a un SVG en
+// public/brand/ (vectorial desde Fase 7, 2026-09-07 — antes un PNG
+// rasterizado), pero sigue sin poder recolorearse con `color` como los
+// iconos de stroke: un SVG cargado por src, a diferencia de uno inline,
+// no hereda `currentColor` de fuera. El mismo efecto de "relleno" se
+// consigue superponiendo dos copias de la imagen (una atenuada de
 // fondo, otra a opacidad completa recortada por la animación), en vez
 // de dos copias coloreadas distinto del mismo icono.
 // =================================================================
@@ -132,9 +134,9 @@ export function AppLoading({ iconName = "Logo", color = BRAND_NAVY, size = 40, l
     return (
       <div className="flex flex-col items-center gap-3" {...statusProps}>
         <div className="relative" style={{ width: size, height: size }}>
-          <img src="/brand/logo-mark-navy.png" width={size} height={size} alt="" aria-hidden="true" style={{ opacity: 0.2 }} />
+          <img src="/brand/logo-mark-navy.svg" width={size} height={size} alt="" aria-hidden="true" style={{ opacity: 0.2 }} />
           <div className="absolute inset-0" style={{ animation: "oceanFill 1.6s ease-in-out infinite" }}>
-            <img src="/brand/logo-mark-navy.png" width={size} height={size} alt="" aria-hidden="true" />
+            <img src="/brand/logo-mark-navy.svg" width={size} height={size} alt="" aria-hidden="true" />
           </div>
         </div>
       </div>
@@ -669,7 +671,7 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "l
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={ariaLabel || placeholder || t("datePicker.defaultAriaLabel")}
-        className="flex min-h-11 w-full items-center gap-2 rounded-[10px] border bg-white px-2.5 py-1.5 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#81ADD0] focus-visible:ring-offset-1"
+        className="flex min-h-11 w-full items-center gap-2 rounded-[10px] border bg-white px-2.5 py-1.5 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#8AACCE] focus-visible:ring-offset-1"
         style={{ borderColor: open ? BRAND_NAVY : "#CCDBE6" }}
       >
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>

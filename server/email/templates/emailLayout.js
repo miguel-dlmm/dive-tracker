@@ -34,7 +34,7 @@
 // CreatePasswordScreen, DeploymentNotice...) cubre aquí tanto el botón
 // como el acento del icono de cabecera, sin introducir un uso de
 // BRAND_SKY que no existe en ningún otro sitio.
-export const BRAND_NAVY = "#00335A";
+export const BRAND_NAVY = "#063256";
 export const BG = "#F7F8F8";
 
 export function escapeHtml(value) {

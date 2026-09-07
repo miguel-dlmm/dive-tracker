@@ -411,7 +411,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
                   solo se entregó como foto/JPEG, sin fuente vectorial
                   disponible (ver docs/DESIGN-SYSTEM.md §1.1). Sustituir por
                   un <svg> real en cuanto exista un vectorial oficial. */}
-              <img src="/brand/logo-mark-navy.png" alt="" width={22} height={22} aria-hidden="true" />
+              <img src="/brand/logo-mark-navy.svg" alt="" width={22} height={22} aria-hidden="true" />
               <h1 className="text-[15px] font-bold tracking-tight" style={{ color: BRAND_NAVY }}>Ocean Flow</h1>
             </button>
           )}

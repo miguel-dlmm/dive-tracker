@@ -35,6 +35,10 @@ Registro de cambios relevantes de Ocean Flow.
   fina a la izquierda; los puntos de color delante de escuela/curso
   desaparecen (en Mi trabajo y Tarifas) — el color ya se lee en el
   propio texto.
+- **Logo**: el icono de marca en toda la app usa ahora el vectorial real
+  (más nítido a cualquier tamaño) en vez del PNG anterior.
+- **Login**: nueva frase bajo el nombre de la app — "Bucea más. Gestiona
+  menos." y un subtítulo con lo que hace la app en concreto.
 - **KPIs de Home y Mi trabajo** un poco más grandes y con más aire, tras
   una primera vuelta que se quedó corta.
 - **Training Records**: la fecha de examen ya va en la misma línea que

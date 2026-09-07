@@ -1247,3 +1247,77 @@ en vez de la franja de color, coherente con Mi trabajo.
 `npm run build` correcto. No se pudo probar el envío de email real
 contra un Preview Deployment real desde este entorno (sin acceso a
 Vercel/Resend en producción) — a confirmar en el próximo Preview.
+
+### 7.5 — Login: logo vectorial real + tagline
+
+El usuario entregó los vectoriales reales del logo (`Logos Ocean
+Flow-01.svg`/`-02.svg`, dos hojas de presentación de 1920×1080 con la
+marca sobre 4 fondos y, la segunda, también el wordmark en su tipografía
+custom) con instrucción explícita de "actualizar y mejorar lo que creas
+necesario ahora que los tienes" — no limitado a la pantalla de login.
+
+**Sustitución del PNG por SVG real, en toda la app, no solo en login**:
+`public/brand/logo-mark-navy.png`/`logo-mark-white.png` (170×157px,
+rasterizados, en uso desde el bloque "logo más grande" del 2026-09-06)
+se sustituyen por `logo-mark-navy.svg`/`logo-mark-white.svg` — los dos
+`<path>` que forman la marca, extraídos directamente de los
+vectoriales (bounding box calculado programáticamente con un parser de
+path propio, sin redibujar ni un solo punto), coloreados con
+`BRAND_NAVY`/blanco. Actualizados los 9 archivos que ya referenciaban el
+PNG (LoginScreen, RegisterScreen, ForgotPasswordScreen,
+ResetPasswordScreen, CreatePasswordScreen, ForcedPasswordUpdateScreen,
+AcceptLegalScreen, ProfileTab, App.jsx, shared.jsx/AppLoading) — mismo
+`<img src>`, mismos width/height/alt en cada sitio, cero cambios de
+comportamiento fuera de la nitidez del propio icono. PNGs antiguos
+borrados (nada los referencia ya). Tamaño: 1,9KB por SVG frente a
+17-26KB de cada PNG.
+
+**Hallazgo relacionado, corregido tras confirmación explícita del
+usuario — ver DESIGN-SYSTEM.md §1.1/§3.1/§3.3**: el navy/sky exactos
+del vectorial (`#063256`/`#8AACCE`) diferían ligeramente de
+`BRAND_NAVY`/`BRAND_SKY` (`#00335A`/`#81ADD0`, muestreados por píxel de
+los JPG originales — la única fuente disponible hasta entonces). Se
+señaló como hallazgo sin aplicar (impacto transversal a toda la app) y,
+tras la aprobación explícita del usuario ("ajusta los tokens con los
+nuevos hallazgos del svg"), se corrigió `src/colors.js` y todo lo que
+duplicaba el valor literal — `index.html`, `manifest.json`,
+`server/email/templates/emailLayout.js`, los dos usos de Tailwind
+arbitrario (`focus:border-[...]`/`focus-visible:ring-[...]`) en
+`shared.jsx`, el propio SVG del símbolo (`logo-mark-navy.svg`), y
+`navy-100` (la única tonalidad derivada de la escala §3.2 que se usa de
+verdad en código). Contraste WCAG re-verificado con la nueva base
+(script propio de luminancia relativa) antes de aplicar — ningún par
+cruza un umbral AA/AAA distinto al que ya tenía, diferencia de
+centésimas en cada ratio.
+
+**Tagline en login** (pedido explícito, con las frases ya escritas por
+el usuario: "Bucea más. Gestiona menos." como título corto + "Controla
+tus inmersiones, ingresos y pagos desde un solo lugar" como subtítulo):
+añadidas bajo el wordmark "Ocean Flow" (que se conserva — el nombre del
+producto sigue siendo el identificador principal, la tagline refuerza,
+no sustituye), como claves de i18n nuevas (`auth:login.tagline`/
+`taglineSubtitle`, es+en) en vez de texto fijo, mismo criterio que el
+resto de la pantalla. Logo aumentado de 44 a 52px (ahora vectorial, sin
+pérdida de nitidez a ningún tamaño) para dar algo más de presencia al
+conjunto, sin llegar a dominar la tarjeta de login.
+
+**Opinión de diseño sobre la tagline** (pedida explícitamente: "¿qué tal
+lo ves? ¿Cuadra con tendencias? ¿Es elegante y atractivo?") — resumen
+aquí para que quede registrado: la estructura de dos frases cortas y
+paralelas ("[verbo] más. [verbo] menos.") es un patrón de tagline de
+producto real y vigente (mismo recurso retórico que "Do more with less"
+de Microsoft o el titular+subtítulo corto de Notion, "One workspace.
+Every team."), encaja con el requisito de brevedad "manos mojadas" de
+CLAUDE.md, y conecta directamente con la motivación real del usuario
+objetivo (un instructor de buceo quiere bucear, no hacer papeleo) — el
+único matiz señalado es que "gestiona menos" podría leerse como "la app
+gestiona menos" en vez de "tú dedicas menos esfuerzo a gestionar",
+resuelto por el subtítulo inmediato que aclara qué hace la app en
+concreto.
+
+**Verificación**: 762/762 tests, lint 0 errores, build correcto (los dos
+SVG presentes en `dist/brand/`, verificado con `ls`); comprobación
+visual manual en navegador — login (logo+tagline+subtítulo, sin
+solapamientos, todo en una línea cada bloque en un viewport de 500px de
+ancho) y el `AppLoading` de la pantalla de carga (mismo mark, animación
+de "relleno" intacta) ambos correctos, sin errores de consola.

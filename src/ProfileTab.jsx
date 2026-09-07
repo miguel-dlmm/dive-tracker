@@ -446,7 +446,7 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
               competir con iniciales/nº SSI, que siguen siendo el foco
               real de esta fila. */}
           <span className="flex items-center gap-1 opacity-55" aria-hidden="true">
-            <img src="/brand/logo-mark-white.png" alt="" width={24} height={24} />
+            <img src="/brand/logo-mark-white.svg" alt="" width={24} height={24} />
           </span>
         </div>
       </div>
