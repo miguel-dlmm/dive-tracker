@@ -28,6 +28,8 @@ Registro de cambios relevantes de Ocean Flow.
 - Training Records: "Descargar todo en PDF/JPG" ya descarga un único
   fichero ZIP con todos los documentos, en vez de una descarga por
   alumno una detrás de otra.
+- Mi perfil: campos opcionales de fecha de nacimiento y país de
+  residencia en "Datos personales".
 
 ### Changed
 - **Icono de carga (logo)**: ahora solo la parte que parece una ola sube
@@ -126,6 +128,10 @@ Registro de cambios relevantes de Ocean Flow.
   trabajo que nunca llegaba a pintarse en la práctica.
 
 ### Fixed
+- **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
+  real** — "Setting up fake worker failed". Causa confirmada leyendo el
+  código fuente de pdfjs-dist: en su modo de reserva "fake worker",
+  esperaba encontrar `WorkerMessageHandler` donde no se exportaba.
 - **(Interno, crítico) Todos los deployments de Vercel fallaban** desde
   que se añadió el endpoint de actividad de usuario — superaba el
   límite de 12 Serverless Functions del plan Hobby. Fusionado dentro de

@@ -2234,3 +2234,78 @@ con GIFs a pesar de la calidad del piloto?
 **Estado**: sin cerrar. Nada de código ni contenido nuevo de Ayuda
 tocado todavía — el piloto se descartó (fichero borrado) por no ser
 presentable.
+
+### 9.15 — JPG en Safari iOS: cerrado, con causa real confirmada
+
+Retoma 9.13. El usuario pegó la consola real de un Safari en su Mac
+probando la URL de Preview:
+
+```
+Error: Setting up fake worker failed: "undefined is not an object
+(evaluating 'e.setup')".
+```
+
+Encontrada la causa exacta leyendo el propio código fuente de
+`pdfjs-dist` (`node_modules/pdfjs-dist/build/pdf.mjs`,
+`PDFWorker._setupFakeWorkerGlobal`/`#mainThreadWorkerMessageHandler`):
+cuando Safari no consigue crear un Worker real, pdf.js cae a su modo
+interno "fake worker" — en vez de `new Worker(workerSrc)`, hace
+`await import(GlobalWorkerOptions.workerSrc)` DIRECTAMENTE EN EL HILO
+PRINCIPAL y espera un `WorkerMessageHandler` entre las exportaciones de
+ese módulo. `pdfWorkerEntry.js` (el fichero al que apunta `workerSrc`)
+nunca exportaba nada — solo tenía un `import()` de efecto secundario,
+necesario para el modo worker real (aplicar los polyfills sobre `self`
+antes de cargar el worker de verdad) — así que en modo fake-worker
+pdf.js recibía un módulo vacío y `undefined.setup(...)` reventaba con
+exactamente ese mensaje.
+
+**Arreglo** (`pdfToJpg.js`): `globalThis.pdfjsWorker = {
+WorkerMessageHandler }`, la vía que el propio pdf.js comprueba ANTES de
+intentar el `import(workerSrc)` — con esto puesto, el modo fake-worker
+de Safari deja de depender de las exportaciones de `pdfWorkerEntry.js`
+del todo.
+
+**Primer intento descartado**: reexportar `WorkerMessageHandler` desde
+el propio `pdfWorkerEntry.js` con top-level await (mantiene el orden
+"parche antes que worker" sin un `export * from` estático, que sí lo
+rompería). Funcionaba en `npm run dev`, pero el build de producción lo
+eliminaba por tree-shaking — ningún módulo de la app "usa" esa
+exportación de forma estática, solo pdf.js en tiempo de ejecución vía
+un `import()` dinámico que el bundler no rastrea. Confirmado
+inspeccionando el chunk generado (`grep` sobre `dist/assets/`): el
+`export const` desaparecía del todo. El mecanismo de `pdfToJpg.js` usa
+un `import` estático real, así que no es tree-shakeable.
+
+**Por qué esta vez sí se cierra** (a diferencia de los 3 intentos
+anteriores del bug del scroll, ver 9.7): esta corrección está anclada
+a un error real de un Safari real, con su causa leída directamente en
+el código fuente de la dependencia — no es una hipótesis sobre qué
+podría estar pasando.
+
+**Verificación**: 781/781 tests, lint sin errores nuevos, build
+correcto (confirmado que `globalThis.pdfjsWorker` sobrevive en el
+chunk de producción). Sin regresión en Chromium (sin acceso a Safari
+real en este entorno, ver CLAUDE.md §8): flujo completo de Training
+Records → generar → "Descargar imagen (JPG)" probado a mano en local,
+JPG descargado correctamente, sin errores de consola.
+
+### 9.16 — Mi perfil: fecha de nacimiento + país de residencia
+
+Cierra el "Plan de migración #3" propuesto antes en esta misma Fase.
+El usuario confirmó el alcance: solo para mostrar en el perfil, ambos
+opcionales, sin validación ni uso en ningún otro flujo. Migración
+aditiva (`birth_date date`, `country_of_residence text` en `profiles`,
+ambas nullable) aplicada contra Supabase TEST con
+`scripts/apply-migration.mjs` (permiso explícito del usuario, bloqueado
+antes por el clasificador de permisos del entorno por ser un cambio de
+esquema en vivo). Nueva `src/countries.js` (lista fija de países con
+etiqueta es/en, mismo criterio que `language`/`professional_level` en
+`schema.sql` — no es configuración de negocio, no necesita tabla en
+Supabase) para el `SearchSelect` del formulario.
+
+**Verificación**: 4 tests nuevos en `ProfileTab.test.jsx` (guardado,
+modo lectura con datos, modo lectura sin datos, elegir país en el
+buscador). 784/784 tests, lint sin errores nuevos, build correcto.
+Comprobado también a mano en el navegador: guardar país+ver que
+persiste tras recargar (confirma que la migración quedó bien aplicada
+en TEST, no solo que el código compila).
