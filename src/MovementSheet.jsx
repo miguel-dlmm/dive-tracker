@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
 import { Plus, Minus, X, Check, Loader2, StickyNote } from "lucide-react";
-import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./App";
+import { TEAL, CORAL, GREEN, BRAND_NAVY, BRAND_GOLD } from "./App";
 import {
   inputCls, formatMoney, Field, Select, MoneyInput,
   DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency, MOVEMENT_TYPE_META,
@@ -37,7 +37,9 @@ const CREATE_TYPES = [
 // igual que en la lista una vez guardado.
 function formAccentColor(creating, amount) {
   if (creating === "ganado") return TEAL;
-  if (creating === "comision") return SUN;
+  // BRAND_GOLD (2026-09-07), no SUN — ver MOVEMENT_TYPE_META (shared.jsx):
+  // SUN es un semántico de estado, no el color de marca de "Comisión".
+  if (creating === "comision") return BRAND_GOLD;
   return Number(amount) < 0 ? CORAL : GREEN;
 }
 

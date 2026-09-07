@@ -91,9 +91,19 @@ sueltos escritos a mano por pantalla.
   para representar un estado.
 - **`colorFor(rows, name)`**: color de una entidad de negocio (escuela,
   actividad…), siempre leído de su propia tabla — nunca una paleta fija
-  en JS (convención #2). Los 6-7 colores de marca (`NAVY`, `TEAL`,
-  `CORAL`, `GREEN`…) exportados desde `App.jsx` son la única excepción
+  en JS (convención #2). Los colores de marca (`BRAND_NAVY`, `TEAL`,
+  `CORAL`, `GREEN`, `BRAND_OCEAN`, `BRAND_GOLD`, `BRAND_SLATE`…)
+  exportados desde `App.jsx`/`colors.js` son la única excepción
   (identidad visual de la app, no dato de negocio).
+- **Colores de marca por tipo de movimiento** (Curso/Comisión/Ajuste,
+  `MOVEMENT_TYPE_META` en `shared.jsx`): cada tipo tiene su propio color
+  de marca dedicado (`TEAL`/`BRAND_GOLD`/`BRAND_SLATE`), pensado también
+  para material de campaña/redes fuera de la app, no solo para la UI —
+  ver `docs/DESIGN-SYSTEM.md` §3.5 para la tabla completa y el porqué de
+  no reutilizar los semánticos de estado (`SUN`/`CORAL`/`GREEN`) para
+  esto. El importe de un Ajuste concreto sigue coloreándose por signo
+  (eso no cambia); el color de marca es solo para el badge/icono del
+  tipo en sí.
 
 ## Objetivo táctil 44×44 sin estirar el layout
 

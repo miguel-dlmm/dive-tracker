@@ -5,7 +5,7 @@ import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, Tren
 import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr, ExpandableCard } from "./shared";
 import { listItemVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
 import { buildEntriesBySource, comparePeriods } from "./rateCalc";
-import { BRAND_NAVY, CORAL, GREEN } from "./App";
+import { BRAND_NAVY, CORAL, GREEN, BRAND_SLATE_FILL } from "./App";
 
 // Rediseño 2026-08-29 (ver docs/ADR/0009-rediseno-resumen.md): Resumen deja
 // de mostrar todo a la vez (antes: calendario global + total + 2 desgloses,
@@ -19,13 +19,13 @@ import { BRAND_NAVY, CORAL, GREEN } from "./App";
 // curso en el sitio, en vez de una segunda sección de página completa
 // dedicada a una sola escuela elegida en un desplegable aparte.
 const NEUTRAL_GRAY = "#94A3B8";
-// MOVEMENT_TYPE_META.companeros.color es un neutro claro pensado para texto
-// (cabeceras de categoría del calendario, sobre fondo blanco) — aquí hace
-// falta relleno sólido con texto blanco encima (botón activo del
-// segmentado, tarjeta de total), donde ese mismo tono no da contraste
-// suficiente. AJUSTE_FILL es un escalón más oscuro de la misma familia
-// neutra (slate), no un color inventado aparte.
-const AJUSTE_FILL = "#64748B";
+// MOVEMENT_TYPE_META.companeros.color (BRAND_SLATE) es un tono pensado
+// para texto/icono pequeño sobre blanco — aquí hace falta relleno sólido
+// con texto blanco encima (botón activo del segmentado, tarjeta de
+// total), donde ese mismo tono no da contraste suficiente.
+// BRAND_SLATE_FILL (colors.js) es el escalón más oscuro de esa misma
+// familia, pensado exactamente para esto.
+const AJUSTE_FILL = BRAND_SLATE_FILL;
 
 // useGrouping: "always" — sin esto, Intl con locale "es-ES" en modo
 // "auto" (el valor por defecto) no agrupa los miles cuando el primer

@@ -6,7 +6,7 @@ import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, Chev
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
-import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY, ENTITY_COLOR_PALETTE } from "./colors";
+import { TEAL, CORAL, GREEN, BRAND_NAVY, BRAND_GOLD, BRAND_SLATE, ENTITY_COLOR_PALETTE } from "./colors";
 import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, monthSlideVariants, usePrefersReducedMotion, useSwipeHorizontal, animateScrollBy } from "./motion";
 import { AVATAR_ICON_MAP } from "./avatarCatalog";
 
@@ -1075,11 +1075,13 @@ const CAL_NEUTRAL = "#94A3B8";
 // propia copia (Home y Resumen decían "Ganado"/"Compañeros", vocabulario
 // previo a la unificación en Mi trabajo, ADR-0005, que ya usa "Curso"/
 // "Ajuste"; encontrado como bug real de datos desincronizados, no solo de
-// estilo, al auditar Home). Curso/Comisión tienen color de marca fijo
-// (BRAND_NAVY/SUN, igual que en MiTrabajoTab); Ajuste no tiene uno propio en
-// ningún sitio de la app — su color depende del signo del importe (ver
-// rowAccent en MiTrabajoTab) — así que aquí usa el neutro del propio
-// calendario en vez de inventarle una identidad de marca que no tiene.
+// estilo, al auditar Home). Los 3 tienen color de marca fijo dedicado
+// (TEAL/BRAND_GOLD/BRAND_SLATE — 2026-09-07, pedido explícito: "define
+// colores de marca para cursos, comisiones y ajustes"; Comisión usaba
+// antes SUN, un semántico de ESTADO — ver docs/DESIGN-SYSTEM.md §3.4 —
+// que no debía compartirse con un tipo de movimiento). El color fijo de
+// Ajuste es solo para esta chip/badge — el importe en sí sigue siguiendo
+// el signo (CORAL/GREEN, ver rowAccent en MiTrabajoTab), eso no cambia.
 // `icon`: añadido 2026-09-07 (feedback explícito: "mejorar la manera de
 // reconocer el tipo de movimiento, ahora es esa franja vertical finita a
 // la izquierda") — sustituye el borde de acento de EntryRow (MiTrabajoTab)
@@ -1095,8 +1097,8 @@ const CAL_NEUTRAL = "#94A3B8";
 // explícito: "que se muestren igual por toda la app").
 export const MOVEMENT_TYPE_META = {
   ganado: { label: "Curso", color: TEAL, icon: GraduationCap },
-  comision: { label: "Comisión", color: SUN, icon: Handshake },
-  companeros: { label: "Ajuste", color: CAL_NEUTRAL, icon: Users },
+  comision: { label: "Comisión", color: BRAND_GOLD, icon: Handshake },
+  companeros: { label: "Ajuste", color: BRAND_SLATE, icon: Users },
 };
 
 // Mini calendario del mes — el día con actividad lleva un anillo de color;

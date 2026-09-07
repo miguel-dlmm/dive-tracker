@@ -1,7 +1,7 @@
 import { render, screen, waitForElementToBeRemoved } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RatesTab from "./RatesTab";
-import { TEAL, SUN } from "./colors";
+import { TEAL, BRAND_GOLD } from "./colors";
 import { ToastProvider } from "./shared";
 
 // ADR-0003, pasos 1-2: payment_type ya no es un concepto del frontend —
@@ -108,7 +108,7 @@ describe("RatesTab — lista combinada de Curso y Comisión", () => {
     const cursoChip = screen.getByText("Open Water").closest("div.flex.items-start.gap-2\\.5").firstElementChild;
     const comisionChip = screen.getByText("Advanced").closest("div.flex.items-start.gap-2\\.5").firstElementChild;
     expect(cursoChip).toHaveStyle({ backgroundColor: `${TEAL}1A` });
-    expect(comisionChip).toHaveStyle({ backgroundColor: `${SUN}1A` });
+    expect(comisionChip).toHaveStyle({ backgroundColor: `${BRAND_GOLD}1A` });
   });
 
   it("el filtro 'Tipo' (dentro de Filtrar) acota la lista combinada a un solo tipo", async () => {

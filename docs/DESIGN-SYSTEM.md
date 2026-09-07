@@ -139,6 +139,8 @@ ver §1.1; hasta el 2026-09-07 venían de muestreo de píxel sobre JPG)
 | `brand-navy` | `#063256` | Primario — texto de marca, iconos, CTA principal |
 | `brand-sky` | `#8AACCE` | Secundario — superficies, fondos decorativos, estados "info" suaves |
 | `brand-ink` | `#191919` | Casi-negro — texto de máximo contraste, base de tema oscuro futuro |
+| `brand-ocean` | `#146A96` | Azul intermedio entre navy y sky (2026-09-07) — acento para material de campaña/redes que necesite un azul propio distinto del navy de texto |
+| `brand-foam` | `#EAF2F8` | Azul casi blanco (2026-09-07) — fondo de sección muy suave en material de campaña, nunca texto |
 | `brand-white` | `#FFFFFF` | Base — fondos claros, texto sobre navy |
 
 ### 3.2 Escala tonal (método Material 3, simplificado — sin motor HCT)
@@ -200,6 +202,10 @@ Calculado con la fórmula real de luminancia relativa de WCAG, no a ojo:
 | `brand-ink` sobre `brand-sky` | 7.43:1 | ✅ Texto normal AA |
 | `sky-300` sobre `brand-ink` | 9.93:1 | ✅ Texto normal AA (tema oscuro) |
 | **`brand-white` sobre `brand-sky`** | **2.37:1** | ❌ No pasa ni el mínimo de elementos grandes (3:1) |
+| `brand-ocean` sobre `brand-white` | 5.95:1 | ✅ Texto normal AA |
+| `brand-gold` sobre `brand-white` | 5.47:1 | ✅ Texto normal AA |
+| `brand-slate` sobre `brand-white` | 5.00:1 | ✅ Texto normal AA |
+| `brand-slate-fill` sobre `brand-white` | 8.51:1 | ✅ Texto normal (AA y AAA) |
 
 **Regla de uso derivada:** `brand-sky` nunca lleva texto/iconos blancos
 encima salvo el logotipo (WCAG exime explícitamente a logotipos del
@@ -234,6 +240,27 @@ formaliza como regla de color, no solo de componente.
 Los colores de entidad de negocio (escuela, actividad…) **siguen sin
 tocar** — convención #2 de `CLAUDE.md`, se leen de su propia tabla, esto
 no cambia con el rediseño.
+
+### 3.5 Colores de marca por tipo de movimiento (Curso/Comisión/Ajuste)
+
+Añadido 2026-09-07, pedido explícito: "define colores de marca para
+cursos, comisiones y ajustes por si hacemos campañas particulares haya
+colores identificativos y de marca". Fuente única de verdad:
+`MOVEMENT_TYPE_META` (`shared.jsx`).
+
+| Token | Hex | Tipo | Nota |
+|---|---|---|---|
+| `teal` (ya existente) | `#0F766E` | Curso | Sin cambios — ya era un color de marca dedicado |
+| `brand-gold` | `#8C6118` | Comisión | Antes usaba `warning`/SUN (§3.4) — un semántico de ESTADO, no de tipo. Rompía la propia regla de separación marca/estado de arriba; corregido con un color dedicado |
+| `brand-slate` | `#5B7286` | Ajuste (badge/icono fijo) | Solo para la identidad visual del TIPO (badge, pestaña de selección). El **importe** de un Ajuste sigue coloreándose por signo (`danger`/`success`), eso no cambia — ver `rowAccent`/`formAccentColor` |
+| `brand-slate-fill` | `#3A4F60` | Ajuste (relleno sólido) | Escalón más oscuro de `brand-slate`, para superficies con texto blanco encima (botón activo, tarjeta de total) donde `brand-slate` no da contraste suficiente |
+
+**Por qué no reutilizar los semánticos de estado para esto:** un tipo de
+movimiento (qué clase de dinero es) y un estado (en qué situación está
+ese dinero — pendiente, pagado...) son preguntas distintas sobre el
+mismo apunte; pintarlos con el mismo color mezclaría las dos preguntas
+en una — exactamente lo que la regla de separación marca/estado de
+arriba ya prohíbe, aplicada ahora también a "tipo" además de a "marca".
 
 ## 4. Espaciado, radio y elevación
 

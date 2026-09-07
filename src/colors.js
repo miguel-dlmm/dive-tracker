@@ -40,6 +40,37 @@ export const BRAND_NAVY = "#063256";
 export const BRAND_SKY = "#8AACCE";
 export const BRAND_INK = "#191919";
 
+// Más tonos azules de marca (2026-09-07, pedido explícito) — completan la
+// rampa entre BRAND_NAVY (el más oscuro) y BRAND_SKY (el más claro) para
+// material de campaña/redes que necesite un azul intermedio o un fondo
+// muy suave, sin tener que recurrir a un azul genérico fuera de la
+// paleta. Mismo rigor que el resto de §3 de docs/DESIGN-SYSTEM.md:
+// contraste verificado, no solo elegido a ojo — BRAND_OCEAN da 5.95:1
+// sobre blanco (AA para texto normal).
+export const BRAND_OCEAN = "#146A96";
+export const BRAND_FOAM = "#EAF2F8";
+
+// Colores de marca por tipo de movimiento (Curso/Comisión/Ajuste),
+// 2026-09-07 — pedido explícito: "define colores de marca para cursos,
+// comisiones y ajustes por si hacemos campañas particulares". Curso ya
+// tenía uno (TEAL, arriba) desde antes; Comisión usaba SUN (un color
+// SEMÁNTICO DE ESTADO — "pendiente/atención", ver §3.4 de
+// docs/DESIGN-SYSTEM.md), lo que en realidad rompía la propia "regla de
+// separación marca/estado" que ese documento define — un tipo de
+// movimiento no es un estado. BRAND_GOLD/BRAND_SLATE son colores nuevos,
+// dedicados, que no comparten vocabulario con ningún semántico de estado
+// (CORAL/SUN/GREEN) ni con los de identidad de la app (BRAND_NAVY/
+// BRAND_SKY/BRAND_OCEAN). Contraste verificado sobre blanco: BRAND_GOLD
+// 5.47:1 (igual que TEAL, misma "categoría de peso" visual entre los
+// tres tipos), BRAND_SLATE 5.00:1 — ambos AA para texto normal.
+// BRAND_SLATE_FILL: variante más oscura de BRAND_SLATE (8.51:1), para
+// puntos/rellenos sólidos que necesitan más contraste que un icono
+// pequeño — mismo patrón de "un tono más oscuro de la misma familia
+// para relleno" que ya usaba AJUSTE_FILL en SummaryTab.jsx.
+export const BRAND_GOLD = "#8C6118";
+export const BRAND_SLATE = "#5B7286";
+export const BRAND_SLATE_FILL = "#3A4F60";
+
 // Paleta curada compartida por dos selectores de color distintos —
 // entidad de negocio (escuela/curso, ColorSwatchPicker en shared.jsx) y
 // avatar de perfil (avatarCatalog.js) — 2026-09-07. Vive aquí, no en
@@ -49,11 +80,12 @@ export const BRAND_INK = "#191919";
 // avatar integren con la paleta de la app", pedido explícito) — ponerla
 // en shared.jsx recrearía el ciclo de imports que este archivo existe
 // para evitar. Evita deliberadamente los 3 colores semánticos de estado
-// (CORAL/SUN/GREEN, "esto es un estado"), los 2 de marca (BRAND_NAVY/
-// BRAND_SKY, "esto es la propia app") y el TEAL de "Curso" en
-// MOVEMENT_TYPE_META ("esto es un tipo de movimiento") — ninguno de los
-// tres vocabularios de color ya existentes se pisa. Incluye negro y
-// blanco a petición expresa del usuario.
+// (CORAL/SUN/GREEN, "esto es un estado"), los de identidad de marca
+// (BRAND_NAVY/BRAND_SKY/BRAND_OCEAN, "esto es la propia app") y los de
+// tipo de movimiento en MOVEMENT_TYPE_META — TEAL/BRAND_GOLD/BRAND_SLATE
+// ("esto es Curso/Comisión/Ajuste") — ninguno de estos vocabularios de
+// color ya existentes se pisa. Incluye negro y blanco a petición expresa
+// del usuario.
 export const ENTITY_COLOR_PALETTE = [
   "#000000", "#FFFFFF", "#475569", "#DC2626", "#EA580C", "#D97706",
   "#16A34A", "#0891B2", "#0284C7", "#4F46E5", "#9333EA", "#DB2777",

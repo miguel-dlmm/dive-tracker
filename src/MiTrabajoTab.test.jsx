@@ -34,6 +34,22 @@ describe("KPIs de Mi trabajo — la cifra nunca se parte en dos líneas (ni trun
   });
 });
 
+// Pedido explícito (2026-09-07): "y si añadimos el icono del kpi al
+// lado del texto?" — icono FIJO junto a la etiqueta ("Generado"/
+// "Pendiente"/"Cobrado"), distinto del icono de arriba (junto a la
+// cifra) que sí puede encogerse/ocultarse del todo — este nunca se
+// oculta, sirve de ancla de identidad de color del KPI.
+describe("KPIs de Mi trabajo — icono fijo junto a la etiqueta", () => {
+  it("cada etiqueta de KPI lleva su propio icono junto al texto, que nunca se oculta", () => {
+    renderMiTrabajo({
+      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" }],
+    });
+    const label = screen.getByText("Pendiente de cobrar");
+    const labelRow = label.closest("span");
+    expect(labelRow.querySelector("svg")).toBeTruthy();
+  });
+});
+
 // Sustituye el umbral de caracteres de kpiIconTierFor (retirado) por una
 // MEDICIÓN real: si la cifra ya renderizada se sale de su propio ancho
 // (scrollWidth > clientWidth), se oculta el icono en las 3 tarjetas a la

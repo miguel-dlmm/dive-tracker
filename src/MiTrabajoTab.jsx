@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "re
 import { useTranslation } from "react-i18next";
 import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2, HelpCircle, Users } from "lucide-react";
 import { motion } from "motion/react";
-import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./App";
+import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY, BRAND_GOLD } from "./App";
 import {
   Money, formatMoney, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
   isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab, EntryTitle,
@@ -64,7 +64,9 @@ function actionLabel(entry, isPending, t) {
 // que ya usan los KPI y los campos de fecha de esta ronda de rediseño.
 function rowAccent(entry, amountColor) {
   if (entry._source === "ganado") return TEAL;
-  if (entry._source === "comision") return SUN;
+  // BRAND_GOLD (2026-09-07), no SUN — ver MOVEMENT_TYPE_META (shared.jsx):
+  // SUN es un semántico de estado, no el color de marca de "Comisión".
+  if (entry._source === "comision") return BRAND_GOLD;
   return amountColor;
 }
 
@@ -429,7 +431,19 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
           {finalText}
         </span>
       </div>
-      <span className="flex items-center gap-0.5 text-[11px] font-medium leading-tight text-gray-500">
+      {/* Icono fijo junto a la etiqueta (2026-09-07, pedido explícito:
+          "y si añadimos el icono del kpi al lado del texto?") — a
+          diferencia del icono de arriba (junto a la cifra, iconScale
+          0-1, puede llegar a ocultarse del todo si el número es muy
+          largo), este nunca se encoge ni se oculta: la etiqueta tiene
+          ancho fijo y corto, así que no compite nunca por espacio con
+          el número. Sirve de ancla — la identidad de color del KPI
+          sigue visible aunque el de arriba haya desaparecido.
+          size 10 (no 16, el de arriba): junto a texto de 11px, no junto
+          a una cifra grande — aria-hidden porque la propia etiqueta ya
+          nombra el KPI, es puramente decorativo. */}
+      <span className="flex items-center gap-1 text-[11px] font-medium leading-tight text-gray-500">
+        <Icon size={10} style={{ color }} aria-hidden="true" />
         {label}
         {tooltip && (
           // Mismo truco de objetivo táctil que Field: el icono visual se

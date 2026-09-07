@@ -9,7 +9,7 @@ import { ToastProvider, AppLoading, useScrolled, Avatar, ErrorBoundary } from ".
 import { resolveAvatar } from "./avatarCatalog";
 import EnvironmentIndicator from "./EnvironmentIndicator";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
-import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG, BRAND_NAVY, BRAND_SKY, BRAND_INK } from "./colors";
+import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG, BRAND_NAVY, BRAND_SKY, BRAND_INK, BRAND_OCEAN, BRAND_FOAM, BRAND_GOLD, BRAND_SLATE, BRAND_SLATE_FILL } from "./colors";
 import LoginScreen from "./LoginScreen";
 import ForgotPasswordScreen from "./ForgotPasswordScreen";
 import ResetPasswordScreen from "./ResetPasswordScreen";
@@ -45,7 +45,7 @@ import i18n, { setStoredLanguage } from "./i18n";
 // arriba junto al resto). Se re-exportan aquí para que el resto de la app
 // siga importando "./App" como siempre, sin tocar ningún import existente.
 // ---------------------------------------------------------------
-export { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG, BRAND_NAVY, BRAND_SKY, BRAND_INK };
+export { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG, BRAND_NAVY, BRAND_SKY, BRAND_INK, BRAND_OCEAN, BRAND_FOAM, BRAND_GOLD, BRAND_SLATE, BRAND_SLATE_FILL };
 
 export const DISPLAY_FONT = "'Inter', sans-serif";
 export const BODY_FONT = "'Inter', sans-serif";
