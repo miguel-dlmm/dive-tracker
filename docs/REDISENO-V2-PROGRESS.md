@@ -1992,3 +1992,32 @@ mano en el navegador (recarga completa, vista previa de "Icono de
 carga" en Configuración → Ajustes): las 3 peticiones de red a los SVG
 devuelven 200, y visualmente el aro se ve sólido y fijo mientras la
 ola aparece y desaparece por debajo.
+
+### 9.11 — Training Records: "Descargar todo" genera un único ZIP, no N descargas sueltas
+
+Petición del usuario: "cuando le de a descargar todos bien foto o pdf
+debería de descargar un fichero comprimido con todos los archivos."
+
+Antes, `downloadAllAs` (`TrainingRecordsTab.jsx`) descargaba un fichero
+por alumno, uno detrás de otro con una pausa de 200ms entre cada uno
+(varias descargas simultáneas se bloquean en algunos navegadores) — con
+una clase de 20-30 alumnos, eso eran 20-30 avisos de descarga que el
+usuario tenía que ir aceptando a mano. Se añade **`fflate`** (~8kB, sin
+dependencias — dependencia nueva, ver `package.json`) para empaquetar
+todos los PDF/JPG generados en memoria en un único ZIP con `zipSync`,
+y una sola llamada a `downloadBytes` al final (mismo mecanismo ya
+probado en Safari iOS que usan `downloadPdf`/`downloadJpg`: revocar el
+`blob:` URL con retraso). Nueva `uniqueZipFilename()` evita que dos
+alumnos con nombre y apellidos idénticos se pisen dentro del ZIP (antes
+eran descargas sueltas y el propio navegador añadía "(1)" al segundo
+fichero sin que hiciera falta nada en el código).
+
+**Verificación**: nuevo test en `TrainingRecordsTab.test.jsx` (genera
+2 alumnos, pulsa "Descargar todo en PDF", comprueba que
+`URL.createObjectURL` se llama exactamente 1 vez con un Blob
+`application/zip`). 784/784 tests, lint sin errores nuevos, build
+correcto. Comprobado también a mano en el navegador real (plantilla
+Basic Diver, 2 alumnos): el ZIP se descargó de verdad
+(`~/Downloads/Basic_Diver.zip`) y, al abrirlo con `unzip -l`, contenía
+los 2 PDF con nombres correctos (`Ana_Garcia_BD.pdf`,
+`Luis_Perez_BD.pdf`).

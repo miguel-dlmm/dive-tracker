@@ -166,6 +166,30 @@ it("configura una vez para todo el listado, añade 2 alumnos y genera los 2 docu
   expect(screen.getByRole("button", { name: "Descargar todo en PDF" })).toBeInTheDocument();
 }, 15000);
 
+// Pedido explícito del usuario (2026-09-07): "debería de descargar un
+// fichero comprimido con todos los archivos" — antes eran 2 descargas
+// sueltas (una por alumno). Ahora debe ser UNA sola descarga, de un
+// Blob application/zip, con los 2 documentos dentro (no se
+// descomprime el ZIP aquí para comprobar el contenido byte a byte —
+// eso ya lo cubre fflate, una librería de terceros; solo interesa que
+// la pantalla arme y descargue exactamente un ZIP).
+it("'Descargar todo en PDF' genera un único ZIP, no una descarga por alumno", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  await addStudent(user, { firstName: "Luis", lastName: "Perez" });
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(2));
+
+  await user.click(screen.getByRole("button", { name: "Descargar todo en PDF" }));
+
+  await waitFor(() => expect(globalThis.URL.createObjectURL).toHaveBeenCalledTimes(1));
+  const [blob] = globalThis.URL.createObjectURL.mock.calls[0];
+  expect(blob.type).toBe("application/zip");
+  expect(await screen.findByText("Comprimido descargado con todos los archivos.")).toBeInTheDocument();
+}, 15000);
+
 it("no genera si falta la configuración compartida o los datos de algún alumno, y lo dice en un solo aviso", async () => {
   const user = userEvent.setup();
   renderTab();

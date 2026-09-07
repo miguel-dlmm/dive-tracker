@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { zipSync } from "fflate";
 import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2, Info } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { useToast, RowMenu, DatePicker, Select, ConfirmDialog } from "../shared";
@@ -111,6 +112,24 @@ function safeFilePart(text) {
 }
 function filenameFor(student, templateCode, ext = "pdf") {
   return `${safeFilePart(student.firstName)}_${safeFilePart(student.lastName)}_${templateCode}.${ext}`;
+}
+
+// Dos alumnos con el mismo nombre y apellidos generan el mismo
+// filenameFor(...) — antes eran descargas sueltas, así que el propio
+// navegador añadía "(1)" al segundo fichero sin que el código tuviera que
+// hacer nada. Empaquetado en un único ZIP (ver downloadAllAs más abajo),
+// una colisión de nombre pisaría de verdad el primer archivo dentro del
+// ZIP — esta función numera el segundo/tercer... duplicado a mano.
+function uniqueZipFilename(name, usedNames) {
+  if (!usedNames.has(name)) { usedNames.add(name); return name; }
+  const dot = name.lastIndexOf(".");
+  const base = dot === -1 ? name : name.slice(0, dot);
+  const ext = dot === -1 ? "" : name.slice(dot);
+  let n = 2;
+  let candidate = `${base}_${n}${ext}`;
+  while (usedNames.has(candidate)) { n += 1; candidate = `${base}_${n}${ext}`; }
+  usedNames.add(candidate);
+  return candidate;
 }
 
 function canShareFiles(files) {
@@ -547,16 +566,37 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     }
   };
 
+  // Antes: N descargas sueltas, una por alumno, con una pausa de 200ms
+  // entre cada una (varias descargas simultáneas se bloquean en algunos
+  // navegadores) — el propio usuario tenía que ir aceptando cada fichero
+  // uno a uno. Pedido explícito (2026-09-07): "debería de descargar un
+  // fichero comprimido con todos los archivos". Se genera cada PDF/JPG en
+  // memoria igual que antes (secuencial: cada JPG depende de renderizar
+  // su PDF, sin independencia real que paralelizar) pero en vez de
+  // descargarlo, se añade a un ZIP con fflate (~8kB, sin dependencias) —
+  // una única descarga al final con downloadBytes, mismo mecanismo ya
+  // probado en Safari iOS (revocar el blob: URL con retraso) que
+  // downloadPdf/downloadJpg.
   const downloadAllAs = async (format) => {
     setBatchWorking(true);
     try {
+      const files = {};
+      const usedNames = new Set();
       for (const student of generatedStudents) {
-        // Descargas secuenciales a propósito: varias descargas simultáneas
-        // se bloquean en algunos navegadores.
-        if (format === "pdf") downloadPdf(student);
-        else await downloadJpg(student);
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        if (format === "pdf") {
+          files[uniqueZipFilename(filenameFor(student, templateCode), usedNames)] = student.pdfBytes;
+        } else {
+          const { renderPdfToJpgBytes } = await import("./pdfToJpg");
+          const jpgBytes = await renderPdfToJpgBytes(student.pdfBytes);
+          files[uniqueZipFilename(filenameFor(student, templateCode, "jpg"), usedNames)] = jpgBytes;
+        }
       }
+      const zipped = zipSync(files);
+      downloadBytes(zipped, `${safeFilePart(templateMap?.name || templateCode)}.zip`, "application/zip");
+      toast?.success(t("roster.zipDescargado"));
+    } catch (err) {
+      console.error(err);
+      toast?.error(t("roster.noSePudoDescargarZip"));
     } finally {
       setBatchWorking(false);
     }

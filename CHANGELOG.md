@@ -25,6 +25,9 @@ Registro de cambios relevantes de Ocean Flow.
 - El selector de fecha (usado en Mi trabajo, Comisiones, Pagos,
   Training Records...) ya ofrece accesos rápidos a ayer y mañana,
   además de hoy y antes de ayer, no solo hoy.
+- Training Records: "Descargar todo en PDF/JPG" ya descarga un único
+  fichero ZIP con todos los documentos, en vez de una descarga por
+  alumno una detrás de otra.
 
 ### Changed
 - **Icono de carga (logo)**: ahora solo la parte que parece una ola sube

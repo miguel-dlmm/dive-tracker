@@ -29,7 +29,9 @@
     "enLoteCount_other": "{{count}} documentos",
     "descargarTodoPdf": "Descargar todo en PDF",
     "descargarTodoJpg": "Descargar todo en JPG",
-    "compartirTodo": "Compartir todo"
+    "compartirTodo": "Compartir todo",
+    "zipDescargado": "Comprimido descargado con todos los archivos.",
+    "noSePudoDescargarZip": "No se pudo generar el comprimido. Inténtalo de nuevo."
   },
   "studentForm": {
     "nuevoAlumno": "Nuevo alumno",

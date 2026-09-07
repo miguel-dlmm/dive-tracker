@@ -29,7 +29,9 @@
     "enLoteCount_other": "{{count}} documents",
     "descargarTodoPdf": "Download all as PDF",
     "descargarTodoJpg": "Download all as JPG",
-    "compartirTodo": "Share all"
+    "compartirTodo": "Share all",
+    "zipDescargado": "ZIP file downloaded with all files.",
+    "noSePudoDescargarZip": "Couldn't create the ZIP file. Please try again."
   },
   "studentForm": {
     "nuevoAlumno": "New student",
