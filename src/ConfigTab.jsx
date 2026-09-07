@@ -4,7 +4,7 @@ import { motion, useAnimationControls } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
   ChevronRight, Building2, GraduationCap, Coins,
-  Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2,
+  Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2, HelpCircle,
 } from "lucide-react";
 import { GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
 import { ENTITY_COLOR_PALETTE } from "./colors";
@@ -445,18 +445,62 @@ const STATUS_META = {
 // "mostrar estado" de "cambiar estado" es justo lo que permite que la
 // lista (donde nunca hay acción) y el detalle (donde sí la hay, junto al
 // switch) reutilicen la misma pieza sin condicionales de por medio.
-// Punto de color delante del texto (feedback explícito 2026-08-30: "quiero
-// que se entienda de un vistazo, sin obligar a leer demasiado") — el texto
-// se mantiene (nunca solo color, que no llega a quien no distingue bien
-// los colores ni a un lector de pantalla), el punto es el atajo visual.
+//
+// Solo el punto de color, sin la palabra visible (Fase 8, 2026-09-07,
+// pedido explícito: "quita la palabra del estado y deja solo el código
+// de color"). Esto revierte a propósito la mitad de una decisión previa
+// (2026-08-30: "el texto se mantiene, nunca solo color, que no llega a
+// quien no distingue bien los colores ni a un lector de pantalla, el
+// punto es el atajo visual") — el texto sigue existiendo para lectores
+// de pantalla (`sr-only`, nunca se quita del DOM/accesible), pero deja
+// de ocupar espacio visual en la fila. Para una persona que ve bien el
+// color pero no distingue verde/ámbar/gris entre sí, la leyenda con
+// StatusLegendButton (más abajo, en la cabecera del listado) es la
+// mitigación explícita que pidió el propio usuario ("puedes añadir un
+// tooltip para explicar la leyenda") — no es tan inmediato como el texto
+// en cada fila, es la decisión consciente de este cambio.
 function StatusBadge({ status }) {
   const { t } = useTranslation("config");
   const meta = STATUS_META[status] || STATUS_META.desactivado;
   return (
-    <span className={`inline-flex min-h-6 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.cls}`}>
-      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: meta.dot }} aria-hidden="true" />
-      {t(`userStatus.${status in STATUS_META ? status : "desactivado"}`)}
+    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center" role="img" aria-label={t(`userStatus.${status in STATUS_META ? status : "desactivado"}`)}>
+      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: meta.dot }} aria-hidden="true" />
     </span>
+  );
+}
+
+// Leyenda de colores del estado — botón "?" que abre un panel flotante
+// con los 3 colores + su significado (mismo patrón que el tooltip de
+// "Pendiente de cobrar" en MiTrabajoTab.jsx: useFloatingDropdown +
+// FloatingPanel, no un <title> nativo, que no funciona al tacto en
+// móvil). Vive en la cabecera del listado de usuarios, no en cada fila
+// — se consulta una vez, no en cada fila del listado.
+function StatusLegendButton() {
+  const { t } = useTranslation("config");
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown("right");
+  return (
+    <div className="relative">
+      <button
+        ref={anchorRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-label={t("usersDirectory.leyendaEstadoAria")}
+        className="-m-2 flex h-11 w-11 shrink-0 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
+      >
+        <HelpCircle size={18} aria-hidden="true" />
+      </button>
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align="right" role="dialog" aria-label={t("usersDirectory.leyendaEstadoAria")} className="w-56 p-3">
+        <ul className="space-y-2">
+          {Object.entries(STATUS_META).map(([key, meta]) => (
+            <li key={key} className="flex items-center gap-2 text-xs text-gray-600">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: meta.dot }} aria-hidden="true" />
+              {t(`userStatus.${key}`)}
+            </li>
+          ))}
+        </ul>
+      </FloatingPanel>
+    </div>
   );
 }
 
@@ -1478,6 +1522,7 @@ function UsersDirectory({ profile }) {
             className={`${inputCls} w-full min-w-[9rem] pl-8`}
           />
         </div>
+        <StatusLegendButton />
         {/* Solo superadmin: los admins normales solo tienen acceso de lectura al directorio. */}
         {profile?.is_superadmin && (
           <button

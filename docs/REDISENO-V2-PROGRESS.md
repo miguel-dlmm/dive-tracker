@@ -1634,3 +1634,57 @@ menú de Configuración, no Tarifas (el bug reportado, confirmado
 corregido); (2) Configuración → Tarifas → recargar la página: sigue
 mostrando Tarifas directamente (el comportamiento del 2026-08-30, sin
 regresión).
+
+## Fase 9 — Lote grande post-Fase 8, trabajo autónomo (2026-09-07)
+
+El usuario se ausenta y pide trabajar en lote sin esperar confirmación
+de commit/push (aviso explícito, ver también la instrucción permanente
+de `deployment-notice-after-commits`). Un encargo grande de perfil de
+usuario/email queda con su propio plan de migración pendiente de
+presentar antes de implementarse (cambios de auth/esquema, regla de
+`CLAUDE.md`) — el resto de ítems se ejecutan y despliegan sin pausa.
+
+### 9.1 — Config/Usuario: estado solo por color, con leyenda accesible
+
+Pedido explícito: "en configuración, usuario, quita la palabra del
+estado y deja solo el código de color, puedes añadir en algún punto un
+tooltip para explicar la leyenda".
+
+**Tensión real con una decisión previa, señalada, no ignorada**: el
+propio `StatusBadge` (`ConfigTab.jsx`) documentaba desde el 2026-08-30
+un motivo explícito para mantener el texto visible junto al punto de
+color: "no llega a quien no distingue bien los colores ni a un lector
+de pantalla". Quitar el texto del todo revierte esa decisión de
+accesibilidad a propósito — mitigado, no ignorado: el texto real del
+estado se conserva como `aria-label`/`sr-only` (nunca desaparece del
+árbol de accesibilidad, un lector de pantalla lo sigue anunciando igual
+que antes) y se añade `StatusLegendButton`, un botón "?" en la cabecera
+del listado de Usuarios que abre un panel con los 3 colores y su
+significado (mismo patrón de `useFloatingDropdown`+`FloatingPanel` que
+el tooltip de "Pendiente de cobrar" en `MiTrabajoTab.jsx` — nunca un
+`title` nativo, que no funciona al tacto en móvil). Trade-off residual,
+dicho con honestidad: para una persona que ve el color pero no
+distingue verde/ámbar/gris entre sí, la leyenda es menos inmediata que
+tener el texto en cada fila — es la decisión consciente de este
+cambio, no un error por no haberlo pensado.
+
+Afecta a las dos únicas instancias de `StatusBadge` (fila del listado y
+hoja de detalle) — un único componente, ambas se benefician igual sin
+condicionales.
+
+Tests actualizados (`ConfigTab.test.jsx`): 8 aserciones que buscaban el
+texto visible ("Activo"/"Pendiente") pasan a buscar por rol accesible
+(`getByRole("img", { name: ... })`, ya que el texto ahora vive en
+`aria-label`, no como nodo de texto); el test que comprobaba "el estado
+va antes que el nickname en la fila" (comparando índices dentro de
+`textContent`, que ya no contiene la palabra) se reescribe comparando
+la posición real en el DOM (`compareDocumentPosition`) en vez del
+índice en el texto plano.
+
+**Verificación**: 764/764 tests, lint 0 errores, build correcto. Sin
+comprobación visual en navegador — la cuenta de desarrollo (`demo`, dev
+bypass) no tiene rol admin, así que la sección "Usuarios" no es
+accesible desde aquí; confianza puesta en los 39/39 tests de
+`ConfigTab.test.jsx` (que sí cubren esta pantalla con un perfil admin
+simulado) y en la reutilización de un patrón de tooltip ya verificado
+visualmente en otra pantalla de la misma app (Mi trabajo, Fase 7).

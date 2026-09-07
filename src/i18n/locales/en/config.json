@@ -148,6 +148,7 @@
   "usersDirectory": {
     "buscarPlaceholder": "Search...",
     "buscarAria": "Search users",
+    "leyendaEstadoAria": "What each status color means",
     "crearUsuario": "Create user",
     "noSePudoCargarListado": "Couldn't load the user list.",
     "errorDesconocido": "Unknown error",

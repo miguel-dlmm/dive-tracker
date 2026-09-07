@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConfigTab from "./ConfigTab";
 
@@ -336,7 +336,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
     await openUsuarios(user);
 
-    await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
   });
 
   // Pedido explícito del usuario (job nocturno, Bloque 4): la fila mostraba
@@ -375,7 +375,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
     await openUsuarios(user);
 
-    await waitFor(() => expect(screen.getByText("Pendiente")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Pendiente" })).toBeInTheDocument());
   });
 
   it("cuenta desactivada con deactivated_at registrado: la fila muestra la fecha real de baja", async () => {
@@ -409,7 +409,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: {} }) }); // list-user-status tras reload
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("switch", { name: "Desactivar usuario" })).toBeInTheDocument());
@@ -433,7 +433,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Pendiente")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Pendiente" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar enlace" })).toBeInTheDocument());
@@ -473,7 +473,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Pendiente")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Pendiente" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar enlace" })).toBeInTheDocument());
@@ -494,7 +494,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar contraseña" })).toBeInTheDocument());
@@ -515,7 +515,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar contraseña" })).toBeInTheDocument());
@@ -535,7 +535,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) });
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Eliminar usuario" })).toBeInTheDocument());
@@ -718,11 +718,15 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       const user = userEvent.setup();
       await openUsuarios(user);
 
+      // El estado ya no es texto visible en la fila (Fase 8, 2026-09-07:
+      // solo el punto de color, el texto sigue existiendo como
+      // aria-label para lectores de pantalla) — el orden se comprueba
+      // por posición real en el DOM, no por índice en el texto plano de
+      // la fila.
       const row = screen.getByText("ana").closest("button");
-      const statusIndex = row.textContent.indexOf("Activo");
-      const nameIndex = row.textContent.indexOf("ana");
-      expect(statusIndex).toBeGreaterThanOrEqual(0);
-      expect(statusIndex).toBeLessThan(nameIndex);
+      const statusEl = within(row).getByRole("img", { name: "Activo" });
+      const nameEl = within(row).getByText("ana");
+      expect(statusEl.compareDocumentPosition(nameEl) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
     it("un usuario normal activo no lleva icono de rol", async () => {

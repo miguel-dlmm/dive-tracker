@@ -160,6 +160,9 @@ Registro de cambios relevantes de Ocean Flow.
   (p. ej. Tarifas) en vez del menú, si se había salido de Configuración
   tocando directamente Home/Mi trabajo/Resumen — ya abre siempre el
   menú, salvo al recargar la página dentro de una sección.
+- Configuración → Usuarios: el estado de una cuenta se reconoce ahora
+  solo por el color (con un botón de ayuda que explica la leyenda) en
+  vez de un texto junto al punto de color.
 - (Interno) Los emails transaccionales (alta, recuperación de
   contraseña, aviso de despliegue) seguían con los colores de marca
   previos al rebrand — ahora usan el mismo azul marino que el resto de
