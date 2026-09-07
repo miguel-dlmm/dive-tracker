@@ -183,6 +183,28 @@ describe("PaymentsTab — liquidación agrupada por escuela", () => {
     expect(screen.queryByText("Aquatic Adventures")).not.toBeInTheDocument();
   });
 
+  it("DatePicker: los 4 accesos rápidos (antes de ayer/ayer/hoy/mañana) eligen la fecha correcta relativa al reloj congelado (15 de agosto de 2026)", async () => {
+    const user = userEvent.setup();
+    renderPayments(twoSchoolDataset());
+    const [desde] = screen.getAllByLabelText("Sin límite");
+
+    await user.click(desde);
+    await user.click(screen.getByRole("button", { name: "Antes de ayer" }));
+    expect(screen.getByText("13/08/2026")).toBeInTheDocument();
+
+    await user.click(screen.getByText("13/08/2026"));
+    await user.click(screen.getByRole("button", { name: "Ayer" }));
+    expect(screen.getByText("14/08/2026")).toBeInTheDocument();
+
+    await user.click(screen.getByText("14/08/2026"));
+    await user.click(screen.getByRole("button", { name: "Hoy" }));
+    expect(screen.getByText("15/08/2026")).toBeInTheDocument();
+
+    await user.click(screen.getByText("15/08/2026"));
+    await user.click(screen.getByRole("button", { name: "Mañana" }));
+    expect(screen.getByText("16/08/2026")).toBeInTheDocument();
+  });
+
   it("sin nada pendiente, muestra el estado vacío", () => {
     renderPayments({});
     expect(screen.getByText("Estás al día — nada pendiente de cobrar.")).toBeInTheDocument();

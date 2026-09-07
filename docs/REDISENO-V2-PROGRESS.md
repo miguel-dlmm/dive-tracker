@@ -1901,6 +1901,33 @@ funcionar tras este cambio, haría falta una captura de consola real de
 Safari (como ya se consiguió para el bug de JPG) para diagnosticar la
 causa de verdad.
 
+### 9.8 — DatePicker: accesos rápidos ayer/mañana/antes de ayer, junto a "Hoy"
+
+Petición del usuario sobre el selector de fecha de Training Records:
+"añade al datepicker de TR los días hoy, ayer, mañana y antes de ayer
+como accesos rápidos encima del calendario. ahora solo sale hoy". El
+`DatePicker` de TR es el mismo componente compartido (`shared.jsx`) que
+usa el resto de la app (Mi trabajo, Comisiones, Pagos...), así que el
+cambio se hace una vez en el componente y llega a todos sus usos por
+igual — mismo criterio de reutilización de siempre (convención 3 de
+CLAUDE.md), no una versión aparte solo para TR.
+
+El único botón "Hoy" se sustituye por una rejilla 2×2 (antes de
+ayer/ayer/hoy/mañana): una fila de 4 píldoras no cabía sin truncar
+"Antes de ayer" en el ancho fijo del panel (`w-72`). Un único
+`selectQuick(offsetDays)` reutiliza `addDays`/`todayStr` (ya existían
+para los presets de `DateRangePicker`, en el mismo archivo) en vez de
+un cálculo de fecha suelto por botón.
+
+**Verificación**: nuevo test en `PaymentsTab.test.jsx` (reutiliza el
+patrón ya existente de reloj congelado en 15 de agosto de 2026) que
+comprueba los 4 accesos uno a uno contra la fecha esperada. 780/780
+tests, lint sin errores nuevos, build correcto. Comprobado también a
+mano en el navegador, en el flujo real de TR (Training Records →
+plantilla → campo "Fecha" de "Sesiones Académicas"): la rejilla se ve
+completa y legible, y pulsar "Ayer" con la fecha real del sistema
+(2026-09-07) rellena correctamente "06/09/2026".
+
 **Verificación**: 779/779 tests, lint 0 errores nuevos (mismos 10
 avisos preexistentes de siempre, ninguno en `shared.jsx`), build
 correcto. Comprobación visual en Chromium local completada esta vez de

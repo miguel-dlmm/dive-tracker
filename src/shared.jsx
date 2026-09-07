@@ -655,11 +655,15 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "l
     onChange(`${viewY}-${pad2(viewM + 1)}-${pad2(d)}`);
     setOpen(false);
   };
-  // Aparte de selectDay: usa el año/mes REALES de hoy, no viewY/viewM —
-  // si el usuario ya navegó a otro mes, selectDay(today.getDate())
-  // seleccionaría ese día en el mes que se está viendo, no en el de hoy.
-  const selectToday = () => {
-    onChange(`${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`);
+  // Accesos rápidos (feedback 2026-09-07: "añade... los días hoy, ayer,
+  // mañana y antes de ayer... ahora solo sale hoy") — un único offset en
+  // días respecto a hoy, usando `addDays`/`todayStr` (ya existían para
+  // los presets de DateRangePicker, más abajo en este mismo archivo;
+  // declaraciones `function` con hoisting, por eso se pueden usar aquí
+  // aunque su definición textual quede después) en vez de un cálculo de
+  // fecha aparte por cada botón.
+  const selectQuick = (offsetDays) => {
+    onChange(addDays(todayStr(), offsetDays));
     setOpen(false);
   };
   const goPrev = () => { if (viewM === 0) { setViewM(11); setViewY(viewY - 1); } else setViewM(viewM - 1); };
@@ -693,22 +697,33 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "l
         <span className={`min-w-0 flex-1 truncate ${parsed ? "text-gray-800" : "text-gray-400"}`}>{display}</span>
       </button>
       <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align={align} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-72 rounded-xl p-3">
-        {/* Acceso directo a "Hoy" — el caso más común con diferencia (una
-            fecha de curso casi siempre es la de hoy o un día muy reciente),
-            un toque en vez de navegar el calendario. Vive en el componente
-            compartido, no en cada pantalla que lo usa. Píldora completa
-            (`rounded-full`) en vez de rectángulo — mismo lenguaje que
-            cualquier chip/acceso rápido de la app — y `min-h-11` en vez de
-            `min-h-9` (36px): quedaba por debajo del objetivo táctil mínimo
-            de 44px de la convención 7 de CLAUDE.md. */}
-        <button
-          type="button"
-          onClick={selectToday}
-          className="mb-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full text-sm font-semibold"
-          style={{ backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }}
-        >
-          {t("datePicker.today")}
-        </button>
+        {/* Accesos directos — el caso más común con diferencia (una fecha
+            de curso casi siempre es hoy o un día muy reciente), un toque
+            en vez de navegar el calendario. Antes solo "Hoy"; ampliado a
+            los 4 días más probables (ayer/hoy/mañana/antes de ayer) por
+            feedback explícito. Vive en el componente compartido, no en
+            cada pantalla que lo usa. Rejilla 2x2 en vez de una fila de 4
+            píldoras: "Antes de ayer" no cabría con las demás en el ancho
+            de w-72 sin truncar. `min-h-11`: objetivo táctil mínimo de
+            44px, convención 7 de CLAUDE.md. */}
+        <div className="mb-2 grid grid-cols-2 gap-1.5">
+          {[
+            { offset: -2, key: "dayBeforeYesterday" },
+            { offset: -1, key: "yesterday" },
+            { offset: 0, key: "today" },
+            { offset: 1, key: "tomorrow" },
+          ].map(({ offset, key }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => selectQuick(offset)}
+              className="flex min-h-11 items-center justify-center rounded-full px-1 text-xs font-semibold"
+              style={{ backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }}
+            >
+              {t(`datePicker.${key}`)}
+            </button>
+          ))}
+        </div>
         <div className="mb-2 flex items-center justify-between">
           <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
           <span className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{months[viewM]} {viewY}</span>

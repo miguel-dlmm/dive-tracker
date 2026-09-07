@@ -40,7 +40,10 @@
     "defaultAriaLabel": "Elegir fecha",
     "pickerAriaLabel": "Selector de fecha",
     "dayAriaLabel": "{{day}} de {{month}}",
-    "today": "Hoy"
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "tomorrow": "Mañana",
+    "dayBeforeYesterday": "Antes de ayer"
   },
   "dateRangePicker": {
     "from": "Desde",

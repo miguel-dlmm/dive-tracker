@@ -22,6 +22,9 @@ Registro de cambios relevantes de Ocean Flow.
 - Configuración → Usuarios: la hoja de detalle de un usuario muestra
   cuántos movimientos tiene dados de alta y cuándo fue su última
   actividad (crear, editar o eliminar un movimiento).
+- El selector de fecha (usado en Mi trabajo, Comisiones, Pagos,
+  Training Records...) ya ofrece accesos rápidos a ayer y mañana,
+  además de hoy y antes de ayer, no solo hoy.
 
 ### Changed
 - **Color de avatar**: la misma paleta curada de 12 colores que escuelas/
