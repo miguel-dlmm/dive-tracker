@@ -134,6 +134,13 @@ Registro de cambios relevantes de Ocean Flow.
   del día al tocarlo, siempre al instante — antes dependía de un tiempo
   variable (a veces varios segundos, a veces nada) según cuánto
   contenido tuviera el día.
+- El botón "Generar para todos los alumnos" de Training Records usaba un
+  verde genérico en vez del color real de la sección.
+- Perfil: fecha de nacimiento y país de residencia ahora van en la misma
+  línea, con el campo Profesional al final.
+- Config/Usuarios: la fila de una cuenta desactivada ahora se ve
+  claramente "apagada" (colores más tenues en toda la fila, no solo en
+  el punto de estado).
 - **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
   real** — "Setting up fake worker failed". Causa confirmada leyendo el
   código fuente de pdfjs-dist: en su modo de reserva "fake worker",

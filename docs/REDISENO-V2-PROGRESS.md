@@ -2433,3 +2433,65 @@ en la misma captura, sin ninguna espera. jsdom no implementa
 `scrollIntoView` (a diferencia de `scrollTo`, que sí existe ahí como
 no-op) — encadenado opcional (`?.`) añadido para que los tests no
 revienten. 786/786 tests, lint sin errores nuevos, build correcto.
+
+### 10.5 — Training Records: botón "Generar para todos" seguía en verde
+
+El botón usaba el `TEAL` genérico hardcodeado en vez del `accentColor`
+real de la sección (ya se le pasaba como prop desde `App.jsx` vía
+`sectionColor("trabajo")`, pero se ignoraba en este botón concreto).
+Confirmado con una consulta directa a `nav_sections` en Supabase que el
+color real de "trabajo" es navy (`#00335A`), no verde — era un bug de
+color hardcodeado, no un problema de datos/configuración. Arreglo:
+`style={{ backgroundColor: accentColor || TEAL }}` (línea 843 de
+`TrainingRecordsTab.jsx`), dejando TEAL solo como respaldo si
+`accentColor` no llegara. Añadida una prueba nueva que renderiza el
+componente con un `accentColor` distinto del TEAL por defecto y
+comprueba el `backgroundColor` real del botón, para que un futuro
+cambio no pueda volver a perder el uso de la prop sin que ningún test
+lo note. 9/9 tests de `TrainingRecordsTab.test.jsx`.
+
+### 10.6 — Perfil: fecha de nacimiento y país de residencia en la misma línea
+
+Pedido explícito del usuario tras ver el campo nuevo (Fase 9.16) en la
+pantalla real: en el formulario de edición, "fecha de nacimiento" y
+"país de residencia" pasan a ir en la misma línea (`grid grid-cols-2
+gap-2`), y el campo "Profesional" pasa a ir al final (antes iba justo
+después del nickname). Mismo orden aplicado a la vista de solo lectura.
+Cambio puramente de disposición, sin tocar validación ni el resto del
+flujo — ambos campos siguen opcionales. 32/32 tests de
+`ProfileTab.test.jsx`.
+
+### 10.7 — Config/Usuarios: fila de una cuenta desactivada, colores más apagados
+
+"la fila de usuarios desactivada tiene el gris muy claro, se diferencia
+poco, además querría q todos los colores q muestra sean mas apagados
+que los del resto de fila, que de la sensación de 'apagado'" — antes,
+una cuenta desactivada solo se distinguía por el punto de estado y la
+línea "Baja:"; nickname, nombre, icono de rol, fecha y flecha se veían
+exactamente igual que en una fila activa.
+
+Dos cambios en `ConfigTab.jsx`: (1) el color del punto de estado
+`desactivado` pasa de `#9CA3AF` (gray-400, el "gris muy claro" del
+reporte) a `#6B7280` (gray-500) — necesita partir de un tono algo más
+oscuro porque además va a quedar atenuado por el segundo cambio; (2) la
+fila entera (`UserListRow`) recibe `opacity-60` cuando
+`status === "desactivado"` — atenúa todos los elementos de la fila a la
+vez con un único ajuste, en vez de recolorear cada uno a mano, y se
+mantiene por encima del umbral de legibilidad.
+
+Añadidas 2 pruebas nuevas en `ConfigTab.test.jsx`: la fila de una cuenta
+desactivada lleva `opacity-60`, la de una cuenta activa no — sin esto,
+ningún test existente comprobaba el `className` de la fila. 41/41 tests
+de `ConfigTab.test.jsx`.
+
+### Cierre del lote 10.5–10.7
+
+789/789 tests (suite completa), lint sin errores nuevos (solo
+warnings preexistentes de `react-hooks/exhaustive-deps` en archivos no
+tocados por este lote), build correcto. Verificado en navegador
+(Chromium, `localhost`, cuenta demo) para 10.4; 10.5–10.7 son cambios
+de CSS/orden de campos de bajo riesgo, cubiertos por tests dirigidos —
+no se dispone de una cuenta superadmin en el navegador de pruebas de
+esta sesión para confirmar visualmente el efecto de `opacity-60` en
+Configuración → Usuarios, pendiente de que el usuario lo confirme en su
+propia sesión de superadmin.
