@@ -130,7 +130,7 @@ describe("datos personales", () => {
     await user.type(nickname, "adalovelace");
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null, instructor_initials: "AL" }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null, birth_date: null, country_of_residence: null, instructor_initials: "AL" }));
     expect(eq).toHaveBeenCalledWith("user_id", "u1");
     expect(onProfileUpdated).toHaveBeenCalled();
   });
@@ -146,7 +146,7 @@ describe("datos personales", () => {
     await user.type(nickname, "adalovelace");
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null, birth_date: null, country_of_residence: null }));
   });
 
   it("permite elegir el nivel profesional (Divemaster/Instructor) y lo guarda junto al resto de datos personales", async () => {
@@ -159,7 +159,42 @@ describe("datos personales", () => {
     await user.click(screen.getByRole("option", { name: "Divemaster" }));
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "ada", professional_level: "divemaster", instructor_initials: "AL" }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "ada", professional_level: "divemaster", birth_date: null, country_of_residence: null, instructor_initials: "AL" }));
+  });
+
+  it("muestra fecha de nacimiento y país de residencia en modo lectura, y '—' si no hay ninguno guardado", () => {
+    renderProfile({ profile: { ...PROFILE, birth_date: "1990-05-12", country_of_residence: "MX" } });
+
+    // Fecha esperada calculada con el mismo new Date(...).toLocaleDateString(...)
+    // que usa shortDate() en tiempo de ejecución (shared.jsx) — nunca un
+    // string fijo a mano, que dependería de la zona horaria de quien
+    // ejecute el test (mismo cuidado que ya toma PaymentsTab.test.jsx
+    // con fechas relativas al reloj real).
+    expect(screen.getByText(new Date("1990-05-12").toLocaleDateString("es-ES"))).toBeInTheDocument();
+    expect(screen.getByText("México")).toBeInTheDocument();
+  });
+
+  it("sin fecha de nacimiento ni país guardados, muestra '—' en ambos", () => {
+    renderProfile();
+
+    const section = personalDataSection();
+    expect(within(section).getAllByText("—").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("permite elegir país de residencia y fecha de nacimiento, y los guarda junto al resto", async () => {
+    const user = userEvent.setup();
+    const { update } = mockUpdate();
+    renderProfile();
+
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
+    await user.type(screen.getByRole("textbox", { name: "Elige un país" }), "México");
+    await user.click(screen.getByRole("option", { name: "México" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({
+      first_name: "Ada", last_name: "Lovelace", nickname: "ada", professional_level: null,
+      birth_date: null, country_of_residence: "MX", instructor_initials: "AL",
+    }));
   });
 
   it("no deja guardar un nickname con \"@\"", async () => {

@@ -116,9 +116,22 @@ create table if not exists public.profiles (
   -- en vez de una tabla catálogo aparte. Se muestra en "Datos personales"
   -- y en el carnet de instructor de Mi perfil.
   professional_level text check (professional_level in ('divemaster', 'instructor')),
+  -- Fecha de nacimiento + país de residencia (Fase 9, 2026-09-07) —
+  -- solo para mostrar en "Datos personales" de Mi perfil, ambos
+  -- opcionales, sin validación ni uso en ningún otro flujo por ahora
+  -- (confirmado con el usuario antes de esta migración).
+  birth_date date,
+  -- ISO 3166-1 alpha-2 ('ES', 'MX'...) — taxonomía universal fija,
+  -- mismo criterio que `language`, no una tabla catálogo aparte.
+  country_of_residence text,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
+
+-- Migración aditiva Fase 9 (2026-09-07, fecha de nacimiento + país de
+-- residencia) para instalaciones existentes —
+-- scripts/migrations/0017-datos-personales-perfil.sql tiene el mismo
+-- DDL, aplicarlo con scripts/apply-migration.mjs.
 
 -- Migración aditiva Release V1, Fase 2 (2026-09-01) para instalaciones
 -- existentes:

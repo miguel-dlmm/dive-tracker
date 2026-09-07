@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { CORAL, BRAND_NAVY, BRAND_SKY } from "./colors";
-import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
+import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, SearchSelect, DatePicker, shortDate, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
 import { AVATAR_ICONS, AVATAR_COLORS, AVATAR_ICON_MAP, resolveAvatar } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
 import i18n, { setStoredLanguage } from "./i18n";
 import { computeInitials } from "./computeInitials";
+import { COUNTRIES } from "./countries";
 import SignatureCapture from "./SignatureCapture";
 
 // Pantalla "Mi perfil" (Bloque 5, 2026-09-01) — pantalla secundaria como
@@ -222,8 +223,15 @@ const PROFESSIONAL_LEVEL_OPTIONS = [
   { code: "instructor", label: "Instructor" },
 ];
 
+// Opciones del selector de país, con la etiqueta en el idioma activo —
+// se recalcula solo cuando cambia el idioma, no en cada tecla del buscador.
+function countryOptionsFor(language) {
+  const key = language === "en" ? "en" : "es";
+  return COUNTRIES.map((c) => ({ value: c.code, label: c[key] }));
+}
+
 function PersonalDataSection({ profile, onProfileUpdated }) {
-  const { t } = useTranslation("profile");
+  const { t, i18n } = useTranslation("profile");
   const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -231,12 +239,18 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
   const [lastName, setLastName] = useState(profile.last_name || "");
   const [nickname, setNickname] = useState(profile.nickname || "");
   const [professionalLevel, setProfessionalLevel] = useState(profile.professional_level || "");
+  const [birthDate, setBirthDate] = useState(profile.birth_date || "");
+  const [countryOfResidence, setCountryOfResidence] = useState(profile.country_of_residence || "");
+  const countryOptions = countryOptionsFor(i18n.language);
+  const countryLabel = (code) => countryOptions.find((o) => o.value === code)?.label || "—";
 
   const startEdit = () => {
     setFirstName(profile.first_name || "");
     setLastName(profile.last_name || "");
     setNickname(profile.nickname || "");
     setProfessionalLevel(profile.professional_level || "");
+    setBirthDate(profile.birth_date || "");
+    setCountryOfResidence(profile.country_of_residence || "");
     setEditing(true);
   };
 
@@ -244,7 +258,10 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
     if (!nickname.trim() || nickname.includes("@")) return;
     setSaving(true);
     try {
-      const patch = { first_name: firstName.trim() || null, last_name: lastName.trim() || null, nickname: nickname.trim(), professional_level: professionalLevel || null };
+      const patch = {
+        first_name: firstName.trim() || null, last_name: lastName.trim() || null, nickname: nickname.trim(), professional_level: professionalLevel || null,
+        birth_date: birthDate || null, country_of_residence: countryOfResidence || null,
+      };
       // Iniciales de instructor autogeneradas desde nombre/apellidos al
       // guardar — pedido explícito del usuario, 2026-09-02 — pero solo si
       // todavía no hay ninguna guardada: que ya tengan un valor es la
@@ -272,6 +289,8 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
           <p><span className="text-gray-400">{t("personalData.nameLine")}</span> {profile.first_name || "—"} {profile.last_name || ""}</p>
           <p><span className="text-gray-400">{t("personalData.nicknameLine")}</span> {profile.nickname}</p>
           <p><span className="text-gray-400">{t("personalData.professionalLine")}</span> {PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === profile.professional_level)?.label || "—"}</p>
+          <p><span className="text-gray-400">{t("personalData.birthDateLine")}</span> {profile.birth_date ? shortDate(profile.birth_date) : "—"}</p>
+          <p><span className="text-gray-400">{t("personalData.countryLine")}</span> {profile.country_of_residence ? countryLabel(profile.country_of_residence) : "—"}</p>
         </div>
         <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: BRAND_NAVY }}>
           <Pencil size={14} aria-hidden="true" /> {t("personalData.edit")}
@@ -296,6 +315,20 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
           onChange={(label) => setProfessionalLevel(PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.label === label)?.code || "")}
           options={PROFESSIONAL_LEVEL_OPTIONS.map((o) => o.label)}
           placeholder={t("personalData.professionalPlaceholder")}
+        />
+      </Field>
+      {/* Fecha de nacimiento + país de residencia (Fase 9, 2026-09-07) —
+          solo para mostrar en el perfil, ambos opcionales (confirmado
+          con el usuario), sin validación ni uso en ningún otro flujo. */}
+      <Field label={t("personalData.birthDateLabel")}>
+        <DatePicker value={birthDate} onChange={setBirthDate} />
+      </Field>
+      <Field label={t("personalData.countryLabel")}>
+        <SearchSelect
+          value={countryOfResidence}
+          onChange={setCountryOfResidence}
+          options={countryOptions}
+          placeholder={t("personalData.countryPlaceholder")}
         />
       </Field>
       <div className="mt-3">
