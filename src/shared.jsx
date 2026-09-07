@@ -1102,6 +1102,39 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   useEffect(() => {
     userSelectedRef.current = false;
   }, [monthKey_]);
+  // Desplazamiento automático al panel de detalle (feedback real,
+  // 2026-09-07: "cuando hago click en un día del calendario de la home no
+  // sé q se está cargando info abajo") — sin esto, tocar un día con
+  // actividad no daba ninguna pista de que algo había pasado si el panel
+  // de detalle quedaba fuera de la parte visible de la pantalla (Home
+  // apila KPIs + tarjeta de "Pendiente de cobrar" antes del propio
+  // calendario). Reordenar el detalle ANTES de la cuadrícula se descartó
+  // (mismo feedback): con un día de muchas líneas, el calendario en sí
+  // acabaría cayendo muy abajo, peor que el problema que se intenta
+  // resolver. `userSelectedRef` (ya existía para otro propósito, ver
+  // arriba) distingue un toque real del usuario de una auto-selección por
+  // `autoSelectFirstDay` — solo la primera debe desplazar la pantalla;
+  // auto-seleccionar el día 1 nada más cargar Home y saltar de golpe no
+  // sería una mejora, sería una sorpresa. `block: "nearest"` (no "start"
+  // ni "center"): si el panel ya está completamente visible no mueve
+  // nada, y si no lo está, se desplaza lo mínimo necesario para que se
+  // vea entero — nunca un salto más grande de lo necesario. Disparado
+  // desde `onAnimationComplete` del propio panel (más abajo), no un
+  // `useEffect` sobre `selectedDay`: `panelVariants` anima `height: 0 →
+  // "auto"`, así que medir/desplazar en cuanto cambia el estado (antes de
+  // que termine de crecer) mediría un rectángulo más pequeño que el
+  // final — el resultado sería quedarse corto, justo el mismo problema
+  // que se intenta arreglar. `onAnimationComplete` solo se atiende para
+  // la transición "animate" (abrir), nunca "exit" (cerrar) — cambiar de
+  // un día a otro con el panel ya abierto no reanima nada (sin `key` por
+  // día, ver comentario del propio panel), así que tampoco vuelve a
+  // desplazar: el contenido ya está a la vista, no hace falta.
+  const detailRef = useRef(null);
+  const scrollDetailIntoView = () => {
+    if (userSelectedRef.current) {
+      detailRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "nearest" });
+    }
+  };
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
 
@@ -1356,7 +1389,23 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           llega a pintarse, ni un fotograma. */}
       <AnimatePresence key={monthKey_} initial={false}>
         {selectedDay && (
-        <motion.div {...panelVariants(reducedMotion)} className="mt-3 overflow-hidden rounded-md bg-gray-50">
+        <motion.div
+          ref={detailRef}
+          variants={panelVariants(reducedMotion)}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          // variants + labels ("animate"/"exit"), no el spread directo de
+          // valores que usa el resto de usos de panelVariants — necesario
+          // para que onAnimationComplete reciba la etiqueta como string
+          // ("animate"/"exit"); pasando los objetos de valores
+          // directamente (como props initial/animate/exit sueltas),
+          // Motion llama a onAnimationComplete con el propio objeto de
+          // valores, no con un nombre comparable — mismo resultado visual
+          // de animación, forma distinta de invocar el callback.
+          onAnimationComplete={(definition) => { if (definition === "animate") scrollDetailIntoView(); }}
+          className="mt-3 overflow-hidden rounded-md bg-gray-50"
+        >
         <div className="p-3">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-600">{t("monthCalendar.dayHeading", { day: selectedDay, month: CAL_MONTHS[month] })}</span>

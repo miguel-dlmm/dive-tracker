@@ -1533,3 +1533,49 @@ comprobación visual en navegador — desactivar una tarifa de prueba
 ("Fun Dive 1T", Blue Manta) confirma el fondo gris distinto de las
 filas activas vecinas, revertido después para no dejar datos de prueba
 alterados.
+
+### 8.5 — Calendario de Home: desplazamiento automático al panel de detalle
+
+Pregunta del usuario, no un bug: "cuando hago click en un día del
+calendario de la home no sé q se está cargando info abajo, no se si
+sería interesante hacer ancla a la zona de info o moverla delante del
+calendario. esto último me chirría porque si la lista es grande el
+calendario caerá muy abajo". El propio usuario ya descartó reordenar
+(mover el detalle antes de la cuadrícula) por un motivo real —
+confirmado: Home apila KPIs + tarjeta de "Pendiente de cobrar" antes
+del calendario, así que el panel de detalle de un día puede caer fuera
+de la parte visible de la pantalla sin ningún indicio de que algo
+cambió al tocar un día.
+
+**Solución implementada — desplazamiento automático (la opción de
+"anclar" que el usuario ya apuntaba)**, en `MonthCalendar` (`shared.jsx`,
+compartido por Home y Resumen, mismo patrón de interacción en las dos):
+al tocar un día CON actividad, la pantalla se desplaza lo mínimo
+necesario (`scrollIntoView({block: "nearest"})`) para que el panel de
+detalle quede completamente visible — nada si ya lo estaba. Solo se
+dispara con un toque real del usuario (reutilizando `userSelectedRef`,
+que ya existía para otro propósito: distinguir un clic real de la
+auto-selección del primer día con actividad al cargar) — auto-
+seleccionar el día 1 nada más entrar en Home y saltar de golpe habría
+sido una sorpresa, no una mejora. Cambiar de un día a otro con el panel
+ya abierto no vuelve a desplazar (el contenido ya está a la vista, sin
+necesidad); cerrar el panel tampoco.
+
+**Detalle técnico real, no trivial**: el panel anima su altura de `0` a
+`"auto"` (`panelVariants`, `motion.js`) — desplazar la pantalla nada
+más cambiar el estado (antes de que termine de crecer) mediría un
+rectángulo más pequeño que el final, quedándose corto exactamente igual
+que el problema que se intenta resolver. Se dispara en cambio desde
+`onAnimationComplete` del propio panel, una vez termina de crecer.
+Para que ese callback reciba la etiqueta de la transición como texto
+("animate"/"exit", en vez del objeto de valores animados) se cambia
+este uso concreto de `panelVariants` de pasar los valores sueltos como
+props (`{...panelVariants(...)}`, como hace el resto de usos en la app)
+a usar el mecanismo de `variants` + etiquetas de Motion — mismo
+resultado visual de animación, forma distinta de invocar el callback.
+
+**Verificación**: 764/764 tests, lint 0 errores, build correcto;
+comprobación visual en navegador — tocar un día con actividad
+(inicialmente fuera de la parte visible) desplaza la pantalla hasta
+mostrar el panel de detalle completo; cerrar el panel o volver a tocar
+el mismo día para deseleccionarlo no desplaza nada.
