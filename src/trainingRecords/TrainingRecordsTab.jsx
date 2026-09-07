@@ -840,7 +840,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
             onClick={generateAll}
             disabled={generating}
             className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
-            style={{ backgroundColor: TEAL }}
+            style={{ backgroundColor: accentColor || TEAL }}
           >
             {generating ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Download size={16} aria-hidden="true" />}
             {generating ? t("studentSheet.generando") : t("studentSheet.generarTodos")}

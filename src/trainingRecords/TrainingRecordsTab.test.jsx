@@ -143,6 +143,22 @@ async function addStudent(user, { firstName, lastName }) {
   await screen.findByText(`${firstName} ${lastName}`);
 }
 
+// Feedback explícito del usuario (2026-09-07): "el generar todos de TR
+// sigue en verde, no cumple con el libro de estilos nuevo" — el botón
+// tenía el TEAL genérico hardcodeado en vez del accentColor real de la
+// sección ("trabajo", navy #00335A vía nav_sections), a pesar de que el
+// componente ya recibía accentColor como prop. TEAL solo debe quedar
+// como respaldo si accentColor no llega (accentColor || TEAL).
+it("el botón 'Generar para todos los alumnos' usa accentColor, no el TEAL genérico", async () => {
+  const user = userEvent.setup();
+  renderTab({ accentColor: "#00335A" });
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+
+  const button = screen.getByRole("button", { name: "Generar para todos los alumnos" });
+  expect(button.style.backgroundColor).toBe("rgb(0, 51, 90)");
+});
+
 it("configura una vez para todo el listado, añade 2 alumnos y genera los 2 documentos de golpe", async () => {
   const user = userEvent.setup();
   renderTab();
