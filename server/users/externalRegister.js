@@ -129,7 +129,7 @@ export async function handleExternalRegister({ method, body, headers }) {
     return { status: 400, payload: { error: "Cuerpo de la petición inválido." } };
   }
 
-  const { email, first_name, last_name, nickname, language, invite_token } = input;
+  const { email, first_name, last_name, nickname, language, invite_token, birth_date, country_of_residence } = input;
   if (!email || !nickname) {
     return { status: 400, payload: { error: "Email y nickname son obligatorios." } };
   }
@@ -190,6 +190,8 @@ export async function handleExternalRegister({ method, body, headers }) {
     reason: "external_signup",
     language: safeLanguage,
     baseUrl,
+    birth_date,
+    country_of_residence,
   });
   if (result.error) {
     if (result.error.message?.includes(EMAIL_ALREADY_REGISTERED)) {

@@ -2,9 +2,14 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, ArrowLeft, MailCheck } from "lucide-react";
 import { BG, BODY_FONT, BRAND_NAVY } from "./App";
-import { inputCls, Field, Select } from "./shared";
+import { inputCls, Field, Select, DatePicker, SearchSelect } from "./shared";
 import { useToast } from "./shared";
 import i18n, { setStoredLanguage, SUPPORTED_LANGUAGES } from "./i18n";
+// countryOptionsFor: misma función que ya usa Mi perfil para su propio
+// selector de país de residencia — una sola fuente de verdad (orden
+// alfabético por Intl.Collator, etiqueta en el idioma activo), no una
+// segunda copia aquí.
+import { countryOptionsFor } from "./ProfileTab";
 
 // No pide contraseña ni aceptación legal aquí — eso ya lo resuelve
 // CreatePasswordScreen (tiene su propio checkbox de bases legales) cuando
@@ -42,6 +47,16 @@ export default function RegisterScreen({ onBack, inviteToken }) {
   const { t } = useTranslation("auth");
   const [form, setForm] = useState(emptyForm);
   const [language, setLanguage] = useState(() => (SUPPORTED_LANGUAGES.includes(i18n.language) ? i18n.language : "es"));
+  // Fecha de nacimiento / país de residencia (2026-09-07, pedido
+  // explícito) — ambos opcionales, mismo criterio y mismos componentes
+  // que Mi perfil (DatePicker sin accesos rápidos, SearchSelect con las
+  // opciones de countryOptionsFor): no tienen sentido dentro de `form`
+  // (los demás campos usan el helper genérico `set()` sobre eventos de
+  // input; estos dos componentes entregan el valor directamente, no un
+  // evento) así que viven en su propio estado, igual que `language`.
+  const [birthDate, setBirthDate] = useState("");
+  const [countryOfResidence, setCountryOfResidence] = useState("");
+  const countryOptions = countryOptionsFor(language);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -70,7 +85,11 @@ export default function RegisterScreen({ onBack, inviteToken }) {
       const res = await fetch("/api/external-register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, language, ...(inviteToken ? { invite_token: inviteToken } : {}) }),
+        body: JSON.stringify({
+          ...form, language,
+          birth_date: birthDate || null, country_of_residence: countryOfResidence || null,
+          ...(inviteToken ? { invite_token: inviteToken } : {}),
+        }),
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -153,6 +172,24 @@ export default function RegisterScreen({ onBack, inviteToken }) {
               <input type="text" value={form.nickname} onChange={set("nickname")} autoComplete="username" required className={`${inputCls} w-full`} />
             </Field>
             {nicknameHasAt && <p role="alert" className="text-sm text-red-600">{t("register.nicknameAtError")}</p>}
+            {/* Opcionales (2026-09-07, pedido explícito) — mismos
+                componentes/criterio que Mi perfil: DatePicker sin accesos
+                rápidos (hoy/ayer/mañana no tienen sentido para una fecha
+                de nacimiento) y SearchSelect con las opciones ya en
+                orden alfabético de countryOptionsFor. */}
+            <div className="grid grid-cols-2 gap-2">
+              <Field label={t("register.birthDateLabel")}>
+                <DatePicker value={birthDate} onChange={setBirthDate} quickAccess={false} />
+              </Field>
+              <Field label={t("register.countryLabel")}>
+                <SearchSelect
+                  value={countryOfResidence}
+                  onChange={setCountryOfResidence}
+                  options={countryOptions}
+                  placeholder={t("register.countryPlaceholder")}
+                />
+              </Field>
+            </div>
 
             {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 

@@ -43,9 +43,32 @@ it("enviar el formulario llama a /api/external-register con los datos y muestra 
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
     method: "POST",
-    body: JSON.stringify({ email: "diver@example.com", first_name: "Ada", last_name: "Lovelace", nickname: "ada", language: "es" }),
+    body: JSON.stringify({ email: "diver@example.com", first_name: "Ada", last_name: "Lovelace", nickname: "ada", language: "es", birth_date: null, country_of_residence: null }),
   })));
   expect(await screen.findByText(/Ya casi está! Te hemos enviado un email para confirmar tu cuenta/)).toBeInTheDocument();
+});
+
+// Pedido explícito 2026-09-07: "añade al formulario de registro los
+// campos fecha de nacimiento y país de residencia. Ambos serán
+// opcionales" — mismos componentes/criterio que Mi perfil
+// (ProfileTab.test.jsx: "permite elegir país de residencia y fecha de
+// nacimiento"), aquí solo se cubre país (el DatePicker de fecha de
+// nacimiento ya está probado a fondo en ese archivo con el mismo
+// componente compartido — no hace falta repetir esa cobertura, solo
+// confirmar que el valor llega al body de la petición).
+it("país de residencia (opcional) se manda en el body si se rellena", async () => {
+  const user = userEvent.setup();
+  renderWithToast(<RegisterScreen onBack={vi.fn()} />);
+
+  await user.type(screen.getByLabelText("Email"), "diver@example.com");
+  await user.type(screen.getByLabelText("Nickname"), "ada");
+  await user.type(screen.getByRole("textbox", { name: "Elige un país" }), "México");
+  await user.click(screen.getByRole("option", { name: "México" }));
+  await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
+
+  await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
+    body: JSON.stringify({ email: "diver@example.com", first_name: "", last_name: "", nickname: "ada", language: "es", birth_date: null, country_of_residence: "MX" }),
+  })));
 });
 
 // Release V1, 2026-09-02 (enlace de invitación): cuando AuthGate detecta
@@ -61,7 +84,7 @@ it("con inviteToken, lo incluye en el body como invite_token", async () => {
   await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
-    body: JSON.stringify({ email: "diver@example.com", first_name: "", last_name: "", nickname: "ada", language: "es", invite_token: "abc-123" }),
+    body: JSON.stringify({ email: "diver@example.com", first_name: "", last_name: "", nickname: "ada", language: "es", birth_date: null, country_of_residence: null, invite_token: "abc-123" }),
   })));
 });
 

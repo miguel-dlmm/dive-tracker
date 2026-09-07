@@ -3218,3 +3218,60 @@ login de desarrollo inicia sesión automáticamente antes de que esta
 pantalla llegue a pintarse (misma limitación ya documentada en 4.5),
 así que la verificación se apoya en los tests, que sí renderizan el
 componente real y comprueban el texto en el DOM.
+
+### 12.4 — Registro: fecha de nacimiento y país de residencia (opcionales)
+
+Pedido: "añade al formulario de registro los campos fecha de
+nacimiento y país de residencia. Ambos serán opcionales" — Mi perfil ya
+tenía estos dos campos (Fase 9), pero el registro externo
+(`RegisterScreen.jsx`) no los pedía nunca; quien quisiera rellenarlos
+tenía que esperar a tener cuenta y entrar en Mi perfil.
+
+**Decisión de diseño (evita tocar el trigger de alta)**: en vez de
+mandar estos valores en `user_metadata` para que `handle_new_user()`
+(el trigger de Postgres que crea la fila de `profiles` al dar de alta
+un usuario en Supabase Auth) los recoja, lo que habría sido un cambio
+de esquema/trigger — CLAUDE.md pide planificarlo aparte, "nunca
+implementar cambios de esquema en un solo paso" — `provisionUser.js`
+hace un `UPDATE` normal sobre la fila que el propio trigger ya creó,
+justo después de clonar el dataset inicial. Mismo criterio best-effort
+que ya usa el email de bienvenida: si el UPDATE falla, la cuenta ya
+existe igual, solo faltarían estos dos datos decorativos (rellenables
+después desde Mi perfil) — nunca revierte el alta por esto.
+
+**Qué se hizo**:
+- `countryOptionsFor()` (`ProfileTab.jsx`) pasa a exportarse — una sola
+  fuente de verdad para el selector de país, reutilizada tal cual en
+  `RegisterScreen.jsx` (convención MVP/reutilización).
+- `RegisterScreen.jsx`: 2 campos nuevos opcionales (`DatePicker` sin
+  accesos rápidos + `SearchSelect` de país, mismos componentes/criterio
+  que Mi perfil), justo después de Nickname. Van en su propio estado
+  (no en el objeto `form`, que usa un helper genérico pensado para
+  eventos de `<input>`) y se mandan en el body de
+  `/api/external-register` como `birth_date`/`country_of_residence`
+  (`null` si se dejan vacíos).
+- `externalRegister.js`: extrae ambos campos del body y los reenvía tal
+  cual a `provisionUser()` — no valida ni transforma nada, ya lo hace
+  el propio formulario (fecha real vía `DatePicker`, país de una lista
+  cerrada vía `SearchSelect`).
+- `provisionUser.js`: acepta `birth_date`/`country_of_residence`: si
+  llega alguno de los dos, hace el `UPDATE` descrito arriba (el que
+  falte se manda como `null`, nunca se omite la clave). Sin ninguno de
+  los dos, no toca la tabla en absoluto — ni una llamada de más para el
+  alta por admin (`createUser.js`, que no manda estos campos), que
+  sigue exactamente igual que antes.
+
+**Verificado**: 2 tests nuevos en `RegisterScreen.test.jsx` (país
+enviado en el body cuando se rellena; fecha de nacimiento no repetida
+aquí porque ya está a fondo probada con el mismo componente compartido
+en `ProfileTab.test.jsx`), 4 tests nuevos en `provisionUser.test.js`
+(UPDATE con ambos, con solo uno — el otro sale `null`—, sin ninguno —no
+llama al UPDATE—, y que un fallo del UPDATE no bloquea el alta), 1 test
+nuevo en `externalRegister.test.js` (propaga ambos campos a
+`provisionUser`) — más el test existente de "flujo correcto" actualizado
+para reflejar las claves nuevas en la llamada. 814/814 tests (suite
+completa), lint 0 errores, build correcto (tamaño del bundle
+prácticamente sin cambio, +1KB — `ProfileTab.jsx` ya se cargaba en el
+bundle principal desde `App.jsx`, importar `countryOptionsFor` desde
+ahí no añade peso nuevo). No verificado en navegador real: mismo motivo
+que 12.3 (bypass de login), verificación apoyada en los tests.

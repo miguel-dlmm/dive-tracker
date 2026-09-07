@@ -137,8 +137,21 @@ it("flujo correcto: registro externo activado, provisiona con el primer dataset 
     dataset_key: "ihasia",
     reason: "external_signup",
     language: undefined,
+    baseUrl: undefined,
+    birth_date: undefined,
+    country_of_residence: undefined,
   });
   expect(result).toEqual({ status: 200, payload: { email_sent: true } });
+});
+
+// Pedido explícito 2026-09-07: "añade al formulario de registro los
+// campos fecha de nacimiento y país de residencia" — el endpoint solo
+// hace de correo: los pasa tal cual a provisionUser(), que es quien de
+// verdad los persiste (best-effort, ver provisionUser.test.js).
+it("propaga birth_date/country_of_residence a provisionUser cuando llegan en el body", async () => {
+  await handleExternalRegister(request({ body: JSON.stringify({ ...VALID_BODY, birth_date: "1990-05-12", country_of_residence: "MX" }) }));
+
+  expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ birth_date: "1990-05-12", country_of_residence: "MX" }));
 });
 
 // Release V1, Fase 2 (multidioma): language solo se propaga si es uno de

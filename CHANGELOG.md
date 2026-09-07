@@ -30,6 +30,9 @@ Registro de cambios relevantes de Ocean Flow.
   alumno una detrás de otra.
 - Mi perfil: campos opcionales de fecha de nacimiento y país de
   residencia en "Datos personales".
+- La pantalla de registro también pide (opcionalmente) fecha de
+  nacimiento y país de residencia, para no tener que añadirlos después
+  desde Mi perfil.
 - (Interno, seguridad) El registro externo ya está protegido contra
   altas masivas automatizadas (Vercel BotID).
 

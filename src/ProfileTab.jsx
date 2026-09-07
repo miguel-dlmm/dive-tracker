@@ -232,7 +232,10 @@ const PROFESSIONAL_LEVEL_OPTIONS = [
 // Intl.Collator (no localeCompare suelto) para que "México" ordene junto
 // a "Marruecos" en vez de después de "Z" por el acento, y para que el
 // criterio de acentos/mayúsculas sea coherente entre es/en.
-function countryOptionsFor(language) {
+// export (2026-09-07): RegisterScreen.jsx reutiliza esta misma función
+// para su propio selector de país de residencia (mismo campo, mismo
+// criterio) — una sola fuente de verdad, convención MVP/reutilización.
+export function countryOptionsFor(language) {
   const key = language === "en" ? "en" : "es";
   const collator = new Intl.Collator(key);
   return COUNTRIES.map((c) => ({ value: c.code, label: c[key] })).sort((a, b) => collator.compare(a.label, b.label));

@@ -64,7 +64,7 @@ async function validateNickname(client, nickname) {
 // is_admin / is_superadmin NUNCA se pasan aquí a propósito: handle_new_user()
 // no los toca al crear la fila de profiles, así que nace siempre con ambos
 // en false, sin importar el origen de la llamada.
-export async function provisionUser({ email, first_name, last_name, nickname, dataset_key, reason = "signup", language, baseUrl }) {
+export async function provisionUser({ email, first_name, last_name, nickname, dataset_key, reason = "signup", language, baseUrl, birth_date, country_of_residence }) {
   const client = getServiceRoleClient();
 
   const nicknameError = await validateNickname(client, nickname);
@@ -102,6 +102,26 @@ export async function provisionUser({ email, first_name, last_name, nickname, da
   if (cloneError) {
     await client.auth.admin.deleteUser(created.user.id);
     return { error: cloneError };
+  }
+
+  // Fecha de nacimiento / país de residencia (2026-09-07, pedido
+  // explícito: "añade al formulario de registro los campos fecha de
+  // nacimiento y país de residencia") — ambos opcionales, solo se
+  // muestran en Mi perfil (mismo criterio ya establecido ahí, ver
+  // ProfileTab.jsx), sin validación ni uso en ningún otro flujo. No van
+  // en user_metadata/handle_new_user() (evita tocar el trigger de alta,
+  // un cambio de esquema que CLAUDE.md pide planificar aparte) — se
+  // escriben con un UPDATE normal sobre la fila de profiles que el
+  // propio trigger ya acaba de crear, con el mismo criterio best-effort
+  // que el email de más abajo: si falla, la cuenta ya existe igual, solo
+  // faltarían estos dos datos decorativos (el usuario puede rellenarlos
+  // después desde Mi perfil).
+  if (birth_date || country_of_residence) {
+    const { error: profileUpdateError } = await client
+      .from("profiles")
+      .update({ birth_date: birth_date || null, country_of_residence: country_of_residence || null })
+      .eq("user_id", created.user.id);
+    if (profileUpdateError) console.error("provisionUser: no se pudo guardar fecha de nacimiento/país de residencia", profileUpdateError);
   }
 
   // Enlace de primer acceso + email de activación — best-effort: la cuenta
