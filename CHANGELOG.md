@@ -149,6 +149,10 @@ Registro de cambios relevantes de Ocean Flow.
 - Los importes de 4 cifras (1.000 a 9.999) no llevaban el punto de los
   miles, a diferencia de los de 5 cifras o más — ya se ven igual de
   consistentes en toda la app.
+- Tarifas: "Mostrar desactivadas" ya no está escondido dentro de
+  "Filtrar" (siempre visible junto al contador de la lista), y una
+  tarifa desactivada se reconoce ahora por su propio fondo, no solo por
+  el texto.
 - (Interno) Los emails transaccionales (alta, recuperación de
   contraseña, aviso de despliegue) seguían con los colores de marca
   previos al rebrand — ahora usan el mismo azul marino que el resto de

@@ -347,8 +347,9 @@ describe("RatesTab — baja lógica: desactivar/reactivar en vez de (o además d
       rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: false }]),
     });
 
-    await user.click(screen.getByRole("button", { name: "Filtrar" }));
-    await user.click(screen.getByRole("checkbox", { name: "Mostrar desactivadas" }));
+    // El interruptor vive siempre visible junto al contador de la lista
+    // (Fase 8, 2026-09-07) — ya no hace falta abrir "Filtrar" antes.
+    await user.click(screen.getByRole("switch", { name: "Mostrar desactivadas" }));
 
     expect(screen.getByText("Open Water")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Más acciones" }));
@@ -376,8 +377,7 @@ describe("RatesTab — baja lógica: desactivar/reactivar en vez de (o además d
       ]),
     });
 
-    await user.click(screen.getByRole("button", { name: "Filtrar" }));
-    await user.click(screen.getByRole("checkbox", { name: "Mostrar desactivadas" }));
+    await user.click(screen.getByRole("switch", { name: "Mostrar desactivadas" }));
     // r1 (desactivada) y r2 (activa) empatan en todos los criterios de
     // orden de allRows (mismo school/tipo/activity, sin created_at) — sort
     // estable conserva el orden de inserción, así que r1 es la PRIMERA

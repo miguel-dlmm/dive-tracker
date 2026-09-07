@@ -5,7 +5,7 @@ import { Plus, Check, X, Search, SlidersHorizontal, Eye, EyeOff } from "lucide-r
 import { BRAND_NAVY, TEAL } from "./App";
 import {
   inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, MoneyInput,
-  EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate,
+  EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate, BooleanToggle,
 } from "./shared";
 import { listItemVariants, usePrefersReducedMotion } from "./motion";
 
@@ -110,7 +110,12 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
   // criterio de negocio (escuela/curso/tipo), es una preferencia de
   // visibilidad ("enséñame también lo que ya no está vigente") — por eso
   // vive fuera de hasFilters/activeFilterCount y "Limpiar filtros" no lo
-  // toca.
+  // toca. Por el mismo motivo el control ya no vive dentro del panel de
+  // "Filtrar" (Fase 8, 2026-09-07, pedido explícito: "quiero probar el
+  // mostrar desactivadas fuera del filtro, para q no cueste encontrarlo o
+  // saber q hay ítems desactivados") — ver el interruptor junto al
+  // contador de la lista más abajo, siempre visible sin tener que abrir
+  // nada antes.
   const [showInactive, setShowInactive] = useState(false);
   // creating: tipo elegido en la hoja — solo relevante al CREAR (ver
   // switchType); al editar, se fija al tipo real de la fila y no cambia
@@ -325,20 +330,6 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
             )}
             <Field label={t("filter.course")}><MultiSelect value={filters.activity} onChange={(v) => setFilters({ ...filters, activity: v })} options={presentValues("activity")} placeholder={t("filter.courseAll")} /></Field>
           </div>
-          {/* "Mostrar desactivadas" vive fuera de `filters` a propósito
-              (ver comentario de showInactive más arriba) — checkbox simple,
-              mismo criterio de "reutilizar antes que construir" que el
-              resto de la pantalla: no hace falta un componente nuevo para
-              un único checkbox. */}
-          <label className="flex min-h-9 w-fit items-center gap-2 text-xs font-medium text-gray-500">
-            <input
-              type="checkbox"
-              checked={showInactive}
-              onChange={(e) => setShowInactive(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-            />
-            {t("filter.showInactive")}
-          </label>
           {hasFilters && (
             <button onClick={() => setFilters({ type: "", school: "", activity: [] })} className="min-h-9 text-xs font-medium text-gray-400 hover:text-gray-600">
               {t("filter.clear")}
@@ -348,8 +339,20 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
       )}
 
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div className="border-b border-gray-100 px-4 py-3">
+        {/* "Mostrar desactivadas" se saca del panel de "Filtrar" (pedido
+            explícito, 2026-09-07: "quiero probar el mostrar desactivadas
+            fuera del filtro, para q no cueste encontrarlo o saber q hay
+            ítems desactivados") — siempre visible junto al contador de la
+            lista, no escondido detrás de un botón que hay que abrir antes
+            de descubrir que existen tarifas desactivadas. BooleanToggle en
+            vez del checkbox nativo anterior: mismo patrón de interruptor
+            que ya usa el resto de la app para un booleano persistente. */}
+        <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-3">
           <h3 className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{t("list.count", { count: filtered.length })}</h3>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-gray-500">{t("filter.showInactive")}</span>
+            <BooleanToggle checked={showInactive} onChange={() => setShowInactive((v) => !v)} ariaLabel={t("filter.showInactive")} />
+          </div>
         </div>
 
         <div>
@@ -391,12 +394,18 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
               // separación entre cards ya se descartó en Mi trabajo por
               // ruido visual — el borde izquierdo de color y el propio
               // padding ya distinguen una fila de la siguiente.
-              // Fila desactivada: opacidad reducida (mismo criterio que
-              // fila/opción deshabilitada en el resto de la app,
-              // disabled:opacity-30/40) + "· Desactivada" en el metadato —
+              // Fila desactivada: fondo gris + opacidad reducida (Fase 8,
+              // 2026-09-07 — antes solo opacidad, feedback explícito:
+              // "quiero q las filas desactivadas se muestren en un color
+              // de fondo q lo indique visualmente rápido", para reconocerlo
+              // de un vistazo sin tener que leer el metadato) + "·
+              // Desactivada" en el metadato como confirmación textual —
               // solo se ve cuando showInactive está activo, ya que si no la
-              // propia lista las filtra fuera.
-              <motion.div key={r.id} {...listItemVariants(reducedMotion)} className={`px-4 py-3.5 text-sm ${!isRateActive(r) ? "opacity-50" : ""}`}>
+              // propia lista las filtra fuera. Opacidad más suave que antes
+              // (70% en vez de 50%): el fondo ya hace la mayor parte del
+              // trabajo de distinguir la fila, no hace falta apagar tanto
+              // el texto para que siga siendo legible.
+              <motion.div key={r.id} {...listItemVariants(reducedMotion)} className={`px-4 py-3.5 text-sm ${!isRateActive(r) ? "bg-gray-50 opacity-70" : ""}`}>
                 <div className="flex items-start gap-2.5">
                   <RateTypeIconChip source={r._source} />
                   <div className="min-w-0 flex-1">

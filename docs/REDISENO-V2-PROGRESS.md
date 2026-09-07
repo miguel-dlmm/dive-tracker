@@ -1501,3 +1501,35 @@ preexistente que esperaba `"1234,50 €"` sin punto se corrige a
 cuenta), lint 0 errores, build correcto; comprobación visual en
 navegador — "Open Water" (4.400,00 ฿) y los KPIs de cabecera muestran
 ya el punto de millar correctamente.
+
+### 8.4 — Tarifas: filas desactivadas más visibles
+
+Dos peticiones explícitas juntas, misma pantalla: "en tarifa, cuando le
+de a mostrar desactivadas quiero q las filas desactivadas se muestren
+en un color de fondo q lo indique visualmente rápido" y "quiero probar
+el mostrar desactivadas fuera del filtro, para q no cueste encontrarlo
+o saber q hay ítems desactivados".
+
+**"Mostrar desactivadas" sale del panel de "Filtrar"**: antes había que
+abrir "Filtrar" para siquiera saber que ese control existía. Ahora vive
+siempre visible junto al contador de la lista ("26 tarifas"), como un
+`BooleanToggle` (el mismo interruptor que ya usa el resto de la app
+para un booleano persistente) en vez del checkbox nativo anterior.
+
+**Fila desactivada con fondo, no solo opacidad**: antes solo se atenuaba
+con `opacity-50`, apoyándose únicamente en el metadato "· Desactivada"
+para confirmarlo por texto. Ahora lleva además `bg-gray-50` — se
+reconoce de un vistazo, sin tener que leer la fila. La opacidad baja a
+70% (antes 50%): con el fondo ya haciendo el trabajo de distinguir la
+fila, no hace falta apagar tanto el texto.
+
+Tests actualizados (`RatesTab.test.jsx`): las dos pruebas que abrían
+"Filtrar" antes de tocar el checkbox ya no necesitan ese paso, y
+buscan el control por `role="switch"` (el que expone `BooleanToggle`),
+no `role="checkbox"`.
+
+**Verificación**: 764/764 tests, lint 0 errores, build correcto;
+comprobación visual en navegador — desactivar una tarifa de prueba
+("Fun Dive 1T", Blue Manta) confirma el fondo gris distinto de las
+filas activas vecinas, revertido después para no dejar datos de prueba
+alterados.
