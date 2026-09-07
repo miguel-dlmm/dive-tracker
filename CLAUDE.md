@@ -297,13 +297,13 @@ obligatorias" más abajo para el mecanismo general de trabajo por lotes.
   pantalla). El calendario de Home sí admite crear un movimiento al tocar
   un día vacío o desde el propio desglose de un día con actividad — ver
   `onCreateForDay` en `MonthCalendar`, `shared.jsx`.
-- Los iconos/imágenes que referencia `index.html` (`/icon-192.png`,
-  `/icon-512.png`, `/og-image.png`) son placeholders — hay que generarlos.
-  `/icon.svg` (favicon) ya no lo es — ver "Indicador visual de entorno
-  TEST" arriba
-- El icono del logo real de Ocean Flow — de momento el loading usa iconos de
-  lucide-react (configurable en Configuración → Ajustes) a la espera del
-  logo oficial
+- ~~Los iconos/imágenes que referencia `index.html` son placeholders~~ —
+  ya no: `/icon.svg`, `/icon-192.png`, `/icon-512.png` y `/og-image.png`
+  son el logo real de Ocean Flow (generados 2026-09-06/07). El icono de
+  carga (`AppLoading`, `shared.jsx`) también usa ese vectorial real por
+  defecto (`iconName="Logo"`) — Configuración → Ajustes sigue ofreciendo
+  iconos de lucide-react como alternativa seleccionable, ya no como único
+  recurso a la espera del logo oficial.
 - **Un Design System unificado de Ocean Flow.** El rediseño de Movimientos
   (paneles flotantes, tarjetas, animaciones, identidad visual por tipo de
   movimiento) es una referencia de calidad, no el sistema de diseño

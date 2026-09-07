@@ -3632,3 +3632,62 @@ se hace sin que aporte algo. Sin cambios de código en este punto —
 solo esta auditoría documentada, tal y como pide la regla 7 de
 "Documentación viva de decisiones" para una decisión de arquitectura
 con motivo real de quedar registrada.
+
+### 12.11 — Limpieza de código y documentación obsoleta
+
+**Pedido**: "analiza si hay algo obsoleto que limpiar", con el añadido
+posterior explícito de repasar también `docs/BACKLOG.md` ("muchas
+cosas están hechas u obsoletas").
+
+**Código eliminado** (verificado sin ninguna referencia antes de
+borrar, `grep` sobre todo el repo): `public/favicon.svg` y
+`public/icons.svg` — ningún archivo (`index.html`, componentes, tests)
+los menciona; sobras de antes del rediseño de marca (el favicon real
+hoy es `public/icon.svg`, ver "Indicador visual de entorno TEST" en
+`CLAUDE.md`).
+
+**`CLAUDE.md` corregido**: la sección "Cosas que NO existen todavía"
+seguía afirmando que `/icon-192.png`, `/icon-512.png` y `/og-image.png`
+eran placeholders pendientes de generar, y que el icono de carga
+(`AppLoading`) usaba iconos de lucide-react "a la espera del logo
+oficial". Ambas afirmaciones ya eran falsas: los 3 ficheros son el
+logo real de Ocean Flow (generados 2026-09-06/07, confirmado abriendo
+cada imagen) y `AppLoading` ya usa ese vectorial real por defecto
+(`iconName="Logo"`, `shared.jsx`) — los iconos de lucide-react siguen
+existiendo solo como alternativa seleccionable en Configuración →
+Ajustes, no como único recurso. Corregido para que una sesión futura
+no dé por hecho un trabajo pendiente que ya está hecho.
+
+**`docs/BACKLOG.md` corregido**: la fila "Crear rama `test` +
+configurar `dive-tracker`" describía `dive-tracker` como un proyecto
+"hoy sin variables de entorno reales en Production/Preview" — ya no es
+cierto, `CLAUDE.md` (sección "Ramas y entornos", con una revisión
+posterior a la última edición de `BACKLOG.md` según `git log`)
+confirma que `develop` ya hace de entorno TEST de facto sobre ese
+proyecto, con su propio Supabase separado y `VITE_ENVIRONMENT=test` ya
+configurado. Se corrige la fila para reflejar que lo único pendiente
+es la rama `test` DEDICADA en sí (sin disparador cumplido todavía, por
+`docs/ADR/0006`), no la configuración del proyecto Vercel (ya hecha).
+
+**Comprobado y descartado como falso positivo** (sin tocar): auditados
+también, contra el código real, varios ítems más de "Después" del
+backlog — rate limiting de `/api/request-password-reset` (sin
+implementar, confirmado), healthcheck periódico de sesión
+(`useSession.js` solo llama `getUser()` puntual, sin `setInterval`),
+snapshot de tarifa en `worklog` (sin columna `rate` en `schema.sql`),
+renombrado interno de `activities` (sigue llamándose así en
+`App.jsx`), pasos de BD de `payment_type` (la tabla y columnas siguen
+en `schema.sql`) — los 5 siguen genuinamente pendientes, ninguno se
+toca.
+
+**Dejado explícitamente sin tocar**: `docs/ADR/0020-migraciones-supabase-y-separacion-test.md`
+(sin commitear, "Propuesto — pendiente de aprobación explícita" según
+su propia cabecera) y la fila "Bug: añadir tarifa inline bloquea el
+formulario" del backlog (sin ninguna evidencia nueva de que esté
+resuelto) — ambos son trabajo en curso ajeno a esta limpieza, no
+material obsoleto.
+
+**Verificado**: 818/818 tests (suite completa, sin relación funcional
+con este cambio pero confirmando que nada se rompió al borrar los 2
+SVG), lint 0 errores, build correcto tras `rm -rf dist && npm run
+build`.

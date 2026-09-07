@@ -156,6 +156,13 @@ Registro de cambios relevantes de Ocean Flow.
   progreso del curso — antes no había ningún indicio visual de que
   fueran obligatorias.
 
+### Chore
+- Limpieza de ficheros SVG obsoletos sin ninguna referencia en el código
+  (`public/favicon.svg`, `public/icons.svg`) y de dos afirmaciones ya
+  falsas en `CLAUDE.md`/`docs/BACKLOG.md` (iconos "pendientes de
+  generar" que ya son el logo real; entorno TEST de `dive-tracker`
+  "pendiente de configurar" que ya está configurado).
+
 ### Fixed
 - **`manifest.json` nunca llegaba al build de producción** (vivía en la
   raíz del repositorio, no en `public/` — Vite solo empaqueta esa
