@@ -148,7 +148,7 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     const user = userEvent.setup();
     renderMiTrabajo(mixedDataset());
 
-    const tooltipText = "No es solo de este mes: aquí se junta todo lo que aún tienes pendiente de cobrar, aunque sea de hace tiempo.";
+    const tooltipText = "Esta cantidad refleja pagos pendientes de meses anteriores.";
     expect(screen.queryByText(tooltipText)).not.toBeInTheDocument();
 
     // Solo el KPI "Pendiente de cobrar" lleva el icono de info — Generado

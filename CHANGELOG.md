@@ -152,6 +152,9 @@ Registro de cambios relevantes de Ocean Flow.
 - Los importes de 4 cifras (1.000 a 9.999) no llevaban el punto de los
   miles, a diferencia de los de 5 cifras o más — ya se ven igual de
   consistentes en toda la app.
+- El KPI "Pendiente de cobrar" (Mi trabajo) podía quedar demasiado
+  pegado al margen derecho de la tarjeta con una cifra grande, y su
+  tooltip se acorta.
 - Tarifas: "Mostrar desactivadas" ya no está escondido dentro de
   "Filtrar" (siempre visible junto al contador de la lista), y una
   tarifa desactivada se reconoce ahora por su propio fondo, no solo por

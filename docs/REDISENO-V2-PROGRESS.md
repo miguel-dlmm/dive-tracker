@@ -1744,3 +1744,28 @@ añada en el futuro, no solo esta.
 refactor del mock), lint 0 errores, build correcto. Sin comprobación
 visual en navegador — misma limitación que 9.1 (sin cuenta admin
 disponible en este entorno).
+
+### 9.3 — KPI "Pendiente de cobrar": margen derecho + tooltip más corto
+
+Dos ajustes pequeños pedidos juntos: "cuando hay una cifra grande en el
+kpi del medio de movimientos queda demasiado pegada al margen derecho
+de la box" y acortar el tooltip a "esta cantidad refleja pagos
+pendientes de meses anteriores".
+
+**Margen**: el span de la cifra (`MoneyKpiTile`, `MiTrabajoTab.jsx`) no
+tenía `w-full` — un `<span>` de solo texto se dimensiona a su propio
+contenido, no al ancho real disponible en la fila, así que una cifra
+partida en dos líneas (8.5) podía terminar su línea más larga justo en
+el borde interior de la tarjeta. `w-full` fuerza el ancho real de la
+fila; `px-2.5` de la tarjeta sube a `px-3` para un margen algo más
+generoso.
+
+**Tooltip**: el texto largo original ("no es solo de este mes: aquí se
+junta todo lo que aún tienes pendiente de cobrar, aunque sea de hace
+tiempo") se sustituye por el texto exacto pedido, más corto — mismo
+criterio "manos mojadas" de `CLAUDE.md`.
+
+**Verificación**: 774/774 tests (1 test actualizado, esperaba el texto
+largo del tooltip), lint 0 errores, build correcto; comprobación visual
+en navegador con datos de prueba reales (117.477,40 ฿) — margen
+correcto y tooltip con el texto nuevo.

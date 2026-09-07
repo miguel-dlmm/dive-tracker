@@ -361,11 +361,18 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
   // por ser una lista más larga y visualmente más ocupada, no por
   // necesidad de que quepa en una línea.
   const amountSizeCls = single ? "text-sm" : "text-xs";
+  // px-3 (antes px-2.5) y w-full en el span de la cifra (Fase 9,
+  // 2026-09-07, feedback real: "cuando hay una cifra grande... queda
+  // demasiado pegada al margen derecho de la box") — sin `w-full`, un
+  // span de solo texto se dimensiona a su propio contenido (no al
+  // ancho real disponible en la fila), así que una cifra partida en dos
+  // líneas podía terminar la línea más larga justo en el borde interior
+  // de la tarjeta, sin ningún margen de seguridad visual.
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-2.5 py-3"
+      className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
     >
       {/* Icono a 28px (no los 32px de KpiTile en Home): un importe con
           separador de miles y símbolo de moneda es mucho más largo que el
@@ -377,7 +384,7 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
           <Icon size={16} style={{ color }} aria-hidden="true" />
         </span>
-        <span className={`min-w-0 ${amountSizeCls} font-bold leading-tight tabular-nums`} style={{ color: BRAND_NAVY }}>
+        <span className={`w-full min-w-0 ${amountSizeCls} font-bold leading-tight tabular-nums`} style={{ color: BRAND_NAVY }}>
           {entries.length === 0 ? "—" : single ? (
             <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
           ) : (
