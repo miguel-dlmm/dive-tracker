@@ -541,6 +541,15 @@ export default function MiTrabajoTab({
   // no solo generado) que completa el cuadro sin repetir los KPIs no
   // financieros que ya tiene Home (alumnos/cursos/captados).
   const currentMonthKey = todayStr().slice(0, 7);
+  // El tooltip de "Pendiente de cobrar" explica por qué esa cifra no
+  // cuadra con Generado/Cobrado (ambos solo de este mes) — pero esa
+  // aclaración solo tiene sentido si de verdad hay algo pendiente de
+  // ANTES de este mes; si todo lo pendiente es del mes en curso, la
+  // cifra ya cuadra sola y el tooltip no aporta nada, solo ruido.
+  const hasPendingBeforeCurrentMonth = useMemo(
+    () => incomeEntries.some((e) => isPendingStatus(e.status, paymentStatuses.rows) && e.date.slice(0, 7) < currentMonthKey),
+    [incomeEntries, paymentStatuses.rows, currentMonthKey]
+  );
   const monthGeneratedTotals = useMemo(() => {
     const map = {};
     incomeEntries.filter((e) => e.date.slice(0, 7) === currentMonthKey).forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
@@ -817,10 +826,15 @@ export default function MiTrabajoTab({
             deuda pendiente acumulada de siempre, no solo de este mes. Sin
             aclararlo, la cifra parece "no cuadrar" con Generado/Cobrado
             (que sí son del mes) en cuanto queda algo sin cobrar de un mes
-            anterior — de ahí el único tooltip de los 3 KPIs. */}
+            anterior — de ahí el único tooltip de los 3 KPIs. Pero si no
+            hay NADA pendiente de antes de este mes, la cifra ya cuadra
+            sola y el tooltip no aclara nada — se oculta (`tooltip`
+            queda `null`, `MoneyKpiTile` ya no monta el botón "?").
+            Pedido explícito 2026-09-07. */}
         <MoneyKpiTile
           icon={Wallet} color={SUN} totals={pendingTotals} label={t("kpis.pendingToCollect")} index={1} reduced={reducedMotion} currencyRows={currencies.rows}
-          tooltip={t("kpis.pendingTooltip")} tooltipShowLabel={t("kpis.pendingTooltipShow")} tooltipHideLabel={t("kpis.pendingTooltipHide")}
+          tooltip={hasPendingBeforeCurrentMonth ? t("kpis.pendingTooltip") : null}
+          tooltipShowLabel={t("kpis.pendingTooltipShow")} tooltipHideLabel={t("kpis.pendingTooltipHide")}
           iconTier={kpiIconTier} measureRef={(el) => (kpiAmountRefs.current[1] = el)}
         />
         <MoneyKpiTile icon={CheckCircle2} color={GREEN} totals={monthCollectedTotals} label={t("kpis.collectedThisMonth")} index={2} reduced={reducedMotion} currencyRows={currencies.rows} iconTier={kpiIconTier} measureRef={(el) => (kpiAmountRefs.current[2] = el)} />

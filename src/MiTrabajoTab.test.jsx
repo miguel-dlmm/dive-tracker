@@ -214,6 +214,19 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     expect(screen.queryByText(tooltipText)).not.toBeInTheDocument();
   });
 
+  // Pedido explícito 2026-09-07: si no hay NADA pendiente de un mes
+  // anterior, la cifra de "Pendiente de cobrar" ya cuadra sola con
+  // Generado/Cobrado (ambos del mes en curso) — el tooltip no aclara
+  // nada en ese caso, así que no debe aparecer.
+  it("sin pendientes de meses anteriores (todo lo pendiente es de este mes), el tooltip no aparece", () => {
+    const now = new Date();
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    renderMiTrabajo({
+      worklog: [{ id: "w1", date: `${thisMonth}-01`, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }],
+    });
+    expect(screen.queryByRole("button", { name: /^Info:/ })).not.toBeInTheDocument();
+  });
+
   it("un ajuste negativo pendiente ofrece 'Marcar liquidado' en vez de 'Confirmar cobro'", () => {
     renderMiTrabajo(mixedDataset());
     expect(screen.getByRole("button", { name: /Marcar liquidado/ })).toBeInTheDocument();

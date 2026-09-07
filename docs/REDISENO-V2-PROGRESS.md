@@ -3090,3 +3090,42 @@ la cuenta demo que usa el bypass de login de desarrollo
 ella en este entorno sin su contraseña real — la verificación se apoya
 en las consultas directas a la base de datos, no en captura de
 pantalla.
+
+## Fase 12 — Nuevo lote de correcciones y mejoras (2026-09-07)
+
+Con la cola de la Fase 10 cerrada, el usuario encarga un lote nuevo de
+11 puntos ("Correcciones y mejoras — Ocean Flow"), más dos aclaraciones
+sobre la cola anterior: la queja de TR ("no se han aplicado los
+estándares del libro de estilo") se concreta en "los campos versión del
+examen, certificación... se ven del tono verde anterior al rediseño";
+y la recarga en bucle del Preview Deployment (#20, abierta desde antes
+de la Fase 10) "ya no ocurre" — se cierra sin más acción, no
+reproducida de nuevo y ahora confirmada resuelta por el propio usuario.
+
+Orden de trabajo explícito del usuario: "el orden no establece la
+prioridad... prioriza entregando valor de forma constante" — se
+resuelve en el orden que permita cerrar y pushear cada punto cuanto
+antes (empezando por los más acotados), no en el orden 1-11 en que se
+listaron. Mismo mecanismo de siempre: documentar+commit+aviso de
+despliegue después de cada bloque cerrado, nunca al final del lote.
+
+### 12.1 — Tooltip de "Pendiente de cobrar": solo si hay pendientes de antes de este mes
+
+El tooltip existía para aclarar por qué la cifra de "Pendiente de
+cobrar" (deuda acumulada de siempre) no cuadraba con Generado/Cobrado
+(ambos solo del mes en curso) en cuanto quedaba algo sin cobrar de un
+mes anterior — pero si TODO lo pendiente es de este mismo mes, las tres
+cifras ya cuadran solas y el tooltip no aclara nada, solo ruido.
+
+**Qué se hizo**: `hasPendingBeforeCurrentMonth` (nuevo, `MiTrabajoTab.jsx`)
+— `true` si algún `incomeEntry` pendiente tiene `date` de un mes
+anterior al actual. El prop `tooltip` de la tarjeta "Pendiente de
+cobrar" pasa a `null` cuando es `false` — `MoneyKpiTile` ya no monta el
+botón "?" en ese caso (no hizo falta tocar ese componente, solo cómo se
+le llama).
+
+**Verificado**: test nuevo en `MiTrabajoTab.test.jsx` — con un único
+pendiente fechado en el mes en curso, el botón "Info: ..." no aparece
+en absoluto. El test ya existente (con pendientes de un mes anterior)
+sigue confirmando que el tooltip SÍ aparece y funciona igual que antes.
+805/805 tests (suite completa), lint 0 errores, build correcto.

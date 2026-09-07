@@ -131,6 +131,9 @@ Registro de cambios relevantes de Ocean Flow.
 - El desplazamiento de la pantalla al abrir el detalle de un día en el
   calendario de Home/Resumen ya no es instantáneo — se anima con el
   mismo estilo de movimiento que el resto de la app.
+- El tooltip de ayuda del KPI "Pendiente de cobrar" (Mi trabajo) solo
+  aparece si de verdad hay algo pendiente de cobrar de un mes anterior
+  — si todo lo pendiente es de este mes, ya no hace falta la aclaración.
 
 ### Fixed
 - El calendario de Home/Resumen ahora sí desplaza la pantalla al detalle
