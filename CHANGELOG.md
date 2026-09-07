@@ -128,6 +128,9 @@ Registro de cambios relevantes de Ocean Flow.
   y Tarifas consolidan el título de cada fila (escuela + curso) en un
   único componente compartido, y se retira un esqueleto de carga de Mi
   trabajo que nunca llegaba a pintarse en la práctica.
+- El desplazamiento de la pantalla al abrir el detalle de un día en el
+  calendario de Home/Resumen ya no es instantáneo — se anima con el
+  mismo estilo de movimiento que el resto de la app.
 
 ### Fixed
 - El calendario de Home/Resumen ahora sí desplaza la pantalla al detalle

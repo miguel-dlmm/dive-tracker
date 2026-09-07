@@ -1,5 +1,17 @@
 import { renderHook } from "@testing-library/react";
-import { useSwipeBack } from "./motion";
+import { useSwipeBack, animateScrollBy } from "./motion";
+
+// animate() de Motion se mockea para no depender de requestAnimationFrame
+// real en jsdom (poco fiable en tests, mismo criterio que useSwipeBack
+// arriba) — se simula que la animación llega directa al valor final,
+// suficiente para comprobar el CONTRATO (a qué scrollY final llega, con
+// qué API) sin necesitar reproducir el tween fotograma a fotograma.
+vi.mock("motion/react", () => ({
+  animate: vi.fn((from, to, opts) => {
+    opts.onUpdate?.(to);
+    return { stop: vi.fn() };
+  }),
+}));
 
 // Deslizar hacia la derecha = "atrás" (feedback explícito 2026-08-30,
 // Configuración y Ayuda). Reescrito 2026-08-30 (segunda vuelta) para usar
@@ -56,5 +68,36 @@ describe("useSwipeBack", () => {
   it("sin onBack (nada adonde volver) se desactiva solo, sin necesidad de pasar enabled:false", () => {
     const { result } = renderHook(() => useSwipeBack(null));
     expect(result.current.onTouchStart).toBeUndefined();
+  });
+});
+
+// Calendario, 2026-09-07: "haz una animación al scroll down al calendario
+// al pulsar en un día" — antes el desplazamiento (medido en el clic, ver
+// MonthCalendar en shared.jsx) era instantáneo a propósito
+// (`window.scrollBy` directo), porque `behavior: "smooth"` nativo no
+// desplaza nada en este entorno de pruebas (hallazgo ya documentado).
+describe("animateScrollBy", () => {
+  beforeEach(() => {
+    window.scrollTo = vi.fn();
+    window.scrollBy = vi.fn();
+    Object.defineProperty(window, "scrollY", { value: 100, writable: true, configurable: true });
+  });
+
+  it("reduced:true salta directo al destino con scrollBy, sin animar", () => {
+    animateScrollBy(50, { reduced: true });
+    expect(window.scrollBy).toHaveBeenCalledWith({ top: 50, behavior: "auto" });
+    expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("delta ~0 salta directo, aunque reduced sea false (nada que animar)", () => {
+    animateScrollBy(0.4, { reduced: false });
+    expect(window.scrollBy).toHaveBeenCalledWith({ top: 0.4, behavior: "auto" });
+    expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+
+  it("con movimiento activo, anima con Motion hasta el scrollY objetivo (startY + delta)", () => {
+    animateScrollBy(-40, { reduced: false });
+    expect(window.scrollBy).not.toHaveBeenCalled();
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 60); // 100 - 40
   });
 });

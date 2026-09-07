@@ -7,7 +7,7 @@ import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, Chev
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
 import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY, ENTITY_COLOR_PALETTE } from "./colors";
-import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, monthSlideVariants, usePrefersReducedMotion, useSwipeHorizontal } from "./motion";
+import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, monthSlideVariants, usePrefersReducedMotion, useSwipeHorizontal, animateScrollBy } from "./motion";
 import { AVATAR_ICON_MAP } from "./avatarCatalog";
 
 // Catálogo cerrado del icono de carga configurable (GeneralSettings,
@@ -1422,11 +1422,20 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
               // mano (varía con `env(safe-area-inset-top)` según el
               // dispositivo) — mismo criterio que `useFloatingPosition`
               // (más abajo en este archivo) de medir antes que adivinar.
+              // Quinto ajuste (2026-09-07, pedido explícito: "haz una
+              // animación al scroll down al calendario al pulsar en un
+              // día") — el delta a desplazar se sigue midiendo igual
+              // (medir en el clic, no esperar a nada, ver el comentario
+              // largo más arriba), pero ya no se aplica al instante:
+              // animateScrollBy (motion.js) lo anima con el mismo tween
+              // de la app, tras reconfirmar en vivo que `behavior:
+              // "smooth"` nativo sigue sin desplazar nada en este
+              // entorno de pruebas.
               if (opening) {
                 const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
                 const gap = 12;
                 const rect = containerRef.current?.getBoundingClientRect();
-                if (rect) window.scrollBy({ top: rect.top - headerBottom - gap, behavior: "auto" });
+                if (rect) animateScrollBy(rect.top - headerBottom - gap, { reduced: reducedMotion });
               }
             } else if (creatable) onCreateForDay(dateStr);
           };

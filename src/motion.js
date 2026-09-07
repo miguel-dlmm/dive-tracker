@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { animate } from "motion/react";
 
 // =================================================================
 // Convención de motion de Ocean Flow — un único vocabulario de
@@ -99,6 +100,37 @@ export function monthSlideVariants(reduced = false) {
     animate: { opacity: 1, x: 0, transition: { duration: d(reduced, DURATION.sm), ease: EASE.enter } },
     exit: (direction) => ({ opacity: 0, x: direction > 0 ? -20 : 20, transition: { duration: d(reduced, DURATION.xs), ease: EASE.exit } }),
   };
+}
+
+// Desplaza la ventana un delta (equivalente animado de `window.scrollBy`) —
+// pedido explícito tras el ajuste anterior de MonthCalendar ("haz una
+// animación al scroll down al calendario al pulsar en un día"), que se
+// había dejado instantáneo a propósito. Antes de escribir esto se
+// reconfirmó en vivo (2026-09-07, mismo hallazgo que ya documentaba
+// shared.jsx) que `window.scrollTo({ behavior: "smooth" })`/
+// `scrollIntoView({ behavior: "smooth" })` siguen sin desplazar NADA en
+// este entorno de pruebas (Chromium vía CDP) — no es un problema resuelto
+// entre rondas, así que animar el scroll sigue necesitando un tween
+// propio en vez de delegar en la API nativa del navegador.
+// Se usa `animate()` de Motion (ya una dependencia real de la app, no una
+// nueva) para animar un simple NÚMERO con el mismo par
+// duración/easing que el resto de la app — el patrón documentado de
+// Motion para animar valores arbitrarios ajenos a un elemento (scroll,
+// en este caso), sin tener que resolver a mano la curva cubic-bezier de
+// EASE con un tween manual. reduced=true (o un delta ya nulo) salta
+// directo al destino con `window.scrollBy` normal, igual que antes de
+// este cambio.
+export function animateScrollBy(deltaY, { reduced = false, duration = DURATION.md, ease = EASE.standard } = {}) {
+  if (reduced || Math.abs(deltaY) < 1) {
+    window.scrollBy({ top: deltaY, behavior: "auto" });
+    return;
+  }
+  const startY = window.scrollY;
+  animate(startY, startY + deltaY, {
+    duration,
+    ease,
+    onUpdate: (v) => window.scrollTo(0, v),
+  });
 }
 
 // prefers-reduced-motion — cualquier componente que anime debe consultar

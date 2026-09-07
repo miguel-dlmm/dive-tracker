@@ -2947,3 +2947,42 @@ la corrección se apoya en la prueba determinista de los tests, no en
 esa comprobación visual adicional. Queda pendiente que el usuario lo
 confirme en su iPhone real, el único sitio donde el bug original era
 reproducible.
+
+### 11.3 — Calendario: animar el scroll al pulsar un día
+
+Retoma el segundo pendiente de la cola: "haz una animación al scroll
+down al calendario al pulsar en un día" — el ajuste de 10.14 había
+dejado el desplazamiento instantáneo a propósito. Antes de implementar
+se reconfirmó en vivo (no se dio por hecho que seguía roto) que
+`window.scrollTo`/`scrollIntoView` con `behavior: "smooth"` TODAVÍA no
+desplaza nada en este entorno de pruebas (Chromium vía CDP) —
+verificado con `javascript_tool`: `scrollY` se queda exactamente igual
+tras pedir un scroll suave, tanto para el propio scroll simple como
+para el caso real del calendario.
+
+**Qué se hizo**: `animateScrollBy` (nueva, `motion.js`) — anima un
+`window.scrollBy` equivalente usando `animate()` de Motion (la misma
+librería que ya usa toda la app, no una dependencia nueva) para animar
+un NÚMERO (el scrollY objetivo) con el mismo par duración/easing
+(`DURATION.md`/`EASE.standard`) que el resto de transiciones — el
+patrón documentado de Motion para animar valores ajenos a un elemento
+(aquí, la posición de scroll), sin tener que resolver a mano la curva
+cubic-bezier de `EASE` con un tween propio. `reduced:true` (o un delta
+ya nulo) salta directo al destino con `scrollBy` normal, igual que
+antes. `MonthCalendar` (`shared.jsx`) lo usa en el mismo punto donde ya
+medía el delta a desplazar (ver el comentario largo junto a
+`handleClick`, sin tocar esa parte) — solo cambia CÓMO se aplica el
+desplazamiento, no cómo se calcula.
+
+**Verificado**: `animateScrollBy` mockea `animate()` de Motion (para no
+depender de `requestAnimationFrame` real en jsdom, mismo criterio que
+`useSwipeBack` en este mismo fichero) — 3 tests nuevos en
+`motion.test.jsx`: salta directo con `reduced:true`, salta directo con
+un delta insignificante, y anima hasta el `scrollY` objetivo
+(`startY + delta`) con movimiento activo. Confirmado también en vivo
+que la función real SÍ se invoca al pulsar un día del calendario de
+Home (con `console.log` temporal, revertido antes de commitear, nunca
+llegó a git): `animate()` de Motion se llama con el `deltaY` correcto y
+devuelve un controlador de animación real de la librería. 804/804
+tests (suite completa, incluye los 3 nuevos), lint 0 errores, build
+correcto.
