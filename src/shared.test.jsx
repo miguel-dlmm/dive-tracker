@@ -96,7 +96,19 @@ describe("formatMoney", () => {
   ];
 
   it("formatea un importe con el símbolo de la moneda encontrada", () => {
-    expect(formatMoney(1234.5, "EUR", currencyRows)).toBe("1234,50 €");
+    expect(formatMoney(1234.5, "EUR", currencyRows)).toBe("1.234,50 €");
+  });
+
+  // Bug real reportado (Fase 8, 2026-09-07): sin useGrouping: "always",
+  // Intl con locale "es-ES" en modo "auto" (su valor por defecto) no
+  // pone el punto de millar en números de 4 cifras (1000-9999) — sí lo
+  // pone a partir de 5 cifras. Comprobado en Node antes de corregirlo:
+  // `(4400).toLocaleString("es-ES", {...})` daba "4400,00", no
+  // "4.400,00". Este test fija el caso exacto reportado para que no
+  // pueda volver a colarse silenciosamente.
+  it("pone el punto de millar también en importes de 4 cifras (1000-9999)", () => {
+    expect(formatMoney(4400, "EUR", currencyRows)).toBe("4.400,00 €");
+    expect(formatMoney(1000, "EUR", currencyRows)).toBe("1.000,00 €");
   });
 
   it("formatea importes negativos", () => {

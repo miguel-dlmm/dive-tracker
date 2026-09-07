@@ -1468,3 +1468,36 @@ el final (confirmado también en el paso "Hasta", donde cabía entero sin
 necesidad de scroll, y el botón "OK" queda visible); el menú "⋯" de una
 fila sigue con las esquinas redondeadas intactas (sin regresión visual
 del cambio de `overflow`).
+
+### 8.3 — Punto de millar inconsistente: cifras de 4 dígitos sin agrupar
+
+Bug real reportado: "en las cantidades hay puntos en decimales cuando
+son 5 cifras, pero cuando son 4 cifras no llevan el punto de los
+miles". Confirmado y reproducido directamente en Node antes de tocar
+nada: `(4400).toLocaleString("es-ES", {minimumFractionDigits:2,
+maximumFractionDigits:2})` da `"4400,00"`, pero
+`(44000).toLocaleString(...)` da `"44.000,00"`. No es un bug de esta
+app — es el comportamiento por defecto (`useGrouping: "auto"`) de
+`Intl.NumberFormat` con el locale `es-ES`: por debajo de 5 cifras
+totales, el motor decide no agrupar en absoluto; a partir de 5 sí,
+incluyendo cualquier grupo adicional que hubiera (`1234567` →
+`"1.234.567"`, con agrupación completa pese a que el primer grupo por
+la izquierda también tendría un solo dígito).
+
+**Corrección, unificada en las 4 funciones de la app que formatean un
+número con `toLocaleString("es-ES", ...)`**: se añade `useGrouping:
+"always"`, que fuerza la agrupación de miles siempre, sin ese umbral
+oculto de 5 cifras. Las 4 funciones (antes ninguna lo tenía):
+`formatMoney` y `Money` (`shared.jsx`, usadas por toda la app para
+mostrar importes), `MoneyInput` (`shared.jsx`, la cifra que se ve al
+dejar de editar un campo de importe) y `fmtInt` (`SummaryTab.jsx`,
+contadores enteros — el mismo umbral de "auto" afecta igual a enteros
+sin decimales, no es exclusivo de las cifras de dinero).
+
+**Verificación**: 764/764 tests (1 nuevo, fija el caso exacto
+reportado — `formatMoney(4400, ...)` → `"4.400,00 €"`; el test
+preexistente que esperaba `"1234,50 €"` sin punto se corrige a
+`"1.234,50 €"`, era el comportamiento buggy documentado sin darse
+cuenta), lint 0 errores, build correcto; comprobación visual en
+navegador — "Open Water" (4.400,00 ฿) y los KPIs de cabecera muestran
+ya el punto de millar correctamente.

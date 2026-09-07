@@ -390,10 +390,22 @@ export function shortDate(iso) {
   return iso ? new Date(iso).toLocaleDateString("es-ES") : "—";
 }
 
+// useGrouping: "always" — bug real reportado (2026-09-07): sin esto,
+// Intl con locale "es-ES" en modo "auto" (su valor por defecto) no pone
+// el punto de millar cuando el primer grupo tendría un solo dígito —
+// 4.400 se veía bien, pero cualquier cifra de 1000 a 9999 salía sin
+// punto ("4400,00" en vez de "4.400,00"; comprobado en Node:
+// `(4400).toLocaleString("es-ES", {minimumFractionDigits:2,
+// maximumFractionDigits:2})` da "4400,00", `(44000)...` da
+// "44.000,00" — el propio motor de JS, no un bug de esta app, pero sí
+// una inconsistencia visible que había que corregir). Mismo motivo y
+// misma corrección en `Money` (aquí abajo), `MoneyInput` y
+// `fmtInt` (SummaryTab.jsx) — cualquier cifra formateada en la app pasa
+// por una de estas cuatro funciones.
 export function formatMoney(amount, code, currencyRows) {
   const cur = currencyRows.find((c) => c.code === code);
   const symbol = cur?.symbol || code || "";
-  const n = (amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const n = (amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" });
   return `${n} ${symbol}`;
 }
 
@@ -420,7 +432,8 @@ export function setFavoriteCurrency(userId, code) {
 export function Money({ amount, code, currencyRows, className = "", muted = false, style = {} }) {
   const cur = currencyRows.find((c) => c.code === code);
   const symbol = cur?.symbol || code || "";
-  const n = (amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // useGrouping: "always" — ver comentario largo de formatMoney más arriba.
+  const n = (amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" });
   return (
     <span className={`tabular-nums ${className}`} style={{ color: muted ? "#6B7280" : undefined, ...style }}>
       {n}
@@ -943,9 +956,10 @@ export function MoneyInput({ value, onChange, className = "", placeholder, "aria
     if (!editing) setRaw(value != null && value !== "" ? String(value) : "");
   }, [value, editing]);
 
+  // useGrouping: "always" — ver comentario largo de formatMoney más arriba.
   const display = editing
     ? raw
-    : (value !== "" && value != null ? Number(value).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "");
+    : (value !== "" && value != null ? Number(value).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" }) : "");
   const isNegative = Number(value) < 0;
 
   const toggleSign = () => {

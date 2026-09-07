@@ -27,7 +27,14 @@ const NEUTRAL_GRAY = "#94A3B8";
 // neutra (slate), no un color inventado aparte.
 const AJUSTE_FILL = "#64748B";
 
-const fmtInt = (n) => (n || 0).toLocaleString("es-ES");
+// useGrouping: "always" — sin esto, Intl con locale "es-ES" en modo
+// "auto" (el valor por defecto) no agrupa los miles cuando el primer
+// grupo tendría un solo dígito (bug real reportado: 4.400 se veía bien,
+// pero 1000-9999 salía sin punto de millar, p. ej. "4400" en vez de
+// "4.400" — comprobado en Node: `(4400).toLocaleString("es-ES")` da
+// "4400", `(44000)...` da "44.000". Mismo motivo en formatMoney/Money/
+// MoneyInput de shared.jsx, unificado ahí también).
+const fmtInt = (n) => (n || 0).toLocaleString("es-ES", { useGrouping: "always" });
 
 // MONTHS/MONTHS_SHORT/shortPeriodLabel/periodLabel dependían de arrays
 // fijos en español — ahora dependen de t() (namespace "summary"), así que

@@ -146,6 +146,9 @@ Registro de cambios relevantes de Ocean Flow.
   del viewport sin ninguna forma de hacer scroll para ver el final —
   afectaba en realidad a cualquier panel flotante de la app (Select,
   MultiSelect, DatePicker...) más alto que el hueco disponible.
+- Los importes de 4 cifras (1.000 a 9.999) no llevaban el punto de los
+  miles, a diferencia de los de 5 cifras o más — ya se ven igual de
+  consistentes en toda la app.
 - (Interno) Los emails transaccionales (alta, recuperación de
   contraseña, aviso de despliegue) seguían con los colores de marca
   previos al rebrand — ahora usan el mismo azul marino que el resto de
