@@ -2097,3 +2097,60 @@ lint sin errores nuevos, build correcto. Confirmado con `vercel build
 `vercel deploy --prebuilt --yes` que el deployment termina en
 `readyState: "READY"` — la corrección funciona de verdad, no solo en
 teoría.
+
+### 9.13 — JPG en Safari iOS real: sin nuevo avance con confianza, se pide un dato concreto en vez de un cuarto arreglo a ciegas
+
+Retomando el reporte del usuario: "descargar JPG SIGUE ROTO. prueba tu
+en la url de preview directamente para q lo veas. estoy probando en
+safari ios iphone 14 pro max."
+
+**Repaso de lo ya intentado en rondas anteriores** (todo documentado en
+sesiones previas, `docs/RELEASE-V1-PROGRESS.md` y Fase 7/8 de este
+mismo documento): (1) polyfills de `Promise.withResolvers`/`Iterator`/
+`Promise.try` aplicados también dentro del Web Worker de pdfjs-dist,
+no solo en el hilo principal; (2) `disableImageDecoder: true` para
+evitar la dependencia de WebCodecs, no soportada de forma fiable en
+Safari; (3) guard sobre `canvas.toBlob()` devolviendo `null` en vez de
+lanzar, con mensaje de error que dice en qué canvas/paso falló. Las
+tres son correcciones reales de bugs confirmados en su momento (con
+capturas de consola de Safari real que el usuario proporcionó
+entonces) — no conjeturas.
+
+**Intento de esta ronda**: probar directamente en la URL de Preview
+real, tal como pidió el usuario — posible ahora mismo porque hay un
+Preview Deployment recién verificado como `Ready` (ver 9.12). Bloqueado
+en la práctica: la app requiere sesión real (el bypass de login es
+exclusivamente `npm run dev` en local, nunca en Vercel, por diseño —
+ver CLAUDE.md) y no hay credenciales de una cuenta real disponibles
+aquí. Sin poder entrar a la app en la URL de Preview, no se puede
+ejecutar el flujo de Training Records ahí ni con Chromium ni con nada.
+
+**Por qué no se hace un cuarto cambio a ciegas**: `downloadJpg` y
+`downloadPdf` comparten exactamente el mismo mecanismo de descarga
+(`downloadBytes`: `<a download>` + `blob:` URL, revocado con retraso).
+Existe una incompatibilidad real y documentada de Safari/WebKit con el
+atributo `download` sobre URLs `blob:` de imágenes específicamente
+(históricamente Safari a veces navega/abre la imagen en vez de
+descargarla, a diferencia de `application/pdf`, con mejor soporte) —
+es una hipótesis razonable de por dónde puede estar fallando
+específicamente JPG y no PDF. Pero aplicar un arreglo (p. ej. detectar
+Safari/iOS y abrir la imagen en pestaña nueva en vez de forzar
+descarga, para al menos dejar la imagen visible y "guardar imagen"
+mediante toque largo como alternativa) sin poder verificarlo sería
+exactamente el mismo patrón que ya falló 3 veces seguidas con el bug
+del scroll del calendario (ver 9.7) antes de encontrar la causa real
+mediante depuración directa — y aquí no hay ninguna vía de depuración
+directa disponible.
+
+**Lo que de verdad desbloquearía este bug**: un dato concreto del
+dispositivo real que aquí no se puede obtener sin él — ¿qué pasa
+exactamente al tocar "Descargar imagen (JPG)" en el iPhone real ahora
+mismo? (a) ¿un error visible en pantalla — cuál exactamente? (b) ¿no
+pasa nada en absoluto? (c) ¿se abre la imagen en una pestaña nueva en
+vez de descargarse? (d) ¿la propia generación falla antes de llegar a
+descargar? Cualquiera de esas 4 respuestas apunta a una causa distinta
+y a un arreglo distinto — sin ese dato, seguir cambiando código es
+conjetura, no diagnóstico.
+
+**Estado**: sin cerrar. Pendiente de esa respuesta del usuario antes de
+un cuarto intento de arreglo. No se toca código en esta sección.
