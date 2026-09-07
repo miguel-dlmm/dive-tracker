@@ -3177,3 +3177,44 @@ checkboxes de "Progreso del curso" en navy (no verde), "Versión del
 examen" (Online) y "Certificación" (Open Water Diver) ambos en navy —
 zoom sobre los dos para confirmar que no queda ningún resto verde. Sin
 errores de consola.
+
+### 12.3 — Pantalla "Crea tu cuenta": textos más cercanos
+
+Pedido: "quiero que la pantalla de 'crea tu cuenta' tenga textos más
+amigables, de bienvenida y que generen expectativa" — el copy anterior
+era puramente funcional ("Crea tu cuenta" / "Te enviaremos un email
+para confirmar tu cuenta y crear tu contraseña"), sin ningún gancho ni
+tono de bienvenida, a diferencia de `createPassword` ("¡Bienvenido a
+Ocean Flow!"), que sí lo tenía para el flujo de alta por admin.
+
+**Qué se hizo** (`src/i18n/locales/{es,en}/auth.json`, clave
+`register`), sin tocar la lógica de `RegisterScreen.jsx`:
+- `title`: "Crea tu cuenta" → "Únete a Ocean Flow" — deja de sonar a
+  trámite.
+- `description`: pasa de solo explicar el paso técnico siguiente
+  (email de confirmación) a nombrar primero el problema real que
+  resuelve la app ("Deja el cuaderno y las notas sueltas — lleva el
+  control de tus clases, comisiones y pagos desde un único sitio"),
+  cerrando con la expectativa de rapidez ("Solo te llevará un minuto").
+- `confirmationMessage`: abre con "¡Ya casi está!" en vez de ir
+  directo al paso técnico, y cierra recordando el beneficio ("empezar a
+  controlar tus ingresos con Ocean Flow") en vez de solo "empezar a
+  usar Ocean Flow".
+- `submit`: "Registrarme" → "Crear mi cuenta" — más personal que el
+  infinitivo genérico.
+
+Mismo cambio en `en/auth.json` (paridad de idioma, ya exigida en
+cualquier copy nueva de la app). Nada de jerga técnica ni mensaje de
+"máquina" — regla 2 de "Reglas permanentes — Release V1" en
+`CLAUDE.md`.
+
+**Verificado**: `RegisterScreen.test.jsx` actualizado (8 asserts que
+dependían del texto literal anterior) — todos los tests comprueban
+comportamiento (envío del formulario, validación de errores, mensaje de
+confirmación), no la redacción exacta más allá de localizar el botón
+por su nuevo nombre accesible. 808/808 tests (suite completa), lint 0
+errores, build correcto. No verificado en navegador real: el bypass de
+login de desarrollo inicia sesión automáticamente antes de que esta
+pantalla llegue a pintarse (misma limitación ya documentada en 4.5),
+así que la verificación se apoya en los tests, que sí renderizan el
+componente real y comprueban el texto en el DOM.

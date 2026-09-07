@@ -39,13 +39,13 @@ it("enviar el formulario llama a /api/external-register con los datos y muestra 
   await user.type(screen.getByLabelText("Nombre"), "Ada");
   await user.type(screen.getByLabelText("Apellidos"), "Lovelace");
   await user.type(screen.getByLabelText("Nickname"), "ada");
-  await user.click(screen.getByRole("button", { name: "Registrarme" }));
+  await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
     method: "POST",
     body: JSON.stringify({ email: "diver@example.com", first_name: "Ada", last_name: "Lovelace", nickname: "ada", language: "es" }),
   })));
-  expect(await screen.findByText(/Te hemos enviado un email para confirmar tu cuenta/)).toBeInTheDocument();
+  expect(await screen.findByText(/Ya casi está! Te hemos enviado un email para confirmar tu cuenta/)).toBeInTheDocument();
 });
 
 // Release V1, 2026-09-02 (enlace de invitación): cuando AuthGate detecta
@@ -58,7 +58,7 @@ it("con inviteToken, lo incluye en el body como invite_token", async () => {
 
   await user.type(screen.getByLabelText("Email"), "diver@example.com");
   await user.type(screen.getByLabelText("Nickname"), "ada");
-  await user.click(screen.getByRole("button", { name: "Registrarme" }));
+  await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
     body: JSON.stringify({ email: "diver@example.com", first_name: "", last_name: "", nickname: "ada", language: "es", invite_token: "abc-123" }),
@@ -71,7 +71,7 @@ it("sin inviteToken, no incluye invite_token en el body (comportamiento normal)"
 
   await user.type(screen.getByLabelText("Email"), "diver@example.com");
   await user.type(screen.getByLabelText("Nickname"), "ada");
-  await user.click(screen.getByRole("button", { name: "Registrarme" }));
+  await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
   const body = JSON.parse(globalThis.fetch.mock.calls[0][1].body);
@@ -89,7 +89,7 @@ it("cambiar el idioma en el selector se envía en el registro", async () => {
 
   await user.type(screen.getByLabelText("Email"), "diver@example.com");
   await user.type(screen.getByLabelText("Nickname"), "ada");
-  await user.click(screen.getByRole("button", { name: "Sign up" }));
+  await user.click(screen.getByRole("button", { name: "Create my account" }));
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
     body: expect.stringContaining('"language":"en"'),
@@ -103,7 +103,7 @@ it("si el servidor responde con error (p. ej. registro externo desactivado), lo 
 
   await user.type(screen.getByLabelText("Email"), "diver@example.com");
   await user.type(screen.getByLabelText("Nickname"), "ada");
-  await user.click(screen.getByRole("button", { name: "Registrarme" }));
+  await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
   expect(await screen.findByText("El registro externo no está habilitado.")).toBeInTheDocument();
   expect(screen.queryByText(/Te hemos enviado un email/)).not.toBeInTheDocument();
@@ -117,8 +117,8 @@ it("un nickname con '@' muestra el aviso, deshabilita el envío y no llama a fet
   await user.type(screen.getByLabelText("Nickname"), "diver@example.com");
 
   expect(screen.getByText('El nickname no puede contener "@".')).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Registrarme" })).toBeDisabled();
-  await user.click(screen.getByRole("button", { name: "Registrarme" }));
+  expect(screen.getByRole("button", { name: "Crear mi cuenta" })).toBeDisabled();
+  await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
   expect(globalThis.fetch).not.toHaveBeenCalled();
 });
 
@@ -129,7 +129,7 @@ it("si el email no se pudo enviar (email_sent:false), avisa por toast y no pasa 
 
   await user.type(screen.getByLabelText("Email"), "diver@example.com");
   await user.type(screen.getByLabelText("Nickname"), "ada");
-  await user.click(screen.getByRole("button", { name: "Registrarme" }));
+  await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
   expect(screen.queryByText(/Te hemos enviado un email/)).not.toBeInTheDocument();

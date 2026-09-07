@@ -134,6 +134,8 @@ Registro de cambios relevantes de Ocean Flow.
 - El tooltip de ayuda del KPI "Pendiente de cobrar" (Mi trabajo) solo
   aparece si de verdad hay algo pendiente de cobrar de un mes anterior
   — si todo lo pendiente es de este mes, ya no hace falta la aclaración.
+- La pantalla "Crea tu cuenta" tiene textos más cercanos, de bienvenida
+  y menos de trámite ("Únete a Ocean Flow" en vez de "Crea tu cuenta").
 
 ### Fixed
 - Training Records: "Versión del examen", "Certificación" y los
