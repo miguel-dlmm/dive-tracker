@@ -17,6 +17,22 @@ export function computeRateTotal(rate, people) {
   return rate.rate * (Number(people) || 0);
 }
 
+// Baja lógica de tarifas (migración 0015, ver scripts/migrations/) —
+// `is_active` puede faltar en una fila si el objeto viene de un
+// test/mock que no lo fija explícitamente, se trata como activa por
+// defecto (mismo valor por defecto que la columna real en BD, `not
+// null default true`). Única fuente de verdad, antes duplicada solo en
+// RatesTab.jsx (que ya la usaba para "Mostrar desactivadas") — bug real
+// encontrado 2026-09-07: MovementSheet.jsx buscaba la tarifa de una
+// escuela+curso con un simple `.find()` sin este filtro, así que una
+// tarifa DESACTIVADA (con o sin una activa vigente al lado) podía
+// usarse igualmente para calcular el importe de un movimiento nuevo, o
+// impedir que se ofreciera el formulario de "Añadir tarifa" cuando en
+// realidad no hay ninguna vigente.
+export function isRateActive(r) {
+  return r.is_active !== false;
+}
+
 // Las 3 fuentes de actividad económica, SIN fusionar — HomeTab y
 // SummaryTab necesitan tanto el array combinado (calendario, "total")
 // como cada fuente por separado (calendario agrupado por tipo,

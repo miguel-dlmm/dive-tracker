@@ -8,14 +8,7 @@ import {
   EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate, BooleanToggle,
 } from "./shared";
 import { listItemVariants, usePrefersReducedMotion } from "./motion";
-
-// Baja lógica (2026-09-04, ver scripts/migrations/0015-tarifas-vigencia.sql):
-// `is_active` puede faltar en una fila si el objeto viene de un test/mock
-// que no lo fija explícitamente — se trata como activa por defecto (mismo
-// valor por defecto que la columna real en BD, `not null default true`),
-// nunca al revés, para no ocultar de golpe listados que no conocían este
-// campo antes de esta migración.
-const isRateActive = (r) => r.is_active !== false;
+import { isRateActive } from "./rateCalc";
 
 // Rediseño 2026-08-30 — Tarifas pasa a hablar el mismo idioma visual que Mi
 // trabajo: una única lista (antes dos pestañas de página, "Instructor"/

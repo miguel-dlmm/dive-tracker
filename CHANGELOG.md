@@ -158,6 +158,9 @@ Registro de cambios relevantes de Ocean Flow.
 - Los 3 KPIs de Mi trabajo reducen u ocultan su icono juntos (nunca solo
   uno) cuando alguna de las 3 cifras crece demasiado, para dejarle sitio
   al número.
+- (Interno) Una tarifa desactivada podía usarse igualmente para
+  calcular el importe de un movimiento nuevo — ahora solo cuenta una
+  tarifa activa, igual que si no existiera ninguna cuando no la hay.
 - Tarifas: "Mostrar desactivadas" ya no está escondido dentro de
   "Filtrar" (siempre visible junto al contador de la lista), y una
   tarifa desactivada se reconoce ahora por su propio fondo, no solo por

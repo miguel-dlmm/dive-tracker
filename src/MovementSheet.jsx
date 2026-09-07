@@ -8,7 +8,7 @@ import {
   DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency, MOVEMENT_TYPE_META,
 } from "./shared";
 import { DURATION, sheetVariants, usePrefersReducedMotion } from "./motion";
-import { computeRateTotal, buildActivityEntries } from "./rateCalc";
+import { computeRateTotal, buildActivityEntries, isRateActive } from "./rateCalc";
 
 // Única fuente de verdad para crear/editar un movimiento (Curso/Comisión/
 // Ajuste) — extraído de MiTrabajoTab.jsx para que Home pueda abrir esta
@@ -94,7 +94,13 @@ export default function MovementSheet({
 
   const tableFor = (source) => (source === "ganado" ? worklog : source === "comision" ? comisiones : colleaguePayments);
   const ratesTableFor = (type) => (type === "ganado" ? rates : commissionRates);
-  const rateFor = (type, school, activity) => ratesTableFor(type).rows.find((r) => r.school === school && r.activity === activity);
+  // Solo tarifas ACTIVAS (Fase 9, 2026-09-07 — bug real confirmado: sin
+  // este filtro, una tarifa desactivada podía usarse igualmente para
+  // calcular el importe de un movimiento nuevo, o impedir que se
+  // ofreciera "Añadir tarifa" cuando en realidad no había ninguna
+  // vigente para esa escuela+curso). Mismo criterio que RatesTab.jsx,
+  // ver isRateActive en rateCalc.js.
+  const rateFor = (type, school, activity) => ratesTableFor(type).rows.find((r) => r.school === school && r.activity === activity && isRateActive(r));
   // Mismo criterio que RatesTab.jsx (lastCurrencyFor) para la tarifa
   // creada al vuelo desde aquí (feedback 2026-08-30: moneda visible, no
   // editable, en el propio formulario de tarifa) — la de la tarifa más

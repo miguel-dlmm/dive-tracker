@@ -1804,3 +1804,31 @@ sin cambios, confirmando que el mecanismo no rompe el caso normal. No
 se ha podido generar en este entorno una cifra de prueba real que
 alcance el nivel "small"/"hidden" (los umbrales exactos están fijados
 por el test unitario, que sí los ejerce directamente).
+
+### 9.5 — Bug real confirmado: una tarifa desactivada podía usarse para calcular un movimiento nuevo
+
+Pregunta del usuario, no una suposición: "se está teniendo en cuenta la
+tarifa desactivada a la hora de añadir un movimiento, pillar solo la
+activa o en caso de no haber ni creada ni activa ofrecer el formulario
+inline?". Investigado el código real (`MovementSheet.jsx`) — la
+respuesta era que NO se tenía en cuenta correctamente: `rateFor`
+buscaba la tarifa de una escuela+curso con un simple `.find(r =>
+r.school === school && r.activity === activity)`, sin filtrar
+`is_active`. Una escuela+curso con SOLO una tarifa desactivada (sin
+ninguna activa) encontraba igualmente esa fila desactivada y calculaba
+el importe del movimiento con su precio — en vez de tratarlo como "no
+hay tarifa vigente" y ofrecer el formulario inline de "Añadir tarifa",
+que es lo que debía pasar.
+
+**Corrección**: `isRateActive` (antes solo en `RatesTab.jsx`, para
+"Mostrar desactivadas") se extrae a `rateCalc.js` como única fuente de
+verdad — RatesTab.jsx pasa a importarla en vez de tener su propia copia
+local. `rateFor` (`MovementSheet.jsx`) añade el filtro que le faltaba:
+`r.school === school && r.activity === activity && isRateActive(r)`.
+
+**Verificación**: 778/778 tests (1 nuevo, en `MiTrabajoTab.test.jsx` —
+`renderMiTrabajo` gana la posibilidad de sustituir `rates`/
+`commissionRates` para este caso concreto — confirma que con una
+tarifa desactivada como única existente para una escuela+curso, no
+aparece ningún importe calculado y sí el botón "Añadir tarifa", igual
+que si no existiera ninguna), lint 0 errores, build correcto.

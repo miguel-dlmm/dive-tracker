@@ -83,13 +83,13 @@ function money(expected) {
   };
 }
 
-function renderMiTrabajo({ worklog = [], comisiones = [], colleaguePayments = [], schools = SCHOOLS } = {}) {
+function renderMiTrabajo({ worklog = [], comisiones = [], colleaguePayments = [], schools = SCHOOLS, rates, commissionRates } = {}) {
   const hooks = {
     worklog: rowsHook(worklog),
     comisiones: rowsHook(comisiones),
     colleaguePayments: rowsHook(colleaguePayments),
-    rates: rowsHook(RATES_ROWS),
-    commissionRates: rowsHook(COMMISSION_RATES_ROWS),
+    rates: rates || rowsHook(RATES_ROWS),
+    commissionRates: commissionRates || rowsHook(COMMISSION_RATES_ROWS),
   };
   render(
     <ToastProvider>
@@ -478,6 +478,28 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     expect(rates.insertRow).toHaveBeenCalledWith(expect.objectContaining({
       school: "PADI Cozumel", activity: "Advanced", currency: "EUR", rate: 30,
     }));
+  });
+
+  // Bug real reportado y confirmado (Fase 9, 2026-09-07): rateFor
+  // (MovementSheet.jsx) buscaba la tarifa de una escuela+curso sin
+  // filtrar por is_active — una tarifa desactivada podía usarse
+  // igualmente para calcular el importe de un movimiento nuevo, en vez
+  // de ofrecer "Añadir tarifa" como si no existiera ninguna vigente.
+  it("una tarifa desactivada no se usa para calcular el importe — se ofrece 'Añadir tarifa' igual que si no existiera ninguna", async () => {
+    const user = userEvent.setup();
+    // Sustituye RATES_ROWS (activa, Open Water) por una desactivada
+    // para el mismo curso.
+    renderMiTrabajo({ rates: rowsHook([{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 20, currency: "EUR", is_active: false }]) });
+
+    await user.click(screen.getByRole("button", { name: "Añadir" })); // abre directo en Curso impartido
+    await user.click(screen.getByLabelText("Curso"));
+    await user.click(screen.getByRole("option", { name: "Open Water" }));
+
+    // No debe aparecer ningún importe calculado (20,00 €, la tarifa
+    // desactivada) — en su lugar, el mismo aviso de "Añadir tarifa" que
+    // se ve cuando no hay tarifa en absoluto.
+    expect(screen.queryByText("20,00 €")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Añadir tarifa" })).toBeInTheDocument();
   });
 
   it("Curso se precarga con la última actividad usada en esa escuela, no con el valor global por defecto", async () => {
