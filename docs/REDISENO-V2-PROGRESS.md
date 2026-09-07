@@ -2530,3 +2530,43 @@ archivo es válido). De paso, se corrige una descripción obsoleta en
 seguía diciendo que el favicon era el icono `Waves` de `lucide-react` en
 TEAL — dejó de ser cierto desde el logo real de 2026-09-06 y nunca se
 había actualizado esa nota.
+
+### 10.9 — DatePicker compartido: accesos rápidos más compactos + salto de año
+
+Dos quejas relacionadas sobre el mismo componente compartido
+(`shared.jsx`, usado en casi toda la app):
+
+1. "los selectores de hoy, ayer.. etc... son muy grandes y poco
+   discretos, ocasionan mucho scroll en la capa del datepicker". La
+   rejilla 2x2 de accesos rápidos (añadida en 9.8) duplicaba la altura
+   del panel — dos filas de 44px antes de llegar siquiera al calendario
+   — obligando a hacer scroll interno en el panel flotante para ver
+   todos los días en móvil.
+2. Fecha de nacimiento (10.6): "no necesito los accesos rápidos de hoy
+   mañana ayer.. sino poder ir atrás varios años fácilmente" — esos
+   accesos no tienen ningún sentido para una fecha de nacimiento, y no
+   había ninguna forma rápida de retroceder décadas (solo mes a mes).
+
+**Arreglo**: los 4 accesos rápidos pasan de una rejilla 2x2 a una única
+fila — cabían sin truncar dejando que el texto de cada pastilla envuelva
+a 2 líneas dentro del mismo botón de 44px de alto (`leading-tight`, sin
+`whitespace-nowrap`), en vez de obligar a una segunda fila completa.
+Reduce a la mitad la altura fija del panel en todos los usos. Además,
+nuevo prop `quickAccess` (`true` por defecto): `ProfileTab` lo desactiva
+del todo para la fecha de nacimiento, donde esos accesos no aportan
+nada. Y junto a los `‹`/`›` de mes ya existentes, se añaden `«`/`»`
+(`ChevronsLeft`/`ChevronsRight`) para saltar de año en año — siempre
+visibles, útiles en cualquier fecha lejana, no solo nacimiento. Nuevas
+claves i18n `calendar.prevYear`/`calendar.nextYear` (es/en).
+
+**Verificación**: 2 tests nuevos (`ProfileTab.test.jsx`: el selector de
+fecha de nacimiento no muestra "Hoy"/"Ayer" pero sí "Año anterior";
+`PaymentsTab.test.jsx`: el salto de año retrocede un año manteniendo mes
+y día) + los tests existentes de accesos rápidos y navegación de mes
+(que dependen de los mismos nombres accesibles) siguen pasando sin
+cambios. Confirmado en navegador (Chromium, `localhost`, cuenta demo):
+panel de "Fecha" en Nuevo movimiento (con accesos rápidos, una sola
+fila, calendario completo visible sin scroll) y panel de fecha de
+nacimiento en Mi perfil (sin accesos rápidos, salto de año probado en
+vivo: Septiembre 2026 → Septiembre 2025 con un toque). 791/791 tests,
+lint sin errores nuevos, build correcto.

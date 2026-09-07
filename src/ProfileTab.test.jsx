@@ -197,6 +197,23 @@ describe("datos personales", () => {
     }));
   });
 
+  // Feedback explícito 2026-09-07: "la fecha de nacimiento no necesito
+  // los accesos rápidos de hoy mañana ayer" — DatePicker soporta
+  // `quickAccess={false}` desde ese mismo feedback; este test es lo que
+  // impide que un cambio futuro vuelva a activarlos aquí sin querer.
+  it("el selector de fecha de nacimiento no muestra los accesos rápidos hoy/ayer/mañana", async () => {
+    const user = userEvent.setup();
+    renderProfile();
+
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+
+    expect(screen.queryByRole("button", { name: "Hoy" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ayer" })).not.toBeInTheDocument();
+    // El salto de año sigue disponible — es lo que sí hace falta aquí.
+    expect(screen.getByRole("button", { name: "Año anterior" })).toBeInTheDocument();
+  });
+
   it("no deja guardar un nickname con \"@\"", async () => {
     const user = userEvent.setup();
     renderProfile();

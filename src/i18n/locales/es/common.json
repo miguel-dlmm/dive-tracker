@@ -33,6 +33,8 @@
     "weekdays": ["L", "M", "X", "J", "V", "S", "D"],
     "prevMonth": "Mes anterior",
     "nextMonth": "Mes siguiente",
+    "prevYear": "Año anterior",
+    "nextYear": "Año siguiente",
     "today": "Hoy"
   },
   "datePicker": {

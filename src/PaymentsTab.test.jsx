@@ -205,6 +205,22 @@ describe("PaymentsTab — liquidación agrupada por escuela", () => {
     expect(screen.getByText("16/08/2026")).toBeInTheDocument();
   });
 
+  // Feedback explícito 2026-09-07 (fecha de nacimiento en Mi perfil):
+  // "poder ir atrás varios años fácilmente" — el salto de año (« »)
+  // se añadió al DatePicker compartido, no solo a ese formulario, así
+  // que se comprueba aquí, en cualquier pantalla que ya lo use.
+  it("DatePicker: el salto de año (\"Año anterior\") retrocede un año manteniendo mes y día", async () => {
+    const user = userEvent.setup();
+    renderPayments(twoSchoolDataset());
+    const [desde] = screen.getAllByLabelText("Sin límite");
+
+    await user.click(desde);
+    await user.click(screen.getByRole("button", { name: "Año anterior" }));
+    await user.click(screen.getByRole("button", { name: "15 de Agosto" }));
+
+    expect(screen.getByText("15/08/2025")).toBeInTheDocument();
+  });
+
   it("sin nada pendiente, muestra el estado vacío", () => {
     renderPayments({});
     expect(screen.getByText("Estás al día — nada pendiente de cobrar.")).toBeInTheDocument();

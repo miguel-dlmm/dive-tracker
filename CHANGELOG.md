@@ -144,6 +144,11 @@ Registro de cambios relevantes de Ocean Flow.
 - El favicon ya no muestra un recuadro azul con el logo en blanco
   dentro — ahora es solo el logo, vectorial, y se invierte a blanco
   automáticamente si el navegador/sistema está en modo oscuro.
+- El selector de fecha: los accesos rápidos (hoy/ayer/mañana/antes de
+  ayer) ocupaban dos filas enteras y obligaban a hacer scroll para ver
+  el calendario completo — ahora es una sola fila. Nuevo salto de año
+  (« »), y la fecha de nacimiento del perfil ya no muestra accesos
+  rápidos que no tenían sentido ahí.
 - **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
   real** — "Setting up fake worker failed". Causa confirmada leyendo el
   código fuente de pdfjs-dist: en su modo de reserva "fake worker",

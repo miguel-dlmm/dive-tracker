@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo, useCallback, createContext, useCo
 import { useTranslation, withTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, Waves, Anchor, Sailboat, Compass, Fish, GraduationCap, Handshake, Users } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, Waves, Anchor, Sailboat, Compass, Fish, GraduationCap, Handshake, Users } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
@@ -641,7 +641,7 @@ function parseDateStr(s) {
 // Records) — ver la nota junto a useFloatingPosition. El resto de usos
 // (el campo Fecha normal de un formulario, con espacio de sobra a su
 // derecha) siguen con el "left" por defecto, sin cambio de comportamiento.
-export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "left" }) {
+export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "left", quickAccess = true }) {
   const { t, months, weekdays } = useCalendarLabels();
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown(align);
   const parsed = parseDateStr(value);
@@ -682,6 +682,13 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "l
   };
   const goPrev = () => { if (viewM === 0) { setViewM(11); setViewY(viewY - 1); } else setViewM(viewM - 1); };
   const goNext = () => { if (viewM === 11) { setViewM(0); setViewY(viewY + 1); } else setViewM(viewM + 1); };
+  // Salto de año (feedback 2026-09-07, fecha de nacimiento: "poder ir
+  // atrás varios años fácilmente" en vez de navegar mes a mes) — un
+  // segundo par de flechas junto al de mes, útil en cualquier fecha
+  // lejana, no solo nacimiento (a diferencia de quickAccess, que sí es
+  // específico de ese caso).
+  const goPrevYear = () => setViewY(viewY - 1);
+  const goNextYear = () => setViewY(viewY + 1);
 
   return (
     <>
@@ -713,35 +720,52 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "l
       <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align={align} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-72 rounded-xl p-3">
         {/* Accesos directos — el caso más común con diferencia (una fecha
             de curso casi siempre es hoy o un día muy reciente), un toque
-            en vez de navegar el calendario. Antes solo "Hoy"; ampliado a
-            los 4 días más probables (ayer/hoy/mañana/antes de ayer) por
-            feedback explícito. Vive en el componente compartido, no en
-            cada pantalla que lo usa. Rejilla 2x2 en vez de una fila de 4
-            píldoras: "Antes de ayer" no cabría con las demás en el ancho
-            de w-72 sin truncar. `min-h-11`: objetivo táctil mínimo de
-            44px, convención 7 de CLAUDE.md. */}
-        <div className="mb-2 grid grid-cols-2 gap-1.5">
-          {[
-            { offset: -2, key: "dayBeforeYesterday" },
-            { offset: -1, key: "yesterday" },
-            { offset: 0, key: "today" },
-            { offset: 1, key: "tomorrow" },
-          ].map(({ offset, key }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => selectQuick(offset)}
-              className="flex min-h-11 items-center justify-center rounded-full px-1 text-xs font-semibold"
-              style={{ backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }}
-            >
-              {t(`datePicker.${key}`)}
-            </button>
-          ))}
-        </div>
+            en vez de navegar el calendario. Opcional (`quickAccess`):
+            para una fecha de nacimiento no hay "ayer/mañana" que valga
+            (feedback explícito 2026-09-07), así que ProfileTab lo
+            desactiva del todo en vez de mostrar accesos irrelevantes.
+            Una sola fila de 4, no la rejilla 2x2 de antes — esa versión
+            duplicaba la altura del panel entero (dos filas de 44px) y
+            era la causa real de que la capa del datepicker necesitara
+            scroll interno en móvil para llegar a ver el propio
+            calendario. "Antes de ayer" ya no se trunca porque el texto
+            puede envolver a 2 líneas DENTRO del mismo botón de 44px de
+            alto (`leading-tight`, sin `whitespace-nowrap`) — la fila
+            entera sigue midiendo una sola altura de fila, no dos. */}
+        {quickAccess && (
+          <div className="mb-2 flex gap-1.5">
+            {[
+              { offset: -2, key: "dayBeforeYesterday" },
+              { offset: -1, key: "yesterday" },
+              { offset: 0, key: "today" },
+              { offset: 1, key: "tomorrow" },
+            ].map(({ offset, key }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => selectQuick(offset)}
+                className="flex min-h-11 flex-1 items-center justify-center rounded-full px-1 text-center text-[10.5px] font-semibold leading-tight"
+                style={{ backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }}
+              >
+                {t(`datePicker.${key}`)}
+              </button>
+            ))}
+          </div>
+        )}
+        {/* Salto de año (`«`/`»`) junto al de mes (`‹`/`›`) — pedido
+            explícito para fecha de nacimiento ("poder ir atrás varios
+            años fácilmente"), pero útil en cualquier fecha lejana, así
+            que no es condicional a `quickAccess`: siempre visible. */}
         <div className="mb-2 flex items-center justify-between">
-          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          <div className="flex items-center">
+            <button type="button" onClick={goPrevYear} aria-label={t("calendar.prevYear")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronsLeft size={16} /></button>
+            <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          </div>
           <span className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{months[viewM]} {viewY}</span>
-          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+          <div className="flex items-center">
+            <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+            <button type="button" onClick={goNextYear} aria-label={t("calendar.nextYear")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronsRight size={16} /></button>
+          </div>
         </div>
         <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
           {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}

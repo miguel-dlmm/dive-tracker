@@ -316,7 +316,11 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
           2026-09-07) y antes de Profesional, que pasa al final. */}
       <div className="grid grid-cols-2 gap-2">
         <Field label={t("personalData.birthDateLabel")}>
-          <DatePicker value={birthDate} onChange={setBirthDate} />
+          {/* quickAccess desactivado (feedback 2026-09-07): "hoy/ayer/
+              mañana" no tiene ningún sentido para una fecha de
+              nacimiento — el salto de año (siempre visible en
+              DatePicker) es lo que de verdad hace falta aquí. */}
+          <DatePicker value={birthDate} onChange={setBirthDate} quickAccess={false} />
         </Field>
         <Field label={t("personalData.countryLabel")}>
           <SearchSelect
