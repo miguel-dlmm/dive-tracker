@@ -3533,3 +3533,45 @@ correcto. Confirmado en Chrome real: con la plantilla "Advanced Open
 Water Diver" seleccionada, "Aventura 2" y "Aventura 3" muestran
 "OBLIGATORIO" con el mismo estilo que "Sesiones Académicas
 Finalizadas"/"Buceo Profundo" — sin errores de consola.
+
+### 12.9 — `manifest.json` nunca llegaba al build de producción (bug real, causa probable del icono roto en Safari iOS)
+
+**Pedido**: feedback real del usuario — "ahora en Safari iOS no sale el
+icono directamente".
+
+**Causa real encontrada**: `manifest.json` vivía en la RAÍZ del
+repositorio, no dentro de `public/`. Vite solo copia a `dist/` los
+ficheros de `publicDir` (por defecto `public/`, sin configuración
+distinta en `vite.config.js`) — un fichero en la raíz del repo nunca
+forma parte del build de producción, aunque `index.html` lo referencie
+como `<link rel="manifest" href="/manifest.json" />`. Confirmado de
+forma reproducible: `rm -rf dist && npm run build` seguido de
+`ls dist/` no incluía `manifest.json` (sí incluía `icon.svg`,
+`icon-192.png`, `icon-512.png`, ya correctamente ubicados en
+`public/`). Confirmado también contra la producción real:
+`curl -L https://dive-tracker-exgg.vercel.app/manifest.json` → 404
+(mientras que `icon.svg` sí respondía 200). Sin un manifest válido,
+Safari iOS no tiene de dónde leer el nombre/tema/lista de iconos de la
+app al hacer "Añadir a pantalla de inicio" y puede caer a un icono
+genérico (una captura de la propia página) en vez del logo real — el
+síntoma exacto reportado. El `apple-touch-icon` (PNG independiente del
+manifest) ya apuntaba al fichero correcto, pero eso solo cubre parte
+del comportamiento de iOS, no lo compensa del todo si el manifest
+falla.
+
+**Implementado**: `git mv manifest.json public/manifest.json` — cambio
+de una sola línea de intención (mover un fichero a su sitio), nada más
+se toca. Sin referencias a la ruta antigua en el código (`grep` sobre
+todo el repo, aparte del propio `index.html`, que sigue apuntando a
+`/manifest.json` — la ruta SERVIDA, no cambia).
+
+**Verificado**: `rm -rf dist && npm run build` seguido de `ls dist/`
+ya incluye `manifest.json` junto al resto de iconos; `vite preview`
+(build de producción real, servido en local) responde 200 tanto en
+`/manifest.json` como en `/icon-192.png`. 818/818 tests (suite
+completa, sin relación funcional con este cambio pero confirmando que
+nada se rompió), lint 0 errores, build correcto. Pendiente de
+confirmar en Safari iOS real una vez este cambio llegue a producción
+(el bug solo era reproducible contra un build real, no en `npm run
+dev`, donde Vite sirve también los ficheros de la raíz del repo de
+forma distinta a como empaqueta `vite build`).
