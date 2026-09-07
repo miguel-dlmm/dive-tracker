@@ -214,7 +214,24 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   // ninguna animación llega a correr con la página desplazada. El efecto
   // de abajo se mantiene como red de seguridad (por si algo más desplaza
   // el scroll ya con la pestaña nueva montada), no se retira.
+  // Salir de Configuración limpia la subsección guardada (sessionStorage,
+  // ver clearStoredSection/ConfigTab.jsx) sin importar POR QUÉ camino se
+  // sale — bug real reportado (2026-09-07): `closeSecondary` (la "✕"/"‹")
+  // ya limpiaba esto desde el 2026-08-30 ("si cierro con la X y reabro,
+  // quiero el inicio; si recargo dentro, quiero seguir donde estaba"),
+  // pero tocar una pestaña de la barra inferior (Home/Mi trabajo/Resumen)
+  // estando dentro de una subsección de Configuración llama a `changeTab`
+  // directamente, sin pasar por `closeSecondary` — la sección quedaba
+  // guardada, y volver a abrir Configuración con el icono del engranaje
+  // restauraba esa subsección en vez de mostrar el menú. Puesto aquí, en
+  // el único sitio por el que pasa CUALQUIER cambio de pestaña (presente y
+  // futuro), en vez de repetirlo en cada botón que pueda alejarse de
+  // Configuración — la comprobación es `tab === "config" && next !==
+  // "config"` (aún dentro, no lo que hay guardado) para no limpiar en el
+  // propio remontaje de ConfigTab al recargar la página, que sigue
+  // debiendo restaurar la subsección como hasta ahora.
   const changeTab = (next) => {
+    if (tab === "config" && next !== "config") clearStoredSection();
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     window.scrollTo(0, 0);
     setTab(next);
@@ -300,11 +317,13 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   // que se abra, nunca a la última subsección/categoría vista — distinto
   // de recargar la página, que sí la conserva (feedback explícito
   // 2026-08-30: "si cierro con la X y reabro, quiero el inicio; si
-  // recargo dentro, quiero seguir donde estaba"). Limpiar aquí, no dentro
-  // de cada pantalla, porque es la MISMA acción ("salir de esta pantalla
-  // por completo") sin importar en qué subnivel se estuviera al cerrar.
+  // recargo dentro, quiero seguir donde estaba"). El caso de Configuración
+  // ya no se limpia aquí explícitamente — `changeTab` lo cubre para
+  // cualquier camino de salida, este incluido, ver su comentario largo.
+  // Ayuda no comparte ese camino alternativo (no hay una pestaña de la
+  // barra inferior que lleve directamente a "help"), así que sigue
+  // limpiándose aquí, el único sitio por el que se sale de Ayuda.
   const closeSecondary = () => {
-    if (tab === "config") clearStoredSection();
     if (tab === "help") clearStoredHelpOpen();
     // Training Records es una herramienta puntual abierta siempre desde
     // Home (pedido explícito: "volver atrás será volver a la home

@@ -1579,3 +1579,58 @@ comprobación visual en navegador — tocar un día con actividad
 (inicialmente fuera de la parte visible) desplaza la pantalla hasta
 mostrar el panel de detalle completo; cerrar el panel o volver a tocar
 el mismo día para deseleccionarlo no desplaza nada.
+
+### 8.6 — El icono de Configuración siempre debe abrir el menú, no la última sección vista
+
+Pedido explícito: "siempre q pulse el icono de configuración iré al
+menú de configuración, no a la última pantalla q visite dentro de
+configuración. en el caso de cerrar configuración volveré a la
+pantalla donde estaba antes de abrirlo y si volviera a abrir otra vez
+volvería al menú de configuraciones".
+
+**Ya existía la mitad de este comportamiento** (feedback del
+2026-08-30, ver comentario largo junto a `closeSecondary` en
+`App.jsx`): cerrar Configuración con la "✕" (o el gesto de "atrás" en
+su nivel más externo) ya limpiaba `oceanpulse:configSection`
+(sessionStorage) para que la próxima apertura mostrara el menú, no la
+última sección — a diferencia de recargar la página, que sí la
+conserva a propósito (encargo distinto, ya resuelto entonces).
+
+**El hueco real, sin cubrir hasta ahora**: `closeSecondary` (donde
+vivía esa limpieza) solo se invoca desde la propia cabecera de
+Configuración. Tocar directamente una pestaña de la barra inferior
+(Home/Mi trabajo/Resumen) estando dentro de una subsección de
+Configuración (p. ej. Tarifas) llama a `changeTab` sin pasar por
+`closeSecondary` — la sección quedaba guardada en sessionStorage sin
+limpiar, y reabrir Configuración con el engranaje restauraba esa
+subsección en vez de mostrar el menú, justo el bug reportado.
+
+**Corrección, centralizada en `changeTab` en vez de repetida en cada
+botón que pueda alejarse de Configuración**: `changeTab` limpia
+`oceanpulse:configSection` cuando `tab === "config" && next !== "config"`
+— cualquier camino de salida (presente o futuro) queda cubierto por un
+único sitio, en vez de tener que acordarse de añadirlo en cada botón
+nuevo que pudiera cambiar de pestaña. La comprobación explícita en
+`closeSecondary` se retira (redundante, `changeTab` ya lo cubre
+también en ese camino) — una única fuente de verdad para esta regla,
+no dos copias que podrían desincronizarse.
+
+**Sin test automatizado nuevo** — decisión consciente, no un olvido:
+`ConfigTab.test.jsx` ya cubre a fondo la persistencia de sección en
+aislamiento (mockeando `onClose`/`onSectionChange`), pero el hueco real
+estaba en el CABLEADO entre `App.jsx` y esa persistencia — probarlo de
+verdad exigiría un test de integración completo de `App.jsx` (montar
+`AppShell` autenticado con todas las tablas simuladas), un montaje
+mucho más pesado que el resto de `App.test.jsx` (centrado hoy en
+`AuthGate`) para fijar una condición de una sola línea. Verificado en
+su lugar a fondo en el navegador (ver más abajo) — el coste de montar
+ese andamiaje de test no está justificado por el riesgo real de una
+condición tan simple (criterio de coste/beneficio, `CLAUDE.md`).
+
+**Verificación**: 764/764 tests, lint 0 errores, build correcto;
+comprobación manual completa en navegador — (1) Configuración → Tarifas
+→ pulsar "Home" en la barra inferior → pulsar el engranaje: muestra el
+menú de Configuración, no Tarifas (el bug reportado, confirmado
+corregido); (2) Configuración → Tarifas → recargar la página: sigue
+mostrando Tarifas directamente (el comportamiento del 2026-08-30, sin
+regresión).

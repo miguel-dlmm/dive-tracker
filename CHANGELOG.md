@@ -156,6 +156,10 @@ Registro de cambios relevantes de Ocean Flow.
 - El calendario de Home (y el de Resumen) desplaza la pantalla
   automáticamente para mostrar el detalle del día al tocarlo, si no era
   ya visible — antes no había ninguna pista de que algo hubiera pasado.
+- El icono de Configuración podía reabrir la última sección visitada
+  (p. ej. Tarifas) en vez del menú, si se había salido de Configuración
+  tocando directamente Home/Mi trabajo/Resumen — ya abre siempre el
+  menú, salvo al recargar la página dentro de una sección.
 - (Interno) Los emails transaccionales (alta, recuperación de
   contraseña, aviso de despliegue) seguían con los colores de marca
   previos al rebrand — ahora usan el mismo azul marino que el resto de
