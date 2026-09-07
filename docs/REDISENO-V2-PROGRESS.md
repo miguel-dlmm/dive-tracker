@@ -1858,3 +1858,54 @@ auto-selecciona hoy, no el día anterior), lint 0 errores, build
 correcto. Los tests preexistentes de navegación entre meses (que ya
 usaban `TODAY` como única fecha con actividad) siguen en verde sin
 cambios, comportamiento idéntico en ese caso.
+
+### 9.7 — Scroll automático al detalle del día: no funcionaba en Safari iOS real
+
+Reporte del usuario, sobre el mecanismo recién construido en 8.5:
+"la animación del calendario de la home al pulsar y ver la info no
+funciona en safari ios iphone 14 pro max".
+
+**No se ha podido reproducir directamente en Safari/WebKit** en este
+entorno (WebKit no arranca aquí, ver CLAUDE.md §8), pero sí se ha
+encontrado y confirmado la causa más probable mediante depuración
+directa en la consola del navegador de este mismo entorno (Chrome, vía
+`javascript_tool`), no por conjetura: `window.scrollTo({ top,
+behavior: "smooth" })` **no desplaza la página en absoluto** aquí
+(`scrollY` se queda igual incluso esperando 800ms) — mientras que
+`window.scrollTo({ top })` sin `behavior` y la forma clásica de dos
+argumentos `window.scrollTo(x, y)` sí funcionan al instante. La
+implementación original de 8.5 usaba `Element.scrollIntoView({behavior:
+"smooth", block: "nearest"})` — mismo tipo de opción con nombre
+(`behavior: "smooth"`) que probablemente parecía funcionar en la
+verificación de 8.5 solo porque `usePrefersReducedMotion()` devolvía
+`true` en ese momento (usando `behavior: "auto"`, instantáneo, que sí
+funciona), enmascarando el problema real.
+
+Dado que lo que el usuario pidió es que quede claro que algo cargó —no
+que el desplazamiento sea suave— y que este tipo de opción es
+sospechosa de fallar también en Safari real, se abandona el
+desplazamiento animado por completo: `scrollDetailIntoView`
+(`MonthCalendar`, `shared.jsx`) ahora calcula el hueco a mano con
+`getBoundingClientRect()` (dentro de un `requestAnimationFrame`, para
+leer el rectángulo ya con `height: "auto"` aplicado tras el aviso de
+fin de animación de Motion) y llama a `window.scrollTo(x, y)` con la
+forma de dos argumentos — la única de las tres probada como fiable —
+siempre instantáneo, nunca con `behavior`. Mismo criterio visual que
+antes: no mueve nada si el panel ya está completamente visible.
+
+**Sin confirmación de que esto sea la causa exacta en Safari real** —
+es la corrección mejor fundamentada que se puede aplicar sin acceso a
+WebKit real, respaldada por un hallazgo reproducible (no una certeza
+sobre Safari específicamente). Si el usuario confirma que sigue sin
+funcionar tras este cambio, haría falta una captura de consola real de
+Safari (como ya se consiguió para el bug de JPG) para diagnosticar la
+causa de verdad.
+
+**Verificación**: 779/779 tests, lint 0 errores nuevos (mismos 10
+avisos preexistentes de siempre, ninguno en `shared.jsx`), build
+correcto. Comprobación visual en Chromium local completada esta vez de
+forma inequívoca: día sin actividad visible en el viewport → clic →
+`window.scrollY` pasa de `0` a `232` y el panel de detalle del día
+queda visible, confirmado leyendo `scrollY` por consola además de por
+captura de pantalla (la verificación anterior, solo por captura, había
+quedado ambigua).

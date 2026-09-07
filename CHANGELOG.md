@@ -164,6 +164,11 @@ Registro de cambios relevantes de Ocean Flow.
 - El calendario de Home y Resumen ya prioriza el día de hoy al abrir la
   pantalla (si tiene alguna entrada), en vez del primer día del mes con
   movimientos.
+- (Interno) El desplazamiento automático al panel de detalle del
+  calendario de Home no funcionaba en Safari iOS real — se usaba
+  `behavior: "smooth"`, con soporte poco fiable comprobado en este
+  entorno; ahora el desplazamiento es siempre instantáneo, con la API
+  más simple y fiable disponible.
 - Tarifas: "Mostrar desactivadas" ya no está escondido dentro de
   "Filtrar" (siempre visible junto al contador de la lista), y una
   tarifa desactivada se reconoce ahora por su propio fondo, no solo por

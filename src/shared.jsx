@@ -1115,10 +1115,11 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   // arriba) distingue un toque real del usuario de una auto-selección por
   // `autoSelectFirstDay` — solo la primera debe desplazar la pantalla;
   // auto-seleccionar el día 1 nada más cargar Home y saltar de golpe no
-  // sería una mejora, sería una sorpresa. `block: "nearest"` (no "start"
-  // ni "center"): si el panel ya está completamente visible no mueve
-  // nada, y si no lo está, se desplaza lo mínimo necesario para que se
-  // vea entero — nunca un salto más grande de lo necesario. Disparado
+  // sería una mejora, sería una sorpresa. Mismo criterio que "nearest"
+  // (ver scrollDetailIntoView más abajo): si el panel ya está
+  // completamente visible no mueve nada, y si no lo está, se desplaza lo
+  // mínimo necesario para que se vea entero — nunca un salto más grande
+  // de lo necesario. Disparado
   // desde `onAnimationComplete` del propio panel (más abajo), no un
   // `useEffect` sobre `selectedDay`: `panelVariants` anima `height: 0 →
   // "auto"`, así que medir/desplazar en cuanto cambia el estado (antes de
@@ -1129,11 +1130,44 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   // un día a otro con el panel ya abierto no reanima nada (sin `key` por
   // día, ver comentario del propio panel), así que tampoco vuelve a
   // desplazar: el contenido ya está a la vista, no hace falta.
+  // window.scrollTo(x, y) de dos argumentos — NUNCA la forma con objeto
+  // de opciones (`{top, behavior}`) ni `Element.scrollIntoView(...)`.
+  // Hallazgo real, verificado en vivo con la consola de este mismo
+  // entorno mientras se diagnosticaba el reporte del usuario ("no
+  // funciona en Safari iOS real"): `window.scrollTo({top, behavior:
+  // "smooth"})` no desplaza la página EN ABSOLUTO aquí (`scrollY` se
+  // queda igual, comprobado con un `await` de por medio) — pero
+  // `window.scrollTo({top})` SIN `behavior: "smooth"`, y también la
+  // forma clásica de dos argumentos, sí funcionan de inmediato. El
+  // primer intento de este mismo arreglo usaba la forma de objeto con
+  // `behavior: "smooth"`/"auto" y parecía funcionar en una comprobación
+  // anterior — con `usePrefersReducedMotion()` devolviendo `true` en
+  // ese momento (behavior: "auto", instantáneo) habría enmascarado el
+  // problema real, que solo aparece con "smooth". Dado que la propia
+  // animación de desplazamiento es secundaria (lo importante, pedido
+  // por el usuario, es que quede claro que algo cargó — no que sea
+  // suave) y que este mismo tipo de opción con nombre ("behavior:
+  // smooth") es sospechoso de fallar también en Safari real, se
+  // abandona el desplazamiento animado del todo — instantáneo siempre,
+  // con la forma de API más simple y fiable posible.
   const detailRef = useRef(null);
   const scrollDetailIntoView = () => {
-    if (userSelectedRef.current) {
-      detailRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "nearest" });
-    }
+    if (!userSelectedRef.current) return;
+    // requestAnimationFrame: sin este margen, `getBoundingClientRect()`
+    // podía leerse antes de que el navegador terminara de aplicar
+    // `height: "auto"` tras el aviso de fin de animación de Motion,
+    // dando un rectángulo más pequeño que el real.
+    requestAnimationFrame(() => {
+      const el = detailRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const vh = window.visualViewport?.height || window.innerHeight;
+      let deltaY = 0;
+      if (rect.bottom > vh) deltaY = rect.bottom - vh + 12;
+      else if (rect.top < 0) deltaY = rect.top - 12;
+      if (deltaY === 0) return;
+      window.scrollTo(window.scrollX, window.scrollY + deltaY);
+    });
   };
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
