@@ -2154,3 +2154,83 @@ conjetura, no diagnóstico.
 
 **Estado**: sin cerrar. Pendiente de esa respuesta del usuario antes de
 un cuarto intento de arreglo. No se toca código en esta sección.
+
+### 9.14 — Ayuda: capturas + GIFs, piloto hecho, hallazgo real antes de escalar
+
+Petición del usuario: "revisa y rehaz la ayuda para q se actualice a
+todo el nuevo contenido. añade capturas de pantallas y para las
+operaciones básicas un paso a paso con gifs animados, capturados en la
+app de la rama rediseño, q pesen poco, no escatimes en gifs".
+
+**Contexto que había que resolver primero**: `docs/ADR/0011-rediseno-ayuda.md`
+(2026-08-29/09-04) documenta una decisión deliberada de NO usar
+capturas — las de esa sesión mostraban el nombre de la cuenta
+`dev-bypass` y datos de prueba acumulados desordenados, no
+presentables. `HelpStep.jsx`/`HelpArticleBody.jsx` hoy NO tienen
+ningún mecanismo de imagen (a diferencia de lo que decía el comentario
+de `content.js` — comprobado leyendo el código real, no el comentario:
+`article.steps` es un array de strings, sin campo `image` en ningún
+sitio) — habría que añadirlo desde cero.
+
+**Antes de descartar la petición por ese antecedente**: se comprobó si
+seguía aplicando. Buena noticia — ya no del todo: la cabecera muestra
+un nickname genérico ("demo"), no "dev-bypass", y los nombres de
+escuela/curso (Blue Manta, Open Water...) leen como datos de ejemplo
+razonables, no basura de prueba — probablemente por el commit reciente
+`eb7108b` ("añade escuela, redondea comisiones y siembra meses
+pasados/futuros"). Sí sigue habiendo un problema de escala: la cuenta
+demo tiene 139 pendientes con fechas hasta 2027, lejos de lo que vería
+un usuario real en su primera semana — mitigable en captura (filtrar a
+un subconjunto pequeño antes de grabar), no bloqueante.
+
+**Piloto real intentado** (artículo "Crear un movimiento", el más
+básico): capturado con `gif_creator` (herramienta de grabación de
+Chrome de este entorno) el flujo completo FAB → elegir tipo → rellenar
+escuela/curso → Guardar, con las marcas de agua/indicadores de clic
+desactivados (`showWatermark`/`showClickIndicators`/etc. `false`) para
+que no se vieran en un GIF de producto real. **Resultado no
+presentable**: el GIF exportado tenía un artefacto real de
+"fantasma"/doble exposición — texto de la hoja "Nuevo curso impartido"
+superpuesto con el texto de la lista de debajo ("Fun Dive 2T", "Jue,
+25 Feb") en posiciones que no corresponden a ningún estado real de la
+pantalla, compatible con un frame capturado a mitad de la transición
+de apertura de la hoja (`Sheet`, animada) o con un problema del propio
+codificador de GIF de la herramienta. Segundo intento añadiendo
+esperas explícitas entre cada acción para dejar asentar la animación
+antes de grabar el siguiente frame — no llegó a completarse: la propia
+sesión de automatización del navegador se volvió a quedar "aparcada"
+(`chrome-extension://.../park.html`, la misma inestabilidad ya
+documentada en la convención 8 de `CLAUDE.md` para verificación
+móvil) a mitad de la grabación.
+
+**Por qué se para aquí en vez de seguir intentando**: dos hallazgos
+reales independientes (calidad del GIF exportado + fiabilidad de la
+sesión de grabación) apuntan a que producir en serie los GIFs de "no
+escatimes" con esta herramienta, en este entorno, ahora mismo,
+probablemente saldría con la misma calidad no presentable del piloto,
+repetido en cada artículo — peor que no tener GIFs, no mejor. Mismo
+criterio que en 9.13: seguir intentando sin una vía de diagnóstico o
+mitigación distinta sería conjetura repetida, no producción de
+verdad.
+
+**Lo que SÍ se puede ofrecer con confianza, sin más capturas
+arriesgadas**: capturas ESTÁTICAS (no animadas) de una sola pantalla
+por artículo básico — esas sí han salido limpias toda la sesión (ver
+las capturas de Training Records/DatePicker/etc. de esta misma
+sesión), sin el problema de transición a media animación que solo
+aparece al grabar varios frames seguidos de una `Sheet` abriéndose.
+Sería necesario primero añadir el soporte de imagen a
+`HelpStep.jsx`/`HelpArticleBody.jsx`/`content.js` (hoy no existe) y
+decidir dónde alojar los ficheros (`public/help/`, mismo patrón que
+`/brand/*.svg`).
+
+**Pregunta para el usuario, antes de seguir invirtiendo tiempo aquí**:
+¿capturas estáticas (1 por artículo básico, sin animación, calidad
+confirmada) como alternativa realista a los GIFs por ahora, dejando
+los GIFs para cuando se pruebe en un navegador real fuera de este
+entorno (o con otra herramienta)? ¿O prefieres que se siga intentando
+con GIFs a pesar de la calidad del piloto?
+
+**Estado**: sin cerrar. Nada de código ni contenido nuevo de Ayuda
+tocado todavía — el piloto se descartó (fichero borrado) por no ser
+presentable.
