@@ -1964,3 +1964,31 @@ dibujarla, ahora aplicada también a su fecha.
 tutor → fecha se rellena; sin ella → fecha se omite, estudiante e
 instructor siguen rellenándose). 781/781 tests, lint sin errores
 nuevos, build correcto.
+
+### 9.10 — Loading: la ola del logo aparece hacia arriba, no todo el icono de golpe
+
+Petición del usuario: "para el loading... podrías animar la parte q
+parece una ola para q vaya apareciendo esa parte del logo hacia arriba
+en lugar de solo rellenarse el color como ahora?".
+
+`logo-mark-navy.svg` son en realidad dos trazos superpuestos: un aro
+en forma de media luna y, dentro, un trazo que sí parece una ola
+rompiendo (confirmado renderizando cada uno por separado). La
+animación `oceanFill` (ya existía, sin cambios) recortaba el logo
+COMPLETO de golpe — los dos trazos a la vez, sin distinguir la ola del
+aro que la envuelve. Se separó el SVG en dos ficheros nuevos con el
+mismo `viewBox` (para que seguir encajando exactamente al
+superponerse): `logo-mark-navy-ring.svg` (solo el aro, estático,
+siempre visible en navy) y `logo-mark-navy-wave.svg` (solo el trazo de
+la ola). `AppLoading` (`shared.jsx`) ahora apila 3 capas en vez de 2:
+fondo tenue completo (sin cambios), aro fijo encima, y la ola encima de
+todo con `oceanFill` — solo ella sube y baja en bucle, el aro se queda
+quieto.
+
+**Verificación**: nuevo `AppLoading.test.jsx` (2 tests: las 3 capas son
+3 imágenes distintas; solo la capa de la ola lleva la animación).
+783/783 tests, lint sin errores nuevos, build correcto. Comprobado a
+mano en el navegador (recarga completa, vista previa de "Icono de
+carga" en Configuración → Ajustes): las 3 peticiones de red a los SVG
+devuelven 200, y visualmente el aro se ve sólido y fijo mientras la
+ola aparece y desaparece por debajo.

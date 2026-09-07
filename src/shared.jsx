@@ -131,12 +131,26 @@ export function AppLoading({ iconName = "Logo", color = BRAND_NAVY, size = 40, l
   const { t } = useTranslation("common");
   const statusProps = { role: "status", "aria-label": label || t("loading.defaultLabel") };
   if (iconName === "Logo") {
+    // Feedback explícito (2026-09-07: "podrías animar la parte q parece
+    // una ola para q vaya apareciendo esa parte del logo hacia arriba en
+    // lugar de solo rellenarse el color como ahora?") — antes `oceanFill`
+    // recortaba el logo ENTERO de golpe (los dos trazos del SVG a la vez,
+    // ver logo-mark-navy.svg), sin distinguir la ola del aro que la
+    // envuelve. El propio SVG se separó en dos ficheros (mismo viewBox,
+    // para que sigan encajando exactamente al superponerse):
+    // logo-mark-navy-ring.svg (el aro/media luna, siempre visible, sin
+    // animar) y logo-mark-navy-wave.svg (solo el trazo que de verdad
+    // parece una ola rompiendo). Solo la ola anima con `oceanFill`
+    // (mismo keyframe que ya existía, sin duplicar) — sube y baja dentro
+    // del aro fijo, en vez de todo el icono apareciendo/desapareciendo a
+    // la vez.
     return (
       <div className="flex flex-col items-center gap-3" {...statusProps}>
         <div className="relative" style={{ width: size, height: size }}>
           <img src="/brand/logo-mark-navy.svg" width={size} height={size} alt="" aria-hidden="true" style={{ opacity: 0.2 }} />
+          <img className="absolute inset-0" src="/brand/logo-mark-navy-ring.svg" width={size} height={size} alt="" aria-hidden="true" />
           <div className="absolute inset-0" style={{ animation: "oceanFill 1.6s ease-in-out infinite" }}>
-            <img src="/brand/logo-mark-navy.svg" width={size} height={size} alt="" aria-hidden="true" />
+            <img src="/brand/logo-mark-navy-wave.svg" width={size} height={size} alt="" aria-hidden="true" />
           </div>
         </div>
       </div>

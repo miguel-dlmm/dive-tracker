@@ -27,6 +27,9 @@ Registro de cambios relevantes de Ocean Flow.
   además de hoy y antes de ayer, no solo hoy.
 
 ### Changed
+- **Icono de carga (logo)**: ahora solo la parte que parece una ola sube
+  y baja en bucle, con el aro que la envuelve fijo — antes el logo
+  entero se recortaba de golpe.
 - **Color de avatar**: la misma paleta curada de 12 colores que escuelas/
   cursos (incluye blanco), en vez de una paleta propia sin relación con
   el resto de la app.
