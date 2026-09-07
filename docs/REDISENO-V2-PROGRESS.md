@@ -2309,3 +2309,33 @@ buscador). 784/784 tests, lint sin errores nuevos, build correcto.
 Comprobado también a mano en el navegador: guardar país+ver que
 persiste tras recargar (confirma que la migración quedó bien aplicada
 en TEST, no solo que el código compila).
+
+### 9.17 — Plan de migración #4 (cambio de email): aparcado a petición del usuario
+
+Propuesto en chat, nunca implementado — el usuario pidió expresamente
+"aparca el intercambio de mail, documenta todo y anótalo en backlog
+con prioridad media" (fila añadida a `docs/BACKLOG.md`, sección
+"Después").
+
+**Flujo descrito por el usuario, tal cual, para cuando se retome**:
+editar email → estado "pendiente" durante 48h → reenvío del email de
+verificación cada 2 minutos con countdown visible en la UI → email de
+verificación → creación de contraseña nueva para el email nuevo → un
+único slide de éxito in-app (mismo patrón que "Qué hay de nuevo")
+aclarando que el login por nickname sigue funcionando igual → si pasan
+las 48h sin confirmar, el email revierte al original + un slide
+explicando la expiración, con la misma nota de transparencia del
+nickname.
+
+**Por qué no se implementó en esta ronda**: toca `auth.users`
+(Supabase Auth, no solo `profiles`) y necesita al menos una tabla
+nueva para el estado "pendiente" — un cambio de esquema/auth real, que
+la regla del proyecto (`CLAUDE.md`) exige plantear como plan de
+migración aparte y aprobarse antes de tocar código, nunca en un solo
+paso. Antes de implementarlo, vale la pena revisar primero (como
+haría un senior, no solo seguir la instrucción literal) si
+`supabase.auth.updateUser({ email })`, que ya trae su propio
+doble-opt-in incorporado, resuelve parte del flujo sin necesidad de
+reinventar la tabla de "pendiente" desde cero.
+
+**Estado**: aparcado, documentado, sin código tocado.
