@@ -3501,3 +3501,35 @@ preexistentes, ninguno nuevo), build correcto. Confirmado en Chrome
 real (Chromium, `localhost`, cuenta demo, datos reales sembrados en
 11.5): la tarjeta muestra "Ihasia" con "30 movimientos · 3 escuelas
 este mes", y pulsarla navega a Resumen sin errores de consola.
+
+### 12.8 — Training Records: AOWD, las "Aventuras" ya avisan de que son obligatorias
+
+**Pedido**: feedback real del usuario — "en TR de Advance no se ve de
+primeras que las aventuras sean obligatorias".
+
+**Causa**: no era un bug de validación — `validateRecordConfig`
+(`recordConfig.js`) ya trataba las 3 filas "Aventura 1/2/3" de AOWD
+como obligatorias de verdad desde el "ALL AOWD fields obligatory" del
+2026-09-04 (hay que elegir una aventura distinta en cada una, con su
+fecha, o el documento no se puede generar). El problema era solo
+visual: `ProgressRowToggle` (filas fijas como "Sesiones Académicas",
+"Buceo Profundo"...) ya mostraba una etiqueta "OBLIGATORIO" junto al
+texto, pero `AdventureRow` (las 3 filas de aventura) no tenía ningún
+indicio equivalente — a simple vista se veían como un campo más,
+indistinguible de uno realmente opcional.
+
+**Implementado**: `AdventureRow` (`TrainingRecordsTab.jsx`) añade la
+misma etiqueta `t("studentSheet.obligatorio")` que ya usa
+`ProgressRowToggle`, reutilizando la clave i18n existente — sin texto
+nuevo que traducir. Cambio puramente visual, la lógica de validación no
+se toca.
+
+**Verificado**: nuevo test en `TrainingRecordsTab.test.jsx`
+("las 'Aventuras' de AOWD muestran la etiqueta 'Obligatorio', igual
+que las filas fijas") — selecciona la plantilla AOWD y comprueba que
+"Aventura 1" lleva la etiqueta junto al texto. 818/818 tests (suite
+completa), lint 0 errores (mismos 10 warnings preexistentes), build
+correcto. Confirmado en Chrome real: con la plantilla "Advanced Open
+Water Diver" seleccionada, "Aventura 2" y "Aventura 3" muestran
+"OBLIGATORIO" con el mismo estilo que "Sesiones Académicas
+Finalizadas"/"Buceo Profundo" — sin errores de consola.

@@ -275,13 +275,22 @@ function DateOnlyRow({ label, dateValue, onDateChange, dateError, dateLabel }) {
 // "sí/no" sino "cuál aventura". `options` ya llega filtrada por exclusión
 // cruzada (availableAdventureOptions, recordConfig.js) — la aventura
 // elegida en otra fila no puede repetirse aquí.
+//
+// Etiqueta "Obligatorio" (2026-09-07, feedback real: "en TR de Advance
+// no se ve de primeras que las aventuras sean obligatorias") — el
+// campo no tenía ningún indicio visual de serlo, a diferencia de las
+// filas `fixed` (ProgressRowToggle), aunque validateRecordConfig ya las
+// trataba como tal desde el "ALL AOWD fields obligatory" del 2026-09-04.
 function AdventureRow({ label, value, options, onSelect, dateValue, onDateChange, dateError, dateLabel }) {
   const { t } = useTranslation("trainingRecords");
   return (
     <div className="rounded-md border border-gray-200 px-3 py-2">
       <div className="flex items-start gap-2.5 py-1">
         <div className="min-w-0 flex-1">
-          <p className="mb-1 text-sm text-gray-700">{label}</p>
+          <p className="mb-1 text-sm text-gray-700">
+            {label}
+            <span className="ml-1.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.obligatorio")}</span>
+          </p>
           <Select value={value} onChange={onSelect} options={options} placeholder={t("studentSheet.elegirAventura")} />
         </div>
         {value && (

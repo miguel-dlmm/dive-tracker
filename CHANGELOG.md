@@ -151,6 +151,10 @@ Registro de cambios relevantes de Ocean Flow.
   visible en la cabecera de Mi trabajo) pasa a mostrar la escuela con
   más movimientos este mes ("Escuela más activa"), con el mismo hueco
   visual y el mismo gesto de pulsar para ir a Resumen.
+- **Training Records (Advanced Open Water Diver)**: las 3 "Aventuras"
+  ya muestran la etiqueta "Obligatorio", igual que el resto de filas de
+  progreso del curso — antes no había ningún indicio visual de que
+  fueran obligatorias.
 
 ### Fixed
 - "Qué hay de nuevo" (Ayuda) vuelve a deslizar de verdad entre

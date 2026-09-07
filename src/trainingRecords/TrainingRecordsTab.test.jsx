@@ -187,6 +187,24 @@ it("el checkbox de una fila de progreso obligatoria usa accentColor, no el TEAL 
   expect(checkbox.style.accentColor).toBe("rgb(0, 51, 90)");
 });
 
+// Feedback real del usuario (2026-09-07): "en TR de Advance no se ve de
+// primeras que las aventuras sean obligatorias" — validateRecordConfig ya
+// las trataba como tal desde el "ALL AOWD fields obligatory" del
+// 2026-09-04, pero AdventureRow (a diferencia de ProgressRowToggle) no
+// mostraba ningún indicio visual de serlo.
+it("las 'Aventuras' de AOWD muestran la etiqueta 'Obligatorio', igual que las filas fijas", async () => {
+  const user = userEvent.setup();
+  templatesQuery.order.mockResolvedValue({
+    data: [{ code: "AOWD", name: "Advanced Open Water Diver", storage_path: "AOWD/AOWD_Spanish_Record.pdf" }],
+    error: null,
+  });
+  renderTab();
+  await user.click(await screen.findByRole("button", { name: "Advanced Open Water Diver" }));
+
+  const adventureLabel = await screen.findByText("Aventura 1");
+  expect(adventureLabel.closest("p")).toHaveTextContent("Aventura 1Obligatorio");
+});
+
 it("el aviso de 'completa tu perfil' usa accentColor en su botón, no el TEAL genérico", async () => {
   renderTab({ accentColor: "#00335A", profile: { ...COMPLETE_PROFILE, instructor_signature: null } });
   const button = await screen.findByRole("button", { name: "Ir a mi perfil" });
