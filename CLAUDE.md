@@ -495,6 +495,25 @@ flujos de interacción, errores de consola) sí sustituye la ausencia total
 de verificación móvil automática que había antes — se comprueba solo, en
 cada sesión, antes de pedirle nada al usuario.
 
+**Inestabilidad conocida de la automatización de Chrome interactiva**
+(la herramienta `mcp__claude-in-chrome__*` que controla un navegador
+real durante la sesión — distinta de `mobile-check`, que usa Playwright
+aparte): una pestaña puede quedar "aparcada" a mitad de una secuencia
+de acciones (URL `chrome-extension://.../park.html`), o un tool call
+puede fallar con un error genérico sin relación con la página
+("Failed to deserialize params...", "Script injection timed out...",
+"Can't interact with browser-internal or unparseable URLs"). Reproducido
+varias veces en distintas sesiones (2026-09-07, verificación del scroll
+del calendario y piloto de GIFs de Ayuda). Mecanismo de recuperación que
+funciona de forma fiable: ante cualquier fallo de este tipo (no un error
+semántico como "elemento no encontrado"), llamar a `tabs_context_mcp`
+con `createIfEmpty: true` para ver el estado real de las pestañas,
+cerrar la que esté aparcada/rota (`tabs_close_mcp`) y crear una pestaña
+nueva (`tabs_create_mcp`) — nunca reintentar la misma llamada varias
+veces seguidas contra una pestaña ya rota, no se arregla sola. Cualquier
+grabación/estado en curso en la pestaña rota se pierde y hay que
+rehacerlo desde cero en la pestaña nueva.
+
 ### 9. Trabajo por fases en iniciativas largas
 
 Cuando una iniciativa se trabaja **por lotes** (una fase por sesión,
