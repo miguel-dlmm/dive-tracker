@@ -2661,3 +2661,35 @@ virtual real de iOS (la limitación ya documentada de `mobile-check` en
 verifica de verdad en el dispositivo físico) — el arreglo está anclado
 al mecanismo real leído en el código, no a una suposición, pero queda
 pendiente de que el usuario lo confirme en su iPhone.
+
+### 10.13 — KPIs de Mi trabajo: la cifra ya puede partirse DENTRO de la palabra
+
+Retoma 8.1/9.3/9.4: "los KPIs de movimientos se siguen saliendo del
+cuadro porque la cifra es muy grande", luego aclarado "me pasa solo en
+el móvil". Causa real, confirmada con DOM real en Chromium (no
+adivinada): la Fase 9 ya había quitado `truncate` para permitir partir
+la cifra en 2 líneas, pero eso solo funciona si el texto tiene algún
+ESPACIO donde partir (varias monedas unidas con " + "). `Money`
+(shared.jsx) pinta una cifra sola como un único nodo de texto sin
+espacios ("119.677,40") — para el motor de layout es UNA sola palabra,
+así que sin más no tenía ningún punto de corte y simplemente se salía
+del borde de la tarjeta en vez de bajar de línea. Solo se nota en móvil
+porque ahí las 3 tarjetas comparten una fila mucho más estrecha; en
+desktop hay margen de sobra para que hasta 7-8 dígitos quepan en una
+sola línea sin llegar a necesitar partir nada.
+
+**Arreglo**: `break-words` (Tailwind, `overflow-wrap: break-word`) en el
+span del importe de `MoneyKpiTile` — permite partir dentro de la propia
+cifra cuando de verdad no cabe, sin afectar a cifras que sí caben en una
+línea.
+
+**Verificación**: reproducido y confirmado en vivo con
+`javascript_tool` sobre el DOM real (Chromium, `localhost`, cuenta
+demo) — con una cifra larga inyectada (`119.677.234.567,40`),
+`scrollWidth` (142px) superaba a `clientWidth` (91px) en 51px con la
+clase quitada (el mismo overflow que reporta el usuario) y coincidían
+exactamente (91px = 91px, la cifra bajaba a una segunda línea) con la
+clase puesta. No es una suposición: es el mismo mecanismo reproducido y
+medido. Test nuevo en `MiTrabajoTab.test.jsx` que comprueba la clase
+`break-words` en el importe. 795/795 tests, lint sin errores nuevos,
+build correcto.

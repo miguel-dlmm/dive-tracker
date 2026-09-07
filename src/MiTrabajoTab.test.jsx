@@ -50,6 +50,21 @@ describe("MoneyKpiTile — la cifra puede partirse en dos líneas en vez de forz
     const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums"));
     expect(amount.className).not.toMatch(/truncate/);
   });
+
+  // Feedback explícito 2026-09-07: "los KPIs de movimientos se siguen
+  // saliendo del cuadro... solo en el móvil". Quitar `truncate` (test de
+  // arriba) solo permite bajar de línea si el texto tiene algún espacio
+  // donde partir — `Money` (shared.jsx) pinta la cifra como un único
+  // nodo de texto sin espacios, así que sin `break-words` una cifra muy
+  // larga simplemente se sale del borde de la tarjeta en vez de partirse.
+  it("el importe permite partirse por dentro de la palabra (break-words), no solo entre palabras", () => {
+    renderMiTrabajo({
+      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" }],
+    });
+    const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
+    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums"));
+    expect(amount.className).toMatch(/break-words/);
+  });
 });
 
 const rowsHook = (rows) => ({

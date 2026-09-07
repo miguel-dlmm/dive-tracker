@@ -159,6 +159,9 @@ Registro de cambios relevantes de Ocean Flow.
   móvil (el teclado virtual ya no le hace cambiar de dirección mientras
   está abierto) — arreglo que también protege a cualquier otro selector
   desplegable de la app frente al mismo problema.
+- Mi trabajo: los KPIs con una cifra muy larga ya no se salen del
+  cuadro en móvil — ahora la cifra puede partirse en dos líneas también
+  cuando es un único número sin espacios.
 - **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
   real** — "Setting up fake worker failed". Causa confirmada leyendo el
   código fuente de pdfjs-dist: en su modo de reserva "fake worker",

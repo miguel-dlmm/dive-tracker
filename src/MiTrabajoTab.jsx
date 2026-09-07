@@ -421,7 +421,19 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
             <Icon size={iconTier === "small" ? 12 : 16} style={{ color }} aria-hidden="true" />
           </span>
         )}
-        <span className={`w-full min-w-0 ${amountSizeCls} font-bold leading-tight tabular-nums`} style={{ color: BRAND_NAVY }}>
+        {/* break-words (Fase 10, 2026-09-07 — "los KPIs de movimientos se
+            siguen saliendo del cuadro... solo en el móvil"): quitar
+            `truncate` (arriba) permite partir la cifra en 2 líneas, pero
+            solo si hay un espacio donde partir — "119.677,40" que
+            `Money` (shared.jsx) pinta como un único nodo de texto sin
+            espacios es UNA sola palabra para el motor de layout, así que
+            sin esto no tenía ningún punto de corte y simplemente se
+            salía del borde de la tarjeta en vez de bajar de línea. Solo
+            en columnas estrechas (3 KPI por fila en móvil) una cifra de
+            6-7 dígitos deja de caber en una palabra sin partir; en
+            desktop, con más ancho por tarjeta, no llega a hacer falta
+            partir nada — de ahí que el bug fuera "solo en el móvil". */}
+        <span className={`w-full min-w-0 break-words ${amountSizeCls} font-bold leading-tight tabular-nums`} style={{ color: BRAND_NAVY }}>
           {entries.length === 0 ? "—" : single ? (
             <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
           ) : (
