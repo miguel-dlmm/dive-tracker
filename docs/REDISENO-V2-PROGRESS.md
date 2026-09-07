@@ -3757,3 +3757,109 @@ que quiere seguir adelante con esto, la vía de menor riesgo sería un
 sin tocar la animación) en vez de un tooltip con panel propio, y
 actualizar `formatMoney`/`moneyKpiText` a la vez que la cifra visible
 para no desincronizar la medición del icono.
+
+### 12.14 — Icono fijo junto a la etiqueta del KPI + colores de marca por tipo de movimiento
+
+**Pedido**: "y si añadimos el icono del kpi al lado del texto?"
+(pendiente de aclarar alcance) y, en el mismo bloque, "la paleta de
+marca incluye más tonos azules y deberías definir colores de marca
+para cursos, comisiones y ajustes por si hacemos campañas
+particulares... actualiza el libro de estilo con esto y aplica a toda
+la app".
+
+**Aclaración recogida (AskUserQuestion)**: sobre el icono del KPI, dos
+lecturas posibles — sustituir el icono que se encoge junto a la cifra,
+o añadir uno FIJO junto a la etiqueta de abajo sin tocar el de arriba.
+El usuario eligió la segunda (recomendada): mantener toda la animación
+de encogimiento ya cerrada en el punto anterior, y añadir un icono
+pequeño (10px) y fijo junto a "Generado"/"Pendiente de cobrar"/
+"Cobrado este mes" — sirve de ancla, la identidad de color del KPI
+nunca desaparece del todo aunque el de arriba se oculte con una cifra
+muy larga. `aria-hidden`, puramente decorativo (la etiqueta ya nombra
+el KPI).
+
+**Colores de marca por tipo de movimiento — hallazgo real durante el
+análisis**: "Comisión" usaba `SUN`, que `docs/DESIGN-SYSTEM.md` §3.4
+documenta explícitamente como semántico de ESTADO ("pendiente,
+atención"), no de marca — la propia "regla de separación marca/estado"
+de ese documento ("un estado 'pagado' nunca se pinta en navy solo
+porque es el azul de marca") ya prohibía implícitamente esto, sin que
+nadie lo hubiera aplicado a "tipo de movimiento" hasta ahora. Se
+introducen `BRAND_GOLD` (Comisión) y `BRAND_SLATE`/`BRAND_SLATE_FILL`
+(Ajuste) como colores de marca dedicados, sin vocabulario compartido
+con los 3 semánticos de estado (`CORAL`/`SUN`/`GREEN`) ni con los de
+identidad de app (`BRAND_NAVY`/`BRAND_SKY`). Además, `BRAND_OCEAN`/
+`BRAND_FOAM` completan la rampa de azules entre navy y sky, pedidos
+explícitamente para material de campaña. Los 4 colores nuevos,
+verificados contraste WCAG 2.2 real (no a ojo, mismo rigor que el
+resto de `docs/DESIGN-SYSTEM.md` §3): `BRAND_OCEAN` 5.95:1,
+`BRAND_GOLD` 5.47:1 (igual peso visual que `TEAL`), `BRAND_SLATE`
+5.00:1, `BRAND_SLATE_FILL` 8.51:1 — los 4 pasan AA para texto normal.
+
+**"Aplicar a toda la app" — barrido real, no solo la fuente única**:
+`MOVEMENT_TYPE_META` (`shared.jsx`) es la fuente de verdad, pero
+`rowAccent` (`MiTrabajoTab.jsx`) y `formAccentColor` (`MovementSheet.jsx`)
+tenían cada una su PROPIA copia hardcodeada de `SUN` para "comision" —
+si solo se cambiaba `MOVEMENT_TYPE_META`, esas dos habrían quedado
+desincronizadas del badge (visible: el mismo tipo con dos colores
+distintos según dónde se mirara). Las tres se corrigen a la vez.
+`AJUSTE_FILL` (`SummaryTab.jsx`) pasa de un hex local a importar
+`BRAND_SLATE_FILL`, misma fuente única. Deliberadamente SIN tocar:
+`SUN` en `MiTrabajoTab.jsx`/`HomeTab.jsx`/`WhatsNew.jsx` para usos que
+no son "Comisión" (KPI "Pendiente de cobrar", KPI "Cursos" de Home,
+un icono de slide de WhatsNew) — coincidencia de reutilizar el mismo
+hex para algo no relacionado, cambiarlo habría sido alcance no pedido;
+tampoco se toca el color del IMPORTE de un Ajuste (sigue por signo,
+`CORAL`/`GREEN`, comportamiento ya documentado y correcto) — el color
+de marca nuevo es solo para el badge/icono del tipo en sí.
+
+**Verificado**: 819/819 tests (suite completa — incluye
+`RatesTab.test.jsx` actualizado a `BRAND_GOLD`, y un test nuevo en
+`MiTrabajoTab.test.jsx` para el icono fijo junto a la etiqueta), lint 0
+errores, build correcto. Confirmado en Chrome real: los 3 KPIs de Mi
+trabajo muestran su icono junto a la etiqueta; la pestaña "Comisión"
+del selector de tipo (`MovementSheet`) muestra el nuevo dorado, distinto
+del ámbar/warning anterior — sin errores de consola. La pestaña/fila de
+"Ajuste" sigue mostrando verde/coral por signo del importe, comportamiento
+correcto y sin cambios (confirmado leyendo el código: `formAccentColor`/
+`rowAccent` nunca llegan a usar el color de marca fijo de Ajuste para
+esas dos superficies, solo para el badge de tipo sin contexto de signo
+— p. ej. el desglose "por tipo" del calendario de Home).
+
+### 12.15 — Guía de marca: bug de contraste real + contenido ampliado
+
+**Pedido**: feedback real sobre la guía publicada en 12.12 — "sobre el
+fondo claro el logo navy se ve fatal y hay secciones q ni se leen por
+los colores", más una petición de ampliar contenido: propuesta de
+valor, puntos fuertes, presentación de la app, copies/CTAs nuevos,
+frases sugerentes, ideas captadoras.
+
+**Causa real del bug**: la primera versión intentaba adaptarse al tema
+claro/oscuro del visor (`prefers-color-scheme`). La tarjeta "Logo sobre
+fondo claro" usaba `background:var(--surface)` — una variable que SÍ
+cambia a un tono oscuro en modo oscuro — con el logo en navy fijo
+encima: en un visor en modo oscuro, esa tarjeta terminaba mostrando
+navy sobre un fondo casi tan oscuro como el propio navy, ilegible,
+aunque la etiqueta siguiera diciendo "fondo claro". Mismo problema de
+fondo en los `.tag` de Funcionalidades (tintes calculados solo para
+tema claro).
+
+**Decisión de diseño**: la guía deja de intentar adaptarse al tema del
+visor — se compromete a un único look (claro), a propósito: es
+material de referencia sobre los colores/logo REALES de la marca, debe
+verse igual para cualquiera que la abra, no depender de si el
+visualizador tiene el modo oscuro activado. Elimina de raíz toda la
+clase de bug (nada que resincronizar entre variables de tema y
+colores fijos).
+
+**Contenido añadido**: sección "Propuesta de valor" (frase única +
+tarjeta destacada en navy) y "Puntos fuertes" (4 tarjetas numeradas);
+bio corta lista para enlace de perfil de Instagram; un "gancho" de
+copy por cada funcionalidad; sección nueva "Ganchos de copy, por
+ángulo" (dolor/beneficio/curiosidad, 3 frases cada uno) explícitamente
+generados como punto de partida creativo, no solo copy ya existente en
+la app. Paleta reestructurada en 3 grupos (identidad / tipo de
+movimiento / estado) reflejando los colores de marca nuevos de 12.14.
+
+Sin cambios de código de la app — solo el Artifact republicado en la
+misma URL.
