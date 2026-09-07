@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2, HelpCircle } from "lucide-react";
+import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2, HelpCircle, ArrowLeftRight } from "lucide-react";
 import { motion } from "motion/react";
 import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./App";
 import {
@@ -50,17 +50,31 @@ function actionLabel(entry, isPending, t) {
 // mantiene ligera (texto+icono, sin relleno de color) para no competir con
 // el FAB, que es la única acción con fondo sólido de toda la pantalla (ver
 // misma nota de ADR-0005 sobre jerarquía de acciones).
-// Acento por tipo (borde izquierdo, discreto) — para escanear la lista
-// de un vistazo sin abrir cada fila. Curso/Comisión usan un color fijo de
-// marca por tipo (TEAL/SUN, igual criterio que BRAND_NAVY/CORAL/GREEN de
-// más abajo — identidad de la app, no dato de negocio configurable). Ajuste
-// reutiliza el color que ya tenía el importe (CORAL/GREEN según signo):
-// esa distinción de "quién debe a quién" ya era más valiosa que un color
-// de tipo uniforme, no había que sustituirla.
+// Acento por tipo — para escanear la lista de un vistazo sin abrir cada
+// fila. Curso/Comisión usan un color fijo de marca por tipo (TEAL/SUN,
+// igual criterio que BRAND_NAVY/CORAL/GREEN de más abajo — identidad de la
+// app, no dato de negocio configurable). Ajuste reutiliza el color que ya
+// tenía el importe (CORAL/GREEN según signo): esa distinción de "quién debe
+// a quién" ya era más valiosa que un color de tipo uniforme, no había que
+// sustituirla.
+// Antes vivía como un borde izquierdo de 4px (feedback explícito
+// 2026-09-07: "esa franja vertical finita a la izquierda" era difícil de
+// reconocer de un vistazo) — ver TypeIconChip, que sustituye el borde por
+// un icono en una chip circular con este mismo color, mismo lenguaje visual
+// que ya usan los KPI y los campos de fecha de esta ronda de rediseño.
 function rowAccent(entry, amountColor) {
   if (entry._source === "ganado") return TEAL;
   if (entry._source === "comision") return SUN;
   return amountColor;
+}
+
+function TypeIconChip({ source, color }) {
+  const Icon = MOVEMENT_TYPE_META[source]?.icon || ArrowLeftRight;
+  return (
+    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+      <Icon size={17} style={{ color }} aria-hidden="true" />
+    </span>
+  );
 }
 
 // Salida al eliminar — tres capas de movimiento en vez de un fade plano:
@@ -194,50 +208,54 @@ function EntryRow({ entry, activityColor, schoolColor, currencyRows, isPending, 
       }}
     >
       <div
-        className="border-l-4 px-4 py-3.5 text-sm"
+        className="px-4 py-3.5 text-sm"
         style={{
-          borderColor: rowAccent(entry, amountColor),
           opacity: collapsed ? 0 : 1,
           transform: collapsed ? "translateX(-16px) scale(0.97)" : "translateX(0) scale(1)",
           transition: `opacity ${CONTENT_MS}ms ${EXIT_EASING}, transform ${CONTENT_MS}ms ${EXIT_EASING}`,
         }}
       >
-        <div className="flex items-start justify-between gap-2">
-          <EntryTitle
-            school={entry.school}
-            activity={entry.activity}
-            schoolColor={schoolColor(entry.school)}
-            activityColor={activityColor(entry.activity)}
-            schoolSuffix={isAjuste && entry.colleague_name ? ` · con ${entry.colleague_name}` : ""}
-          />
-          <span className="shrink-0 font-semibold tabular-nums" style={{ color: amountColor }}>
-            {isAjuste && (negative ? "− " : "+ ")}
-            <Money amount={Math.abs(entry.total)} code={entry.currency} currencyRows={currencyRows} style={{ color: amountColor }} />
-          </span>
-        </div>
-        {entry.notes && (
-          <p className="mt-1 truncate text-[11px] italic text-gray-400">"{entry.notes}"</p>
-        )}
-        <div className="mt-1.5 flex items-center justify-between gap-2">
-          <span className="truncate text-xs text-gray-400">
-            {entry.date}{MOVEMENT_TYPE_META[entry._source] ? ` · ${t(`common:movementTypes.${entry._source}`)}` : ""}
-          </span>
-          <div className="flex shrink-0 items-center gap-1">
-            <button
-              onClick={onToggle}
-              className="flex min-h-9 items-center gap-1 rounded px-1.5 text-xs font-semibold transition-colors"
-              style={{ color: isPending ? BRAND_NAVY : "#6B7280" }}
-            >
-              {isPending ? <Check size={14} aria-hidden="true" /> : <RotateCcw size={13} aria-hidden="true" />}
-              {actionLabel(entry, isPending, t)}
-            </button>
-            <RowMenu
-              onEdit={onEdit}
-              onDelete={handleDelete}
-              itemLabel={deleteItemLabel}
-              deleteConfirmMessage={t("rowMenu.deleteConfirmMessage", { item: deleteItemLabel })}
-              deleteSuccessAction={{ label: t("rowMenu.undoAction"), onClick: onUndoDelete }}
-            />
+        <div className="flex items-start gap-2.5">
+          <TypeIconChip source={entry._source} color={rowAccent(entry, amountColor)} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <EntryTitle
+                school={entry.school}
+                activity={entry.activity}
+                schoolColor={schoolColor(entry.school)}
+                activityColor={activityColor(entry.activity)}
+                schoolSuffix={isAjuste && entry.colleague_name ? ` · con ${entry.colleague_name}` : ""}
+              />
+              <span className="shrink-0 font-semibold tabular-nums" style={{ color: amountColor }}>
+                {isAjuste && (negative ? "− " : "+ ")}
+                <Money amount={Math.abs(entry.total)} code={entry.currency} currencyRows={currencyRows} style={{ color: amountColor }} />
+              </span>
+            </div>
+            {entry.notes && (
+              <p className="mt-1 truncate text-[11px] italic text-gray-400">"{entry.notes}"</p>
+            )}
+            <div className="mt-1.5 flex items-center justify-between gap-2">
+              <span className="truncate text-xs text-gray-400">
+                {entry.date}{MOVEMENT_TYPE_META[entry._source] ? ` · ${t(`common:movementTypes.${entry._source}`)}` : ""}
+              </span>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  onClick={onToggle}
+                  className="flex min-h-9 items-center gap-1 rounded px-1.5 text-xs font-semibold transition-colors"
+                  style={{ color: isPending ? BRAND_NAVY : "#6B7280" }}
+                >
+                  {isPending ? <Check size={14} aria-hidden="true" /> : <RotateCcw size={13} aria-hidden="true" />}
+                  {actionLabel(entry, isPending, t)}
+                </button>
+                <RowMenu
+                  onEdit={onEdit}
+                  onDelete={handleDelete}
+                  itemLabel={deleteItemLabel}
+                  deleteConfirmMessage={t("rowMenu.deleteConfirmMessage", { item: deleteItemLabel })}
+                  deleteSuccessAction={{ label: t("rowMenu.undoAction"), onClick: onUndoDelete }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -327,11 +345,17 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex flex-col gap-1 rounded-xl border border-gray-200 bg-white px-2.5 py-2.5"
+      className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-2.5 py-3"
     >
+      {/* Icono a 28px (no los 32px de KpiTile en Home) y cifra en text-base
+          (no text-lg): un importe con separador de miles y símbolo de
+          moneda ("75.828,40 ฿") es mucho más largo que el 1-2 dígitos de
+          un KPI simple — a 32px+text-lg se truncaba de verdad (regresión
+          real encontrada al verificar en el navegador), perdiendo la
+          cifra completa, justo lo que "más presencia" no debía costar. */}
       <div className="flex items-center gap-1.5">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
-          <Icon size={13} style={{ color }} aria-hidden="true" />
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+          <Icon size={16} style={{ color }} aria-hidden="true" />
         </span>
         <span className="min-w-0 truncate text-base font-bold tabular-nums" style={{ color: BRAND_NAVY }}>
           {entries.length === 0 ? "—" : single ? (
@@ -341,7 +365,7 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
           )}
         </span>
       </div>
-      <span className="flex items-center gap-0.5 text-[10.5px] font-medium leading-tight text-gray-500">
+      <span className="flex items-center gap-0.5 text-[11px] font-medium leading-tight text-gray-500">
         {label}
         {tooltip && (
           // Mismo truco de objetivo táctil que Field: el icono visual se

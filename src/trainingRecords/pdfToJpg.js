@@ -69,7 +69,14 @@ export async function renderPdfToJpgBytes(pdfBytes, { scale = DEFAULT_SCALE } = 
     canvas.width = viewport.width;
     canvas.height = viewport.height;
     const ctx = canvas.getContext("2d");
-    await page.render({ canvasContext: ctx, viewport }).promise;
+    // Anota qué página exacta falló — sin esto, un fallo aquí llegaba al
+    // toast de error genérico de TrainingRecordsTab.jsx sin ninguna pista
+    // de en qué punto del render se rompió.
+    try {
+      await page.render({ canvasContext: ctx, viewport }).promise;
+    } catch (err) {
+      throw new Error(`Fallo al renderizar la página ${pageNum}/${doc.numPages} a canvas: ${err?.message || err}`, { cause: err });
+    }
     pageCanvases.push(canvas);
   }
 
@@ -86,6 +93,23 @@ export async function renderPdfToJpgBytes(pdfBytes, { scale = DEFAULT_SCALE } = 
     ctx.drawImage(pageCanvases[i], placement.x, placement.y, placement.width, placement.height);
   });
 
-  const blob = await new Promise((resolve) => finalCanvas.toBlob(resolve, "image/jpeg", JPG_QUALITY));
+  // `toBlob` puede llamar a su callback con `null` en vez de lanzar un
+  // error real (lienzo "tainted", memoria agotada, formato no soportado)
+  // — sin este guard, `blob.arrayBuffer()` explotaba con un
+  // "Cannot read properties of null" genérico que no decía nada sobre la
+  // causa real. Bug real reportado en iOS Safari 2026-09-07 ("el generar
+  // JPG no funciona"): no se pudo reproducir en este entorno (sin
+  // Safari/WebKit real disponible, ver CLAUDE.md §8), así que este cambio
+  // no es la corrección confirmada del error concreto — es endurecer el
+  // punto más frágil ya identificado del pipeline para que, si vuelve a
+  // fallar, el mensaje de consola diga con qué canvas y en qué paso, en
+  // vez de un TypeError sin contexto.
+  const blob = await new Promise((resolve, reject) => {
+    finalCanvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error(`toBlob devolvió null (canvas ${finalCanvas.width}x${finalCanvas.height}, ${doc.numPages} página(s))`))),
+      "image/jpeg",
+      JPG_QUALITY
+    );
+  });
   return new Uint8Array(await blob.arrayBuffer());
 }

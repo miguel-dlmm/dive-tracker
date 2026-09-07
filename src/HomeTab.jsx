@@ -62,21 +62,29 @@ function useTranslatedMovementTypeMeta(t) {
 // en su propia fila, a todo el ancho, para no perder espacio de lectura
 // frente a etiquetas más largas (mismo motivo que en MoneyKpiTile,
 // MiTrabajoTab.jsx — las dos comparten ahora este mismo patrón).
+// Segunda vuelta de diseño (2026-09-07, feedback explícito: "no acaban de
+// gustarme, dales otra vuelta" tras la primera compactación) — mismo
+// patrón de 2 filas (icono+cifra / etiqueta), pero con más presencia:
+// insignia de 32px (antes 24px) e icono de 18px (antes 13px), cifra en
+// text-xl (antes text-lg) y algo más de aire interno (px-3 py-3 en vez de
+// px-2.5). Pedido explícito de mantener la altura a raya ("que no robe
+// mucho espacio") — sigue siendo 2 filas, no 3; solo crecen los elementos
+// dentro de esas 2 filas, no el número de filas.
 function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
   const count = useCountUp(value, { reduced });
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex flex-col gap-1 rounded-xl border border-gray-200 bg-white px-2.5 py-2.5"
+      className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
     >
-      <div className="flex items-center gap-1.5">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
-          <Icon size={13} style={{ color }} aria-hidden="true" />
+      <div className="flex items-center gap-2">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+          <Icon size={18} style={{ color }} aria-hidden="true" />
         </span>
-        <span className="text-lg font-bold leading-none tabular-nums" style={{ color: BRAND_NAVY }}>{count}</span>
+        <span className="text-xl font-bold leading-none tabular-nums" style={{ color: BRAND_NAVY }}>{count}</span>
       </div>
-      <span className="text-[10.5px] font-medium leading-tight text-gray-500">{label}</span>
+      <span className="text-[11px] font-medium leading-tight text-gray-500">{label}</span>
     </motion.div>
   );
 }

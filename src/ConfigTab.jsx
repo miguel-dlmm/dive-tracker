@@ -7,7 +7,7 @@ import {
   Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2,
 } from "lucide-react";
 import { GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle } from "./shared";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle, ColorSwatchPicker, ENTITY_COLOR_PALETTE, useFloatingDropdown, FloatingPanel } from "./shared";
 import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
 import i18n from "./i18n";
@@ -47,6 +47,34 @@ function actionErrorMessage(res, payload, { forbidden, fallback }) {
   return payload.error || fallback;
 }
 
+// Botón de color inline de cada fila (Escuelas/Cursos) — antes era un
+// `<input type="color">` nativo (rueda de color sin restricción), ahora
+// abre un panel flotante con la paleta curada (ColorSwatchPicker,
+// shared.jsx) — mismo cambio, mismo motivo, que el selector de color del
+// alta/edición más abajo. align="right": el botón vive al final de la
+// fila, pegado al lado derecho — igual criterio que el DatePicker de una
+// fila de progreso en Training Records (ver shared.jsx, useFloatingPosition).
+function ColorFieldButton({ value, onChange, ariaLabel }) {
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown("right");
+  return (
+    <>
+      <button
+        ref={anchorRef}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        className="h-9 w-9 shrink-0 rounded-full"
+        style={{ backgroundColor: value, border: value?.toLowerCase() === "#ffffff" ? "1.5px solid #D1D5DB" : "none" }}
+      />
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align="right" role="dialog" aria-label={ariaLabel} className="w-64 rounded-xl p-3">
+        <ColorSwatchPicker value={value} onChange={(hex) => { onChange(hex); setOpen(false); }} />
+      </FloatingPanel>
+    </>
+  );
+}
+
 /**
  * Tabla CRUD genérica reutilizada por las secciones de Configuración
  * (Escuelas, Cursos, Estados de pago, Monedas). Crear y
@@ -62,7 +90,7 @@ function actionErrorMessage(res, payload, { forbidden, fallback }) {
  */
 function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false, description, defaultLabel }) {
   const { t } = useTranslation("config");
-  const emptyForm = Object.fromEntries(fields.map((f) => [f.key, f.type === "color" ? "#0E7C7B" : ""]));
+  const emptyForm = Object.fromEntries(fields.map((f) => [f.key, f.type === "color" ? ENTITY_COLOR_PALETTE[7] : ""]));
   const [form, setForm] = useState(emptyForm);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingRow, setEditingRow] = useState(null); // null = alta
@@ -119,13 +147,11 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
   };
 
   const renderColorField = (row, f) => (
-    <input
+    <ColorFieldButton
       key={f.key}
-      type="color"
       value={row[f.key]}
-      onChange={(e) => updateLive(row[pkField], { [f.key]: e.target.value })}
-      title={t("crudTable.cambiarColor")}
-      className="h-9 w-11 shrink-0 cursor-pointer rounded border border-gray-200"
+      onChange={(hex) => updateLive(row[pkField], { [f.key]: hex })}
+      ariaLabel={t("crudTable.cambiarColor")}
     />
   );
 
@@ -202,21 +228,24 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
           <button onClick={closeSheet} aria-label={t("crudTable.cerrar")} className="text-gray-400"><X size={19} /></button>
         </div>
         <div className="mt-2 flex flex-wrap items-end gap-2.5">
-          {fields.map((f) => (
-            f.type === "color" ? (
-              <Field key={f.key} label={f.label}>
-                <input type="color" value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                  className="h-11 w-12 cursor-pointer rounded-md border border-gray-200" />
-              </Field>
-            ) : (
-              <Field key={f.key} label={f.label}>
-                <input value={form[f.key]} placeholder={f.placeholder}
-                  onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                  className={`${inputCls} w-full min-w-[8rem]`} onKeyDown={(e) => e.key === "Enter" && submitSheet()} />
-              </Field>
-            )
+          {fields.filter((f) => f.type !== "color").map((f) => (
+            <Field key={f.key} label={f.label}>
+              <input value={form[f.key]} placeholder={f.placeholder}
+                onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                className={`${inputCls} w-full min-w-[8rem]`} onKeyDown={(e) => e.key === "Enter" && submitSheet()} />
+            </Field>
           ))}
         </div>
+        {/* Paleta curada a todo el ancho, debajo del nombre — no cabía a
+            su lado sin apretarlo (rejilla de 12 swatches vs. un solo
+            input de color de 48px), y separarla en su propia fila además
+            le da más peso: sigue siendo una decisión real, no un detalle
+            menor del formulario. */}
+        {fields.filter((f) => f.type === "color").map((f) => (
+          <div key={f.key} className="mt-3">
+            <ColorSwatchPicker value={form[f.key]} onChange={(hex) => setForm({ ...form, [f.key]: hex })} label={f.label} />
+          </div>
+        ))}
         <button
           onClick={submitSheet}
           className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"

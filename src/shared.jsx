@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo, useCallback, createContext, useCo
 import { useTranslation, withTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, Waves, Anchor, Sailboat, Compass, Fish } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, Waves, Anchor, Sailboat, Compass, Fish, GraduationCap, Handshake, ArrowLeftRight } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
@@ -596,9 +596,14 @@ function parseDateStr(s) {
 // otros iguales en la misma pantalla para lectores de pantalla (ver
 // ProgressRowToggle en trainingRecords/TrainingRecordsTab.jsx). Por
 // defecto sigue siendo el propio placeholder, igual que siempre.
-export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
+// align="right" (2026-09-07): para un disparador estrecho pegado al lado
+// derecho de su contenedor (fecha de una fila de progreso, Training
+// Records) — ver la nota junto a useFloatingPosition. El resto de usos
+// (el campo Fecha normal de un formulario, con espacio de sobra a su
+// derecha) siguen con el "left" por defecto, sin cambio de comportamiento.
+export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "left" }) {
   const { t, months, weekdays } = useCalendarLabels();
-  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown(align);
   const parsed = parseDateStr(value);
   const today = new Date();
   const [viewY, setViewY] = useState(parsed?.y ?? today.getFullYear());
@@ -661,7 +666,7 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
         </span>
         <span className={`min-w-0 flex-1 truncate ${parsed ? "text-gray-800" : "text-gray-400"}`}>{display}</span>
       </button>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-72 rounded-xl p-3">
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align={align} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-72 rounded-xl p-3">
         {/* Acceso directo a "Hoy" — el caso más común con diferencia (una
             fecha de curso casi siempre es la de hoy o un día muy reciente),
             un toque en vez de navegar el calendario. Vive en el componente
@@ -995,10 +1000,15 @@ const CAL_NEUTRAL = "#94A3B8";
 // ningún sitio de la app — su color depende del signo del importe (ver
 // rowAccent en MiTrabajoTab) — así que aquí usa el neutro del propio
 // calendario en vez de inventarle una identidad de marca que no tiene.
+// `icon`: añadido 2026-09-07 (feedback explícito: "mejorar la manera de
+// reconocer el tipo de movimiento, ahora es esa franja vertical finita a
+// la izquierda") — sustituye el borde de acento de EntryRow (MiTrabajoTab)
+// por una chip circular icono+color, mismo lenguaje visual que los KPI y
+// los campos de fecha de esta misma ronda de rediseño.
 export const MOVEMENT_TYPE_META = {
-  ganado: { label: "Curso", color: TEAL },
-  comision: { label: "Comisión", color: SUN },
-  companeros: { label: "Ajuste", color: CAL_NEUTRAL },
+  ganado: { label: "Curso", color: TEAL, icon: GraduationCap },
+  comision: { label: "Comisión", color: SUN, icon: Handshake },
+  companeros: { label: "Ajuste", color: CAL_NEUTRAL, icon: ArrowLeftRight },
 };
 
 // Mini calendario del mes — el día con actividad lleva un anillo de color;
@@ -1583,7 +1593,19 @@ export function useBodyScrollLock(active) {
 // window.visualViewport (la API correcta para detectar el teclado
 // virtual, a diferencia de window.innerHeight, que no cambia con él) y
 // scroll/resize normales.
-function useFloatingPosition(open, anchorRef) {
+// align: "left" (por defecto) ancla el panel por su borde izquierdo al
+// borde izquierdo del disparador, creciendo hacia la derecha — el maxWidth
+// se calcula como el espacio libre HASTA el borde derecho del viewport.
+// "right" hace lo simétrico (ancla por la derecha, crece hacia la
+// izquierda, maxWidth = espacio libre hasta el borde IZQUIERDO). Bug real
+// corregido 2026-09-07: un disparador estrecho pegado al lado derecho de
+// su contenedor (el DatePicker de una fila de progreso en Training
+// Records, w-36) con align="left" por defecto dejaba un maxWidth
+// minúsculo (apenas el margen hasta el borde derecho de la pantalla),
+// forzando un calendario de ancho fijo (w-72) a comprimirse muchísimo —
+// "demasiado vertical y muy pegado al lateral". Antes de este fix, la
+// fórmula de maxWidth no distinguía el modo de alineación en absoluto.
+function useFloatingPosition(open, anchorRef, align = "left") {
   const [pos, setPos] = useState(null);
   const recalc = useCallback(() => {
     const el = anchorRef.current;
@@ -1598,11 +1620,11 @@ function useFloatingPosition(open, anchorRef) {
       left: rect.left,
       right: vw - rect.right, // alineación por la derecha (p. ej. RowMenu) — evita salirse por el borde derecho en vez de calcular un ancho que no se conoce de antemano
       width: rect.width,
-      maxWidth: Math.max(160, vw - rect.left - 8),
+      maxWidth: align === "right" ? Math.max(160, rect.right - 8) : Math.max(160, vw - rect.left - 8),
       top: openUp ? null : rect.bottom + 4,
       bottom: openUp ? vh - rect.top + 4 : null,
     });
-  }, [open, anchorRef]);
+  }, [open, anchorRef, align]);
 
   useEffect(() => { recalc(); }, [recalc]);
   useEffect(() => {
@@ -1629,7 +1651,7 @@ function useFloatingPosition(open, anchorRef) {
 // input que abre el panel); panelRef va en <FloatingPanel> — el clic
 // fuera comprueba los dos, porque una vez portado a document.body el
 // panel deja de ser un descendiente DOM del disparador.
-export function useFloatingDropdown() {
+export function useFloatingDropdown(align = "left") {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
   const panelRef = useRef(null);
@@ -1651,7 +1673,7 @@ export function useFloatingDropdown() {
   // bloquea el scroll de fondo mientras está abierto — ver useBodyScrollLock.
   useBodyScrollLock(open);
 
-  const pos = useFloatingPosition(open, anchorRef);
+  const pos = useFloatingPosition(open, anchorRef, align);
   return { open, setOpen, anchorRef, panelRef, pos };
 }
 
@@ -2091,6 +2113,68 @@ export function colorFor(rows, name, fallback = "#6B7280") {
   return rows.find((r) => r.name === name)?.color || fallback;
 }
 
+// Paleta curada para el color de una entidad de negocio (escuela, curso...)
+// — 2026-09-07, decisión explícita del usuario tras plantearse quitar del
+// todo la personalización de color: el selector anterior era un
+// `<input type="color">` nativo, sin ninguna restricción (se encontró un
+// caso real en datos de prueba: una escuela en negro puro, #000000). El
+// color de entidad sigue siendo real información (distingue escuelas/
+// cursos de un vistazo en listas y calendarios, convención #2 de
+// CLAUDE.md — no es solo decoración), así que no se elimina; en vez de
+// abrir la puerta a cualquier hex, se acota a una rejilla de swatches ya
+// elegidos, todos con contraste suficiente sobre blanco y sin pisar
+// ninguno de los colores semánticos de la propia app (CORAL/SUN/GREEN,
+// "esto es un estado" — ver docs/DESIGN-SYSTEM.md §3.4), los de marca
+// (BRAND_NAVY/BRAND_SKY, "esto es la propia app") NI el TEAL de "Curso"
+// en MOVEMENT_TYPE_META (más arriba en este archivo) — encontrado al
+// verificar en el navegador: un cyan (#0891B2, ni TEAL ni BRAND_SKY)
+// sustituye a un verde-azulado más cercano a ese TEAL que se probó
+// primero, para que el color de una escuela nunca se confunda con el
+// icono de tipo "Curso" de sus propios movimientos. Incluye negro y
+// blanco a petición expresa del usuario.
+export const ENTITY_COLOR_PALETTE = [
+  "#000000", "#FFFFFF", "#475569", "#DC2626", "#EA580C", "#D97706",
+  "#16A34A", "#0891B2", "#0284C7", "#4F46E5", "#9333EA", "#DB2777",
+];
+
+// Selector de color de entidad — rejilla de swatches tocables en vez del
+// `<input type="color">` nativo (rueda de color sin restricción alguna).
+// El blanco lleva un anillo gris siempre visible (si no, es invisible
+// sobre el propio fondo blanco de la hoja); el seleccionado se marca con
+// un check, blanco sobre oscuro o navy sobre claro/blanco según su propio
+// contraste.
+export function ColorSwatchPicker({ value, onChange, label }) {
+  return (
+    <div className="flex flex-col gap-1 text-sm">
+      {label && <span className="font-medium text-gray-700">{label}</span>}
+      <div className="grid grid-cols-6 gap-2">
+        {ENTITY_COLOR_PALETTE.map((hex) => {
+          const selected = value?.toLowerCase() === hex.toLowerCase();
+          const needsRing = hex.toLowerCase() === "#ffffff";
+          const checkColor = ["#ffffff", "#d97706"].includes(hex.toLowerCase()) ? BRAND_NAVY : "white";
+          return (
+            <button
+              key={hex}
+              type="button"
+              onClick={() => onChange(hex)}
+              aria-label={hex}
+              aria-pressed={selected}
+              className="flex h-9 w-9 items-center justify-center rounded-full transition-transform active:scale-90"
+              style={{
+                backgroundColor: hex,
+                border: needsRing ? "1.5px solid #D1D5DB" : selected ? "2px solid white" : "none",
+                boxShadow: selected ? `0 0 0 2px ${hex}` : "none",
+              }}
+            >
+              {selected && <Check size={15} style={{ color: checkColor }} aria-hidden="true" />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // Aclara un color hex mezclándolo con blanco — para fondos de pill.
 export function lighten(hex, amount = 0.88) {
   const c = (hex || "#6B7280").replace("#", "");
@@ -2102,30 +2186,23 @@ export function lighten(hex, amount = 0.88) {
 }
 
 // Cabecera "Actividad + Escuela" estandarizada en las filas de listado de
-// Registro/Comisiones/Tarifas/Pagos: la actividad es el dato principal (su
-// propio color + un punto de acento, para escanear la lista de un vistazo),
-// la escuela queda debajo como contexto secundario, más pequeña y con su
-// propio acento pero sin competir en peso — sustituye al antiguo
-// "Escuela - Actividad" en una sola línea, donde ambos datos competían por
-// la misma jerarquía visual.
+// Registro/Comisiones/Tarifas/Pagos: la actividad es el dato principal, la
+// escuela queda debajo como contexto secundario, más pequeña y sin competir
+// en peso — sustituye al antiguo "Escuela - Actividad" en una sola línea,
+// donde ambos datos competían por la misma jerarquía visual.
+// Sin puntos de acento delante del texto (retirados 2026-09-07, feedback
+// explícito: "quiero quitar los puntos que salen delante de los textos" en
+// Tarifas y Mi trabajo, las dos pantallas que usan este componente) — el
+// color de cada uno ya se lee directamente en el propio texto (antes solo
+// la actividad lo hacía; la escuela pasa a teñirse igual, para no perder
+// esa distinción visual al quitar su punto).
 // schoolSuffix (opcional): texto añadido tras el nombre de la escuela, sin
-// tocar su color (p. ej. " · con Ana" en un Ajuste de curso, Mi trabajo) —
-// mismo componente para cualquier fila de "curso + escuela" en la app
-// (Tarifas, Mi trabajo), consolidado 2026-09-04 al confirmar que
-// EntryRowTitle (antes privado de MiTrabajoTab.jsx) y este componente
-// pintaban exactamente lo mismo con un desvío accidental (los puntos de
-// color de escuela/curso solo existían aquí) — ver docs/ESTILO.md.
+// tocar su color (p. ej. " · con Ana" en un Ajuste de curso, Mi trabajo).
 export function EntryTitle({ school, activity, schoolColor, activityColor, schoolSuffix }) {
   return (
     <div className="min-w-0">
-      <div className="flex items-center gap-1.5">
-        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: activityColor }} aria-hidden="true" />
-        <span className="truncate text-[15px] font-semibold leading-tight" style={{ color: activityColor }}>{activity || "—"}</span>
-      </div>
-      <div className="mt-1 flex items-center gap-1.5">
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: schoolColor }} aria-hidden="true" />
-        <span className="truncate text-[11.5px] font-medium text-gray-400">{school}{schoolSuffix || ""}</span>
-      </div>
+      <p className="truncate text-[15px] font-semibold leading-tight" style={{ color: activityColor }}>{activity || "—"}</p>
+      <p className="mt-0.5 truncate text-[11.5px] font-medium" style={{ color: schoolColor }}>{school}{schoolSuffix || ""}</p>
     </div>
   );
 }

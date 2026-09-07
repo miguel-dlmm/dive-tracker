@@ -390,55 +390,69 @@ export default function MovementSheet({
                   ) : (
                     // Nº personas y Total emparejados: el total es
                     // consecuencia directa de las personas, así que vive
-                    // justo al lado del dato que lo modifica.
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <Field label={t("sheet.fields.peopleCount")}>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, people: String(Math.max(0, Number(form.people || 0) - 1)) })}
-                            aria-label={t("sheet.fields.lessPeople")}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
-                          >
-                            <Minus size={14} aria-hidden="true" />
-                          </button>
-                          <input
-                            type="number" min={0} value={form.people}
-                            onChange={(e) => setForm({ ...form, people: e.target.value })}
-                            className={`${inputCls} w-full text-center`}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, people: String(Number(form.people || 0) + 1) })}
-                            aria-label={t("sheet.fields.morePeople")}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
-                          >
-                            <Plus size={14} aria-hidden="true" />
-                          </button>
-                        </div>
-                      </Field>
-                      <Field label={t("sheet.fields.total")}>
-                        {preview ? (
-                          <div className="flex h-11 flex-col justify-center rounded-md px-2.5" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
-                            <span className="text-sm font-semibold tabular-nums" style={{ color: BRAND_NAVY }}>
-                              {formatMoney(preview.total, preview.currency, currencies.rows)}
-                            </span>
-                            <span className="text-[10px] leading-tight text-gray-400">
-                              {formatMoney(preview.rate, preview.currency, currencies.rows)} {t("sheet.fields.perPerson")}
-                            </span>
+                    // justo al lado del dato que lo modifica. `flex` en vez
+                    // de un `grid-cols-2` a partes iguales (bug real
+                    // reportado, "las cifras salen cortadas"): un importe
+                    // con separador de miles y símbolo de moneda es mucho
+                    // más largo que las 1-2 cifras de personas, así que
+                    // repartir el ancho al 50% le dejaba a Total justo el
+                    // espacio que no necesitaba (el contador de personas
+                    // sobraba) — Total ahora se queda con todo el ancho
+                    // restante (`flex-1 min-w-0`, imprescindible para que
+                    // `truncate` funcione dentro de un flex item) y el
+                    // contador de personas con solo el suyo (`shrink-0`).
+                    <div className="flex items-start gap-2.5">
+                      <div className="shrink-0">
+                        <Field label={t("sheet.fields.peopleCount")}>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, people: String(Math.max(0, Number(form.people || 0) - 1)) })}
+                              aria-label={t("sheet.fields.lessPeople")}
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
+                            >
+                              <Minus size={14} aria-hidden="true" />
+                            </button>
+                            <input
+                              type="number" min={0} value={form.people}
+                              onChange={(e) => setForm({ ...form, people: e.target.value })}
+                              className={`${inputCls} w-14 text-center`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, people: String(Number(form.people || 0) + 1) })}
+                              aria-label={t("sheet.fields.morePeople")}
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
+                            >
+                              <Plus size={14} aria-hidden="true" />
+                            </button>
                           </div>
-                        ) : form.school && form.activity ? (
-                          <button
-                            type="button" onClick={openInlineRate}
-                            aria-label={t("sheet.fields.addRate")}
-                            className="flex h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 bg-amber-50 px-2 text-xs font-semibold text-amber-700"
-                          >
-                            {t("sheet.fields.addRate")}
-                          </button>
-                        ) : (
-                          <div className="flex h-11 items-center rounded-md bg-gray-50 px-2.5 text-sm text-gray-300">—</div>
-                        )}
-                      </Field>
+                        </Field>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <Field label={t("sheet.fields.total")}>
+                          {preview ? (
+                            <div className="flex h-11 min-w-0 flex-col justify-center rounded-md px-2.5" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
+                              <span className="truncate text-sm font-semibold tabular-nums" style={{ color: BRAND_NAVY }}>
+                                {formatMoney(preview.total, preview.currency, currencies.rows)}
+                              </span>
+                              <span className="truncate text-[10px] leading-tight text-gray-400">
+                                {formatMoney(preview.rate, preview.currency, currencies.rows)} {t("sheet.fields.perPerson")}
+                              </span>
+                            </div>
+                          ) : form.school && form.activity ? (
+                            <button
+                              type="button" onClick={openInlineRate}
+                              aria-label={t("sheet.fields.addRate")}
+                              className="flex h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 bg-amber-50 px-2 text-xs font-semibold text-amber-700"
+                            >
+                              {t("sheet.fields.addRate")}
+                            </button>
+                          ) : (
+                            <div className="flex h-11 items-center rounded-md bg-gray-50 px-2.5 text-sm text-gray-300">—</div>
+                          )}
+                        </Field>
+                      </div>
                     </div>
                   )}
 

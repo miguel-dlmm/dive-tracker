@@ -21,6 +21,25 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Color de escuelas y cursos**: ya se elige de una paleta de 12 colores
+  ya pensados para quedar bien con el resto de la app (incluye blanco y
+  negro), en vez de un selector de color libre sin ninguna restricción.
+- **Mi trabajo**: el tipo de movimiento (Curso/Comisión/Ajuste) ya se
+  reconoce por un icono en su propia chip de color, no por una franja
+  fina a la izquierda; los puntos de color delante de escuela/curso
+  desaparecen (en Mi trabajo y Tarifas) — el color ya se lee en el
+  propio texto.
+- **KPIs de Home y Mi trabajo** un poco más grandes y con más aire, tras
+  una primera vuelta que se quedó corta.
+- **Training Records**: la fecha de examen ya va en la misma línea que
+  su etiqueta (antes, título arriba y campo suelto debajo); las
+  aventuras electivas de AOWD ya se ven exactamente igual que el resto
+  de filas de progreso, en vez de apilar la fecha debajo; el calendario
+  que se abre en esas filas ya no sale comprimido contra el borde de la
+  pantalla.
+- **Mi trabajo**: un importe largo (con separador de miles y símbolo de
+  moneda) ya no se corta al crear/editar un movimiento con muchas
+  personas.
 - Últimos restos del navy antiguo (pre-rebrand) al navy de marca:
   títulos de login/registro/recuperar contraseña/aceptar términos y
   "Qué hay de nuevo".
@@ -85,6 +104,9 @@ Registro de cambios relevantes de Ocean Flow.
   trabajo que nunca llegaba a pintarse en la práctica.
 
 ### Fixed
+- (Interno, Training Records) La exportación a JPG podía fallar con un
+  error genérico sin ninguna pista de la causa real si la conversión a
+  imagen fallaba a mitad — ahora el mensaje dice en qué paso exacto.
 - El menú inferior podía quedar oculto tras la propia barra de Safari en
   una pantalla con poco contenido (p. ej. Mi trabajo sin movimientos) —
   el navegador no tenía nada que desplazar para colapsar su barra.

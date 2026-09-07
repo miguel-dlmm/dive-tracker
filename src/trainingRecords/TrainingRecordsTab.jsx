@@ -194,8 +194,15 @@ function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, 
           <div className="w-36 shrink-0">
             {/* placeholder corto porque el campo ya va pegado a su propia
                 etiqueta — el texto completo sigue disponible para
-                lectores de pantalla vía ariaLabel */}
-            <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} />
+                lectores de pantalla vía ariaLabel. align="right": el
+                disparador es estrecho y va pegado al lado derecho de la
+                fila — con el align="left" por defecto, el calendario que
+                se abre (ancho fijo, w-72) apenas tenía sitio y salía
+                comprimido contra el borde de la pantalla (bug real
+                reportado 2026-09-07, "demasiado vertical y muy pegado al
+                lateral"). Con align="right" se ancla por el lado que sí
+                tiene sitio de sobra dentro de la fila. */}
+            <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} align="right" />
           </div>
         )}
       </div>
@@ -204,25 +211,51 @@ function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, 
   );
 }
 
+// Fecha suelta, sin casilla — mismo contenedor y misma línea que
+// ProgressRowToggle (2026-09-07, pedido explícito: "los campos de fecha
+// deberían salir en la misma línea"). Antes "Fecha de examen"/
+// "Confirmación del Cuestionario" vivían como una sección aparte (título
+// arriba, DatePicker suelto a todo el ancho debajo) — un tercer
+// vocabulario visual frente a las filas de progreso y de aventuras, sin
+// motivo real para ser distinto.
+function DateOnlyRow({ label, dateValue, onDateChange, dateError, dateLabel }) {
+  const { t } = useTranslation("trainingRecords");
+  return (
+    <div className="rounded-md border border-gray-200 px-3 py-2">
+      <div className="flex min-h-11 items-center gap-2.5 py-1">
+        <span className="min-w-0 flex-1 text-sm text-gray-700">{label}</span>
+        <div className="w-36 shrink-0">
+          <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} align="right" />
+        </div>
+      </div>
+      <FieldError message={dateError} />
+    </div>
+  );
+}
+
 // Fila de aventura electiva de AOWD (2026-09-04, pedido explícito: "las
-// mismas 5 filas de aventura tienen la misma forma visual") — mismo
-// contenedor que ProgressRowToggle (rounded-md border px-3 py-2), pero con
-// un Select en vez de una casilla, porque aquí lo que varía por alumno no
-// es "sí/no" sino "cuál aventura". `options` ya llega filtrada por
-// exclusión cruzada (availableAdventureOptions, recordConfig.js) — la
-// aventura elegida en otra fila no puede repetirse aquí.
+// mismas 5 filas de aventura tienen la misma forma visual"; unificada de
+// nuevo 2026-09-07 — seguía siendo distinta en la práctica: apilaba la
+// fecha DEBAJO en móvil en vez de en la misma línea que el resto de filas
+// de progreso). Mismo contenedor que ProgressRowToggle (rounded-md border
+// px-3 py-2) y ya SIEMPRE en una sola línea, sin el `flex-col`/`sm:` que
+// solo apilaba en pantallas estrechas — exactamente donde vive esta app.
+// Select en vez de una casilla porque aquí lo que varía por alumno no es
+// "sí/no" sino "cuál aventura". `options` ya llega filtrada por exclusión
+// cruzada (availableAdventureOptions, recordConfig.js) — la aventura
+// elegida en otra fila no puede repetirse aquí.
 function AdventureRow({ label, value, options, onSelect, dateValue, onDateChange, dateError, dateLabel }) {
   const { t } = useTranslation("trainingRecords");
   return (
     <div className="rounded-md border border-gray-200 px-3 py-2">
-      <div className="flex flex-col gap-2 py-1 sm:flex-row sm:items-start sm:gap-2.5">
+      <div className="flex items-start gap-2.5 py-1">
         <div className="min-w-0 flex-1">
           <p className="mb-1 text-sm text-gray-700">{label}</p>
           <Select value={value} onChange={onSelect} options={options} placeholder={t("studentSheet.elegirAventura")} />
         </div>
         {value && (
-          <div className="sm:w-36 sm:shrink-0">
-            <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} />
+          <div className="mt-6 w-36 shrink-0">
+            <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} align="right" />
           </div>
         )}
       </div>
@@ -704,18 +737,18 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
 
           {/* "Fecha de examen" (2026-09-04, pedido explícito, OWD/SC-DD/
               SC-EAN): ya no es una casilla de "confirmación" con fecha —
-              es directamente un campo de fecha obligatorio. */}
+              es directamente un campo de fecha obligatorio. Vive dentro de
+              DateOnlyRow desde 2026-09-07 (mismo contenedor y misma línea
+              que el resto de filas de progreso, en vez de una sección
+              aparte con el título arriba y la fecha suelta debajo). */}
           {templateMap.examConfirmation && (
-            <section>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{templateMap.examConfirmation.label}</h3>
-              <DatePicker
-                value={config.examConfirmedDate}
-                onChange={(v) => updateConfig({ examConfirmedDate: v })}
-                placeholder={t("studentSheet.elegirFechaCorta")}
-                ariaLabel={templateMap.examConfirmation.label}
-              />
-              <FieldError message={configErrors.examConfirmationDate} />
-            </section>
+            <DateOnlyRow
+              label={templateMap.examConfirmation.label}
+              dateValue={config.examConfirmedDate}
+              onDateChange={(v) => updateConfig({ examConfirmedDate: v })}
+              dateError={configErrors.examConfirmationDate}
+              dateLabel={templateMap.examConfirmation.label}
+            />
           )}
 
           <section>

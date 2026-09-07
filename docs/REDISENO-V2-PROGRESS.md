@@ -841,3 +841,142 @@ de TEST, no algo que exista en producción ni deba tocarse ahí.
 de `interactive-widget=resizes-content` para el menú inferior (4.1) y
 el tamaño de logo en login/registro/recuperar contraseña (4.5, el
 bypass de desarrollo impide verlas en este entorno).
+
+## Fase 5 — Segunda ronda de feedback, con el usuario ya conectado (2026-09-07)
+
+**Estado: ✅ cerrada — 9 items, todos verificados en Chrome (lint 0
+errores, 754/754 tests, build correcto).** A diferencia de la Fase 4
+(lote nocturno sin el usuario presente), esta ronda se resolvió con el
+usuario activo en el chat — dos decisiones de diseño abiertas
+(colores de entidad, KPIs) se le preguntaron directamente en vez de
+decidirse por autonomía, siguiendo la memoria de sesión que distingue
+ambos modos.
+
+### 5.1 — Colores de escuela/curso: paleta curada, no eliminación
+
+El usuario planteó la duda directamente ("¿dejar esto al usuario causa
+mucha distorsión?"). Recomendación dada y aceptada: no eliminar la
+personalización (sigue siendo información real — distingue entidades en
+listas/calendarios, convención #2 de CLAUDE.md), pero sustituir el
+`<input type="color">` nativo (sin restricción alguna; caso real
+encontrado en los propios datos de prueba, una escuela en negro puro)
+por una paleta curada de 12 swatches — pedido explícito: "que haya
+blanco y negro también".
+
+**`ENTITY_COLOR_PALETTE`** (`shared.jsx`) + **`ColorSwatchPicker`**
+(rejilla tocable, con check y anillo para el blanco) — evitan
+deliberadamente los 3 colores semánticos de estado (CORAL/SUN/GREEN),
+los 2 de marca (BRAND_NAVY/BRAND_SKY) y, encontrado ya en el propio
+navegador durante la verificación, el TEAL de "Curso" en
+`MOVEMENT_TYPE_META` (ver 5.9) — un cyan distinto lo sustituye en la
+paleta para que el color de una escuela nunca se confunda con el icono
+de tipo de sus propios movimientos.
+
+Reemplaza el `<input type="color">` en dos sitios de `ConfigTab.jsx`:
+el botón inline de cada fila (Escuelas/Cursos/Estados de pago — nuevo
+`ColorFieldButton`, abre la paleta en un panel flotante) y el alta/
+edición en la hoja inferior (`ColorSwatchPicker` a todo el ancho, debajo
+del nombre). Verificado en vivo: cambio de color en línea aplicado al
+instante, paleta completa visible y correctamente marcada en el alta.
+
+### 5.2 — Training Records: fecha de examen en la misma línea
+
+"Fecha de examen"/"Confirmación del Cuestionario" vivían como una
+sección aparte (título arriba, `DatePicker` suelto a todo el ancho
+debajo) — un tercer vocabulario visual frente a las filas de progreso.
+Nuevo componente `DateOnlyRow` (mismo contenedor `rounded-md border`
+que `ProgressRowToggle`, etiqueta y fecha en la misma línea) sustituye
+esa sección suelta.
+
+### 5.3 — DatePicker: panel flotante corregido para disparadores estrechos
+
+Diagnóstico real: `useFloatingPosition` calculaba `maxWidth` solo en
+función del borde IZQUIERDO del disparador (`vw - rect.left - 8`),
+fórmula que no tenía sentido para un disparador estrecho (`w-36`)
+pegado al lado DERECHO de su fila — el resultado era un `maxWidth` de
+apenas ~150px forzando el calendario (ancho fijo `w-72`, 288px) a
+comprimirse muchísimo: "demasiado vertical y muy pegado al lateral".
+`useFloatingPosition`/`useFloatingDropdown` ganan un parámetro `align`
+("left"/"right") que cambia la fórmula al lado correcto; `DatePicker`
+gana la misma prop, por defecto "left" (sin cambio para el campo Fecha
+normal de un formulario, con espacio de sobra). Los `DatePicker` de
+`ProgressRowToggle`, `AdventureRow` y `DateOnlyRow` pasan `align="right"`.
+Verificado en vivo: el calendario abre a su ancho completo, sin
+comprimirse, en las tres filas.
+
+### 5.4 — AOWD: aventuras unificadas con el resto de progreso del curso
+
+`AdventureRow` apilaba la fecha DEBAJO del selector en móvil
+(`flex-col sm:flex-row`) — el `sm:` nunca se disparaba en un teléfono
+real, así que en la práctica SIEMPRE se apilaba, a diferencia de
+`ProgressRowToggle`. Se retira el `flex-col`/`sm:`: ahora siempre en una
+sola línea (Select `flex-1` + fecha `w-36 shrink-0`, igual que el resto
+de filas), con el `DatePicker` desplazado (`mt-6`) para alinearse con el
+control, no con su etiqueta.
+
+### 5.5 — Mi trabajo/Tarifas: importes ya no se cortan
+
+`MovementSheet.jsx`: "Nº personas" y "Total" vivían en un `grid-cols-2`
+a partes iguales — un importe con separador de miles y símbolo de
+moneda ("19.800,00 ฿") es mucho más largo que 1-2 dígitos de personas,
+así que el 50% fijo dejaba a Total justo el espacio que no necesitaba.
+Sustituido por `flex` (personas `shrink-0`, Total `flex-1 min-w-0` +
+`truncate` como red de seguridad). Verificado con un caso extremo real
+(Blue Manta · Open Water · 9 personas → "19.800,00 ฿ / 2200,00 ฿ por
+persona"): se lee completo, sin cortes.
+
+### 5.6 — Puntos de acento retirados, color movido al propio texto
+
+`EntryTitle` (`shared.jsx`, compartido por Mi trabajo y Tarifas) pintaba
+un punto de color delante de actividad y escuela — pedido explícito:
+"quiero quitar los puntos". Retirados los dos; la actividad ya teñía su
+propio texto (sin cambio), la escuela pasa a teñir el suyo también (antes
+gris fijo) para no perder la distinción visual que aportaba el punto.
+
+### 5.7 — KPIs: segunda vuelta de diseño
+
+Primera compactación (Fase 4) no convenció ("no acaban de gustarme").
+Presentadas 3 direcciones concretas con vista previa; elegida "más
+grandes y con aire" con la condición explícita de no ganar altura.
+`KpiTile` (Home) e insignia+icono a 32px/18px (antes 24px/13px), cifra
+en `text-xl` (antes `text-lg`), más padding interno — sigue en 2 filas.
+`MoneyKpiTile` (Mi trabajo) recibió un ajuste MENOR (28px/16px de
+insignia, cifra en `text-base`, no `text-xl`): un importe es mucho más
+largo que un entero de 1-2 dígitos y a la primera pasada (`text-lg`) se
+truncaba de verdad en el navegador — regresión real encontrada y
+corregida en la misma ronda de verificación, antes de darla por buena.
+
+### 5.8 — Training Records en iOS Safari: JPG, hardening sin diagnóstico confirmado
+
+Igual que en la Fase 4, el error concreto no se pudo reproducir en este
+entorno (sin Safari/WebKit real). Se revisó `pdfToJpg.js` en busca del
+punto más frágil del pipeline: `canvas.toBlob()` puede llamar a su
+callback con `null` en vez de lanzar un error real (lienzo saturado de
+memoria, formato no soportado), y el código no lo comprobaba — un fallo
+ahí producía un `TypeError` genérico ("Cannot read properties of null")
+sin ninguna pista de la causa. Añadido el guard (rechaza con un mensaje
+que incluye tamaño de canvas y nº de páginas) y anotado con qué página
+exacta falla si `page.render()` lanza. No es la corrección confirmada
+del error reportado — es endurecer el punto ya identificado como frágil
+para que, si vuelve a fallar, el mensaje de consola diga algo útil.
+
+### 5.9 — Mi trabajo: tipo de movimiento con icono, no una franja fina
+
+La franja de 4px a la izquierda de cada fila (color por tipo) era
+"difícil de reconocer de un vistazo" — pedido explícito de mejorar el
+reconocimiento visual. `MOVEMENT_TYPE_META` gana un campo `icon`
+(GraduationCap/Handshake/ArrowLeftRight para Curso/Comisión/Ajuste,
+`shared.jsx`); `EntryRow` (Mi trabajo) sustituye el borde por una chip
+circular de 36px, mismo lenguaje visual que los KPI y los campos de
+fecha de esta misma ronda — el color de Ajuste sigue derivándose del
+signo del importe (CORAL/GREEN), no de un color de tipo fijo, exactamente
+igual que antes.
+
+**Verificación**: recorrido real en Chrome (viewport iPhone 14 Pro Max)
+para los 9 puntos — Mi trabajo con las 3 escuelas y el nuevo icono de
+tipo, Training Records con OWD (fecha de examen) y AOWD (aventuras),
+Configuración → Escuelas con la paleta curada en línea y en el alta.
+Un movimiento de prueba creado para verificar el caso extremo de
+importe largo se eliminó después de confirmar el fix, dejando los datos
+de la cuenta demo como estaban. Sin errores de consola en ningún punto
+del recorrido.
