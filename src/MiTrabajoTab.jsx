@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2, HelpCircle, Users } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./App";
 import {
   Money, formatMoney, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
@@ -355,12 +355,19 @@ function moneyKpiText(totals, currencyRows) {
 // reales de prueba en dev-bypass (ver comentario de MoneyKpiTile sobre
 // por qué la cifra ya puede partirse en dos líneas — esto es la capa
 // siguiente, para el caso ya extremo en el que ni así cabe con el icono
-// delante). "small" reduce el icono; "hidden" lo retira del todo,
-// liberando el ancho completo de la fila para la cifra.
+// delante).
+// Tier intermedio "small" (icono reducido) retirado en la siguiente
+// ronda de feedback (2026-09-07): "queda fatal ese diseño de KPIs
+// cortados por la cifra... si el número es tan grande como para que no
+// quepan número e icono, quitamos los iconos de los tres" — un icono
+// reducido seguía sin resolver el problema real (competir por el mismo
+// ancho que la cifra), así que ahora solo hay dos estados: "normal"
+// (icono a tamaño completo) o "hidden" (sin icono, todo el ancho para
+// la cifra). El umbral se mantiene en 14 — el mismo punto en el que
+// antes empezaba a reducirse el icono, porque esa cifra ya señalaba que
+// el icono a tamaño completo no cabía cómodo.
 export function kpiIconTierFor(longestText) {
-  if (longestText.length > 20) return "hidden";
-  if (longestText.length > 14) return "small";
-  return "normal";
+  return longestText.length > 14 ? "hidden" : "normal";
 }
 
 function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel, iconTier = "normal" }) {
@@ -407,20 +414,31 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
           cifra puede ocupar dos líneas (ver amountSizeCls arriba), así
           que el icono se alinea con la primera línea, no con el centro
           vertical del bloque entero.
-          iconTier ("normal"/"small"/"hidden", ver kpiIconTierFor arriba):
-          calculado sobre las 3 cifras a la vez, no cada tarjeta por su
-          cuenta — si una cifra crece tanto que hace falta reducir u
-          ocultar el icono, las 3 tarjetas cambian juntas, para no romper
-          la alineación entre ellas con solo una distinta. */}
+          iconTier ("normal"/"hidden", ver kpiIconTierFor arriba): calculado
+          sobre las 3 cifras a la vez, no cada tarjeta por su cuenta — si
+          una cifra crece tanto que hace falta ocultar el icono, las 3
+          tarjetas cambian juntas, para no romper la alineación entre ellas
+          con solo una distinta. AnimatePresence anima la entrada/salida
+          (ancho+opacidad+escala, mismo par EASE.enter/exit que el resto de
+          la app) — antes era instantáneo, feedback explícito de esta
+          ronda ("todo con animaciones"). overflow-hidden en el propio
+          icono evita que se vea recortado a medio colapsar mientras el
+          ancho anima hacia 0. */}
       <div className="flex items-start gap-1.5">
-        {iconTier !== "hidden" && (
-          <span
-            className={`flex shrink-0 items-center justify-center rounded-full ${iconTier === "small" ? "h-5 w-5" : "h-7 w-7"}`}
-            style={{ backgroundColor: `${color}1A` }}
-          >
-            <Icon size={iconTier === "small" ? 12 : 16} style={{ color }} aria-hidden="true" />
-          </span>
-        )}
+        <AnimatePresence initial={false}>
+          {iconTier !== "hidden" && (
+            <motion.span
+              key="icon"
+              initial={{ opacity: 0, width: 0, scale: 0.6 }}
+              animate={{ opacity: 1, width: 28, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.sm, ease: EASE.enter } }}
+              exit={{ opacity: 0, width: 0, scale: 0.6, transition: { duration: reduced ? 0.01 : DURATION.xs, ease: EASE.exit } }}
+              className="flex h-7 shrink-0 items-center justify-center overflow-hidden rounded-full"
+              style={{ backgroundColor: `${color}1A` }}
+            >
+              <Icon size={16} style={{ color }} aria-hidden="true" />
+            </motion.span>
+          )}
+        </AnimatePresence>
         {/* break-words (Fase 10, 2026-09-07 — "los KPIs de movimientos se
             siguen saliendo del cuadro... solo en el móvil"): quitar
             `truncate` (arriba) permite partir la cifra en 2 líneas, pero

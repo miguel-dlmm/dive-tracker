@@ -5,22 +5,22 @@ import { ToastProvider } from "./shared";
 
 // Bug real reportado (Fase 9, 2026-09-07): "si crece mucho la cifra de
 // los KPIs de movimientos se llegan a salir incluso de la box" —
-// kpiIconTierFor decide si el icono de los 3 KPI se reduce u oculta
-// según lo larga que sea la cifra MÁS larga de las 3 (calculado en el
-// componente, no aquí), liberando ancho para el número. Este test fija
-// los umbrales exactos.
+// kpiIconTierFor decide si el icono de los 3 KPI se oculta según lo
+// larga que sea la cifra MÁS larga de las 3 (calculado en el
+// componente, no aquí), liberando ancho para el número. Tier
+// intermedio "small" (icono reducido) retirado en la siguiente ronda de
+// feedback ("si el número es tan grande como para que no quepan número
+// e icono, quitamos los iconos de los tres") — ahora solo "normal" o
+// "hidden". Este test fija el umbral exacto.
 describe("kpiIconTierFor", () => {
   it("tamaño normal para cifras de hasta 14 caracteres", () => {
     expect(kpiIconTierFor("117.477,40 ฿")).toBe("normal"); // 12
     expect(kpiIconTierFor("1.117.477,40 ฿")).toBe("normal"); // 14, límite exacto
   });
 
-  it("icono reducido para cifras de 15 a 20 caracteres", () => {
-    expect(kpiIconTierFor("11.117.477,40 ฿")).toBe("small"); // 15, límite exacto
-    expect(kpiIconTierFor("111.111.117.477,40 ฿")).toBe("small"); // 20, límite exacto
-  });
-
-  it("icono oculto para cifras de más de 20 caracteres", () => {
+  it("icono oculto para cifras de más de 14 caracteres", () => {
+    expect(kpiIconTierFor("11.117.477,40 ฿")).toBe("hidden"); // 15, límite exacto
+    expect(kpiIconTierFor("111.111.117.477,40 ฿")).toBe("hidden"); // 20
     expect(kpiIconTierFor("1.111.111.117.477,40 ฿")).toBe("hidden"); // 22
   });
 });

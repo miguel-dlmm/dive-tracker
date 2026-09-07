@@ -259,6 +259,10 @@ Registro de cambios relevantes de Ocean Flow.
   color a la izquierda de cada fila — ahora usa el mismo icono en una
   chip circular que ya usa Mi trabajo, para reconocerlo igual en las dos
   pantallas.
+- Los 3 KPIs de Mi trabajo ya no reducen su icono a un tamaño intermedio
+  con una cifra larga — o se ve a tamaño completo, o se oculta del todo
+  (nunca uno solo distinto de sus hermanos), y ahora aparece/desaparece
+  con una animación suave en vez de un cambio instantáneo.
 
 ## [1.0.0] - 2026-09-04
 

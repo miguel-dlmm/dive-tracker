@@ -2839,3 +2839,50 @@ residencia alfabético + el panel que ya no salta, KPIs que no se salen
 del cuadro, calendario alineado bajo la cabecera, dominio real en todos
 los enlaces) está cerrado, verificado y pusheado — no hace falta
 retomarlo salvo que el usuario reporte algo nuevo sobre ello.
+
+## Fase 11 — Continuación de la cola pendiente (2026-09-07, sesión nueva)
+
+Sesión nueva tras el `/clear` pedido al cierre de la Fase 10 — retoma la
+lista de "Pendiente, en orden aproximado de lo último que se pidió" de
+arriba, en el mismo orden, en modo autónomo (encargo explícito del
+usuario: implementar, testear, lintear, build, verificar y hacer
+commit+push de cada punto sin pararse a pedir confirmación salvo bloqueo
+real).
+
+### 11.1 — KPIs de Mi trabajo: sin tier "small", icono animado al aparecer/ocultarse
+
+Retoma el primer pendiente de la cola: "queda fatal ese diseño de KPIs
+cortados por la cifra... si el número es tan grande como para que no
+quepan número e icono, quitamos los iconos de los tres... todo con
+animaciones".
+
+**Qué se hizo**: `kpiIconTierFor` (`MiTrabajoTab.jsx`) pasa de 3 estados
+(`normal`/`small`/`hidden`, umbrales 14/20 caracteres) a solo 2
+(`normal`/`hidden`, un único umbral en 14) — el tier intermedio que
+reducía el icono a 20px seguía sin resolver el problema real (el icono
+seguía compitiendo por el mismo ancho que la cifra), así que ahora es
+binario: icono a tamaño completo (28px) o ningún icono, liberando todo
+el ancho de la fila para el número. El umbral se mantiene en el mismo
+punto (14 caracteres) que antes marcaba el paso a "small" — ya señalaba
+que el icono a tamaño completo dejaba de caber cómodo.
+
+`MoneyKpiTile` envuelve el icono en `AnimatePresence` +
+`motion.span` (mismo par `EASE.enter`/`EASE.exit` y `DURATION.sm`/`xs`
+que el resto de la app, no un tercer vocabulario de motion): entra con
+opacidad+ancho+escala crecientes, sale a la inversa, con
+`overflow-hidden` en el propio icono para que no se vea recortado a
+medio colapsar mientras el ancho anima hacia 0. Antes el cambio de tier
+era instantáneo (montaje/desmontaje condicional sin animar).
+
+**Verificado**: `kpiIconTierFor` reescrito en `MiTrabajoTab.test.jsx`
+(2 describe blocks en vez de 3, mismos umbrales exactos, ahora solo
+normal/hidden). 802/802 tests (suite completa, un test menos que 803
+por fusionar 2 casos de "small"/"hidden" en un único describe de
+"hidden", no por perder cobertura), lint 0 errores, build correcto.
+Confirmado visualmente en Chrome (Chromium, `localhost`, cuenta demo,
+viewport por defecto): forzando temporalmente `iconTier` a `"hidden"`
+vía una variable de depuración en el propio render (revertida antes de
+commitear, nunca llegó a git) se comprobó que las 3 tarjetas ocultan su
+icono a la vez y el número ocupa todo el ancho; quitando el forzado y
+volviendo a montar la pantalla, el icono reaparece en las 3 — sin
+errores de consola en ningún estado.
