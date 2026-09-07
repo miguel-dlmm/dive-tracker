@@ -3575,3 +3575,60 @@ confirmar en Safari iOS real una vez este cambio llegue a producción
 (el bug solo era reproducible contra un build real, no en `npm run
 dev`, donde Vite sirve también los ficheros de la raíz del repo de
 forma distinta a como empaqueta `vite build`).
+
+### 12.10 — Auditoría de los 10 warnings de lint: ninguno esconde un bug real
+
+**Pedido**: "analiza si merece la pena arreglarlos o si esconden algo
+más grande" sobre los 10 warnings de `npm run lint` (0 errores, todos
+`react-hooks/exhaustive-deps`, sin cambios desde antes de esta sesión).
+
+**Análisis, caso a caso** (no solo por categoría — cada archivo
+inspeccionado):
+
+1. **`ComisionesTab.jsx`/`MovementSheet.jsx`/`WorkLogTab.jsx`** (`rateFor`
+   fuera de las deps de un `useMemo`) y **`SummaryTab.jsx`**
+   (`withinRange`/`schoolColor` fuera de las deps de varios `useMemo`,
+   5 de los 10 avisos): en los 4 archivos, la función señalada es un
+   closure plano, redefinido en cada render, que solo lee de un valor
+   que YA está en el array de dependencias (`commissionRates.rows`,
+   `rangeStart`/`rangeEnd`, `schools.rows`...). Añadir la función al
+   array no cambiaría nunca el resultado (su comportamiento ya depende
+   por completo de lo que ya se vigila) — sí haría que el `useMemo`
+   recalculase en CADA render, porque una función sin `useCallback`
+   tiene una identidad distinta cada vez: quitaría el memo de raíz sin
+   arreglar nada real. Caso de falso positivo conocido y documentado
+   del propio plugin `eslint-plugin-react-hooks` para closures locales
+   que cierran solo sobre dependencias ya declaradas.
+2. **`ConfigTab.jsx`** (`onSectionChange`/`t` fuera de un `useEffect`):
+   `onSectionChange` es el setter de un `useState` de `App.jsx`
+   (`setConfigSectionHeader`) — React garantiza que un setter de
+   `useState` nunca cambia de identidad entre renders, así que omitirlo
+   es siempre seguro. `t` sí podría, en teoría, dejar la miga de pan de
+   Configuración en el idioma antiguo si el idioma cambiara mientras el
+   usuario sigue dentro de una subsección — pero el único selector de
+   idioma en caliente vive en "Mi perfil" (`ProfileTab.jsx`), una
+   pestaña principal distinta: llegar hasta ahí implica salir de
+   Configuración, lo que desmonta este estado (`section` vuelve a
+   `null`) y hace que el efecto se re-ejecute igualmente al volver. No
+   hay ningún camino real de la UI actual que deje ver el bug.
+3. **`StudentQuickEntrySheet.jsx`** (`initial` fuera de un `useEffect`):
+   deliberado y ya explicado en un comentario del propio archivo — usa
+   `initial?.id` (un primitivo estable) en vez del objeto `initial`
+   completo (una referencia nueva en cada render del padre) para no
+   resetear el formulario en cada re-render ajeno de quien abre la
+   hoja. Patrón estándar recomendado precisamente para este caso.
+
+**Decisión**: no tocar ninguno de los 10. "Arreglarlos" en el sentido
+que sugiere el aviso (añadir la dependencia) sería, según el caso, un
+no-op (el setter) o un empeoramiento real (recalcular en cada render
+donde hoy hay memoización correcta), sin ganar nada — iría contra
+"evitar sobreingeniería y patrones introducidos solo por moda" (regla
+de arquitectura de `CLAUDE.md`). La alternativa "correcta" según la
+letra de la regla — envolver `rateFor`/`withinRange`/`schoolColor` en
+`useCallback` en sus 4 archivos para poder listarlas sin recalcular de
+más — es una refactorización real con su propio coste (más código, más
+superficie que mantener) a cambio de cero cambio de comportamiento; no
+se hace sin que aporte algo. Sin cambios de código en este punto —
+solo esta auditoría documentada, tal y como pide la regla 7 de
+"Documentación viva de decisiones" para una decisión de arquitectura
+con motivo real de quedar registrada.
