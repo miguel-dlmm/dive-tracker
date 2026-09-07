@@ -3724,3 +3724,36 @@ fuentes reales del propio proyecto, sin inventar mensajes nuevos:
 
 Sin código de la app tocado — entregable puramente de contenido/diseño,
 sin tests/lint/build aplicables.
+
+### 12.13 — Decimales en cifras de dinero: análisis, sin implementar todavía
+
+**Pedido**: "¿cómo sería de elegante ocultar los decimales e indicarlo
+en algún tooltip? lo veo una basura" — pregunta de diseño, no una
+instrucción cerrada de implementar.
+
+**Análisis**: la cifra que motivó el comentario son los KPIs de
+cabecera de Mi trabajo (`MoneyKpiTile`, `MiTrabajoTab.jsx`) — el mismo
+componente rediseñado tres veces esta sesión (Fase 6/7/9/11.1/11.2/13)
+hasta llegar al encogimiento continuo del icono ya cerrado en el punto
+anterior de esta fase. Redondear su cifra a 0 decimales no es solo
+"quitar dos caracteres": el ancho medido para decidir cuánto se encoge
+el icono (`finalTextMeasureRef`) usa `moneyKpiText()` →
+`formatMoney()`, la MISMA función de 2 decimales que pintaría la cifra
+visible — cambiar solo la cifra visible sin tocar también esa medición
+dejaría el icono encogiéndose más de lo necesario (conservador, no
+roto, pero sí una regresión sutil sobre un cálculo que costó 3 rondas
+dejar bien). Añadir además un tooltip con el importe exacto sobre un
+componente ya animado (icono + cifra contando hacia arriba) es
+superficie nueva de interacción sobre algo recién estabilizado.
+
+**Decisión**: no implementarlo todavía. El coste real (tocar de nuevo
+un componente ya delicado, dos sitios que deben cambiar a la vez para
+no desincronizarse) no es proporcional a una idea todavía abierta
+("¿cómo sería...?", no "hazlo"), y compite con trabajo de más impacto
+y más urgente ya en cola (SEO y QA antes de la release a producción,
+pedidos explícitamente "antes de la release"). Si el usuario confirma
+que quiere seguir adelante con esto, la vía de menor riesgo sería un
+`title` nativo del navegador con el importe exacto (sin estado nuevo,
+sin tocar la animación) en vez de un tooltip con panel propio, y
+actualizar `formatMoney`/`moneyKpiText` a la vez que la cifra visible
+para no desincronizar la medición del icono.
