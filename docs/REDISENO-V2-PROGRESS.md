@@ -2339,3 +2339,97 @@ doble-opt-in incorporado, resuelve parte del flujo sin necesidad de
 reinventar la tabla de "pendiente" desde cero.
 
 **Estado**: aparcado, documentado, sin código tocado.
+
+## Fase 10 — Segundo lote grande, feedback en vivo del usuario (2026-09-07)
+
+El usuario prueba en vivo la Fase 9 recién desplegada (Preview real,
+Safari iOS/macOS, Chrome PC) mientras la sesión sigue en curso y va
+encolando hallazgos según los ve. Mismo criterio de autonomía que la
+Fase 9: se resuelve y despliega sin pausa salvo que algo necesite una
+decisión suya.
+
+### 10.1 — Dominio de producción: alias adicional, con protección de Vercel de por medio
+
+`oceanflow.vercel.app` y `ocean-flow.vercel.app` ya estaban cogidos por
+terceros (comprobado con `vercel alias set`, que los rechazó con
+"already in use"). `oceanflow-app.vercel.app` se probó, se creó, y se
+descartó por decisión del usuario ("app" quedaba repetido demasiado
+cerca del propio `.vercel.app`). Alias final:
+**`oceanflow-web.vercel.app`**, apuntando al mismo despliegue de
+producción que `dive-tracker-exgg.vercel.app` (que nunca se toca —
+nunca hay enlaces rotos, no es una redirección).
+
+Hallazgo real durante la creación: el alias nuevo devolvía 302 a un
+login de Vercel (`vercel.com/sso-api`) en vez de servir la app —
+protección "Vercel Authentication" del proyecto, que por defecto
+protege cualquier dominio que no sea el ya marcado como Production.
+El usuario lo resolvió él mismo en el dashboard (Project Settings →
+Deployment Protection) — confirmado con `curl -I` que
+`oceanflow-web.vercel.app` ya devuelve 200 directo, sin redirección.
+
+### 10.2 — Vercel BotID en el registro externo
+
+Ver commit `2713a61` — aprobado explícitamente tras el hallazgo de
+seguridad de la Fase 9 (registro externo sin límite de frecuencia).
+Nivel Basic (gratis). Detalle completo en el propio mensaje de commit.
+
+### 10.3 — Bug del email de recuperación de contraseña: confirmado ya resuelto, no un bug nuevo
+
+El usuario reportó "sigue sin dejarme cambiar la contraseña... me
+envía el mail con URL a develop" desde la URL de Preview del
+rediseño. Investigado con la propia API de Resend (con la
+`RESEND_API_KEY` ya en el proyecto): se encontró un email de las 03:31
+de esa misma madrugada con la URL de develop — pero **reproducido en
+vivo ahora mismo** (pedir "olvidé mi contraseña" desde la URL real de
+Preview, con la cuenta real `demom `/`mi.gueldlmm@gmail.com`,
+inspeccionando el email resultante vía la API de Resend) el enlace
+salió con la URL CORRECTA del Preview, y el cambio de contraseña
+completo funcionó de principio a fin. La sospecha razonable es que el
+email de las 03:31 se pidió directamente desde `dive-tracker-three.vercel.app`
+(develop), donde esa URL sí es la correcta — no una prueba contra el
+Preview de esta rama. Sin cambios de código; verificado end-to-end en
+el navegador real, no solo revisión de código.
+
+### 10.4 — Calendario Home: causa real encontrada y arreglada (scroll al detalle)
+
+Retoma 9.7/9.15. El usuario reportó que el arreglo de la sesión
+anterior (`window.scrollTo` de dos argumentos, sin `behavior: "smooth"`)
+NO funcionaba en Safari iOS, Safari macOS NI Chrome PC — "lo hace de
+vez en cuando pero con un retraso muy grande y solo se ve la
+cabecera... no está animado".
+
+**Reproducido y diagnosticado en vivo** (demo, `localhost`, cuenta con
+datos reales): `window.scrollY` confirmó que el scroll SÍ llegaba a
+ocurrir (0 → 232), pero con un retraso variable de hasta varios
+segundos. Causa real: el mecanismo dependía de `onAnimationComplete`
+del panel de detalle (`panelVariants`, animación `height: 0 → "auto"`)
+— la DURACIÓN de esa animación no es constante, varía según cuánto
+contenido tenga el día (un día con más movimientos tarda más en
+terminar su animación de altura), así que "esperar a que la animación
+termine" nunca iba a dar un tiempo fiable ni predecible.
+
+**Arreglo real (tercer intento sobre este mismo bug)**: dejar de
+esperar a nada. El desplazamiento ahora ocurre dentro del propio
+manejador de clic del día (`handleClick`, `MonthCalendar`), usando
+`e.currentTarget.scrollIntoView({ behavior: "auto", block: "center" })`
+sobre el BOTÓN del día pulsado — un elemento que no cambia de tamaño
+ni anima, así que su posición se conoce con certeza en el mismo
+instante del clic, sin depender de si (ni de cuándo) el panel de
+debajo termina de crecer. Se elimina todo el mecanismo anterior
+(`detailRef`, `scrollDetailIntoView`, `onAnimationComplete`) — más
+simple y sin la fragilidad que tenía.
+
+Efecto secundario esperado y aceptado: al abrir un día que ya cabía
+en la pantalla sin necesidad de scroll, este mecanismo igualmente
+centra la vista en él — se prefiere un comportamiento consistente y
+predecible en todos los casos frente a uno "más fino" que dependa de
+medir con precisión (la misma clase de fragilidad que causó este bug
+tres veces seguidas).
+
+**Verificación**: reproducido el bug en vivo (retraso real observado,
+scrollY con `await` de por medio) y confirmado el arreglo en vivo dos
+veces seguidas — clic en un día fuera de la pantalla → panel visible
+en la misma captura, sin ninguna espera. jsdom no implementa
+`scrollIntoView` (a diferencia de `scrollTo`, que sí existe ahí como
+no-op) — encadenado opcional (`?.`) añadido para que los tests no
+revienten. 786/786 tests, lint sin errores nuevos, build correcto.

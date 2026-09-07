@@ -130,6 +130,10 @@ Registro de cambios relevantes de Ocean Flow.
   trabajo que nunca llegaba a pintarse en la práctica.
 
 ### Fixed
+- El calendario de Home/Resumen ahora sí desplaza la pantalla al detalle
+  del día al tocarlo, siempre al instante — antes dependía de un tiempo
+  variable (a veces varios segundos, a veces nada) según cuánto
+  contenido tuviera el día.
 - **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
   real** — "Setting up fake worker failed". Causa confirmada leyendo el
   código fuente de pdfjs-dist: en su modo de reserva "fake worker",

@@ -1140,64 +1140,36 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   // calendario). Reordenar el detalle ANTES de la cuadrícula se descartó
   // (mismo feedback): con un día de muchas líneas, el calendario en sí
   // acabaría cayendo muy abajo, peor que el problema que se intenta
-  // resolver. `userSelectedRef` (ya existía para otro propósito, ver
-  // arriba) distingue un toque real del usuario de una auto-selección por
-  // `autoSelectFirstDay` — solo la primera debe desplazar la pantalla;
-  // auto-seleccionar el día 1 nada más cargar Home y saltar de golpe no
-  // sería una mejora, sería una sorpresa. Mismo criterio que "nearest"
-  // (ver scrollDetailIntoView más abajo): si el panel ya está
-  // completamente visible no mueve nada, y si no lo está, se desplaza lo
-  // mínimo necesario para que se vea entero — nunca un salto más grande
-  // de lo necesario. Disparado
-  // desde `onAnimationComplete` del propio panel (más abajo), no un
-  // `useEffect` sobre `selectedDay`: `panelVariants` anima `height: 0 →
-  // "auto"`, así que medir/desplazar en cuanto cambia el estado (antes de
-  // que termine de crecer) mediría un rectángulo más pequeño que el
-  // final — el resultado sería quedarse corto, justo el mismo problema
-  // que se intenta arreglar. `onAnimationComplete` solo se atiende para
-  // la transición "animate" (abrir), nunca "exit" (cerrar) — cambiar de
-  // un día a otro con el panel ya abierto no reanima nada (sin `key` por
-  // día, ver comentario del propio panel), así que tampoco vuelve a
-  // desplazar: el contenido ya está a la vista, no hace falta.
-  // window.scrollTo(x, y) de dos argumentos — NUNCA la forma con objeto
-  // de opciones (`{top, behavior}`) ni `Element.scrollIntoView(...)`.
-  // Hallazgo real, verificado en vivo con la consola de este mismo
-  // entorno mientras se diagnosticaba el reporte del usuario ("no
-  // funciona en Safari iOS real"): `window.scrollTo({top, behavior:
-  // "smooth"})` no desplaza la página EN ABSOLUTO aquí (`scrollY` se
-  // queda igual, comprobado con un `await` de por medio) — pero
-  // `window.scrollTo({top})` SIN `behavior: "smooth"`, y también la
-  // forma clásica de dos argumentos, sí funcionan de inmediato. El
-  // primer intento de este mismo arreglo usaba la forma de objeto con
-  // `behavior: "smooth"`/"auto" y parecía funcionar en una comprobación
-  // anterior — con `usePrefersReducedMotion()` devolviendo `true` en
-  // ese momento (behavior: "auto", instantáneo) habría enmascarado el
-  // problema real, que solo aparece con "smooth". Dado que la propia
-  // animación de desplazamiento es secundaria (lo importante, pedido
-  // por el usuario, es que quede claro que algo cargó — no que sea
-  // suave) y que este mismo tipo de opción con nombre ("behavior:
-  // smooth") es sospechoso de fallar también en Safari real, se
-  // abandona el desplazamiento animado del todo — instantáneo siempre,
-  // con la forma de API más simple y fiable posible.
-  const detailRef = useRef(null);
-  const scrollDetailIntoView = () => {
-    if (!userSelectedRef.current) return;
-    // requestAnimationFrame: sin este margen, `getBoundingClientRect()`
-    // podía leerse antes de que el navegador terminara de aplicar
-    // `height: "auto"` tras el aviso de fin de animación de Motion,
-    // dando un rectángulo más pequeño que el real.
-    requestAnimationFrame(() => {
-      const el = detailRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const vh = window.visualViewport?.height || window.innerHeight;
-      let deltaY = 0;
-      if (rect.bottom > vh) deltaY = rect.bottom - vh + 12;
-      else if (rect.top < 0) deltaY = rect.top - 12;
-      if (deltaY === 0) return;
-      window.scrollTo(window.scrollX, window.scrollY + deltaY);
-    });
-  };
+  // resolver.
+  //
+  // Tercer rediseño de este mecanismo (2026-09-07, feedback real tras el
+  // segundo intento: "lo hace de vez en cuando pero con un retraso muy
+  // grande y solo se ve la cabecera... no está animado... en Chrome PC
+  // tampoco hace el salto"). El segundo intento (medir el panel ya
+  // abierto con getBoundingClientRect() dentro de onAnimationComplete +
+  // requestAnimationFrame) tenía un defecto de raíz encontrado en vivo:
+  // `panelVariants` anima `height: 0 → "auto"` con una animación cuya
+  // DURACIÓN REAL varía según cuánto contenido tenga el día (verificado
+  // con `window.scrollY` en consola — un día con poco contenido disparaba
+  // el scroll casi al instante; uno con más contenido tardaba varios
+  // segundos) — esperar a "que la animación termine" es depender de un
+  // tiempo que ni siquiera es constante, nunca iba a ser fiable.
+  //
+  // Este tercer intento no espera a NADA: se desplaza en el propio
+  // manejador de clic (más abajo, `handleClick`), usando la posición del
+  // BOTÓN DEL DÍA pulsado — un elemento que no cambia de tamaño ni anima,
+  // así que su posición se conoce con certeza en el mismo instante del
+  // clic, sin depender de cuándo (ni de si) el panel de debajo termina de
+  // crecer. `scrollIntoView({ block: "center" })` centra el día pulsado
+  // en la pantalla, dejando sitio de sobra debajo para el panel
+  // (cualquiera que sea su altura final) sin necesidad de medirlo.
+  // `behavior: "auto"` (nunca "smooth") a propósito — hallazgo real de
+  // una ronda anterior: `behavior: "smooth"` (por `scrollIntoView` o por
+  // `scrollTo`, da igual la API) no desplazaba la página EN ABSOLUTO en
+  // este entorno de pruebas, verificado con la consola — sospecha
+  // razonable de que el mismo tipo de opción falla también en Safari
+  // real. Instantáneo es peor cosméticamente pero es la única opción
+  // verificada como fiable.
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
 
@@ -1397,9 +1369,23 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           // dateStr/todayStr que usa el resto de la app, no una comparación
           // de Date() propia — cero riesgo de desajuste de huso horario.
           const isToday = d && dateStr === todayStr();
-          const handleClick = () => {
-            if (hasActivity) setSelectedDay(isSelected ? null : d);
-            else if (creatable) onCreateForDay(dateStr);
+          const handleClick = (e) => {
+            if (hasActivity) {
+              const opening = !isSelected;
+              setSelectedDay(isSelected ? null : d);
+              // Ver el comentario largo más arriba (scrollDetailIntoView) —
+              // se desplaza en el propio clic, con la posición del botón
+              // pulsado, nunca esperando a que el panel de debajo termine
+              // de animarse. Solo al ABRIR (nunca al cerrar) y solo si el
+              // día no estaba ya seleccionado — cambiar de un día a otro
+              // con el panel ya abierto no necesita desplazar nada, el
+              // contenido ya está a la vista.
+              // Encadenado opcional: jsdom (tests) no implementa
+              // scrollIntoView en absoluto (a diferencia de scrollTo, que
+              // sí existe ahí como no-op) — sin esto, cualquier test que
+              // pulse un día con actividad revienta con un TypeError real.
+              if (opening) e.currentTarget.scrollIntoView?.({ behavior: "auto", block: "center" });
+            } else if (creatable) onCreateForDay(dateStr);
           };
           return (
             <button
@@ -1465,20 +1451,10 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
       <AnimatePresence key={monthKey_} initial={false}>
         {selectedDay && (
         <motion.div
-          ref={detailRef}
           variants={panelVariants(reducedMotion)}
           initial="initial"
           animate="animate"
           exit="exit"
-          // variants + labels ("animate"/"exit"), no el spread directo de
-          // valores que usa el resto de usos de panelVariants — necesario
-          // para que onAnimationComplete reciba la etiqueta como string
-          // ("animate"/"exit"); pasando los objetos de valores
-          // directamente (como props initial/animate/exit sueltas),
-          // Motion llama a onAnimationComplete con el propio objeto de
-          // valores, no con un nombre comparable — mismo resultado visual
-          // de animación, forma distinta de invocar el callback.
-          onAnimationComplete={(definition) => { if (definition === "animate") scrollDetailIntoView(); }}
           className="mt-3 overflow-hidden rounded-md bg-gray-50"
         >
         <div className="p-3">
