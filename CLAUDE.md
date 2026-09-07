@@ -185,10 +185,16 @@ exacta de producción (posiciones, tamaños, layout).
   cualquier Preview Deployment de rama) tienen `VITE_ENVIRONMENT=test`. El
   proyecto de producción real (`dive-tracker-exgg`, rama `main`) no la
   tiene — nunca debe configurarse ahí.
-- **Favicon:** `public/icon.svg` (referenciado por `index.html`) usa el
-  mismo icono `Waves` de `lucide-react` y el mismo color `TEAL` que ya usa
-  la app en cabecera/login/spinner — antes ese archivo no existía
-  (`<link>` roto, sin favicon real).
+- **Favicon:** `public/icon.svg` (referenciado por `index.html`) es el
+  logo real de Ocean Flow, vectorial (mismos paths que
+  `public/brand/logo-mark-navy.svg`, el mismo vectorial que usa el logo
+  de carga en `AppLoading`), en `BRAND_NAVY`, sin fondo — antes envolvía
+  un PNG en base64 con un fondo cuadrado navy "horneado" en la imagen
+  (bug real reportado 2026-09-07: se veía un recuadro azul, no solo el
+  logo). Incluye `@media (prefers-color-scheme: dark)` para invertir a
+  blanco cuando el navegador/sistema está en modo oscuro — el "negativo"
+  pedido, sin relación con el tema oscuro de la app (todavía pendiente,
+  ver "Cosas que NO existen todavía" más abajo).
 
 ## Convenciones — seguirlas es más importante que "queda bien"
 

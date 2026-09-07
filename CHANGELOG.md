@@ -141,6 +141,9 @@ Registro de cambios relevantes de Ocean Flow.
 - Config/Usuarios: la fila de una cuenta desactivada ahora se ve
   claramente "apagada" (colores más tenues en toda la fila, no solo en
   el punto de estado).
+- El favicon ya no muestra un recuadro azul con el logo en blanco
+  dentro — ahora es solo el logo, vectorial, y se invierte a blanco
+  automáticamente si el navegador/sistema está en modo oscuro.
 - **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
   real** — "Setting up fake worker failed". Causa confirmada leyendo el
   código fuente de pdfjs-dist: en su modo de reserva "fake worker",

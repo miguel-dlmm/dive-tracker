@@ -2495,3 +2495,38 @@ no se dispone de una cuenta superadmin en el navegador de pruebas de
 esta sesión para confirmar visualmente el efecto de `opacity-60` en
 Configuración → Usuarios, pendiente de que el usuario lo confirme en su
 propia sesión de superadmin.
+
+### 10.8 — Favicon: logo real sin recuadro, con negativo en modo oscuro
+
+"el favicon debería ser solo el logo en el color primario, y si el
+navegador tiene activo el modo oscuro serviremos el negativo, ahora
+sale un recuadro azul con el logo blanco en el medio". Confirmado
+decodificando el PNG embebido en `public/icon.svg`: era literalmente
+eso, un cuadrado navy sólido horneado en la propia imagen con el logo
+en blanco encima — quedaba así porque en el momento de crear ese
+favicon (2026-09-06) el logo solo existía como foto/JPEG, sin fuente
+vectorial disponible.
+
+Esa limitación ya no aplica: `public/brand/logo-mark-navy.svg` (mismos
+paths que usa el logo de carga de `AppLoading`, extraído del vectorial
+real del logo en la Fase 7) ya existe, junto con
+`public/brand/logo-mark-white.svg` como negativo. `public/icon.svg`
+pasa a ser esos mismos dos `<path>` directamente, sin PNG ni fondo, con
+un `<style>` que fija `fill: #063256` (BRAND_NAVY) por defecto y lo
+cambia a blanco bajo `@media (prefers-color-scheme: dark)` — el
+"negativo" pedido, para que la marca no desaparezca sobre una pestaña
+oscura del propio navegador/sistema (sin relación con el tema oscuro de
+la app, todavía pendiente).
+
+**Verificación**: `public/icon.svg` es XML válido; en `dist/icon.svg`
+tras el build aparecen tanto `#063256` como `#FFFFFF`. Comprobado en
+Chromium con una página de prueba aparte (`<img>` del mismo `icon.svg`
+sobre fondo blanco y sobre fondo negro): el navegador de pruebas tiene
+el esquema de color del sistema en oscuro, y el logo se pintó en blanco
+(visible sobre el fondo negro, invisible sobre el blanco por diseño —
+confirma que el `@media` sí se está aplicando de verdad, no solo que el
+archivo es válido). De paso, se corrige una descripción obsoleta en
+`CLAUDE.md` ("Indicador visual de entorno TEST" → punto "Favicon") que
+seguía diciendo que el favicon era el icono `Waves` de `lucide-react` en
+TEAL — dejó de ser cierto desde el logo real de 2026-09-06 y nunca se
+había actualizado esa nota.
