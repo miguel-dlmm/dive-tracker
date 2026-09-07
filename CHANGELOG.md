@@ -263,6 +263,11 @@ Registro de cambios relevantes de Ocean Flow.
   con una cifra larga — o se ve a tamaño completo, o se oculta del todo
   (nunca uno solo distinto de sus hermanos), y ahora aparece/desaparece
   con una animación suave en vez de un cambio instantáneo.
+- (Interno, importante) Los KPIs de Mi trabajo podían partirse en dos
+  líneas en Safari/iOS real con importes que en Chrome se veían bien —
+  la cifra ya no se parte nunca; en su lugar se oculta el icono cuando
+  hace falta, decidido midiendo de verdad el espacio disponible en el
+  propio dispositivo en vez de adivinar un umbral fijo.
 
 ## [1.0.0] - 2026-09-04
 

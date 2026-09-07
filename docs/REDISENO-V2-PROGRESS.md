@@ -2886,3 +2886,64 @@ commitear, nunca llegó a git) se comprobó que las 3 tarjetas ocultan su
 icono a la vez y el número ocupa todo el ancho; quitando el forzado y
 volviendo a montar la pantalla, el icono reaparece en las 3 — sin
 errores de consola en ningún estado.
+
+### 11.2 — KPIs de Mi trabajo: de umbral de caracteres a medición real en el DOM
+
+Feedback en vivo del usuario probando el cambio anterior (11.1) recién
+pusheado, en dos mensajes seguidos: "quita el truncate de la cifra
+numérica porque ahora sale en dos filas en vez de ocultar el icono" y,
+tras preguntarle, "en chrome lo ves bien pero en safari ios se salta en
+dos líneas". Confirma el mismo patrón de fallo que ya había costado 3
+rondas anteriores en este archivo (Fase 6/7/9): un umbral de caracteres
+adivinado (14, fijado en 11.1) no refleja las métricas de fuente reales
+de Safari/WebKit, que renderiza los dígitos más anchos que Chromium con
+la misma fuente/tamaño — así que una cifra que en Chromium se quedaba en
+el tier "normal" (icono visible) en Safari real ya no cabía, y como
+`break-words` seguía en el span (heredado de la Fase 10), el resultado
+era la cifra partiéndose en dos líneas con el icono todavía puesto, en
+vez de ocultar el icono como pedía el diseño.
+
+**Decisión de fondo, no un cuarto ajuste de umbral**: dejar de adivinar
+por completo. Se sustituye `kpiIconTierFor` (función pura de longitud de
+caracteres, retirada) por una MEDICIÓN real hecha en el propio DOM:
+
+- El span del importe (`MoneyKpiTile`) pierde `break-words` — la cifra
+  ya no se parte nunca en dos líneas, en ninguna tarjeta.
+- El padre (`MiTrabajoTab`) mantiene `kpiIconTier` como estado (antes
+  era un `useMemo` derivado de la longitud del texto) y una referencia a
+  los 3 spans de importe (`kpiAmountRefs`, poblada vía la nueva prop
+  `measureRef` de `MoneyKpiTile`). Dos `useLayoutEffect` encadenados: el
+  primero reintenta "normal" cada vez que cambia la cifra más larga
+  (por si ahora sí cabe, p. ej. tras cobrar un pendiente); el segundo
+  comprueba si alguno de los 3 spans se sale de su propio ancho
+  (`scrollWidth > clientWidth`, mismo criterio ya usado para verificar
+  el bug de la Fase 10/10.13) y, si es así, oculta el icono en las 3 a
+  la vez. Al ser `useLayoutEffect` (no `useEffect`), la medición ocurre
+  antes de pintar el frame — nunca hay un parpadeo del icono
+  apareciendo y desapareciendo de golpe.
+
+Esto funciona igual de bien en Safari que en Chromium porque no depende
+de contar caracteres en ningún punto: le pregunta al navegador cuánto
+ocupa de verdad lo que ya pintó, sea cual sea su motor de fuentes.
+
+**Verificado**: `kpiIconTierFor` y su test se retiran (la lógica ya no
+existe como función pura). 2 describe blocks nuevos en
+`MiTrabajoTab.test.jsx`: uno confirma que el importe no lleva `truncate`
+ni `break-words` pase lo que pase; el otro mockea `scrollWidth`/
+`clientWidth` sobre `Element.prototype` (jsdom no calcula layout real,
+mismo criterio que otros bugs de esta app reproducidos con medidas
+DOM simuladas) para probar ambos caminos — cabe (icono visible) y no
+cabe (icono oculto en las 3 tarjetas, con `waitFor` porque el icono sale
+con una animación, no al instante). 804/804 tests (suite completa),
+lint 0 errores, build correcto. Confirmado en Chrome con los datos
+reales de la cuenta demo (sin overflow en ese caso): las 3 tarjetas
+muestran icono + cifra en una sola línea, sin errores de consola.
+Reproducir el caso de overflow EN VIVO en este entorno (forzando un
+ancho artificial con CSS inyectado) resultó poco fiable por la
+inestabilidad ya documentada de esta herramienta de automatización de
+Chrome en esta sesión (CLAUDE.md §8: pestaña con estado desincronizado
+entre lo que devuelve `javascript_tool` y lo que se ve en pantalla) —
+la corrección se apoya en la prueba determinista de los tests, no en
+esa comprobación visual adicional. Queda pendiente que el usuario lo
+confirme en su iPhone real, el único sitio donde el bug original era
+reproducible.

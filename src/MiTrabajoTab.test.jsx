@@ -1,45 +1,24 @@
 import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import MiTrabajoTab, { kpiIconTierFor } from "./MiTrabajoTab";
+import MiTrabajoTab from "./MiTrabajoTab";
 import { ToastProvider } from "./shared";
 
-// Bug real reportado (Fase 9, 2026-09-07): "si crece mucho la cifra de
-// los KPIs de movimientos se llegan a salir incluso de la box" —
-// kpiIconTierFor decide si el icono de los 3 KPI se oculta según lo
-// larga que sea la cifra MÁS larga de las 3 (calculado en el
-// componente, no aquí), liberando ancho para el número. Tier
-// intermedio "small" (icono reducido) retirado en la siguiente ronda de
-// feedback ("si el número es tan grande como para que no quepan número
-// e icono, quitamos los iconos de los tres") — ahora solo "normal" o
-// "hidden". Este test fija el umbral exacto.
-describe("kpiIconTierFor", () => {
-  it("tamaño normal para cifras de hasta 14 caracteres", () => {
-    expect(kpiIconTierFor("117.477,40 ฿")).toBe("normal"); // 12
-    expect(kpiIconTierFor("1.117.477,40 ฿")).toBe("normal"); // 14, límite exacto
-  });
-
-  it("icono oculto para cifras de más de 14 caracteres", () => {
-    expect(kpiIconTierFor("11.117.477,40 ฿")).toBe("hidden"); // 15, límite exacto
-    expect(kpiIconTierFor("111.111.117.477,40 ฿")).toBe("hidden"); // 20
-    expect(kpiIconTierFor("1.111.111.117.477,40 ฿")).toBe("hidden"); // 22
-  });
-});
-
-// Bug real reportado dos veces con dos soluciones distintas basadas en
-// adivinar un umbral de caracteres (Fase 6 y Fase 7, ambas en Safari/iOS
-// real — confirmado por el usuario que prueba siempre en un iPhone 14 Pro
-// Max real, el mismo viewport que ya emula `mobile-check`, así que no es
-// un problema de tamaño de pantalla sino de métricas de fuente de WebKit
-// que no se pueden medir desde este entorno, ver CLAUDE.md §8). Tercer
-// intento: en vez de un tamaño de letra fijo que hay que adivinar bien,
-// se permite partir la cifra en dos líneas — el propio navegador decide
-// dónde cabe cada palabra con su motor de layout real, así que nunca
-// puede quedarse corto sea cual sea el ancho que le dé a cada carácter.
-// Este test fija el comportamiento (nada de `truncate`/una sola línea
-// forzada), no un número de caracteres — no hay umbral que pueda quedarse
-// corto una tercera vez.
-describe("MoneyKpiTile — la cifra puede partirse en dos líneas en vez de forzarse a una", () => {
-  it("el importe no lleva `truncate` (no fuerza una sola línea) aunque la cifra sea larga", () => {
+// Historial de esta cifra (KPIs de cabecera de Mi trabajo, "Generado
+// este mes"/"Pendiente de cobrar"/"Cobrado este mes"): Fase 6/7
+// adivinaron un tamaño de letra según la longitud del texto ya
+// formateado, Fase 9 adivinó un umbral de caracteres para el tamaño del
+// icono, Fase 10 permitió partir la cifra en dos líneas (`break-words`)
+// como red de seguridad. Las cuatro fallaron en algún punto en
+// Safari/iOS real (iPhone 14 Pro Max, mismo viewport que ya emula
+// `mobile-check`) porque WebKit renderiza los dígitos más anchos que
+// Chromium con la misma fuente/tamaño — algo que no se puede medir
+// desde este entorno (CLAUDE.md §8). Feedback en vivo 2026-09-07 tras el
+// último cambio: "en chrome lo ves bien pero en safari ios se salta en
+// dos líneas" en vez de ocultar el icono — la cifra NUNCA debe partirse
+// en dos líneas; en su lugar, ocultar el icono en las 3 tarjetas es lo
+// que debe liberar el ancho que falte.
+describe("KPIs de Mi trabajo — la cifra nunca se parte en dos líneas (ni truncate ni break-words)", () => {
+  it("el importe no lleva `truncate` ni `break-words`, sea cual sea la longitud de la cifra", () => {
     // 500 personas × 20€/persona (tarifa de Open Water en PADI Cozumel,
     // ver RATES_ROWS) = 10.000,00 € — una cifra larga sin tener que
     // fabricar un número gigante a mano.
@@ -49,21 +28,57 @@ describe("MoneyKpiTile — la cifra puede partirse en dos líneas en vez de forz
     const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
     const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums"));
     expect(amount.className).not.toMatch(/truncate/);
+    expect(amount.className).not.toMatch(/break-words/);
+  });
+});
+
+// Sustituye el umbral de caracteres de kpiIconTierFor (retirado) por una
+// MEDICIÓN real: si la cifra ya renderizada se sale de su propio ancho
+// (scrollWidth > clientWidth), se oculta el icono en las 3 tarjetas a la
+// vez — funciona igual en cualquier motor de render porque no depende de
+// contar caracteres. jsdom no calcula layout real, así que aquí se
+// simulan esas medidas directamente sobre HTMLElement.prototype (mismo
+// criterio que ya usó la Fase 10 para reproducir el bug de overflow con
+// medidas reales del DOM en vez de una suposición).
+describe("KPIs de Mi trabajo — el icono se oculta según lo que MIDE el DOM, no por longitud de caracteres", () => {
+  const worklogEntry = { id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" };
+
+  afterEach(() => {
+    delete Element.prototype.scrollWidth;
+    delete Element.prototype.clientWidth;
   });
 
-  // Feedback explícito 2026-09-07: "los KPIs de movimientos se siguen
-  // saliendo del cuadro... solo en el móvil". Quitar `truncate` (test de
-  // arriba) solo permite bajar de línea si el texto tiene algún espacio
-  // donde partir — `Money` (shared.jsx) pinta la cifra como un único
-  // nodo de texto sin espacios, así que sin `break-words` una cifra muy
-  // larga simplemente se sale del borde de la tarjeta en vez de partirse.
-  it("el importe permite partirse por dentro de la palabra (break-words), no solo entre palabras", () => {
-    renderMiTrabajo({
-      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" }],
-    });
-    const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
-    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums"));
-    expect(amount.className).toMatch(/break-words/);
+  it("si la cifra cabe en su ancho (scrollWidth <= clientWidth), el icono se mantiene visible en las 3 tarjetas", () => {
+    Object.defineProperty(Element.prototype, "scrollWidth", { configurable: true, get() { return 80; } });
+    Object.defineProperty(Element.prototype, "clientWidth", { configurable: true, get() { return 100; } });
+    renderMiTrabajo({ worklog: [worklogEntry] });
+    const tile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
+    expect(tile.querySelector("svg")).not.toBeNull();
+  });
+
+  it("si la cifra se sale de su ancho (scrollWidth > clientWidth), el icono se oculta en las 3 tarjetas a la vez", async () => {
+    Object.defineProperty(Element.prototype, "scrollWidth", { configurable: true, get() { return 140; } });
+    Object.defineProperty(Element.prototype, "clientWidth", { configurable: true, get() { return 100; } });
+    // El icono no se desmonta al instante: sale con una animación
+    // (AnimatePresence, ver MoneyKpiTile) — prefers-reduced-motion la
+    // colapsa a ~0 para que el test sea determinista, mismo criterio ya
+    // usado en el describe de arriba para useCountUp.
+    const original = window.matchMedia;
+    window.matchMedia = () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} });
+    try {
+      renderMiTrabajo({ worklog: [worklogEntry] });
+      const generatedTile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
+      const pendingTile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
+      const collectedTile = screen.getByText("Cobrado este mes").closest("div[class*='rounded-xl']");
+      await waitFor(() => expect(generatedTile.querySelector("svg")).toBeNull());
+      // "Pendiente de cobrar" tiene además el icono del tooltip ("?") —
+      // ese SÍ debe seguir ahí, es un elemento distinto del icono del KPI.
+      expect(pendingTile.querySelector(".rounded-full svg")).toBeNull();
+      expect(within(pendingTile).getByLabelText(/Info:/)).toBeInTheDocument();
+      expect(collectedTile.querySelector("svg")).toBeNull();
+    } finally {
+      window.matchMedia = original;
+    }
   });
 });
 
