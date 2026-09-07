@@ -49,11 +49,13 @@ Modelo completo en `docs/ADR/0006-estrategia-de-ramas-y-entornos.md`. Hoy:
 renombrado a "oceanflow" en el dashboard de Vercel en algún momento
 tras el rebrand, confirmado con `vercel project ls` el 2026-09-06; el
 dominio sigue siendo `dive-tracker-exgg.vercel.app`, sin cambios).
-2026-09-07: añadido `oceanflow-app.vercel.app` como alias adicional del
+2026-09-07: añadido `oceanflow-web.vercel.app` como alias adicional del
 mismo proyecto (`oceanflow.vercel.app`/`ocean-flow.vercel.app` ya
-estaban cogidos por terceros) — el dominio original NUNCA se toca, así
-que nunca hay enlaces rotos; no es una redirección, ambos sirven la
-misma producción a la vez. **Pendiente de un paso manual en el
+estaban cogidos por terceros; `oceanflow-app.vercel.app` se probó y se
+descartó por decisión del usuario — "app" quedaba repetido demasiado
+cerca del propio `.vercel.app`) — el dominio original NUNCA se toca,
+así que nunca hay enlaces rotos; no es una redirección, ambos sirven
+la misma producción a la vez. **Pendiente de un paso manual en el
 dashboard de Vercel** (no expuesto por la CLI): el alias nuevo hereda
 la protección SSO de equipo por defecto de Vercel y hoy pide login de
 Vercel antes de servir la app — hay que excluirlo en Project Settings →

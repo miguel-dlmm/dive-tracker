@@ -8,9 +8,19 @@ vi.mock("./provisionUser.js", () => ({
   friendlyError: (m) => m,
 }));
 
+// Vercel BotID (Fase 9, 2026-09-07) — mockeado como "humano" por defecto en
+// todos los tests existentes (beforeEach), para no depender del contexto
+// real de petición de Vercel (`@vercel/request-context`) que no existe en
+// este entorno de test. Los tests que sí quieren comprobar el bloqueo
+// cambian el mock explícitamente.
+vi.mock("botid/server", () => ({
+  checkBotId: vi.fn(),
+}));
+
 import { handleExternalRegister } from "./externalRegister.js";
 import { hasServerConfig, getServiceRoleClient } from "../supabaseAdmin.js";
 import { provisionUser } from "./provisionUser.js";
+import { checkBotId } from "botid/server";
 
 const VALID_BODY = { email: "diver@example.com", first_name: "Ada", last_name: "Lovelace", nickname: "ada" };
 
@@ -62,12 +72,34 @@ beforeEach(() => {
   getServiceRoleClient.mockReturnValue(makeClient());
   provisionUser.mockReset();
   provisionUser.mockResolvedValue({ user_id: "new-user-1", email_sent: true, email_error: null, action_link: undefined });
+  checkBotId.mockReset().mockResolvedValue({ isBot: false, isHuman: true, isVerifiedBot: false, bypassed: false });
 });
 
 it("rechaza métodos distintos de POST", async () => {
   const result = await handleExternalRegister(request({ method: "GET" }));
 
   expect(result).toEqual({ status: 405, payload: { error: "Method not allowed" } });
+});
+
+// Vercel BotID (Fase 9, 2026-09-07, pedido explícito del usuario tras la
+// revisión de seguridad — "alta masiva de usuarios"): antes de CUALQUIER
+// otra comprobación, incluida la del token de invitación, porque un alta
+// automatizada en bucle es el mismo problema exista o no invitación.
+it("rechaza el registro si BotID detecta un bot, antes de tocar Supabase", async () => {
+  checkBotId.mockResolvedValue({ isBot: true, isHuman: false, isVerifiedBot: false, bypassed: false });
+
+  const result = await handleExternalRegister(request());
+
+  expect(result).toEqual({ status: 403, payload: { error: "No se pudo completar el registro." } });
+  expect(hasServerConfig).not.toHaveBeenCalled();
+  expect(provisionUser).not.toHaveBeenCalled();
+});
+
+it("permite el registro si BotID confirma que es humano", async () => {
+  const result = await handleExternalRegister(request());
+
+  expect(result.status).toBe(200);
+  expect(provisionUser).toHaveBeenCalled();
 });
 
 it("devuelve 500 si falta configuración de servidor", async () => {

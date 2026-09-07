@@ -1,3 +1,4 @@
+import { checkBotId } from "botid/server";
 import { getServiceRoleClient, hasServerConfig } from "../supabaseAdmin.js";
 import { provisionUser, friendlyError } from "./provisionUser.js";
 
@@ -95,6 +96,21 @@ function parseBody(body) {
 export async function handleExternalRegister({ method, body }) {
   if (method !== "POST") {
     return { status: 405, payload: { error: "Method not allowed" } };
+  }
+
+  // Vercel BotID (Fase 9, 2026-09-07, aprobado explícitamente por el
+  // usuario, ver seguridad — "alta masiva de usuarios") — antes que
+  // cualquier otra comprobación, incluida la del token de invitación:
+  // un alta automatizada en bucle es exactamente el mismo problema
+  // exista o no invitación de por medio. Nivel Basic (gratis), sin
+  // Deep Analysis todavía. isBot === true nunca se ve en local
+  // (checkBotId() detecta NODE_ENV !== "production" y siempre
+  // devuelve isBot: false ahí) ni en la petición real de un navegador
+  // con initBotId() activo (main.jsx) — solo bloquea peticiones sin el
+  // desafío del cliente, como scripts automatizados.
+  const botCheck = await checkBotId();
+  if (botCheck.isBot) {
+    return { status: 403, payload: { error: "No se pudo completar el registro." } };
   }
 
   if (!hasServerConfig()) {
