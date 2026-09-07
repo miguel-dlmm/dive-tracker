@@ -1766,6 +1766,28 @@ export function useBodyScrollLock(active) {
 // fórmula de maxWidth no distinguía el modo de alineación en absoluto.
 function useFloatingPosition(open, anchorRef, align = "left") {
   const [pos, setPos] = useState(null);
+  // Dirección (arriba/abajo) decidida UNA VEZ al abrir, no en cada
+  // recálculo — bug real reportado 2026-09-07 (país de residencia en Mi
+  // perfil, un SearchSelect con campo de búsqueda): en móvil, escribir
+  // en el campo abre el teclado virtual, que encoge
+  // `visualViewport.height` de golpe; sin congelar la dirección, ese
+  // encogimiento podía hacer que `openUp` cambiara de valor MIENTRAS el
+  // panel ya estaba abierto y el usuario escribiendo, y el panel entero
+  // saltaba de estar debajo del campo a estar encima (o viceversa) sin
+  // ninguna interacción directa del usuario con la dirección ("si lo
+  // toco salta"). `maxHeight`/`top`/`bottom` siguen recalculándose con
+  // cada cambio de viewport (necesario para no salirse de la pantalla,
+  // ver el comentario de `maxHeight` más abajo) — solo la elección
+  // arriba/abajo queda fija mientras el panel siga abierto.
+  const openUpRef = useRef(false);
+  useEffect(() => {
+    if (!open) return;
+    const el = anchorRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const vh = window.visualViewport?.height || window.innerHeight;
+    openUpRef.current = (vh - rect.bottom) < 280 && rect.top > 280;
+  }, [open, anchorRef]);
   const recalc = useCallback(() => {
     const el = anchorRef.current;
     if (!open || !el) return;
@@ -1774,7 +1796,7 @@ function useFloatingPosition(open, anchorRef, align = "left") {
     const vw = window.visualViewport?.width || window.innerWidth;
     const spaceBelow = vh - rect.bottom;
     const spaceAbove = rect.top;
-    const openUp = spaceBelow < 280 && spaceAbove > 280;
+    const openUp = openUpRef.current;
     setPos({
       left: rect.left,
       right: vw - rect.right, // alineación por la derecha (p. ej. RowMenu) — evita salirse por el borde derecho en vez de calcular un ancho que no se conoce de antemano

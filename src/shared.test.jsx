@@ -1,4 +1,6 @@
-import { colorFor, applyListFilters, formatMoney, oppositeStatus, isPendingStatus, lighten } from "./shared";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { colorFor, applyListFilters, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect } from "./shared";
 
 // Estos tests documentan el comportamiento ACTUAL de las funciones puras de
 // shared.jsx, como red de seguridad antes de dividir/refactorizar el
@@ -219,5 +221,43 @@ describe("lighten", () => {
     // Comportamiento actual documentado, no corregido: "zzzzzz" no es hex
     // válido y produce un gris silencioso en vez de un error o el fallback.
     expect(lighten("zzzzzz")).toBe("rgb(224, 224, 224)");
+  });
+});
+
+// Bug real reportado 2026-09-07 (país de residencia en Mi perfil, un
+// SearchSelect con campo de búsqueda): en móvil, escribir en el campo
+// abre el teclado virtual, que encoge `visualViewport.height` de golpe
+// — antes, ese encogimiento podía hacer que el panel flotante decidiera
+// de nuevo si abrirse arriba o abajo MIENTRAS ya estaba abierto,
+// saltando de un lado a otro sin que el usuario tocara nada relacionado
+// con la posición ("si lo toco salta"). Arreglado congelando esa
+// decisión en el instante de abrir (useFloatingPosition, shared.jsx).
+describe("useFloatingPosition (vía SearchSelect) — la dirección arriba/abajo no cambia mientras el panel está abierto", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("si al abrir hay poco espacio debajo, el panel abre hacia arriba y sigue arriba aunque el viewport crezca después (el teclado se cierra)", async () => {
+    const user = userEvent.setup();
+    // Ancla pegada al fondo de un viewport de 768px: solo 38px libres
+    // debajo (menos del umbral de 280), 700px libres encima — abre arriba.
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
+      { top: 700, bottom: 730, left: 0, right: 300, width: 300, height: 30 }
+    );
+    render(<SearchSelect value="" onChange={() => {}} options={[{ value: "a", label: "Alpha" }]} placeholder="Elige" />);
+
+    await user.click(screen.getByRole("textbox", { name: "Elige" }));
+    const panel = screen.getByRole("listbox");
+    expect(panel.style.top).toBe("");
+    expect(panel.style.bottom).not.toBe("");
+
+    // El viewport "crece" (equivalente a que el teclado se cierre) y se
+    // dispara el recálculo — sin la congelación, esto haría `openUp`
+    // false (ahora sobraría espacio debajo) y el panel saltaría abajo.
+    window.innerHeight = 2000;
+    window.dispatchEvent(new Event("resize"));
+
+    expect(panel.style.top).toBe("");
+    expect(panel.style.bottom).not.toBe("");
   });
 });
