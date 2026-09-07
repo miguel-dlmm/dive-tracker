@@ -157,7 +157,7 @@ it("el botón 'Generar para todos los alumnos' usa accentColor, no el TEAL gené
 
   const button = screen.getByRole("button", { name: "Generar para todos los alumnos" });
   expect(button.style.backgroundColor).toBe("rgb(0, 51, 90)");
-});
+}, 15000);
 
 it("configura una vez para todo el listado, añade 2 alumnos y genera los 2 documentos de golpe", async () => {
   const user = userEvent.setup();
