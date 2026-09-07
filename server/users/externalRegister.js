@@ -93,7 +93,13 @@ function parseBody(body) {
   }
 }
 
-export async function handleExternalRegister({ method, body }) {
+function getHeader(headers, name) {
+  if (!headers) return undefined;
+  const key = Object.keys(headers).find((k) => k.toLowerCase() === name.toLowerCase());
+  return key ? headers[key] : undefined;
+}
+
+export async function handleExternalRegister({ method, body, headers }) {
   if (method !== "POST") {
     return { status: 405, payload: { error: "Method not allowed" } };
   }
@@ -166,6 +172,15 @@ export async function handleExternalRegister({ method, body }) {
     return { status: 500, payload: { error: "No se pudo completar el registro. Inténtalo más tarde." } };
   }
 
+  // baseUrl del host real de la petición — mismo bug que el email de
+  // recuperación de contraseña (ver activationLink.js), aplicado aquí:
+  // sin esto, el email de bienvenida del autoregistro llevaba siempre a
+  // la URL fija de APP_URL en vez del dominio real desde el que alguien
+  // se registró (producción, TEST o un Preview de rama).
+  const proto = getHeader(headers, "x-forwarded-proto") || "https";
+  const host = getHeader(headers, "host");
+  const baseUrl = host ? `${proto}://${host}` : undefined;
+
   const result = await provisionUser({
     email,
     first_name,
@@ -174,6 +189,7 @@ export async function handleExternalRegister({ method, body }) {
     dataset_key: datasetKey,
     reason: "external_signup",
     language: safeLanguage,
+    baseUrl,
   });
   if (result.error) {
     if (result.error.message?.includes(EMAIL_ALREADY_REGISTERED)) {

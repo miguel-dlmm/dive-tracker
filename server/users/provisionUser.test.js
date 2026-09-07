@@ -125,6 +125,29 @@ it("email_sent:false con action_link cuando el envío falla — la cuenta ya est
   expect(result.action_link).toContain("hashed-token-abc");
 });
 
+// Fase 10, 2026-09-07 — "aplica a todos los enlaces generados en la
+// app": el email de bienvenida de CUALQUIER alta (superadmin o
+// autoregistro) usaba siempre la URL fija de APP_URL, ignorando el
+// dominio real desde el que se pidió el alta. provisionUser() reenvía
+// baseUrl (si el llamador lo pasa) a generateActivationLink(), que ya
+// sabía priorizarlo sobre APP_URL (ver activationLink.js) desde la
+// corrección anterior de "olvidé mi contraseña".
+it("cuando se pasa baseUrl, el enlace de activación usa ese dominio en vez de APP_URL", async () => {
+  sendActivationEmail.mockResolvedValue({ sent: false, error: "no importa para este test" });
+
+  const result = await provisionUser({ ...ARGS, baseUrl: "https://dive-tracker-git-mi-rama.vercel.app" });
+
+  expect(result.action_link).toMatch(/^https:\/\/dive-tracker-git-mi-rama\.vercel\.app/);
+});
+
+it("sin baseUrl, el enlace de activación sigue usando APP_URL (comportamiento de siempre)", async () => {
+  sendActivationEmail.mockResolvedValue({ sent: false, error: "no importa para este test" });
+
+  const result = await provisionUser(ARGS);
+
+  expect(result.action_link).toMatch(/^https:\/\/app\.example/);
+});
+
 // GoTrue nunca propaga el texto real del error de Postgres cuando
 // handle_new_user() falla dentro de client.auth.admin.createUser() — solo
 // devuelve el genérico "Database error creating new user", sin el nombre

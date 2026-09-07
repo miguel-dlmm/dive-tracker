@@ -137,6 +137,18 @@ it("sobrescribe la contraseña con una cadena aleatoria de 64 caracteres hex, qu
   });
 });
 
+// Fase 10, 2026-09-07 — "aplica a todos los enlaces generados en la
+// app": este enlace usaba siempre APP_URL, ignorando el dominio real
+// desde el que el superadmin lo pidió.
+it("pasa baseUrl a generateActivationLink, calculado del host real de la petición", async () => {
+  const client = makeClient({ lookupResult: { data: { is_superadmin: false }, error: null } });
+  getServiceRoleClient.mockReturnValue(client);
+
+  await handleRegeneratePassword(request({ headers: { authorization: "Bearer valid-token", host: "dive-tracker-git-mi-rama.vercel.app" } }));
+
+  expect(generateActivationLink).toHaveBeenCalledWith(TARGET_EMAIL, { flow: "recovery", baseUrl: "https://dive-tracker-git-mi-rama.vercel.app" });
+});
+
 it("envía el email de contraseña regenerada con los datos del perfil objetivo y no devuelve action_link si se envía bien", async () => {
   const client = makeClient({ lookupResult: { data: { is_superadmin: false, first_name: "Ana", nickname: "ana" }, error: null } });
   getServiceRoleClient.mockReturnValue(client);

@@ -64,7 +64,7 @@ async function validateNickname(client, nickname) {
 // is_admin / is_superadmin NUNCA se pasan aquí a propósito: handle_new_user()
 // no los toca al crear la fila de profiles, así que nace siempre con ambos
 // en false, sin importar el origen de la llamada.
-export async function provisionUser({ email, first_name, last_name, nickname, dataset_key, reason = "signup", language }) {
+export async function provisionUser({ email, first_name, last_name, nickname, dataset_key, reason = "signup", language, baseUrl }) {
   const client = getServiceRoleClient();
 
   const nicknameError = await validateNickname(client, nickname);
@@ -108,9 +108,16 @@ export async function provisionUser({ email, first_name, last_name, nickname, da
   // ya está creada, así que un fallo aquí no debe impedir la respuesta de
   // éxito. Si falla, quien llamó puede seguir compartiendo el enlace a
   // mano (ver action_link más abajo).
+  //
+  // baseUrl (opcional, del host real de la petición entrante — ver
+  // createUser.js/externalRegister.js): mismo bug ya corregido para
+  // "olvidé mi contraseña" (ADR/comentario en activationLink.js), pero
+  // aplicaba también aquí — el email de bienvenida de CUALQUIER alta
+  // (por superadmin o autoregistro) seguía cayendo siempre a la URL fija
+  // de APP_URL en vez del dominio real desde el que se pidió el alta.
   let emailSent = false;
   let emailError = null;
-  const { activationLink, error: linkErrorMessage } = await generateActivationLink(email);
+  const { activationLink, error: linkErrorMessage } = await generateActivationLink(email, { baseUrl });
 
   if (linkErrorMessage) {
     emailError = linkErrorMessage;

@@ -164,6 +164,18 @@ it("quita el baneo (ban_duration: none), genera un enlace nuevo y devuelve actio
   });
 });
 
+// Fase 10, 2026-09-07 — "aplica a todos los enlaces generados en la
+// app": este enlace usaba siempre APP_URL, ignorando el dominio real
+// desde el que el superadmin lo pidió.
+it("pasa baseUrl a generateActivationLink, calculado del host real de la petición", async () => {
+  const client = makeClient({ lookupResult: { data: { is_superadmin: false }, error: null } });
+  getServiceRoleClient.mockReturnValue(client);
+
+  await handleRegenerateActivationLink(request({ headers: { authorization: "Bearer token", host: "dive-tracker-git-mi-rama.vercel.app" } }));
+
+  expect(generateActivationLink).toHaveBeenCalledWith(TARGET_EMAIL, { baseUrl: "https://dive-tracker-git-mi-rama.vercel.app" });
+});
+
 it("pasa flow: recovery si la cuenta ya había aceptado las bases legales antes (reactivación real, no primer acceso)", async () => {
   const client = makeClient({
     lookupResult: { data: { is_superadmin: false }, error: null },

@@ -165,6 +165,13 @@ Registro de cambios relevantes de Ocean Flow.
 - El calendario de Home/Resumen ahora se alinea justo debajo de la
   cabecera al tocar un día, en vez de centrar el día pulsado en medio
   de la pantalla — se ve el mes completo y el detalle debajo.
+- **(Interno, importante)** Todos los enlaces de email generados por la
+  app (bienvenida al dar de alta un usuario, autoregistro, reactivar
+  cuenta, regenerar contraseña, invitación) ya usan el dominio real
+  desde el que se pidieron, no una URL fija — antes solo "olvidé mi
+  contraseña" tenía este arreglo; los otros cinco flujos podían enviar
+  un enlace al dominio equivocado si se generaban desde un Preview
+  Deployment o desde TEST.
 - **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
   real** — "Setting up fake worker failed". Causa confirmada leyendo el
   código fuente de pdfjs-dist: en su modo de reserva "fake worker",

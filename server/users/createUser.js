@@ -74,7 +74,15 @@ export async function handleCreateUser({ method, headers, body }) {
   const denied = await requireSuperadmin(caller.id, "Solo un superadmin puede crear usuarios.");
   if (denied) return denied;
 
-  const result = await provisionUser({ email, first_name, last_name, nickname, dataset_key, reason: "signup", language: safeLanguage });
+  // baseUrl del host real de la petición (ver activationLink.js) — sin
+  // esto, el email de bienvenida siempre llevaba a la URL fija de
+  // APP_URL en vez del dominio real (producción, TEST o un Preview de
+  // rama) desde el que el superadmin dio de alta al usuario.
+  const proto = getHeader(headers, "x-forwarded-proto") || "https";
+  const host = getHeader(headers, "host");
+  const baseUrl = host ? `${proto}://${host}` : undefined;
+
+  const result = await provisionUser({ email, first_name, last_name, nickname, dataset_key, reason: "signup", language: safeLanguage, baseUrl });
   if (result.error) {
     console.error(result.error);
     return { status: 400, payload: { error: friendlyError(result.error.message) } };

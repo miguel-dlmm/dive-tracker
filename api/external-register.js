@@ -6,6 +6,7 @@ export default async function handler(req, res) {
   const { status, payload } = await handleExternalRegister({
     method: req.method,
     body: req.body,
+    headers: req.headers,
   });
   res.status(status).json(payload);
 }

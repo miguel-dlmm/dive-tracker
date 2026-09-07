@@ -2724,3 +2724,56 @@ separados exactamente 11.75px (el margen de 12px pedido, con el
 redondeo normal de sub-píxel del navegador) — el mes completo visible
 justo debajo de la cabecera, con el detalle del día 20 apareciendo a
 continuación.
+
+### 10.15 — Dominio real en TODOS los enlaces generados por email, no solo "olvidé mi contraseña"
+
+Pedido explícito: "lo que corregiste de dominio de enlaces de
+recuperación de contraseña aplica a todos los enlaces generados en la
+app, aplica el fix lo antes posible". La corrección de la Fase 9/10.3
+(`baseUrl` del host real de la petición, en vez de la URL fija
+`APP_URL`) solo se había aplicado a "olvidé mi contraseña"
+(`requestPasswordReset.js`). Auditados TODOS los sitios que generan un
+enlace de un solo uso o de invitación — 5 más seguían con el mismo bug,
+confirmado leyendo cada uno (no una sospecha, una comprobación real de
+cada llamada a `generateActivationLink`/`new URL(APP_URL)`):
+
+1. **`provisionUser.js`** (compartido por alta de usuario y registro
+   externo) — `generateActivationLink(email)` sin `baseUrl`. Afecta al
+   email de bienvenida de CUALQUIER cuenta nueva, la ruta con más
+   volumen de las cinco.
+2. **`createUser.js`** (alta por superadmin) — no calculaba `baseUrl`
+   del header `host`, así que `provisionUser` nunca lo recibía.
+3. **`externalRegister.js`** (autoregistro público) — ni siquiera
+   recibía `headers` en su firma (`api/external-register.js` tampoco se
+   los pasaba) — el más lejano del fix original de los cinco.
+4. **`regenerateActivationLink.js`** (reactivar cuenta / reenviar
+   enlace de activación desde Configuración).
+5. **`regeneratePassword.js`** (regenerar contraseña desde
+   Configuración).
+6. **`generateInvitationLink.js`** (enlace de invitación, Release V1) —
+   caso más grave de los seis: ni siquiera tenía la opción de recibir
+   un `baseUrl`, `new URL(process.env.APP_URL)` a pelo. Con respaldo a
+   `APP_URL` solo si de verdad no llega el header `host`.
+
+`activationLink.js` (el núcleo compartido) ya sabía priorizar `baseUrl`
+sobre `APP_URL` desde el fix original — no necesitó ningún cambio,
+solo que los seis llamadores empezaran a pasárselo. Mismo patrón en
+todos: `getHeader(headers, "host")` + `getHeader(headers, "x-forwarded-proto")`
+(ya con su propio helper `getHeader` en cada archivo, patrón ya
+establecido en el resto de `server/users/*.js`) → `baseUrl` →
+adelante. Ningún cambio de comportamiento cuando no llega el header
+`host` (tests locales, o cualquier entorno sin ese header): sigue
+cayendo a `APP_URL` exactamente igual que antes.
+
+**Verificación**: 8 tests nuevos (uno o dos por archivo tocado), cada
+uno confirma que el enlace/email final usa el host de la petición en
+vez de `APP_URL` cuando ese header llega, y que sigue cayendo a
+`APP_URL` cuando no llega (sin romper ningún test existente — todos los
+tests que ya comprobaban el `flow`/la forma de la llamada a
+`generateActivationLink` con matchers exactos siguen pasando porque
+`baseUrl: undefined` es equivalente a "esa clave no está" para
+`toEqual`/`toHaveBeenCalledWith`). 803/803 tests (suite completa), lint
+sin errores nuevos, build correcto. Sin cambio en el recuento de
+Serverless Functions (ningún fichero `api/*.js` nuevo, límite de 12 del
+plan Hobby sin tocar — ver "Límite de Serverless Functions" en
+`CLAUDE.md`).

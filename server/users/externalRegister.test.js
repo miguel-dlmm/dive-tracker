@@ -182,6 +182,23 @@ it("usa el dataset activo marcado is_default cuando existe, sin caer al de respa
   expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ dataset_key: "otro-dataset" }));
 });
 
+// Fase 10, 2026-09-07 — "aplica a todos los enlaces generados en la
+// app": el email de bienvenida del autoregistro usaba siempre APP_URL,
+// ignorando el dominio real desde el que alguien se registró
+// (producción, TEST o un Preview de rama). baseUrl se calcula ahora del
+// header `host` real de la petición.
+it("pasa baseUrl a provisionUser, calculado del host real de la petición", async () => {
+  await handleExternalRegister(request({ headers: { host: "dive-tracker-git-mi-rama.vercel.app" } }));
+
+  expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ baseUrl: "https://dive-tracker-git-mi-rama.vercel.app" }));
+});
+
+it("sin header host, baseUrl es undefined (provisionUser cae a APP_URL, comportamiento de siempre)", async () => {
+  await handleExternalRegister(request());
+
+  expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ baseUrl: undefined }));
+});
+
 it("propaga el error de provisionUser traducido con friendlyError", async () => {
   provisionUser.mockResolvedValue({ error: { message: "unknown setup dataset: x" } });
 

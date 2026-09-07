@@ -54,9 +54,14 @@ function buildActivationUrl(baseUrl, { tokenHash, email, flow }) {
 // dominio equivocado. `baseUrl`, cuando se pasa, gana sobre `APP_URL` —
 // pensado para que cada llamador HTTP pase el host real de la petición
 // entrante (`req.headers.host`, ver api/request-password-reset.js), que
-// sí varía por despliegue. Los llamadores que no pasan `baseUrl` (alta/
-// reactivación/regenerar por admin, hoy) siguen exactamente igual que
-// antes — no es un cambio de comportamiento para ellos.
+// sí varía por despliegue. Extendido a TODOS los flujos que generan un
+// enlace de este tipo (Fase 10, 2026-09-07, pedido explícito: "aplica a
+// todos los enlaces generados en la app"): alta de usuario y registro
+// externo (provisionUser.js), reactivar/regenerar enlace de activación
+// (regenerateActivationLink.js) y regenerar contraseña
+// (regeneratePassword.js) — los cuatro pasan ahora su propio `baseUrl`
+// igual que "olvidé mi contraseña". Un llamador que aun así no lo pase
+// cae al mismo `APP_URL` fijo de siempre, sin romper nada.
 export async function generateActivationLink(email, { flow, baseUrl } = {}) {
   const { data: linkData, error: linkError } = await getServiceRoleClient().auth.admin.generateLink({
     type: ACTIVATION_LINK_TYPE,
