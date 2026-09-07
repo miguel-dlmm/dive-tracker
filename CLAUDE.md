@@ -48,7 +48,19 @@ Modelo completo en `docs/ADR/0006-estrategia-de-ramas-y-entornos.md`. Hoy:
 `main` es la producción real (proyecto Vercel `dive-tracker-exgg` —
 renombrado a "oceanflow" en el dashboard de Vercel en algún momento
 tras el rebrand, confirmado con `vercel project ls` el 2026-09-06; el
-dominio sigue siendo `dive-tracker-exgg.vercel.app`, sin cambios) y
+dominio sigue siendo `dive-tracker-exgg.vercel.app`, sin cambios).
+2026-09-07: añadido `oceanflow-app.vercel.app` como alias adicional del
+mismo proyecto (`oceanflow.vercel.app`/`ocean-flow.vercel.app` ya
+estaban cogidos por terceros) — el dominio original NUNCA se toca, así
+que nunca hay enlaces rotos; no es una redirección, ambos sirven la
+misma producción a la vez. **Pendiente de un paso manual en el
+dashboard de Vercel** (no expuesto por la CLI): el alias nuevo hereda
+la protección SSO de equipo por defecto de Vercel y hoy pide login de
+Vercel antes de servir la app — hay que excluirlo en Project Settings →
+Deployment Protection, igual que ya debe estar excluido
+`dive-tracker-exgg.vercel.app`, antes de darlo como URL pública. Hasta
+entonces, seguir usando `dive-tracker-exgg.vercel.app` como el enlace
+real a compartir.
 `develop` es la rama de
 integración/preparación, que además hace de entorno TEST de facto para el
 proyecto Vercel `dive-tracker` (`dive-tracker-three.vercel.app`), con su
