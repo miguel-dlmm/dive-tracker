@@ -1,26 +1,32 @@
 import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import MiTrabajoTab, { moneyKpiSizeClass } from "./MiTrabajoTab";
+import MiTrabajoTab from "./MiTrabajoTab";
 import { ToastProvider } from "./shared";
 
-// Bug real reportado dos veces (Fase 6: "117.477,09 ฿" cortado en
-// Chromium con datos de prueba reales; Fase 7: mismo síntoma en un
-// iPhone real con Safari, sin poder reproducirlo en este entorno) — fija
-// los umbrales de moneyKpiSizeClass con un test para que un futuro
-// ajuste no vuelva a estrechar el margen sin darse cuenta.
-describe("moneyKpiSizeClass", () => {
-  it("usa text-base para cifras de hasta 6 caracteres", () => {
-    expect(moneyKpiSizeClass("0,00 €")).toBe("text-base"); // 6
-  });
-
-  it("usa text-sm para cifras de 7 a 10 caracteres", () => {
-    expect(moneyKpiSizeClass("20,00 €")).toBe("text-sm"); // 7
-    expect(moneyKpiSizeClass("7.200,00 €")).toBe("text-sm"); // 10
-  });
-
-  it("usa text-xs para cifras de más de 10 caracteres, el caso real reportado", () => {
-    expect(moneyKpiSizeClass("75.828,40 ฿")).toBe("text-xs"); // 11
-    expect(moneyKpiSizeClass("117.477,40 ฿")).toBe("text-xs"); // 12
+// Bug real reportado dos veces con dos soluciones distintas basadas en
+// adivinar un umbral de caracteres (Fase 6 y Fase 7, ambas en Safari/iOS
+// real — confirmado por el usuario que prueba siempre en un iPhone 14 Pro
+// Max real, el mismo viewport que ya emula `mobile-check`, así que no es
+// un problema de tamaño de pantalla sino de métricas de fuente de WebKit
+// que no se pueden medir desde este entorno, ver CLAUDE.md §8). Tercer
+// intento: en vez de un tamaño de letra fijo que hay que adivinar bien,
+// se permite partir la cifra en dos líneas — el propio navegador decide
+// dónde cabe cada palabra con su motor de layout real, así que nunca
+// puede quedarse corto sea cual sea el ancho que le dé a cada carácter.
+// Este test fija el comportamiento (nada de `truncate`/una sola línea
+// forzada), no un número de caracteres — no hay umbral que pueda quedarse
+// corto una tercera vez.
+describe("MoneyKpiTile — la cifra puede partirse en dos líneas en vez de forzarse a una", () => {
+  it("el importe no lleva `truncate` (no fuerza una sola línea) aunque la cifra sea larga", () => {
+    // 500 personas × 20€/persona (tarifa de Open Water en PADI Cozumel,
+    // ver RATES_ROWS) = 10.000,00 € — una cifra larga sin tener que
+    // fabricar un número gigante a mano.
+    renderMiTrabajo({
+      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" }],
+    });
+    const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
+    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums"));
+    expect(amount.className).not.toMatch(/truncate/);
   });
 });
 

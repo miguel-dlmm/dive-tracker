@@ -140,8 +140,12 @@ Registro de cambios relevantes de Ocean Flow.
   principal — ahora se le aplican los mismos dentro de él antes de
   cargar su código real.
 - Los KPIs de la cabecera de Mi trabajo podían seguir cortando la cifra
-  en Safari iOS con importes largos — el margen de reducción del tamaño
-  de letra es ahora más generoso.
+  en Safari iOS con importes largos — ahora la cifra puede partirse en
+  dos líneas en vez de depender de acertar un tamaño de letra.
+- El calendario de "Periodo" en el filtro de Mi trabajo podía salirse
+  del viewport sin ninguna forma de hacer scroll para ver el final —
+  afectaba en realidad a cualquier panel flotante de la app (Select,
+  MultiSelect, DatePicker...) más alto que el hueco disponible.
 - (Interno) Los emails transaccionales (alta, recuperación de
   contraseña, aviso de despliegue) seguían con los colores de marca
   previos al rebrand — ahora usan el mismo azul marino que el resto de

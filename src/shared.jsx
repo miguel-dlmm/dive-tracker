@@ -1642,6 +1642,19 @@ function useFloatingPosition(open, anchorRef, align = "left") {
       right: vw - rect.right, // alineación por la derecha (p. ej. RowMenu) — evita salirse por el borde derecho en vez de calcular un ancho que no se conoce de antemano
       width: rect.width,
       maxWidth: align === "right" ? Math.max(160, rect.right - 8) : Math.max(160, vw - rect.left - 8),
+      // Bug real reportado (Fase 7, 2026-09-07): el calendario de rango de
+      // fechas (Periodo, en el filtro de Mi trabajo) se salía por debajo
+      // del viewport sin ninguna forma de hacer scroll para ver el resto
+      // — ni el panel en sí, ni la página de detrás (con el scroll de
+      // fondo bloqueado mientras el panel está abierto, ver
+      // useBodyScrollLock). No es un caso aislado de ese calendario: este
+      // hook es el que usan TODOS los paneles flotantes de la app
+      // (Select, MultiSelect, SearchSelect, DatePicker, DateRangePicker,
+      // RowMenu...), así que faltaba aquí, no en cada uno por separado —
+      // sin `maxHeight`, cualquier panel más alto que el hueco disponible
+      // se sale del viewport igual. Margen de 12px, mismo criterio que
+      // el margen de 8px que ya usa `maxWidth`.
+      maxHeight: Math.max(160, (openUp ? spaceAbove : spaceBelow) - 12),
       top: openUp ? null : rect.bottom + 4,
       bottom: openUp ? vh - rect.top + 4 : null,
     });
@@ -1716,6 +1729,17 @@ export function FloatingPanel({ open, pos, panelRef, matchWidth = true, align = 
         left: align === "left" ? pos.left : undefined,
         right: align === "right" ? pos.right : undefined,
         maxWidth: pos.maxWidth,
+        maxHeight: pos.maxHeight,
+        // overflowY inline, no una clase de Tailwind (`overflow-y-auto`)
+        // — algún llamador (RowMenu) ya trae su propio `overflow-hidden`
+        // en `className` (para recortar las esquinas redondeadas de sus
+        // opciones, nada que ver con altura); qué clase de Tailwind "gana"
+        // entre dos que tocan `overflow` depende del orden en que
+        // Tailwind las genera en la hoja de estilos, no del orden en el
+        // propio `className` — un inline style siempre gana sin ese
+        // riesgo, y solo se fija el eje Y (el eje X de RowMenu sigue
+        // oculto por su propio `overflow-hidden`, sin tocarlo).
+        overflowY: "auto",
         width: matchWidth ? pos.width : undefined,
         top: pos.top ?? undefined,
         bottom: pos.bottom ?? undefined,

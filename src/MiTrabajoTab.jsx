@@ -4,7 +4,7 @@ import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, C
 import { motion } from "motion/react";
 import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./App";
 import {
-  Money, formatMoney, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
+  Money, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
   isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab, EntryTitle,
   useFloatingDropdown, FloatingPanel,
 } from "./shared";
@@ -336,46 +336,31 @@ function emptyMessage(statusFilter, hasActiveFilters, t) {
 // encima de esta pantalla, no la desmonta). Un aria-label específico
 // ("Info: Pendiente de cobrar") evita esa ambigüedad para lectores de
 // pantalla y de paso es más claro por sí solo.
-// Tamaño de letra de la cifra de un MoneyKpiTile, según lo larga que sea
-// la cadena ya formateada — extraída como función pura para poder fijar
-// con un test unitario los umbrales exactos (ver comentario largo en
-// MoneyKpiTile) y que no se repita el mismo bug de truncado una tercera
-// vez sin que un test lo detecte primero.
-export function moneyKpiSizeClass(text) {
-  if (text.length > 10) return "text-xs";
-  if (text.length > 6) return "text-sm";
-  return "text-base";
-}
-
 function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel }) {
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const entries = Object.entries(totals || {});
   const single = entries.length === 1 ? entries[0] : null;
   const animatedCents = useCountUp(single ? Math.round(single[1] * 100) : 0, { reduced });
-  // El tamaño de la cifra se reduce con su longitud en vez de quedarse fijo
-  // en text-base (bug real encontrado al sembrar más datos de prueba: un
-  // total de 6 cifras como "117.477,09 ฿" seguía truncándose incluso ya
-  // con el ajuste anterior) — varias monedas a la vez (entries.length > 1,
-  // unidas con " + ") son siempre largas, van directas al tamaño más
-  // pequeño sin necesidad de medir. `truncate` se queda como red de
-  // seguridad para el caso extremo que ni el tamaño más pequeño evite,
-  // nunca como primera línea de defensa.
+  // Tercer intento (Fase 7, 2026-09-07) — los dos anteriores achicaban el
+  // tamaño de letra según cuántos caracteres tenía la cifra ya formateada
+  // (un umbral adivinado, nunca medido de verdad), y los dos fallaron en
+  // Safari/iOS real reportado por el usuario (iPhone 14 Pro Max, mismo
+  // viewport que ya emula `mobile-check` — no es un problema de tamaño de
+  // pantalla, es que WebKit renderiza los dígitos/el símbolo de moneda
+  // más anchos que Chromium con el mismo font-family/tamaño, algo que no
+  // se puede medir desde este entorno, ver CLAUDE.md §8). Adivinar un
+  // tercer umbral a ciegas tenía toda la pinta de fallar otra vez.
   //
-  // Umbrales endurecidos (Fase 7, 2026-09-07) — bug real reportado en un
-  // iPhone real ("las cifras numéricas salen cortadas"), con un total de
-  // 12 caracteres ("117.477,40 ฿") que en Chromium cabía de sobra en
-  // text-sm pero no se pudo reproducir/medir en Safari real desde este
-  // entorno (WebKit no arranca aquí, ver CLAUDE.md §8 sobre
-  // mobile-check). En vez de un umbral ajustado a ciegas al caso
-  // concreto reportado, se baja el margen en los dos escalones (antes
-  // >13/>9, ahora >10/>6, ver moneyKpiSizeClass) — Safari/WebKit puede
-  // renderizar dígitos y el símbolo de moneda algo más anchos que
-  // Chromium con el mismo font-family/tamaño (sustitución de fuente
-  // distinta para caracteres como ฿), así que un margen de seguridad
-  // mayor es más robusto que afinar el número exacto sin poder
-  // verificarlo en el motor real.
-  const singleText = single ? formatMoney(single[1], single[0], currencyRows) : "";
-  const amountSizeCls = !single ? "text-xs" : moneyKpiSizeClass(singleText);
+  // Solución distinta de raíz: en vez de forzar una sola línea con un
+  // tamaño de letra que hay que acertar, se permite partir en dos líneas
+  // (se quita `truncate`, que fuerza no-wrap) con un tamaño de letra fijo
+  // y cómodo. El navegador decide dónde cabe cada palabra con su propio
+  // motor de layout real — nunca puede quedarse corto, sea cual sea el
+  // ancho exacto que ese motor le dé a cada carácter. Varias monedas a la
+  // vez (entries.length > 1, unidas con " + ") usan un tamaño algo menor,
+  // por ser una lista más larga y visualmente más ocupada, no por
+  // necesidad de que quepa en una línea.
+  const amountSizeCls = single ? "text-sm" : "text-xs";
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
@@ -384,13 +369,15 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
     >
       {/* Icono a 28px (no los 32px de KpiTile en Home): un importe con
           separador de miles y símbolo de moneda es mucho más largo que el
-          1-2 dígitos de un KPI simple. La cifra misma ya no tiene un
-          tamaño fijo, ver amountSizeCls arriba. */}
-      <div className="flex items-center gap-1.5">
+          1-2 dígitos de un KPI simple. items-start, no items-center: la
+          cifra puede ocupar dos líneas (ver amountSizeCls arriba), así
+          que el icono se alinea con la primera línea, no con el centro
+          vertical del bloque entero. */}
+      <div className="flex items-start gap-1.5">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
           <Icon size={16} style={{ color }} aria-hidden="true" />
         </span>
-        <span className={`min-w-0 truncate ${amountSizeCls} font-bold tabular-nums`} style={{ color: BRAND_NAVY }}>
+        <span className={`min-w-0 ${amountSizeCls} font-bold leading-tight tabular-nums`} style={{ color: BRAND_NAVY }}>
           {entries.length === 0 ? "—" : single ? (
             <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
           ) : (

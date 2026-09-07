@@ -1398,3 +1398,73 @@ en Safari), 7.7 (investigación de firma digital, sin código). El ítem
 1 (aviso de chunk de build) se resolvió con una recomendación sin
 cambio de código (diferir al bloque de optimización de build ya
 existente, hallazgo ya documentado en `docs/RELEASE-V1-PROGRESS.md`).
+
+## Fase 8 — Dos bugs reales tras la Fase 7 (2026-09-07)
+
+El usuario confirma explícitamente que todas sus pruebas son en Safari,
+en un iPhone 14 Pro Max real — el mismo viewport que ya emula
+`mobile-check`, así que los bugs de esta fase no son de tamaño de
+pantalla, son de motor de renderizado (WebKit vs. Chromium), algo que
+sigue sin poder verificarse directamente desde este entorno (CLAUDE.md
+§8).
+
+### 8.1 — KPI del medio ("Pendiente de cobrar") seguía cortando la cifra: tercer intento, esta vez sin adivinar
+
+Las dos correcciones anteriores (Fase 6 y 7.6) reducían el tamaño de
+letra según el número de caracteres de la cifra ya formateada — un
+umbral **adivinado**, nunca medido en el motor real, y las dos veces
+resultó insuficiente en Safari/iOS real. Adivinar un tercer umbral
+tenía toda la pinta de fallar otra vez por el mismo motivo.
+
+**Solución de raíz distinta**: en vez de forzar una sola línea con un
+tamaño de letra que hay que acertar a ciegas, se deja que la cifra se
+parta en dos líneas si hace falta (se quita `truncate`, que fuerza
+`white-space: nowrap`, en `MoneyKpiTile`, `MiTrabajoTab.jsx`) con un
+tamaño de letra fijo. El propio motor de layout del navegador decide
+dónde cabe cada palabra con sus métricas reales — nunca puede quedarse
+corto, sea cual sea el ancho exacto que le dé a cada carácter, porque
+ya no depende de que quepa en una sola línea. Test actualizado para
+fijar el comportamiento (ausencia de `truncate`), no un número de
+caracteres que pueda volver a quedarse corto.
+
+**Verificación**: 763/763 tests, lint 0 errores, build correcto;
+comprobación visual en Chromium con los datos de prueba reales — los
+tres importes se ven al mismo tamaño ahora (ya no hace falta reducir
+ninguno), sin cortarse.
+
+### 8.2 — Calendario de "Periodo" (Mi trabajo) se salía del viewport sin poder hacer scroll
+
+**Causa raíz, real y compartida por TODOS los paneles flotantes de la
+app**: `useFloatingPosition`/`FloatingPanel` (shared.jsx) — el hook y
+componente que usan Select, MultiSelect, SearchSelect, DatePicker,
+DateRangePicker y RowMenu por igual — calculaban `maxWidth` pero nunca
+`maxHeight`. Un panel más alto que el hueco disponible (p. ej. el
+calendario de rango con la fila de atajos + 6 filas de días, abierto
+desde un punto no muy alto de la pantalla) simplemente se salía por
+debajo del viewport, sin ningún `overflow-y` que permitiera hacer
+scroll para ver el resto — ni el panel en sí, ni la página de detrás
+(bloqueada mientras el panel está abierto, `useBodyScrollLock`).
+
+**Corrección, en el hook compartido, no en `DateRangePicker` a solas**:
+`useFloatingPosition` calcula ahora también `maxHeight` (espacio
+disponible por encima o por debajo del disparador, el que se esté
+usando, menos un margen de 12px) y `FloatingPanel` lo aplica junto con
+`overflow-y: auto` — vía `style` inline, no una clase de Tailwind
+(`overflow-y-auto`), porque `RowMenu` ya trae su propio
+`overflow-hidden` en `className` para recortar sus esquinas
+redondeadas, y qué clase "gana" cuando dos tocan `overflow` depende del
+orden en que Tailwind las genera en la hoja de estilos, no del orden en
+el propio `className` — un inline style se salta ese riesgo por
+completo. Corrige el bug reportado y, de paso, cualquier otro panel
+flotante de la app que pudiera tener el mismo problema latente sin
+haberse reportado todavía (varios ya traían su propio `max-h-*
+overflow-y-auto` a mano, como red de seguridad fija que ahora convive
+con el cálculo dinámico sin conflicto).
+
+**Verificación**: 763/763 tests, lint 0 errores, build correcto;
+comprobación visual en navegador — el calendario de "Periodo" en Mi
+trabajo ahora muestra una barra de scroll real y permite llegar hasta
+el final (confirmado también en el paso "Hasta", donde cabía entero sin
+necesidad de scroll, y el botón "OK" queda visible); el menú "⋯" de una
+fila sigue con las esquinas redondeadas intactas (sin regresión visual
+del cambio de `overflow`).
