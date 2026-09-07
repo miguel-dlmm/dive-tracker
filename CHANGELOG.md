@@ -154,6 +154,11 @@ Registro de cambios relevantes de Ocean Flow.
   fila activa era demasiado sutil).
 - Mi perfil: el formulario de edición de Datos personales ya no aparece
   con todos los campos pegados unos a otros — ahora respira entre filas.
+- Mi perfil: el selector de país de residencia ahora lista los países en
+  orden alfabético, y ya no "salta" de un lado a otro al escribir en
+  móvil (el teclado virtual ya no le hace cambiar de dirección mientras
+  está abierto) — arreglo que también protege a cualquier otro selector
+  desplegable de la app frente al mismo problema.
 - **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
   real** — "Setting up fake worker failed". Causa confirmada leyendo el
   código fuente de pdfjs-dist: en su modo de reserva "fake worker",

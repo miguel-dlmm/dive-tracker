@@ -225,9 +225,17 @@ const PROFESSIONAL_LEVEL_OPTIONS = [
 
 // Opciones del selector de país, con la etiqueta en el idioma activo —
 // se recalcula solo cuando cambia el idioma, no en cada tecla del buscador.
+// Orden alfabético por la propia etiqueta (feedback explícito 2026-09-07:
+// "los países no están en orden alfabético") — COUNTRIES vive en
+// countries.js curado por relevancia (España/Latinoamérica primero), útil
+// para leer el archivo, pero no para elegir en el propio selector.
+// Intl.Collator (no localeCompare suelto) para que "México" ordene junto
+// a "Marruecos" en vez de después de "Z" por el acento, y para que el
+// criterio de acentos/mayúsculas sea coherente entre es/en.
 function countryOptionsFor(language) {
   const key = language === "en" ? "en" : "es";
-  return COUNTRIES.map((c) => ({ value: c.code, label: c[key] }));
+  const collator = new Intl.Collator(key);
+  return COUNTRIES.map((c) => ({ value: c.code, label: c[key] })).sort((a, b) => collator.compare(a.label, b.label));
 }
 
 function PersonalDataSection({ profile, onProfileUpdated }) {

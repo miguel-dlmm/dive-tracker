@@ -214,6 +214,22 @@ describe("datos personales", () => {
     expect(screen.getByRole("button", { name: "Año anterior" })).toBeInTheDocument();
   });
 
+  // Feedback explícito 2026-09-07: "los países no están en orden
+  // alfabético" — countries.js los tiene curados por relevancia
+  // (España/Latinoamérica primero), útil para el archivo pero no para
+  // el propio selector; countryOptionsFor() los ordena antes de
+  // devolverlos.
+  it("las opciones de país de residencia aparecen en orden alfabético", async () => {
+    const user = userEvent.setup();
+    renderProfile();
+
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
+    await user.click(screen.getByRole("textbox", { name: "Elige un país" }));
+
+    const labels = screen.getAllByRole("option").map((o) => o.textContent);
+    expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b, "es")));
+  });
+
   it("no deja guardar un nickname con \"@\"", async () => {
     const user = userEvent.setup();
     renderProfile();

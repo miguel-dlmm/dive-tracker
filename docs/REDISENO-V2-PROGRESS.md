@@ -2612,3 +2612,52 @@ Confirmado en navegador (Chromium, `localhost`, cuenta demo): el
 formulario de edición de Datos personales ahora respira entre filas en
 vez de aparecer todo pegado. 792/792 tests (suite completa), lint sin
 errores nuevos, build correcto.
+
+### 10.12 — Perfil: país de residencia en orden alfabético + panel que ya no "salta" en móvil
+
+Dos quejas sobre el mismo campo: "los países no están en orden
+alfabético" y "es imposible de usar en mv, sale arriba, si lo toco
+salta".
+
+**Orden alfabético**: `countries.js` los tiene curados por relevancia
+(España/Latinoamérica primero) — útil para leer el archivo, no para
+elegir en el propio selector. `countryOptionsFor()` (`ProfileTab.jsx`)
+ahora los ordena con `Intl.Collator` (no `localeCompare` suelto, para
+que acentos como en "México" ordenen junto al resto de sus vecinos y no
+al final por el propio acento) antes de devolverlos.
+
+**El panel "salta"**: causa real, no adivinada — `useFloatingPosition`
+(`shared.jsx`, el hook que decide si CUALQUIER panel flotante de la app
+abre hacia arriba o hacia abajo) recalculaba esa decisión en cada
+evento de `resize`/`scroll` del `visualViewport`, incluidos los que
+dispara el propio teclado virtual al abrirse mientras el usuario escribe
+en el campo de búsqueda del país. Si el campo estaba en una posición
+donde el teclado dejaba "justo" el umbral de 280px por debajo, la
+decisión podía cambiar de "abajo" a "arriba" (o al revés) MIENTRAS el
+panel ya estaba abierto y el usuario tecleando — el panel entero se
+desplazaba de golpe sin que nadie tocara nada relacionado con su
+posición. Arreglo: la dirección arriba/abajo se decide UNA SOLA VEZ, en
+el instante de abrir el panel, y queda congelada mientras siga abierto;
+`maxHeight`/`top`/`bottom` (con esa misma dirección ya fija) se siguen
+recalculando en cada cambio de viewport, así que el panel sigue sin
+salirse nunca de la pantalla — solo deja de cambiar de lado.
+
+**Verificación**: 2 tests nuevos. `ProfileTab.test.jsx` comprueba el
+orden alfabético real de las opciones. `shared.test.jsx` reproduce el
+mecanismo exacto del bug con un `SearchSelect` aislado — ancla mockeada
+cerca del borde inferior de un viewport de 768px (fuerza apertura hacia
+arriba), panel abierto, `window.innerHeight` agrandado a 2000 + evento
+`resize` disparado (equivalente a que el teclado se cierre), y se
+confirma que el panel SIGUE abriendo hacia arriba en vez de saltar hacia
+abajo — el test falla con el código anterior y pasa con el arreglo,
+confirmado ejecutándolo contra ambas versiones. Como afecta a
+`useFloatingPosition`, el hook que comparten TODOS los paneles
+flotantes de la app (Select, MultiSelect, SearchSelect, DatePicker,
+DateRangePicker, RowMenu), el arreglo protege a los demás por igual, no
+solo al selector de país. 794/794 tests (suite completa), lint sin
+errores nuevos, build correcto. No se ha podido confirmar en un teclado
+virtual real de iOS (la limitación ya documentada de `mobile-check` en
+`CLAUDE.md`: el efecto del teclado real sobre `visualViewport` solo se
+verifica de verdad en el dispositivo físico) — el arreglo está anclado
+al mecanismo real leído en el código, no a una suposición, pero queda
+pendiente de que el usuario lo confirme en su iPhone.
