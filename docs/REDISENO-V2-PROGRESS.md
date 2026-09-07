@@ -1356,3 +1356,45 @@ correcto; comprobación visual en navegador — Mi trabajo con los mismos
 datos de prueba reales (117.477,40 ฿, 26.584,00 ฿, 5.150,00 ฿) muestra
 las tres cifras completas, sin cortar, con la más larga ("Pendiente de
 cobrar") en el tamaño más pequeño y las otras dos en el intermedio.
+
+### 7.7 — Investigación: firma digital y validez legal de los Training Records
+
+Última tarea del bloque, puramente de investigación (sin código) —
+encargo: si existe algún API/conexión con SSI para dar más validez
+legal al Training Record generado por Ocean Flow, con el aviso de que
+SSI podría empezar a exigir que no se rellenen "a máquina".
+
+**Análisis completo, con fuentes reales, en `docs/INVESTIGACION-FIRMA-DIGITAL-TR.md`**
+— resumen del hallazgo principal: SSI ya tiene su propio sistema de
+firma digital de Training Records, pero vive dentro de su plataforma
+MySSI, sin ningún API público conocido para que un tercero como Ocean
+Flow se integre. Lo que el usuario probablemente escuchó es el empuje
+de SSI hacia MySSI, no un requisito genérico sobre qué tecnología de
+firma debe llevar cualquier documento de terceros — Ocean Flow no
+puede hacer su propio documento "oficial para SSI" sin un
+reconocimiento explícito de SSI, algo que no depende de ninguna
+integración técnica que se construya aquí.
+
+Se investigaron también las 3 APIs de firma electrónica más conocidas
+(DocuSign, Dropbox Sign, Adobe Acrobat Sign) — descartadas para el MVP
+por coste desproporcionado (≥$100/mes el más barato con firma embebida)
+frente al problema real, que ninguna resolvería de todos modos
+(reconocimiento SSI). Recomendación entregada: reforzar la firma ya
+existente (trazo en canvas) con los 3 elementos que exige una firma
+electrónica simple válida bajo eIDAS (intención, atribución,
+integridad) — checkbox de confirmación + timestamp + hash SHA-256 del
+PDF, sin coste añadido — y, sobre todo, preguntar directamente a SSI
+antes de construir nada más. Registrado como ítem "Después" en
+`docs/BACKLOG.md`, no implementado en este commit — es investigación y
+recomendación, la decisión de priorizarlo queda para el usuario.
+
+## Cierre de la Fase 7
+
+Los 8 encargos de esta ronda quedan resueltos, cada uno en su propio
+commit con su propio Preview Deployment: 7.1 (recuperación de
+contraseña), 7.2 (JPG en Safari), 7.3 (emails), 7.4 (Tarifas), 7.5
+(logo vectorial + tagline + corrección de tokens de marca), 7.6 (KPIs
+en Safari), 7.7 (investigación de firma digital, sin código). El ítem
+1 (aviso de chunk de build) se resolvió con una recomendación sin
+cambio de código (diferir al bloque de optimización de build ya
+existente, hallazgo ya documentado en `docs/RELEASE-V1-PROGRESS.md`).
