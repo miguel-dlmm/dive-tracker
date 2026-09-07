@@ -37,6 +37,14 @@ Registro de cambios relevantes de Ocean Flow.
   altas masivas automatizadas (Vercel BotID).
 
 ### Changed
+- **Mi trabajo**: cada KPI de cabecera lleva ahora un icono fijo junto a
+  su etiqueta, además del que ya se encoge junto a la cifra — la
+  identidad de color del KPI no desaparece del todo aunque la cifra sea
+  muy larga.
+- **Comisión y Ajuste** tienen ahora su propio color de marca dedicado
+  (antes reutilizaban colores de estado como "pendiente" o un gris
+  genérico) — pensado también para material de campaña/redes, no solo
+  para la app.
 - **Icono de carga (logo)**: ahora solo la parte que parece una ola sube
   y baja en bucle, con el aro que la envuelve fijo — antes el logo
   entero se recortaba de golpe.
