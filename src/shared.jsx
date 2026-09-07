@@ -1159,15 +1159,27 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
     return map;
   }, [entries, year, month]);
 
-  // Si se pide auto-selección, marca el primer día con datos en cuanto
-  // llegan (p. ej. tras la carga asíncrona de Supabase) — pero solo
-  // mientras el usuario no haya tocado el calendario, para no pisar una
-  // selección manual con un re-render posterior.
+  // Si se pide auto-selección, marca el día de HOY si tiene actividad
+  // (Fase 9, 2026-09-07, pedido explícito: "aparecerá marcado el día de
+  // hoy si tiene alguna entrada, con la lista desplegada") — y solo si
+  // hoy está vacío, cae al primer día del mes con movimientos, igual
+  // que antes. Se recalcula en cuanto llegan los datos (p. ej. tras la
+  // carga asíncrona de Supabase) — pero solo mientras el usuario no haya
+  // tocado el calendario, para no pisar una selección manual con un
+  // re-render posterior. "Hoy" solo puede estar entre los días con
+  // actividad si el mes que se está pintando ES el mes actual — en
+  // cualquier otro mes (navegado con las flechas o deslizando), todoDay
+  // no puede coincidir con ningún día de esta cuadrícula, así que el
+  // criterio cae solo al primer día con actividad automáticamente, sin
+  // necesitar una rama aparte para "no es el mes actual".
   useEffect(() => {
     if (!autoSelectFirstDay || userSelectedRef.current) return;
     const days = Object.keys(byDay).map(Number);
-    if (days.length > 0) setSelection({ monthKey: monthKey_, day: Math.min(...days) });
-  }, [autoSelectFirstDay, byDay, monthKey_]);
+    if (days.length === 0) return;
+    const today = parseDateStr(todayStr());
+    const todayHasActivity = today && today.y === year && today.m === month && byDay[today.d];
+    setSelection({ monthKey: monthKey_, day: todayHasActivity ? today.d : Math.min(...days) });
+  }, [autoSelectFirstDay, byDay, monthKey_, year, month]);
 
   const cells = [];
   for (let i = 0; i < firstWeekday; i++) cells.push(null);

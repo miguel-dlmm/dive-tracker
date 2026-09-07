@@ -332,6 +332,25 @@ describe("HomeTab — calendario: navegación entre meses", () => {
     const label = screen.getByText("Generado el día");
     expect(label.parentElement).toHaveTextContent("20,00");
   });
+
+  // Pedido explícito (Fase 9, 2026-09-07): "aparecerá marcado el día de
+  // hoy si tiene alguna entrada... en caso de estar vacío se
+  // seleccionará el primer día del mes con movimientos" — antes siempre
+  // caía al primer día CON actividad del mes, aunque hoy también
+  // tuviera la suya y no fuera el primero.
+  it("con actividad en un día anterior y también hoy, se auto-selecciona hoy (no el primer día del mes)", () => {
+    const earlierDay = new Date(NOW.getFullYear(), NOW.getMonth(), Math.max(1, NOW.getDate() - 1)).toISOString().slice(0, 10);
+    renderHome({
+      worklog: [
+        { id: "w1", date: earlierDay, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }, // 20€
+        { id: "w2", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }, // 40€
+      ],
+      rates: RATES,
+    });
+
+    const label = screen.getByText("Generado el día");
+    expect(label.parentElement).toHaveTextContent("40,00"); // el de hoy, no los 20€ del día anterior
+  });
 });
 
 // Feedback explícito 2026-08-30: total combinado (Curso+Comisión+Ajuste,

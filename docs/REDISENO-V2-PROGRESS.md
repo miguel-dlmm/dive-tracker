@@ -1832,3 +1832,29 @@ local. `rateFor` (`MovementSheet.jsx`) añade el filtro que le faltaba:
 tarifa desactivada como única existente para una escuela+curso, no
 aparece ningún importe calculado y sí el botón "Añadir tarifa", igual
 que si no existiera ninguna), lint 0 errores, build correcto.
+
+### 9.6 — Calendario Home/Resumen: hoy tiene prioridad al auto-seleccionar
+
+Pedido explícito: "en el calendario de la home y el de resumen aparecerá
+marcado el día de hoy si tiene alguna entrada, con la lista desplegada.
+en caso de estar vacío se seleccionará el primer día del mes con
+movimientos asociados".
+
+**Antes**: `autoSelectFirstDay` (`MonthCalendar`, `shared.jsx`) siempre
+seleccionaba el PRIMER día del mes con actividad (`Math.min(...days)`),
+sin distinguir si hoy mismo tenía actividad — si hoy no era el primer
+día del mes con movimientos, se auto-abría un día distinto al de hoy.
+
+**Corrección**: se compara el mes/año que se está pintando con el de
+hoy (`parseDateStr(todayStr())`) — si coinciden Y hoy tiene entradas en
+`byDay`, se selecciona el día de hoy; si no (hoy vacío, o el mes visible
+no es el actual — p. ej. tras navegar con las flechas), cae al primer
+día con actividad, exactamente igual que antes. Mismo componente
+compartido por Home y Resumen, un único cambio cubre las dos pantallas.
+
+**Verificación**: 779/779 tests (1 nuevo en `HomeTab.test.jsx` — dos
+entradas en el mes, una en un día anterior y otra hoy, confirma que se
+auto-selecciona hoy, no el día anterior), lint 0 errores, build
+correcto. Los tests preexistentes de navegación entre meses (que ya
+usaban `TODAY` como única fecha con actividad) siguen en verde sin
+cambios, comportamiento idéntico en ese caso.

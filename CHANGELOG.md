@@ -161,6 +161,9 @@ Registro de cambios relevantes de Ocean Flow.
 - (Interno) Una tarifa desactivada podía usarse igualmente para
   calcular el importe de un movimiento nuevo — ahora solo cuenta una
   tarifa activa, igual que si no existiera ninguna cuando no la hay.
+- El calendario de Home y Resumen ya prioriza el día de hoy al abrir la
+  pantalla (si tiene alguna entrada), en vez del primer día del mes con
+  movimientos.
 - Tarifas: "Mostrar desactivadas" ya no está escondido dentro de
   "Filtrar" (siempre visible junto al contador de la lista), y una
   tarifa desactivada se reconoce ahora por su propio fondo, no solo por
