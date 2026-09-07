@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Languages, TrendingUp, UserCircle, IdCard, Sparkles } from "lucide-react";
-import { TEAL, SUN, GREEN, CORAL, BRAND_NAVY } from "./App";
+import { X, Smartphone, Building2, Palette, GraduationCap, Sparkles } from "lucide-react";
+import { BRAND_OCEAN, TEAL, BRAND_GOLD, BRAND_NAVY } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { usePrefersReducedMotion, monthSlideVariants, useSwipeHorizontal } from "./motion";
 
@@ -45,13 +45,13 @@ import { usePrefersReducedMotion, monthSlideVariants, useSwipeHorizontal } from 
 // notices.json (whatsNew.slides, mismo orden por índice) y se combinan con
 // este array en el componente.
 const SLIDE_ICONS = [
-  { icon: Languages, color: SUN },
-  { icon: TrendingUp, color: GREEN },
-  { icon: UserCircle, color: CORAL },
-  // Mi perfil / carnet de instructor (2026-09-04) — se inserta antes de la
-  // diapositiva de cierre ("Repásalo cuando quieras"), que se queda última
-  // a propósito porque es un meta-mensaje sobre el propio WhatsNew.
-  { icon: IdCard, color: TEAL },
+  { icon: Smartphone, color: BRAND_OCEAN },
+  { icon: Building2, color: TEAL },
+  { icon: Palette, color: BRAND_GOLD },
+  { icon: GraduationCap, color: TEAL },
+  // Se inserta antes de la diapositiva de cierre ("Repásalo cuando
+  // quieras"), que se queda última a propósito porque es un meta-mensaje
+  // sobre el propio WhatsNew, no sobre una funcionalidad concreta.
   { icon: Sparkles, color: BRAND_NAVY },
 ];
 

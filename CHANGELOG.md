@@ -4,6 +4,8 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.1.0] - 2026-09-07
+
 ### Added
 - **Instalar la app**: nuevo banner en Home con instrucciones paso a
   paso para añadir Ocean Flow a la pantalla de inicio, tanto en iOS
