@@ -356,6 +356,23 @@ describe("RatesTab — baja lógica: desactivar/reactivar en vez de (o además d
     expect(screen.getByRole("menuitem", { name: "Reactivar" })).toBeInTheDocument();
   });
 
+  // Alineado con ConfigTab (Fase 10, 2026-09-07 — "añade lo de la fila
+  // desactivada para las tarifas también"): la opacidad baja de 70% a
+  // 60%, el mismo criterio que ya se aplicó a la fila de usuario
+  // desactivado tras confirmar que 70% distinguía muy poco una fila
+  // desactivada de una activa.
+  it("una tarifa desactivada se muestra atenuada (opacity-60) cuando 'Mostrar desactivadas' está activo", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: false }]),
+    });
+
+    await user.click(screen.getByRole("switch", { name: "Mostrar desactivadas" }));
+
+    const row = screen.getByText("Open Water").closest(".px-4.py-3\\.5");
+    expect(row).toHaveClass("opacity-60");
+  });
+
   it("'Desactivar' en el menú de una tarifa activa llama a updateRow con is_active: false", async () => {
     const user = userEvent.setup();
     const { rates } = renderRatesTab({

@@ -2570,3 +2570,26 @@ fila, calendario completo visible sin scroll) y panel de fecha de
 nacimiento en Mi perfil (sin accesos rápidos, salto de año probado en
 vivo: Septiembre 2026 → Septiembre 2025 con un toque). 791/791 tests,
 lint sin errores nuevos, build correcto.
+
+### 10.10 — Tarifas: mismo criterio de "apagado" que la fila de usuario desactivado
+
+"añade lo de la fila desactivada para las tarifas también" — Tarifas ya
+tenía su propio tratamiento para una tarifa desactivada desde la Fase 8
+(8.4: fondo `bg-gray-50` + opacidad + "· Desactivada" en el metadato),
+así que no partía de cero. Comprobado en vivo (Chromium, `localhost`):
+desactivando una tarifa de prueba y comparándola con una fila activa, la
+opacidad al 70% seguía siendo demasiado sutil — el mismo defecto que ya
+se había corregido en la fila de usuario de ConfigTab. Bajada a 60%,
+igualando el criterio entre las dos pantallas. Añadido un test que
+comprueba la clase `opacity-60` en la fila.
+
+De paso, un test añadido en el commit anterior
+(`trainingRecords/TrainingRecordsTab.test.jsx`, "el botón 'Generar para
+todos'... usa accentColor") no llevaba el `testTimeout` explícito
+(15000ms) que ya usa el test hermano de al lado para el mismo flujo
+(seleccionar plantilla + rellenar + añadir alumno) — bajo la carga de la
+suite completa llegaba a superar el timeout por defecto de Vitest
+(5000ms) y fallaba de forma intermitente, aunque en solitario siempre
+pasaba. Corregido añadiendo el mismo `}, 15000);` al final del test.
+792/792 tests (suite completa, verificado dos veces seguidas sin fallos
+intermitentes), lint sin errores nuevos, build correcto.

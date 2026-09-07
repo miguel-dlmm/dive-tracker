@@ -394,11 +394,13 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
               // de un vistazo sin tener que leer el metadato) + "·
               // Desactivada" en el metadato como confirmación textual —
               // solo se ve cuando showInactive está activo, ya que si no la
-              // propia lista las filtra fuera. Opacidad más suave que antes
-              // (70% en vez de 50%): el fondo ya hace la mayor parte del
-              // trabajo de distinguir la fila, no hace falta apagar tanto
-              // el texto para que siga siendo legible.
-              <motion.div key={r.id} {...listItemVariants(reducedMotion)} className={`px-4 py-3.5 text-sm ${!isRateActive(r) ? "bg-gray-50 opacity-70" : ""}`}>
+              // propia lista las filtra fuera. Opacidad bajada de 70% a
+              // 60% (Fase 10, mismo criterio ya aplicado a la fila de
+              // usuario desactivado en ConfigTab, pedido explícito "para
+              // las tarifas también"): a 70% la diferencia con una fila
+              // activa seguía siendo demasiado sutil, mismo defecto que
+              // ya se corrigió ahí.
+              <motion.div key={r.id} {...listItemVariants(reducedMotion)} className={`px-4 py-3.5 text-sm ${!isRateActive(r) ? "bg-gray-50 opacity-60" : ""}`}>
                 <div className="flex items-start gap-2.5">
                   <RateTypeIconChip source={r._source} />
                   <div className="min-w-0 flex-1">

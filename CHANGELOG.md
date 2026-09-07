@@ -149,6 +149,9 @@ Registro de cambios relevantes de Ocean Flow.
   el calendario completo — ahora es una sola fila. Nuevo salto de año
   (« »), y la fecha de nacimiento del perfil ya no muestra accesos
   rápidos que no tenían sentido ahí.
+- Tarifas: una tarifa desactivada se ve ahora igual de "apagada" que una
+  cuenta desactivada en Config/Usuarios (antes la diferencia con una
+  fila activa era demasiado sutil).
 - **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
   real** — "Setting up fake worker failed". Causa confirmada leyendo el
   código fuente de pdfjs-dist: en su modo de reserva "fake worker",
