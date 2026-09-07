@@ -1172,6 +1172,49 @@ rompe nada en un navegador que ya soporta `Promise.try` de forma nativa,
 antes de confiar en que también corrige el caso real de Safari que no se
 puede probar aquí directamente.
 
+### 7.3 — Emails sin adaptar al rediseño: colores de marca desactualizados
+
+**Confirmado**: `server/email/templates/emailLayout.js` (el envoltorio
+visual compartido por todos los emails transaccionales) tenía sus
+propias constantes `NAVY`/`TEAL` con los valores **previos al rebrand**
+(`#0F172A`/`#0F766E` — exactamente los mismos valores que las constantes
+legado del mismo nombre en `src/colors.js`). El texto de los emails ya
+decía "Ocean Flow" en todos los flujos (alta, reactivación, recuperación
+de contraseña, aviso de despliegue al superadmin) desde el rebrand del
+2026-08-30 — el hueco era puramente visual, nunca de copy.
+
+**Por qué no se importa directamente `src/colors.js`**: `server/email/`
+es un árbol de código deliberadamente independiente de `src/` (para
+poder desplegarse como función serverless sin acoplarse a Vite/React) —
+ya duplicaba el valor de la paleta antes de este cambio, solo que con
+los valores antiguos sin actualizar tras el rebrand.
+
+**Corrección**: `NAVY`/`TEAL` sustituidas por una única constante
+`BRAND_NAVY = "#00335A"` (mismo valor que `src/colors.js`) — un solo
+color en vez de dos porque en el resto de la app `BRAND_SKY` solo se usa
+como tinte suave sobre fondos claros (icono badges), nunca como color
+sólido de botón, mientras que `BRAND_NAVY` es el que ya usan todos los
+botones de acción sólidos de la app (ConfigTab, CreatePasswordScreen,
+DeploymentNotice...) — usarlo también aquí, tanto en el acento del icono
+de cabecera como en el botón CTA, mantiene los emails coherentes con el
+mismo vocabulario de color que ya usa el resto de la app, sin inventar
+un uso de `BRAND_SKY` que no existe en ningún otro sitio.
+
+**Barrido del resto de la app en busca de otras superficies sin migrar**
+(pedido explícito: "revisa si queda alguna otra cosa que se nos haya
+pasado adaptar") — sin más hallazgos: las únicas menciones a "Ocean
+Pulse" fuera de `src/colors.js` están en comentarios de código que
+documentan el propio rebrand histórico (`App.jsx`,
+`legal/privacyPolicy.js`, `legal/termsOfUse.js`) — intencionales, no
+texto visible al usuario (ver nota de CLAUDE.md sobre el rebrand); no
+hay otros colores hexadecimales de la paleta antigua fuera de `src/`
+(`server/notifications/` no renderiza HTML propio, reutiliza estas
+mismas plantillas de email).
+
+**Verificación**: 34/34 tests de `server/email/` en verde (sin cambios
+necesarios — ningún test fijaba el valor hexadecimal concreto), 762/762
+de la suite completa, lint 0 errores, build correcto.
+
 **Verificado**: `npm run lint` 0 errores, `npm run test -- --run`
 758/758 (4 tests nuevos: `baseUrl` pasa correctamente end-to-end desde
 `requestPasswordReset` y gana sobre `APP_URL` en `activationLink`),

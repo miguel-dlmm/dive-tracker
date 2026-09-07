@@ -15,9 +15,26 @@
 //
 // html lang="es": accesibilidad — lectores de pantalla necesitan saber el
 // idioma del contenido para elegir la voz/pronunciación correctas.
-
-export const NAVY = "#0F172A";
-export const TEAL = "#0F766E";
+//
+// BRAND_NAVY: mismo valor que src/colors.js (paleta del rediseño v2,
+// docs/DESIGN-SYSTEM.md §3.1) — no se importa desde ahí porque
+// server/email/ es un árbol de código deliberadamente independiente de
+// src/ (sin acoplarlo a Vite/React para poder desplegarse como función
+// serverless), así que el valor se duplica aquí a propósito, igual que
+// ya hacía con la paleta antigua. Corrige un hueco real: hasta ahora
+// estas constantes se llamaban NAVY/TEAL y llevaban los valores previos
+// al rebrand (#0F172A/#0F766E, los mismos que las constantes legado del
+// mismo nombre en src/colors.js) — los emails seguían con la marca
+// antigua aunque el resto de la app visible ya se hubiera migrado
+// (reportado por el usuario: "los emails no están adaptados al
+// rediseño"). Un solo color de marca (antes NAVY+TEAL) porque en el
+// resto de la app BRAND_SKY solo se usa como tinte suave sobre fondos
+// claros, nunca como color sólido de botón/CTA — el mismo BRAND_NAVY
+// que ya usan todos los botones sólidos de la app (ConfigTab,
+// CreatePasswordScreen, DeploymentNotice...) cubre aquí tanto el botón
+// como el acento del icono de cabecera, sin introducir un uso de
+// BRAND_SKY que no existe en ningún otro sitio.
+export const BRAND_NAVY = "#00335A";
 export const BG = "#F7F8F8";
 
 export function escapeHtml(value) {
@@ -35,10 +52,10 @@ function wavesIconSvg(color, size = 22) {
 function renderHeaderRow() {
   return `<tr>
     <td style="padding:32px 28px 12px 28px;text-align:center;">
-      <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:9999px;background-color:${TEAL}1A;">
-        ${wavesIconSvg(TEAL)}
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:9999px;background-color:${BRAND_NAVY}1A;">
+        ${wavesIconSvg(BRAND_NAVY)}
       </span>
-      <div style="margin-top:8px;font-size:15px;font-weight:700;color:${NAVY};">Ocean Flow</div>
+      <div style="margin-top:8px;font-size:15px;font-weight:700;color:${BRAND_NAVY};">Ocean Flow</div>
     </td>
   </tr>`;
 }

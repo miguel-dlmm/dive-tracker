@@ -1,4 +1,4 @@
-import { renderEmailShell, escapeHtml, TEAL, NAVY } from "./emailLayout.js";
+import { renderEmailShell, escapeHtml, BRAND_NAVY } from "./emailLayout.js";
 
 // Generalización de la plantilla de bienvenida (antes welcomeEmailTemplate.js)
 // para que un único template sirva a los tres flujos que envían "aquí tienes
@@ -76,7 +76,7 @@ export const ACTIVATION_EMAIL_COPY = {
 // sobre todo) no soportan Flexbox/Grid ni <style> externo, así que este
 // template no puede reutilizar las clases Tailwind del resto de la app —
 // es su propio sistema reducido, coherente en color/tipografía con el
-// resto de la app (mismo NAVY/TEAL, mismo icono Waves que el login —
+// resto de la app (mismo BRAND_NAVY, mismo icono Waves que el login —
 // ver emailLayout.js). Una sola columna, mobile-first.
 export function renderActivationEmailHtml({ firstName, actionLink, copy = ACTIVATION_EMAIL_COPY.signup }) {
   const safeName = escapeHtml(firstName);
@@ -84,14 +84,14 @@ export function renderActivationEmailHtml({ firstName, actionLink, copy = ACTIVA
   const bodyRows = `
     <tr>
       <td style="padding:12px 28px 0 28px;">
-        <h1 style="margin:0 0 16px 0;font-size:20px;color:${NAVY};">${escapeHtml(copy.title)}</h1>
+        <h1 style="margin:0 0 16px 0;font-size:20px;color:${BRAND_NAVY};">${escapeHtml(copy.title)}</h1>
         <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#374151;">${copy.greeting(safeName)}</p>
         <p style="margin:0 0 24px 0;font-size:14px;line-height:1.6;color:#374151;">${escapeHtml(copy.intro)}</p>
       </td>
     </tr>
     <tr>
       <td style="padding:0 28px;text-align:center;">
-        <a href="${safeLink}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;background-color:${TEAL};color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 24px;border-radius:8px;">${escapeHtml(copy.ctaLabel)}</a>
+        <a href="${safeLink}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;background-color:${BRAND_NAVY};color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 24px;border-radius:8px;">${escapeHtml(copy.ctaLabel)}</a>
       </td>
     </tr>
     <tr>

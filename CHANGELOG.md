@@ -135,6 +135,10 @@ Registro de cambios relevantes de Ocean Flow.
   ámbito global, sin heredar los polyfills ya aplicados al hilo
   principal — ahora se le aplican los mismos dentro de él antes de
   cargar su código real.
+- (Interno) Los emails transaccionales (alta, recuperación de
+  contraseña, aviso de despliegue) seguían con los colores de marca
+  previos al rebrand — ahora usan el mismo azul marino que el resto de
+  la app rediseñada.
 
 ## [1.0.0] - 2026-09-04
 
