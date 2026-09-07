@@ -221,3 +221,30 @@ vocabulario de gesto que Configuración, en el mismo nivel de recursión.
 `HelpTab` recibe ahora un prop `onClose` con el mismo contrato que
 `ConfigTab` (ver ADR-0008): opcional, sin él el swipe en el índice
 simplemente no hace nada.
+
+## Addendum 2026-09-08 — la decisión "sin capturas" se revierte parcialmente
+
+Pedido explícito: "recupera el rehacer la ayuda con gifs animados...
+corrige lo que necesites para poder generar los gifs". Revierte la
+sección "Sin capturas de pantalla" de arriba, pero no por completo —
+ver el comentario íntegro en `src/help/content.js` para el detalle
+técnico completo. Resumen:
+
+- **Por qué ya no aplica el motivo original**: la cuenta demo mostraba
+  "dev-bypass" y datos de prueba desordenados cuando se tomó la
+  decisión original; ya no es el caso (confirmado en
+  `docs/REDISENO-V2-PROGRESS.md`, 9.14).
+- **El bloqueo real que aparcó el primer intento con GIFs** (un
+  "fantasma"/doble exposición, capturado a media transición CSS de una
+  `Sheet`) se investigó y se corrigió de raíz — no era un límite fijo
+  del entorno, era que las capturas coincidían con fotogramas a media
+  animación. `?captureGif=1` (`usePrefersReducedMotion`, `src/motion.js`,
+  solo `npm run dev`) fuerza duración ~0 en las animaciones exclusivamente
+  para grabar, así que cada captura cae siempre sobre un estado ya
+  asentado. Verificado extrayendo cada fotograma de los 3 GIFs
+  producidos (`crear-movimiento`, `cobrar-movimientos`,
+  `configurar-app`) con Pillow — ninguno muestra el artefacto.
+- **Alcance deliberadamente acotado**: solo los 3 artículos "Quiero..."
+  con el flujo más básico llevan GIF — no los 9 artículos de Ayuda. Un
+  campo `gif` opcional por artículo (`content.js`), nunca un mecanismo
+  "todo artículo debe tener uno".

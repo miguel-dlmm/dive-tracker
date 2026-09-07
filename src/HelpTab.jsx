@@ -16,9 +16,9 @@ const CATEGORY_ICONS = { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, 
 
 // Combina el texto traducido (namespace "help", claves `articles.<id>.*`)
 // con el id del artículo en content.js para dar a HelpArticleBody el
-// shape de `article` que espera. Ya no resuelve imágenes de paso — el
-// rediseño 2026-09-04 las retiró por completo (ver comentario en
-// content.js): `steps` son strings simples, sin variante `{ text, image }`.
+// shape de `article` que espera. `steps` son strings simples, sin
+// variante `{ text, image }` — el GIF (2026-09-08, ver content.js) es
+// una sola pieza de cabecera del artículo, no por paso.
 function resolveArticle(articleMeta, t) {
   const base = `articles.${articleMeta.id}`;
   return {
@@ -29,6 +29,7 @@ function resolveArticle(articleMeta, t) {
     steps: t(`${base}.steps`, { returnObjects: true }),
     tips: t(`${base}.tips`, { returnObjects: true, defaultValue: [] }),
     expectedResult: t(`${base}.expectedResult`),
+    gif: articleMeta.gif,
   };
 }
 

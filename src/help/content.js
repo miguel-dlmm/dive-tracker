@@ -26,21 +26,36 @@
 // la categoría, para que la Ayuda use los mismos colores que el resto de
 // la app en vez de una paleta propia (ver CLAUDE.md, convención 2).
 //
-// Sin capturas de pantalla (rediseño 2026-09-04, "Ayuda fácil de
-// entender"): la versión anterior de este archivo llevaba un campo
+// GIFs animados (2026-09-08, reintroducidos — pedido explícito:
+// "recupera el rehacer la ayuda con gifs animados... corrige lo que
+// necesites para poder generar los gifs"). Revierte la decisión "sin
+// capturas" del rediseño 2026-09-04 de este mismo archivo (histórico
+// más abajo) — aquella decisión se tomó cuando la cuenta demo mostraba
+// "dev-bypass" y datos de prueba desordenados; ya no es el caso (ver
+// docs/REDISENO-V2-PROGRESS.md, 9.14). El bloqueo real que aparcó el
+// primer intento (GIF con "fantasma"/doble exposición, capturado a
+// media transición CSS de una Sheet) se corrigió de raíz con
+// `?captureGif=1` (ver `usePrefersReducedMotion`, `src/motion.js`):
+// fuerza duración ~0 en las animaciones solo para grabar, así que cada
+// fotograma cae siempre sobre un estado ya asentado. Campo `gif`
+// opcional por artículo (nombre de fichero en `public/help/`, no
+// traducible — es la misma animación en cualquier idioma) — solo los 3
+// "Quiero..." con el flujo más básico lo llevan hoy (crear un
+// movimiento, cobrarlo, configurar la app por primera vez), no todos
+// los artículos: un GIF por cada uno de los 9 artículos sería mucho
+// mantenimiento para contenido de referencia que cambia poco visita a
+// visita, mientras que estos 3 son el primer contacto real de un
+// usuario nuevo con la app.
+//
+// Histórico — por qué se habían retirado (rediseño 2026-09-04, "Ayuda
+// fácil de entender"): la versión de entonces llevaba un campo
 // `stepImages` con capturas reales generadas con
 // scripts/capture-help-screenshots.mjs (recortando la cabecera para no
 // mostrar la cuenta de desarrollo). Aun así, el CUERPO de esas capturas
 // seguía mostrando datos reales del dataset de prueba "ihasia" (importes,
-// nombres de escuela/curso) — no presentable a un usuario real, mismo
-// motivo por el que WhatsNew.jsx nunca ha usado capturas (ver comentario
-// en ese archivo). Se retira el mecanismo entero: ni el campo, ni el
-// script (que generaba justamente ese problema), ni los PNG de
-// public/help/. La claridad "paso a paso, muy visual" que se pedía se
-// consigue con los pasos numerados de HelpStep.jsx (sección "Pasos" de
-// cada artículo) en vez de con imágenes — cero riesgo de filtrar datos
-// de prueba, cero mantenimiento de capturas que quedan desactualizadas
-// en cuanto cambia una pantalla.
+// nombres de escuela/curso) — no presentable a un usuario real. Se
+// retiró el mecanismo entero en su momento; el campo `gif` de ahora es
+// una pieza nueva, no una reactivación de aquel `stepImages`.
 //
 // Regla permanente (Release V1, Fase 1 — ver CLAUDE.md, "Reglas
 // permanentes — Release V1"): la Ayuda nunca documenta funcionalidades
@@ -76,21 +91,21 @@ export const HELP_CATEGORIES = [
     group: "quiero",
     sectionKey: "config",
     icon: "Settings",
-    articles: [{ id: "configurar-app" }],
+    articles: [{ id: "configurar-app", gif: "configurar-app.gif" }],
   },
   {
     id: "quiero-crear-movimiento",
     group: "quiero",
     sectionKey: "trabajo",
     icon: "GraduationCap",
-    articles: [{ id: "crear-movimiento" }],
+    articles: [{ id: "crear-movimiento", gif: "crear-movimiento.gif" }],
   },
   {
     id: "quiero-cobrar",
     group: "quiero",
     sectionKey: "trabajo",
     icon: "Wallet",
-    articles: [{ id: "cobrar-movimientos" }],
+    articles: [{ id: "cobrar-movimientos", gif: "cobrar-movimientos.gif" }],
   },
   {
     id: "quiero-consultar-generado",

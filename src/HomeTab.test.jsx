@@ -15,9 +15,26 @@ import HomeTab from "./HomeTab";
 // nada — acotar por tarjeta evita ese falso positivo/negativo.
 const rowsHook = (rows) => ({ rows, loaded: true, insertRow: vi.fn(), updateRow: vi.fn(), deleteRow: vi.fn(), bulkUpdateWhere: vi.fn(), setDefault: vi.fn() });
 
+// Bug real de zona horaria (mismo ya corregido 2026-08-30 en
+// SummaryTab.test.jsx — ver la nota extensa junto a
+// "suma correcta en los límites del periodo" ahí): toISOString()
+// convierte a medianoche UTC, no a la fecha LOCAL de "hoy" — en un huso
+// con offset positivo (este entorno corre en Asia/Bangkok, UTC+7), entre
+// la medianoche local y la medianoche UTC (las primeras ~17h de cada
+// día local) toISOString().slice(0,10) devuelve el día ANTERIOR al que
+// la propia app considera "hoy" (todayStr(), shared.jsx, que sí usa
+// getFullYear()/getMonth()/getDate() locales). `TODAY` desincronizado de
+// lo que la app real considera hoy rompía en directo, no en teoría, el
+// 2026-09-08 — reproducido: un test que sembraba un movimiento con
+// `date: TODAY` esperando que el calendario lo auto-seleccionara como
+// "de hoy" fallaba porque el componente ya había cruzado la medianoche
+// local. `localDateStr` sustituye a toISOString en todo este archivo.
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 const NOW = new Date();
-const TODAY = NOW.toISOString().slice(0, 10);
-const LAST_MONTH = new Date(NOW.getFullYear(), NOW.getMonth() - 1, 15).toISOString().slice(0, 10);
+const TODAY = localDateStr(NOW);
+const LAST_MONTH = localDateStr(new Date(NOW.getFullYear(), NOW.getMonth() - 1, 15));
 
 const PAYMENT_STATUSES = rowsHook([
   { name: "Pending", is_default: true },
@@ -333,7 +350,7 @@ describe("HomeTab — calendario: navegación entre meses", () => {
   // caía al primer día CON actividad del mes, aunque hoy también
   // tuviera la suya y no fuera el primero.
   it("con actividad en un día anterior y también hoy, se auto-selecciona hoy (no el primer día del mes)", () => {
-    const earlierDay = new Date(NOW.getFullYear(), NOW.getMonth(), Math.max(1, NOW.getDate() - 1)).toISOString().slice(0, 10);
+    const earlierDay = localDateStr(new Date(NOW.getFullYear(), NOW.getMonth(), Math.max(1, NOW.getDate() - 1)));
     renderHome({
       worklog: [
         { id: "w1", date: earlierDay, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }, // 20€

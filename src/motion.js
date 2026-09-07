@@ -133,14 +133,38 @@ export function animateScrollBy(deltaY, { reduced = false, duration = DURATION.m
   });
 }
 
+// `?captureGif=1` (2026-09-08, solo `npm run dev`, ver más abajo):
+// fuerza reduced-motion sin depender de la preferencia real del sistema
+// operativo — pensado exclusivamente para grabar los GIFs de Ayuda con
+// gif_creator (Claude-in-Chrome). Hallazgo real al intentarlo antes (ver
+// docs/REDISENO-V2-PROGRESS.md, 9.14): un GIF grabado con las
+// animaciones normales de una Sheet (deslizar hacia arriba) salía con
+// "fantasma"/doble exposición — compatible con un fotograma capturado a
+// media transición CSS. Con las animaciones a duración ~0 (mismo
+// mecanismo que ya usa prefers-reduced-motion real), cada captura cae
+// siempre sobre un estado ya asentado, nunca a mitad de una transición —
+// elimina la causa más probable del artefacto de raíz, en vez de seguir
+// intentando "esperar más" entre capturas (ya probado, sin éxito, en la
+// sesión anterior). Doble candado igual que el bypass de login
+// (`MODE === "development"`, no `DEV`, mismo motivo: `DEV` también es
+// true bajo Vitest) + el propio parámetro explícito en la URL — nunca
+// activo por accidente, y el propio `vite build` elimina esta rama del
+// bundle de producción (verificable con grep sobre dist/, igual que el
+// bypass de login).
+function captureModeForced() {
+  if (typeof window === "undefined" || import.meta.env.MODE !== "development") return false;
+  return new URLSearchParams(window.location.search).get("captureGif") === "1";
+}
+
 // prefers-reduced-motion — cualquier componente que anime debe consultar
 // esto y, si es true, usar duraciones ~0 en vez de desactivar la
 // funcionalidad (el estado final debe seguir siendo el mismo).
 export function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(
-    () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    () => captureModeForced() || (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
   );
   useEffect(() => {
+    if (captureModeForced()) return;
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     if (!mq) return;
     const handler = (e) => setReduced(e.matches);

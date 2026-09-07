@@ -5,6 +5,10 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Added
+- **Ayuda**: los 3 artículos más básicos ("Registrar un movimiento",
+  "Cobrar movimientos pendientes", "Configurar tu aplicación") ya
+  incluyen un GIF animado con el flujo real, además del paso a paso en
+  texto.
 - **Instalar la app**: nuevo banner en Home con instrucciones paso a
   paso para añadir Ocean Flow a la pantalla de inicio, tanto en iOS
   (Safari) como en Android (Chrome) — descartable, y oculto solo si ya

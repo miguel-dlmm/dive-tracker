@@ -142,27 +142,34 @@ describe("HelpTab — 'Ver qué hay de nuevo'", () => {
   });
 });
 
-// Rediseño 2026-09-04 ("Ayuda fácil de entender"): las capturas de
-// pantalla reales (dataset de prueba "ihasia", cuenta dev-bypass) se
-// retiraron por completo — ver comentario en content.js. Guarda de
-// regresión: ningún artículo debe volver a renderizar una imagen,
-// aunque alguien reintroduzca `stepImages` sin darse cuenta del motivo
-// por el que se quitó.
-describe("HelpTab — sin capturas de pantalla", () => {
-  it("ningún artículo (de los que antes llevaban imagen) renderiza un <img>", async () => {
+// GIFs animados (2026-09-08, ver content.js) — reintroducidos, revierte
+// la decisión "sin capturas" del rediseño 2026-09-04 (histórico: dataset
+// de prueba "ihasia"/cuenta dev-bypass no presentables en ese momento;
+// ver comentario en content.js). Solo los 3 "Quiero..." con flujo más
+// básico llevan `gif` — el resto de artículos sigue sin ninguna imagen.
+describe("HelpTab — GIFs animados solo en los 3 artículos básicos", () => {
+  it("los 3 artículos con `gif` en content.js renderizan su <img>, el resto no", async () => {
     const user = userEvent.setup();
     const { container } = render(<HelpTab navSections={navSections} />);
 
-    const categoriesThatHadImages = [
-      /Primeros pasos/,
-      /Configurar tu aplicación/,
-      /Registrar un movimiento/,
-      /Cobrar movimientos pendientes/,
-      /Consultar cuánto has generado/,
-    ];
-    for (const name of categoriesThatHadImages) {
+    const withGif = {
+      "Configurar tu aplicación": "configurar-app.gif",
+      "Registrar un movimiento": "crear-movimiento.gif",
+      "Cobrar movimientos pendientes": "cobrar-movimientos.gif",
+    };
+    for (const [name, filename] of Object.entries(withGif)) {
+      await user.click(screen.getByRole("button", { name: new RegExp(name) }));
+      expect(container.querySelector(`img[src="/help/${filename}"]`)).toBeInTheDocument();
+    }
+
+    const withoutGif = [/Primeros pasos/, /Consultar cuánto has generado/];
+    for (const name of withoutGif) {
       await user.click(screen.getByRole("button", { name }));
-      expect(container.querySelector("img")).not.toBeInTheDocument();
+      // El acordeón (ExpandableCard) anima la salida de la categoría
+      // anterior — su <img> sigue en el DOM hasta que esa animación
+      // termina, no es un fallo real (mismo patrón ya usado más arriba
+      // en este archivo, "tocar de nuevo la misma categoría...").
+      await waitFor(() => expect(container.querySelector("img")).not.toBeInTheDocument());
     }
   });
 });

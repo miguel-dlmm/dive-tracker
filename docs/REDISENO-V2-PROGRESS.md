@@ -4223,3 +4223,103 @@ de diferencia son un merge de la propia `v1.0.0` y un hotfix
 contenido contra `develop` es CERO (mismo resultado ya presente en
 `develop` por otra vía) — la fusión de `release/v1.1.0` sobre `main`
 en el paso 5 de arriba no debería generar ningún conflicto real.
+
+### 12.20 — Ayuda con GIFs animados: recuperada, con el bloqueo real corregido de raíz
+
+**Pedido**: "recupera el rehacer la ayuda con gifs animados. corrige lo
+que necesites para poder generar los gifs, quiero una ayuda dinámica,
+entretenida, útil, fácil de consumir, rápida de leer y de entender."
+
+**El bloqueo real de la sesión anterior (9.14) se investigó, no se dio
+por definitivo**: el piloto anterior encontró un GIF con "fantasma"/
+doble exposición, compatible con un fotograma capturado a media
+transición CSS de una `Sheet` — se aparcó tras dos intentos, sin
+descartar del todo la causa. Esta sesión, antes de reintentarlo con la
+misma técnica, se investigó la causa real: `gif_creator`
+(Claude-in-Chrome) captura estados discretos ligados a acciones
+(clics/scroll/navegación), no un vídeo continuo — si una captura cae
+justo a mitad de una transición CSS en curso (p. ej. una `Sheet`
+deslizándose hacia arriba), ese fotograma concreto puede quedar mal
+compuesto.
+
+**Corrección de raíz, no un parche sobre el síntoma**: en vez de seguir
+intentando "esperar más" entre capturas (ya probado sin éxito antes),
+se elimina la CAUSA — que exista una transición CSS en curso en el
+momento de una captura. `?captureGif=1` (nuevo, `usePrefersReducedMotion`,
+`src/motion.js`) fuerza `reduced=true` sin depender de la preferencia
+real del sistema operativo, solo bajo `npm run dev`
+(`import.meta.env.MODE === "development"`, mismo doble candado que el
+bypass de login — nunca en producción, `vite build` elimina la rama
+del bundle). Con las animaciones a duración ~0 (mismo mecanismo que ya
+usa `prefers-reduced-motion` real en toda la app), cualquier captura
+cae siempre sobre un estado ya asentado — nunca a media transición.
+
+**Verificado, no solo asumido**: pilotado primero contra el mismo flujo
+del intento anterior ("Crear un movimiento") — GIF exportado, extraídos
+sus 4 fotogramas con Pillow (sin herramientas de imagen del sistema
+disponibles: `convert`/`magick`/`ffmpeg` no instalados) y revisados uno
+a uno. Los 4, limpios. Confirmado también en el GIF más largo de los 3
+producidos (`configurar-app`, 9 fotogramas) — igual de limpio en todos.
+
+**Contenido producido**: 3 GIFs (no los 9 artículos — ver más abajo),
+grabados contra la cuenta demo real de TEST (ya confirmada presentable
+en 9.14, sin más limpieza necesaria):
+- `crear-movimiento.gif` (4 fotogramas, 294KB) — Home → "+" en
+  "Pendiente de cobrar" → curso ya precargado → Guardar → navega a Mi
+  trabajo.
+- `cobrar-movimientos.gif` (2 fotogramas, 211KB) — Mi trabajo →
+  "Confirmar cobro" en una fila pendiente → desaparece de Pendientes,
+  el total se actualiza.
+- `configurar-app.gif` (9 fotogramas, 401KB) — Configuración → Escuelas
+  → FAB → nombre + color → Guardar → aparece en la lista.
+
+**Alcance deliberado — no todos los artículos**: solo los 3 "Quiero..."
+con el flujo más básico (crear, cobrar, configurar por primera vez)
+llevan GIF — el resto de los 9 artículos de Ayuda (referencia por
+pantalla, filtros, perfil...) sigue sin ninguna imagen. Un GIF por cada
+uno de los 9 sería mucho mantenimiento (queda desactualizado en cuanto
+cambia una pantalla) para contenido que un usuario ya orientado consulta
+puntualmente, no en su primer contacto con la app.
+
+**Implementación**: campo `gif` opcional por artículo en
+`content.js` (nombre de fichero en `public/help/`, no traducible — la
+misma animación en cualquier idioma), traído hasta `HelpArticleBody.jsx`
+vía `resolveArticle()` (`HelpTab.jsx`) y renderizado como imagen de
+cabecera del artículo, decorativa (`alt=""`/`aria-hidden`, la
+información completa ya vive en "Pasos" en texto). `docs/ADR/0011-rediseno-ayuda.md`
+recibe un addendum explicando la reversión parcial de la decisión "sin
+capturas" original, sin borrar el histórico de por qué se tomó
+entonces.
+
+**Test de regresión actualizado**: `HelpTab.test.jsx` tenía un test
+guardando la decisión "sin capturas" ("ningún artículo... renderiza un
+`<img>`") — reescrito para reflejar el nuevo contrato: los 3 artículos
+con `gif` en `content.js` sí renderizan su imagen, el resto sigue sin
+ninguna.
+
+**Hallazgo real no relacionado, corregido de paso porque bloqueaba
+CUALQUIER push**: al ejecutar la suite completa, un test de
+`HomeTab.test.jsx` (sin relación con Ayuda) empezó a fallar —
+`TODAY`/`LAST_MONTH`/`earlierDay` se calculaban con
+`NOW.toISOString().slice(0, 10)`, que convierte a medianoche UTC en vez
+de usar la fecha LOCAL. En un huso con offset positivo (este entorno
+corre en Asia/Bangkok, UTC+7), entre la medianoche local y la medianoche
+UTC (~17h de cada día) esto devuelve el día ANTERIOR al que la propia
+app considera "hoy" (`todayStr()`, `shared.jsx`, que sí usa componentes
+locales). Cruzar la medianoche local a mitad de esta sesión lo expuso en
+vivo. **Mismo bug ya encontrado y corregido una vez antes** (2026-08-30,
+`SummaryTab.test.jsx`, ver la nota junto a "suma correcta en los límites
+del periodo" ahí) — esa vez solo se corrigió el test nuevo que lo
+encontró, no los `THIS_MONTH`/`LAST_MONTH` ya existentes en ese mismo
+archivo, que siguen teniendo el mismo riesgo latente (no falla hoy
+porque usan el día 10 de cada mes, lejos del borde) — señalado aquí
+como pendiente de una limpieza futura, fuera de alcance de este punto.
+Corregido en `HomeTab.test.jsx` con el mismo patrón ya establecido
+(`localDateStr`, componentes de fecha locales, nunca `toISOString`).
+
+**Verificado**: 824/824 tests (suite completa, incluidos los 2 tests
+nuevos de contrato GIF y el fix de zona horaria), lint 0 errores, build
+correcto — `dist/help/*.gif` confirmado en el build real. Confirmado en
+Chrome real: el artículo "Registrar un movimiento" muestra su GIF
+(carga diferida — `loading="lazy"`, tarda un instante en aparecer tras
+expandir, esperado), sin errores de consola.
