@@ -3034,3 +3034,59 @@ errores, build correcto. Verificado además renderizando
 (archivo temporal en `public/`, generado y borrado en el mismo paso, sin
 llegar a git): el logo se ve nítido y completo, sin paths rotos ni
 recortados.
+
+### 11.5 — Sembrar datos reales para migueldlmm@gmail.com (TEST)
+
+Retoma el quinto pendiente de la cola: "carga el usuario... con datos de
+movimientos reales de los últimos 4-5 meses y un par de meses a
+futuro... cantidades redondas... varias escuelas". Solo contra el
+Supabase TEST (`VITE_ENVIRONMENT=test`, verificado antes de ejecutar) —
+es la cuenta real del superadmin (`migueldlmm@gmail.com`), no la cuenta
+demo, así que nunca se toca nada de lo ya sembrado a mano.
+
+**Estado de partida**: la cuenta ya tenía datos reales propios — 3
+escuelas (Ihasia, Reef Divers, Taco), 24 worklog + 2 comisiones, todo
+concentrado entre 2026-08-01 y 2026-09-07 y casi todo en Ihasia (21/24).
+
+**Qué se hizo** — nuevo script puntual
+`scripts/seed-real-account-movimientos.mjs` (mismo patrón que
+`seed-fase4-datos-reales.mjs` de la cuenta demo, documentado igual como
+herramienta de desarrollo, no parte de la app real), sin borrar ni tocar
+ningún worklog/comisiones ya existente:
+- 3 meses pasados adicionales (mayo/junio/julio 2026, antes del rango ya
+  sembrado) + 2 meses futuros (octubre/noviembre 2026, "un par de
+  meses").
+- Repartido entre las 3 escuelas ya existentes (antes casi todo en
+  Ihasia) — solo sobre combinaciones escuela+actividad cuya tarifa YA es
+  una cifra redonda; se excluyen a propósito 3 tarifas de Ihasia con
+  cifras sueltas (Specialty 34, Rescue 12, curso 10 THB) que eran ruido
+  de pruebas anterior, no datos reales.
+- Futuros siempre "Pending" — no tiene sentido un curso futuro ya
+  cobrado.
+- Resultado: cobertura continua mayo→noviembre 2026 (7 meses, sin
+  huecos), 52 worklog + 11 comisiones en total, en las 3 escuelas.
+
+**Bug real encontrado y corregido en el propio desarrollo de esta
+sesión**: el primer cálculo de "meses pasados adicionales" tenía un
+error de desfase de un mes — `currentMonth - [3,2,1]` caía en
+junio/julio/AGOSTO en vez de mayo/junio/julio, duplicando el mes de
+agosto (que ya tenía datos reales). Detectado antes de dar el paso por
+bueno (verificando los meses cubiertos tras la primera ejecución, no
+asumiendo que el script era correcto), revertido con un `DELETE` acotado
+por `created_at` de los últimos 5 minutos (los 35 registros recién
+insertados, ninguno de los originales, verificado por recuento antes/
+después: 24/2 exactos de vuelta), corregido el desfase (`currentMonth -
+[4,3,2]`) y reejecutado.
+
+**Verificado**: recuento de meses cubiertos por `worklog.date` (mayo a
+noviembre, sin huecos), reparto por escuela (Ihasia/Taco/Reef Divers,
+ya no solo Ihasia), e importe = tarifa × personas para cada fila nueva
+(todos números redondos, ninguna cifra con decimales) — consultado
+directamente contra Supabase TEST con el service role, no asumido.
+Todos los meses futuros (octubre/noviembre) confirmados "Pending". No
+verificado en el navegador: esta es la cuenta real del superadmin, no
+la cuenta demo que usa el bypass de login de desarrollo
+(`VITE_DEV_DEMO_EMAIL`), así que no hay forma de iniciar sesión como
+ella en este entorno sin su contraseña real — la verificación se apoya
+en las consultas directas a la base de datos, no en captura de
+pantalla.
