@@ -980,3 +980,82 @@ Un movimiento de prueba creado para verificar el caso extremo de
 importe largo se eliminó después de confirmar el fix, dejando los datos
 de la cuenta demo como estaban. Sin errores de consola en ningún punto
 del recorrido.
+
+## Fase 6 — Colores de avatar, tipos consolidados y más datos de prueba (2026-09-07)
+
+**Estado: ✅ cerrada — 3 encargos, verificados en Chrome (lint 0
+errores, 754/754 tests, build correcto).**
+
+### 6.1 — Paleta de avatar integrada con la de la app
+
+La paleta de colores de avatar (`AVATAR_COLORS`, `avatarCatalog.js`)
+era un vocabulario propio (NAVY/TEAL/AQUA/CORAL/GREEN/SUN, el previo al
+rediseño) sin relación con `ENTITY_COLOR_PALETTE` (Fase 5) ni con la
+paleta de marca — pedido explícito: "que integren con la paleta de
+colores de la app" + "que esté disponible en blanco también".
+`AVATAR_COLORS` pasa a derivar de `ENTITY_COLOR_PALETTE` (movida de
+`shared.jsx` a `colors.js` para evitar un ciclo de imports:
+`shared.jsx` ya importa de `avatarCatalog.js`, así que la paleta
+compartida tiene que vivir en un archivo sin imports propios, igual
+criterio que el resto de `colors.js`).
+
+Blanco necesitó tratamiento especial en dos sitios que antes asumían un
+color "normal": `Avatar` (shared.jsx) pintaba el icono del color exacto
+sobre un fondo tintado al 10% de ese mismo color — blanco sobre
+blanco-casi-invisible sería directamente invisible; ahora blanco lleva
+fondo sólido + borde gris + icono en un neutro oscuro. El selector de
+color del propio picker (ProfileTab.jsx) tenía el mismo problema con el
+check de selección (blanco fijo, invisible sobre un swatch blanco) —
+mismo criterio de excepción que `ColorSwatchPicker`.
+
+### 6.2 — Colores/iconos de tipo (Curso/Comisión/Ajuste) unificados de verdad
+
+Auditoría pedida explícitamente ("que se muestren igual por toda la
+app cuando se usen los tipos"): los COLORES ya eran consistentes
+(HomeTab/RatesTab/SummaryTab/MiTrabajoTab ya leían de
+`MOVEMENT_TYPE_META`, la única fuente), pero los ICONOS no — `RatesTab.jsx`
+y `MovementSheet.jsx` mantenían cada uno su propia copia de
+`CREATE_TYPES` (GraduationCap/Handshake para Curso/Comisión, ya
+coincidentes) y un desvío real para Ajuste: `MOVEMENT_TYPE_META`
+(añadido en la Fase 5) usaba `ArrowLeftRight`, mientras que
+`MovementSheet.jsx` — el sitio donde el usuario elige el tipo al crear
+un movimiento — llevaba tiempo usando `Users`. `MOVEMENT_TYPE_META.companeros.icon`
+pasa a `Users` (alineado con el uso real, no al revés) y las tres copias
+de `CREATE_TYPES`/iconos sueltos en `RatesTab.jsx` y `MovementSheet.jsx`
+se retiran — ambos derivan del mismo `MOVEMENT_TYPE_META`/`TYPE_META`
+ahora, ninguno puede volver a desincronizarse en silencio.
+
+### 6.3 — Más datos de prueba (TEST): meses pasados, actual y futuros
+
+Auditoría antes de sembrar (pedido explícito: "cifras redondas fáciles
+de cuadrar para meses pasados, actuales y futuros"): septiembre 2026
+(el mes ACTUAL) tenía bastante menos volumen que junio-agosto y CERO
+comisiones; Pagos de compañeros (Ajuste) solo existía en junio-agosto,
+con decimales aleatorios (76.96, -31.2...) sembrados en una sesión
+anterior — lo opuesto de "cifras redondas". Nuevo script puntual
+`scripts/seed-fase6-mas-movimientos.mjs` (no toca ni borra nada
+existente, solo añade filas nuevas con cifras redondas):
+refuerzo de septiembre (worklog+comisiones a la altura de junio-agosto),
+Pagos de compañeros en marzo/abril/mayo/septiembre/octubre/noviembre/
+diciembre (antes solo en junio-agosto), y enero-febrero de 2026 y 2027
+(pasado y futuro más profundos, cruzando el límite de año). Resultado:
+worklog/comisiones/pagos con datos en los 12 meses de 2026 completos
+más enero-febrero de 2027.
+
+**Regresión real encontrada y corregida durante la verificación**: con
+el pendiente de cobro creciendo por encima de 100.000 ฿, la cifra del
+KPI "Pendiente de cobrar" (Mi trabajo) volvía a truncarse pese al ajuste
+de la Fase 5 — un importe de 6 cifras con decimales y símbolo de moneda
+seguía sin caber en `text-base` dentro de una columna de KPI de 1/3 de
+ancho. `MoneyKpiTile` gana un tamaño de fuente que responde a la
+longitud real del importe formateado (`text-base`/`text-sm`/`text-xs`
+según corte, en vez de un tamaño fijo que confiaba en `truncate` como
+primera línea de defensa) — verificado con el caso real de "117.477,40
+฿", que ya se lee completo.
+
+**Verificación**: recorrido real en Chrome — avatar en blanco (icono
+oscuro visible, sin invisibilidad blanco-sobre-blanco), tipo "Curso"/
+"Comisión"/"Ajuste" con el mismo icono en Tarifas y en el selector de
+Mi trabajo/Home, calendario y listado con los nuevos meses (incluida
+2027-02, cruzando el año), KPI de importe largo legible sin cortes. Sin
+errores de consola en ningún punto.

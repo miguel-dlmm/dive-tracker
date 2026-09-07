@@ -7,7 +7,8 @@ import {
   Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2,
 } from "lucide-react";
 import { GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle, ColorSwatchPicker, ENTITY_COLOR_PALETTE, useFloatingDropdown, FloatingPanel } from "./shared";
+import { ENTITY_COLOR_PALETTE } from "./colors";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle, ColorSwatchPicker, useFloatingDropdown, FloatingPanel } from "./shared";
 import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
 import i18n from "./i18n";

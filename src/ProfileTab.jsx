@@ -167,23 +167,36 @@ function AvatarPicker({ profile, onProfileUpdated }) {
       {open && (
         <div className="w-full space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
           <div className="flex flex-wrap justify-center gap-2">
-            {AVATAR_COLORS.map((c) => (
-              <button
-                key={c.name}
-                onClick={() => setDraftColor(c.value)}
-                aria-label={t("avatar.colorLabel", { name: c.name })}
-                aria-pressed={draftColor === c.value}
-                disabled={saving}
-                className="flex min-h-11 min-w-11 items-center justify-center rounded-full disabled:opacity-50"
-              >
-                <span
-                  className="flex h-8 w-8 items-center justify-center rounded-full"
-                  style={{ backgroundColor: c.value, outline: draftColor === c.value ? `2px solid ${BRAND_NAVY}` : "none", outlineOffset: 2 }}
+            {/* Blanco necesita su propio tratamiento (borde siempre
+                visible + check en navy, no blanco-sobre-blanco) — mismo
+                criterio que ColorSwatchPicker (shared.jsx), misma paleta
+                de origen (ENTITY_COLOR_PALETTE). */}
+            {AVATAR_COLORS.map((c) => {
+              const isWhite = c.value.toLowerCase() === "#ffffff";
+              const needsNavyCheck = ["#ffffff", "#d97706"].includes(c.value.toLowerCase());
+              return (
+                <button
+                  key={c.name}
+                  onClick={() => setDraftColor(c.value)}
+                  aria-label={t("avatar.colorLabel", { name: c.name })}
+                  aria-pressed={draftColor === c.value}
+                  disabled={saving}
+                  className="flex min-h-11 min-w-11 items-center justify-center rounded-full disabled:opacity-50"
                 >
-                  {draftColor === c.value && <Check size={14} className="text-white" aria-hidden="true" />}
-                </span>
-              </button>
-            ))}
+                  <span
+                    className="flex h-8 w-8 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor: c.value,
+                      border: isWhite ? "1.5px solid #D1D5DB" : "none",
+                      outline: draftColor === c.value ? `2px solid ${BRAND_NAVY}` : "none",
+                      outlineOffset: 2,
+                    }}
+                  >
+                    {draftColor === c.value && <Check size={14} style={{ color: needsNavyCheck ? BRAND_NAVY : "white" }} aria-hidden="true" />}
+                  </span>
+                </button>
+              );
+            })}
           </div>
           <IconCarousel
             icons={AVATAR_ICONS} value={draftIcon} onChange={setDraftIcon} color={draftColor} disabled={saving}

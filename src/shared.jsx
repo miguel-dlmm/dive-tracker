@@ -2,11 +2,11 @@ import { useState, useRef, useEffect, useMemo, useCallback, createContext, useCo
 import { useTranslation, withTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, Waves, Anchor, Sailboat, Compass, Fish, GraduationCap, Handshake, ArrowLeftRight } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, Waves, Anchor, Sailboat, Compass, Fish, GraduationCap, Handshake, Users } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
-import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./colors";
+import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY, ENTITY_COLOR_PALETTE } from "./colors";
 import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, monthSlideVariants, usePrefersReducedMotion, useSwipeHorizontal } from "./motion";
 import { AVATAR_ICON_MAP } from "./avatarCatalog";
 
@@ -208,14 +208,25 @@ export const ErrorBoundary = withTranslation("common")(ErrorBoundaryBase);
 // helper que usa el resto de la app, nunca un lookup propio (antes
 // duplicaba la resolución con `import * as Icons`, ver LOADING_ICONS
 // más arriba para el porqué de quitarlo).
+// Blanco necesita su propio tratamiento (2026-09-07, "blanco también" en
+// la paleta de avatar): el fondo tintado (`${color}1A`) es prácticamente
+// invisible en blanco sobre el fondo casi-blanco de la app, y un icono
+// blanco encima sería directamente invisible — mismo criterio que
+// ColorSwatchPicker (borde gris siempre visible, icono en un neutro
+// oscuro en vez del color literal).
 export function Avatar({ icon, color = BRAND_NAVY, size = 36 }) {
   const Icon = AVATAR_ICON_MAP[icon] || AVATAR_ICON_MAP.Fish;
+  const isWhite = color?.toLowerCase() === "#ffffff";
   return (
     <span
       className="inline-flex shrink-0 items-center justify-center rounded-full"
-      style={{ width: size, height: size, backgroundColor: `${color}1A` }}
+      style={{
+        width: size, height: size,
+        backgroundColor: isWhite ? "#FFFFFF" : `${color}1A`,
+        border: isWhite ? "1.5px solid #D1D5DB" : "none",
+      }}
     >
-      <Icon size={Math.round(size * 0.55)} style={{ color }} aria-hidden="true" />
+      <Icon size={Math.round(size * 0.55)} style={{ color: isWhite ? "#475569" : color }} aria-hidden="true" />
     </span>
   );
 }
@@ -1004,11 +1015,19 @@ const CAL_NEUTRAL = "#94A3B8";
 // reconocer el tipo de movimiento, ahora es esa franja vertical finita a
 // la izquierda") — sustituye el borde de acento de EntryRow (MiTrabajoTab)
 // por una chip circular icono+color, mismo lenguaje visual que los KPI y
-// los campos de fecha de esta misma ronda de rediseño.
+// los campos de fecha de esta misma ronda de rediseño. Los tres iconos
+// NO son una elección nueva: GraduationCap/Handshake/Users ya eran el
+// `CREATE_TYPES` del selector de tipo de RatesTab.jsx y MovementSheet.jsx
+// desde antes — dos copias sueltas del mismo vocabulario, con un desvío
+// real entre ellas (esta tabla usaba ArrowLeftRight para Ajuste hasta
+// verificar contra las otras dos y encontrar que ya usaban Users). Ahora
+// es la única fuente: RatesTab.jsx/MovementSheet.jsx derivan su propio
+// `CREATE_TYPES` de aquí en vez de mantener su lista aparte (pedido
+// explícito: "que se muestren igual por toda la app").
 export const MOVEMENT_TYPE_META = {
   ganado: { label: "Curso", color: TEAL, icon: GraduationCap },
   comision: { label: "Comisión", color: SUN, icon: Handshake },
-  companeros: { label: "Ajuste", color: CAL_NEUTRAL, icon: ArrowLeftRight },
+  companeros: { label: "Ajuste", color: CAL_NEUTRAL, icon: Users },
 };
 
 // Mini calendario del mes — el día con actividad lleva un anillo de color;
@@ -2113,29 +2132,12 @@ export function colorFor(rows, name, fallback = "#6B7280") {
   return rows.find((r) => r.name === name)?.color || fallback;
 }
 
-// Paleta curada para el color de una entidad de negocio (escuela, curso...)
-// — 2026-09-07, decisión explícita del usuario tras plantearse quitar del
-// todo la personalización de color: el selector anterior era un
-// `<input type="color">` nativo, sin ninguna restricción (se encontró un
-// caso real en datos de prueba: una escuela en negro puro, #000000). El
-// color de entidad sigue siendo real información (distingue escuelas/
-// cursos de un vistazo en listas y calendarios, convención #2 de
-// CLAUDE.md — no es solo decoración), así que no se elimina; en vez de
-// abrir la puerta a cualquier hex, se acota a una rejilla de swatches ya
-// elegidos, todos con contraste suficiente sobre blanco y sin pisar
-// ninguno de los colores semánticos de la propia app (CORAL/SUN/GREEN,
-// "esto es un estado" — ver docs/DESIGN-SYSTEM.md §3.4), los de marca
-// (BRAND_NAVY/BRAND_SKY, "esto es la propia app") NI el TEAL de "Curso"
-// en MOVEMENT_TYPE_META (más arriba en este archivo) — encontrado al
-// verificar en el navegador: un cyan (#0891B2, ni TEAL ni BRAND_SKY)
-// sustituye a un verde-azulado más cercano a ese TEAL que se probó
-// primero, para que el color de una escuela nunca se confunda con el
-// icono de tipo "Curso" de sus propios movimientos. Incluye negro y
-// blanco a petición expresa del usuario.
-export const ENTITY_COLOR_PALETTE = [
-  "#000000", "#FFFFFF", "#475569", "#DC2626", "#EA580C", "#D97706",
-  "#16A34A", "#0891B2", "#0284C7", "#4F46E5", "#9333EA", "#DB2777",
-];
+// ENTITY_COLOR_PALETTE vive en colors.js, no aquí — la reutiliza también
+// avatarCatalog.js (colores de avatar "integrados con la paleta de la
+// app", pedido explícito 2026-09-07) y shared.jsx ya importa de
+// avatarCatalog.js (AVATAR_ICON_MAP): declararla en shared.jsx crearía el
+// mismo ciclo de imports que colors.js existe para evitar (ver la nota
+// de cabecera de ese archivo).
 
 // Selector de color de entidad — rejilla de swatches tocables en vez del
 // `<input type="color">` nativo (rueda de color sin restricción alguna).

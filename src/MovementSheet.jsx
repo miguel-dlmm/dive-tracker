@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { Plus, Minus, X, Check, Loader2, StickyNote, GraduationCap, Handshake, Users } from "lucide-react";
+import { Plus, Minus, X, Check, Loader2, StickyNote } from "lucide-react";
 import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./App";
 import {
   inputCls, formatMoney, Field, Select, MoneyInput,
-  DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency,
+  DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency, MOVEMENT_TYPE_META,
 } from "./shared";
 import { DURATION, sheetVariants, usePrefersReducedMotion } from "./motion";
 import { computeRateTotal, buildActivityEntries } from "./rateCalc";
@@ -18,10 +18,17 @@ import { computeRateTotal, buildActivityEntries } from "./rateCalc";
 // cambia según quién lo abra, solo qué pasa después de guardar (eso lo
 // decide `onSaved`, no este componente).
 // label se resuelve en render vía t(`createTypes.${key}`) (namespace "trabajo").
+// icon: deriva de MOVEMENT_TYPE_META (shared.jsx), no una copia propia —
+// esta lista y la de RatesTab.jsx (CREATE_TYPES ahí también) llegaron a
+// desincronizarse en el pasado (Ajuste con un icono distinto en cada
+// sitio) por mantenerse por separado, ver la nota junto a
+// MOVEMENT_TYPE_META. GraduationCap se eligió en su día por ser "más
+// reconocible a tamaño pequeño que un icono náutico genérico" — el
+// criterio se mantiene, solo cambia dónde vive la elección.
 const CREATE_TYPES = [
-  { key: "ganado", icon: GraduationCap }, // formación/certificación — más reconocible a tamaño pequeño que un icono náutico genérico
-  { key: "comision", icon: Handshake },
-  { key: "companeros", icon: Users },
+  { key: "ganado", icon: MOVEMENT_TYPE_META.ganado.icon },
+  { key: "comision", icon: MOVEMENT_TYPE_META.comision.icon },
+  { key: "companeros", icon: MOVEMENT_TYPE_META.companeros.icon },
 ];
 
 // Mismo cálculo que rowAccent en MiTrabajoTab, pero pensado para el

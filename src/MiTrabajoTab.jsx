@@ -1,10 +1,10 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2, HelpCircle, ArrowLeftRight } from "lucide-react";
+import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2, HelpCircle, Users } from "lucide-react";
 import { motion } from "motion/react";
 import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./App";
 import {
-  Money, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
+  Money, formatMoney, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
   isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab, EntryTitle,
   useFloatingDropdown, FloatingPanel,
 } from "./shared";
@@ -69,7 +69,7 @@ function rowAccent(entry, amountColor) {
 }
 
 function TypeIconChip({ source, color }) {
-  const Icon = MOVEMENT_TYPE_META[source]?.icon || ArrowLeftRight;
+  const Icon = MOVEMENT_TYPE_META[source]?.icon || Users;
   return (
     <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
       <Icon size={17} style={{ color }} aria-hidden="true" />
@@ -341,23 +341,31 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
   const entries = Object.entries(totals || {});
   const single = entries.length === 1 ? entries[0] : null;
   const animatedCents = useCountUp(single ? Math.round(single[1] * 100) : 0, { reduced });
+  // El tamaño de la cifra se reduce con su longitud en vez de quedarse fijo
+  // en text-base (bug real encontrado al sembrar más datos de prueba: un
+  // total de 6 cifras como "117.477,09 ฿" seguía truncándose incluso ya
+  // con el ajuste anterior) — varias monedas a la vez (entries.length > 1,
+  // unidas con " + ") son siempre largas, van directas al tamaño más
+  // pequeño sin necesidad de medir. `truncate` se queda como red de
+  // seguridad para el caso extremo que ni el tamaño más pequeño evite,
+  // nunca como primera línea de defensa.
+  const singleText = single ? formatMoney(single[1], single[0], currencyRows) : "";
+  const amountSizeCls = !single ? "text-xs" : singleText.length > 13 ? "text-xs" : singleText.length > 9 ? "text-sm" : "text-base";
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
       className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-2.5 py-3"
     >
-      {/* Icono a 28px (no los 32px de KpiTile en Home) y cifra en text-base
-          (no text-lg): un importe con separador de miles y símbolo de
-          moneda ("75.828,40 ฿") es mucho más largo que el 1-2 dígitos de
-          un KPI simple — a 32px+text-lg se truncaba de verdad (regresión
-          real encontrada al verificar en el navegador), perdiendo la
-          cifra completa, justo lo que "más presencia" no debía costar. */}
+      {/* Icono a 28px (no los 32px de KpiTile en Home): un importe con
+          separador de miles y símbolo de moneda es mucho más largo que el
+          1-2 dígitos de un KPI simple. La cifra misma ya no tiene un
+          tamaño fijo, ver amountSizeCls arriba. */}
       <div className="flex items-center gap-1.5">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
           <Icon size={16} style={{ color }} aria-hidden="true" />
         </span>
-        <span className="min-w-0 truncate text-base font-bold tabular-nums" style={{ color: BRAND_NAVY }}>
+        <span className={`min-w-0 truncate ${amountSizeCls} font-bold tabular-nums`} style={{ color: BRAND_NAVY }}>
           {entries.length === 0 ? "—" : single ? (
             <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
           ) : (

@@ -30,3 +30,22 @@ export const BG = "#F7F8F8";
 export const BRAND_NAVY = "#00335A";
 export const BRAND_SKY = "#81ADD0";
 export const BRAND_INK = "#191919";
+
+// Paleta curada compartida por dos selectores de color distintos —
+// entidad de negocio (escuela/curso, ColorSwatchPicker en shared.jsx) y
+// avatar de perfil (avatarCatalog.js) — 2026-09-07. Vive aquí, no en
+// shared.jsx, por el mismo motivo que el resto de este archivo:
+// shared.jsx importa de avatarCatalog.js (AVATAR_ICON_MAP) y
+// avatarCatalog.js necesita esta misma paleta ("que los colores del
+// avatar integren con la paleta de la app", pedido explícito) — ponerla
+// en shared.jsx recrearía el ciclo de imports que este archivo existe
+// para evitar. Evita deliberadamente los 3 colores semánticos de estado
+// (CORAL/SUN/GREEN, "esto es un estado"), los 2 de marca (BRAND_NAVY/
+// BRAND_SKY, "esto es la propia app") y el TEAL de "Curso" en
+// MOVEMENT_TYPE_META ("esto es un tipo de movimiento") — ninguno de los
+// tres vocabularios de color ya existentes se pisa. Incluye negro y
+// blanco a petición expresa del usuario.
+export const ENTITY_COLOR_PALETTE = [
+  "#000000", "#FFFFFF", "#475569", "#DC2626", "#EA580C", "#D97706",
+  "#16A34A", "#0891B2", "#0284C7", "#4F46E5", "#9333EA", "#DB2777",
+];

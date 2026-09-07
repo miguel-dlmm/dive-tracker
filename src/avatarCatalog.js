@@ -1,5 +1,5 @@
 import { Fish, FishSymbol, Turtle, Shrimp, Snail, Shell, Anchor, Compass, LifeBuoy, Sailboat, ShipWheel, Bubbles, TreePalm, Droplets } from "lucide-react";
-import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN } from "./colors";
+import { ENTITY_COLOR_PALETTE } from "./colors";
 
 // Catálogo cerrado de avatares (Bloque 5, ampliado 2026-09-06 dentro del
 // rediseño — ver docs/DESIGN-SYSTEM.md §7) — mismo criterio que el icono de
@@ -42,14 +42,18 @@ export const AVATAR_ICONS = [
   { name: "Droplets", Icon: Droplets },
 ];
 
-export const AVATAR_COLORS = [
-  { name: "navy", value: NAVY },
-  { name: "teal", value: TEAL },
-  { name: "aqua", value: AQUA },
-  { name: "coral", value: CORAL },
-  { name: "green", value: GREEN },
-  { name: "sun", value: SUN },
-];
+// Antes una paleta propia (NAVY/TEAL/AQUA/CORAL/GREEN/SUN, el vocabulario
+// PRE-rediseño) sin relación con la paleta de marca nueva ni con la de
+// entidad de negocio — dos vocabularios de color en la misma app. Ahora
+// reutiliza ENTITY_COLOR_PALETTE (colors.js), la misma paleta curada de
+// escuelas/cursos — 2026-09-07, pedido explícito: "que integren con la
+// paleta de colores de la app" + "que esté disponible en blanco también"
+// (ya lo estaba en ENTITY_COLOR_PALETTE, así que llega gratis al
+// reutilizarla). Nombres en español, no los nombres técnicos Tailwind de
+// la paleta base — son los que puede leer un lector de pantalla al
+// elegir avatar.
+const AVATAR_COLOR_NAMES = ["negro", "blanco", "pizarra", "rojo", "naranja", "ámbar", "verde", "cian", "azul", "índigo", "morado", "rosa"];
+export const AVATAR_COLORS = ENTITY_COLOR_PALETTE.map((value, i) => ({ name: AVATAR_COLOR_NAMES[i], value }));
 
 // Mapa plano nombre→componente, derivado de AVATAR_ICONS — expuesto aparte
 // (no solo la función de abajo) porque `react-hooks/static-components`

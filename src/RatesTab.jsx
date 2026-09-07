@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, Check, X, Search, SlidersHorizontal, GraduationCap, Handshake, Eye, EyeOff } from "lucide-react";
+import { Plus, Check, X, Search, SlidersHorizontal, Eye, EyeOff } from "lucide-react";
 import { BRAND_NAVY, TEAL } from "./App";
 import {
   inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, MoneyInput,
@@ -41,9 +41,15 @@ const TYPE_META = { ganado: MOVEMENT_TYPE_META.ganado, comision: MOVEMENT_TYPE_M
 // aplicado en MiTrabajoTab.jsx.
 const TYPE_OPTIONS = ["Curso", "Comisión"];
 const TYPE_KEY = { "Curso": "ganado", "Comisión": "comision" };
+// CREATE_TYPES ya no repite su propio icono por tipo (GraduationCap/
+// Handshake hardcodeados aquí, 2026-09-07: encontrado un desvío real
+// frente a MOVEMENT_TYPE_META.companeros, que usaba un icono distinto al
+// de MovementSheet.jsx pese a significar lo mismo) — deriva de TYPE_META,
+// la misma fuente de color, para que el icono de "Curso"/"Comisión" no
+// pueda desincronizarse de MOVEMENT_TYPE_META en ningún sitio de la app.
 const CREATE_TYPES = [
-  { key: "ganado", icon: GraduationCap },
-  { key: "comision", icon: Handshake },
+  { key: "ganado", icon: TYPE_META.ganado.icon },
+  { key: "comision", icon: TYPE_META.comision.icon },
 ];
 
 // schools / activities / currencies: { rows: [...] } — de useSupabaseTable
@@ -253,6 +259,7 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
   };
 
   const sheetTypeColor = TYPE_META[creating]?.color || BRAND_NAVY;
+  const SheetTypeIcon = TYPE_META[creating]?.icon || CREATE_TYPES[0].icon;
 
   return (
     <div className="relative space-y-4 pb-16">
@@ -399,7 +406,7 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
         <div className="mb-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: lighten(sheetTypeColor) }}>
-              {creating === "ganado" ? <GraduationCap size={14} style={{ color: sheetTypeColor }} aria-hidden="true" /> : <Handshake size={14} style={{ color: sheetTypeColor }} aria-hidden="true" />}
+              <SheetTypeIcon size={14} style={{ color: sheetTypeColor }} aria-hidden="true" />
             </span>
             {/* Sin subtítulo de fecha aquí (una vuelta anterior la puso al
                 retirarla del listado) — la fecha de alta ha vuelto al

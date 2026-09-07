@@ -76,13 +76,13 @@ describe("avatar", () => {
     await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
     await user.click(screen.getByRole("button", { name: "Icono Fish" }));
     await user.click(screen.getByRole("button", { name: "Icono Turtle" }));
-    await user.click(screen.getByRole("button", { name: "Color teal" }));
+    await user.click(screen.getByRole("button", { name: "Color rojo" }));
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(update).toHaveBeenCalledTimes(1);
-    expect(update).toHaveBeenCalledWith({ avatar_icon: "Turtle", avatar_color: "#0F766E" });
+    expect(update).toHaveBeenCalledWith({ avatar_icon: "Turtle", avatar_color: "#DC2626" });
     expect(eq).toHaveBeenCalledWith("user_id", "u1");
-    expect(onProfileUpdated).toHaveBeenCalledWith({ avatar_icon: "Turtle", avatar_color: "#0F766E" });
+    expect(onProfileUpdated).toHaveBeenCalledWith({ avatar_icon: "Turtle", avatar_color: "#DC2626" });
   });
 
   it("Cancelar descarta la selección probada y no guarda nada", async () => {

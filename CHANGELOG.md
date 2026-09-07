@@ -21,6 +21,12 @@ Registro de cambios relevantes de Ocean Flow.
   funcionando.
 
 ### Changed
+- **Color de avatar**: la misma paleta curada de 12 colores que escuelas/
+  cursos (incluye blanco), en vez de una paleta propia sin relación con
+  el resto de la app.
+- **Curso/Comisión/Ajuste**: el mismo icono por tipo en cualquier sitio
+  donde aparezca (Tarifas, Mi trabajo, Home) — antes "Ajuste" podía
+  mostrar un icono distinto según la pantalla.
 - **Color de escuelas y cursos**: ya se elige de una paleta de 12 colores
   ya pensados para quedar bien con el resto de la app (incluye blanco y
   negro), en vez de un selector de color libre sin ninguna restricción.
@@ -104,6 +110,9 @@ Registro de cambios relevantes de Ocean Flow.
   trabajo que nunca llegaba a pintarse en la práctica.
 
 ### Fixed
+- El KPI "Pendiente de cobrar" (Mi trabajo) podía seguir cortando la
+  cifra con importes de 6 cifras — el tamaño de letra ya se ajusta a lo
+  largo que sea el número.
 - (Interno, Training Records) La exportación a JPG podía fallar con un
   error genérico sin ninguna pista de la causa real si la conversión a
   imagen fallaba a mitad — ahora el mensaje dice en qué paso exacto.
