@@ -162,6 +162,9 @@ Registro de cambios relevantes de Ocean Flow.
 - Mi trabajo: los KPIs con una cifra muy larga ya no se salen del
   cuadro en móvil — ahora la cifra puede partirse en dos líneas también
   cuando es un único número sin espacios.
+- El calendario de Home/Resumen ahora se alinea justo debajo de la
+  cabecera al tocar un día, en vez de centrar el día pulsado en medio
+  de la pantalla — se ve el mes completo y el detalle debajo.
 - **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
   real** — "Setting up fake worker failed". Causa confirmada leyendo el
   código fuente de pdfjs-dist: en su modo de reserva "fake worker",

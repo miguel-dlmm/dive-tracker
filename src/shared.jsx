@@ -1180,20 +1180,21 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   // tiempo que ni siquiera es constante, nunca iba a ser fiable.
   //
   // Este tercer intento no espera a NADA: se desplaza en el propio
-  // manejador de clic (más abajo, `handleClick`), usando la posición del
-  // BOTÓN DEL DÍA pulsado — un elemento que no cambia de tamaño ni anima,
-  // así que su posición se conoce con certeza en el mismo instante del
-  // clic, sin depender de cuándo (ni de si) el panel de debajo termina de
-  // crecer. `scrollIntoView({ block: "center" })` centra el día pulsado
-  // en la pantalla, dejando sitio de sobra debajo para el panel
-  // (cualquiera que sea su altura final) sin necesidad de medirlo.
+  // manejador de clic (más abajo, `handleClick`), usando la posición de
+  // un elemento que no cambia de tamaño ni anima, así que su posición se
+  // conoce con certeza en el mismo instante del clic, sin depender de
+  // cuándo (ni de si) el panel de debajo termina de crecer.
   // `behavior: "auto"` (nunca "smooth") a propósito — hallazgo real de
   // una ronda anterior: `behavior: "smooth"` (por `scrollIntoView` o por
   // `scrollTo`, da igual la API) no desplazaba la página EN ABSOLUTO en
   // este entorno de pruebas, verificado con la consola — sospecha
   // razonable de que el mismo tipo de opción falla también en Safari
   // real. Instantáneo es peor cosméticamente pero es la única opción
-  // verificada como fiable.
+  // verificada como fiable. (Cuarto ajuste, mismo día: qué elemento se
+  // usa como referencia y a qué posición se lleva cambió — ver el
+  // comentario junto a `handleClick` más abajo — pero el principio de
+  // fondo de este bloque, "medir en el clic, no esperar a nada", sigue
+  // siendo el mismo.)
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
 
@@ -1319,12 +1320,13 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   // gestos animen igual (antes solo cambiaba el mes al instante, sin
   // transición, la única navegación de la app que "saltaba").
   const [monthDirection, setMonthDirection] = useState(1);
+  const containerRef = useRef(null);
   const goPrevMonth = () => { setMonthDirection(-1); onPrevMonth?.(); };
   const goNextMonth = () => { setMonthDirection(1); onNextMonth?.(); };
   const swipeMonthProps = useSwipeHorizontal({ onSwipeLeft: goNextMonth, onSwipeRight: goPrevMonth, enabled: !!(onPrevMonth || onNextMonth) });
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4" {...swipeMonthProps}>
+    <div ref={containerRef} className="rounded-lg border border-gray-200 bg-white p-4" {...swipeMonthProps}>
       {/* Encima de los días de la semana, dentro de la propia tarjeta —
           antes vivía como un párrafo aparte debajo de todo el calendario
           (feedback 2026-08-30: se leía como una nota a pie de página, no
@@ -1393,22 +1395,39 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           // dateStr/todayStr que usa el resto de la app, no una comparación
           // de Date() propia — cero riesgo de desajuste de huso horario.
           const isToday = d && dateStr === todayStr();
-          const handleClick = (e) => {
+          const handleClick = () => {
             if (hasActivity) {
               const opening = !isSelected;
               setSelectedDay(isSelected ? null : d);
-              // Ver el comentario largo más arriba (scrollDetailIntoView) —
-              // se desplaza en el propio clic, con la posición del botón
-              // pulsado, nunca esperando a que el panel de debajo termine
-              // de animarse. Solo al ABRIR (nunca al cerrar) y solo si el
-              // día no estaba ya seleccionado — cambiar de un día a otro
-              // con el panel ya abierto no necesita desplazar nada, el
-              // contenido ya está a la vista.
-              // Encadenado opcional: jsdom (tests) no implementa
-              // scrollIntoView en absoluto (a diferencia de scrollTo, que
-              // sí existe ahí como no-op) — sin esto, cualquier test que
-              // pulse un día con actividad revienta con un TypeError real.
-              if (opening) e.currentTarget.scrollIntoView?.({ behavior: "auto", block: "center" });
+              // Ver el comentario largo más arriba — se desplaza en el
+              // propio clic, nunca esperando a que el panel de debajo
+              // termine de animarse. Solo al ABRIR (nunca al cerrar) y
+              // solo si el día no estaba ya seleccionado — cambiar de un
+              // día a otro con el panel ya abierto no necesita desplazar
+              // nada, el contenido ya está a la vista.
+              //
+              // Cuarto ajuste de este mecanismo (2026-09-07, pedido
+              // explícito tras el tercero: "el calendario estará alineado
+              // con la parte superior de la pantalla, justo debajo de la
+              // cabecera con algo de aire"). Antes `scrollIntoView({block:
+              // "center"})` centraba el DÍA pulsado en el viewport; ahora
+              // se calcula manualmente cuánto desplazar para que la
+              // TARJETA del calendario entera (`containerRef`, no el día
+              // suelto) quede pegada justo debajo de la cabecera fija
+              // (`<header>`, `sticky top-0` en App.jsx) con un margen
+              // pequeño — así se ve el mes completo (contexto) y el
+              // detalle del día debajo, en vez de centrar el día en medio
+              // de la pantalla. Se mide la cabecera real con
+              // `getBoundingClientRect()` en vez de asumir su altura a
+              // mano (varía con `env(safe-area-inset-top)` según el
+              // dispositivo) — mismo criterio que `useFloatingPosition`
+              // (más abajo en este archivo) de medir antes que adivinar.
+              if (opening) {
+                const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+                const gap = 12;
+                const rect = containerRef.current?.getBoundingClientRect();
+                if (rect) window.scrollBy({ top: rect.top - headerBottom - gap, behavior: "auto" });
+              }
             } else if (creatable) onCreateForDay(dateStr);
           };
           return (

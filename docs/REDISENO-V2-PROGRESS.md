@@ -2693,3 +2693,34 @@ clase puesta. No es una suposición: es el mismo mecanismo reproducido y
 medido. Test nuevo en `MiTrabajoTab.test.jsx` que comprueba la clase
 `break-words` en el importe. 795/795 tests, lint sin errores nuevos,
 build correcto.
+
+### 10.14 — Calendario Home/Resumen: alinear bajo la cabecera en vez de centrar el día
+
+Cuarto ajuste sobre este mismo mecanismo (retoma 9.7/9.15/10.4): "al
+hacer click en un día, el calendario estará alineado con la parte
+superior de la pantalla, justo debajo de la cabecera con algo de aire".
+El criterio anterior (`scrollIntoView({block:"center"})` sobre el BOTÓN
+del día) centraba el día pulsado en el viewport; el nuevo pedido es
+distinto — ver el mes completo (contexto) pegado justo debajo de la
+cabecera fija, con el detalle del día apareciendo debajo, en vez de que
+el día pulsado quede en medio de la pantalla.
+
+Se calcula manualmente cuánto desplazar (`window.scrollBy`) para que el
+contenedor del calendario entero (`containerRef`, no el día suelto)
+quede justo debajo de `<header>` con un margen de 12px. La altura real
+de la cabecera se MIDE con `getBoundingClientRect()` en el instante del
+clic (mismo criterio que `useFloatingPosition` — medir, no asumir un
+número fijo), porque varía con `env(safe-area-inset-top)` según el
+dispositivo (notch o no). Se mantiene `behavior: "auto"` (nunca
+"smooth", hallazgo ya documentado de que "smooth" no desplaza nada en
+este entorno de pruebas).
+
+**Verificación**: 795/795 tests, lint sin errores nuevos, build
+correcto. Confirmado en vivo (Chromium, `localhost`, cuenta demo, con
+`javascript_tool` para medir con precisión): tras hacer scroll manual
+para alejar el calendario de la cabecera y pulsar el día 20, la
+cabecera y el borde superior de la tarjeta del calendario quedaron
+separados exactamente 11.75px (el margen de 12px pedido, con el
+redondeo normal de sub-píxel del navegador) — el mes completo visible
+justo debajo de la cabecera, con el detalle del día 20 apareciendo a
+continuación.
