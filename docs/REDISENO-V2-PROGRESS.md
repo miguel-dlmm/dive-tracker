@@ -1688,3 +1688,59 @@ accesible desde aquí; confianza puesta en los 39/39 tests de
 `ConfigTab.test.jsx` (que sí cubren esta pantalla con un perfil admin
 simulado) y en la reutilización de un patrón de tooltip ya verificado
 visualmente en otra pantalla de la misma app (Mi trabajo, Fase 7).
+
+### 9.2 — Config/Usuario: cuántos movimientos tiene un usuario y cuándo fue el último
+
+Pedido explícito: "quiero ver al consultar los datos de perfil de un
+usuario, cuantos movimientos tiene dados de alta y cuando creo/edito/
+elimino el último movimiento".
+
+**Por qué hace falta un endpoint nuevo, con service role**:
+`worklog`/`comisiones`/`colleague_payments` tienen RLS "own rows"
+(`auth.uid() = user_id`, ver `schema.sql`) — un admin viendo el perfil
+de OTRO usuario no puede leer sus filas con su propia sesión, la RLS se
+lo impide igual que le impediría a cualquier usuario normal. Mismo
+patrón ya establecido por `listUserStatus.js` (que salta la RLS de
+`auth.users` para leer `banned_until`/`last_sign_in_at` de cualquier
+cuenta): nuevo `getUserActivitySummary.js` + adaptador
+`api/get-user-activity-summary.js`, admin-only, con service role.
+
+**Qué calcula, y por qué un único timestamp cubre las 3 acciones
+pedidas**: `count` = movimientos activos (`deleted_at is null`) en las 3
+tablas — "cuántos tiene dados de alta hoy". `lastActivityAt` = el
+`updated_at` más reciente entre las 3 tablas, INCLUYENDO filas borradas
+lógicamente — el trigger `set_updated_at()` (ver `schema.sql`) se
+dispara en cualquier UPDATE, y la baja lógica (`deleted_at`) es una
+UPDATE como otra cualquiera, así que un único valor ya cubre "creó,
+editó o eliminó" sin necesitar tres consultas separadas por tipo de
+acción ni ninguna columna nueva.
+
+**Bajo demanda, no en el listado entero**: se consulta solo al abrir la
+hoja de detalle de un usuario concreto (`useEffect` sobre `openUserId`
+en `UsersDirectory`), no en cada carga del directorio — calcularlo para
+todos los usuarios de golpe sería trabajo desperdiciado para un dato
+que rara vez se consulta. Mientras carga se muestra "…" en vez de dejar
+el valor en blanco (para no leerse como "sin movimientos" antes de
+tiempo); un fallo de red no bloquea el resto de la hoja (mismo criterio
+que `loadActiveStatus`, ya establecido).
+
+**Hallazgo de fragilidad de tests, corregido de paso**: añadir esta
+llamada rompió 4 tests preexistentes de `ConfigTab.test.jsx` que
+mockeaban `fetch` con una cadena `.mockResolvedValueOnce()` indexada
+por ORDEN GLOBAL de llamada — la nueva llamada a
+`get-user-activity-summary` se colaba en medio de esa cola y
+desplazaba las respuestas de las llamadas reales que cada test quería
+comprobar. Corregido de raíz, no solo parcheado para que vuelva a
+pasar: nuevo helper `mockFetchByUrl` (una cola de respuestas POR URL,
+no un único índice global) sustituye las 9 cadenas de
+`.mockResolvedValueOnce()` del archivo — cualquier llamada no
+anticipada por un test (como esta, en los tests a los que no les
+importa) recibe un 200 vacío genérico en vez de descolocar la cola de
+otra URL. Más robusto también de cara a cualquier llamada nueva que se
+añada en el futuro, no solo esta.
+
+**Verificación**: 774/774 tests (10 nuevos en
+`getUserActivitySummary.test.js`, 39/39 en `ConfigTab.test.jsx` tras el
+refactor del mock), lint 0 errores, build correcto. Sin comprobación
+visual en navegador — misma limitación que 9.1 (sin cuenta admin
+disponible en este entorno).

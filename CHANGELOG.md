@@ -19,6 +19,9 @@ Registro de cambios relevantes de Ocean Flow.
   de forma inesperada se ve una tarjeta de aviso con botón de recargar
   en vez de una pantalla en blanco, y cabecera/navegación siguen
   funcionando.
+- Configuración → Usuarios: la hoja de detalle de un usuario muestra
+  cuántos movimientos tiene dados de alta y cuándo fue su última
+  actividad (crear, editar o eliminar un movimiento).
 
 ### Changed
 - **Color de avatar**: la misma paleta curada de 12 colores que escuelas/

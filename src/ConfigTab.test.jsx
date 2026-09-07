@@ -330,6 +330,26 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await waitFor(() => expect(screen.getByText("ana")).toBeInTheDocument());
   }
 
+  // Mock de fetch por URL, consumido en orden por cada URL — no un único
+  // índice global (`.mockResolvedValueOnce()` encadenado). Necesario
+  // desde que abrir la hoja de detalle de un usuario dispara su propia
+  // llamada a /api/get-user-activity-summary (Fase 9, 2026-09-07) además
+  // de la llamada concreta que cada test quiere comprobar: un mock
+  // indexado por orden de llegada global se desincroniza en cuanto se
+  // añade cualquier llamada nueva que el test no conocía de antemano.
+  // Cualquier URL sin respuestas configuradas (como
+  // get-user-activity-summary en la mayoría de estos tests, que no les
+  // importa) recibe un 200 vacío genérico en vez de romper la cola de
+  // otra URL.
+  function mockFetchByUrl(responsesByUrl) {
+    const queues = Object.fromEntries(Object.entries(responsesByUrl).map(([url, list]) => [url, [...list]]));
+    globalThis.fetch = vi.fn((url) => {
+      const queue = queues[url];
+      if (!queue || queue.length === 0) return Promise.resolve({ ok: true, json: async () => ({}) });
+      return Promise.resolve(queue.shift());
+    });
+  }
+
   it("muestra 'Activo' en la fila para una cuenta sin banned_until y ya activada (activated_at presente)", async () => {
     const user = userEvent.setup();
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null } }) });
@@ -403,10 +423,13 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("desactivar (desde el switch de la hoja de detalle) pide confirmación y llama a /api/set-user-active con active:false", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", active: false }) }) // set-user-active
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: {} }) }); // list-user-status tras reload
+    mockFetchByUrl({
+      "/api/list-user-status": [
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+        { ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: {} }) },
+      ],
+      "/api/set-user-active": [{ ok: true, json: async () => ({ user_id: "target-1", active: false }) }],
+    });
 
     await openUsuarios(user);
     await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
@@ -427,10 +450,13 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("regenerar enlace (cuenta pendiente) pide confirmación, llama a /api/regenerate-activation-link y muestra el enlace devuelto si el email falla", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: false, action_link: "https://app.example/activate?token_hash=abc" }) }) // regenerate-activation-link
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
+    mockFetchByUrl({
+      "/api/list-user-status": [
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+      ],
+      "/api/regenerate-activation-link": [{ ok: true, json: async () => ({ user_id: "target-1", email_sent: false, action_link: "https://app.example/activate?token_hash=abc" }) }],
+    });
 
     await openUsuarios(user);
     await waitFor(() => expect(screen.getByRole("img", { name: "Pendiente" })).toBeInTheDocument());
@@ -449,9 +475,10 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("genera un enlace de invitación (superadmin) y lo muestra en el panel, sin el botón de simular envío", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ invitation_link: "https://app.example/?invite=abc-123", expires_at: "2026-09-03T00:00:00Z" }) });
+    mockFetchByUrl({
+      "/api/list-user-status": [{ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) }],
+      "/api/generate-invitation-link": [{ ok: true, json: async () => ({ invitation_link: "https://app.example/?invite=abc-123", expires_at: "2026-09-03T00:00:00Z" }) }],
+    });
 
     await openUsuarios(user);
     await user.click(screen.getByRole("button", { name: "Generar enlace de invitación" }));
@@ -467,10 +494,13 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("regenerar enlace no muestra el panel manual cuando el email se envía correctamente", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }) // regenerate-activation-link
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
+    mockFetchByUrl({
+      "/api/list-user-status": [
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+      ],
+      "/api/regenerate-activation-link": [{ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }],
+    });
 
     await openUsuarios(user);
     await waitFor(() => expect(screen.getByRole("img", { name: "Pendiente" })).toBeInTheDocument());
@@ -488,10 +518,13 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("regenerar contraseña pide confirmación, llama a /api/regenerate-password y muestra el enlace devuelto si el email falla", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: false, action_link: "https://app.example/activate?token_hash=xyz" }) }) // regenerate-password
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
+    mockFetchByUrl({
+      "/api/list-user-status": [
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+      ],
+      "/api/regenerate-password": [{ ok: true, json: async () => ({ user_id: "target-1", email_sent: false, action_link: "https://app.example/activate?token_hash=xyz" }) }],
+    });
 
     await openUsuarios(user);
     await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
@@ -509,10 +542,13 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("regenerar contraseña no muestra el panel manual cuando el email se envía correctamente", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }) // regenerate-password
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
+    mockFetchByUrl({
+      "/api/list-user-status": [
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+      ],
+      "/api/regenerate-password": [{ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }],
+    });
 
     await openUsuarios(user);
     await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
@@ -530,9 +566,10 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("eliminar (desde la hoja de detalle) pide confirmación danger y llama a /api/delete-user", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) });
+    mockFetchByUrl({
+      "/api/list-user-status": [{ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }],
+      "/api/delete-user": [{ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }],
+    });
 
     await openUsuarios(user);
     await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
@@ -551,9 +588,10 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("la hoja de detalle se cierra sola tras eliminar correctamente (la cuenta ya no existe)", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }); // delete-user
+    mockFetchByUrl({
+      "/api/list-user-status": [{ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }],
+      "/api/delete-user": [{ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }],
+    });
 
     await openUsuarios(user);
     await user.click(screen.getByRole("button", { name: /ana/ }));
@@ -647,9 +685,10 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   // de listado solo debe haberse llamado una vez (la carga inicial).
   it("eliminar un usuario actualiza el listado en el sitio, sin volver a pedir admin_list_profiles()", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) });
+    mockFetchByUrl({
+      "/api/list-user-status": [{ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }],
+      "/api/delete-user": [{ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }],
+    });
 
     await openUsuarios(user);
     const rpcCallsBefore = supabase.rpc.mock.calls.length;

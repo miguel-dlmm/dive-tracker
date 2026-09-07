@@ -673,6 +673,7 @@ function UserListRow({ user, status, lastSignInAt, deactivatedAt, onOpen }) {
 // estructura de pantalla que no pinta nada en este caso.
 function UserDetailSheet({
   open, user: userProp, status: statusProp, lastSignInAt: lastSignInAtProp, deactivatedAt: deactivatedAtProp,
+  activitySummary,
   currentUserId, viewerIsSuperadmin, actionBusy,
   onClose, onRequestToggleAdmin, onRequestToggleActive, onRequestRegenerateLink,
   onRequestRegeneratePassword, onRequestDelete, onSaveProfile,
@@ -756,6 +757,24 @@ function UserDetailSheet({
               {/* Solo fecha, sin hora (2026-09-04, pedido explícito) — ver
                   mismo cambio y motivo en UserListRow arriba. */}
               <span className="text-gray-700">{lastSignInAt ? shortDate(lastSignInAt) : t("userStatus.nunca")}</span>
+            </div>
+            {/* Movimientos dados de alta + última actividad (Fase 9,
+                2026-09-07, pedido explícito) — carga aparte bajo demanda
+                (ver el efecto en UsersDirectory que dispara
+                getUserActivitySummary.js al abrir esta hoja), nunca
+                bloquea el resto del detalle: mientras no ha llegado
+                (activitySummary null) se muestra "…" en vez de dejar el
+                valor en blanco, para que quede claro que está cargando y
+                no que la cuenta no tiene movimientos. */}
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.movimientos")}</span>
+              <span className="text-gray-700">{activitySummary ? activitySummary.count : "…"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.ultimaActividad")}</span>
+              <span className="text-gray-700">
+                {!activitySummary ? "…" : activitySummary.lastActivityAt ? shortDate(activitySummary.lastActivityAt) : t("userStatus.nunca")}
+              </span>
             </div>
             {/* Solo se muestra con una fecha real (2026-09-04, pedido
                 explícito) — antes se gateaba en status === "desactivado" y,
@@ -1146,6 +1165,35 @@ function UsersDirectory({ profile }) {
   // reload() (cambiar de rol, activar/desactivar) sin tener que sincronizar
   // manualmente un segundo estado.
   const [openUserId, setOpenUserId] = useState(null);
+  // Resumen de actividad (recuento de movimientos + fecha de la última
+  // actividad) — bajo demanda al abrir la hoja de detalle de un usuario
+  // concreto, ver getUserActivitySummary.js. Objeto { count, lastActivityAt }
+  // o null mientras carga/antes de abrir ninguna hoja; se limpia al cerrar
+  // para no mostrar el dato del usuario anterior un instante al abrir el
+  // siguiente.
+  const [activitySummary, setActivitySummary] = useState(null);
+  useEffect(() => {
+    if (!openUserId) { setActivitySummary(null); return; }
+    let cancelled = false;
+    setActivitySummary(null);
+    (async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        const res = await fetch("/api/get-user-activity-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ user_id: openUserId }),
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok) setActivitySummary(payload);
+      } catch {
+        // silencioso a propósito, mismo criterio que loadActiveStatus — un
+        // fallo aquí no debe impedir ver el resto de la hoja de detalle
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [openUserId]);
   const [pendingToggle, setPendingToggle] = useState(null);
   const [pendingToggleActive, setPendingToggleActive] = useState(null);
   const [pendingRegenerateLink, setPendingRegenerateLink] = useState(null);
@@ -1600,6 +1648,7 @@ function UsersDirectory({ profile }) {
         status={openUser ? userStatus(activeByUser[openUser.user_id] ?? true, activatedAtByUser[openUser.user_id]) : null}
         lastSignInAt={openUser ? (lastSignInByUser[openUser.user_id] ?? null) : null}
         deactivatedAt={openUser ? deactivatedAtByUser[openUser.user_id] : null}
+        activitySummary={activitySummary}
         currentUserId={profile?.user_id}
         viewerIsSuperadmin={!!profile?.is_superadmin}
         actionBusy={submitting}
