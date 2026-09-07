@@ -111,16 +111,33 @@ async function main() {
     await shot(page, "whats-new-primera-diapositiva");
 
     console.log("  → swipe lateral entre diapositivas");
+    // Corregido 2026-09-07 (auditoría de QA pre-release): useSwipeHorizontal
+    // (motion.js) solo escucha eventos de TOUCH reales (onTouchStart/
+    // onTouchEnd) — page.mouse simula ratón, invisible para ese handler.
+    // Este bloque llevaba "probando" el swipe sin ejecutar nunca su código
+    // real desde que se reintrodujo (12.5); confirmado con un test unitario
+    // nuevo (WhatsNew.test.jsx, fireEvent.touchStart/touchEnd) que SÍ pasa
+    // — no era una regresión de la app, era un falso negativo del propio
+    // script. Se despacha un TouchEvent real vía page.evaluate en su lugar.
     const dialog = page.getByRole("dialog");
     const firstSlideTitle = await dialog.getByRole("heading").textContent();
-    const dialogBox = await dialog.boundingBox();
-    const midY = dialogBox.y + dialogBox.height / 2;
-    const midX = dialogBox.x + dialogBox.width / 2;
+    const swipeTarget = ".touch-pan-y";
+    async function touchSwipe(startX, endX, y) {
+      await page.evaluate(({ selector, startX, endX, y }) => {
+        const el = document.querySelector(selector);
+        if (!el) throw new Error(`touchSwipe: no se encontró ${selector}`);
+        el.dispatchEvent(new TouchEvent("touchstart", {
+          bubbles: true, cancelable: true,
+          touches: [new Touch({ identifier: 0, target: el, clientX: startX, clientY: y })],
+        }));
+        el.dispatchEvent(new TouchEvent("touchend", {
+          bubbles: true, cancelable: true,
+          changedTouches: [new Touch({ identifier: 0, target: el, clientX: endX, clientY: y })],
+        }));
+      }, { selector: swipeTarget, startX, endX, y });
+    }
     // Swipe a la izquierda → avanza a la siguiente diapositiva.
-    await page.mouse.move(midX + 60, midY);
-    await page.mouse.down();
-    await page.mouse.move(midX - 100, midY, { steps: 10 });
-    await page.mouse.up();
+    await touchSwipe(260, 110, 300);
     await page.waitForTimeout(300);
     const afterSwipeLeftTitle = await dialog.getByRole("heading").textContent();
     if (afterSwipeLeftTitle === firstSlideTitle) {
@@ -128,10 +145,7 @@ async function main() {
     }
     await shot(page, "whats-new-tras-swipe-izquierda");
     // Swipe a la derecha → vuelve a la diapositiva anterior.
-    await page.mouse.move(midX - 60, midY);
-    await page.mouse.down();
-    await page.mouse.move(midX + 100, midY, { steps: 10 });
-    await page.mouse.up();
+    await touchSwipe(110, 260, 300);
     await page.waitForTimeout(300);
     const afterSwipeRightTitle = await dialog.getByRole("heading").textContent();
     if (afterSwipeRightTitle !== firstSlideTitle) {
@@ -157,14 +171,14 @@ async function main() {
 
   await shot(page, "home");
 
-  console.log("→ Home: 'Generado este mes' navega a Resumen (puente táctil, 2026-08-29)");
-  await page.getByTestId("generated-this-month-card").tap();
+  console.log("→ Home: 'Escuela más activa' navega a Resumen (puente táctil, 2026-09-07 — antes 'Generado este mes')");
+  await page.getByTestId("active-school-this-month-card").tap();
   await page.waitForTimeout(300);
   const activeTabAfterGeneratedTap = await page.locator('nav button[aria-current="page"]').textContent();
   if (activeTabAfterGeneratedTap?.trim() !== "Resumen") {
-    consoleIssues.push(`[home->resumen] Al tocar "Generado este mes", la pestaña activa es "${activeTabAfterGeneratedTap?.trim()}", no "Resumen"`);
+    consoleIssues.push(`[home->resumen] Al tocar "Escuela más activa", la pestaña activa es "${activeTabAfterGeneratedTap?.trim()}", no "Resumen"`);
   }
-  await shot(page, "resumen-tras-tocar-generado-este-mes");
+  await shot(page, "resumen-tras-tocar-escuela-mas-activa");
   await page.locator("text=Home").first().tap();
   await page.waitForTimeout(300);
 
@@ -511,11 +525,15 @@ async function main() {
   // de <header>, así que resuelve al de la hoja.
   await sheetCloseButton(page).tap();
   await page.waitForTimeout(200);
-  // "Configuración" también es el texto de la cabecera exterior (que
-  // cierra la pantalla entera) — el "‹ Configuración" de vuelta al menú
-  // vive dentro de <main>, hay que acotar a esa región para no pulsar la
-  // cabecera por error.
-  await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
+  // Corregido 2026-09-07 (mobile-check estaba desactualizado desde el
+  // rediseño de navegación del 2026-09-06): ConfigTab.jsx ya NO dibuja
+  // su propia miga de pan "‹ Configuración" dentro de <main> — se quitó
+  // a propósito para no repetir "Configuración" dos veces (una vez en
+  // la cabecera global, otra en la miga de pan interna). El "volver" de
+  // una subsección ahora vive en la cabecera GLOBAL (<header>), con
+  // aria-label "Volver" (texto visible = el nombre de la sección actual,
+  // p. ej. "Escuelas" — ver configSectionHeader/onSectionChange, App.jsx).
+  await page.locator("header").getByRole("button", { name: "Volver" }).tap();
   await page.waitForTimeout(200);
   const backAtMenu = await page.getByText("Cursos", { exact: true }).isVisible().catch(() => false);
   if (!backAtMenu) {
@@ -541,6 +559,15 @@ async function main() {
   await shot(page, "configuracion-tarifas-tras-recargar");
 
   console.log("→ Configuración: cerrar con 'X' desde dentro de Tarifas y reabrir debe volver al menú principal, no a Tarifas (feedback 2026-08-30, segunda vuelta — distinto de recargar, probado justo arriba, que sí la conserva)");
+  // Corregido 2026-09-07: desde el rediseño de navegación del 2026-09-06,
+  // la cabecera dentro de una subsección ya no tiene un "✕ Cerrar" directo
+  // — solo "‹ Volver" (vuelve al menú). Cerrar Configuración ENTERA desde
+  // dentro de una subsección son ahora dos toques: "Volver" y luego, ya
+  // en el menú, "Cerrar" — antes era un solo botón con doble
+  // comportamiento según dónde estuvieras, la propia ambigüedad que el
+  // rediseño quitó a propósito.
+  await page.locator("header").getByRole("button", { name: "Volver" }).tap();
+  await page.waitForTimeout(150);
   await headerCloseButton(page).tap();
   await page.waitForTimeout(200);
   await page.locator('button[aria-label="Configuración"]').tap();
@@ -602,7 +629,8 @@ async function main() {
   await sheetCloseButton(page).tap();
   await page.waitForTimeout(150);
 
-  await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
+  // Ver nota 2026-09-07 más arriba: "Volver" vive en la cabecera global.
+  await page.locator("header").getByRole("button", { name: "Volver" }).tap();
   await page.waitForTimeout(200);
 
   const hasAdminGroup = await page.getByText("Administración", { exact: true }).isVisible().catch(() => false);
@@ -634,7 +662,8 @@ async function main() {
       }
     }
 
-    await page.getByRole("main").getByRole("button", { name: "Configuración" }).tap();
+    // Ver nota 2026-09-07 más arriba: "Volver" vive en la cabecera global.
+  await page.locator("header").getByRole("button", { name: "Volver" }).tap();
     await page.waitForTimeout(200);
   } else {
     console.log("  (grupo Administración no visible — cuenta sin rol admin/superadmin, esperado si no se usó dev-bypass con esos permisos)");

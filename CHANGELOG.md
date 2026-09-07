@@ -169,6 +169,11 @@ Registro de cambios relevantes de Ocean Flow.
   fueran obligatorias.
 
 ### Chore
+- QA exhaustivo pre-release: `npm run mobile-check` corregido (4 pasos
+  desactualizados desde el rediseño de navegación del 2026-09-06,
+  incluido un swipe que se simulaba con eventos de ratón en vez de
+  touch); recorrido completo de 47 capturas sin errores de consola.
+  Nueva cobertura unitaria del gesto de deslizar en "Qué hay de nuevo".
 - Limpieza de ficheros SVG obsoletos sin ninguna referencia en el código
   (`public/favicon.svg`, `public/icons.svg`) y de dos afirmaciones ya
   falsas en `CLAUDE.md`/`docs/BACKLOG.md` (iconos "pendientes de

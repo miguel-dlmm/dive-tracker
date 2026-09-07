@@ -3976,3 +3976,90 @@ correcto.
   directa — [AppInstitute, PWA SEO & Discoverability
   Checklist](https://appinstitute.com/pwa-seo-discoverability-checklist/),
   [GOMAGE, PWA SEO](https://www.gomage.com/blog/pwa-seo/).
+
+### 12.18 — QA exhaustivo pre-release
+
+**Pedido**: "antes de preparar la release quiero q hagas pruebas
+visuales de todo tipo, pruebes todos los flujos... sé un usuario
+cabrón... prueba todos los dispositivos, resoluciones, cortes de
+pantallas, navegadores, sistemas operativos... corrige lo necesario".
+
+**Herramientas disponibles en este entorno, y su alcance real** (mismo
+límite ya documentado en CLAUDE.md §8, reafirmado aquí): Playwright +
+Chromium con emulación de iPhone 14 Pro Max (`npm run mobile-check`,
+touch real, viewport/densidad reales) es la única vía fiable de
+extremo a extremo; WebKit real cuelga en este entorno (confirmado en
+sesiones anteriores); Claude-in-Chrome (`mcp__claude-in-chrome__*`) da
+verificación visual puntual pero no simulación táctil fiable ni
+redimensionado de viewport verificable con garantías (una prueba con
+`resize_window` a 768×1024 no cambió de forma comprobable el layout
+renderizado — descartada como señal fiable, no repetida). Ningún
+navegador real de Android ni un iPhone físico están disponibles aquí —
+quedan, como siempre, para verificación humana antes de publicar.
+
+**`npm run mobile-check` — 4 bugs reales encontrados y corregidos, los
+4 en el SCRIPT de QA, no en la app**:
+
+1. **Testid obsoleto** (`generated-this-month-card` → renombrado a
+   `active-school-this-month-card` en 12.11 de esta misma sesión, sin
+   actualizar el script) — el recorrido se paraba en seco en el primer
+   paso de Home.
+2. **Botón "‹ Configuración" obsoleto** (2 apariciones): el script
+   buscaba un botón con ese nombre DENTRO de `<main>` — ese patrón se
+   quitó a propósito en el rediseño de navegación del 2026-09-06 (para
+   no repetir "Configuración" dos veces en pantalla). El "volver" real
+   vive ahora en la cabecera GLOBAL, con `aria-label="Volver"`.
+3. **"Cerrar con X desde dentro de una subsección" obsoleto**: desde el
+   mismo rediseño, la cabecera dentro de una subsección solo tiene
+   "‹ Volver" (nunca "✕ Cerrar" directo) — cerrar Configuración entera
+   desde dentro de Tarifas son ahora dos toques (Volver, luego Cerrar),
+   antes uno solo con doble comportamiento según la profundidad.
+4. **Swipe de "Qué hay de nuevo" simulado con eventos de RATÓN**
+   (`page.mouse.down/move/up`), invisibles para `useSwipeHorizontal`
+   (motion.js), que solo escucha `onTouchStart`/`onTouchEnd` reales —
+   el "aviso" que disparó esta auditoría (`El swipe hacia la izquierda
+   no avanzó de diapositiva`) era un falso negativo del script, no una
+   regresión: confirmado añadiendo cobertura unitaria real
+   (`WhatsNew.test.jsx`, `fireEvent.touchStart`/`touchEnd`, mismo
+   patrón ya usado en `ConfigTab.test.jsx`/`HelpTab.test.jsx`) que SÍ
+   pasa, y corrigiendo el script para despachar un `TouchEvent` real vía
+   `page.evaluate` en vez de simular con ratón — vuelve a probar el
+   gesto de verdad, no solo los botones "Siguiente"/"Atrás".
+
+Los 4 comparten la misma causa de fondo: el script de QA no se había
+tocado desde antes del rediseño de navegación del 2026-09-06 y de los
+cambios de esta sesión — quedó desincronizado en silencio, sin que
+nada lo señalara hasta ejecutarlo de verdad.
+
+**Recorrido completo tras las correcciones**: 47 capturas, sin ningún
+error ni aviso de consola en todo el recorrido (login con bypass →
+"Qué hay de nuevo" con swipe real → Home (con el banner nuevo de
+12.16 visible) → Mi trabajo (crear/cobrar/marcar pendiente/eliminar
+con animación, con los colores de marca nuevos de 12.14 visibles en
+las filas de Comisión) → Resumen (tendencia, calendario, desgloses) →
+Ayuda → Configuración (Escuelas/Tarifas, recargar vs. cerrar-y-reabrir)
+→ cerrar sesión). Confirmado visualmente (capturas revisadas una a
+una): iconos de KPI con la etiqueta fija (12.14), banner de instalar
+(12.16), color dorado de Comisión (12.14/12.17) — todo el trabajo de
+esta sesión se ve correctamente integrado junto al resto de la app, sin
+overlaps, sin texto cortado, sin errores visuales.
+
+**Suite de tests, lint y build** (además del recorrido visual):
+824/824 tests (2 nuevos de swipe táctil real en `WhatsNew.test.jsx`),
+lint 0 errores (mismos 10 warnings preexistentes, auditados y
+descartados en 12.10), build correcto.
+
+**Lo que NO se ha podido probar aquí, y sigue pendiente de
+verificación humana antes de publicar** (mismo límite estructural de
+siempre, no nuevo de esta ronda): Safari/WebKit real (motor de
+render/CSS real, teclado virtual de iOS y su efecto sobre
+`visualViewport`), cualquier navegador Android real, tacto físico real
+(presión, gestos multitáctiles), y cualquier resolución/corte de
+pantalla más allá de la emulación de iPhone 14 Pro Max de
+`mobile-check` — un iPad o un Android real con una densidad de píxel
+distinta podrían revelar algo que ni Chromium en desktop ni esa única
+emulación cubren. Recomendación: antes de la release a producción,
+probar a mano en un iPhone real y, si es posible, en un Android real,
+el recorrido completo de esta sesión (banner de instalar, KPIs con
+icono fijo, colores de marca de Comisión/Ajuste, "Escuela más activa"
+en Home).
