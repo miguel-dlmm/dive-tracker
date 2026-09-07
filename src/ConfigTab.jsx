@@ -437,7 +437,12 @@ const STATUS_META = {
   // gray-100 da ~4.4:1 de contraste, justo por debajo del 4.5:1 mínimo
   // AA para texto normal (12px, no es "texto grande") — comprobado con la
   // fórmula de contraste relativo de WCAG. gray-600 sube a ~6.9:1.
-  desactivado: { cls: "bg-gray-100 text-gray-600", dot: "#9CA3AF" },
+  // dot: gray-500 (#6B7280), no gray-400 (#9CA3AF) — feedback explícito
+  // (2026-09-07: "el gris muy claro, se diferencia poco"). Se combina
+  // además con la fila entera atenuada (ver UserListRow más abajo), así
+  // que el punto necesita partir de un gris ya visible por sí solo antes
+  // de esa atenuación.
+  desactivado: { cls: "bg-gray-100 text-gray-600", dot: "#6B7280" },
 };
 
 // Badge de solo lectura — cualquier admin puede VERLO, cambiarlo es cosa
@@ -617,10 +622,19 @@ function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
 
 function UserListRow({ user, status, lastSignInAt, deactivatedAt, onOpen }) {
   const { t } = useTranslation("config");
+  // Fila "apagada" para una cuenta desactivada (feedback explícito
+  // 2026-09-07: "querría q todos los colores q muestra sean mas
+  // apagados que los del resto de fila, que de la sensación de
+  // 'apagado'") — antes una cuenta desactivada se veía exactamente
+  // igual que una activa salvo por el punto de estado y la línea
+  // "Baja:". `opacity-60` en vez de recolorear cada elemento a mano:
+  // atenúa nickname, nombre, icono de rol, fecha y flecha a la vez con
+  // un único ajuste, y sigue por encima del umbral razonable de
+  // legibilidad (no tan bajo como para que el texto deje de leerse).
   return (
     <button
       onClick={() => onOpen(user.user_id)}
-      className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left"
+      className={`flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left ${status === "desactivado" ? "opacity-60" : ""}`}
     >
       <div className="min-w-0 flex-1">
         {/* Estado antes que el nickname (feedback explícito 2026-08-30,

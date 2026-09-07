@@ -434,6 +434,33 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     expect(screen.getByText(/fecha no registrada/)).toBeInTheDocument();
   });
 
+  // Feedback explícito del usuario (2026-09-07): la fila de una cuenta
+  // desactivada se veía casi igual que una activa, solo el punto de
+  // estado y la línea "Baja:" cambiaban. `opacity-60` en la fila entera
+  // es la señal — sin este test, un cambio futuro en `UserListRow`
+  // podría perder la clase sin que ningún otro test lo note (nada más
+  // en este describe comprueba el className del botón de la fila).
+  it("la fila de una cuenta desactivada se muestra atenuada (opacity-60)", async () => {
+    const user = userEvent.setup();
+    mockProfilesFrom("2026-08-02T00:00:00Z", "2026-08-15T10:00:00Z");
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: { "target-1": null } }) });
+
+    await openUsuarios(user);
+
+    const row = screen.getByText("ana").closest("button");
+    await waitFor(() => expect(row).toHaveClass("opacity-60"));
+  });
+
+  it("la fila de una cuenta activa no se muestra atenuada", async () => {
+    const user = userEvent.setup();
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null } }) });
+
+    await openUsuarios(user);
+
+    const row = screen.getByText("ana").closest("button");
+    expect(row).not.toHaveClass("opacity-60");
+  });
+
   it("desactivar (desde el switch de la hoja de detalle) pide confirmación y llama a /api/set-user-active con active:false", async () => {
     const user = userEvent.setup();
     mockFetchByUrl({
