@@ -139,6 +139,10 @@ Registro de cambios relevantes de Ocean Flow.
   contraseña, aviso de despliegue) seguían con los colores de marca
   previos al rebrand — ahora usan el mismo azul marino que el resto de
   la app rediseñada.
+- Tarifas seguía marcando el tipo (Curso/Comisión) con una franja de
+  color a la izquierda de cada fila — ahora usa el mismo icono en una
+  chip circular que ya usa Mi trabajo, para reconocerlo igual en las dos
+  pantallas.
 
 ## [1.0.0] - 2026-09-04
 

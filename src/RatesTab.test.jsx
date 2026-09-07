@@ -85,10 +85,13 @@ describe("RatesTab — editar abre la hoja de creación, precargada", () => {
 
 // Rediseño 2026-08-30: rates y commission_rates (dos tablas reales, sin
 // cambios de modelo) se combinan en UNA sola lista de presentación, con el
-// mismo lenguaje visual que Mi trabajo (acento de color por tipo a la
-// izquierda) en vez de dos pestañas de página separadas.
+// mismo lenguaje visual que Mi trabajo en vez de dos pestañas de página
+// separadas. Reconocimiento de tipo por icono, no por borde (Fase 7,
+// 2026-09-07, RateTypeIconChip) — mismo cambio que Mi trabajo ya había
+// hecho en la ronda anterior (5.9, TypeIconChip), aplicado aquí para dar
+// consistencia visual entre las dos pantallas.
 describe("RatesTab — lista combinada de Curso y Comisión", () => {
-  it("muestra tarifas de ambos tipos a la vez, con acento de color distinto por tipo", () => {
+  it("muestra tarifas de ambos tipos a la vez, con un icono de tipo distinto por fila", () => {
     renderRatesTab({
       activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
       rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20 }]),
@@ -98,10 +101,14 @@ describe("RatesTab — lista combinada de Curso y Comisión", () => {
     expect(screen.getByText("Open Water")).toBeInTheDocument();
     expect(screen.getByText("Advanced")).toBeInTheDocument();
 
-    const cursoRow = screen.getByText("Open Water").closest("div.border-l-4");
-    const comisionRow = screen.getByText("Advanced").closest("div.border-l-4");
-    expect(cursoRow).toHaveStyle({ borderColor: TEAL });
-    expect(comisionRow).toHaveStyle({ borderColor: SUN });
+    // RateTypeIconChip es el primer hijo de la fila (span circular con
+    // el icono del tipo) — el color de fondo de esa chip es lo que
+    // distingue Curso de Comisión de un vistazo, ahora que el borde
+    // izquierdo de color ya no existe.
+    const cursoChip = screen.getByText("Open Water").closest("div.flex.items-start.gap-2\\.5").firstElementChild;
+    const comisionChip = screen.getByText("Advanced").closest("div.flex.items-start.gap-2\\.5").firstElementChild;
+    expect(cursoChip).toHaveStyle({ backgroundColor: `${TEAL}1A` });
+    expect(comisionChip).toHaveStyle({ backgroundColor: `${SUN}1A` });
   });
 
   it("el filtro 'Tipo' (dentro de Filtrar) acota la lista combinada a un solo tipo", async () => {

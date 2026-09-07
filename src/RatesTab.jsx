@@ -19,15 +19,27 @@ const isRateActive = (r) => r.is_active !== false;
 
 // Rediseño 2026-08-30 — Tarifas pasa a hablar el mismo idioma visual que Mi
 // trabajo: una única lista (antes dos pestañas de página, "Instructor"/
-// "Comisión", cada una con su propia tabla montada por separado) con
-// acento de color por tipo a la izquierda de cada fila (mismo criterio que
-// EntryRow — TEAL para Curso, SUN para Comisión, ver MOVEMENT_TYPE_META),
-// y el tipo como un filtro más dentro de "Filtrar" en vez de un modo de
+// "Comisión", cada una con su propia tabla montada por separado) con el
+// tipo como un filtro más dentro de "Filtrar" en vez de un modo de
 // página — igual que Mi trabajo NO usa el tipo como control de primer
 // nivel (ver docs/ADR/0005). Rates y commission_rates SIGUEN siendo dos
 // tablas separadas (ninguna decisión de negocio cambia aquí, solo
 // presentación) — se combinan únicamente en esta capa, con el mismo
 // patrón que buildActivityEntries ya usa para worklog/comisiones.
+//
+// Reconocimiento visual del tipo por icono, no por borde (Fase 7,
+// 2026-09-07): la fila usaba un borde izquierdo de color de 4px
+// (`border-l-4`) — el mismo patrón que Mi trabajo ya había retirado en
+// la ronda anterior (5.9, "esa franja vertical finita a la izquierda")
+// en favor de un icono en una chip circular (`TypeIconChip`,
+// MiTrabajoTab.jsx). Tarifas seguía con la franja, un desvío real frente
+// a Movimientos pese al comentario de arriba ("mismo idioma visual"):
+// pedido explícito del usuario ("la pantalla de tarifas debe ser
+// consistente con los nuevos cambios de diseño implementados en
+// movimientos"). Ver RateTypeIconChip más abajo, mismo criterio visual,
+// sin duplicar el componente entero porque Tarifas nunca tiene el tipo
+// "companeros" (solo ganado/comision) y no comparte el resto de props de
+// EntryRow (pendiente/deshacer/animación de borrado).
 const TYPE_META = { ganado: MOVEMENT_TYPE_META.ganado, comision: MOVEMENT_TYPE_META.comision };
 // TYPE_OPTIONS/TYPE_KEY se quedan en español fijo a propósito (i18n, Fase 2):
 // son a la vez el texto mostrado y la clave de búsqueda del Select de
@@ -51,6 +63,19 @@ const CREATE_TYPES = [
   { key: "ganado", icon: TYPE_META.ganado.icon },
   { key: "comision", icon: TYPE_META.comision.icon },
 ];
+
+// Mismo lenguaje visual que TypeIconChip (MiTrabajoTab.jsx): icono del
+// tipo en una chip circular con tinte de fondo al 10% de su propio
+// color, en vez del borde izquierdo de 4px que usaba esta pantalla
+// hasta ahora — ver comentario largo junto a TYPE_META.
+function RateTypeIconChip({ source }) {
+  const { icon: Icon, color } = TYPE_META[source];
+  return (
+    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+      <Icon size={17} style={{ color }} aria-hidden="true" />
+    </span>
+  );
+}
 
 // schools / activities / currencies: { rows: [...] } — de useSupabaseTable
 // rates / commissionRates: { rows, insertRow, updateRow, deleteRow }
@@ -371,28 +396,33 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
               // disabled:opacity-30/40) + "· Desactivada" en el metadato —
               // solo se ve cuando showInactive está activo, ya que si no la
               // propia lista las filtra fuera.
-              <motion.div key={r.id} {...listItemVariants(reducedMotion)} className={`border-l-4 px-4 py-3.5 text-sm ${!isRateActive(r) ? "opacity-50" : ""}`} style={{ borderColor: TYPE_META[r._source].color }}>
-                <div className="flex items-start justify-between gap-2">
-                  <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
-                  <span className="shrink-0 font-semibold tabular-nums" style={{ color: BRAND_NAVY }}>
-                    <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: BRAND_NAVY }} />
-                  </span>
-                </div>
-                <div className="mt-1.5 flex items-center justify-between gap-2">
-                  <span className="truncate text-xs text-gray-400">
-                    {t("list.createdOn", { date: shortDate(r.created_at), type: t(`common:movementTypes.${r._source}`) })}
-                    {!isRateActive(r) && ` · ${t("list.inactive")}`}
-                  </span>
-                  <RowMenu
-                    onEdit={() => startEdit(r)}
-                    onDelete={() => deleteRate(r)}
-                    itemLabel={t("rowMenu.itemLabel", { school: r.school, activity: r.activity })}
-                    extraActions={[{
-                      label: isRateActive(r) ? t("rowMenu.deactivate") : t("rowMenu.reactivate"),
-                      icon: isRateActive(r) ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />,
-                      onClick: () => toggleActive(r),
-                    }]}
-                  />
+              <motion.div key={r.id} {...listItemVariants(reducedMotion)} className={`px-4 py-3.5 text-sm ${!isRateActive(r) ? "opacity-50" : ""}`}>
+                <div className="flex items-start gap-2.5">
+                  <RateTypeIconChip source={r._source} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
+                      <span className="shrink-0 font-semibold tabular-nums" style={{ color: BRAND_NAVY }}>
+                        <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: BRAND_NAVY }} />
+                      </span>
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between gap-2">
+                      <span className="truncate text-xs text-gray-400">
+                        {t("list.createdOn", { date: shortDate(r.created_at), type: t(`common:movementTypes.${r._source}`) })}
+                        {!isRateActive(r) && ` · ${t("list.inactive")}`}
+                      </span>
+                      <RowMenu
+                        onEdit={() => startEdit(r)}
+                        onDelete={() => deleteRate(r)}
+                        itemLabel={t("rowMenu.itemLabel", { school: r.school, activity: r.activity })}
+                        extraActions={[{
+                          label: isRateActive(r) ? t("rowMenu.deactivate") : t("rowMenu.reactivate"),
+                          icon: isRateActive(r) ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />,
+                          onClick: () => toggleActive(r),
+                        }]}
+                      />
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             ))}

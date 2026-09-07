@@ -1215,6 +1215,32 @@ mismas plantillas de email).
 necesarios — ningún test fijaba el valor hexadecimal concreto), 762/762
 de la suite completa, lint 0 errores, build correcto.
 
+### 7.4 — Tarifas: consistencia visual con Movimientos
+
+Pedido explícito: "la pantalla de tarifas debe ser consistente con los
+nuevos cambios de diseño implementados en movimientos, para dar
+unificación al uso de la APP". Revisando `RatesTab.jsx` frente al estado
+actual de `MiTrabajoTab.jsx` (tras 5.9, `TypeIconChip`), había un desvío
+real: la fila de Tarifas seguía usando un borde izquierdo de 4px
+(`border-l-4`) coloreado por tipo — exactamente el patrón que Mi trabajo
+ya había retirado en la ronda anterior en favor de un icono en una chip
+circular, con el propio comentario de la pantalla ("mismo idioma visual
+que Mi trabajo") sin actualizar tras ese cambio.
+
+**Corrección**: nuevo `RateTypeIconChip` (mismo criterio visual que
+`TypeIconChip` de Mi trabajo — chip circular de 36px, icono del tipo,
+fondo al 10% de opacidad de su color — sin reutilizar el componente
+entero porque Tarifas nunca tiene el tipo "companeros" y no comparte el
+resto de props de `EntryRow`, como pendiente/deshacer/animación de
+borrado) sustituye el `border-l-4` de cada fila. Test actualizado
+(`RatesTab.test.jsx`) para validar el color de fondo de la chip en vez
+del borde retirado, mismo criterio de la fila anterior.
+
+**Verificación**: 762/762 tests (23/23 en `RatesTab.test.jsx`), lint 0
+errores, build correcto; comprobación visual manual en navegador —
+Configuración → Tarifas muestra el icono de Curso/Comisión en cada fila
+en vez de la franja de color, coherente con Mi trabajo.
+
 **Verificado**: `npm run lint` 0 errores, `npm run test -- --run`
 758/758 (4 tests nuevos: `baseUrl` pasa correctamente end-to-end desde
 `requestPasswordReset` y gana sobre `APP_URL` en `activationLink`),
