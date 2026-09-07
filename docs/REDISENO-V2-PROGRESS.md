@@ -1901,6 +1901,15 @@ funcionar tras este cambio, haría falta una captura de consola real de
 Safari (como ya se consiguió para el bug de JPG) para diagnosticar la
 causa de verdad.
 
+**Verificación**: 779/779 tests, lint 0 errores nuevos (mismos 10
+avisos preexistentes de siempre, ninguno en `shared.jsx`), build
+correcto. Comprobación visual en Chromium local completada esta vez de
+forma inequívoca: día sin actividad visible en el viewport → clic →
+`window.scrollY` pasa de `0` a `232` y el panel de detalle del día
+queda visible, confirmado leyendo `scrollY` por consola además de por
+captura de pantalla (la verificación anterior, solo por captura, había
+quedado ambigua).
+
 ### 9.8 — DatePicker: accesos rápidos ayer/mañana/antes de ayer, junto a "Hoy"
 
 Petición del usuario sobre el selector de fecha de Training Records:
@@ -1928,11 +1937,30 @@ plantilla → campo "Fecha" de "Sesiones Académicas"): la rejilla se ve
 completa y legible, y pulsar "Ayer" con la fecha real del sistema
 (2026-09-07) rellena correctamente "06/09/2026".
 
-**Verificación**: 779/779 tests, lint 0 errores nuevos (mismos 10
-avisos preexistentes de siempre, ninguno en `shared.jsx`), build
-correcto. Comprobación visual en Chromium local completada esta vez de
-forma inequívoca: día sin actividad visible en el viewport → clic →
-`window.scrollY` pasa de `0` a `232` y el panel de detalle del día
-queda visible, confirmado leyendo `scrollY` por consola además de por
-captura de pantalla (la verificación anterior, solo por captura, había
-quedado ambigua).
+### 9.9 — Bug real confirmado: fecha de padre/madre/tutor se rellenaba aunque el alumno no fuera menor
+
+Feedback del usuario: "en todos los TR cuando hay padre/madre/tutor es
+nombre, firma y una fecha (donde aplica). si el alumno no marcó el
+check de menor, esa fecha quedará vacía."
+
+Confirmado en `buildFillOperations` (`pdfFill.js`), la función que
+arma el relleno para las 10 plantillas (tanto las de campos de
+formulario reales como las 6 de coordenadas — una única función
+compartida, no una por plantilla): la fecha de la fila de firma de
+padre/madre/tutor (`sig.parentDate`) se rellenaba siempre con
+`generatedAtLabel`, sin comprobar si esa fila tenía contenido. Nombre
+y firma del tutor ya dependían correctamente de `isMinor`
+(`StudentQuickEntrySheet.jsx`/`recordConfig.js`: si no es menor,
+`guardianName`/`guardianSignature` se guardan vacíos) — solo la fecha
+se había quedado fuera de esa regla, dejando una fecha "huérfana" sin
+nombre ni firma que la acompañara en cualquier alumno no menor.
+
+Corrección: la fecha de padre/madre/tutor ahora solo se rellena si
+`data.signatures?.parentPng` existe — la misma condición que ya usaba
+la propia firma (línea de al lado en el archivo) para decidir si
+dibujarla, ahora aplicada también a su fecha.
+
+**Verificación**: 2 tests nuevos en `pdfFill.test.js` (con firma de
+tutor → fecha se rellena; sin ella → fecha se omite, estudiante e
+instructor siguen rellenándose). 781/781 tests, lint sin errores
+nuevos, build correcto.

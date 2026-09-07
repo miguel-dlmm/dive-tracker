@@ -52,16 +52,34 @@ describe("buildFillOperations", () => {
   // progreso SÍ se rellena ahora (llega ya calculada desde fuera, ver
   // TrainingRecordsTab.jsx) — buildFillOperations solo la traslada, no
   // decide de dónde sale.
-  it("rellena la fecha de las 3 firmas con generatedAtLabel, igual para las 3", () => {
+  it("rellena la fecha de las 3 firmas con generatedAtLabel cuando hay firma de padre/madre/tutor", () => {
     const { texts } = buildFillOperations(TEMPLATE, {
       firstName: "Ana", lastName: "Garcia",
       generatedAtLabel: "02/09/26",
+      signatures: { parentPng: TINY_PNG },
     });
     expect(texts).toEqual(expect.arrayContaining([
       { field: "sig.studentDate", value: "02/09/26" },
       { field: "sig.parentDate", value: "02/09/26" },
       { field: "sig.instructorDate", value: "02/09/26" },
     ]));
+  });
+
+  // Bug real confirmado (feedback 2026-09-07: "si el alumno no marcó el
+  // check de menor, esa fecha quedará vacía") — antes se rellenaba
+  // siempre, dejando una fecha huérfana en la fila de padre/madre/tutor
+  // aunque esa fila entera (nombre y firma) quedara en blanco por no ser
+  // menor de edad.
+  it("NO rellena la fecha de padre/madre/tutor si no hay firma de padre/madre/tutor (alumno no es menor)", () => {
+    const { texts } = buildFillOperations(TEMPLATE, {
+      firstName: "Ana", lastName: "Garcia",
+      generatedAtLabel: "02/09/26",
+    });
+    expect(texts).toEqual(expect.arrayContaining([
+      { field: "sig.studentDate", value: "02/09/26" },
+      { field: "sig.instructorDate", value: "02/09/26" },
+    ]));
+    expect(texts.some((t) => t.field === "sig.parentDate")).toBe(false);
   });
 
   it("omite una fila de sesión opcional sin datos, sin fallar", () => {

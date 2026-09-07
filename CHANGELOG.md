@@ -172,6 +172,10 @@ Registro de cambios relevantes de Ocean Flow.
   `behavior: "smooth"`, con soporte poco fiable comprobado en este
   entorno; ahora el desplazamiento es siempre instantáneo, con la API
   más simple y fiable disponible.
+- (Interno, Training Records) La fecha de la firma de padre/madre/tutor
+  se rellenaba en el PDF aunque el alumno no fuera menor de edad (y esa
+  fila no tuviera ni nombre ni firma) — ahora solo se rellena si de
+  verdad hay firma de padre/madre/tutor, en las 10 plantillas.
 - Tarifas: "Mostrar desactivadas" ya no está escondido dentro de
   "Filtrar" (siempre visible junto al contador de la lista), y una
   tarifa desactivada se reconoce ahora por su propio fondo, no solo por

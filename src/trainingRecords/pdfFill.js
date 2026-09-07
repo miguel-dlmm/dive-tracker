@@ -119,9 +119,15 @@ export function buildFillOperations(templateMap, data) {
   pushIfValue(texts, sig.instructorNumber, data.instructor?.number);
   // Fecha de firma: SIEMPRE la fecha de generación del PDF (pedido
   // explícito del usuario, 2026-09-02), igual para las 3 firmas y para
-  // cualquier plantilla — nunca una fecha distinta por firma.
+  // cualquier plantilla — nunca una fecha distinta por firma. Excepción
+  // encontrada 2026-09-07 ("si el alumno no marcó el check de menor, esa
+  // fecha quedará vacía"): la fecha de la fila de padre/madre/tutor solo
+  // se rellena si de verdad hay firma de padre/madre/tutor — antes se
+  // rellenaba siempre, aunque el alumno no fuera menor y esa fila entera
+  // (nombre y firma) quedara en blanco, dejando una fecha huérfana sin
+  // firma que la acompañara.
   pushIfValue(texts, sig.studentDate, data.generatedAtLabel);
-  pushIfValue(texts, sig.parentDate, data.generatedAtLabel);
+  if (data.signatures?.parentPng) pushIfValue(texts, sig.parentDate, data.generatedAtLabel);
   pushIfValue(texts, sig.instructorDate, data.generatedAtLabel);
 
   if (sig.student && data.signatures?.studentPng) signatures.push({ field: sig.student, dataUrl: data.signatures.studentPng });
