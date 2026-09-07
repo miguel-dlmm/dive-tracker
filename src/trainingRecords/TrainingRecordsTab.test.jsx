@@ -159,6 +159,40 @@ it("el botón 'Generar para todos los alumnos' usa accentColor, no el TEAL gené
   expect(button.style.backgroundColor).toBe("rgb(0, 51, 90)");
 }, 15000);
 
+// Barrido completo del archivo (2026-09-07, feedback real: "los campos
+// versión del examen, certificación... se ven del tono verde anterior al
+// rediseño") — la corrección anterior solo tocó el botón "Generar para
+// todos"; el resto de controles (RadioChoice de "versión de examen"/
+// "certificación", checkboxes de progreso, avisos...) seguían con el
+// TEAL genérico, algunos sin ni siquiera recibir accentColor como prop.
+it("'Versión de examen' (RadioChoice) usa accentColor en la opción marcada, no el TEAL genérico", async () => {
+  const user = userEvent.setup();
+  renderTab({ accentColor: "#00335A" });
+  await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
+
+  // "Online" viene premarcado por defecto (buildDefaultConfig) — no hace
+  // falta pulsarlo, solo comprobar el estilo con el que ya se pinta.
+  const onlineButton = screen.getByRole("button", { name: "Online" });
+  expect(onlineButton.style.color).toBe("rgb(0, 51, 90)");
+  expect(onlineButton.style.borderColor).toBe("rgb(0, 51, 90)");
+});
+
+it("el checkbox de una fila de progreso obligatoria usa accentColor, no el TEAL genérico", async () => {
+  const user = userEvent.setup();
+  renderTab({ accentColor: "#00335A" });
+  await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
+  await screen.findByText("Sesiones Académicas");
+  const checkbox = document.querySelector('input[type="checkbox"][disabled]');
+  expect(checkbox).toBeTruthy();
+  expect(checkbox.style.accentColor).toBe("rgb(0, 51, 90)");
+});
+
+it("el aviso de 'completa tu perfil' usa accentColor en su botón, no el TEAL genérico", async () => {
+  renderTab({ accentColor: "#00335A", profile: { ...COMPLETE_PROFILE, instructor_signature: null } });
+  const button = await screen.findByRole("button", { name: "Ir a mi perfil" });
+  expect(button.style.backgroundColor).toBe("rgb(0, 51, 90)");
+});
+
 it("configura una vez para todo el listado, añade 2 alumnos y genera los 2 documentos de golpe", async () => {
   const user = userEvent.setup();
   renderTab();

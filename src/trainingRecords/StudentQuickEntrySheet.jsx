@@ -22,7 +22,14 @@ function FieldError({ message }) {
   return <p role="alert" className="mt-1 text-xs text-red-600">{message}</p>;
 }
 
-export default function StudentQuickEntrySheet({ open, onClose, mode, initial, onSaved }) {
+// accentColor (2026-09-07, feedback real: "los campos versión del
+// examen, certificación... se ven del tono verde anterior al
+// rediseño") — antes esta hoja ni siquiera recibía el accentColor de
+// TrainingRecordsTab, así que el checkbox "Menor de edad" y el botón
+// "Guardar alumno" caían siempre en el TEAL genérico. TEAL solo queda
+// como respaldo si accentColor no llega (mismo criterio ya establecido
+// en TrainingRecordsTab.jsx).
+export default function StudentQuickEntrySheet({ open, onClose, mode, initial, onSaved, accentColor }) {
   const { t } = useTranslation("trainingRecords");
 
   const [firstName, setFirstName] = useState("");
@@ -118,7 +125,7 @@ export default function StudentQuickEntrySheet({ open, onClose, mode, initial, o
             <FieldError message={errors.initials} />
           </div>
           <label className="flex min-h-11 items-center gap-2.5 text-sm text-gray-700">
-            <input type="checkbox" checked={isMinor} onChange={(e) => setIsMinor(e.target.checked)} className="h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: TEAL }} />
+            <input type="checkbox" checked={isMinor} onChange={(e) => setIsMinor(e.target.checked)} className="h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: accentColor || TEAL }} />
             {t("studentForm.menorDeEdad")}
           </label>
           {isMinor && (
@@ -150,7 +157,7 @@ export default function StudentQuickEntrySheet({ open, onClose, mode, initial, o
         <button
           onClick={save}
           className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"
-          style={{ backgroundColor: TEAL }}
+          style={{ backgroundColor: accentColor || TEAL }}
         >
           {t("studentForm.guardarAlumno")}
         </button>

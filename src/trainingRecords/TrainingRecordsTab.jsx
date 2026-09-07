@@ -4,6 +4,18 @@ import { zipSync } from "fflate";
 import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2, Info } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { useToast, RowMenu, DatePicker, Select, ConfirmDialog } from "../shared";
+// TEAL: solo queda como último respaldo (`accentColor || TEAL`) si por lo
+// que sea no llega accentColor — feedback real 2026-09-07 ("los campos
+// versión del examen, certificación... se ven del tono verde anterior al
+// rediseño"): el componente ya recibía `accentColor` (el color real de
+// la sección "trabajo", navy) desde App.jsx, pero solo el botón
+// "Generar para todos" (más abajo) lo usaba de verdad — el resto de
+// componentes de este archivo (RadioChoice, ProgressRowToggle,
+// BatchActionTile, StudentRow, InstructorMissingNotice, y
+// StudentQuickEntrySheet.jsx entero) seguían con el TEAL genérico
+// hardcodeado, sin ni siquiera recibir `accentColor` como prop. Barrido
+// completo del archivo — no queda ningún componente de TR con el TEAL
+// como único color.
 import { TEAL } from "../App";
 // Reutiliza el MISMO carnet editable que "Mi perfil" → "Datos de
 // instructor" (2026-09-04, pedido explícito: "una única fuente de
@@ -145,7 +157,7 @@ function formatGeneratedAt(timestamp, locale) {
   return new Date(timestamp).toLocaleString(locale === "en" ? "en-GB" : "es-ES", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function InstructorMissingNotice({ onOpenProfile }) {
+function InstructorMissingNotice({ onOpenProfile, accentColor }) {
   const { t } = useTranslation("trainingRecords");
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-5 text-center">
@@ -154,7 +166,7 @@ function InstructorMissingNotice({ onOpenProfile }) {
       <button
         onClick={onOpenProfile}
         className="flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-medium text-white"
-        style={{ backgroundColor: TEAL }}
+        style={{ backgroundColor: accentColor || TEAL }}
       >
         {t("instructorMissing.boton")}
       </button>
@@ -189,7 +201,7 @@ function FieldError({ message }) {
 // checkbox interactivo se muestra un indicador fijo (marcado, deshabilitado)
 // más una etiqueta "Obligatorio" — la fecha se pide siempre, igual que una
 // fila normal ya marcada.
-function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, dateError, dateLabel, fixed }) {
+function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, dateError, dateLabel, fixed, accentColor }) {
   const { t } = useTranslation("trainingRecords");
   const showDate = (fixed || checked) && onDateChange;
   return (
@@ -197,7 +209,7 @@ function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, 
       <div className="flex min-h-11 items-start gap-2.5 py-1">
         {fixed ? (
           <span className="flex min-w-0 flex-1 items-start gap-2.5 text-sm text-gray-700">
-            <input type="checkbox" checked disabled aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 opacity-70" style={{ accentColor: TEAL }} />
+            <input type="checkbox" checked disabled aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 opacity-70" style={{ accentColor: accentColor || TEAL }} />
             <span className="min-w-0 flex-1">
               {label}
               <span className="ml-1.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.obligatorio")}</span>
@@ -205,7 +217,7 @@ function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, 
           </span>
         ) : (
           <label className="flex min-w-0 flex-1 items-start gap-2.5 text-sm text-gray-700">
-            <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: TEAL }} />
+            <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: accentColor || TEAL }} />
             <span className="min-w-0 flex-1">{label}</span>
           </label>
         )}
@@ -283,7 +295,8 @@ function AdventureRow({ label, value, options, onSelect, dateValue, onDateChange
   );
 }
 
-function RadioChoice({ options, value, onChange }) {
+function RadioChoice({ options, value, onChange, accentColor }) {
+  const color = accentColor || TEAL;
   return (
     <div className="flex flex-wrap gap-2">
       {options.map((opt) => (
@@ -292,7 +305,7 @@ function RadioChoice({ options, value, onChange }) {
           type="button"
           onClick={() => onChange(value === opt.value ? null : opt.value)}
           className="flex min-h-11 items-center rounded-md border px-3 text-sm font-medium"
-          style={value === opt.value ? { borderColor: TEAL, backgroundColor: "#F0FDFA", color: TEAL } : { borderColor: "#E5E7EB", color: "#4B5563" }}
+          style={value === opt.value ? { borderColor: color, backgroundColor: `${color}1A`, color } : { borderColor: "#E5E7EB", color: "#4B5563" }}
         >
           {opt.label}
         </button>
@@ -317,7 +330,8 @@ function configHasData(config) {
 // mucho más visual") — sustituye los 3 botones planos de contorno por
 // tarjetas icono+etiqueta, mismo lenguaje visual que la lista de
 // plantillas de arriba (icono en badge de color).
-function BatchActionTile({ icon: Icon, label, onClick, disabled }) {
+function BatchActionTile({ icon: Icon, label, onClick, disabled, accentColor }) {
+  const color = accentColor || TEAL;
   return (
     <button
       type="button"
@@ -325,7 +339,7 @@ function BatchActionTile({ icon: Icon, label, onClick, disabled }) {
       disabled={disabled}
       className="flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-3 text-center disabled:opacity-50"
     >
-      <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: "#F0FDFA", color: TEAL }}>
+      <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A`, color }}>
         <Icon size={17} aria-hidden="true" />
       </span>
       <span className="px-1 text-xs font-medium text-gray-700">{label}</span>
@@ -333,8 +347,9 @@ function BatchActionTile({ icon: Icon, label, onClick, disabled }) {
   );
 }
 
-function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf, onDownloadJpg, onShare, onRegenerate, regenerating }) {
+function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf, onDownloadJpg, onShare, onRegenerate, regenerating, accentColor }) {
   const { t } = useTranslation("trainingRecords");
+  const color = accentColor || TEAL;
   const hasGenerated = !!student.pdfBytes;
   return (
     <li className="flex items-center gap-1.5 px-4 py-2.5 text-sm">
@@ -365,20 +380,20 @@ function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf
         aria-label={t("roster.regenerarTr")}
         title={t("roster.regenerarTr")}
         className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 disabled:opacity-30"
-        style={{ color: TEAL }}
+        style={{ color }}
       >
         {regenerating ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <RefreshCw size={16} aria-hidden="true" />}
       </button>
       {hasGenerated && (
         <>
-          <button onClick={() => onDownloadPdf(student)} aria-label={t("roster.descargarPdf")} title={t("roster.descargarPdf")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
+          <button onClick={() => onDownloadPdf(student)} aria-label={t("roster.descargarPdf")} title={t("roster.descargarPdf")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color }}>
             <FileText size={17} aria-hidden="true" />
           </button>
-          <button onClick={() => onDownloadJpg(student)} aria-label={t("roster.descargarJpg")} title={t("roster.descargarJpg")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
+          <button onClick={() => onDownloadJpg(student)} aria-label={t("roster.descargarJpg")} title={t("roster.descargarJpg")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color }}>
             <ImageDown size={17} aria-hidden="true" />
           </button>
           {onShare && (
-            <button onClick={() => onShare(student)} aria-label={t("roster.compartir")} title={t("roster.compartir")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
+            <button onClick={() => onShare(student)} aria-label={t("roster.compartir")} title={t("roster.compartir")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color }}>
               <Share2 size={17} aria-hidden="true" />
             </button>
           )}
@@ -616,7 +631,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   if (!instructorComplete) {
     return (
       <div className="space-y-4 pb-16">
-        <InstructorMissingNotice onOpenProfile={onOpenProfile} />
+        <InstructorMissingNotice onOpenProfile={onOpenProfile} accentColor={accentColor} />
       </div>
     );
   }
@@ -636,7 +651,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
         <div className="mb-2 flex items-center justify-between gap-2">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentForm.plantilla")}</h3>
           {templateCode && (
-            <button onClick={requestTemplateChange} className="flex min-h-9 shrink-0 items-center gap-1 text-xs font-medium" style={{ color: TEAL }}>
+            <button onClick={requestTemplateChange} className="flex min-h-9 shrink-0 items-center gap-1 text-xs font-medium" style={{ color: accentColor || TEAL }}>
               {t("studentForm.cambiarPlantilla")}
             </button>
           )}
@@ -648,7 +663,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
             <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
               {templates.map((tpl) => (
                 <button key={tpl.code} onClick={() => selectTemplate(tpl.code)} className="flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: "#F0FDFA", color: TEAL }}>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: `${accentColor || TEAL}1A`, color: accentColor || TEAL }}>
                     <Award size={18} aria-hidden="true" />
                   </span>
                   <span className="flex-1 text-sm font-medium text-gray-800">{tpl.name}</span>
@@ -671,7 +686,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
               no un formulario por alumno; cada alumno solo aporta su
               nombre y su firma. Es la confusión más probable de esta
               pantalla, así que se explicita en vez de darla por sabida. */}
-          <div className="flex items-start gap-2 rounded-lg border px-3 py-2.5 text-xs" style={{ borderColor: `${TEAL}33`, backgroundColor: "#F0FDFA", color: "#0F5B57" }}>
+          <div className="flex items-start gap-2 rounded-lg border px-3 py-2.5 text-xs" style={{ borderColor: `${accentColor || TEAL}33`, backgroundColor: `${accentColor || TEAL}1A`, color: accentColor || TEAL }}>
             <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
             <p>{t("studentSheet.configCompartidaHint")}</p>
           </div>
@@ -691,6 +706,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                   onDateChange={(v) => setRowDate(i, v)}
                   dateError={configErrors.rowDates?.[i]}
                   dateLabel={t("studentSheet.fechaDeFila", { label: r.label })}
+                  accentColor={accentColor}
                 />
               ))}
               {/* Aventuras electivas de AOWD (2026-09-04, pedido explícito:
@@ -739,6 +755,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                   { value: "online", label: t("studentSheet.examenOnline") },
                   { value: "printed", label: t("studentSheet.examenImpreso") },
                 ]}
+                accentColor={accentColor}
               />
               <FieldError message={configErrors.examVersion} />
             </section>
@@ -754,6 +771,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                   { value: "openWaterDiver", label: t("studentSheet.openWaterDiver") },
                   { value: "scubaDiver", label: t("studentSheet.scubaDiver") },
                 ]}
+                accentColor={accentColor}
               />
               <FieldError message={configErrors.upgrade} />
             </section>
@@ -771,6 +789,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                   { value: "ean32", label: t("studentSheet.ean32") },
                   { value: "ean40", label: t("studentSheet.ean40") },
                 ]}
+                accentColor={accentColor}
               />
             </section>
           )}
@@ -797,7 +816,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
             {students.length === 0 ? (
               <div className="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-gray-400">
                 <p className="mb-2">{t("roster.vacio")}</p>
-                <button onClick={() => setEntrySheet({ mode: "add" })} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium" style={{ color: TEAL }}>
+                <button onClick={() => setEntrySheet({ mode: "add" })} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium" style={{ color: accentColor || TEAL }}>
                   <UserPlus size={15} aria-hidden="true" /> {t("roster.anadirPrimerAlumno")}
                 </button>
               </div>
@@ -816,6 +835,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                     onShare={canShareFiles([new File([""], "t.pdf", { type: "application/pdf" })]) ? shareRecord : null}
                     onRegenerate={regenerateStudent}
                     regenerating={regeneratingId === student.id}
+                    accentColor={accentColor}
                   />
                 ))}
                 {/* "+ Añadir alumno" como fila del propio listado
@@ -853,9 +873,9 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                 <span className="text-xs text-gray-400">{t("roster.enLoteCount", { count: generatedStudents.length })}</span>
               </div>
               <div className={`grid gap-2 ${shareAllSupported ? "grid-cols-3" : "grid-cols-2"}`}>
-                <BatchActionTile icon={FileText} label={t("roster.descargarTodoPdf")} onClick={() => downloadAllAs("pdf")} disabled={batchWorking} />
-                <BatchActionTile icon={ImageDown} label={t("roster.descargarTodoJpg")} onClick={() => downloadAllAs("jpg")} disabled={batchWorking} />
-                {shareAllSupported && <BatchActionTile icon={Share2} label={t("roster.compartirTodo")} onClick={shareAll} />}
+                <BatchActionTile icon={FileText} label={t("roster.descargarTodoPdf")} onClick={() => downloadAllAs("pdf")} disabled={batchWorking} accentColor={accentColor} />
+                <BatchActionTile icon={ImageDown} label={t("roster.descargarTodoJpg")} onClick={() => downloadAllAs("jpg")} disabled={batchWorking} accentColor={accentColor} />
+                {shareAllSupported && <BatchActionTile icon={Share2} label={t("roster.compartirTodo")} onClick={shareAll} accentColor={accentColor} />}
               </div>
             </section>
           )}
@@ -868,6 +888,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
         mode={entrySheet?.mode}
         initial={editingEntry}
         onSaved={handleStudentSaved}
+        accentColor={accentColor}
       />
       <ConfirmDialog
         open={confirmingTemplateChange}

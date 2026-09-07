@@ -136,6 +136,10 @@ Registro de cambios relevantes de Ocean Flow.
   — si todo lo pendiente es de este mes, ya no hace falta la aclaración.
 
 ### Fixed
+- Training Records: "Versión del examen", "Certificación" y los
+  checkboxes de "Progreso del curso" seguían con el tono verde anterior
+  al rediseño — ahora usan el mismo azul marino que el resto de la
+  pantalla (el botón "Generar para todos" ya se había corregido antes).
 - El calendario de Home/Resumen ahora sí desplaza la pantalla al detalle
   del día al tocarlo, siempre al instante — antes dependía de un tiempo
   variable (a veces varios segundos, a veces nada) según cuánto

@@ -3129,3 +3129,51 @@ pendiente fechado en el mes en curso, el botón "Info: ..." no aparece
 en absoluto. El test ya existente (con pendientes de un mes anterior)
 sigue confirmando que el tooltip SÍ aparece y funciona igual que antes.
 805/805 tests (suite completa), lint 0 errores, build correcto.
+
+### 12.2 — Training Records: barrido completo del TEAL antiguo (no solo "Generar para todos")
+
+Retoma la queja de TR de la cola anterior, ahora concretada: "los campos
+versión del examen, certificación... se ven del tono verde anterior al
+rediseño". La ronda de feedback previa (10.5) solo había corregido el
+botón "Generar para todos los alumnos" — el resto del archivo seguía
+con `TEAL` (el teal legado, `#0F766E`) hardcodeado, algunos componentes
+sin ni siquiera recibir `accentColor` como prop.
+
+**Auditoría real (no solo el punto señalado)**: `TrainingRecordsTab.jsx`
+ya recibía `accentColor={sectionColor("trabajo")}` desde `App.jsx`
+(navy) — pero de los ~16 usos de `TEAL` en el archivo, solo 1
+(`accentColor || TEAL` del botón "Generar para todos") lo aprovechaba.
+Los otros 15 (`RadioChoice` — versión de examen/certificación/variante
+de curso —, `ProgressRowToggle` — checkbox de cada fila de progreso —,
+`BatchActionTile`, `StudentRow`, `InstructorMissingNotice`, badge de
+plantilla, botón "cambiar plantilla", aviso de "configuración
+compartida", enlace "Añade tu primer alumno") seguían con TEAL fijo,
+más `#F0FDFA`/`#0F5B57` (tinte/texto teal) hardcodeados en vez de
+derivarse del color real. `StudentQuickEntrySheet.jsx` (hoja de alta de
+alumno) ni siquiera recibía `accentColor` — sus 2 usos (checkbox "Menor
+de edad", botón "Guardar alumno") no tenían forma de acceder al color
+real aunque hubiera querido.
+
+**Qué se hizo**: `accentColor` pasa a ser un prop real de cada
+subcomponente afectado (antes solo lo tenía el componente raíz),
+sustituyendo cada `TEAL` fijo por `accentColor || TEAL` (TEAL queda
+solo como último respaldo, nunca como valor por defecto real — mismo
+criterio que ya fijó el test de la ronda anterior). Los tintes
+hardcodeados (`#F0FDFA`, `#0F5B57`) pasan a derivarse del propio color
+(`${color}1A`/`${color}33`), mismo patrón ya usado en Config/Mi trabajo
+para las chips de icono. `StudentQuickEntrySheet` gana el prop
+`accentColor`, pasado desde `TrainingRecordsTab` en su única llamada.
+
+**Verificado**: 3 tests nuevos en `TrainingRecordsTab.test.jsx` —
+"Versión de examen" (RadioChoice) refleja `accentColor` en la opción ya
+marcada por defecto, el checkbox de una fila obligatoria de progreso
+usa `accentColor` en su `accentColor` CSS, y el aviso de "completa tu
+perfil" usa `accentColor` en su botón — los 3 con un `accentColor`
+distinto del TEAL legado para que el test falle de verdad si vuelve a
+colarse el valor fijo. 808/808 tests (suite completa), lint 0 errores,
+build correcto. Confirmado además en navegador real (Chromium,
+`localhost`, cuenta demo): plantilla Open Water Diver seleccionada,
+checkboxes de "Progreso del curso" en navy (no verde), "Versión del
+examen" (Online) y "Certificación" (Open Water Diver) ambos en navy —
+zoom sobre los dos para confirmar que no queda ningún resto verde. Sin
+errores de consola.
