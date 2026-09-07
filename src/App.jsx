@@ -30,6 +30,7 @@ import DeploymentNotice from "./DeploymentNotice";
 import { APP_VERSION } from "./version";
 import SummaryTab from "./SummaryTab";
 import HelpTab, { clearStoredHelpOpen } from "./HelpTab";
+import InstallAppTab from "./InstallAppTab";
 import PaymentsTab from "./PaymentsTab";
 import ProfileTab from "./ProfileTab";
 import i18n, { setStoredLanguage } from "./i18n";
@@ -82,7 +83,12 @@ const PRIMARY_TABS = [
 // es una pestaña secundaria más, al mismo nivel que Ayuda/Configuración/Mi
 // perfil — ver closeSecondary más abajo para el único comportamiento
 // propio que conserva (cerrar siempre vuelve a Home, nunca a `returnTab`).
-const SECONDARY_TABS = ["config", "help", "pagos", "perfil", "training-records"];
+// "install-app" (2026-09-07, pedido explícito: "un enlace para añadir
+// la app a tu escritorio como acceso directo, en iOS y en android...
+// una página que se abre sobre toda la pantalla como la ayuda") — mismo
+// patrón que "training-records": pestaña secundaria independiente,
+// cerrar siempre vuelve a Home (ver closeSecondary más abajo).
+const SECONDARY_TABS = ["config", "help", "pagos", "perfil", "training-records", "install-app"];
 
 // Recuerda la pestaña activa y a cuál "volver" desde una pantalla
 // secundaria — corrige de raíz dos problemas reales, no dos parches
@@ -343,7 +349,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
     // siempre") — a diferencia de Ayuda/Configuración/Mi perfil, que
     // vuelven a la pestaña primaria desde la que se entró, esta ignora
     // `returnTab` a propósito.
-    if (tab === "training-records") { changeTab("home"); return; }
+    if (tab === "training-records" || tab === "install-app") { changeTab("home"); return; }
     changeTab(returnTab);
   };
   // Cerrar sesión — Fase 4, Release V1 (rediseño de cabecera): antes vivía
@@ -495,6 +501,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             onOpenPending={() => changeTab("trabajo")}
             onOpenSummary={() => changeTab("summary")}
             onOpenTrainingRecords={() => changeTab("training-records")}
+            onOpenInstallApp={() => changeTab("install-app")}
           />
         )}
         {tab === "log" && (
@@ -537,6 +544,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
           />
         )}
         {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} />}
+        {tab === "install-app" && <InstallAppTab />}
         {tab === "perfil" && (
           <ProfileTab
             profile={profile} currencies={currencies}

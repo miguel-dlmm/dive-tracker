@@ -5,6 +5,10 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Added
+- **Instalar la app**: nuevo banner en Home con instrucciones paso a
+  paso para añadir Ocean Flow a la pantalla de inicio, tanto en iOS
+  (Safari) como en Android (Chrome) — descartable, y oculto solo si ya
+  se está usando la app instalada.
 - **Training Records ya tiene acceso propio**, desde una tarjeta en
   Home. Genera el registro de progreso oficial (Training Record) de
   cada alumno para las 10 plantillas SSI, con firma incluida — nada de

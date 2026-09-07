@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { GraduationCap, Award, Handshake, ChevronRight, Building2 } from "lucide-react";
-import { TEAL, SUN, GREEN, BRAND_NAVY } from "./App";
+import { GraduationCap, Award, Handshake, ChevronRight, Building2, Smartphone, X } from "lucide-react";
+import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
@@ -89,8 +89,26 @@ function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary, onOpenTrainingRecords }) {
+// Preferencia de dispositivo, no de cuenta — ver comentario junto a su uso.
+const INSTALL_BANNER_DISMISSED_KEY = "oceanpulse:installBannerDismissed";
+
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp }) {
   const { t } = useTranslation("home");
+  const [installBannerDismissed, setInstallBannerDismissed] = useState(() => {
+    try { return localStorage.getItem(INSTALL_BANNER_DISMISSED_KEY) === "true"; } catch { return false; }
+  });
+  // De dispositivo, no de cuenta (a diferencia de la moneda favorita,
+  // ver ADR-0007): "ya lo he visto" es sobre este navegador/móvil, no
+  // sobre qué usuario haya iniciado sesión en él. Oculto también si la
+  // propia app ya se está ejecutando instalada (display-mode:
+  // standalone en Chromium/Android, navigator.standalone en iOS Safari
+  // — ningún estándar cubre ambos con la misma propiedad) — no tiene
+  // sentido ofrecer instalar algo que ya está instalado.
+  const alreadyInstalled = typeof window !== "undefined" && (window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator?.standalone === true);
+  const dismissInstallBanner = () => {
+    setInstallBannerDismissed(true);
+    try { localStorage.setItem(INSTALL_BANNER_DISMISSED_KEY, "true"); } catch { /* no-op — preferencia de UI, no crítica */ }
+  };
   const translatedTypeMeta = useTranslatedMovementTypeMeta(t);
   const reducedMotion = usePrefersReducedMotion();
   const now = new Date();
@@ -258,6 +276,29 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           </span>
           <ChevronRight size={20} className="shrink-0" style={{ color: BRAND_NAVY }} aria-hidden="true" />
         </button>
+      )}
+
+      {/* Banner "Instalar la app" (2026-09-07, pedido explícito) —
+          distinto a propósito de la tarjeta de Training Records de
+          arriba: es descartable (✕, oculto para siempre en este
+          dispositivo tras cerrarlo) y de menor peso visual (banner
+          fino, no una tarjeta de acceso a una herramienta que se usa a
+          diario). Oculto también si la app ya corre instalada, o si
+          `onOpenInstallApp` no llega (defensivo, mismo criterio que
+          `onOpenTrainingRecords` arriba). */}
+      {onOpenInstallApp && !installBannerDismissed && !alreadyInstalled && (
+        <div className="flex items-center gap-3 rounded-xl border p-3" style={{ borderColor: `${BRAND_OCEAN}40`, backgroundColor: `${BRAND_OCEAN}0D` }}>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_OCEAN}1A` }}>
+            <Smartphone size={16} style={{ color: BRAND_OCEAN }} aria-hidden="true" />
+          </span>
+          <button type="button" onClick={onOpenInstallApp} className="min-w-0 flex-1 text-left">
+            <span className="block text-xs font-semibold" style={{ color: BRAND_OCEAN }}>{t("installBanner.title")}</span>
+            <span className="block text-xs text-gray-500">{t("installBanner.subtitle")}</span>
+          </button>
+          <button type="button" onClick={dismissInstallBanner} className="-m-2 flex h-9 w-9 shrink-0 items-center justify-center p-2 text-gray-400" aria-label={t("installBanner.dismiss")}>
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
       )}
 
       {/* 3. Pendiente de cobrar — información financiera principal, la más

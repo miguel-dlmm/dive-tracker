@@ -9,7 +9,8 @@
     "help": "Help",
     "pagos": "Payments",
     "perfil": "My profile",
-    "training-records": "Training Records"
+    "training-records": "Training Records",
+    "install-app": "Install the app"
   },
   "aria": {
     "close": "Close",

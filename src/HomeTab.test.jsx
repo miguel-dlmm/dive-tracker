@@ -401,3 +401,56 @@ describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", (
     }, { timeout: 2000 });
   });
 });
+
+// Banner "Instalar la app" (2026-09-07, pedido explícito) — descartable
+// (✕, oculto para siempre en ESTE dispositivo, no por cuenta) y ausente
+// si `onOpenInstallApp` no llega (mismo criterio defensivo que
+// onOpenTrainingRecords) o si la app ya corre instalada.
+describe("HomeTab — banner 'Instalar la app'", () => {
+  beforeEach(() => { localStorage.clear(); });
+
+  function renderHomeWithInstallBanner(onOpenInstallApp = vi.fn()) {
+    render(
+      <HomeTab
+        worklog={rowsHook([])} comisiones={rowsHook([])} colleaguePayments={rowsHook([])}
+        rates={rowsHook([])} commissionRates={rowsHook([])}
+        activities={rowsHook([{ name: "Open Water" }])} schools={rowsHook([{ name: "PADI Cozumel" }])}
+        currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])} navSections={rowsHook([])}
+        paymentStatuses={PAYMENT_STATUSES} onQuickCreate={vi.fn()} onOpenInstallApp={onOpenInstallApp}
+      />
+    );
+  }
+
+  it("no aparece si no se pasa onOpenInstallApp", () => {
+    render(
+      <HomeTab
+        worklog={rowsHook([])} comisiones={rowsHook([])} colleaguePayments={rowsHook([])}
+        rates={rowsHook([])} commissionRates={rowsHook([])}
+        activities={rowsHook([{ name: "Open Water" }])} schools={rowsHook([{ name: "PADI Cozumel" }])}
+        currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])} navSections={rowsHook([])}
+        paymentStatuses={PAYMENT_STATUSES} onQuickCreate={vi.fn()}
+      />
+    );
+    expect(screen.queryByText("Instala Ocean Flow en tu móvil")).not.toBeInTheDocument();
+  });
+
+  it("pulsar el banner llama a onOpenInstallApp", async () => {
+    const user = userEvent.setup();
+    const onOpenInstallApp = vi.fn();
+    renderHomeWithInstallBanner(onOpenInstallApp);
+    await user.click(screen.getByText("Instala Ocean Flow en tu móvil"));
+    expect(onOpenInstallApp).toHaveBeenCalledTimes(1);
+  });
+
+  it("cerrar con la ✕ lo oculta y recuerda la decisión en este dispositivo (localStorage)", async () => {
+    const user = userEvent.setup();
+    renderHomeWithInstallBanner();
+    await user.click(screen.getByRole("button", { name: "No volver a mostrar" }));
+    expect(screen.queryByText("Instala Ocean Flow en tu móvil")).not.toBeInTheDocument();
+    expect(localStorage.getItem("oceanpulse:installBannerDismissed")).toBe("true");
+
+    // Remontar (p. ej. recargar la página) — sigue sin aparecer.
+    renderHomeWithInstallBanner();
+    expect(screen.queryByText("Instala Ocean Flow en tu móvil")).not.toBeInTheDocument();
+  });
+});

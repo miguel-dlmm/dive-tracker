@@ -3863,3 +3863,46 @@ movimiento / estado) reflejando los colores de marca nuevos de 12.14.
 
 Sin cambios de código de la app — solo el Artifact republicado en la
 misma URL.
+
+### 12.16 — Banner "Instalar la app" + página de instrucciones (iOS/Android)
+
+**Pedido**: "añade en algún sitio rollo banner un enlace para añadir la
+app a tu escritorio como acceso directo, en iOS y en android. la info
+irá en una página q se abre sobre toda la pantalla como la ayuda y q
+se puede cerrar. añadir antes del testeo".
+
+**Implementado**: mismo patrón ya probado que Training Records — nueva
+pestaña secundaria `"install-app"` (`SECONDARY_TABS`, `App.jsx`), sin
+cabecera propia (la global ya pone "✕ + título", cerrar siempre vuelve
+a Home). Contenido: `InstallAppTab.jsx`, dos secciones con pasos
+numerados (iPhone/iPad Safari — Compartir → Añadir a pantalla de
+inicio; Android Chrome — menú ⋮ → Instalar app), coloreadas con
+`BRAND_NAVY`/`BRAND_OCEAN` respectivamente (el azul general nuevo de
+12.14, primer uso real). Sin ningún prompt nativo de instalación que
+disparar: iOS Safari no expone ninguna API para eso
+(`beforeinstallprompt` es solo Chromium/Android), así que el único
+camino real en cualquier plataforma es explicar el gesto manual —
+nunca se ha prometido más que eso.
+
+**El banner en sí** (Home, justo debajo de Training Records):
+descartable con ✕ (a diferencia de la tarjeta de Training Records, que
+es permanente) — la decisión se recuerda en `localStorage` de este
+DISPOSITIVO, no de la cuenta (a propósito, distinto del criterio de
+"moneda favorita"/ADR-0007: "ya lo he visto" es sobre el navegador/
+móvil, no sobre qué usuario haya iniciado sesión en él). Oculto también
+si la app ya se ejecuta instalada — `display-mode: standalone`
+(Chromium/Android) o `navigator.standalone` (iOS Safari, sin estándar
+común entre ambos) — no tiene sentido ofrecer instalar algo que ya lo
+está.
+
+**Verificado**: 822/822 tests (suite completa — 3 tests nuevos para el
+banner: no aparece sin `onOpenInstallApp`, pulsarlo navega, cerrar con
+la ✕ lo oculta y sobrevive a un remontaje vía `localStorage`), lint 0
+errores, build correcto. Confirmado en Chrome real: el banner aparece
+en Home bajo Training Records; pulsarlo abre "Instalar la app" con las
+2 secciones y sus 4 pasos cada una; cerrar con la ✕ de la cabecera
+global vuelve a Home con el banner intacto — sin errores de consola.
+Sin test dedicado a nivel `App.jsx` para el enrutado en sí (mismo
+criterio que `onOpenTrainingRecords`, que tampoco lo tiene — el propio
+mecanismo de `SECONDARY_TABS`/`closeSecondary` ya está probado por ese
+patrón existente).
