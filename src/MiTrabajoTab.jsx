@@ -336,6 +336,17 @@ function emptyMessage(statusFilter, hasActiveFilters, t) {
 // encima de esta pantalla, no la desmonta). Un aria-label específico
 // ("Info: Pendiente de cobrar") evita esa ambigüedad para lectores de
 // pantalla y de paso es más claro por sí solo.
+// Tamaño de letra de la cifra de un MoneyKpiTile, según lo larga que sea
+// la cadena ya formateada — extraída como función pura para poder fijar
+// con un test unitario los umbrales exactos (ver comentario largo en
+// MoneyKpiTile) y que no se repita el mismo bug de truncado una tercera
+// vez sin que un test lo detecte primero.
+export function moneyKpiSizeClass(text) {
+  if (text.length > 10) return "text-xs";
+  if (text.length > 6) return "text-sm";
+  return "text-base";
+}
+
 function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel }) {
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const entries = Object.entries(totals || {});
@@ -349,8 +360,22 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
   // pequeño sin necesidad de medir. `truncate` se queda como red de
   // seguridad para el caso extremo que ni el tamaño más pequeño evite,
   // nunca como primera línea de defensa.
+  //
+  // Umbrales endurecidos (Fase 7, 2026-09-07) — bug real reportado en un
+  // iPhone real ("las cifras numéricas salen cortadas"), con un total de
+  // 12 caracteres ("117.477,40 ฿") que en Chromium cabía de sobra en
+  // text-sm pero no se pudo reproducir/medir en Safari real desde este
+  // entorno (WebKit no arranca aquí, ver CLAUDE.md §8 sobre
+  // mobile-check). En vez de un umbral ajustado a ciegas al caso
+  // concreto reportado, se baja el margen en los dos escalones (antes
+  // >13/>9, ahora >10/>6, ver moneyKpiSizeClass) — Safari/WebKit puede
+  // renderizar dígitos y el símbolo de moneda algo más anchos que
+  // Chromium con el mismo font-family/tamaño (sustitución de fuente
+  // distinta para caracteres como ฿), así que un margen de seguridad
+  // mayor es más robusto que afinar el número exacto sin poder
+  // verificarlo en el motor real.
   const singleText = single ? formatMoney(single[1], single[0], currencyRows) : "";
-  const amountSizeCls = !single ? "text-xs" : singleText.length > 13 ? "text-xs" : singleText.length > 9 ? "text-sm" : "text-base";
+  const amountSizeCls = !single ? "text-xs" : moneyKpiSizeClass(singleText);
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}

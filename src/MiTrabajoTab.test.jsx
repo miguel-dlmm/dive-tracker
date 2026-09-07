@@ -1,7 +1,28 @@
 import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import MiTrabajoTab from "./MiTrabajoTab";
+import MiTrabajoTab, { moneyKpiSizeClass } from "./MiTrabajoTab";
 import { ToastProvider } from "./shared";
+
+// Bug real reportado dos veces (Fase 6: "117.477,09 ฿" cortado en
+// Chromium con datos de prueba reales; Fase 7: mismo síntoma en un
+// iPhone real con Safari, sin poder reproducirlo en este entorno) — fija
+// los umbrales de moneyKpiSizeClass con un test para que un futuro
+// ajuste no vuelva a estrechar el margen sin darse cuenta.
+describe("moneyKpiSizeClass", () => {
+  it("usa text-base para cifras de hasta 6 caracteres", () => {
+    expect(moneyKpiSizeClass("0,00 €")).toBe("text-base"); // 6
+  });
+
+  it("usa text-sm para cifras de 7 a 10 caracteres", () => {
+    expect(moneyKpiSizeClass("20,00 €")).toBe("text-sm"); // 7
+    expect(moneyKpiSizeClass("7.200,00 €")).toBe("text-sm"); // 10
+  });
+
+  it("usa text-xs para cifras de más de 10 caracteres, el caso real reportado", () => {
+    expect(moneyKpiSizeClass("75.828,40 ฿")).toBe("text-xs"); // 11
+    expect(moneyKpiSizeClass("117.477,40 ฿")).toBe("text-xs"); // 12
+  });
+});
 
 const rowsHook = (rows) => ({
   rows, loaded: true,

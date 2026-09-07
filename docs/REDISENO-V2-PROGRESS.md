@@ -1321,3 +1321,38 @@ visual manual en navegador — login (logo+tagline+subtítulo, sin
 solapamientos, todo en una línea cada bloque en un viewport de 500px de
 ancho) y el `AppLoading` de la pantalla de carga (mismo mark, animación
 de "relleno" intacta) ambos correctos, sin errores de consola.
+
+### 7.6 — KPIs de Mi trabajo cortados en Safari iOS: umbrales endurecidos + test
+
+Mismo síntoma que 5.7 (Fase 5) pero reportado por segunda vez, esta vez
+en un iPhone real ("los KPIs de la cabecera de movimientos me salen con
+las cifras numéricas cortadas") — el ajuste anterior (umbrales de
+tamaño de letra en `>13`/`>9` caracteres) resolvió el caso reproducido
+en Chromium con los datos de prueba de Fase 6, pero Safari/WebKit puede
+renderizar dígitos y símbolos de moneda (el ฿ en concreto) más anchos
+que Chromium con el mismo `font-family`/tamaño — no verificable desde
+este entorno (WebKit no arranca aquí, ver CLAUDE.md §8).
+
+**Corrección**: en vez de afinar el umbral exacto a ciegas sobre el
+caso reportado, se baja el margen en los dos escalones (`MiTrabajoTab.jsx`,
+`moneyKpiSizeClass`): `text-xs` a partir de 11 caracteres (antes 14),
+`text-sm` a partir de 7 (antes 10) — cada cifra pasa a un tamaño más
+pequeño con más margen de sobra, más robusto frente a diferencias de
+métricas de fuente entre navegadores que un número ajustado al
+milímetro sin poder probarlo en el motor real. La función se extrae
+como `moneyKpiSizeClass(text)`, pura y exportada, con 3 tests nuevos
+que fijan los umbrales exactos (incluyendo el caso real reportado,
+"117.477,40 ฿") — para que un futuro ajuste no vuelva a estrechar el
+margen sin que un test lo señale primero (es la segunda vez que este
+mismo síntoma se reporta).
+
+Comprobado también que el resto de la app no comparte el mismo patrón
+de columna estrecha con cifras de moneda: el "Pendiente de cobrar" de
+Home usa una tarjeta de ancho completo (`text-2xl` con margen de sobra
+incluso para valores largos) — no aplica el mismo riesgo, no se toca.
+
+**Verificación**: 765/765 tests (3 nuevos), lint 0 errores, build
+correcto; comprobación visual en navegador — Mi trabajo con los mismos
+datos de prueba reales (117.477,40 ฿, 26.584,00 ฿, 5.150,00 ฿) muestra
+las tres cifras completas, sin cortar, con la más larga ("Pendiente de
+cobrar") en el tamaño más pequeño y las otras dos en el intermedio.
