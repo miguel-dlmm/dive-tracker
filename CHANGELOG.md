@@ -126,6 +126,11 @@ Registro de cambios relevantes de Ocean Flow.
   trabajo que nunca llegaba a pintarse en la práctica.
 
 ### Fixed
+- **(Interno, crítico) Todos los deployments de Vercel fallaban** desde
+  que se añadió el endpoint de actividad de usuario — superaba el
+  límite de 12 Serverless Functions del plan Hobby. Fusionado dentro de
+  `/api/list-user-status` en vez de vivir en su propio fichero — ver
+  "Límite de Serverless Functions" en `CLAUDE.md`.
 - (Interno) El email de "olvidé mi contraseña" podía llevar a la URL
   fija de TEST en vez de al Preview Deployment concreto desde el que se
   pidió — ya usa el dominio real de la petición.

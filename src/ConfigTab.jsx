@@ -760,9 +760,9 @@ function UserDetailSheet({
             </div>
             {/* Movimientos dados de alta + última actividad (Fase 9,
                 2026-09-07, pedido explícito) — carga aparte bajo demanda
-                (ver el efecto en UsersDirectory que dispara
-                getUserActivitySummary.js al abrir esta hoja), nunca
-                bloquea el resto del detalle: mientras no ha llegado
+                (ver el efecto en UsersDirectory que llama a
+                /api/list-user-status con user_id al abrir esta hoja),
+                nunca bloquea el resto del detalle: mientras no ha llegado
                 (activitySummary null) se muestra "…" en vez de dejar el
                 valor en blanco, para que quede claro que está cargando y
                 no que la cuenta no tiene movimientos. */}
@@ -1167,9 +1167,12 @@ function UsersDirectory({ profile }) {
   const [openUserId, setOpenUserId] = useState(null);
   // Resumen de actividad (recuento de movimientos + fecha de la última
   // actividad) — bajo demanda al abrir la hoja de detalle de un usuario
-  // concreto, ver getUserActivitySummary.js. Objeto { count, lastActivityAt }
-  // o null mientras carga/antes de abrir ninguna hoja; se limpia al cerrar
-  // para no mostrar el dato del usuario anterior un instante al abrir el
+  // concreto — fusionado en /api/list-user-status (ver activitySummaryFor()
+  // en listUserStatus.js, 2026-09-07): un endpoint propio era la 13ª
+  // Serverless Function y tumbaba todos los deployments del plan Hobby de
+  // Vercel (límite de 12). Objeto { count, lastActivityAt } o null
+  // mientras carga/antes de abrir ninguna hoja; se limpia al cerrar para
+  // no mostrar el dato del usuario anterior un instante al abrir el
   // siguiente.
   const [activitySummary, setActivitySummary] = useState(null);
   useEffect(() => {
@@ -1180,7 +1183,7 @@ function UsersDirectory({ profile }) {
       try {
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData?.session?.access_token;
-        const res = await fetch("/api/get-user-activity-summary", {
+        const res = await fetch("/api/list-user-status", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ user_id: openUserId }),

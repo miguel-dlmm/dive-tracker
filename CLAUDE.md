@@ -62,6 +62,34 @@ Vercel con las mismas variables TEST, útil para validar sin tocar
 cuando se cumpla alguno de los disparadores objetivos que describe el
 ADR, no por adelantado.
 
+## Límite de Serverless Functions (plan Hobby de Vercel)
+
+Los proyectos `dive-tracker` y `oceanflow` están en el plan Hobby de
+Vercel, que limita a **12 Serverless Functions por deployment** — cada
+fichero en `api/*.js` cuenta como una. Se superó ese límite el
+2026-09-07 (incidente real, ver `docs/RELEASE-V1-PROGRESS.md`/
+`docs/REDISENO-V2-PROGRESS.md`, sección "Incidente en producción"): un
+endpoint nuevo (`api/get-user-activity-summary.js`) fue la 13ª
+función y tumbó todos los deployments de la rama en curso, sin que
+`npm run build`, `npm run test` ni `npm run lint` lo detectaran — solo
+lo señala el propio empaquetado de Functions de Vercel, un paso
+posterior al build que solo corre en el servidor de Vercel (o en local
+con el proyecto vinculado vía `vercel link` + `vercel build --yes`).
+
+**Antes de añadir un fichero nuevo en `api/*.js`**, plantear primero si
+puede vivir como una rama más de un endpoint hermano ya existente con
+la misma autenticación/rol (ver `activitySummaryFor()` dentro de
+`handleListUserStatus`, `server/users/listUserStatus.js`, como
+ejemplo del patrón: una rama activada por un campo del cuerpo de la
+petición, en vez de un fichero `api/*.js` aparte) — salvo que la
+semántica sea claramente distinta (método HTTP, endpoint público vs
+admin, etc.), en cuyo caso sí toca crear uno nuevo y, si eso hiciera
+falta superar las 12 funciones, avisar antes de que el límite es un
+coste real (pasar a plan Pro) y esperar aprobación, no crearlo sin más.
+Verificar el recuento de funciones tras cualquier cambio en `api/`:
+`vercel build --yes && find .vercel/output/functions -name "*.func" |
+wc -l` (requiere el proyecto vinculado una vez con `vercel link`).
+
 ## Bypass de login en desarrollo
 
 Herramienta permanente de desarrollo — **no evita autenticación, la

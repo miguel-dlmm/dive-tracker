@@ -2021,3 +2021,79 @@ Basic Diver, 2 alumnos): el ZIP se descargó de verdad
 (`~/Downloads/Basic_Diver.zip`) y, al abrirlo con `unzip -l`, contenía
 los 2 PDF con nombres correctos (`Ana_Garcia_BD.pdf`,
 `Luis_Perez_BD.pdf`).
+
+### 9.12 — Incidente en producción: todos los deployments de Vercel fallaban desde 94b02dd
+
+Aviso directo del usuario a mitad de esta sesión, sin haberlo pedido
+como tarea: "te has dado cuenta q los deploy de vercel están fallando?
+me están llegando mails de avisos de error". No estaba en el backlog
+de la Fase 9 — se atiende de inmediato por delante de todo lo demás,
+al ser una rotura activa de producción con avisos llegando por email.
+
+**Diagnóstico** (con `vercel ls`/`vercel inspect --logs`, comparando
+deployments Ready vs Error commit a commit): el primer deployment en
+error fue exactamente `94b02dd` — el commit de la sección 9.2
+(Config/Usuario: movimientos + última actividad), que añadía
+`api/get-user-activity-summary.js`. El log de build terminaba en
+"Deploying outputs..." seguido de "Error" sin más detalle — el build
+en sí (`npm run build`) siempre había terminado bien, tanto en Vercel
+como en local, porque `vite build` no toca `api/` en absoluto: un
+fallo ahí solo lo detecta el propio empaquetado de Functions de
+Vercel, un paso posterior que no corre con `npm run build` ni con
+`vercel build` sin sesión vinculada. Reproducido en local vinculando
+el proyecto (`vercel link` + `vercel build --yes` + `vercel deploy
+--prebuilt --yes`), lo que dio el mensaje real: **"No more than 12
+Serverless Functions can be added to a Deployment on the Hobby
+plan."** — `api/get-user-activity-summary.js` era la 13ª función del
+proyecto (`api/*.js` = 1 Serverless Function cada uno en Vercel).
+
+**Corrección**: en vez de subir a un plan de pago (decisión de
+producto/coste, no técnica) o eliminar la funcionalidad, se fusiona el
+resumen de actividad dentro de `/api/list-user-status` — endpoint
+hermano que ya autentica y comprueba el rol admin igual, ver
+`activitySummaryFor()` en `listUserStatus.js`. `handleListUserStatus`
+gana una rama activada por `user_id` en el cuerpo: si llega, responde
+SOLO el resumen de actividad de ese usuario (sin tocar
+`auth.admin.listUsers()`, que no hace falta para esa rama); si no
+llega, se comporta exactamente igual que antes (listado masivo para el
+directorio). Eliminados `api/get-user-activity-summary.js`,
+`server/users/getUserActivitySummary.js` y su test — la lógica y sus
+tests (7 casos, portados tal cual) viven ahora en
+`listUserStatus.js`/`listUserStatus.test.js`. Cliente actualizado
+(`ConfigTab.jsx`): la misma llamada de antes, ahora contra
+`/api/list-user-status` con `{ user_id }` en el cuerpo.
+
+**Efecto secundario encontrado en el propio test suite**: los tests de
+`ConfigTab.test.jsx` que mockean `fetch` por URL (`mockFetchByUrl`) ya
+no pueden distinguir la llamada masiva de la llamada por usuario solo
+por la URL (las dos son ahora `/api/list-user-status`) — se
+distinguen por si el cuerpo de la petición trae `user_id`, con una
+clave de mock aparte (`/api/list-user-status:user`) para quien quiera
+comprobar esa respuesta en concreto. Aparte, fusionar los tests de
+`getUserActivitySummary.test.js` dentro de `listUserStatus.test.js`
+reveló un mock compartido (`verifyCaller`) sin `.mockClear()` en el
+`beforeEach` — un test que comprobaba "no se llamó a verifyCaller"
+solo pasaba si era el primero del archivo en ejecutarse; ahora se
+limpia el historial de llamadas en cada test, no solo el valor de
+retorno.
+
+**Regla para el futuro, no solo para hoy**: el límite de 12 Serverless
+Functions del plan Hobby es un techo real del proyecto mientras siga
+en ese plan — cualquier endpoint admin nuevo debería plantearse primero
+como una rama de un endpoint hermano ya existente (mismo criterio de
+autenticación/rol) antes que como un fichero `api/*.js` nuevo, salvo
+que la semántica sea claramente distinta (método HTTP, público vs
+admin, etc.). Ninguna herramienta local (`npm run build`, `npm run
+test`, `npm run lint`) detecta este límite — solo se descubre con
+`vercel build`/`vercel deploy` vinculado al proyecto real, o
+desplegando de verdad. Vale la pena considerar añadir esa comprobación
+al proceso de cierre de cualquier cambio que toque `api/`, no solo
+cuando ya ha fallado en producción.
+
+**Verificación**: 781/781 tests (58 en
+`listUserStatus.test.js`+`ConfigTab.test.jsx` juntos, todos verdes),
+lint sin errores nuevos, build correcto. Confirmado con `vercel build
+--yes` que el número de funciones vuelve a 12 (antes 13), y con
+`vercel deploy --prebuilt --yes` que el deployment termina en
+`readyState: "READY"` — la corrección funciona de verdad, no solo en
+teoría.

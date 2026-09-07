@@ -333,18 +333,31 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   // Mock de fetch por URL, consumido en orden por cada URL — no un único
   // índice global (`.mockResolvedValueOnce()` encadenado). Necesario
   // desde que abrir la hoja de detalle de un usuario dispara su propia
-  // llamada a /api/get-user-activity-summary (Fase 9, 2026-09-07) además
-  // de la llamada concreta que cada test quiere comprobar: un mock
-  // indexado por orden de llegada global se desincroniza en cuanto se
-  // añade cualquier llamada nueva que el test no conocía de antemano.
-  // Cualquier URL sin respuestas configuradas (como
-  // get-user-activity-summary en la mayoría de estos tests, que no les
-  // importa) recibe un 200 vacío genérico en vez de romper la cola de
-  // otra URL.
+  // llamada además de la llamada concreta que cada test quiere comprobar:
+  // un mock indexado por orden de llegada global se desincroniza en
+  // cuanto se añade cualquier llamada nueva que el test no conocía de
+  // antemano. Cualquier URL sin respuestas configuradas recibe un 200
+  // vacío genérico en vez de romper la cola de otra URL.
+  //
+  // /api/list-user-status se usa para 2 cosas distintas desde el MISMO
+  // endpoint (Fase 9, fusionado 2026-09-07 — un fichero propio para el
+  // resumen de actividad era la 13ª Serverless Function y tumbaba todos
+  // los deployments del plan Hobby de Vercel, límite de 12; ver
+  // activitySummaryFor() en listUserStatus.js): el listado masivo (bulk,
+  // sin user_id) y el resumen de actividad de un único usuario (con
+  // user_id, al abrir su hoja de detalle). Se distinguen por el cuerpo de
+  // la petición, no por la URL — sin esto, abrir cualquier hoja de
+  // detalle consumía una respuesta pensada para el refetch masivo (p.ej.
+  // tras desactivar una cuenta) y desincronizaba la cola. Clave
+  // "/api/list-user-status:user" aparte para quien quiera comprobar el
+  // resumen de actividad en concreto; el resto de tests ni la conocen y
+  // reciben el 200 vacío genérico de siempre.
   function mockFetchByUrl(responsesByUrl) {
     const queues = Object.fromEntries(Object.entries(responsesByUrl).map(([url, list]) => [url, [...list]]));
-    globalThis.fetch = vi.fn((url) => {
-      const queue = queues[url];
+    globalThis.fetch = vi.fn((url, init) => {
+      const isUserSummary = url === "/api/list-user-status" && typeof init?.body === "string" && init.body.includes("user_id");
+      const key = isUserSummary ? "/api/list-user-status:user" : url;
+      const queue = queues[key];
       if (!queue || queue.length === 0) return Promise.resolve({ ok: true, json: async () => ({}) });
       return Promise.resolve(queue.shift());
     });
