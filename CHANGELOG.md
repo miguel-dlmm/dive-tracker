@@ -180,6 +180,12 @@ Registro de cambios relevantes de Ocean Flow.
   raíz del repositorio, no en `public/` — Vite solo empaqueta esa
   carpeta): probable causa de que el icono de la app no aparezca bien
   en Safari iOS al añadirla a la pantalla de inicio.
+- **`robots.txt` tampoco llegaba a producción** — mismo bug que
+  `manifest.json` de arriba: devolvía 404, dejando la propia
+  instrucción de "no indexar esta app" sin una de sus dos capas.
+- **Vista previa al compartir un enlace de Ocean Flow** (WhatsApp,
+  email...) — la imagen de vista previa usaba una ruta relativa, que la
+  mayoría de generadores de vista previa no resuelve.
 - "Qué hay de nuevo" (Ayuda) vuelve a deslizar de verdad entre
   diapositivas, en vez de solo aparecer con un fundido — un bug real
   había obligado a quitar esa animación antes.

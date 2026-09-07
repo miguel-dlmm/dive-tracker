@@ -3906,3 +3906,73 @@ Sin test dedicado a nivel `App.jsx` para el enrutado en sí (mismo
 criterio que `onOpenTrainingRecords`, que tampoco lo tiene — el propio
 mecanismo de `SECONDARY_TABS`/`closeSecondary` ya está probado por ese
 patrón existente).
+
+### 12.17 — SEO: solo lo aplicable a una app privada + otro bug real de `publicDir`
+
+**Pedido**: "añade e implementa todo el seo posible... buenas
+prácticas... antes de preparar la release" — investigado con fuentes
+contrastadas y actuales (regla 5 de "Reglas permanentes — Release V1",
+`CLAUDE.md`), citadas abajo.
+
+**Encaje con el alcance real del producto — decisión explícita, no
+ignorada**: `index.html` ya tiene `<meta name="robots" content="noindex,
+nofollow">`, a propósito — Ocean Flow es "una herramienta personal/
+privada con datos de facturación, no contenido pensado para aparecer en
+buscadores" (comentario ya existente, ver también `docs/PRODUCT.md`:
+alcance de instructor freelance, no B2B). Revertir esto sería una
+decisión de producto real (visibilidad pública de una app con datos de
+facturación), no una mejora técnica — **no se toca aquí**, sin
+aprobación explícita. Por el mismo motivo, no se añade `sitemap.xml` ni
+se prepara envío a Google Search Console — ambos son recomendaciones
+estándar de SEO que solo tienen sentido para un sitio que SÍ quiere
+indexarse, contradictorias con la decisión ya tomada.
+
+**Lo que sí aplica sin contradecir esa decisión** (verificado con
+fuentes, no a ojo):
+
+1. **Bug real encontrado: `robots.txt` nunca llegaba a producción** —
+   mismo patrón exacto que `manifest.json` (corregido en 12.9 de esta
+   sesión): vivía en la raíz del repo, no en `public/`, así que Vite
+   nunca lo incluía en `dist/`. Confirmado contra producción real:
+   `curl -L https://dive-tracker-exgg.vercel.app/robots.txt` → 404. El
+   robots.txt en sí ya estaba bien escrito (`Disallow: /`, coherente con
+   el `noindex` del `<meta>`) — solo mal ubicado. Corregido con
+   `git mv robots.txt public/robots.txt`, mismo fix que 12.9. Esto
+   significa que la propia protección "no indexar esta app" llevaba
+   rota en producción desde que existía el fichero — el meta `noindex`
+   seguía funcionando (va en el HTML servido, no depende de `public/`),
+   pero la capa adicional de robots.txt no.
+2. **`og:image`/`twitter:image` con ruta relativa — bug real de
+   vistas previas al compartir un enlace**: `/og-image.png` no se
+   resuelve en la mayoría de generadores de vista previa (WhatsApp,
+   iMessage, Slack…), que no conocen el dominio de origen — deben ser
+   URLs absolutas. Corregido a
+   `https://dive-tracker-exgg.vercel.app/og-image.png` (el dominio real
+   de producción, ver "Ramas y entornos" en `CLAUDE.md`). Relevante
+   incluso para una app privada: enlaces de activación/invitación se
+   comparten igualmente por WhatsApp/email, y la vista previa debe
+   verse bien.
+3. **`og:image` ya medía 1200×630** (verificado con `file`), el tamaño
+   universal recomendado (1.91:1) — sin cambios necesarios ahí.
+4. **`og:url` añadido** (buena práctica estándar, ausente hasta ahora).
+5. **Manifest ya completo** (nombre, iconos, `theme_color`, `display:
+   standalone`, `start_url`) — el checklist de PWA SEO consultado lo
+   confirma como ya correcto, sin cambios.
+
+**Verificado**: `rm -rf dist && npm run build` seguido de `ls dist/`
+ya incluye `robots.txt`; `vite preview` responde 200 en `/robots.txt`
+con el contenido correcto. 822/822 tests, lint 0 errores, build
+correcto.
+
+**Fuentes citadas** (regla 5, Release V1):
+- Tamaño de imagen OG 1200×630 (1.91:1), universal para
+  Facebook/X/LinkedIn/Discord/Slack/WhatsApp/iMessage — [Krumzi, OG
+  Image Sizes 2026](https://www.krumzi.com/blog/open-graph-image-sizes-for-social-media-the-complete-2026-guide),
+  [env.dev, OpenGraph Image Sizes 2026](https://env.dev/guides/opengraph-image-sizes).
+- La URL de `og:image` debe ser absoluta, no relativa — mismas fuentes
+  de arriba.
+- Manifest completo (iconos/`theme_color`/`display`/`start_url`) como
+  buena práctica de PWA, aunque Google no lo use como señal de ranking
+  directa — [AppInstitute, PWA SEO & Discoverability
+  Checklist](https://appinstitute.com/pwa-seo-discoverability-checklist/),
+  [GOMAGE, PWA SEO](https://www.gomage.com/blog/pwa-seo/).

@@ -24,26 +24,44 @@
          de facturación, no contenido pensado para aparecer en buscadores.
          Si en algún momento tiene login multiusuario y quieres promocionarla
          como producto, cambia esto a "index, follow" y añade contenido
-         público real (una landing, no la app en sí). -->
+         público real (una landing, no la app en sí).
+         Reforzado por /robots.txt (public/robots.txt, Disallow: /) desde
+         2026-09-07 — antes vivía en la raíz del repo, no en public/, así
+         que Vite nunca lo incluía en el build real y devolvía 404 en
+         producción (mismo bug de fondo que manifest.json, corregido
+         antes en esta misma sesión: publicDir es solo public/). -->
 
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#063256" />
 
-    <!-- Open Graph / redes sociales -->
+    <!-- Open Graph / redes sociales — investigado 2026-09-07 (fuentes:
+         https://www.krumzi.com/blog/open-graph-image-sizes-for-social-media-the-complete-2026-guide,
+         https://env.dev/guides/opengraph-image-sizes): la URL de
+         og:image/twitter:image debe ser ABSOLUTA — una ruta relativa
+         como "/og-image.png" no se resuelve en la mayoría de rastreadores
+         de vista previa (WhatsApp, iMessage, Slack...), que no conocen el
+         dominio de origen de la página. Bug real corregido aquí (antes
+         era una ruta relativa); og-image.png ya medía 1200×630 (1.91:1),
+         el tamaño recomendado universal, sin necesidad de regenerarlo.
+         og:url añadido (buena práctica estándar, antes ausente). Dominio
+         fijo al de producción real (ver "Ramas y entornos" en CLAUDE.md)
+         — la vista previa social no depende de qué entorno sirve la
+         página, solo necesita una imagen accesible. -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Ocean Flow" />
     <meta property="og:title" content="Ocean Flow — Control de ingresos para instructores de buceo" />
     <meta property="og:description" content="Registra clases, comisiones y pagos por escuela, con resumen mensual y anual." />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image" content="https://dive-tracker-exgg.vercel.app/og-image.png" />
+    <meta property="og:url" content="https://dive-tracker-exgg.vercel.app/" />
     <meta property="og:locale" content="es_ES" />
 
     <!-- Twitter/X card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Ocean Flow" />
     <meta name="twitter:description" content="Control de ingresos para instructores de buceo." />
-    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:image" content="https://dive-tracker-exgg.vercel.app/og-image.png" />
 
     <!-- Datos estructurados: ayuda tanto a buscadores clásicos como a
          motores de respuesta con IA (Google SGE, Perplexity, etc.) a
