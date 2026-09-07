@@ -288,9 +288,9 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
         <div className="space-y-2 text-sm">
           <p><span className="text-gray-400">{t("personalData.nameLine")}</span> {profile.first_name || "—"} {profile.last_name || ""}</p>
           <p><span className="text-gray-400">{t("personalData.nicknameLine")}</span> {profile.nickname}</p>
-          <p><span className="text-gray-400">{t("personalData.professionalLine")}</span> {PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === profile.professional_level)?.label || "—"}</p>
           <p><span className="text-gray-400">{t("personalData.birthDateLine")}</span> {profile.birth_date ? shortDate(profile.birth_date) : "—"}</p>
           <p><span className="text-gray-400">{t("personalData.countryLine")}</span> {profile.country_of_residence ? countryLabel(profile.country_of_residence) : "—"}</p>
+          <p><span className="text-gray-400">{t("personalData.professionalLine")}</span> {PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === profile.professional_level)?.label || "—"}</p>
         </div>
         <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: BRAND_NAVY }}>
           <Pencil size={14} aria-hidden="true" /> {t("personalData.edit")}
@@ -309,26 +309,30 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
         <input value={nickname} onChange={(e) => setNickname(e.target.value)} className={`${inputCls} w-full`} />
       </Field>
       {nickname.includes("@") && <p role="alert" className="-mt-2 text-xs text-red-600">{t("personalData.nicknameAtError")}</p>}
+      {/* Fecha de nacimiento + país de residencia (Fase 9, 2026-09-07) —
+          solo para mostrar en el perfil, ambos opcionales (confirmado
+          con el usuario), sin validación ni uso en ningún otro flujo.
+          Misma línea que nombre/apellidos (pedido explícito del usuario,
+          2026-09-07) y antes de Profesional, que pasa al final. */}
+      <div className="grid grid-cols-2 gap-2">
+        <Field label={t("personalData.birthDateLabel")}>
+          <DatePicker value={birthDate} onChange={setBirthDate} />
+        </Field>
+        <Field label={t("personalData.countryLabel")}>
+          <SearchSelect
+            value={countryOfResidence}
+            onChange={setCountryOfResidence}
+            options={countryOptions}
+            placeholder={t("personalData.countryPlaceholder")}
+          />
+        </Field>
+      </div>
       <Field label={t("personalData.professionalLabel")}>
         <Select
           value={PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === professionalLevel)?.label || ""}
           onChange={(label) => setProfessionalLevel(PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.label === label)?.code || "")}
           options={PROFESSIONAL_LEVEL_OPTIONS.map((o) => o.label)}
           placeholder={t("personalData.professionalPlaceholder")}
-        />
-      </Field>
-      {/* Fecha de nacimiento + país de residencia (Fase 9, 2026-09-07) —
-          solo para mostrar en el perfil, ambos opcionales (confirmado
-          con el usuario), sin validación ni uso en ningún otro flujo. */}
-      <Field label={t("personalData.birthDateLabel")}>
-        <DatePicker value={birthDate} onChange={setBirthDate} />
-      </Field>
-      <Field label={t("personalData.countryLabel")}>
-        <SearchSelect
-          value={countryOfResidence}
-          onChange={setCountryOfResidence}
-          options={countryOptions}
-          placeholder={t("personalData.countryPlaceholder")}
         />
       </Field>
       <div className="mt-3">
