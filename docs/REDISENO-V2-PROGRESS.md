@@ -2777,3 +2777,65 @@ sin errores nuevos, build correcto. Sin cambio en el recuento de
 Serverless Functions (ningún fichero `api/*.js` nuevo, límite de 12 del
 plan Hobby sin tocar — ver "Límite de Serverless Functions" en
 `CLAUDE.md`).
+
+### Estado al cierre de esta sesión (2026-09-07) — cola pendiente para la próxima
+
+Último commit pusheado a `feature/rediseno-v2`: `fe11868` (fix del
+dominio real en todos los enlaces de email). Todo lo de 10.1 a 10.15
+está commiteado y pusheado; nada uncommitted salvo dos JPEG sueltos en
+la raíz y `docs/ADR/0020-...md`, ninguno de esta sesión — no tocar sin
+preguntar. El usuario ha pedido explícitamente cortar aquí y hacer un
+`/clear`; esta sección es el punto exacto por el que retomar, sin
+depender del historial de chat.
+
+**Pendiente, en orden aproximado de lo último que se pidió:**
+
+1. **KPIs de Mi trabajo — rediseño del icono cuando el número es largo**
+   (feedback tras 10.13, break-words): "queda fatal ese diseño de KPIs
+   cortados por la cifra... si el número es tan grande como para que no
+   quepan número e icono, quitamos los iconos de los tres... todo con
+   animaciones". Repasar `kpiIconTierFor`/`MoneyKpiTile` en
+   `MiTrabajoTab.jsx` — hoy hay 3 tiers (normal/small/hidden); revisar
+   si "small" debe desaparecer (pasar directo de normal a hidden) y
+   añadir una transición animada (Motion, `AnimatePresence`) al
+   mostrar/ocultar el icono, que hoy es instantáneo.
+2. **Calendario — animar el scroll al pulsar un día** (tras 10.14, que
+   dejó el scroll instantáneo a propósito): "haz una animación al
+   scroll down al calendario al pulsar en un día". Antes de descartar
+   `behavior: "smooth"` otra vez (una ronda anterior encontró que no
+   desplazaba nada en este entorno de pruebas), verificar con
+   `javascript_tool` si sigue fallando aquí o si hace falta un tween
+   manual con `requestAnimationFrame`.
+3. **Emails — revisión completa** (#31 en la cola del usuario, aparte
+   del fix de dominio de 10.15): "en los emails sigue llegando el logo
+   antiguo de waves, haz una revisión completa y ajusta diseño y textos
+   según la línea Ocean Flow y el libro de estilos". Revisar
+   `server/email/` (plantillas HTML) — logo, colores, tono de los
+   textos (regla 2 de "Reglas permanentes — Release V1" en
+   `CLAUDE.md`: cercano, humano, sin jerga técnica).
+4. **TR — estándares del libro de estilo pendientes** (#33, bloqueado):
+   "creo q en el TR no se han aplicado los estándares del libro de
+   estilo…" — mensaje cortado a media frase. Ya se revisó una vez
+   (RowMenu/DeleteButton/Sheet compatibles, botón "Generar para todos"
+   ya arreglado en 10.5) sin encontrar más desviaciones obvias. Sigue
+   sin resolver: falta que el usuario aclare qué vio mal en concreto.
+5. **Sembrar datos reales para mi.gueldlmm@gmail.com** (#32, solo
+   TEST): "carga el usuario... con datos de movimientos reales de los
+   últimos 4-5 meses y un par de meses a futuro... cantidades redondas...
+   varias escuelas". No iniciado.
+6. **Investigar recarga en bucle** (#20, abierto desde antes de esta
+   sesión): reportado en el Preview Deployment del rediseño. Probado
+   una vez sin reproducirlo (solo dos 503 aislados que no se repitieron:
+   `HEAD /` y `/.well-known/vercel/jwe`). Sin más datos del usuario
+   desde entonces — genuinamente sin cerrar, no descartar sin más
+   evidencia.
+7. **Rehacer Ayuda: capturas + GIFs** (#18, aparcado desde antes de
+   esta sesión) — piloto ya hecho en una sesión anterior con un hallazgo
+   real antes de escalar (ver 9.14). No retomado en esta sesión.
+
+Todo lo demás pedido en esta sesión (favicon, DatePicker, fila
+desactivada en Config/Tarifas, espaciado de Datos personales, país de
+residencia alfabético + el panel que ya no salta, KPIs que no se salen
+del cuadro, calendario alineado bajo la cabecera, dominio real en todos
+los enlaces) está cerrado, verificado y pusheado — no hace falta
+retomarlo salvo que el usuario reporte algo nuevo sobre ello.
