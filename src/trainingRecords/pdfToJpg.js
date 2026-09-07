@@ -5,6 +5,10 @@
 // debajo de la 17.4/18.4/sin Promise.try según la API).
 import "./pdfjsPolyfills";
 import * as pdfjsLib from "pdfjs-dist";
+// Import estático (no un ?worker&url) porque este SÍ debe acabar en el
+// bundle del hilo principal, no en el del worker — ver el bloque
+// globalThis.pdfjsWorker más abajo para el porqué exacto.
+import { WorkerMessageHandler } from "pdfjs-dist/build/pdf.worker.mjs";
 // pdfWorkerEntry.js, NO "pdfjs-dist/build/pdf.worker.mjs?url" directamente
 // (bug real reportado 2026-09-07, iPhone real) — el worker corre en su
 // propio ámbito global, así que necesita los mismos polyfills aplicados
@@ -31,6 +35,33 @@ import pdfWorkerUrl from "./pdfWorkerEntry.js?worker&url";
 // necesita esa URL antes de la primera llamada a getDocument(), por eso se
 // fija aquí, a nivel de módulo, no dentro de la función.
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+
+// Bug real confirmado 2026-09-07 (consola de un Safari real, pegada por
+// el usuario): "Setting up fake worker failed: undefined is not an
+// object (evaluating 'e.setup')". Causa exacta, encontrada leyendo el
+// propio código fuente de pdfjs-dist (pdf.mjs, PDFWorker): cuando no
+// consigue crear un Worker real (o directamente no se arriesga a
+// intentarlo — no hace falta saber el motivo exacto en Safari para
+// arreglar esto), cae a su modo interno "fake worker", que hace
+// `await import(GlobalWorkerOptions.workerSrc)` DIRECTAMENTE EN EL HILO
+// PRINCIPAL esperando encontrar `WorkerMessageHandler` entre las
+// exportaciones — pero `pdfWorkerEntry.js` (workerSrc) nunca lo
+// exportaba, solo tiene un `import()` de efecto secundario (necesario
+// para el modo worker real, ver ese archivo). `undefined.setup(...)`
+// revienta con exactamente ese mensaje.
+// pdf.js mira ANTES una vía pensada justo para bundlers como este
+// (`PDFWorker.#mainThreadWorkerMessageHandler`, en pdf.mjs): si
+// `globalThis.pdfjsWorker.WorkerMessageHandler` ya existe, la usa
+// directamente y ni siquiera intenta el import() de arriba. Con esto
+// puesto, el modo fake-worker de Safari deja de depender de que
+// pdfWorkerEntry.js exporte nada. Se probó primero reexportar
+// WorkerMessageHandler desde el propio pdfWorkerEntry.js (con
+// top-level await) — el build de producción lo eliminaba por
+// tree-shaking, porque ningún módulo de la app lo "usa" de forma
+// estática (solo pdf.js, en tiempo de ejecución, vía un import()
+// dinámico que el bundler no rastrea). Esta vía sí es fiable: el import
+// de arriba es estático, así que Rollup/Rolldown nunca puede eliminarlo.
+globalThis.pdfjsWorker = { WorkerMessageHandler };
 
 // scale=2 sobre el tamaño base del PDF (72dpi) da ~144dpi — nítido para
 // leer en pantalla/compartir por WhatsApp sin generar un archivo enorme

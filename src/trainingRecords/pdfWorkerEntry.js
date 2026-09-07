@@ -28,3 +28,26 @@ import { applyPdfjsPolyfills } from "./pdfjsPolyfills.js";
 applyPdfjsPolyfills(self);
 
 import("pdfjs-dist/build/pdf.worker.mjs");
+
+// Nota sobre un bug real de Safari relacionado (2026-09-07, consola de
+// Safari real: "Setting up fake worker failed: undefined is not an
+// object (evaluating 'e.setup')") — la causa NO estaba en este fichero:
+// cuando pdf.js no consigue crear un Worker real, cae a su modo interno
+// "fake worker", que hace `await import(GlobalWorkerOptions.workerSrc)`
+// (es decir, importa ESTE fichero) DIRECTAMENTE EN EL HILO PRINCIPAL y
+// espera un `WorkerMessageHandler` entre sus exportaciones — que este
+// fichero nunca tuvo (solo tiene un `import()` de efecto secundario,
+// necesario para el modo worker real). La corrección real vive en
+// pdfToJpg.js: `globalThis.pdfjsWorker = { WorkerMessageHandler }`,
+// el mecanismo que el propio pdf.js comprueba ANTES de intentar
+// importar workerSrc (ver `_setupFakeWorkerGlobal`/
+// `#mainThreadWorkerMessageHandler` en pdfjs-dist/build/pdf.mjs) — con
+// eso ya puesto, el modo fake-worker nunca llega a intentar importar
+// este fichero, así que sus exportaciones dejan de importar. Se probó
+// primero reexportar WorkerMessageHandler aquí mismo (con top-level
+// await, para no romper el orden parche-antes-que-worker) — funcionaba
+// en desarrollo pero el build de producción lo eliminaba por
+// tree-shaking (nada en el propio grafo de módulos de la app "usa" esa
+// exportación de forma estática — solo el propio pdf.js, en tiempo de
+// ejecución, vía un import() dinámico que el bundler no puede rastrear).
+// El mecanismo de pdfToJpg.js evita ese problema del todo.
