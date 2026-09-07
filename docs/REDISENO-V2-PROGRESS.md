@@ -2593,3 +2593,22 @@ suite completa llegaba a superar el timeout por defecto de Vitest
 pasaba. Corregido añadiendo el mismo `}, 15000);` al final del test.
 792/792 tests (suite completa, verificado dos veces seguidas sin fallos
 intermitentes), lint sin errores nuevos, build correcto.
+
+### 10.11 — Perfil: espaciado del formulario de Datos personales
+
+"el formulario de edición de datos personales del perfil está todo muy
+pegado, input, input, control...". Comprobado en el código: las filas
+del formulario (nombre/apellidos, nickname, fecha de nacimiento/país,
+profesional) no tenían ningún margen ni `space-y` entre sí — cada
+`Field` solo trae su propio `gap-1` interno (etiqueta a input), así que
+entre una fila y la siguiente había literalmente 0px. Comparado con el
+panel de avatar más arriba en el mismo `ProfileTab.jsx`, que sí envuelve
+sus campos en `space-y-3`: se adopta el mismo valor aquí, en vez de
+introducir un tercer criterio de espaciado dentro de la misma pantalla.
+
+**Verificación**: 33/33 tests de `ProfileTab.test.jsx` sin cambios
+(cambio puramente de layout, sin tocar ningún dato ni comportamiento).
+Confirmado en navegador (Chromium, `localhost`, cuenta demo): el
+formulario de edición de Datos personales ahora respira entre filas en
+vez de aparecer todo pegado. 792/792 tests (suite completa), lint sin
+errores nuevos, build correcto.

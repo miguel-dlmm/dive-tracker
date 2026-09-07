@@ -152,6 +152,8 @@ Registro de cambios relevantes de Ocean Flow.
 - Tarifas: una tarifa desactivada se ve ahora igual de "apagada" que una
   cuenta desactivada en Config/Usuarios (antes la diferencia con una
   fila activa era demasiado sutil).
+- Mi perfil: el formulario de edición de Datos personales ya no aparece
+  con todos los campos pegados unos a otros — ahora respira entre filas.
 - **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
   real** — "Setting up fake worker failed". Causa confirmada leyendo el
   código fuente de pdfjs-dist: en su modo de reserva "fake worker",

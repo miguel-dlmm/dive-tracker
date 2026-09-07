@@ -301,44 +301,53 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
 
   return (
     <SectionCard title={t("sections.personalData")}>
-      <div className="grid grid-cols-2 gap-2">
-        <Field label={t("personalData.nameLabel")}><input value={firstName} onChange={(e) => setFirstName(e.target.value)} className={`${inputCls} w-full`} /></Field>
-        <Field label={t("personalData.lastNameLabel")}><input value={lastName} onChange={(e) => setLastName(e.target.value)} className={`${inputCls} w-full`} /></Field>
-      </div>
-      <Field label={t("personalData.nicknameLabel")}>
-        <input value={nickname} onChange={(e) => setNickname(e.target.value)} className={`${inputCls} w-full`} />
-      </Field>
-      {nickname.includes("@") && <p role="alert" className="-mt-2 text-xs text-red-600">{t("personalData.nicknameAtError")}</p>}
-      {/* Fecha de nacimiento + país de residencia (Fase 9, 2026-09-07) —
-          solo para mostrar en el perfil, ambos opcionales (confirmado
-          con el usuario), sin validación ni uso en ningún otro flujo.
-          Misma línea que nombre/apellidos (pedido explícito del usuario,
-          2026-09-07) y antes de Profesional, que pasa al final. */}
-      <div className="grid grid-cols-2 gap-2">
-        <Field label={t("personalData.birthDateLabel")}>
-          {/* quickAccess desactivado (feedback 2026-09-07): "hoy/ayer/
-              mañana" no tiene ningún sentido para una fecha de
-              nacimiento — el salto de año (siempre visible en
-              DatePicker) es lo que de verdad hace falta aquí. */}
-          <DatePicker value={birthDate} onChange={setBirthDate} quickAccess={false} />
+      {/* space-y-3 (feedback explícito 2026-09-07: "está todo muy pegado,
+          input, input, control...") — antes las filas (nombre/apellidos,
+          nickname, fecha/país, profesional) no tenían ningún espaciado
+          vertical entre sí, solo el gap interno de cada Field/grid.
+          Mismo valor que ya usa el panel de avatar más arriba en este
+          mismo archivo, para no introducir un tercer criterio de
+          espaciado dentro de Mi perfil. */}
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
+          <Field label={t("personalData.nameLabel")}><input value={firstName} onChange={(e) => setFirstName(e.target.value)} className={`${inputCls} w-full`} /></Field>
+          <Field label={t("personalData.lastNameLabel")}><input value={lastName} onChange={(e) => setLastName(e.target.value)} className={`${inputCls} w-full`} /></Field>
+        </div>
+        <Field label={t("personalData.nicknameLabel")}>
+          <input value={nickname} onChange={(e) => setNickname(e.target.value)} className={`${inputCls} w-full`} />
         </Field>
-        <Field label={t("personalData.countryLabel")}>
-          <SearchSelect
-            value={countryOfResidence}
-            onChange={setCountryOfResidence}
-            options={countryOptions}
-            placeholder={t("personalData.countryPlaceholder")}
+        {nickname.includes("@") && <p role="alert" className="-mt-2 text-xs text-red-600">{t("personalData.nicknameAtError")}</p>}
+        {/* Fecha de nacimiento + país de residencia (Fase 9, 2026-09-07) —
+            solo para mostrar en el perfil, ambos opcionales (confirmado
+            con el usuario), sin validación ni uso en ningún otro flujo.
+            Misma línea que nombre/apellidos (pedido explícito del usuario,
+            2026-09-07) y antes de Profesional, que pasa al final. */}
+        <div className="grid grid-cols-2 gap-2">
+          <Field label={t("personalData.birthDateLabel")}>
+            {/* quickAccess desactivado (feedback 2026-09-07): "hoy/ayer/
+                mañana" no tiene ningún sentido para una fecha de
+                nacimiento — el salto de año (siempre visible en
+                DatePicker) es lo que de verdad hace falta aquí. */}
+            <DatePicker value={birthDate} onChange={setBirthDate} quickAccess={false} />
+          </Field>
+          <Field label={t("personalData.countryLabel")}>
+            <SearchSelect
+              value={countryOfResidence}
+              onChange={setCountryOfResidence}
+              options={countryOptions}
+              placeholder={t("personalData.countryPlaceholder")}
+            />
+          </Field>
+        </div>
+        <Field label={t("personalData.professionalLabel")}>
+          <Select
+            value={PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === professionalLevel)?.label || ""}
+            onChange={(label) => setProfessionalLevel(PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.label === label)?.code || "")}
+            options={PROFESSIONAL_LEVEL_OPTIONS.map((o) => o.label)}
+            placeholder={t("personalData.professionalPlaceholder")}
           />
         </Field>
       </div>
-      <Field label={t("personalData.professionalLabel")}>
-        <Select
-          value={PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === professionalLevel)?.label || ""}
-          onChange={(label) => setProfessionalLevel(PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.label === label)?.code || "")}
-          options={PROFESSIONAL_LEVEL_OPTIONS.map((o) => o.label)}
-          placeholder={t("personalData.professionalPlaceholder")}
-        />
-      </Field>
       <div className="mt-3">
         <EditActions onSave={save} onCancel={() => setEditing(false)} saveLabel={saving ? t("personalData.saving") : t("personalData.save")} />
       </div>
