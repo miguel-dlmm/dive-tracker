@@ -4063,3 +4063,163 @@ probar a mano en un iPhone real y, si es posible, en un Android real,
 el recorrido completo de esta sesión (banner de instalar, KPIs con
 icono fijo, colores de marca de Comisión/Ajuste, "Escuela más activa"
 en Home).
+
+### 12.19 — Preparar la release a producción: hecho hasta donde es seguro sin supervisión
+
+**Pedido**: "mañana quiero hacer release a PRO, prepara todo: tags
+migrations rollback general rollback BBDD protocolo de subida...
+piensa todo para dejar rediseño listo para hacer una release a pro".
+
+**Criterio seguido, explícito**: este punto sigue el proceso YA
+decidido en `docs/ADR/0010-proceso-de-release.md` (no se inventa nada
+nuevo) hasta donde llega sin tocar producción de verdad — desplegar a
+producción y migrar la base de datos real son acciones de alto impacto
+e irreversibles (memoria: "cualquier plan de despliegue a producción
+debe incluir un rollback ligero explícito"; `CLAUDE.md`: "nunca
+implementar cambios de esquema/permisos en un solo paso, siempre
+proponer plan de migración antes"). Con el usuario dormido y sin poder
+confirmar en tiempo real, se prepara TODO lo seguro y reversible, y se
+deja el resto como checklist explícito para ejecutar con supervisión.
+
+**Hecho ya, en `develop` y en la rama `release/v1.1.0` (ambas
+empujadas a `origin`, ninguna toca producción)**:
+
+1. `feature/rediseno-v2` → `develop`: fast-forward limpio (`develop`
+   era ancestro directo, cero conflictos), `npm run test`/`lint`/
+   `build` verificados sobre `develop` ya actualizada, `git push
+   origin develop` — dispara solo el deploy de TEST
+   (`dive-tracker-three.vercel.app`), nunca producción.
+2. Rama `release/v1.1.0` creada desde `develop` (paso 2 del proceso de
+   `ADR-0010`/`ADR-0006`). Versión decidida: **`v1.1.0`** — SemVer
+   `MINOR`, porque el proyecto ya pasó de `0.y.z` a `1.0.0` (última
+   release), y este lote es funcionalidad nueva compatible hacia atrás
+   (rediseño visual + banner de instalar + colores de marca +
+   mejoras), no un cambio incompatible.
+3. Sobre `release/v1.1.0`: `CHANGELOG.md` — `Unreleased` movido a
+   `[1.1.0] - 2026-09-07`, `Unreleased` nuevo vacío abierto encima;
+   `APP_VERSION` subido a `"1.1.0"` (`src/version.js`); contenido de
+   "Qué hay de nuevo" reescrito para esta release (instalar la app,
+   Home/Escuela más activa, colores de marca por tipo de movimiento,
+   KPIs de Mi trabajo más claros — 4 diapositivas + el cierre evergreen
+   ya existente), en `es`/`en`. Un test obsoleto encontrado y corregido
+   de paso (`App.test.jsx` sembraba `"1.0.0"` a mano como "versión ya
+   vista" — con `APP_VERSION` en `"1.1.0"` eso dejaba de representar
+   "ya visto", así que WhatsNew volvía a aparecer donde el test no lo
+   esperaba; corregido a importar `APP_VERSION` en vez de un literal,
+   para que no vuelva a quedarse desactualizado en la próxima release).
+4. Validaciones completas sobre `release/v1.1.0`: 824/824 tests, lint 0
+   errores, build correcto, `npm run mobile-check` sin errores de
+   consola (47 capturas, incluida la nueva diapositiva 1 de "Qué hay de
+   nuevo" verificada visualmente).
+5. Commit `chore: preparar release v1.1.0`, rama empujada a
+   `origin/release/v1.1.0` — visible y revisable, nada fusionado
+   todavía sobre `main`.
+
+**Hallazgo real durante la preparación — producción está más
+desactualizada de lo que parecía**: comparando `scripts/migrations/`
+entre `main` y esta rama, `main` (y por tanto producción) le faltan
+**4 migraciones ya aplicadas a TEST** (`develop` las incluye desde
+antes de esta sesión, no son nuevas de este lote):
+
+| Migración | Qué hace | Riesgo |
+|---|---|---|
+| `0014-registro-externo-produccion.sql` | Columna `app_config.allow_external_registration` + función `external_registration_enabled()` | Bajo — aditiva, idempotente, mismo DDL que ya documenta `schema.sql` |
+| `0015-tarifas-vigencia.sql` | `is_active` en `rates`/`commission_rates` + índice único parcial (una tarifa activa por escuela+curso) | **Medio — ver aviso abajo** |
+| `0016-baja-logica-movimientos.sql` | Baja lógica (`deleted_at`) + `created_at`/`updated_at` con trigger en `worklog`/`comisiones`/`colleague_payments` | Bajo — aditiva, rollback ya escrito dentro del propio fichero |
+| `0017-datos-personales-perfil.sql` | `birth_date`/`country_of_residence` en `profiles` | Bajo — aditiva, sin lógica |
+
+**Aviso real sobre `0015`, léelo antes de ejecutarla contra
+producción**: el propio fichero documenta que, al escribirla, SÍ había
+tarifas duplicadas en TEST (datos de prueba del dataset "Ihasia"
+clonado varias veces) y la migración las desactiva automáticamente
+antes de crear el índice único. **Nunca se comprobó contra producción
+real** — si tu cuenta real tiene, por lo que sea, dos tarifas activas
+para la misma escuela+curso, la migración las desactivará solas (sin
+perder datos, solo deja de ofrecer la más antigua como activa) en vez
+de fallar, así que es segura en cualquier caso — pero conviene mirar
+`select school, activity, count(*) from rates where is_active group by
+1,2 having count(*) > 1;` (y lo mismo en `commission_rates`) ANTES de
+aplicarla, para saber si te vas a encontrar alguna tarifa desactivada
+sola que no esperabas.
+
+**Ninguna herramienta segura existe hoy para aplicar migraciones
+contra producción** — `scripts/apply-migration.mjs` se niega
+explícitamente a correr contra nada que no sea
+`SUPABASE_TEST_DB_URL` (guarda de seguridad deliberada, no un
+descuido). `docs/ADR/0025-gestion-de-migraciones-para-release.md` ya
+proponía extenderlo para producción de forma segura y trazable (tabla
+`schema_migrations`), pero sigue "Propuesto — sin implementar,
+pendiente de aprobación explícita" — no se implementa aquí sin esa
+aprobación, coherente con el propio pie de esa ADR. La vía segura HOY es
+manual: SQL editor del Dashboard de Supabase de producción, pegando
+cada fichero de `scripts/migrations/0014-*.sql` a `0017-*.sql` en
+orden, uno a uno, verificando que cada uno termina sin error antes de
+pasar al siguiente.
+
+**Checklist final — queda para ejecutar con supervisión (nunca
+autónomo, exactamente lo que las reglas de este proyecto piden para
+tocar producción)**:
+
+```
+□ 1. Backup manual de producción antes de tocar nada (npm run backup:db
+     — ver docs/ADR/0017-politica-de-backups-mvp.md; el plan Free de
+     Supabase no hace backups automáticos, esta es la única red real).
+□ 2. Comprobar duplicados de tarifas activas en producción (query de
+     0015 arriba) — informativo, no bloqueante.
+□ 3. Aplicar 0014 → 0015 → 0016 → 0017 contra producción, en ese
+     orden, vía SQL editor del Dashboard de Supabase (contenido exacto
+     en scripts/migrations/). Verificar cada una sin error antes de
+     seguir a la siguiente.
+□ 4. git checkout release/v1.1.0 && git pull
+□ 5. Fusionar release/v1.1.0 sobre main:
+     git checkout main && git pull && git merge --no-ff release/v1.1.0
+     (no debería haber conflictos — confirmado: los únicos commits de
+     main que develop no tiene son un hotfix ya sin diferencias de
+     contenido, ver detalle técnico más abajo)
+□ 6. npm run test && npm run build sobre main ya fusionada — deben
+     pasar limpios (ya verificados sobre release/v1.1.0, pero repetir
+     sobre el commit real de main que se va a desplegar, por si acaso).
+□ 7. git push origin main — dispara el deploy automático de
+     producción (dive-tracker-exgg.vercel.app / alias
+     oceanflow-web.vercel.app).
+□ 8. Verificar el despliegue real: abrir la URL de producción, sin
+     errores de consola, recorrido básico (login, Home, Mi trabajo).
+□ 9. Solo si el paso 8 sale limpio: git tag -a v1.1.0 -m "v1.1.0" 
+     (sobre el commit de main recién desplegado) && git push origin 
+     main --tags
+□ 10. gh release create v1.1.0 --notes-file <extracto de CHANGELOG.md,
+      sección [1.1.0]> — gh SÍ está disponible en este entorno
+      (v2.98.0, confirmado), a diferencia de cuando se escribió
+      ADR-0010 originalmente.
+□ 11. Borrar release/v1.1.0 (local y remota) una vez fusionada:
+      git branch -d release/v1.1.0 && git push origin --delete
+      release/v1.1.0
+```
+
+**Rollback si algo sale mal** (consolidado de `ADR-0010` +
+`docs/BACKLOG.md` + los propios ficheros de migración — nada inventado
+aquí):
+
+- **Más rápido — código**: Vercel "Instant Rollback" sobre el
+  deployment anterior de `main`, sin tocar Git ni esperar build nuevo.
+  Primera opción mientras se decide la causa raíz.
+- **Git**: `git revert` del commit problemático sobre `main` (nunca
+  `reset --hard` sobre una rama compartida) + push — nuevo deploy
+  automático con el estado revertido. Reversión etiquetada como
+  `v1.1.1`, nunca reescribiendo `v1.1.0`.
+- **Base de datos** (solo si hace falta, cada migración ya trae su
+  propio rollback documentado dentro del fichero): `0014` — 
+  `drop function`/`alter table drop column`, sin riesgo de dato real
+  perdido; `0015` — `drop index`/`drop column` (documentado en el
+  propio fichero); `0016` — mismo patrón, con un aviso explícito ya
+  escrito ahí: revertir sus columnas perdería para siempre cualquier
+  fila dada de baja solo mediante `deleted_at` (nunca tuvo DELETE
+  real) — no ejecutar ese rollback concreto sin decidir antes,
+  explícitamente, descartar esas filas.
+
+**Confirmado, sin ejecutar**: `main`↔`develop` — los únicos 2 commits
+de diferencia son un merge de la propia `v1.0.0` y un hotfix
+(`sembrar Pendiente/Cobrado en payment_statuses`) cuyo diff de
+contenido contra `develop` es CERO (mismo resultado ya presente en
+`develop` por otra vía) — la fusión de `release/v1.1.0` sobre `main`
+en el paso 5 de arriba no debería generar ningún conflicto real.
