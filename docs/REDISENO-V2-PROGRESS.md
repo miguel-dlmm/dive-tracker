@@ -3376,3 +3376,83 @@ entorno sin generar uno de verdad contra Supabase TEST — verificación
 apoyada en el test, que ejercita el mismo camino de estado que usaría
 la app real (`profile.activated_at` recién fijado, sin marca de versión
 vista).
+
+### Fase 13, punto final — KPIs de Mi trabajo: encogimiento continuo del icono
+
+Pedido explícito, muy concreto (el propio usuario: "llevamos varias
+iteraciones... se me está haciendo bola"): "el número animado empieza a
+crecer. El icono de la izquierda se va encogiendo según crece el
+número. En el momento en que el número vaya a salirse de la caja, el
+icono desaparece... En el momento en que uno de los 3 KPIs vaya a
+ocultar su icono, el resto hará lo mismo a la vez." Con libertad
+explícita para decidir la implementación ("rápida y eficiente").
+
+**Por qué las 5 rondas anteriores (Fase 6/7/9/11.1/11.2) no llegaban a
+esto**: todas eran BINARIAS — dos estados fijos (normal/pequeño,
+normal/oculto) con un salto o una animación de entrada/salida entre
+ellos. El pedido de esta ronda es explícitamente continuo ("se va
+encogiendo"), no dos estados.
+
+**Diseño elegido** (`MiTrabajoTab.jsx`): `kpiIconScale`, un número de 0
+a 1 en vez de un string de dos valores.
+- Se mide la cifra FINAL de cada tarjeta, no la que se ve mientras el
+  número cuenta hacia arriba — cada `MoneyKpiTile` renderiza un span
+  invisible adicional (`finalTextMeasureRef`, `visibility:hidden` +
+  `position:absolute`, nunca `display:none`, que inutilizaría
+  `scrollWidth`) con el importe ya formateado sin animar, solo para
+  medir su ancho real de una sola vez por cambio de totales — evita
+  tener que remedir en cada fotograma del conteo (más simple y barato)
+  sin perder la garantía de Fase 11.2 de medir el DOM real en vez de
+  contar caracteres (WebKit renderiza más ancho que Chromium).
+- Fórmula: `scale = clamp((rowWidth - 34 - textScrollWidth) / 36, 0, 1)`
+  — 34px es el hueco del icono completo (28px + 6px de gap), 36px es la
+  zona de transición (cuánto margen antes del borde empieza a encoger
+  el icono en vez de saltar de golpe). Se calcula sobre las 3 tarjetas a
+  la vez y se aplica el MÍNIMO de las 3 a las 3 — así, si una cifra
+  fuerza a ocultar el icono, las otras dos lo hacen a la vez, mismo
+  criterio que ya exigían las rondas anteriores.
+- El icono nunca se desmonta (sin `AnimatePresence`): su
+  `width`/`opacity`/`scale` se anima de forma continua con Motion hacia
+  el `iconScale` que le llegue — un cambio de 1 a 0 se ve como un
+  encogimiento gradual sobre `DURATION.md`, no un salto ni una
+  animación de entrada/salida separada. "Se encoge según crece el
+  número" se consigue por SINCRONÍA de duración (mismo tramo de tiempo
+  que el conteo hacia arriba, aunque no estén atados fotograma a
+  fotograma), no midiendo en cada frame — mucho más barato y, en la
+  práctica, indistinguible para quien lo mira.
+
+**Bug real encontrado y corregido durante la verificación en vivo** (no
+en los tests, que no lo detectaban): el `motion.span` del icono no
+tenía `initial` explícito — en el primer render, Motion trataba el
+`opacity` de partida como "el que ya hay" (1, el valor CSS por
+defecto), pero el `width` de partida como "el que ya hay" también, solo
+que sin ningún ancho explícito en las clases (`h-7` fija el alto, no el
+ancho) su ancho natural real era el del icono SVG interior (~16-20px),
+no 28px — las dos propiedades animaban desde puntos de partida
+distintos e inconsistentes entre sí, dejando `opacity` congelado en 1
+mientras `width` sí llegaba a 0 (confirmado con `javascript_tool`
+sobre el DOM real: `iconWidth: "0.99785px"`, `iconOpacity: "1"` a la
+vez — un estado a medio camino que nunca debía quedarse fijo).
+Corregido añadiendo `initial={{ width: 28, opacity: 1, scale: 1 }}`
+explícito, con lo que ambas propiedades pasan a compartir el mismo
+punto de partida y llegan sincronizadas al mismo destino.
+
+**Verificado**: 3 tests reescritos en `MiTrabajoTab.test.jsx` — escala
+1 con espacio de sobra, escala 0 sincronizada en las 3 tarjetas cuando
+el límite se supera (con el botón de tooltip de "Pendiente de cobrar"
+comprobado aparte, nunca depende de esta escala), y un caso a
+propósito en el punto intermedio confirmando una escala estrictamente
+entre 0 y 1 (el encogimiento gradual, no un salto). El matcher
+compartido `money()` de este archivo se ajusta para excluir el nuevo
+span invisible de medición (mismo texto que el visible, antes lo
+encontraba dos veces). 817/817 tests (suite completa), lint 0 errores,
+build correcto. Confirmado en Chrome real (Chromium, `localhost`,
+cuenta demo): con los importes reales, las 3 tarjetas muestran el
+icono a tamaño completo (`28px`, opacity `1`) sin overflow; forzando un
+ancho de tarjeta artificialmente estrecho (CSS inyectado y revertido en
+el mismo paso, nunca llegó a git), el icono se oculta del todo
+(`0px`, opacity `0`) en las 3 a la vez — sin errores de consola en
+ningún estado. No se pudo reproducir en vivo el tramo intermedio exacto
+(los importes reales de la cuenta demo no dejan margen suficiente entre
+"cabe justo" y "no cabe" para forzarlo solo con CSS sin tocar datos) —
+cubierto igualmente por el test dedicado con anchos controlados.

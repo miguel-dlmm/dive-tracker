@@ -26,7 +26,9 @@ describe("KPIs de Mi trabajo — la cifra nunca se parte en dos líneas (ni trun
       worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" }],
     });
     const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
-    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums"));
+    // Excluye el span invisible de medición (Fase 13: mismas clases de
+    // texto, pero sin `w-full` — ver finalTextMeasureRef en MiTrabajoTab.jsx).
+    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("w-full"));
     expect(amount.className).not.toMatch(/truncate/);
     expect(amount.className).not.toMatch(/break-words/);
   });
@@ -40,7 +42,17 @@ describe("KPIs de Mi trabajo — la cifra nunca se parte en dos líneas (ni trun
 // simulan esas medidas directamente sobre HTMLElement.prototype (mismo
 // criterio que ya usó la Fase 10 para reproducir el bug de overflow con
 // medidas reales del DOM en vez de una suposición).
-describe("KPIs de Mi trabajo — el icono se oculta según lo que MIDE el DOM, no por longitud de caracteres", () => {
+// Fase 13, 2026-09-07 — pedido explícito: "el icono... se va encogiendo
+// según crece el número... en el momento en que vaya a salirse de la
+// caja, el icono desaparece". Sustituye el tier binario normal/hidden
+// (Fase 11.1/11.2) por una escala continua (0 a 1) — sigue MIDIENDO el
+// DOM real (nunca contando caracteres, mismo motivo que 11.2: WebKit
+// renderiza más ancho que Chromium), pero ahora contra la cifra FINAL
+// (el span invisible de medición, `aria-hidden="true"`) para no tener
+// que remedir en cada fotograma del conteo. El icono nunca se desmonta
+// — su tamaño real se comprueba por estilo (width/opacity), no por
+// presencia/ausencia del <svg>.
+describe("KPIs de Mi trabajo — el icono se encoge de forma continua según lo que MIDE el DOM", () => {
   const worklogEntry = { id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" };
 
   afterEach(() => {
@@ -48,37 +60,54 @@ describe("KPIs de Mi trabajo — el icono se oculta según lo que MIDE el DOM, n
     delete Element.prototype.clientWidth;
   });
 
-  it("si la cifra cabe en su ancho (scrollWidth <= clientWidth), el icono se mantiene visible en las 3 tarjetas", () => {
-    Object.defineProperty(Element.prototype, "scrollWidth", { configurable: true, get() { return 80; } });
-    Object.defineProperty(Element.prototype, "clientWidth", { configurable: true, get() { return 100; } });
+  // Recuerda: el mock de Element.prototype es GLOBAL (mismo valor para
+  // cualquier elemento), así que tanto la fila (clientWidth) como el
+  // span de medición (scrollWidth) devuelven las mismas cifras. La
+  // fórmula real (MiTrabajoTab.jsx) es
+  // scale = clamp((rowClientWidth - 34 - textScrollWidth) / 36, 0, 1).
+  function mockWidths(scrollWidth, clientWidth) {
+    Object.defineProperty(Element.prototype, "scrollWidth", { configurable: true, get() { return scrollWidth; } });
+    Object.defineProperty(Element.prototype, "clientWidth", { configurable: true, get() { return clientWidth; } });
+  }
+  it("con espacio de sobra, el icono queda a tamaño completo (escala 1) en las 3 tarjetas", async () => {
+    mockWidths(80, 150); // slack = (150-34) - 80 = 36 -> scale 1
     renderMiTrabajo({ worklog: [worklogEntry] });
     const tile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
-    expect(tile.querySelector("svg")).not.toBeNull();
+    const icon = tile.querySelector(".rounded-full");
+    // Motion no fija el estilo de golpe en el primer render — necesita
+    // al menos un fotograma de su propio ciclo de animación, incluso
+    // con reduced motion (duración ~0), para reflejarlo como estilo
+    // inline (mismo comportamiento ya visto en WhatsNew.test.jsx).
+    await waitFor(() => expect(icon.style.width).toBe("28px"));
+    expect(icon.style.opacity).toBe("1");
   });
 
-  it("si la cifra se sale de su ancho (scrollWidth > clientWidth), el icono se oculta en las 3 tarjetas a la vez", async () => {
-    Object.defineProperty(Element.prototype, "scrollWidth", { configurable: true, get() { return 140; } });
-    Object.defineProperty(Element.prototype, "clientWidth", { configurable: true, get() { return 100; } });
-    // El icono no se desmonta al instante: sale con una animación
-    // (AnimatePresence, ver MoneyKpiTile) — prefers-reduced-motion la
-    // colapsa a ~0 para que el test sea determinista, mismo criterio ya
-    // usado en el describe de arriba para useCountUp.
-    const original = window.matchMedia;
-    window.matchMedia = () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} });
-    try {
-      renderMiTrabajo({ worklog: [worklogEntry] });
-      const generatedTile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
-      const pendingTile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
-      const collectedTile = screen.getByText("Cobrado este mes").closest("div[class*='rounded-xl']");
-      await waitFor(() => expect(generatedTile.querySelector("svg")).toBeNull());
-      // "Pendiente de cobrar" tiene además el icono del tooltip ("?") —
-      // ese SÍ debe seguir ahí, es un elemento distinto del icono del KPI.
-      expect(pendingTile.querySelector(".rounded-full svg")).toBeNull();
-      expect(within(pendingTile).getByLabelText(/Info:/)).toBeInTheDocument();
-      expect(collectedTile.querySelector("svg")).toBeNull();
-    } finally {
-      window.matchMedia = original;
-    }
+  it("justo en el límite, el icono se oculta del todo (escala 0) en las 3 tarjetas a la vez", async () => {
+    mockWidths(140, 100); // slack = (100-34) - 140 = -74 -> scale 0
+    const user = userEvent.setup();
+    renderMiTrabajo({ worklog: [worklogEntry] });
+    const generatedTile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
+    const pendingTile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
+    const collectedTile = screen.getByText("Cobrado este mes").closest("div[class*='rounded-xl']");
+    await waitFor(() => expect(generatedTile.querySelector(".rounded-full").style.width).toBe("0px"));
+    expect(pendingTile.querySelector(".rounded-full").style.width).toBe("0px");
+    expect(collectedTile.querySelector(".rounded-full").style.width).toBe("0px");
+    // "Pendiente de cobrar" tiene además el icono del tooltip ("?") —
+    // ese SÍ debe seguir ahí, es un elemento distinto del icono del KPI,
+    // y nunca depende de esta escala.
+    await user.click(within(pendingTile).getByLabelText(/Info:/));
+    expect(within(pendingTile).getByLabelText(/Ocultar info:/)).toBeInTheDocument();
+  });
+
+  it("en el punto intermedio, el icono queda a una escala estrictamente entre 0 y 1 (encogimiento gradual, no un salto)", async () => {
+    mockWidths(100, 150); // slack = (150-34) - 100 = 16 -> scale 16/36 ≈ 0.444
+    renderMiTrabajo({ worklog: [worklogEntry] });
+    const tile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
+    await waitFor(() => {
+      const width = parseFloat(tile.querySelector(".rounded-full").style.width);
+      expect(width).toBeGreaterThan(0);
+      expect(width).toBeLessThan(28);
+    });
   });
 });
 
@@ -104,10 +133,16 @@ const COMMISSION_RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water",
 
 // <Money> separa cifra y símbolo en nodos distintos; este matcher compara
 // el texto combinado del nodo sin espacios (ver PaymentsTab.test.jsx).
+// aria-hidden !== "true" (Fase 13, 2026-09-07): cada MoneyKpiTile tiene
+// además un span invisible con la MISMA cifra ya formateada, solo para
+// medir su ancho real sin depender de la animación de conteo (ver
+// finalTextMeasureRef en MiTrabajoTab.jsx) — sin este filtro, ese span
+// coincide igual de bien que el visible y el matcher encuentra dos.
 function money(expected) {
   const target = expected.replace(/\s+/g, "");
   return (_content, node) => {
     if (!node) return false;
+    if (node.getAttribute("aria-hidden") === "true") return false;
     const text = (el) => el.textContent.replace(/\s+/g, "");
     return text(node) === target && Array.from(node.children).every((child) => text(child) !== target);
   };

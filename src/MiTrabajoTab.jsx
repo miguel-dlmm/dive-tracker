@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2, HelpCircle, Users } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY } from "./App";
 import {
   Money, formatMoney, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
@@ -347,27 +347,25 @@ function moneyKpiText(totals, currencyRows) {
   return entries.map(([code, amt]) => formatMoney(amt, code, currencyRows)).join(" + ");
 }
 
-function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel, iconTier = "normal", measureRef }) {
+function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel, iconScale = 1, rowMeasureRef, finalTextMeasureRef }) {
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const entries = Object.entries(totals || {});
   const single = entries.length === 1 ? entries[0] : null;
   const animatedCents = useCountUp(single ? Math.round(single[1] * 100) : 0, { reduced });
-  // Tercer y cuarto intento de resolver esto sin adivinar un umbral
-  // (Fase 7 y Fase 9, 2026-09-07) fallaron en Safari/iOS real (iPhone 14
-  // Pro Max, mismo viewport que ya emula `mobile-check`): WebKit
-  // renderiza los dígitos/el símbolo de moneda más anchos que Chromium
-  // con la misma fuente/tamaño, algo que no se puede medir desde este
-  // entorno (ver CLAUDE.md §8), así que cualquier umbral fijo (de tamaño
-  // de letra o de caracteres) tarde o temprano se quedaba corto en el
-  // dispositivo real — confirmado en vivo en esta misma ronda ("en
-  // chrome lo ves bien pero en safari ios se salta en dos líneas").
-  //
-  // Quinto intento, esta vez sin adivinar nada: la cifra ya NUNCA se
-  // parte en dos líneas (una sola línea, sin `break-words`) y es el
-  // padre (ver kpiIconTier en MiTrabajoTab) quien decide si oculta el
-  // icono MIDIENDO de verdad en el DOM si esta cifra concreta se sale de
-  // su ancho — no contando caracteres. measureRef (prop) es la referencia
-  // al propio span que el padre usa para esa medición.
+  // Sexto intento (2026-09-07, pedido explícito tras las rondas
+  // anteriores — Fase 6/7/9/11.1/11.2, todas documentadas en las que ya
+  // no queda ni rastro aquí): "el icono se va encogiendo según crece el
+  // número... en el momento en que vaya a salirse de la caja, el icono
+  // desaparece". Los intentos anteriores eran binarios (normal/hidden,
+  // un salto instantáneo o una animación de entrada/salida) — este ya
+  // no lo es: `iconScale` (0 a 1, calculado en el padre) encoge el
+  // icono de forma continua, nunca de golpe. Sigue midiendo el DOM real
+  // en vez de adivinar caracteres (mismo motivo que las rondas
+  // anteriores: WebKit renderiza más ancho que Chromium) — pero mide la
+  // cifra FINAL, no la que se ve mientras cuenta: `finalTextMeasureRef`
+  // apunta a un span invisible (mismo texto ya formateado, sin animar)
+  // que existe solo para medir su ancho real de una sola vez cuando
+  // cambian los totales, no en cada fotograma del conteo.
   const amountSizeCls = single ? "text-sm" : "text-xs";
   // px-3 (antes px-2.5) y w-full en el span de la cifra (Fase 9,
   // 2026-09-07, feedback real: "cuando hay una cifra grande... queda
@@ -376,6 +374,7 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
   // ancho real disponible en la fila), así que una cifra partida en dos
   // líneas podía terminar la línea más larga justo en el borde interior
   // de la tarjeta, sin ningún margen de seguridad visual.
+  const finalText = moneyKpiText(totals, currencyRows);
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
@@ -387,45 +386,47 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
           1-2 dígitos de un KPI simple. items-start, no items-center: la
           cifra puede ocupar dos líneas (ver amountSizeCls arriba), así
           que el icono se alinea con la primera línea, no con el centro
-          vertical del bloque entero.
-          iconTier ("normal"/"hidden", ver kpiIconTierFor arriba): calculado
+          vertical del bloque entero. relative: contiene el span
+          invisible de medición (position:absolute, ver más abajo) sin
+          que afecte a la posición de nada visible.
+          iconScale (0 a 1, ver kpiIconScale en MiTrabajoTab): calculado
           sobre las 3 cifras a la vez, no cada tarjeta por su cuenta — si
-          una cifra crece tanto que hace falta ocultar el icono, las 3
-          tarjetas cambian juntas, para no romper la alineación entre ellas
-          con solo una distinta. AnimatePresence anima la entrada/salida
-          (ancho+opacidad+escala, mismo par EASE.enter/exit que el resto de
-          la app) — antes era instantáneo, feedback explícito de esta
-          ronda ("todo con animaciones"). overflow-hidden en el propio
-          icono evita que se vea recortado a medio colapsar mientras el
-          ancho anima hacia 0. */}
-      <div className="flex items-start gap-1.5">
-        <AnimatePresence initial={false}>
-          {iconTier !== "hidden" && (
-            <motion.span
-              key="icon"
-              initial={{ opacity: 0, width: 0, scale: 0.6 }}
-              animate={{ opacity: 1, width: 28, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.sm, ease: EASE.enter } }}
-              exit={{ opacity: 0, width: 0, scale: 0.6, transition: { duration: reduced ? 0.01 : DURATION.xs, ease: EASE.exit } }}
-              className="flex h-7 shrink-0 items-center justify-center overflow-hidden rounded-full"
-              style={{ backgroundColor: `${color}1A` }}
-            >
-              <Icon size={16} style={{ color }} aria-hidden="true" />
-            </motion.span>
-          )}
-        </AnimatePresence>
-        {/* Sin `break-words` (retirado en esta ronda, ver el comentario
-            largo más arriba de este componente): la cifra ya no se
-            parte nunca en dos líneas — si no cabe con el icono puesto,
-            el padre lo detecta MIDIENDO este mismo span (`measureRef`,
-            scrollWidth > clientWidth) y oculta el icono en las 3
-            tarjetas a la vez, liberando ancho para que quepa en una
-            sola línea. */}
-        <span ref={measureRef} className={`w-full min-w-0 ${amountSizeCls} font-bold leading-tight tabular-nums`} style={{ color: BRAND_NAVY }}>
+          una cifra crece tanto que hace falta encoger/ocultar el icono,
+          las 3 tarjetas cambian juntas, para no romper la alineación
+          entre ellas con solo una distinta. Nunca se desmonta (sin
+          AnimatePresence): el propio ancho/opacidad/escala anima de
+          forma continua con Motion hacia el `iconScale` que le llegue,
+          así que un cambio de 1→0 se ve como un encogimiento gradual,
+          no un salto — overflow-hidden evita que se vea recortado a
+          medio encoger. */}
+      <div className="relative flex items-start gap-1.5">
+        <motion.span
+          initial={{ width: 28, opacity: 1, scale: 1 }}
+          animate={{ width: 28 * iconScale, opacity: iconScale, scale: 0.6 + 0.4 * iconScale, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.standard } }}
+          className="flex h-7 shrink-0 items-center justify-center overflow-hidden rounded-full"
+          style={{ backgroundColor: `${color}1A` }}
+        >
+          <Icon size={16} style={{ color }} aria-hidden="true" />
+        </motion.span>
+        {/* Sin `break-words` (Fase 11.2): la cifra ya no se parte nunca
+            en dos líneas — si no cabe con el icono puesto, el padre lo
+            detecta MIDIENDO el span invisible de abajo (mismo texto ya
+            formateado, sin animar) y encoge el icono en las 3 tarjetas
+            a la vez, liberando ancho para que quepa en una sola línea. */}
+        <span ref={rowMeasureRef} className={`w-full min-w-0 ${amountSizeCls} font-bold leading-tight tabular-nums`} style={{ color: BRAND_NAVY }}>
           {entries.length === 0 ? "—" : single ? (
             <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
           ) : (
             entries.map(([code, amt], i) => <span key={code}>{i > 0 && " + "}<Money amount={amt} code={code} currencyRows={currencyRows} /></span>)
           )}
+        </span>
+        {/* Span de medición, invisible y fuera del flujo (position:
+            absolute + visibility:hidden — nunca display:none, que
+            haría scrollWidth inservible): pinta la cifra FINAL ya
+            formateada, sin animar, solo para que el padre pueda medir
+            su ancho real de una sola vez por cambio de totales. */}
+        <span ref={finalTextMeasureRef} aria-hidden="true" className={`invisible absolute left-0 top-0 whitespace-nowrap ${amountSizeCls} font-bold tabular-nums`}>
+          {finalText}
         </span>
       </div>
       <span className="flex items-center gap-0.5 text-[11px] font-medium leading-tight text-gray-500">
@@ -781,46 +782,63 @@ export default function MiTrabajoTab({
   const [sheetRequest, setSheetRequest] = useState(null);
   const fabVisible = useHideFabOnScroll();
 
-  // Nivel de icono compartido por los 3 KPI a la vez — Fase 11.2
-  // (2026-09-07, feedback en vivo tras el cambio anterior: "en chrome lo
-  // ves bien pero en safari ios se salta en dos líneas" en vez de
-  // ocultar el icono). Los intentos anteriores (Fase 6/7/9) adivinaban
-  // un umbral de caracteres — WebKit renderiza los dígitos más anchos
-  // que Chromium con la misma fuente/tamaño, así que cualquier umbral
-  // fijo fallaba tarde o temprano en el dispositivo real. Se sustituye
-  // por una MEDICIÓN real en el DOM: tras cada render con el icono a
-  // tamaño normal, se comprueba si la cifra de alguna de las 3 tarjetas
-  // se sale de su propio ancho (scrollWidth > clientWidth, mismo criterio
-  // ya usado para verificar el bug de 10.13) — si es así, se oculta el
-  // icono en las 3 a la vez. Funciona igual en cualquier motor de
-  // render porque no depende de contar caracteres, solo de preguntarle
-  // al navegador cuánto ocupa de verdad lo que ya pintó.
-  const [kpiIconTier, setKpiIconTier] = useState("normal");
-  const kpiAmountRefs = useRef([null, null, null]);
+  // Escala de icono compartida por los 3 KPI a la vez — Fase 13
+  // (2026-09-07, pedido explícito: "el icono de la izquierda se va
+  // encogiendo según crece el número... en el momento en que vaya a
+  // salirse de la caja, el icono desaparece... si uno de los 3 va a
+  // ocultar su icono, el resto hará lo mismo a la vez"). Las rondas
+  // anteriores (Fase 6/7/9/11.1/11.2) eran todas binarias — un salto
+  // instantáneo o una animación de entrada/salida entre dos estados fijos
+  // (icono a tamaño completo u oculto). Aquí `kpiIconScale` (0 a 1) sigue
+  // siendo el mismo principio de fondo que ya demostró funcionar en
+  // Safari real (11.2: medir el DOM de verdad, nunca contar caracteres),
+  // pero como un valor CONTINUO en vez de dos estados — el icono se
+  // encoge de forma gradual, nunca de golpe.
+  //
+  // Se mide la cifra FINAL (vía el span invisible de cada MoneyKpiTile,
+  // `finalTextMeasureRef`) en vez de la que se ve mientras el número
+  // cuenta hacia arriba — evita tener que remedir en cada fotograma del
+  // conteo (más simple y barato) y hace que el icono se encoja "a la
+  // vez" que el número crece porque ambos comparten la misma duración de
+  // transición (DURATION.md), no porque estén atados fotograma a
+  // fotograma.
+  const [kpiIconScale, setKpiIconScale] = useState(1);
+  const kpiRowRefs = useRef([null, null, null]);
+  const kpiFinalTextRefs = useRef([null, null, null]);
   const longestKpiText = useMemo(() => {
     return [monthGeneratedTotals, pendingTotals, monthCollectedTotals]
       .map((totals) => moneyKpiText(totals, currencies.rows))
       .reduce((max, text) => (text.length > max.length ? text : max), "");
   }, [monthGeneratedTotals, pendingTotals, monthCollectedTotals, currencies.rows]);
-  // Cada vez que cambia la cifra más larga se reintenta "normal" primero
-  // (puede que ahora sí quepa, p. ej. tras cobrar un pendiente) — el
-  // segundo efecto decide si hace falta ocultar el icono. Los dos son
-  // useLayoutEffect (se ejecutan antes de pintar el frame), así que
-  // nunca hay un parpadeo visible del icono apareciendo y desapareciendo
-  // de golpe.
+  // ICON_FOOTPRINT: 28px del icono + 6px del gap (gap-1.5) que deja de
+  // hacer falta cuando el icono llega a 0. TRANSITION_ZONE: cuántos
+  // píxeles de margen antes de tocar el borde se usan para pasar de
+  // escala 1 a 0 — ni un salto brusco (0px) ni una transición tan larga
+  // que el icono ya se vea pequeño con cifras que sobran de espacio de
+  // sobra.
+  const ICON_FOOTPRINT = 34;
+  const TRANSITION_ZONE = 36;
   useLayoutEffect(() => {
-    setKpiIconTier("normal");
+    let minScale = 1;
+    for (let i = 0; i < 3; i++) {
+      const rowEl = kpiRowRefs.current[i];
+      const textEl = kpiFinalTextRefs.current[i];
+      if (!rowEl || !textEl) continue;
+      const availableForNumber = rowEl.clientWidth - ICON_FOOTPRINT;
+      const slack = availableForNumber - textEl.scrollWidth;
+      const scale = Math.max(0, Math.min(1, slack / TRANSITION_ZONE));
+      if (scale < minScale) minScale = scale;
+    }
+    setKpiIconScale(minScale);
   }, [longestKpiText]);
-  useLayoutEffect(() => {
-    if (kpiIconTier !== "normal") return;
-    const overflows = kpiAmountRefs.current.some((el) => el && el.scrollWidth > el.clientWidth + 1);
-    if (overflows) setKpiIconTier("hidden");
-  }, [kpiIconTier, longestKpiText]);
 
   return (
     <div className="relative space-y-4 pb-24">
       <div className="grid grid-cols-3 gap-2">
-        <MoneyKpiTile icon={TrendingUp} color={TEAL} totals={monthGeneratedTotals} label={t("kpis.generatedThisMonth")} index={0} reduced={reducedMotion} currencyRows={currencies.rows} iconTier={kpiIconTier} measureRef={(el) => (kpiAmountRefs.current[0] = el)} />
+        <MoneyKpiTile
+          icon={TrendingUp} color={TEAL} totals={monthGeneratedTotals} label={t("kpis.generatedThisMonth")} index={0} reduced={reducedMotion} currencyRows={currencies.rows}
+          iconScale={kpiIconScale} rowMeasureRef={(el) => (kpiRowRefs.current[0] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[0] = el)}
+        />
         {/* A diferencia de sus dos hermanos, "Pendiente de cobrar" NO
             filtra por currentMonthKey (ver pendingTotals más arriba): es
             deuda pendiente acumulada de siempre, no solo de este mes. Sin
@@ -835,9 +853,12 @@ export default function MiTrabajoTab({
           icon={Wallet} color={SUN} totals={pendingTotals} label={t("kpis.pendingToCollect")} index={1} reduced={reducedMotion} currencyRows={currencies.rows}
           tooltip={hasPendingBeforeCurrentMonth ? t("kpis.pendingTooltip") : null}
           tooltipShowLabel={t("kpis.pendingTooltipShow")} tooltipHideLabel={t("kpis.pendingTooltipHide")}
-          iconTier={kpiIconTier} measureRef={(el) => (kpiAmountRefs.current[1] = el)}
+          iconScale={kpiIconScale} rowMeasureRef={(el) => (kpiRowRefs.current[1] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[1] = el)}
         />
-        <MoneyKpiTile icon={CheckCircle2} color={GREEN} totals={monthCollectedTotals} label={t("kpis.collectedThisMonth")} index={2} reduced={reducedMotion} currencyRows={currencies.rows} iconTier={kpiIconTier} measureRef={(el) => (kpiAmountRefs.current[2] = el)} />
+        <MoneyKpiTile
+          icon={CheckCircle2} color={GREEN} totals={monthCollectedTotals} label={t("kpis.collectedThisMonth")} index={2} reduced={reducedMotion} currencyRows={currencies.rows}
+          iconScale={kpiIconScale} rowMeasureRef={(el) => (kpiRowRefs.current[2] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[2] = el)}
+        />
       </div>
 
       <div className="flex items-center gap-5 border-b border-gray-200">

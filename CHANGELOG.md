@@ -143,6 +143,10 @@ Registro de cambios relevantes de Ocean Flow.
   la app ya abre en Home con "Qué hay de nuevo" mostrado automáticamente
   (antes abría directo en Ayuda) — se cierra igual que siempre y no
   vuelve a aparecer solo hasta la próxima versión.
+- Los KPIs de Mi trabajo animan el icono de forma continua: se va
+  encogiendo mientras el número crece y desaparece justo si hace falta,
+  en vez del salto entre dos tamaños fijos de antes — los 3 KPIs
+  siempre se encogen a la vez.
 
 ### Fixed
 - "Qué hay de nuevo" (Ayuda) vuelve a deslizar de verdad entre
