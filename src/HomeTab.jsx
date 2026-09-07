@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { TrendingUp, TrendingDown, Minus, GraduationCap, Award, Handshake, ChevronRight } from "lucide-react";
-import { TEAL, SUN, GREEN, CORAL, BRAND_NAVY } from "./App";
-import { Money, formatMoney, MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
-import { buildEntriesBySource, buildIncomeEntries, comparePeriods } from "./rateCalc";
+import { GraduationCap, Award, Handshake, ChevronRight, Building2 } from "lucide-react";
+import { TEAL, SUN, GREEN, BRAND_NAVY } from "./App";
+import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
+import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import PendingCollectionCard from "./PendingCollectionCard";
 
@@ -167,17 +167,6 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
 
-  // "Generado este mes": filtro de fecha (mes actual), sin filtro de
-  // estado — cuenta lo cobrado y lo pendiente por igual, porque ya lo has
-  // generado aunque todavía no te lo hayan pagado.
-  const monthTotals = useMemo(() => {
-    const map = {};
-    incomeEntries
-      .filter((e) => e.date.slice(0, 7) === currentMonthKey)
-      .forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
-    return map;
-  }, [incomeEntries, currentMonthKey]);
-
   // "Pendiente de cobrar": sin filtro de fecha (una deuda de hace 2 meses
   // sigue siendo una deuda), solo estado pendiente.
   const pendingSummary = useMemo(() => {
@@ -187,20 +176,28 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
     return { totals, count: pendingEntries.length };
   }, [incomeEntries, paymentStatuses.rows]);
 
-  // Indicio de tendencia de "Generado este mes" — mismo total del mes
-  // anterior, mismo filtro (fecha, sin estado). comparePeriods (rateCalc.js)
-  // es la misma regla de comparación que ya usa HeroTotal en Resumen: se
-  // omite (null) si cualquiera de los dos meses mezcla más de una moneda,
-  // en vez de mostrar un delta agregado que parecería preciso sin serlo.
-  const previousMonthKey = monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
-  const previousMonthTotals = useMemo(() => {
-    const map = {};
+  // Escuela más activa este mes (2026-09-07, pedido explícito: "el módulo
+  // 'generado este mes' duplica información ya disponible en la cabecera
+  // de movimientos [Mi trabajo] — piensa algo de menos valor que combine
+  // con el diseño de la home"). Sustituye la cifra financiera (ya
+  // duplicada con el KPI "Generado este mes" de Mi trabajo) por un ángulo
+  // nuevo — CON QUIÉN trabajas, no CUÁNTO generas — de menor peso
+  // informativo a propósito (no decide nada, solo da contexto) pero
+  // coherente con el resto de la pantalla: reutiliza `incomeEntries`
+  // (ya calculado arriba, `.school` viene directo de worklog/comisiones,
+  // convención #1 de CLAUDE.md) en vez de una fuente de datos nueva.
+  // Se cuentan MOVIMIENTOS (cuántas veces aparece esa escuela este mes),
+  // no personas — "más activa" se lee mejor como frecuencia de trabajo
+  // que como volumen de alumnos, que ya cubre el KPI "Alumnos" de arriba.
+  const schoolActivityThisMonth = useMemo(() => {
+    const counts = {};
     incomeEntries
-      .filter((e) => e.date.slice(0, 7) === previousMonthKey)
-      .forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
-    return map;
-  }, [incomeEntries, previousMonthKey]);
-  const monthTrend = useMemo(() => comparePeriods(monthTotals, previousMonthTotals), [monthTotals, previousMonthTotals]);
+      .filter((e) => e.date.slice(0, 7) === currentMonthKey)
+      .forEach((e) => { counts[e.school] = (counts[e.school] || 0) + 1; });
+    const bySchool = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    if (bySchool.length === 0) return null;
+    return { school: bySchool[0][0], count: bySchool[0][1], schoolCount: bySchool.length };
+  }, [incomeEntries, currentMonthKey]);
 
   return (
     <div className="space-y-4">
@@ -328,63 +325,45 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         />
       </div>
 
-      {/* 5. Generado este mes — información secundaria de cierre, no la
-          protagonista: una cifra que solo se consulta, complementaria al
-          propio calendario de arriba (que ya muestra qué días tuvieron
-          actividad). "Generado" y no "Ganado" porque cuenta las 3 fuentes
-          (Registro + Comisiones + Compañeros que te pagan). El dato de
-          abajo (personas formadas) le da el mismo equilibrio de "cifra +
-          conteo" que "Pendiente de cobrar".
-
-          2026-08-29 (rediseño Home/Resumen): antes esta tarjeta era un
-          callejón sin salida — la única de Home que no llevaba a ningún
-          sitio al tocarla. Se le añaden dos piezas, reutilizando cálculo
-          ya existente (comparePeriods, la misma regla que HeroTotal en
-          Resumen — nunca una segunda implementación del mismo criterio):
-          (1) un indicio de tendencia de una línea (↑/↓ vs mes anterior),
-          la versión "de un vistazo" de lo que Resumen ya hace en
-          profundidad con TrendBars; (2) la tarjeta entera se vuelve
-          táctil y navega a Resumen (onOpenSummary), que ya abre en "Mes"/
-          mes actual por defecto — el puente que le faltaba al "¿por qué,
-          de dónde viene esta cifra?". Sustituye al widget "Los más
-          antiguos por cobrar" (retirado en el mismo cambio): duplicaba
-          una acción que "Pendiente de cobrar" → Mi trabajo ya resuelve
-          mejor (animación, deshacer, filtros, sin límite de 3 filas), sin
-          responder a una pregunta nueva — ver docs/PROPUESTA-home-resumen.md. */}
+      {/* 5. Escuela más activa este mes — información secundaria de cierre,
+          no la protagonista (2026-09-07, pedido explícito: "el módulo
+          'generado este mes' duplica información ya disponible en la
+          cabecera de movimientos [el KPI "Generado este mes" de Mi
+          trabajo] — piensa algo de menos valor que combine con el diseño
+          de la home"). Antes esta tarjeta mostraba la misma cifra
+          financiera que ya se ve al entrar en Mi trabajo — sustituida por
+          un ángulo distinto y deliberadamente de menor peso informativo:
+          CON QUIÉN trabajas este mes, no CUÁNTO generas (eso ya lo cubren
+          los KPIs financieros de Mi trabajo). Mismo patrón visual que
+          antes (tarjeta táctil, icono+etiqueta / cifra grande / caption),
+          así que sigue combinando con el resto de la pantalla sin
+          introducir un cuarto lenguaje visual — solo cambia el contenido.
+          Sigue navegando a Resumen (onOpenSummary) — "Por escuela" ya
+          vive ahí como desglose completo, así que el puente sigue
+          teniendo sentido: esta tarjeta es el adelanto, Resumen es el
+          detalle. */}
       <button
         type="button"
         onClick={onOpenSummary}
-        data-testid="generated-this-month-card"
+        data-testid="active-school-this-month-card"
         className="w-full rounded-xl border border-gray-200 bg-white p-4 text-left transition-transform active:scale-[0.98]"
       >
         <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-          <TrendingUp size={14} style={{ color: BRAND_NAVY }} aria-hidden="true" />
-          {t("generatedThisMonth")}
+          <Building2 size={14} style={{ color: TEAL }} aria-hidden="true" />
+          {t("activeSchoolThisMonth")}
         </div>
-        <div className="mt-1 text-2xl font-bold tabular-nums" style={{ color: BRAND_NAVY }}>
-          {Object.keys(monthTotals).length === 0 ? (
-            "—"
-          ) : (
-            Object.entries(monthTotals).map(([code, amt], i) => (
-              <span key={code}>{i > 0 && " + "}<Money amount={amt} code={code} currencyRows={currencies.rows} /></span>
-            ))
-          )}
+        <div className="mt-1 truncate text-2xl font-bold" style={{ color: BRAND_NAVY }}>
+          {schoolActivityThisMonth ? schoolActivityThisMonth.school : "—"}
         </div>
         <div className="mt-0.5 text-xs text-gray-400">
-          {peopleTrainedThisMonth > 0
-            ? t("peopleTrained", { count: peopleTrainedThisMonth })
-            : t("noCoursesThisMonth")}
+          {schoolActivityThisMonth ? (
+            schoolActivityThisMonth.schoolCount > 1
+              ? t("activeSchoolCountAndOthers", { count: schoolActivityThisMonth.count, schools: schoolActivityThisMonth.schoolCount })
+              : t("activeSchoolCount", { count: schoolActivityThisMonth.count })
+          ) : (
+            t("noActivityThisMonth")
+          )}
         </div>
-        {monthTrend && (
-          <div className="mt-1.5 flex items-center gap-1 text-xs font-medium" style={{ color: monthTrend.delta > 0 ? GREEN : monthTrend.delta < 0 ? CORAL : "#9CA3AF" }}>
-            {monthTrend.delta > 0 ? <TrendingUp size={12} aria-hidden="true" /> : monthTrend.delta < 0 ? <TrendingDown size={12} aria-hidden="true" /> : <Minus size={12} aria-hidden="true" />}
-            {t("trendVsPreviousMonth", {
-              delta: monthTrend.pct !== null
-                ? `${monthTrend.delta >= 0 ? "+" : ""}${monthTrend.pct.toFixed(0)}%`
-                : `${monthTrend.delta >= 0 ? "+" : ""}${formatMoney(monthTrend.delta, monthTrend.code, currencies.rows)}`,
-            })}
-          </div>
-        )}
       </button>
     </div>
   );

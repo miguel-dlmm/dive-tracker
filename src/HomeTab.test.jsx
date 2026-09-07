@@ -2,10 +2,11 @@ import { render, screen, within, waitFor, fireEvent } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import HomeTab from "./HomeTab";
 
-// Cubre "Generado este mes" y "Pendiente de cobrar" (ADR-0004) — las dos
-// parten de la misma base de datos (worklog + comisiones + compañeros
-// positivos) y solo difieren en el filtro que aplican. El resto de la
-// pantalla (accesos rápidos, calendario) ya existía y no cambia.
+// Cubre "Pendiente de cobrar" (ADR-0004) y "Escuela más activa este mes"
+// (2026-09-07, sustituye a la antigua tarjeta "Generado este mes" —
+// duplicaba el KPI "Generado este mes" que ya muestra Mi trabajo). El
+// resto de la pantalla (accesos rápidos, calendario) ya existía y no
+// cambia.
 //
 // Las aserciones de importe se acotan con data-testid a cada tarjeta (no al
 // documento entero): el calendario de abajo también muestra dinero en su
@@ -56,14 +57,14 @@ function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rat
     />
   );
   return {
-    generated: within(screen.getByTestId("generated-this-month-card")),
+    activeSchool: within(screen.getByTestId("active-school-this-month-card")),
     pending: within(screen.getByTestId("pending-collection-card")),
   };
 }
 
-describe("HomeTab — Generado este mes y Pendiente de cobrar", () => {
-  it("las dos métricas parten de la misma base, con distinto filtro (ejemplo de referencia)", () => {
-    const { generated, pending } = renderHome({
+describe("HomeTab — Pendiente de cobrar", () => {
+  it("suma pendientes de Registro, Comisiones y Compañeros, de cualquier mes (ejemplo de referencia)", () => {
+    const { pending } = renderHome({
       worklog: [
         { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }, // 40€, pagado, este mes
         { id: "w2", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }, // 20€, pendiente, este mes
@@ -79,39 +80,26 @@ describe("HomeTab — Generado este mes y Pendiente de cobrar", () => {
       commissionRates: COMMISSION_RATES,
     });
 
-    // Generado este mes: 40 (pagado) + 20 (pendiente) + 15 (comisión) + 30 (compañero) = 105 — el de mes anterior (60) queda fuera por fecha, el estado no filtra.
-    expect(generated.getByText(money("105,00 €"))).toBeInTheDocument();
-
     // Pendiente de cobrar: 20 (este mes) + 60 (mes anterior) + 15 (comisión) + 30 (compañero) = 125 — el pagado (40) queda fuera por estado, sin filtro de fecha.
     expect(pending.getByText(money("125,00 €"))).toBeInTheDocument();
   });
 
-  it("Generado este mes no filtra por estado (cuenta lo pagado igual que lo pendiente)", () => {
-    const { generated } = renderHome({
-      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }], // 20€, pagado
-      rates: RATES,
-    });
-    expect(generated.getByText(money("20,00 €"))).toBeInTheDocument();
-  });
-
-  it("Generado este mes excluye entradas de meses anteriores, aunque Pendiente sí las cuente", () => {
-    const { generated, pending } = renderHome({
+  it("Pendiente de cobrar SÍ cuenta entradas de meses anteriores (a diferencia de los KPIs financieros del mes en curso)", () => {
+    const { pending } = renderHome({
       worklog: [{ id: "w1", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }], // 20€, mes anterior
       rates: RATES,
     });
     expect(pending.getByText(money("20,00 €"))).toBeInTheDocument();
-    expect(generated.queryByText(money("20,00 €"))).not.toBeInTheDocument();
   });
 
-  it("excluye pagos de compañeros con importe negativo de ambas métricas (es lo que tú debes, no lo que generas ni te deben)", () => {
-    const { generated, pending } = renderHome({
+  it("excluye pagos de compañeros con importe negativo (es lo que tú debes, no lo que te deben)", () => {
+    const { pending } = renderHome({
       colleaguePayments: [
         { id: "p1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", colleague_name: "Marc", amount: -10, currency: "EUR", status: "Pending" },
       ],
     });
     expect(pending.getByText("Nada pendiente")).toBeInTheDocument();
     expect(pending.queryByText(money("10,00 €"))).not.toBeInTheDocument();
-    expect(generated.queryByText(money("10,00 €"))).not.toBeInTheDocument();
   });
 
   it("agrupa Pendiente de cobrar por moneda cuando hay más de una", () => {
@@ -172,21 +160,20 @@ describe("HomeTab — acceso rápido integrado en Pendiente de cobrar", () => {
   });
 });
 
-// "Generado este mes" como puente hacia Resumen (2026-08-29, ver
-// docs/PROPUESTA-home-resumen.md) — sustituye al widget "Los más antiguos
-// por cobrar" (retirado por duplicar una acción que "Pendiente de cobrar"
-// → Mi trabajo ya resolvía mejor). La tarjeta gana: (1) navegación táctil
-// a Resumen, y (2) un indicio de tendencia de una línea vs. el mes
-// anterior, reutilizando comparePeriods (misma regla que HeroTotal).
-describe("HomeTab — 'Generado este mes' como puente hacia Resumen", () => {
+// "Escuela más activa" como puente hacia Resumen (2026-09-07) — sustituye
+// a "Generado este mes", que duplicaba el KPI del mismo nombre ya visible
+// en la cabecera de Mi trabajo. La tarjeta nueva aporta información de
+// menor "peso" (qué escuela ha dado más movimientos este mes, no una
+// cifra de dinero) pero conserva el mismo rol de puente táctil a Resumen.
+describe("HomeTab — 'Escuela más activa' como puente hacia Resumen", () => {
   it("pulsar la tarjeta llama a onOpenSummary", async () => {
     const onOpenSummary = vi.fn();
     render(
       <HomeTab
-        worklog={rowsHook([])}
+        worklog={rowsHook([{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }])}
         comisiones={rowsHook([])}
         colleaguePayments={rowsHook([])}
-        rates={rowsHook([])}
+        rates={rowsHook(RATES)}
         commissionRates={rowsHook([])}
         activities={rowsHook([{ name: "Open Water" }])}
         schools={rowsHook([{ name: "PADI Cozumel" }])}
@@ -198,28 +185,35 @@ describe("HomeTab — 'Generado este mes' como puente hacia Resumen", () => {
       />
     );
 
-    await userEvent.click(screen.getByTestId("generated-this-month-card"));
+    await userEvent.click(screen.getByTestId("active-school-this-month-card"));
     expect(onOpenSummary).toHaveBeenCalledTimes(1);
   });
 
-  it("muestra el indicio de tendencia vs. el mes anterior cuando ambos meses están en una única moneda", () => {
-    const { generated } = renderHome({
-      worklog: [
-        { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }, // 40€, este mes
-        { id: "w2", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }, // 20€, mes anterior
-      ],
-      rates: RATES,
-    });
-    // 40 vs 20 el mes anterior -> +100%
-    expect(generated.getByText(/\+100% vs mes anterior/)).toBeInTheDocument();
-  });
-
-  it("no muestra tendencia si no hay datos del mes anterior que comparar", () => {
-    const { generated } = renderHome({
+  it("muestra el nombre de la única escuela con movimientos este mes, en singular", () => {
+    const { activeSchool } = renderHome({
       worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }],
       rates: RATES,
     });
-    expect(generated.queryByText(/vs mes anterior/)).not.toBeInTheDocument();
+    expect(activeSchool.getByText("PADI Cozumel")).toBeInTheDocument();
+    expect(activeSchool.getByText("1 movimiento este mes")).toBeInTheDocument();
+  });
+
+  it("cuando hay varias escuelas, muestra la de más movimientos y cuenta cuántas escuelas hay en total", () => {
+    const { activeSchool } = renderHome({
+      worklog: [
+        { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" },
+        { id: "w2", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" },
+        { id: "w3", date: TODAY, school: "SSI Tulum", activity: "Open Water", people: 1, status: "Paid" },
+      ],
+      rates: RATES,
+    });
+    expect(activeSchool.getByText("PADI Cozumel")).toBeInTheDocument();
+    expect(activeSchool.getByText("2 movimientos · 2 escuelas este mes")).toBeInTheDocument();
+  });
+
+  it("sin movimientos este mes, muestra el estado vacío en vez de una escuela", () => {
+    const { activeSchool } = renderHome({ worklog: [], rates: RATES });
+    expect(activeSchool.getByText("Sin actividad este mes")).toBeInTheDocument();
   });
 });
 

@@ -1,10 +1,11 @@
 {
   "calendarCaption": "Tap a day to see the detail, or an empty one to add an entry",
-  "generatedThisMonth": "Generated this month",
-  "peopleTrained_one": "{{count}} person trained this month",
-  "peopleTrained_other": "{{count}} people trained this month",
-  "noCoursesThisMonth": "No courses this month",
-  "trendVsPreviousMonth": "{{delta}} vs last month",
+  "activeSchoolThisMonth": "Most active school",
+  "activeSchoolCount_one": "{{count}} entry this month",
+  "activeSchoolCount_other": "{{count}} entries this month",
+  "activeSchoolCountAndOthers_one": "{{count}} entry · {{schools}} schools this month",
+  "activeSchoolCountAndOthers_other": "{{count}} entries · {{schools}} schools this month",
+  "noActivityThisMonth": "No activity this month",
   "kpis": {
     "sectionTitle": "Your impact this month",
     "studentsThisMonth": "Students",

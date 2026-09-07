@@ -3456,3 +3456,48 @@ ningún estado. No se pudo reproducir en vivo el tramo intermedio exacto
 (los importes reales de la cuenta demo no dejan margen suficiente entre
 "cabe justo" y "no cabe" para forzarlo solo con CSS sin tocar datos) —
 cubierto igualmente por el test dedicado con anchos controlados.
+
+### 12.7 — Home: "Generado este mes" → "Escuela más activa" (deja de duplicar el KPI de Mi trabajo)
+
+**Pedido**: la tarjeta "Generado este mes" al final de Home mostraba
+una cifra de dinero que ya aparece, igual de visible, en la cabecera
+de Mi trabajo ("Tu impacto este mes") — información duplicada sin
+aportar nada nuevo. Petición explícita del usuario: rediseñarla con
+libertad creativa total, con la única condición de que el contenido
+nuevo tenga **menos** peso informativo que una cifra de dinero (no
+sustituir un duplicado por otro dato igual de "grande"), manteniendo el
+encaje visual con el resto de Home.
+
+**Decisión de diseño**: la tarjeta pasa a mostrar la **escuela con más
+movimientos este mes** ("Escuela más activa"), con un contador de
+movimientos como subtítulo y, si hay más de una escuela con actividad,
+cuántas escuelas en total (p. ej. "2 movimientos · 2 escuelas este
+mes"). Es información de contexto/curiosidad, no una cifra de negocio —
+cumple el requisito de "menos peso" sin dejar la tarjeta vacía de
+contenido. Reutiliza `incomeEntries` (ya cargado en `HomeTab.jsx`, sin
+tabla ni cálculo nuevo) agrupando por escuela y quedándose con el
+máximo; si no hay ningún movimiento este mes, muestra un estado vacío
+("Sin actividad este mes") en vez de esconder la tarjeta — mismo rol de
+"puente táctil a Resumen" que tenía antes, ahora con `onClick` idéntico
+y el testid renombrado a `active-school-this-month-card`. Icono
+`Building2` (lucide-react) en `TEAL`, mismo patrón visual de tarjeta que
+el resto de Home. Las claves i18n antiguas (`generatedThisMonth`,
+`peopleTrained_*`, `noCoursesThisMonth`, `trendVsPreviousMonth`) se
+eliminan de `home.json` (comprobado que ningún otro archivo depende de
+ellas — la clave homónima `trabajo:kpis.generatedThisMonth` de Mi
+trabajo vive en un namespace distinto y no se toca).
+
+**Descartado**: mantener el indicador de tendencia ("+100% vs mes
+anterior") junto al nuevo dato — habría vuelto a subir el peso
+informativo de la tarjeta justo lo que se pedía bajar.
+
+**Verificado**: `HomeTab.test.jsx` reescrito — nuevo describe con 3
+tests (una escuela activa en singular, varias escuelas con el contador
+combinado, sin actividad muestra el estado vacío) más el test de
+navegación a Resumen ya existente, adaptado al testid nuevo; los 2
+tests del indicador de tendencia (funcionalidad retirada) se eliminan.
+817/817 tests (suite completa), lint 0 errores (mismos 10 warnings
+preexistentes, ninguno nuevo), build correcto. Confirmado en Chrome
+real (Chromium, `localhost`, cuenta demo, datos reales sembrados en
+11.5): la tarjeta muestra "Ihasia" con "30 movimientos · 3 escuelas
+este mes", y pulsarla navega a Resumen sin errores de consola.

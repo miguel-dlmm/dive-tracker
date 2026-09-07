@@ -147,6 +147,10 @@ Registro de cambios relevantes de Ocean Flow.
   encogiendo mientras el número crece y desaparece justo si hace falta,
   en vez del salto entre dos tamaños fijos de antes — los 3 KPIs
   siempre se encogen a la vez.
+- **Home**: la tarjeta "Generado este mes" (duplicaba la misma cifra ya
+  visible en la cabecera de Mi trabajo) pasa a mostrar la escuela con
+  más movimientos este mes ("Escuela más activa"), con el mismo hueco
+  visual y el mismo gesto de pulsar para ir a Resumen.
 
 ### Fixed
 - "Qué hay de nuevo" (Ayuda) vuelve a deslizar de verdad entre
