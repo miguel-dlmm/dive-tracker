@@ -139,6 +139,10 @@ Registro de cambios relevantes de Ocean Flow.
   — si todo lo pendiente es de este mes, ya no hace falta la aclaración.
 - La pantalla "Crea tu cuenta" tiene textos más cercanos, de bienvenida
   y menos de trámite ("Únete a Ocean Flow" en vez de "Crea tu cuenta").
+- Justo después de activar la cuenta (primer acceso, reactivación...),
+  la app ya abre en Home con "Qué hay de nuevo" mostrado automáticamente
+  (antes abría directo en Ayuda) — se cierra igual que siempre y no
+  vuelve a aparecer solo hasta la próxima versión.
 
 ### Fixed
 - "Qué hay de nuevo" (Ayuda) vuelve a deslizar de verdad entre

@@ -3323,3 +3323,56 @@ de nuevo): "Siguiente" desliza de verdad lateralmente (capturada la
 transición a medio camino, ambas diapositivas visibles brevemente,
 resuelto limpio a una sola al asentarse), "Atrás" desliza en el sentido
 contrario, sin errores de consola.
+
+### 12.6 — Tras activar la cuenta: Home con WhatsNew, no Ayuda
+
+Pedido: "cuando el usuario accede después del enlace de activación, le
+llevará a la home con el WhatsNew abierto. Una vez que lo cierre, no
+volverá a verlo hasta la próxima release."
+
+**Estado de partida real, no supuesto**: ya existía un mecanismo
+`justActivated` (`App.jsx`) — tras completar `activateAccount()`, la
+app abría directamente en **Ayuda** (`initialTab`), pensado para
+orientar a alguien en su primer acceso. Este pedido sustituye esa
+decisión anterior por la descrita arriba — se retira `justActivated`
+por completo en vez de mantener las dos rutas en paralelo (el propio
+pedido solo describe UN resultado, no "Ayuda y además WhatsNew").
+
+**Por qué el cambio real es pequeño**: WhatsNew ya tenía su propio
+mecanismo general de "una vez por versión" (`whatsNewOpen`/
+`hasSeenWhatsNew`, con `localStorage` por `user_id`+`APP_VERSION`) —
+independiente de `justActivated`, nunca gateado por él. Una cuenta
+recién activada, por definición, no tiene ninguna versión marcada como
+vista en ese navegador — así que quitar el enrutado especial a Ayuda y
+dejar que `AppShell` arranque siempre en `"home"` (su valor por
+defecto) hace que WhatsNew se abra solo, sin necesitar ningún caso
+especial para "recién activado": el mismo mecanismo que ya cubre a
+cualquier usuario existente que entra tras una versión nueva.
+
+**Qué se hizo**: se retira `justActivated` (estado, `setJustActivated`,
+los comentarios que lo explicaban) y el prop `initialTab` de `AppShell`
+(ya no lo pasa nadie con un valor distinto del por defecto) — `tab` pasa
+a inicializarse siempre como `readStoredNav()?.tab || "home"`, sin la
+rama especial. `handleResetPassword` (recuperar contraseña autoservicio)
+no cambia: nunca puso `justActivated`, y sigue sin necesitarlo.
+
+**Verificado**: test nuevo en `App.test.jsx` — una cuenta con
+`activated_at` recién fijado y sin ninguna versión vista en
+`localStorage` muestra el diálogo de WhatsNew abierto solo tras
+montar; al cerrarlo (botón "Cerrar" dentro del propio diálogo), queda
+"Tu impacto este mes" (contenido único de Home) y NO "Primeros pasos"
+(contenido único de Ayuda). Encontrado y corregido un problema real de
+aislamiento del propio test durante el desarrollo (no del código de la
+app): `sessionStorage` no se limpia entre tests de este archivo, así que
+un test anterior que había navegado a Ayuda dejaba esa pestaña guardada
+y el test nuevo la heredaba en vez de arrancar en Home — un `sessionStorage.clear()`
+al principio del test (documentado en el propio test, con la aclaración
+de que en producción esto nunca ocurre: una activación real siempre
+pasa en una sesión/pestaña nueva) lo replicó fielmente. 816/816 tests
+(suite completa), lint 0 errores, build correcto. No verificado en
+navegador real: reproducir un enlace de activación real requiere un
+token válido de un solo uso recién generado, no algo simulable en este
+entorno sin generar uno de verdad contra Supabase TEST — verificación
+apoyada en el test, que ejercita el mismo camino de estado que usaría
+la app real (`profile.activated_at` recién fijado, sin marca de versión
+vista).

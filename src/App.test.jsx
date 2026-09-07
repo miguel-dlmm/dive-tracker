@@ -25,7 +25,7 @@ vi.mock("./supabaseClient", () => ({
   supabase: { rpc: vi.fn(), from: vi.fn(() => emptyQuery()) },
 }));
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { useSession } from "./useSession";
@@ -241,6 +241,41 @@ describe("AuthGate", () => {
     await user.click(await screen.findByText("Ver qué hay de nuevo en esta versión"));
 
     expect(await screen.findByText("La app ya habla tu idioma")).toBeInTheDocument();
+  });
+
+  // 2026-09-07, pedido explícito: "cuando el usuario accede después del
+  // enlace de activación, le llevará a la home con el WhatsNew abierto.
+  // Una vez que lo cierre, no volverá a verlo hasta la próxima release."
+  // Antes de este cambio, justo tras activar la cuenta la app abría
+  // directamente en Ayuda (initialTab, ya retirado de App.jsx) — se
+  // sustituye por depender solo del mecanismo general de WhatsNew: una
+  // cuenta sin ninguna versión marcada como vista en este navegador
+  // (localStorage limpio, como cualquier usuario recién activado) lo
+  // abre solo, sin ningún caso especial para "recién activado".
+  it("una cuenta que nunca ha visto la versión actual cae en Home con WhatsNew abierto solo; al cerrarlo, Home queda debajo (no Ayuda)", async () => {
+    // sessionStorage limpio: una activación real ocurre siempre en una
+    // sesión nueva (ver "Bypass de login en desarrollo"/nav storage,
+    // App.jsx — sessionStorage nunca sobrevive a cerrar la pestaña), sin
+    // esto un test anterior que navegó a otra pestaña dejaría esa
+    // posición guardada y este test heredaría esa pestaña en vez de
+    // arrancar en Home de verdad.
+    sessionStorage.clear();
+    mockUseSession({
+      session: SESSION,
+      profile: { user_id: "brand-new-user", activated_at: "2026-09-07T00:00:00.000Z", nickname: "ada" },
+      pendingLegalConsents: [],
+    });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText("Ocean Flow");
+
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Cerrar" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Tu impacto este mes")).toBeInTheDocument();
+    expect(screen.queryByText("Primeros pasos")).not.toBeInTheDocument();
   });
 
   it("activated_at fijado pero con consentimiento legal pendiente, muestra la pantalla de aceptación legal en vez de la app", () => {

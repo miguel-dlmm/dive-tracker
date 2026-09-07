@@ -126,7 +126,7 @@ function markWhatsNewSeen(userId) {
   try { localStorage.setItem(whatsNewSeenKey(userId), APP_VERSION); } catch { /* no-op */ }
 }
 
-function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" }) {
+function AppShell({ onSignOut, profile, onProfileUpdated }) {
   const { t } = useTranslation("app");
   // profiles.language es la fuente de verdad una vez hay sesión (Release V1,
   // Fase 2) — sincroniza la interfaz al idioma guardado del usuario y
@@ -182,10 +182,19 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   const navSections = useSupabaseTable("nav_sections", "key", "key");
   const appConfig = useSupabaseTable("app_config", "id", "id");
 
-  // initialTab !== "home" es el caso "justActivated" (ver AuthGate) — una
-  // activación recién completada siempre debe abrir en Ayuda, prioridad
-  // sobre cualquier posición guardada de una sesión anterior.
-  const [tab, setTab] = useState(() => (initialTab !== "home" ? initialTab : (readStoredNav()?.tab || initialTab)));
+  // Siempre "home" tras cualquier activación (alta nueva, autoregistro,
+  // reactivación) — hasta 2026-09-07 abría directamente en Ayuda
+  // (initialTab, ya retirado) para orientar a alguien en su primer
+  // acceso; pedido explícito del usuario: en su lugar debe caer en Home
+  // con WhatsNew abierto. Ese "abierto" no necesita ninguna bandera
+  // aparte — se resuelve solo con el mecanismo general de WhatsNew de
+  // más abajo (whatsNewOpen/hasSeenWhatsNew): una cuenta que se acaba
+  // de activar nunca tiene marcada como vista la versión actual en este
+  // navegador, así que WhatsNew ya se abre automáticamente al llegar
+  // aquí, igual que le pasaría a cualquier usuario existente que entre
+  // por primera vez tras una versión nueva — mismo mecanismo, sin un
+  // caso especial para "recién activado".
+  const [tab, setTab] = useState(() => readStoredNav()?.tab || "home");
   // Único punto de cambio de pestaña disparado por un toque del usuario
   // (todo el resto de este archivo llama a changeTab, nunca a setTab
   // directamente, salvo el propio useState de arriba). Corrige un bug real
@@ -276,7 +285,11 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   // "Qué hay de nuevo" — se decide en el primer render tras conocer al
   // usuario (profile.user_id), no en un efecto con dependencia vacía: con
   // el bypass de desarrollo, AppShell puede remontarse con un profile
-  // distinto sin recargar la página completa.
+  // distinto sin recargar la página completa. Este mismo mecanismo es
+  // también lo que hace que se abra solo justo tras activar una cuenta
+  // (ver el comentario junto al useState de `tab`, más arriba): una
+  // cuenta recién activada nunca tiene la versión actual marcada como
+  // vista, sin necesitar ningún caso especial aparte.
   const [whatsNewOpen, setWhatsNewOpen] = useState(() => !hasSeenWhatsNew(profile?.user_id));
   const closeWhatsNew = () => {
     markWhatsNewSeen(profile?.user_id);
@@ -724,10 +737,6 @@ function AuthGate() {
       })
       .finally(() => setBypassPending(false));
   }, [loading, session, bypassAttempted, signIn]);
-  // Justo tras completar la activación, AppShell debe abrir directamente en
-  // Ayuda en vez de Home — se limpia solo (no persiste entre sesiones), ver
-  // App.jsx → AppShell → initialTab.
-  const [justActivated, setJustActivated] = useState(false);
   // activateAccount encadena completePasswordChange + markAccountActivated +
   // acceptLegalConsents — sin este flag, AuthGate re-renderizaría en el
   // hueco entre pasos (p. ej. activated_at ya fijado pero consentimientos
@@ -804,16 +813,11 @@ function AuthGate() {
     setActivating(true);
     try {
       await activateAccount({ tokenHash, type, expectedEmail: session?.user?.email, password });
-      setJustActivated(true);
     } finally {
       setActivating(false);
     }
   };
 
-  // Deliberadamente NO pone justActivated: esa bandera abre AppShell en
-  // Ayuda en vez de Home, pensado para alguien completando su primer
-  // acceso — quien recupera una contraseña ya conoce la app, no es una
-  // persona nueva a la que orientar.
   const handleResetPassword = async (password) => {
     setActivating(true);
     try {
@@ -878,7 +882,7 @@ function AuthGate() {
     return <AcceptLegalScreen onSubmit={acceptLegalConsents} />;
   }
 
-  return <AppShell onSignOut={signOut} profile={profile} onProfileUpdated={updateProfile} initialTab={justActivated ? "help" : "home"} />;
+  return <AppShell onSignOut={signOut} profile={profile} onProfileUpdated={updateProfile} />;
 }
 
 export default function App() {
