@@ -1,0 +1,266 @@
+{
+  "datasets": {
+    "copySuffix": "cópia",
+    "summary_one": "Configuração inicial (escolas, cursos e tarifas) clonada em cada conta nova. {{count}} ativo de {{total}}.",
+    "summary_other": "Configuração inicial (escolas, cursos e tarifas) clonada em cada conta nova. {{count}} ativos de {{total}}.",
+    "inactive": "Inativo",
+    "setDefault": "Marcar como padrão",
+    "setDefaultAria": "Marcar \"{{label}}\" como padrão",
+    "duplicate": "Duplicar",
+    "duplicateAria": "Duplicar \"{{label}}\"",
+    "activeAria": "Dataset \"{{label}}\" ativo",
+    "deleteItemLabel": "o dataset \"{{label}}\"",
+    "empty": "Ainda não há datasets.",
+    "fab": "Novo dataset",
+    "sheetTitle": "Novo dataset",
+    "sheetHint": "Começa vazio e inativo — duplique um já existente se quiser partir de um conteúdo já carregado.",
+    "nameLabel": "Nome",
+    "create": "Criar",
+    "toasts": {
+      "created": "Dataset criado — adicione o conteúdo antes de ativá-lo",
+      "duplicated": "\"{{newLabel}}\" criado com o mesmo conteúdo de \"{{sourceLabel}}\"",
+      "duplicateError": "Não foi possível duplicar. Tente novamente.",
+      "keyTaken": "Já existe um dataset com essa chave.",
+      "createError": "Não foi possível criar. Tente novamente.",
+      "updateError": "Não foi possível atualizar."
+    },
+    "errors": {
+      "isDefault": "É o dataset padrão — marque outro como padrão antes de excluir este.",
+      "lastOne": "Você não pode excluir o único dataset — o cadastro externo e o cadastro manual precisam de pelo menos um."
+    }
+  },
+  "crudTable": {
+    "buscarPlaceholder": "Buscar...",
+    "buscarAria": "Buscar",
+    "cambiarColor": "Mudar cor",
+    "favorita": "Favorita",
+    "marcarPredeterminado": "Marcar como padrão",
+    "esteElemento": "este item",
+    "sinResultados": "Nenhum resultado.",
+    "cerrar": "Fechar",
+    "guardar": "Salvar",
+    "cambiosGuardados": "Alterações salvas",
+    "anadidoCorrectamente": "Adicionado",
+    "noSePudoGuardar": "Não foi possível salvar. Tente novamente.",
+    "noSePudoGuardarCambio": "Não foi possível salvar a alteração.",
+    "estadoPredeterminadoRazon": "É o status padrão (representa \"pendente\") — marque outro como padrão antes de excluir este"
+  },
+  "sectionColors": {
+    "descripcion": "Usadas na barra de navegação e nos botões de criar registro de cada área."
+  },
+  "generalSettings": {
+    "iconoCarga": "Ícone de carregamento",
+    "descripcion": "Usado na animação de \"carregando\" de todo o app. Quando vocês tiverem a logo oficial do Ocean Flow, me avisem que eu substituo por ela em vez desta lista.",
+    "iconoActualizado": "Ícone atualizado",
+    "noSePudoGuardar": "Não foi possível salvar. Tente novamente.",
+    "vistaPrevia": "Pré-visualização"
+  },
+  "externalRegistration": {
+    "titulo": "Permitir cadastro externo",
+    "descripcion": "Exibe \"Cadastre-se\" no login para que qualquer pessoa possa criar sua própria conta.",
+    "activado": "Cadastro externo ativado",
+    "desactivado": "Cadastro externo desativado",
+    "noSePudoGuardar": "Não foi possível salvar. Tente novamente."
+  },
+  "roleCheckbox": {
+    "rolProtegido": "{{label}} — papel de sistema protegido, não editável",
+    "si": "sim",
+    "no": "não",
+    "etiquetaAria": "{{label}}: {{value}}"
+  },
+  "roleIcon": {
+    "superadmin": "Superadmin",
+    "admin": "Administrador"
+  },
+  "userStatus": {
+    "activo": "Ativo",
+    "pendiente": "Pendente",
+    "desactivado": "Desativado",
+    "nunca": "Nunca"
+  },
+  "swipeToDelete": {
+    "eliminar": "Excluir",
+    "eliminarA": "Excluir {{nickname}}"
+  },
+  "userListRow": {
+    "alta": "Cadastro: {{date}}",
+    "ultimoAcceso": "Último acesso: {{date}}",
+    "baja": "Desativado em: {{date}}",
+    "fechaNoRegistrada": "data não registrada"
+  },
+  "userDetailSheet": {
+    "cerrar": "Fechar",
+    "nombre": "Nome",
+    "apellidos": "Sobrenome",
+    "nickname": "Apelido",
+    "editarDatos": "Editar dados",
+    "email": "Email",
+    "altaLabel": "Cadastro",
+    "ultimoAcceso": "Último acesso",
+    "movimientos": "Movimentos",
+    "ultimaActividad": "Última atividade",
+    "baja": "Desativação",
+    "estado": "Status",
+    "activarUsuario": "Ativar usuário",
+    "desactivarUsuario": "Desativar usuário",
+    "pendienteTexto": "Aguardando a pessoa abrir o link e criar sua senha.",
+    "regenerarEnlace": "Gerar novo link",
+    "admin": "Admin",
+    "superadmin": "Superadmin",
+    "regenerarContrasena": "Gerar nova senha",
+    "eliminarUsuario": "Excluir usuário"
+  },
+  "activationLinkPanel": {
+    "cerrar": "Fechar",
+    "enlaceCopiado": "Link copiado",
+    "noSePudoCopiar": "Não foi possível copiar. Selecione manualmente.",
+    "copiarEnlace": "Copiar link",
+    "simularEnvioMock": "Simular envio bem-sucedido (mock)",
+    "mockEmailEnviado": "(Mock) Email enviado com sucesso"
+  },
+  "createUserSheet": {
+    "cerrar": "Fechar",
+    "noSePudieronCargarDatasets": "Não foi possível carregar os datasets disponíveis.",
+    "camposObligatorios": "Email, apelido e dataset inicial são obrigatórios.",
+    "soloSuperadminCrear": "Somente um superadmin pode criar usuários.",
+    "noSePudoCrear": "Não foi possível criar o usuário.",
+    "usuarioCreadoSinEmail": "Usuário criado (o email não pôde ser enviado)",
+    "usuarioCreadoCorrectamente": "Usuário criado",
+    "enlaceCopiado": "Link copiado",
+    "noSePudoCopiar": "Não foi possível copiar. Selecione manualmente.",
+    "noSePudoEnviarEmailTitulo": "Não foi possível enviar o email",
+    "noSePudoEnviarEmailDescripcion": "Não foi possível enviar o email de ativação. Você pode compartilhar este link manualmente.",
+    "copiarEnlace": "Copiar link",
+    "simularEnvioMock": "Simular envio bem-sucedido (mock)",
+    "mockUsuarioCreado": "(Mock) Usuário criado e email enviado com sucesso",
+    "titulo": "Criar usuário",
+    "email": "Email",
+    "nombre": "Nome",
+    "apellidos": "Sobrenome",
+    "nickname": "Apelido",
+    "datasetInicial": "Dataset inicial",
+    "cargando": "Carregando…",
+    "seleccionaDataset": "Selecione um dataset",
+    "sinDatasets": "Não há datasets disponíveis",
+    "idioma": "Idioma",
+    "nota": "O dataset escolhido carrega automaticamente escolas, cursos, tarifas, comissões e catálogos de pagamento iniciais. A pessoa receberá um email com um link de uso único para entrar e criar sua própria senha.",
+    "creando": "Criando…",
+    "crearUsuario": "Criar usuário"
+  },
+  "usersDirectory": {
+    "buscarPlaceholder": "Buscar...",
+    "buscarAria": "Buscar usuários",
+    "leyendaEstadoAria": "O que significa cada cor de status",
+    "crearUsuario": "Criar usuário",
+    "noSePudoCargarListado": "Não foi possível carregar a lista de usuários.",
+    "errorDesconocido": "Erro desconhecido",
+    "errorCargarListado": "Não foi possível carregar a lista: {{error}}",
+    "cargandoUsuarios": "Carregando usuários…",
+    "sinResultados": "Nenhum resultado.",
+    "soloSuperadminRol": "Somente um superadmin pode alterar o papel de admin de outra conta.",
+    "noSePudoActualizarRol": "Não foi possível atualizar o papel.",
+    "rolActualizado": "Papel atualizado",
+    "soloSuperadminEliminar": "Somente um superadmin pode excluir usuários.",
+    "noSePudoEliminar": "Não foi possível excluir o usuário.",
+    "usuarioEliminado": "Usuário excluído",
+    "soloSuperadminActivar": "Somente um superadmin pode ativar ou desativar usuários.",
+    "noSePudoActualizarEstado": "Não foi possível atualizar o status.",
+    "usuarioDesactivado": "Usuário desativado",
+    "soloSuperadminEnlace": "Somente um superadmin pode ativar contas ou gerar um novo link de acesso.",
+    "noSePudoGenerarEnlace": "Não foi possível gerar o link.",
+    "enlaceGeneradoSinEmail": "Link gerado (o email não pôde ser enviado para {{nickname}})",
+    "enlaceActivacionTitulo": "Link de ativação gerado",
+    "enlaceActivacionDescripcion": "Compartilhe este link com {{nickname}}. Vai continuar aparecendo como \"Pendente\" até que ele/ela use o link para criar a senha.",
+    "emailActivacionEnviado": "Email de ativação enviado para {{nickname}}",
+    "soloSuperadminContrasena": "Somente um superadmin pode gerar uma nova senha para outra conta.",
+    "noSePudoRegenerarContrasena": "Não foi possível gerar a nova senha.",
+    "contrasenaRegeneradaSinEmail": "Senha renovada (o email não pôde ser enviado para {{nickname}})",
+    "contrasenaRegeneradaTitulo": "Senha renovada",
+    "contrasenaRegeneradaDescripcion": "A senha anterior de {{nickname}} deixou de ser válida. É preciso criar uma nova a partir de um link de ativação — a conta volta a ficar \"Pendente\" até lá.",
+    "contrasenaRegeneradaEmailEnviado": "Senha renovada e email enviado para {{nickname}}",
+    "nicknameVacio": "O apelido não pode ficar vazio.",
+    "datosActualizados": "Dados atualizados",
+    "noSePudieronGuardarCambios": "Não foi possível salvar as alterações.",
+    "cambiarRolAdminTitulo": "Alterar papel de admin",
+    "usuarioLabel": "Usuário: {{nickname}}",
+    "adminLabel": "Admin: {{from}} → {{to}}",
+    "confirmar": "Confirmar",
+    "eliminarUsuarioTitulo": "Excluir usuário",
+    "eliminarUsuarioMensaje": "A conta de <strong>{{nickname}}</strong> e todos os seus dados (escolas, tarifas, movimentos...) serão excluídos permanentemente. Essa ação não pode ser desfeita.",
+    "eliminarUsuarioAlternativa": "Se você só quer revogar o acesso mantendo os dados, use \"Desativar\" em vez disso.",
+    "eliminar": "Excluir",
+    "desactivarUsuarioTitulo": "Desativar usuário",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> vai perder o acesso para fazer login. Todos os dados (escolas, tarifas, movimentos...) são mantidos intactos — você pode reativá-lo quando quiser, gerando um novo link de ativação.",
+    "desactivar": "Desativar",
+    "generarEnlaceTitulo": "Gerar link de ativação",
+    "generarEnlaceMensaje": "Um novo link de uso único será gerado para <strong>{{nickname}}</strong>. Qualquer link anterior deixará de funcionar. A conta só ganha acesso depois de completá-lo.",
+    "generarEnlace": "Gerar link",
+    "regenerarContrasenaTitulo": "Gerar nova senha",
+    "regenerarContrasenaMensaje": "A senha atual de <strong>{{nickname}}</strong> vai parar de funcionar imediatamente. Será preciso criar uma nova a partir de um novo link de ativação — os dados não são afetados.",
+    "regenerar": "Gerar nova",
+    "generarInvitacion": "Gerar link de convite",
+    "soloSuperadminInvitacion": "Somente um superadmin pode gerar links de convite.",
+    "noSePudoGenerarInvitacion": "Não foi possível gerar o link de convite.",
+    "enlaceInvitacionTitulo": "Link de convite",
+    "enlaceInvitacionDescripcion": "Válido por 24 horas e de uso único. Compartilhe com a pessoa que você quer convidar — ela poderá se cadastrar mesmo que o cadastro externo esteja desativado."
+  },
+  "sections": {
+    "escuelas": {
+      "label": "Escolas",
+      "description": "Onde você dá aulas, com sua cor"
+    },
+    "cursos": {
+      "label": "Cursos",
+      "description": "O que você ensina, com sua cor"
+    },
+    "tarifas": {
+      "label": "Tarifas",
+      "description": "Quanto você cobra por escola e curso"
+    },
+    "estadosPago": {
+      "label": "Status de pagamento",
+      "description": "Pendente, recebido..."
+    },
+    "monedas": {
+      "label": "Moedas",
+      "description": "Catálogo disponível em todo o app"
+    },
+    "navegacion": {
+      "label": "Cores de navegação",
+      "description": "Identidade visual de cada área"
+    },
+    "ajustes": {
+      "label": "Configurações gerais",
+      "description": "Ícone de carregamento do app"
+    },
+    "usuarios": {
+      "label": "Usuários",
+      "description": "Contas com acesso ao app"
+    },
+    "datasets": {
+      "label": "Datasets iniciais",
+      "description": "Configuração clonada ao criar uma conta"
+    }
+  },
+  "menu": {
+    "administracion": "Administração",
+    "superadmin": "Superadmin",
+    "configuracion": "Configurações"
+  },
+  "crud": {
+    "nuevaEscuela": "Nova escola",
+    "editarEscuela": "Editar escola",
+    "nombreCampo": "Nome",
+    "colorCampo": "Cor",
+    "nuevoCurso": "Novo curso",
+    "editarCurso": "Editar curso",
+    "nuevoEstadoPago": "Novo status de pagamento",
+    "editarEstadoPago": "Editar status de pagamento",
+    "nuevaMoneda": "Nova moeda",
+    "editarMoneda": "Editar moeda",
+    "monedasDescripcion": "Escolha aqui a moeda de reserva de todo o app: é usada quando um usuário ainda não escolheu sua própria moeda favorita em Meu perfil. Não é uma preferência pessoal — é a que se aplica por padrão a qualquer conta nova.",
+    "monedaPorDefectoApp": "Padrão do app",
+    "codigoCampo": "Código (ex.: EUR)",
+    "simboloCampo": "Símbolo"
+  }
+}

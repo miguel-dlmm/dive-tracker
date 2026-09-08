@@ -1,0 +1,25 @@
+{
+  "tabs": {
+    "home": "หน้าแรก",
+    "trabajo": "งานของฉัน",
+    "summary": "สรุป"
+  },
+  "secondaryTitles": {
+    "config": "ตั้งค่า",
+    "help": "ช่วยเหลือ",
+    "pagos": "การชำระเงิน",
+    "perfil": "โปรไฟล์ของฉัน",
+    "training-records": "Training Records",
+    "install-app": "ติดตั้งแอป"
+  },
+  "aria": {
+    "close": "ปิด",
+    "back": "ย้อนกลับ",
+    "goHome": "ไปที่หน้าแรก",
+    "help": "ช่วยเหลือ",
+    "config": "ตั้งค่า",
+    "profile": "โปรไฟล์ของฉัน",
+    "signOut": "ออกจากระบบ",
+    "mainNav": "เมนูนำทางหลัก"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "personalData": "Dados pessoais",
+    "instructor": "Dados de instrutor",
+    "favoriteCurrency": "Moeda favorita",
+    "language": "Idioma",
+    "security": "Segurança",
+    "privacy": "Privacidade"
+  },
+  "signOut": {
+    "button": "Sair da conta"
+  },
+  "avatar": {
+    "changeAvatar": "Trocar avatar",
+    "closeAvatarPicker": "Fechar seletor de avatar",
+    "colorLabel": "Cor {{name}}",
+    "iconLabel": "Ícone {{name}}",
+    "previousIcon": "Ícone anterior",
+    "nextIcon": "Próximo ícone",
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "cancel": "Cancelar",
+    "toastSuccess": "Avatar atualizado",
+    "toastError": "Não foi possível salvar o avatar. Tente novamente."
+  },
+  "personalData": {
+    "nameLine": "Nome:",
+    "nicknameLine": "Apelido:",
+    "professionalLine": "Profissional:",
+    "birthDateLine": "Data de nascimento:",
+    "countryLine": "País de residência:",
+    "edit": "Editar",
+    "nameLabel": "Nome",
+    "lastNameLabel": "Sobrenome",
+    "nicknameLabel": "Apelido",
+    "professionalLabel": "Profissional",
+    "professionalPlaceholder": "Não escolhido",
+    "birthDateLabel": "Data de nascimento",
+    "countryLabel": "País de residência",
+    "countryPlaceholder": "Escolha um país",
+    "nicknameAtError": "Não pode conter \"@\".",
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "toastSuccess": "Perfil atualizado",
+    "errors": {
+      "nicknameTaken": "Esse apelido já está em uso.",
+      "nicknameAt": "O apelido não pode conter \"@\".",
+      "generic": "Não foi possível salvar. Tente novamente."
+    }
+  },
+  "instructor": {
+    "hint": "Usados para preencher seus Training Records automaticamente — são salvos aqui uma única vez, não por dispositivo.",
+    "card": {
+      "role": "Profissional SSI",
+      "roleWithLevel": "SSI {{level}}",
+      "noSignature": "Sem assinatura",
+      "signatureAlt": "Assinatura de {{name}}",
+      "initialsLabel": "Iniciais",
+      "numberLabel": "SSI PRO"
+    },
+    "signatureLabel": "Sua assinatura",
+    "edit": "Editar",
+    "initialsLabel": "Iniciais",
+    "numberLabel": "Número SSI Pro",
+    "save": "Salvar",
+    "saving": "Salvando…",
+    "toastSuccess": "Dados de instrutor atualizados",
+    "toastError": "Não foi possível salvar os dados de instrutor. Tente novamente."
+  },
+  "currency": {
+    "hint": "Usada como moeda padrão em Ajuste de curso, quando não há uma tarifa que a determine. Os demais movimentos sempre usam a moeda da sua tarifa.",
+    "placeholder": "Não escolhida — usa a moeda padrão do app",
+    "toastSuccess": "Moeda favorita atualizada"
+  },
+  "language": {
+    "placeholder": "Selecione um idioma",
+    "toastSuccess": "Idioma atualizado",
+    "toastError": "Não foi possível mudar o idioma. Tente novamente."
+  },
+  "password": {
+    "currentLabel": "Senha atual",
+    "newLabel": "Nova senha",
+    "confirmLabel": "Confirmar senha",
+    "showCurrent": "Mostrar senha atual",
+    "hideCurrent": "Ocultar senha atual",
+    "show": "Mostrar senha",
+    "hide": "Ocultar senha",
+    "minLength": "Mínimo de 8 caracteres",
+    "matches": "As senhas coincidem",
+    "submit": "Alterar senha",
+    "toastSuccess": "Senha atualizada",
+    "toastError": "Não foi possível alterar a senha. Tente novamente.",
+    "wrongCurrent": "Senha atual incorreta."
+  },
+  "deleteAccount": {
+    "confirmWord": "CANCELAR",
+    "description": "Excluir sua conta remove seu acesso e todos os seus dados do Ocean Flow de forma permanente: escolas, cursos, tarifas, registro de aulas, comissões e ajustes com colegas. Nenhuma cópia é mantida. Essa ação não pode ser desfeita.",
+    "button": "Excluir minha conta",
+    "confirmTitle": "Excluir sua conta?",
+    "confirmMessage": "Você vai excluir a conta \"{{nickname}}\" e todos os seus dados de forma permanente. Você não poderá desfazer essa ação.",
+    "continue": "Continuar",
+    "finalCheckTitle": "Última verificação",
+    "typeWordPrefix": "Digite",
+    "typeWordSuffix": "para confirmar que deseja excluir sua conta de forma permanente.",
+    "typeWordAriaLabel": "Digite {{word}} para confirmar",
+    "back": "Voltar",
+    "deleteButton": "Excluir conta",
+    "toastSuccess": "Conta excluída",
+    "genericError": "Não foi possível excluir a conta. Tente novamente.",
+    "networkError": "Não foi possível excluir a conta. Verifique sua conexão e tente novamente."
+  }
+}

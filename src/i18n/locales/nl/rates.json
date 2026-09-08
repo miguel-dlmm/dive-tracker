@@ -1,0 +1,52 @@
+{
+  "filter": {
+    "button": "Filteren",
+    "type": "Type",
+    "typeAll": "Alle",
+    "school": "School",
+    "schoolAll": "Alle",
+    "course": "Cursus",
+    "courseAll": "Alle",
+    "clear": "Filters wissen",
+    "showInactive": "Inactieve tonen"
+  },
+  "search": {
+    "placeholder": "Zoeken",
+    "ariaLabel": "Tarief zoeken"
+  },
+  "list": {
+    "count": "{{count}} tarieven",
+    "empty": "Geen resultaten.",
+    "createdOn": "Aangemaakt: {{date}} · {{type}}",
+    "inactive": "Inactief"
+  },
+  "fab": "Nieuw tarief",
+  "sheet": {
+    "editTitle": "Tarief van {{school}} - {{activity}} bewerken",
+    "createTitle": "Nieuw tarief voor {{type}}",
+    "close": "Sluiten",
+    "typeTablistLabel": "Type tarief",
+    "hintGanado": "Wat je vraagt voor het zelf geven van de cursus.",
+    "hintComision": "Wat je vraagt voor het aanbrengen van een klant.",
+    "school": "School",
+    "course": "Cursus",
+    "rateLabel": "Tarief · {{currency}}",
+    "save": "Opslaan"
+  },
+  "toasts": {
+    "saved": "Wijzigingen opgeslagen",
+    "added": "Tarief toegevoegd",
+    "saveError": "Kon niet worden opgeslagen. Probeer het opnieuw.",
+    "duplicate": "Je hebt al een actief tarief voor deze school en cursus. Deactiveer het eerst voordat je een nieuwe maakt.",
+    "reactivateBlocked": "Kan niet worden geactiveerd: er is al een ander actief tarief voor deze school en cursus.",
+    "deactivated": "Tarief gedeactiveerd",
+    "reactivated": "Tarief geactiveerd"
+  },
+  "deleteInUse_one": "Kan niet worden verwijderd: {{count}} boeking gebruikt dit tarief.",
+  "deleteInUse_other": "Kan niet worden verwijderd: {{count}} boekingen gebruiken dit tarief.",
+  "rowMenu": {
+    "itemLabel": "het tarief van {{school}} - {{activity}}",
+    "deactivate": "Deactiveren",
+    "reactivate": "Activeren"
+  }
+}

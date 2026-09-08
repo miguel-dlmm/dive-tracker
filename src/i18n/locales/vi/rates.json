@@ -1,0 +1,52 @@
+{
+  "filter": {
+    "button": "Lọc",
+    "type": "Loại",
+    "typeAll": "Tất cả",
+    "school": "Trung tâm",
+    "schoolAll": "Tất cả",
+    "course": "Khóa học",
+    "courseAll": "Tất cả",
+    "clear": "Xóa bộ lọc",
+    "showInactive": "Hiện đã tắt"
+  },
+  "search": {
+    "placeholder": "Tìm kiếm",
+    "ariaLabel": "Tìm mức giá"
+  },
+  "list": {
+    "count": "{{count}} mức giá",
+    "empty": "Không có kết quả.",
+    "createdOn": "Tạo: {{date}} · {{type}}",
+    "inactive": "Đã tắt"
+  },
+  "fab": "Mức giá mới",
+  "sheet": {
+    "editTitle": "Sửa mức giá {{school}} - {{activity}}",
+    "createTitle": "Mức giá mới cho {{type}}",
+    "close": "Đóng",
+    "typeTablistLabel": "Loại mức giá",
+    "hintGanado": "Số tiền bạn nhận khi trực tiếp dạy khóa học.",
+    "hintComision": "Số tiền bạn nhận khi giới thiệu khách.",
+    "school": "Trung tâm",
+    "course": "Khóa học",
+    "rateLabel": "Mức giá · {{currency}}",
+    "save": "Lưu"
+  },
+  "toasts": {
+    "saved": "Đã lưu thay đổi",
+    "added": "Đã thêm mức giá",
+    "saveError": "Không thể lưu. Vui lòng thử lại.",
+    "duplicate": "Bạn đã có một mức giá đang hoạt động cho trung tâm và khóa học này. Hãy tắt nó trước khi tạo mức giá mới.",
+    "reactivateBlocked": "Không thể kích hoạt lại: đã có mức giá khác đang hoạt động cho trung tâm và khóa học này.",
+    "deactivated": "Đã tắt mức giá",
+    "reactivated": "Đã kích hoạt lại mức giá"
+  },
+  "deleteInUse_one": "Không thể xóa: có {{count}} bản ghi đang dùng mức giá này.",
+  "deleteInUse_other": "Không thể xóa: có {{count}} bản ghi đang dùng mức giá này.",
+  "rowMenu": {
+    "itemLabel": "mức giá {{school}} - {{activity}}",
+    "deactivate": "Tắt",
+    "reactivate": "Kích hoạt lại"
+  }
+}

@@ -133,10 +133,18 @@ export async function handleExternalRegister({ method, body, headers }) {
   if (!email || !nickname) {
     return { status: 400, payload: { error: "Email y nickname son obligatorios." } };
   }
-  // Mismos 2 idiomas que el check de profiles.language (schema.sql) — si
-  // llega algo distinto (o nada), provisionUser()/handle_new_user() caen
-  // al 'es' por defecto, nunca se propaga un valor sin validar a metadata.
-  const safeLanguage = ["es", "en"].includes(language) ? language : undefined;
+  // Mismos idiomas que el check de profiles.language (schema.sql +
+  // scripts/migrations/0018 y 0020) — si llega algo distinto (o nada),
+  // provisionUser()/handle_new_user() caen al 'es' por defecto, nunca se
+  // propaga un valor sin validar a metadata. Bug real encontrado
+  // 2026-09-09: esta lista se quedó en solo ["es","en"] cuando se
+  // añadieron fr/it/de/ca/eu (v1.1.0) — cualquier registro externo con
+  // uno de esos 5 idiomas perdía en silencio el idioma elegido
+  // (SUPPORTED_LANGUAGES en src/i18n/index.js sí los aceptaba en cliente,
+  // esta lista del servidor no). Duplicada a propósito, ver el mismo
+  // comentario largo en createUser.js — revisar esta lista Y createUser.js
+  // Y el check de schema.sql cada vez que se añada un idioma nuevo.
+  const safeLanguage = ["es", "en", "fr", "it", "de", "ca", "eu", "nl", "th", "id", "vi", "my", "ms", "ru", "pt"].includes(language) ? language : undefined;
 
   const client = getServiceRoleClient();
 

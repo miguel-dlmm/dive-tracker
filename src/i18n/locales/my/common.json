@@ -1,0 +1,97 @@
+{
+  "loading": { "defaultLabel": "ဖွင့်နေသည်" },
+  "errorBoundary": {
+    "title": "အိုး၊ တစ်ခုခုမှားသွားပါပြီ",
+    "body": "ဒီစာမျက်နှာမှာ မမျှော်လင့်ထားတဲ့ ပြဿနာလေးတစ်ခု ဖြစ်သွားပါတယ်။ မင်းလုပ်လို့ဖြစ်တာ မဟုတ်ပါဘူး — ထပ်ပြီးဖွင့်ကြည့်ပါ၊ ပုံမှန်အတိုင်း ပြန်ဖြစ်သွားပါလိမ့်မယ်။",
+    "reload": "ပြန်ဖွင့်ရန်"
+  },
+  "movementTypes": {
+    "ganado": "သင်တန်း",
+    "comision": "ကော်မရှင်",
+    "companeros": "ချိန်ညှိမှု"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "ကောက်ခံရန် ကျန်ရှိသည်",
+    "empty": "ဆိုင်းငံ့ထားစရာ မရှိပါ",
+    "count_one": "ငွေပေးချေမှု {{count}} ခု ဆိုင်းငံ့နေသည်",
+    "count_other": "ငွေပေးချေမှု {{count}} ခု ဆိုင်းငံ့နေသည်",
+    "addMovement": "မှတ်တမ်း ထည့်ရန်"
+  },
+  "confirmDialog": { "cancel": "ပယ်ဖျက်ရန်", "defaultConfirmLabel": "ဖျက်ရန်" },
+  "editActions": { "defaultSaveLabel": "သိမ်းဆည်းရန်", "cancel": "ပယ်ဖျက်ရန်" },
+  "deleteButton": {
+    "defaultLabel": "ဖျက်ရန်",
+    "defaultItemLabel": "ဒီအချက်",
+    "deletedToast": "ဖျက်ပြီးပါပြီ",
+    "errorToast": "ဖျက်၍ မရပါ။ ထပ်မံကြိုးစားကြည့်ပါ။",
+    "confirmTitle": "ဒီမှတ်တမ်းကို ဖျက်မှာလား။",
+    "confirmMessage": "{{item}} ကို ဖျက်တော့မှာပါ။ ဒီလုပ်ဆောင်ချက်ကို နောက်ပြန်ရုပ်သိမ်းလို့ မရတော့ပါ။"
+  },
+  "field": { "hideHelp": "အကူအညီကို ဖျောက်ရန်", "help": "အကူအညီ" },
+  "calendar": {
+    "months": ["ဇန်နဝါရီ", "ဖေဖော်ဝါရီ", "မတ်", "ဧပြီ", "မေ", "ဇွန်", "ဇူလိုင်", "သြဂုတ်", "စက်တင်ဘာ", "အောက်တိုဘာ", "နိုဝင်ဘာ", "ဒီဇင်ဘာ"],
+    "weekdays": ["လာ", "ဂါ", "ဟူး", "ကြာ", "သော", "နေ", "ဂနွေ"],
+    "prevMonth": "ယခင်လ",
+    "nextMonth": "လာမည့်လ",
+    "prevYear": "ယခင်နှစ်",
+    "nextYear": "လာမည့်နှစ်",
+    "prevDecade": "ယခင်ဆယ်စုနှစ်",
+    "nextDecade": "လာမည့်ဆယ်စုနှစ်",
+    "today": "ယနေ့"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "နေ့စွဲ",
+    "defaultAriaLabel": "နေ့စွဲ ရွေးရန်",
+    "pickerAriaLabel": "နေ့စွဲ ရွေးချယ်ရေးကိရိယာ",
+    "chooseMonthAriaLabel": "လ ရွေးရန်",
+    "chooseYearAriaLabel": "နှစ် ရွေးရန်",
+    "dayAriaLabel": "{{month}} {{day}}",
+    "today": "ယနေ့",
+    "yesterday": "မနေ့က",
+    "tomorrow": "မနက်ဖြန်",
+    "dayBeforeYesterday": "တနေ့က"
+  },
+  "dateRangePicker": {
+    "from": "မှ",
+    "to": "အထိ",
+    "fromAriaLabel": "အစနေ့စွဲ",
+    "toAriaLabel": "အဆုံးနေ့စွဲ",
+    "pickerAriaLabel": "နေ့စွဲအပိုင်းအခြား ရွေးချယ်ရေးကိရိယာ",
+    "chooseStart": "အစနေ့စွဲကို ရွေးပါ",
+    "chooseEnd": "အဆုံးနေ့စွဲကို ရွေးပါ",
+    "chooseDate": "နေ့စွဲတစ်ခု ရွေးပါ",
+    "okFrom": "OK — {{date}} မှသာ",
+    "presets": { "today": "ယနေ့", "thisWeek": "ဒီအပတ်", "thisMonth": "ဒီလ", "last30Days": "နောက်ဆုံး ရက် ၃၀" }
+  },
+  "monthCalendar": {
+    "addOnDay": "{{month}} {{day}} ရက်နေ့တွင် မှတ်တမ်း ထည့်ရန်",
+    "addOnDayToday": "{{month}} {{day}} ရက်နေ့ (ယနေ့) တွင် မှတ်တမ်း ထည့်ရန်",
+    "dayToday": "{{month}} {{day}} (ယနေ့)",
+    "closeDayDetail": "နေ့အသေးစိတ်ကို ပိတ်ရန်",
+    "dayHeading": "{{month}} {{day}} ရက်",
+    "generatedOnDay": "ရရှိသည့်နေ့",
+    "table": { "course": "သင်တန်း", "comment": "မှတ်ချက်", "people": "လူ", "amount": "ပမာဏ" }
+  },
+  "select": { "placeholder": "ရွေးချယ်ပါ..." },
+  "multiSelect": { "placeholder": "အားလုံး", "clearSelection": "ရွေးချယ်မှု ရှင်းရန်", "selectedCount": "{{count}} ခု ရွေးထားသည်" },
+  "searchSelect": { "placeholder": "ရှာဖွေပါ...", "ariaLabel": "ရှာဖွေရန်", "noResults": "ရလဒ် မရှိပါ" },
+  "currencySearchSelect": { "placeholder": "ငွေကြေး ရှာဖွေပါ..." },
+  "listFilterBar": {
+    "from": "မှ",
+    "to": "အထိ",
+    "school": "ကျောင်း",
+    "activity": "လှုပ်ရှားမှု",
+    "noLimit": "ကန့်သတ်မထား",
+    "all": "အားလုံး",
+    "clearFilters": "စစ်ထုတ်မှုများ ရှင်းရန်"
+  },
+  "rowMenu": { "moreActions": "နောက်ထပ်လုပ်ဆောင်ချက်များ", "edit": "ပြင်ဆင်ရန်", "delete": "ဖျက်ရန်" },
+  "statusSwitch": { "ariaLabel": "အခြေအနေ − {{value}}။ {{next}} သို့ပြောင်းရန် နှိပ်ပါ", "title": "{{value}} — \"{{next}}\" သို့ပြောင်းရန် နှိပ်ပါ" },
+  "signature": {
+    "opcional": "ရွေးချယ်နိုင်",
+    "borrar": "ဖျက်ရန်",
+    "deshacer": "ပြန်ဖျက်ရန်",
+    "firmadoAria": "{{label}}: လက်မှတ်ထိုးပြီး",
+    "sinFirmarAria": "{{label}}: လက်မှတ်မထိုးရသေး"
+  }
+}

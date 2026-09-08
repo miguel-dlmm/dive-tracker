@@ -1,0 +1,56 @@
+{
+  "whatsNew": {
+    "close": "Fechar",
+    "eyebrow": "Novidades desta versão",
+    "slideTablist": "Slide",
+    "back": "Voltar",
+    "next": "Próximo",
+    "start": "Começar",
+    "slides": [
+      {
+        "title": "Redesign completo, cara nova",
+        "body": "Logo, cores e visual renovados de ponta a ponta — o mesmo Ocean Flow, com uma identidade própria."
+      },
+      {
+        "title": "Sua carteira de instrutor",
+        "body": "Meu perfil agora tem sua própria carteira: nível profissional, dados pessoais e moeda favorita, tudo em um só lugar."
+      },
+      {
+        "title": "Training Records, direto do app",
+        "body": "Gere o registro de progresso SSI de cada aluno, assinado e pronto para entregar — sem sair do Ocean Flow."
+      },
+      {
+        "title": "O app agora fala seu idioma",
+        "body": "Espanhol, inglês, francês, italiano, alemão, catalão ou basco — mude quando quiser pelo seu perfil."
+      },
+      {
+        "title": "Home e Meu trabalho, mais claros",
+        "body": "Tudo melhor organizado, para você encontrar o que procura de relance: seus KPIs, seus movimentos, seu dia a dia."
+      },
+      {
+        "title": "Reveja quando quiser",
+        "body": "Volte a essas novidades em Ajuda → \"Ver o que há de novo\", sem esperar pela próxima atualização."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Fechar",
+    "eyebrow": "Nova implantação",
+    "branchLabel": "Branch",
+    "commitLabel": "commit",
+    "technicalChanges": "Alterações técnicas",
+    "functionalChanges": "Alterações de funcionalidade",
+    "uiChangesLabel": "Alterações de UI:",
+    "uiChangesYes": "Sim",
+    "uiChangesNo": "Não",
+    "stepsHeading": "O que testar / o que fazer",
+    "testsLabel": "Testes:",
+    "buildLabel": "Build:",
+    "notReported": "não informado",
+    "previewCommit": "Preview do commit",
+    "previewCommitEmpty": "Preview do commit: sem preview ainda",
+    "previewIntegrated": "Preview integrada (Release-V1)",
+    "previewIntegratedEmpty": "Preview integrada: sem preview ainda",
+    "understood": "Entendi"
+  }
+}

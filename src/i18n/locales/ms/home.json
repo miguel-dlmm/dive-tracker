@@ -1,0 +1,21 @@
+{
+  "calendarCaption": "Ketik satu hari untuk lihat butiran, atau hari kosong untuk tambah transaksi",
+  "activeSchoolThisMonth": "Sekolah paling aktif",
+  "activeSchoolCount_one": "{{count}} transaksi bulan ini",
+  "activeSchoolCount_other": "{{count}} transaksi bulan ini",
+  "activeSchoolCountAndOthers_one": "{{count}} transaksi · {{schools}} sekolah bulan ini",
+  "activeSchoolCountAndOthers_other": "{{count}} transaksi · {{schools}} sekolah bulan ini",
+  "noActivityThisMonth": "Tiada aktiviti bulan ini",
+  "kpis": {
+    "sectionTitle": "Impak anda bulan ini",
+    "studentsThisMonth": "Pelajar",
+    "coursesTotal": "Kursus",
+    "referredThisMonth": "Dirujuk"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "ctaFirstTime": "Jana Training Record pertama anda",
+    "generatedLabel": "Dijana"
+  },
+  "installApp": "Muat turun aplikasi"
+}

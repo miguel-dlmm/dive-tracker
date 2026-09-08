@@ -177,8 +177,9 @@ describe("con permisos válidos", () => {
     });
   });
 
-  // Release V1, Fase 2 (multidioma): language solo se propaga si es uno de
-  // los 2 idiomas soportados — cualquier otro valor cae a null, y
+  // Release V1, Fase 2 (multidioma) + idiomas adicionales (v1.1.0 y
+  // 2026-09-09): language solo se propaga si es uno de los idiomas
+  // realmente soportados — cualquier otro valor cae a null, y
   // handle_new_user() (schema.sql) lo resuelve a 'es' por defecto.
   it("propaga language cuando es un idioma soportado", async () => {
     createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
@@ -191,9 +192,26 @@ describe("con permisos válidos", () => {
     }));
   });
 
-  it("ignora un language no soportado, cae a null", async () => {
+  // Bug real encontrado 2026-09-09: esta lista se había quedado en solo
+  // ["es","en"] cuando se añadieron fr/it/de/ca/eu (v1.1.0) — este mismo
+  // test usaba "fr" como ejemplo de idioma NO soportado, dando por buena
+  // la pérdida silenciosa del idioma elegido en cualquier alta con uno de
+  // esos 5 idiomas. "fr" ahora se prueba aparte como SOPORTADO; el
+  // ejemplo de no soportado pasa a un código que nunca podrá serlo.
+  it("un idioma soportado añadido en v1.1.0 (fr/it/de/ca/eu) se propaga igual que es/en", async () => {
     createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
     const body = { ...VALID_BODY, language: "fr" };
+
+    await handleCreateUser(request({ body: JSON.stringify(body) }));
+
+    expect(createUser).toHaveBeenCalledWith(expect.objectContaining({
+      user_metadata: expect.objectContaining({ language: "fr" }),
+    }));
+  });
+
+  it("ignora un language no soportado, cae a null", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+    const body = { ...VALID_BODY, language: "xx" };
 
     await handleCreateUser(request({ body: JSON.stringify(body) }));
 

@@ -1,0 +1,144 @@
+{
+  "actionLabel": {
+    "markPending": "Tandai tertunda",
+    "markSettled": "Tandai lunas",
+    "confirmCollection": "Konfirmasi pembayaran"
+  },
+  "dateGroup": {
+    "today": "Hari ini",
+    "yesterday": "Kemarin",
+    "weekdaysShort": ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
+    "monthsShort": ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "Tidak ada item tertunda dengan filter ini.",
+    "pendingNoFilters": "Semua sudah beres — tidak ada yang tertunda.",
+    "paidWithFilters": "Tidak ada item terbayar dengan filter ini.",
+    "paidNoFilters": "Kamu belum menandai apa pun sebagai terbayar."
+  },
+  "rowMenu": {
+    "adjustmentWith": "penyesuaian dengan {{name}}",
+    "courseAt": "{{activity}} di {{school}}",
+    "deleteConfirmMessage": "Kamu akan menghapus {{item}}. Kamu punya beberapa detik untuk membatalkannya dari notifikasi.",
+    "undoAction": "Urungkan",
+    "deleteUndoneToast": "Berhasil dipulihkan",
+    "deleteUndoError": "Gagal mengurungkan. Coba lagi."
+  },
+  "tabs": {
+    "pending": "Tertunda",
+    "paid": "Terbayar"
+  },
+  "filter": {
+    "label": "Filter",
+    "period": "Periode",
+    "school": "Sekolah",
+    "course": "Kursus",
+    "type": "Jenis",
+    "allFeminine": "Semua",
+    "allMasculine": "Semua",
+    "clear": "Hapus filter"
+  },
+  "collectAll": {
+    "button": "Bayar semua",
+    "confirmLabel": "Bayar",
+    "title_one": "Bayar {{count}} transaksi tertunda?",
+    "title_other": "Bayar {{count}} transaksi tertunda?",
+    "messageAjuste_one": "Kamu akan menandai transaksi ini sebagai terbayar atau lunas sekaligus, sesuai jenis masing-masing. Kamu tetap bisa membatalkan satu per satu setelahnya, seperti saat mengonfirmasi satu per satu.",
+    "messageAjuste_other": "Kamu akan menandai {{count}} transaksi ini sebagai terbayar atau lunas sekaligus, sesuai jenis masing-masing. Kamu tetap bisa membatalkan satu per satu setelahnya, seperti saat mengonfirmasi satu per satu.",
+    "messageSimple_one": "Kamu akan menandai transaksi ini sebagai terbayar sekaligus. Kamu tetap bisa membatalkan satu per satu setelahnya, seperti saat mengonfirmasi satu per satu.",
+    "messageSimple_other": "Kamu akan menandai {{count}} transaksi ini sebagai terbayar sekaligus. Kamu tetap bisa membatalkan satu per satu setelahnya, seperti saat mengonfirmasi satu per satu.",
+    "toastSwitch_one": "{{count}} transaksi ditandai sebagai {{verb}} — buka \"Terbayar\" untuk melihatnya",
+    "toastSwitch_other": "{{count}} transaksi ditandai sebagai {{verbPlural}} — buka \"Terbayar\" untuk melihatnya",
+    "toastNoSwitch_one": "{{count}} transaksi ditandai sebagai {{verb}}",
+    "toastNoSwitch_other": "{{count}} transaksi ditandai sebagai {{verbPlural}}",
+    "verbCobrado": "terbayar",
+    "verbCobradoPlural": "terbayar",
+    "verbCobradoOLiquidado": "terbayar atau lunas",
+    "verbCobradoOLiquidadoPlural": "terbayar atau lunas"
+  },
+  "markAllPending": {
+    "button": "Tandai semua sebagai tertunda",
+    "confirmLabel": "Tandai tertunda",
+    "title_one": "Tandai {{count}} transaksi terbayar sebagai tertunda?",
+    "title_other": "Tandai {{count}} transaksi terbayar sebagai tertunda?",
+    "message_one": "Kamu akan mengembalikan transaksi ini menjadi tertunda sekaligus. Kamu tetap bisa membatalkan satu per satu setelahnya, seperti saat melakukannya satu per satu.",
+    "message_other": "Kamu akan mengembalikan {{count}} transaksi ini menjadi tertunda sekaligus. Kamu tetap bisa membatalkan satu per satu setelahnya, seperti saat melakukannya satu per satu.",
+    "toast_one": "{{count}} transaksi ditandai sebagai tertunda",
+    "toast_other": "{{count}} transaksi ditandai sebagai tertunda"
+  },
+  "paidCapHint": "Menampilkan {{limit}} transaksi terbayar paling baru dari total {{total}} — gunakan \"Filter\" untuk melihat periode tertentu.",
+  "fabAdd": "Tambah",
+  "toggleStatus": {
+    "undoneToast": "Diurungkan",
+    "undoError": "Gagal mengurungkan. Coba lagi.",
+    "undoAction": "Urungkan",
+    "markedPending": "Ditandai sebagai tertunda",
+    "markedPaidSwitchTab": "Ditandai sebagai terbayar — buka \"Terbayar\" untuk melihatnya",
+    "markedPaid": "Ditandai sebagai terbayar"
+  },
+  "genericUpdateError": "Gagal memperbarui. Coba lagi.",
+  "sheet": {
+    "close": "Tutup",
+    "typeSelectorAria": "Jenis transaksi",
+    "createTypes": {
+      "ganado": "Kursus yang diberikan",
+      "comision": "Komisi",
+      "companeros": "Penyesuaian kursus"
+    },
+    "titleEdit": {
+      "ganado": "Ubah kursus yang diberikan",
+      "comision": "Ubah komisi",
+      "companeros": "Ubah penyesuaian kursus"
+    },
+    "titleNew": {
+      "ganado": "Kursus baru yang diberikan",
+      "comision": "Komisi baru",
+      "companeros": "Penyesuaian kursus baru"
+    },
+    "fields": {
+      "course": "Kursus",
+      "school": "Sekolah",
+      "date": "Tanggal",
+      "relatedColleague": "Instruktur terkait",
+      "amount": "Jumlah · {{currency}}",
+      "amountHint": "Positif jika dia membayarmu; negatif jika kamu membayar dia",
+      "colleaguePlaceholder": "Ana, Marc...",
+      "amountPlaceholder": "90 atau -30",
+      "peopleCount": "Jumlah orang",
+      "lessPeople": "Kurangi orang",
+      "morePeople": "Tambah orang",
+      "total": "Total",
+      "perPerson": "/ orang",
+      "addRate": "Tambah tarif",
+      "notes": "Catatan",
+      "notesPlaceholder": "Opsional",
+      "addNote": "Tambah catatan"
+    },
+    "rate": {
+      "label": "Tarif — {{school}} · {{activity}}",
+      "cancel": "Batal",
+      "placeholder": "Tarif",
+      "ariaLabel": "Tarif · {{currency}}",
+      "saving": "Menyimpan tarif",
+      "save": "Simpan tarif"
+    },
+    "save": "Simpan",
+    "toasts": {
+      "changesSaved": "Perubahan disimpan",
+      "adjustmentAdded": "Penyesuaian ditambahkan",
+      "courseAdded": "Kursus ditambahkan",
+      "commissionAdded": "Komisi ditambahkan",
+      "saveError": "Gagal menyimpan. Coba lagi.",
+      "rateAdded": "Tarif ditambahkan",
+      "rateSaveError": "Gagal menyimpan tarif. Coba lagi."
+    }
+  },
+  "kpis": {
+    "generatedThisMonth": "Dihasilkan bulan ini",
+    "pendingToCollect": "Menunggu dibayar",
+    "pendingTooltip": "Jumlah ini mencerminkan pembayaran tertunda dari bulan-bulan sebelumnya.",
+    "pendingTooltipShow": "Info: Menunggu dibayar",
+    "pendingTooltipHide": "Sembunyikan info: Menunggu dibayar",
+    "collectedThisMonth": "Terbayar bulan ini"
+  }
+}

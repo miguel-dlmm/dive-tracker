@@ -1,0 +1,266 @@
+{
+  "datasets": {
+    "copySuffix": "สำเนา",
+    "summary_one": "การตั้งค่าเริ่มต้น (โรงเรียน คอร์ส และอัตรา) ที่ถูกโคลนไปยังทุกบัญชีใหม่ ใช้งานอยู่ {{count}} จากทั้งหมด {{total}}",
+    "summary_other": "การตั้งค่าเริ่มต้น (โรงเรียน คอร์ส และอัตรา) ที่ถูกโคลนไปยังทุกบัญชีใหม่ ใช้งานอยู่ {{count}} จากทั้งหมด {{total}}",
+    "inactive": "ไม่ได้ใช้งาน",
+    "setDefault": "ตั้งเป็นค่าเริ่มต้น",
+    "setDefaultAria": "ตั้ง \"{{label}}\" เป็นค่าเริ่มต้น",
+    "duplicate": "ทำสำเนา",
+    "duplicateAria": "ทำสำเนา \"{{label}}\"",
+    "activeAria": "ดาต้าเซ็ต \"{{label}}\" กำลังใช้งานอยู่",
+    "deleteItemLabel": "ดาต้าเซ็ต \"{{label}}\"",
+    "empty": "ยังไม่มีดาต้าเซ็ต",
+    "fab": "ดาต้าเซ็ตใหม่",
+    "sheetTitle": "ดาต้าเซ็ตใหม่",
+    "sheetHint": "จะเริ่มต้นเป็นค่าว่างและไม่ได้ใช้งาน — ทำสำเนาจากที่มีอยู่หากต้องการเริ่มจากเนื้อหาที่มีอยู่แล้ว",
+    "nameLabel": "ชื่อ",
+    "create": "สร้าง",
+    "toasts": {
+      "created": "สร้างดาต้าเซ็ตแล้ว — เพิ่มเนื้อหาก่อนเปิดใช้งาน",
+      "duplicated": "สร้าง \"{{newLabel}}\" ด้วยเนื้อหาเดียวกับ \"{{sourceLabel}}\" แล้ว",
+      "duplicateError": "ไม่สามารถทำสำเนาได้ กรุณาลองใหม่อีกครั้ง",
+      "keyTaken": "มีดาต้าเซ็ตที่ใช้คีย์นี้อยู่แล้ว",
+      "createError": "ไม่สามารถสร้างได้ กรุณาลองใหม่อีกครั้ง",
+      "updateError": "ไม่สามารถอัปเดตได้"
+    },
+    "errors": {
+      "isDefault": "นี่คือดาต้าเซ็ตเริ่มต้น — ตั้งอันอื่นเป็นค่าเริ่มต้นก่อนลบอันนี้",
+      "lastOne": "คุณไม่สามารถลบดาต้าเซ็ตสุดท้ายได้ — การลงทะเบียนภายนอกและการเพิ่มผู้ใช้ด้วยตนเองต้องมีอย่างน้อยหนึ่งชุด"
+    }
+  },
+  "crudTable": {
+    "buscarPlaceholder": "ค้นหา...",
+    "buscarAria": "ค้นหา",
+    "cambiarColor": "เปลี่ยนสี",
+    "favorita": "รายการโปรด",
+    "marcarPredeterminado": "ตั้งเป็นค่าเริ่มต้น",
+    "esteElemento": "รายการนี้",
+    "sinResultados": "ไม่มีผลลัพธ์",
+    "cerrar": "ปิด",
+    "guardar": "บันทึก",
+    "cambiosGuardados": "บันทึกการเปลี่ยนแปลงแล้ว",
+    "anadidoCorrectamente": "เพิ่มแล้ว",
+    "noSePudoGuardar": "ไม่สามารถบันทึกได้ กรุณาลองใหม่อีกครั้ง",
+    "noSePudoGuardarCambio": "ไม่สามารถบันทึกการเปลี่ยนแปลงได้",
+    "estadoPredeterminadoRazon": "นี่คือสถานะเริ่มต้น (แทน \"รอดำเนินการ\") — ตั้งอันอื่นเป็นค่าเริ่มต้นก่อนลบอันนี้"
+  },
+  "sectionColors": {
+    "descripcion": "ใช้ในแถบนำทางและในปุ่มสร้างรายการของแต่ละหมวด"
+  },
+  "generalSettings": {
+    "iconoCarga": "ไอคอนกำลังโหลด",
+    "descripcion": "ใช้ในแอนิเมชัน \"กำลังโหลด\" ทั่วทั้งแอป เมื่อมีโลโก้อย่างเป็นทางการของ Ocean Flow แล้ว แจ้งให้ฉันทราบแล้วจะเปลี่ยนไปใช้ไอคอนจริงแทนรายการนี้",
+    "iconoActualizado": "อัปเดตไอคอนแล้ว",
+    "noSePudoGuardar": "ไม่สามารถบันทึกได้ กรุณาลองใหม่อีกครั้ง",
+    "vistaPrevia": "ตัวอย่าง"
+  },
+  "externalRegistration": {
+    "titulo": "อนุญาตการสมัครสมาชิกจากภายนอก",
+    "descripcion": "แสดง \"สมัครสมาชิก\" ในหน้าเข้าสู่ระบบเพื่อให้ใครก็ตามสามารถสร้างบัญชีของตนเองได้",
+    "activado": "เปิดใช้งานการสมัครสมาชิกจากภายนอกแล้ว",
+    "desactivado": "ปิดใช้งานการสมัครสมาชิกจากภายนอกแล้ว",
+    "noSePudoGuardar": "ไม่สามารถบันทึกได้ กรุณาลองใหม่อีกครั้ง"
+  },
+  "roleCheckbox": {
+    "rolProtegido": "{{label}} — บทบาทระบบที่ได้รับการป้องกัน แก้ไขไม่ได้",
+    "si": "ใช่",
+    "no": "ไม่",
+    "etiquetaAria": "{{label}}: {{value}}"
+  },
+  "roleIcon": {
+    "superadmin": "ผู้ดูแลระบบสูงสุด",
+    "admin": "ผู้ดูแลระบบ"
+  },
+  "userStatus": {
+    "activo": "ใช้งานอยู่",
+    "pendiente": "รอดำเนินการ",
+    "desactivado": "ปิดใช้งาน",
+    "nunca": "ไม่เคย"
+  },
+  "swipeToDelete": {
+    "eliminar": "ลบ",
+    "eliminarA": "ลบ {{nickname}}"
+  },
+  "userListRow": {
+    "alta": "สมัครเมื่อ: {{date}}",
+    "ultimoAcceso": "เข้าใช้งานล่าสุด: {{date}}",
+    "baja": "ปิดใช้งานเมื่อ: {{date}}",
+    "fechaNoRegistrada": "ไม่มีวันที่บันทึกไว้"
+  },
+  "userDetailSheet": {
+    "cerrar": "ปิด",
+    "nombre": "ชื่อ",
+    "apellidos": "นามสกุล",
+    "nickname": "ชื่อเล่น",
+    "editarDatos": "แก้ไขข้อมูล",
+    "email": "อีเมล",
+    "altaLabel": "วันที่สมัคร",
+    "ultimoAcceso": "เข้าใช้งานล่าสุด",
+    "movimientos": "รายการ",
+    "ultimaActividad": "กิจกรรมล่าสุด",
+    "baja": "วันที่ปิดใช้งาน",
+    "estado": "สถานะ",
+    "activarUsuario": "เปิดใช้งานผู้ใช้",
+    "desactivarUsuario": "ปิดใช้งานผู้ใช้",
+    "pendienteTexto": "รอให้บุคคลนี้เปิดลิงก์และตั้งรหัสผ่านของตนเอง",
+    "regenerarEnlace": "สร้างลิงก์ใหม่",
+    "admin": "ผู้ดูแลระบบ",
+    "superadmin": "ผู้ดูแลระบบสูงสุด",
+    "regenerarContrasena": "สร้างรหัสผ่านใหม่",
+    "eliminarUsuario": "ลบผู้ใช้"
+  },
+  "activationLinkPanel": {
+    "cerrar": "ปิด",
+    "enlaceCopiado": "คัดลอกลิงก์แล้ว",
+    "noSePudoCopiar": "ไม่สามารถคัดลอกได้ กรุณาเลือกด้วยตนเอง",
+    "copiarEnlace": "คัดลอกลิงก์",
+    "simularEnvioMock": "จำลองการส่งสำเร็จ (mock)",
+    "mockEmailEnviado": "(Mock) ส่งอีเมลสำเร็จแล้ว"
+  },
+  "createUserSheet": {
+    "cerrar": "ปิด",
+    "noSePudieronCargarDatasets": "ไม่สามารถโหลดดาต้าเซ็ตที่มีอยู่ได้",
+    "camposObligatorios": "อีเมล ชื่อเล่น และดาต้าเซ็ตเริ่มต้นเป็นข้อมูลที่จำเป็น",
+    "soloSuperadminCrear": "เฉพาะผู้ดูแลระบบสูงสุดเท่านั้นที่สามารถสร้างผู้ใช้ได้",
+    "noSePudoCrear": "ไม่สามารถสร้างผู้ใช้ได้",
+    "usuarioCreadoSinEmail": "สร้างผู้ใช้แล้ว (ไม่สามารถส่งอีเมลได้)",
+    "usuarioCreadoCorrectamente": "สร้างผู้ใช้แล้ว",
+    "enlaceCopiado": "คัดลอกลิงก์แล้ว",
+    "noSePudoCopiar": "ไม่สามารถคัดลอกได้ กรุณาเลือกด้วยตนเอง",
+    "noSePudoEnviarEmailTitulo": "ไม่สามารถส่งอีเมลได้",
+    "noSePudoEnviarEmailDescripcion": "ไม่สามารถส่งอีเมลยืนยันได้ คุณสามารถแชร์ลิงก์นี้ด้วยตนเองได้",
+    "copiarEnlace": "คัดลอกลิงก์",
+    "simularEnvioMock": "จำลองการส่งสำเร็จ (mock)",
+    "mockUsuarioCreado": "(Mock) สร้างผู้ใช้และส่งอีเมลสำเร็จแล้ว",
+    "titulo": "สร้างผู้ใช้",
+    "email": "อีเมล",
+    "nombre": "ชื่อ",
+    "apellidos": "นามสกุล",
+    "nickname": "ชื่อเล่น",
+    "datasetInicial": "ดาต้าเซ็ตเริ่มต้น",
+    "cargando": "กำลังโหลด…",
+    "seleccionaDataset": "เลือกดาต้าเซ็ต",
+    "sinDatasets": "ไม่มีดาต้าเซ็ตให้เลือก",
+    "idioma": "ภาษา",
+    "nota": "ดาต้าเซ็ตที่เลือกจะโหลดโรงเรียน คอร์ส อัตรา ค่าคอมมิชชัน และแคตตาล็อกการชำระเงินเริ่มต้นให้โดยอัตโนมัติ บุคคลนี้จะได้รับอีเมลพร้อมลิงก์ใช้ครั้งเดียวเพื่อเข้าใช้งานและตั้งรหัสผ่านของตนเอง",
+    "creando": "กำลังสร้าง…",
+    "crearUsuario": "สร้างผู้ใช้"
+  },
+  "usersDirectory": {
+    "buscarPlaceholder": "ค้นหา...",
+    "buscarAria": "ค้นหาผู้ใช้",
+    "leyendaEstadoAria": "ความหมายของสีแต่ละสถานะ",
+    "crearUsuario": "สร้างผู้ใช้",
+    "noSePudoCargarListado": "ไม่สามารถโหลดรายชื่อผู้ใช้ได้",
+    "errorDesconocido": "ข้อผิดพลาดที่ไม่ทราบสาเหตุ",
+    "errorCargarListado": "ไม่สามารถโหลดรายชื่อได้: {{error}}",
+    "cargandoUsuarios": "กำลังโหลดผู้ใช้…",
+    "sinResultados": "ไม่มีผลลัพธ์",
+    "soloSuperadminRol": "เฉพาะผู้ดูแลระบบสูงสุดเท่านั้นที่สามารถเปลี่ยนบทบาทผู้ดูแลระบบของบัญชีอื่นได้",
+    "noSePudoActualizarRol": "ไม่สามารถอัปเดตบทบาทได้",
+    "rolActualizado": "อัปเดตบทบาทแล้ว",
+    "soloSuperadminEliminar": "เฉพาะผู้ดูแลระบบสูงสุดเท่านั้นที่สามารถลบผู้ใช้ได้",
+    "noSePudoEliminar": "ไม่สามารถลบผู้ใช้ได้",
+    "usuarioEliminado": "ลบผู้ใช้แล้ว",
+    "soloSuperadminActivar": "เฉพาะผู้ดูแลระบบสูงสุดเท่านั้นที่สามารถเปิดหรือปิดใช้งานผู้ใช้ได้",
+    "noSePudoActualizarEstado": "ไม่สามารถอัปเดตสถานะได้",
+    "usuarioDesactivado": "ปิดใช้งานผู้ใช้แล้ว",
+    "soloSuperadminEnlace": "เฉพาะผู้ดูแลระบบสูงสุดเท่านั้นที่สามารถเปิดใช้งานบัญชีหรือสร้างลิงก์เข้าใช้งานใหม่ได้",
+    "noSePudoGenerarEnlace": "ไม่สามารถสร้างลิงก์ได้",
+    "enlaceGeneradoSinEmail": "สร้างลิงก์แล้ว (ไม่สามารถส่งอีเมลถึง {{nickname}} ได้)",
+    "enlaceActivacionTitulo": "สร้างลิงก์เปิดใช้งานแล้ว",
+    "enlaceActivacionDescripcion": "แชร์ลิงก์นี้ให้ {{nickname}} จะยังคงแสดงเป็น \"รอดำเนินการ\" จนกว่าจะใช้ลิงก์นี้ตั้งรหัสผ่าน",
+    "emailActivacionEnviado": "ส่งอีเมลเปิดใช้งานถึง {{nickname}} แล้ว",
+    "soloSuperadminContrasena": "เฉพาะผู้ดูแลระบบสูงสุดเท่านั้นที่สามารถสร้างรหัสผ่านใหม่ของบัญชีอื่นได้",
+    "noSePudoRegenerarContrasena": "ไม่สามารถสร้างรหัสผ่านใหม่ได้",
+    "contrasenaRegeneradaSinEmail": "สร้างรหัสผ่านใหม่แล้ว (ไม่สามารถส่งอีเมลถึง {{nickname}} ได้)",
+    "contrasenaRegeneradaTitulo": "สร้างรหัสผ่านใหม่แล้ว",
+    "contrasenaRegeneradaDescripcion": "รหัสผ่านเดิมของ {{nickname}} จะใช้งานไม่ได้อีกต่อไป แชร์ลิงก์นี้เพื่อให้สร้างรหัสผ่านใหม่ — บัญชีจะกลับไปเป็น \"รอดำเนินการ\" จนกว่าจะทำเสร็จ",
+    "contrasenaRegeneradaEmailEnviado": "สร้างรหัสผ่านใหม่และส่งอีเมลถึง {{nickname}} แล้ว",
+    "nicknameVacio": "ชื่อเล่นห้ามเว้นว่าง",
+    "datosActualizados": "อัปเดตข้อมูลแล้ว",
+    "noSePudieronGuardarCambios": "ไม่สามารถบันทึกการเปลี่ยนแปลงได้",
+    "cambiarRolAdminTitulo": "เปลี่ยนบทบาทผู้ดูแลระบบ",
+    "usuarioLabel": "ผู้ใช้: {{nickname}}",
+    "adminLabel": "ผู้ดูแลระบบ: {{from}} → {{to}}",
+    "confirmar": "ยืนยัน",
+    "eliminarUsuarioTitulo": "ลบผู้ใช้",
+    "eliminarUsuarioMensaje": "บัญชีของ <strong>{{nickname}}</strong> และข้อมูลทั้งหมด (โรงเรียน อัตรา รายการ...) จะถูกลบอย่างถาวร การกระทำนี้ไม่สามารถย้อนกลับได้",
+    "eliminarUsuarioAlternativa": "หากคุณต้องการเพียงเพิกถอนสิทธิ์การเข้าถึงแต่เก็บข้อมูลไว้ ให้ใช้ \"ปิดใช้งาน\" แทน",
+    "eliminar": "ลบ",
+    "desactivarUsuarioTitulo": "ปิดใช้งานผู้ใช้",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> จะไม่สามารถเข้าสู่ระบบได้อีกต่อไป ข้อมูลทั้งหมด (โรงเรียน อัตรา รายการ...) จะยังคงอยู่ครบถ้วน — คุณสามารถเปิดใช้งานอีกครั้งเมื่อใดก็ได้โดยสร้างลิงก์เปิดใช้งานใหม่ให้",
+    "desactivar": "ปิดใช้งาน",
+    "generarEnlaceTitulo": "สร้างลิงก์เปิดใช้งาน",
+    "generarEnlaceMensaje": "จะมีการสร้างลิงก์ใช้ครั้งเดียวใหม่สำหรับ <strong>{{nickname}}</strong> ลิงก์เก่าจะใช้งานไม่ได้อีกต่อไป บัญชีจะยังไม่สามารถเข้าถึงได้จนกว่าจะดำเนินการเสร็จสิ้น",
+    "generarEnlace": "สร้างลิงก์",
+    "regenerarContrasenaTitulo": "สร้างรหัสผ่านใหม่",
+    "regenerarContrasenaMensaje": "รหัสผ่านปัจจุบันของ <strong>{{nickname}}</strong> จะใช้งานไม่ได้ทันที จะต้องสร้างรหัสผ่านใหม่จากลิงก์เปิดใช้งานใหม่ — ข้อมูลของบัญชีจะไม่ได้รับผลกระทบ",
+    "regenerar": "สร้างใหม่",
+    "generarInvitacion": "สร้างลิงก์คำเชิญ",
+    "soloSuperadminInvitacion": "เฉพาะผู้ดูแลระบบสูงสุดเท่านั้นที่สามารถสร้างลิงก์คำเชิญได้",
+    "noSePudoGenerarInvitacion": "ไม่สามารถสร้างลิงก์คำเชิญได้",
+    "enlaceInvitacionTitulo": "ลิงก์คำเชิญ",
+    "enlaceInvitacionDescripcion": "ใช้ได้ 24 ชั่วโมงและใช้ได้ครั้งเดียว แชร์ให้บุคคลที่คุณต้องการเชิญ — สามารถสมัครสมาชิกได้แม้การสมัครสมาชิกจากภายนอกจะถูกปิดอยู่ก็ตาม"
+  },
+  "sections": {
+    "escuelas": {
+      "label": "โรงเรียน",
+      "description": "สถานที่ที่คุณสอน พร้อมสี"
+    },
+    "cursos": {
+      "label": "คอร์ส",
+      "description": "สิ่งที่คุณสอน พร้อมสี"
+    },
+    "tarifas": {
+      "label": "อัตราค่าบริการ",
+      "description": "ค่าบริการตามโรงเรียนและคอร์ส"
+    },
+    "estadosPago": {
+      "label": "สถานะการชำระเงิน",
+      "description": "รอดำเนินการ, เก็บเงินแล้ว..."
+    },
+    "monedas": {
+      "label": "สกุลเงิน",
+      "description": "แคตตาล็อกที่มีให้ใช้ทั่วทั้งแอป"
+    },
+    "navegacion": {
+      "label": "สีของแถบนำทาง",
+      "description": "อัตลักษณ์ทางภาพของแต่ละหมวด"
+    },
+    "ajustes": {
+      "label": "การตั้งค่าทั่วไป",
+      "description": "ไอคอนกำลังโหลดของแอป"
+    },
+    "usuarios": {
+      "label": "ผู้ใช้",
+      "description": "บัญชีที่มีสิทธิ์เข้าถึงแอป"
+    },
+    "datasets": {
+      "label": "ดาต้าเซ็ตเริ่มต้น",
+      "description": "การตั้งค่าที่ถูกโคลนเมื่อสร้างบัญชี"
+    }
+  },
+  "menu": {
+    "administracion": "การจัดการระบบ",
+    "superadmin": "ผู้ดูแลระบบสูงสุด",
+    "configuracion": "การตั้งค่า"
+  },
+  "crud": {
+    "nuevaEscuela": "โรงเรียนใหม่",
+    "editarEscuela": "แก้ไขโรงเรียน",
+    "nombreCampo": "ชื่อ",
+    "colorCampo": "สี",
+    "nuevoCurso": "คอร์สใหม่",
+    "editarCurso": "แก้ไขคอร์ส",
+    "nuevoEstadoPago": "สถานะการชำระเงินใหม่",
+    "editarEstadoPago": "แก้ไขสถานะการชำระเงิน",
+    "nuevaMoneda": "สกุลเงินใหม่",
+    "editarMoneda": "แก้ไขสกุลเงิน",
+    "monedasDescripcion": "เลือกสกุลเงินสำรองของทั้งแอปที่นี่ — จะถูกใช้เมื่อผู้ใช้ยังไม่ได้เลือกสกุลเงินโปรดของตนเองใน \"โปรไฟล์ของฉัน\" ไม่ใช่ค่ากำหนดส่วนตัว แต่เป็นค่าที่ใช้กับบัญชีใหม่ทุกบัญชีโดยอัตโนมัติ",
+    "monedaPorDefectoApp": "ค่าเริ่มต้นของแอป",
+    "codigoCampo": "รหัส (เช่น EUR)",
+    "simboloCampo": "สัญลักษณ์"
+  }
+}

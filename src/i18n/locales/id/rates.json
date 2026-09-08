@@ -1,0 +1,52 @@
+{
+  "filter": {
+    "button": "Filter",
+    "type": "Jenis",
+    "typeAll": "Semua",
+    "school": "Sekolah",
+    "schoolAll": "Semua",
+    "course": "Kursus",
+    "courseAll": "Semua",
+    "clear": "Hapus filter",
+    "showInactive": "Tampilkan yang nonaktif"
+  },
+  "search": {
+    "placeholder": "Cari",
+    "ariaLabel": "Cari tarif"
+  },
+  "list": {
+    "count": "{{count}} tarif",
+    "empty": "Tidak ada hasil.",
+    "createdOn": "Dibuat: {{date}} · {{type}}",
+    "inactive": "Nonaktif"
+  },
+  "fab": "Tarif baru",
+  "sheet": {
+    "editTitle": "Edit tarif {{school}} - {{activity}}",
+    "createTitle": "Tarif {{type}} baru",
+    "close": "Tutup",
+    "typeTablistLabel": "Jenis tarif",
+    "hintGanado": "Yang kamu tagihkan untuk mengajar kursus sendiri.",
+    "hintComision": "Yang kamu tagihkan untuk membawa klien.",
+    "school": "Sekolah",
+    "course": "Kursus",
+    "rateLabel": "Tarif · {{currency}}",
+    "save": "Simpan"
+  },
+  "toasts": {
+    "saved": "Perubahan disimpan",
+    "added": "Tarif ditambahkan",
+    "saveError": "Gagal menyimpan. Coba lagi.",
+    "duplicate": "Kamu sudah punya tarif aktif untuk sekolah dan kursus ini. Nonaktifkan dulu sebelum membuat yang baru.",
+    "reactivateBlocked": "Tidak bisa diaktifkan kembali: sudah ada tarif aktif lain untuk sekolah dan kursus ini.",
+    "deactivated": "Tarif dinonaktifkan",
+    "reactivated": "Tarif diaktifkan kembali"
+  },
+  "deleteInUse_one": "Tidak bisa dihapus: ada {{count}} catatan yang menggunakan tarif ini.",
+  "deleteInUse_other": "Tidak bisa dihapus: ada {{count}} catatan yang menggunakan tarif ini.",
+  "rowMenu": {
+    "itemLabel": "tarif {{school}} - {{activity}}",
+    "deactivate": "Nonaktifkan",
+    "reactivate": "Aktifkan kembali"
+  }
+}

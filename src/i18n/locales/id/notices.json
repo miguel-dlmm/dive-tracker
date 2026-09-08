@@ -1,0 +1,56 @@
+{
+  "whatsNew": {
+    "close": "Tutup",
+    "eyebrow": "Yang baru di versi ini",
+    "slideTablist": "Slide",
+    "back": "Kembali",
+    "next": "Lanjut",
+    "start": "Mulai",
+    "slides": [
+      {
+        "title": "Desain baru, wajah baru",
+        "body": "Logo, warna, dan tampilan diperbarui total — tetap Ocean Flow yang sama, dengan gaya barunya sendiri."
+      },
+      {
+        "title": "Kartu instrukturmu",
+        "body": "Profilku kini punya kartu sendiri: level profesional, data pribadi, dan mata uang favorit, semua di satu tempat."
+      },
+      {
+        "title": "Training Records, langsung dari aplikasi",
+        "body": "Buat catatan kemajuan SSI setiap siswa, sudah ditandatangani dan siap diserahkan — tanpa keluar dari Ocean Flow."
+      },
+      {
+        "title": "Aplikasi kini berbicara bahasamu",
+        "body": "Spanyol, Inggris, Prancis, Italia, Jerman, Katalan, atau Basque — ganti kapan saja dari profilmu."
+      },
+      {
+        "title": "Home dan Pekerjaanku, lebih jelas",
+        "body": "Semuanya lebih tertata, agar mudah menemukan apa yang kamu cari sekilas: KPI-mu, transaksimu, keseharianmu."
+      },
+      {
+        "title": "Lihat lagi kapan saja",
+        "body": "Kembali ke pembaruan ini dari Bantuan → \"Lihat yang baru\", tanpa harus menunggu pembaruan berikutnya."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Tutup",
+    "eyebrow": "Rilis baru",
+    "branchLabel": "Cabang",
+    "commitLabel": "commit",
+    "technicalChanges": "Perubahan teknis",
+    "functionalChanges": "Perubahan fungsional",
+    "uiChangesLabel": "Perubahan UI:",
+    "uiChangesYes": "Ya",
+    "uiChangesNo": "Tidak",
+    "stepsHeading": "Apa yang perlu diuji / dilakukan",
+    "testsLabel": "Tes:",
+    "buildLabel": "Build:",
+    "notReported": "tidak dilaporkan",
+    "previewCommit": "Pratinjau commit",
+    "previewCommitEmpty": "Pratinjau commit: belum ada pratinjau",
+    "previewIntegrated": "Pratinjau terintegrasi (Release-V1)",
+    "previewIntegratedEmpty": "Pratinjau terintegrasi: belum ada pratinjau",
+    "understood": "Mengerti"
+  }
+}

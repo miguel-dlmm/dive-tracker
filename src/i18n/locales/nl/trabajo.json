@@ -1,0 +1,144 @@
+{
+  "actionLabel": {
+    "markPending": "Markeer als openstaand",
+    "markSettled": "Markeer als vereffend",
+    "confirmCollection": "Ontvangst bevestigen"
+  },
+  "dateGroup": {
+    "today": "Vandaag",
+    "yesterday": "Gisteren",
+    "weekdaysShort": ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"],
+    "monthsShort": ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "Geen openstaande items met deze filters.",
+    "pendingNoFilters": "Je bent helemaal bij — niets openstaand.",
+    "paidWithFilters": "Geen ontvangen items met deze filters.",
+    "paidNoFilters": "Je hebt nog niets als ontvangen gemarkeerd."
+  },
+  "rowMenu": {
+    "adjustmentWith": "de aanpassing met {{name}}",
+    "courseAt": "{{activity}} bij {{school}}",
+    "deleteConfirmMessage": "Je staat op het punt {{item}} te verwijderen. Je hebt een paar seconden om dit ongedaan te maken via de melding.",
+    "undoAction": "Ongedaan maken",
+    "deleteUndoneToast": "Hersteld",
+    "deleteUndoError": "Kon niet ongedaan worden gemaakt. Probeer het opnieuw."
+  },
+  "tabs": {
+    "pending": "Openstaand",
+    "paid": "Ontvangen"
+  },
+  "filter": {
+    "label": "Filteren",
+    "period": "Periode",
+    "school": "School",
+    "course": "Cursus",
+    "type": "Type",
+    "allFeminine": "Alle",
+    "allMasculine": "Alle",
+    "clear": "Filters wissen"
+  },
+  "collectAll": {
+    "button": "Alles innen",
+    "confirmLabel": "Innen",
+    "title_one": "{{count}} openstaande boeking innen?",
+    "title_other": "{{count}} openstaande boekingen innen?",
+    "messageAjuste_one": "Je markeert deze boeking in één keer als ontvangen of vereffend, al naar gelang. Je kunt elke boeking daarna apart terugdraaien, net als bij het één voor één bevestigen.",
+    "messageAjuste_other": "Je markeert deze {{count}} boekingen in één keer als ontvangen of vereffend, al naar gelang. Je kunt elke boeking daarna apart terugdraaien, net als bij het één voor één bevestigen.",
+    "messageSimple_one": "Je markeert deze boeking in één keer als ontvangen. Je kunt elke boeking daarna apart terugdraaien, net als bij het één voor één bevestigen.",
+    "messageSimple_other": "Je markeert deze {{count}} boekingen in één keer als ontvangen. Je kunt elke boeking daarna apart terugdraaien, net als bij het één voor één bevestigen.",
+    "toastSwitch_one": "{{count}} boeking gemarkeerd als {{verb}} — ga naar \"Ontvangen\" om ze te bekijken",
+    "toastSwitch_other": "{{count}} boekingen gemarkeerd als {{verbPlural}} — ga naar \"Ontvangen\" om ze te bekijken",
+    "toastNoSwitch_one": "{{count}} boeking gemarkeerd als {{verb}}",
+    "toastNoSwitch_other": "{{count}} boekingen gemarkeerd als {{verbPlural}}",
+    "verbCobrado": "ontvangen",
+    "verbCobradoPlural": "ontvangen",
+    "verbCobradoOLiquidado": "ontvangen of vereffend",
+    "verbCobradoOLiquidadoPlural": "ontvangen of vereffend"
+  },
+  "markAllPending": {
+    "button": "Alles markeren als openstaand",
+    "confirmLabel": "Markeren als openstaand",
+    "title_one": "{{count}} ontvangen boeking terugzetten naar openstaand?",
+    "title_other": "{{count}} ontvangen boekingen terugzetten naar openstaand?",
+    "message_one": "Je zet deze boeking in één keer terug naar openstaand. Je kunt elke boeking daarna apart terugdraaien, net als bij het één voor één doen.",
+    "message_other": "Je zet deze {{count}} boekingen in één keer terug naar openstaand. Je kunt elke boeking daarna apart terugdraaien, net als bij het één voor één doen.",
+    "toast_one": "{{count}} boeking gemarkeerd als openstaand",
+    "toast_other": "{{count}} boekingen gemarkeerd als openstaand"
+  },
+  "paidCapHint": "De {{limit}} meest recente ontvangen boekingen van {{total}} worden getoond — gebruik \"Filteren\" om een specifieke periode te bekijken.",
+  "fabAdd": "Toevoegen",
+  "toggleStatus": {
+    "undoneToast": "Ongedaan gemaakt",
+    "undoError": "Kon niet ongedaan worden gemaakt. Probeer het opnieuw.",
+    "undoAction": "Ongedaan maken",
+    "markedPending": "Gemarkeerd als openstaand",
+    "markedPaidSwitchTab": "Gemarkeerd als ontvangen — ga naar \"Ontvangen\" om het te bekijken",
+    "markedPaid": "Gemarkeerd als ontvangen"
+  },
+  "genericUpdateError": "Kon niet worden bijgewerkt. Probeer het opnieuw.",
+  "sheet": {
+    "close": "Sluiten",
+    "typeSelectorAria": "Type boeking",
+    "createTypes": {
+      "ganado": "Gegeven cursus",
+      "comision": "Commissie",
+      "companeros": "Cursusaanpassing"
+    },
+    "titleEdit": {
+      "ganado": "Gegeven cursus bewerken",
+      "comision": "Commissie bewerken",
+      "companeros": "Cursusaanpassing bewerken"
+    },
+    "titleNew": {
+      "ganado": "Nieuwe gegeven cursus",
+      "comision": "Nieuwe commissie",
+      "companeros": "Nieuwe cursusaanpassing"
+    },
+    "fields": {
+      "course": "Cursus",
+      "school": "School",
+      "date": "Datum",
+      "relatedColleague": "Betrokken instructeur",
+      "amount": "Bedrag · {{currency}}",
+      "amountHint": "Positief als jij wordt betaald; negatief als jij hem/haar betaalt",
+      "colleaguePlaceholder": "Ana, Marc...",
+      "amountPlaceholder": "90 of -30",
+      "peopleCount": "Aantal personen",
+      "lessPeople": "Minder personen",
+      "morePeople": "Meer personen",
+      "total": "Totaal",
+      "perPerson": "/ persoon",
+      "addRate": "Tarief toevoegen",
+      "notes": "Notities",
+      "notesPlaceholder": "Optioneel",
+      "addNote": "Notitie toevoegen"
+    },
+    "rate": {
+      "label": "Tarief — {{school}} · {{activity}}",
+      "cancel": "Annuleren",
+      "placeholder": "Tarief",
+      "ariaLabel": "Tarief · {{currency}}",
+      "saving": "Tarief opslaan",
+      "save": "Tarief opslaan"
+    },
+    "save": "Opslaan",
+    "toasts": {
+      "changesSaved": "Wijzigingen opgeslagen",
+      "adjustmentAdded": "Aanpassing toegevoegd",
+      "courseAdded": "Cursus toegevoegd",
+      "commissionAdded": "Commissie toegevoegd",
+      "saveError": "Kon niet worden opgeslagen. Probeer het opnieuw.",
+      "rateAdded": "Tarief toegevoegd",
+      "rateSaveError": "Het tarief kon niet worden opgeslagen. Probeer het opnieuw."
+    }
+  },
+  "kpis": {
+    "generatedThisMonth": "Gegenereerd deze maand",
+    "pendingToCollect": "Nog te innen",
+    "pendingTooltip": "Dit bedrag omvat openstaande betalingen van eerdere maanden.",
+    "pendingTooltipShow": "Info: Nog te innen",
+    "pendingTooltipHide": "Info verbergen: Nog te innen",
+    "collectedThisMonth": "Ontvangen deze maand"
+  }
+}

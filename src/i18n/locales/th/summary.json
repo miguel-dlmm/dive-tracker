@@ -1,0 +1,41 @@
+{
+  "months": {
+    "long": ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"],
+    "short": ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
+  },
+  "granularity": {
+    "mensual": "เดือน",
+    "trimestral": "ไตรมาส",
+    "semestral": "ครึ่งปี",
+    "anual": "ปี",
+    "personalizado": "ช่วงกำหนดเอง"
+  },
+  "granularityLabel": "ช่วงเวลาที่แสดง",
+  "quarterAbbr": "Q",
+  "halfYearAbbr": "H",
+  "trend": {
+    "heading": "แนวโน้ม — แตะช่วงเวลาเพื่อเลื่อนไปดู",
+    "goTo": "ไปที่ {{period}}",
+    "currentSuffix": " (ช่วงเวลาปัจจุบัน)"
+  },
+  "from": "จาก",
+  "to": "ถึง",
+  "chooseRange": "เลือกช่วงเวลา",
+  "total": "รวมทั้งหมด",
+  "totalCombined": "รวมทั้งหมด",
+  "totalOf": "รวม {{source}}",
+  "trendVsPreviousPeriod": "{{delta}} เทียบกับช่วงก่อนหน้า",
+  "sections": {
+    "bySchool": "แยกตามโรงเรียน",
+    "byActivity": "แยกตามคอร์ส",
+    "commissions": "ค่าคอมมิชชัน",
+    "colleagueAdjustments": "รายการปรับปรุงกับเพื่อนร่วมงาน",
+    "calendar": "ปฏิทิน"
+  },
+  "empty": {
+    "noData": "ไม่มีข้อมูล",
+    "noCoursesInPeriod": "ไม่มีคอร์สในช่วงเวลานี้",
+    "noMovementsInPeriod": "ไม่มีรายการในช่วงเวลานี้",
+    "noColleagueAdjustmentsInPeriod": "ไม่มีรายการปรับปรุงในช่วงเวลานี้"
+  }
+}

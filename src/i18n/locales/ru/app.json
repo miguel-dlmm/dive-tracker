@@ -1,0 +1,25 @@
+{
+  "tabs": {
+    "home": "Главная",
+    "trabajo": "Моя работа",
+    "summary": "Итоги"
+  },
+  "secondaryTitles": {
+    "config": "Настройки",
+    "help": "Помощь",
+    "pagos": "Платежи",
+    "perfil": "Мой профиль",
+    "training-records": "Training Records",
+    "install-app": "Установить приложение"
+  },
+  "aria": {
+    "close": "Закрыть",
+    "back": "Назад",
+    "goHome": "На главную",
+    "help": "Помощь",
+    "config": "Настройки",
+    "profile": "Мой профиль",
+    "signOut": "Выйти",
+    "mainNav": "Основная навигация"
+  }
+}

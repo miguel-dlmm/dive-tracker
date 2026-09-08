@@ -93,12 +93,16 @@ create table if not exists public.profiles (
   -- reactivar (quitar el baneo) — mismo criterio que activated_at.
   deactivated_at timestamptz,
   -- Idioma preferido de la interfaz (Release V1 Fase 2, multidioma,
-  -- ampliado en la migración 0018-idiomas-adicionales.sql). 'es' por
-  -- defecto en todo alta nueva (registro, alta admin) — regla del
-  -- documento maestro de la iniciativa. check limita a los idiomas
-  -- soportados hoy; ampliar la lista es un check nuevo, no una
-  -- migración de datos.
-  language text not null default 'es' check (language in ('es', 'en', 'fr', 'it', 'de', 'ca', 'eu')),
+  -- ampliado en las migraciones 0018-idiomas-adicionales.sql y
+  -- 0020-idiomas-adicionales-2.sql). 'es' por defecto en todo alta nueva
+  -- (registro, alta admin) — regla del documento maestro de la
+  -- iniciativa. check limita a los idiomas soportados hoy; ampliar la
+  -- lista es un check nuevo, no una migración de datos. Esta misma lista
+  -- también vive, duplicada a propósito, en createUser.js/
+  -- externalRegister.js (server/) — las tres deben ir sincronizadas
+  -- (bug real encontrado 2026-09-09: el servidor se quedó desincronizado
+  -- durante toda la v1.1.0).
+  language text not null default 'es' check (language in ('es', 'en', 'fr', 'it', 'de', 'ca', 'eu', 'nl', 'th', 'id', 'vi', 'my', 'ms', 'ru', 'pt')),
   -- Datos de instructor para el generador de Training Records (Release V1
   -- Fase 5, 2026-09-02) — viven en el perfil, no en localStorage por
   -- dispositivo, para que se rellenen una vez y sirvan en cualquier sesión.

@@ -1,0 +1,41 @@
+{
+  "months": {
+    "long": ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"],
+    "short": ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"]
+  },
+  "granularity": {
+    "mensual": "Bulan",
+    "trimestral": "Triwulan",
+    "semestral": "Semester",
+    "anual": "Tahun",
+    "personalizado": "Rentang"
+  },
+  "granularityLabel": "Granularitas periode",
+  "quarterAbbr": "T",
+  "halfYearAbbr": "S",
+  "trend": {
+    "heading": "Tren — ketuk satu periode untuk berpindah",
+    "goTo": "Ke {{period}}",
+    "currentSuffix": " (periode saat ini)"
+  },
+  "from": "Dari",
+  "to": "Sampai",
+  "chooseRange": "Pilih rentang",
+  "total": "Total",
+  "totalCombined": "Total gabungan",
+  "totalOf": "Total {{source}}",
+  "trendVsPreviousPeriod": "{{delta}} vs periode sebelumnya",
+  "sections": {
+    "bySchool": "Per sekolah",
+    "byActivity": "Per kursus",
+    "commissions": "Komisi",
+    "colleagueAdjustments": "Penyesuaian kursus",
+    "calendar": "Kalender"
+  },
+  "empty": {
+    "noData": "Tidak ada data.",
+    "noCoursesInPeriod": "Tidak ada kursus pada periode ini.",
+    "noMovementsInPeriod": "Tidak ada transaksi pada periode ini.",
+    "noColleagueAdjustmentsInPeriod": "Tidak ada penyesuaian kursus pada periode ini."
+  }
+}

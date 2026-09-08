@@ -1,0 +1,56 @@
+{
+  "whatsNew": {
+    "close": "Sluiten",
+    "eyebrow": "Nieuw in deze versie",
+    "slideTablist": "Dia",
+    "back": "Terug",
+    "next": "Volgende",
+    "start": "Beginnen",
+    "slides": [
+      {
+        "title": "Volledig vernieuwd, nieuwe look",
+        "body": "Logo, kleuren en uitstraling helemaal vernieuwd — dezelfde Ocean Flow, met een eigen gezicht."
+      },
+      {
+        "title": "Jouw instructeurskaart",
+        "body": "Mijn profiel heeft nu je eigen kaart: professioneel niveau, persoonlijke gegevens en favoriete munteenheid, allemaal op één plek."
+      },
+      {
+        "title": "Training Records, vanuit de app",
+        "body": "Genereer het SSI-voortgangsregister van elke cursist, ondertekend en klaar om te overhandigen — zonder Ocean Flow te verlaten."
+      },
+      {
+        "title": "De app spreekt nu jouw taal",
+        "body": "Spaans, Engels, Frans, Italiaans, Duits, Catalaans of Baskisch — wijzig het wanneer je wilt vanuit je profiel."
+      },
+      {
+        "title": "Home en Mijn werk, overzichtelijker",
+        "body": "Alles beter georganiseerd, zodat je in één oogopslag vindt wat je zoekt: je KPI's, je boekingen, je dagelijkse werk."
+      },
+      {
+        "title": "Bekijk het opnieuw wanneer je wilt",
+        "body": "Kom terug naar deze nieuwtjes via Hulp → \"Wat is er nieuw\", zonder te wachten op de volgende update."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Sluiten",
+    "eyebrow": "Nieuwe release",
+    "branchLabel": "Branch",
+    "commitLabel": "commit",
+    "technicalChanges": "Technische wijzigingen",
+    "functionalChanges": "Functionele wijzigingen",
+    "uiChangesLabel": "UI-wijzigingen:",
+    "uiChangesYes": "Ja",
+    "uiChangesNo": "Nee",
+    "stepsHeading": "Wat te testen / wat te doen",
+    "testsLabel": "Tests:",
+    "buildLabel": "Build:",
+    "notReported": "niet gerapporteerd",
+    "previewCommit": "Preview van de commit",
+    "previewCommitEmpty": "Preview van de commit: nog geen preview",
+    "previewIntegrated": "Geïntegreerde preview (Release-V1)",
+    "previewIntegratedEmpty": "Geïntegreerde preview: nog geen preview",
+    "understood": "Begrepen"
+  }
+}

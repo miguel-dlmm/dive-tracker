@@ -1,0 +1,21 @@
+{
+  "calendarCaption": "Chạm vào một ngày để xem chi tiết, hoặc ngày trống để thêm giao dịch",
+  "activeSchoolThisMonth": "Trung tâm hoạt động nhiều nhất",
+  "activeSchoolCount_one": "{{count}} giao dịch tháng này",
+  "activeSchoolCount_other": "{{count}} giao dịch tháng này",
+  "activeSchoolCountAndOthers_one": "{{count}} giao dịch · {{schools}} trung tâm tháng này",
+  "activeSchoolCountAndOthers_other": "{{count}} giao dịch · {{schools}} trung tâm tháng này",
+  "noActivityThisMonth": "Chưa có hoạt động tháng này",
+  "kpis": {
+    "sectionTitle": "Thành quả tháng này",
+    "studentsThisMonth": "Học viên",
+    "coursesTotal": "Khóa học",
+    "referredThisMonth": "Khách giới thiệu"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "ctaFirstTime": "Tạo Training Record đầu tiên",
+    "generatedLabel": "Đã tạo"
+  },
+  "installApp": "Tải ứng dụng"
+}

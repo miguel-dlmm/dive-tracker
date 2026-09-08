@@ -1,0 +1,18 @@
+{
+  "intro": "Thêm Ocean Flow vào màn hình chính điện thoại và mở như bất kỳ ứng dụng nào khác, không cần mở trình duyệt mỗi lần.",
+  "ios": {
+    "title": "iPhone / iPad (Safari)",
+    "step1": "Mở Ocean Flow bằng Safari — phải là Safari, các trình duyệt khác trên iOS không hỗ trợ.",
+    "step2": "Chạm vào biểu tượng Chia sẻ ở thanh dưới.",
+    "step3": "Kéo xuống và chạm \"Thêm vào Màn hình chính\".",
+    "step4": "Chạm \"Thêm\" ở góc trên bên phải — xong."
+  },
+  "android": {
+    "title": "Android (Chrome)",
+    "step1": "Mở Ocean Flow bằng Chrome.",
+    "step2": "Chạm vào menu (⋮) ở góc trên bên phải.",
+    "step3": "Chạm \"Cài đặt ứng dụng\" hoặc \"Thêm vào Màn hình chính\".",
+    "step4": "Xác nhận bằng cách chạm \"Cài đặt\" — xong."
+  },
+  "note": "Biểu tượng sẽ xuất hiện cùng các ứng dụng khác của bạn. Không chiếm thêm dung lượng gì đặc biệt."
+}

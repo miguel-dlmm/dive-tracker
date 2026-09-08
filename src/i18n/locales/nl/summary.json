@@ -1,0 +1,41 @@
+{
+  "months": {
+    "long": ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"],
+    "short": ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+  },
+  "granularity": {
+    "mensual": "Maand",
+    "trimestral": "Kwartaal",
+    "semestral": "Halfjaar",
+    "anual": "Jaar",
+    "personalizado": "Bereik"
+  },
+  "granularityLabel": "Detailniveau van de periode",
+  "quarterAbbr": "K",
+  "halfYearAbbr": "H",
+  "trend": {
+    "heading": "Trend — tik op een periode om te navigeren",
+    "goTo": "Ga naar {{period}}",
+    "currentSuffix": " (huidige periode)"
+  },
+  "from": "Van",
+  "to": "Tot",
+  "chooseRange": "Kies een bereik",
+  "total": "Totaal",
+  "totalCombined": "Gecombineerd totaal",
+  "totalOf": "Totaal {{source}}",
+  "trendVsPreviousPeriod": "{{delta}} t.o.v. vorige periode",
+  "sections": {
+    "bySchool": "Per school",
+    "byActivity": "Per cursus",
+    "commissions": "Commissies",
+    "colleagueAdjustments": "Cursusaanpassingen",
+    "calendar": "Kalender"
+  },
+  "empty": {
+    "noData": "Geen gegevens.",
+    "noCoursesInPeriod": "Geen cursussen in deze periode.",
+    "noMovementsInPeriod": "Geen boekingen in deze periode.",
+    "noColleagueAdjustmentsInPeriod": "Geen cursusaanpassingen in deze periode."
+  }
+}

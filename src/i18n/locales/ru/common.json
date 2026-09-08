@@ -1,0 +1,97 @@
+{
+  "loading": { "defaultLabel": "Загрузка" },
+  "errorBoundary": {
+    "title": "Ой, что-то пошло не так",
+    "body": "На этом экране произошла неожиданная ошибка. Это точно не из-за тебя — попробуй перезагрузить страницу, и всё должно вернуться в норму.",
+    "reload": "Перезагрузить"
+  },
+  "movementTypes": {
+    "ganado": "Курс",
+    "comision": "Комиссия",
+    "companeros": "Корректировка"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "Ожидает оплаты",
+    "empty": "Ничего не ожидает оплаты",
+    "count_one": "{{count}} платёж в ожидании",
+    "count_other": "{{count}} платежей в ожидании",
+    "addMovement": "Добавить операцию"
+  },
+  "confirmDialog": { "cancel": "Отмена", "defaultConfirmLabel": "Удалить" },
+  "editActions": { "defaultSaveLabel": "Сохранить", "cancel": "Отмена" },
+  "deleteButton": {
+    "defaultLabel": "Удалить",
+    "defaultItemLabel": "этот элемент",
+    "deletedToast": "Удалено",
+    "errorToast": "Не удалось удалить. Попробуй ещё раз.",
+    "confirmTitle": "Удалить эту запись?",
+    "confirmMessage": "Ты собираешься удалить {{item}}. Это действие нельзя отменить."
+  },
+  "field": { "hideHelp": "Скрыть подсказку", "help": "Подсказка" },
+  "calendar": {
+    "months": ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
+    "weekdays": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
+    "prevMonth": "Предыдущий месяц",
+    "nextMonth": "Следующий месяц",
+    "prevYear": "Предыдущий год",
+    "nextYear": "Следующий год",
+    "prevDecade": "Предыдущее десятилетие",
+    "nextDecade": "Следующее десятилетие",
+    "today": "Сегодня"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "Дата",
+    "defaultAriaLabel": "Выбрать дату",
+    "pickerAriaLabel": "Выбор даты",
+    "chooseMonthAriaLabel": "Выбрать месяц",
+    "chooseYearAriaLabel": "Выбрать год",
+    "dayAriaLabel": "{{day}} {{month}}",
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "tomorrow": "Завтра",
+    "dayBeforeYesterday": "Позавчера"
+  },
+  "dateRangePicker": {
+    "from": "С",
+    "to": "По",
+    "fromAriaLabel": "Дата с",
+    "toAriaLabel": "Дата по",
+    "pickerAriaLabel": "Выбор диапазона дат",
+    "chooseStart": "Выбери дату начала",
+    "chooseEnd": "Выбери дату окончания",
+    "chooseDate": "Выбери дату",
+    "okFrom": "OK — только с {{date}}",
+    "presets": { "today": "Сегодня", "thisWeek": "Эта неделя", "thisMonth": "Этот месяц", "last30Days": "Последние 30 дней" }
+  },
+  "monthCalendar": {
+    "addOnDay": "Добавить операцию за {{day}} {{month}}",
+    "addOnDayToday": "Добавить операцию за {{day}} {{month}} (сегодня)",
+    "dayToday": "{{day}} {{month}} (сегодня)",
+    "closeDayDetail": "Закрыть детали дня",
+    "dayHeading": "День {{day}} {{month}}",
+    "generatedOnDay": "Заработано в этот день",
+    "table": { "course": "Курс", "comment": "Комментарий", "people": "Чел.", "amount": "Сумма" }
+  },
+  "select": { "placeholder": "Выбери..." },
+  "multiSelect": { "placeholder": "Все", "clearSelection": "Очистить выбор", "selectedCount": "Выбрано: {{count}}" },
+  "searchSelect": { "placeholder": "Поиск...", "ariaLabel": "Поиск", "noResults": "Ничего не найдено" },
+  "currencySearchSelect": { "placeholder": "Найти валюту..." },
+  "listFilterBar": {
+    "from": "С",
+    "to": "По",
+    "school": "Школа",
+    "activity": "Активность",
+    "noLimit": "Без ограничения",
+    "all": "Все",
+    "clearFilters": "Сбросить фильтры"
+  },
+  "rowMenu": { "moreActions": "Другие действия", "edit": "Редактировать", "delete": "Удалить" },
+  "statusSwitch": { "ariaLabel": "Статус: {{value}}. Нажми, чтобы изменить на {{next}}", "title": "{{value}} — нажми, чтобы изменить на «{{next}}»" },
+  "signature": {
+    "opcional": "необязательно",
+    "borrar": "Стереть",
+    "deshacer": "Отменить",
+    "firmadoAria": "{{label}}: подписано",
+    "sinFirmarAria": "{{label}}: не подписано"
+  }
+}
