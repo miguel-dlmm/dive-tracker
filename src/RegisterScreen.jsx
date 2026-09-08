@@ -35,7 +35,7 @@ const emptyForm = { email: "", first_name: "", last_name: "", nickname: "" };
 // esté en inglés, y viceversa). SUPPORTED_LANGUAGES (src/i18n/index.js) es
 // la fuente de verdad de qué idiomas existen; este objeto es solo su
 // etiqueta visual.
-const LANGUAGE_NATIVE_NAME = { es: "Español", en: "English" };
+const LANGUAGE_NATIVE_NAME = { es: "Español", en: "English", fr: "Français", it: "Italiano", de: "Deutsch", ca: "Català", eu: "Euskara" };
 
 // inviteToken (opcional, Release V1 2026-09-02): presente cuando se llega
 // aquí desde un enlace de invitación de un solo uso (?invite=... en la

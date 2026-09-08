@@ -1,0 +1,266 @@
+{
+  "datasets": {
+    "copySuffix": "Kopie",
+    "summary_one": "Grundkonfiguration (Schulen, Kurse und Tarife), die für jedes neue Konto geklont wird. {{count}} aktiv von {{total}}.",
+    "summary_other": "Grundkonfiguration (Schulen, Kurse und Tarife), die für jedes neue Konto geklont wird. {{count}} aktiv von {{total}}.",
+    "inactive": "Inaktiv",
+    "setDefault": "Als Standard festlegen",
+    "setDefaultAria": "\"{{label}}\" als Standard festlegen",
+    "duplicate": "Duplizieren",
+    "duplicateAria": "\"{{label}}\" duplizieren",
+    "activeAria": "Datensatz \"{{label}}\" aktiv",
+    "deleteItemLabel": "den Datensatz \"{{label}}\"",
+    "empty": "Noch keine Datensätze.",
+    "fab": "Neuer Datensatz",
+    "sheetTitle": "Neuer Datensatz",
+    "sheetHint": "Wird leer und inaktiv angelegt — dupliziere einen bestehenden, wenn du mit bereits geladenem Inhalt starten möchtest.",
+    "nameLabel": "Name",
+    "create": "Erstellen",
+    "toasts": {
+      "created": "Datensatz erstellt — füge seinen Inhalt hinzu, bevor du ihn aktivierst",
+      "duplicated": "\"{{newLabel}}\" mit demselben Inhalt wie \"{{sourceLabel}}\" erstellt",
+      "duplicateError": "Konnte nicht dupliziert werden. Versuch es erneut.",
+      "keyTaken": "Es existiert bereits ein Datensatz mit diesem Schlüssel.",
+      "createError": "Konnte nicht erstellt werden. Versuch es erneut.",
+      "updateError": "Konnte nicht aktualisiert werden."
+    },
+    "errors": {
+      "isDefault": "Dies ist der Standarddatensatz — lege einen anderen als Standard fest, bevor du diesen löschst.",
+      "lastOne": "Du kannst den einzigen Datensatz nicht löschen — die externe Registrierung und die manuelle Anlage benötigen mindestens einen."
+    }
+  },
+  "crudTable": {
+    "buscarPlaceholder": "Suchen...",
+    "buscarAria": "Suchen",
+    "cambiarColor": "Farbe ändern",
+    "favorita": "Favorit",
+    "marcarPredeterminado": "Als Standard festlegen",
+    "esteElemento": "dieses Element",
+    "sinResultados": "Keine Ergebnisse.",
+    "cerrar": "Schließen",
+    "guardar": "Speichern",
+    "cambiosGuardados": "Änderungen gespeichert",
+    "anadidoCorrectamente": "Hinzugefügt",
+    "noSePudoGuardar": "Konnte nicht gespeichert werden. Versuch es erneut.",
+    "noSePudoGuardarCambio": "Änderung konnte nicht gespeichert werden.",
+    "estadoPredeterminadoRazon": "Dies ist der Standardstatus (steht für \"ausstehend\") — lege einen anderen als Standard fest, bevor du diesen löschst"
+  },
+  "sectionColors": {
+    "descripcion": "Verwendet in der Navigationsleiste und in den Buttons zum Erstellen von Einträgen in jedem Bereich."
+  },
+  "generalSettings": {
+    "iconoCarga": "Ladesymbol",
+    "descripcion": "Wird in der \"Lädt\"-Animation der gesamten App verwendet. Sobald ihr das offizielle Ocean-Flow-Logo habt, sagt mir Bescheid und ich ersetze es durch das echte Symbol statt dieser Liste.",
+    "iconoActualizado": "Symbol aktualisiert",
+    "noSePudoGuardar": "Konnte nicht gespeichert werden. Versuch es erneut.",
+    "vistaPrevia": "Vorschau"
+  },
+  "externalRegistration": {
+    "titulo": "Externe Registrierung erlauben",
+    "descripcion": "Zeigt \"Registrieren\" im Login an, damit jeder sein eigenes Konto erstellen kann.",
+    "activado": "Externe Registrierung aktiviert",
+    "desactivado": "Externe Registrierung deaktiviert",
+    "noSePudoGuardar": "Konnte nicht gespeichert werden. Versuch es erneut."
+  },
+  "roleCheckbox": {
+    "rolProtegido": "{{label}} — geschützte Systemrolle, nicht bearbeitbar",
+    "si": "ja",
+    "no": "nein",
+    "etiquetaAria": "{{label}}: {{value}}"
+  },
+  "roleIcon": {
+    "superadmin": "Superadmin",
+    "admin": "Administrator"
+  },
+  "userStatus": {
+    "activo": "Aktiv",
+    "pendiente": "Ausstehend",
+    "desactivado": "Deaktiviert",
+    "nunca": "Nie"
+  },
+  "swipeToDelete": {
+    "eliminar": "Löschen",
+    "eliminarA": "{{nickname}} löschen"
+  },
+  "userListRow": {
+    "alta": "Angelegt: {{date}}",
+    "ultimoAcceso": "Letzter Zugriff: {{date}}",
+    "baja": "Deaktiviert: {{date}}",
+    "fechaNoRegistrada": "Datum nicht erfasst"
+  },
+  "userDetailSheet": {
+    "cerrar": "Schließen",
+    "nombre": "Vorname",
+    "apellidos": "Nachname",
+    "nickname": "Nickname",
+    "editarDatos": "Daten bearbeiten",
+    "email": "E-Mail",
+    "altaLabel": "Angelegt",
+    "ultimoAcceso": "Letzter Zugriff",
+    "movimientos": "Buchungen",
+    "ultimaActividad": "Letzte Aktivität",
+    "baja": "Deaktiviert",
+    "estado": "Status",
+    "activarUsuario": "Benutzer aktivieren",
+    "desactivarUsuario": "Benutzer deaktivieren",
+    "pendienteTexto": "Wartet darauf, dass die Person den Link öffnet und ihr Passwort erstellt.",
+    "regenerarEnlace": "Link neu erstellen",
+    "admin": "Admin",
+    "superadmin": "Superadmin",
+    "regenerarContrasena": "Passwort neu erstellen",
+    "eliminarUsuario": "Benutzer löschen"
+  },
+  "activationLinkPanel": {
+    "cerrar": "Schließen",
+    "enlaceCopiado": "Link kopiert",
+    "noSePudoCopiar": "Konnte nicht kopiert werden. Wähle ihn manuell aus.",
+    "copiarEnlace": "Link kopieren",
+    "simularEnvioMock": "Erfolgreichen Versand simulieren (Mock)",
+    "mockEmailEnviado": "(Mock) E-Mail erfolgreich gesendet"
+  },
+  "createUserSheet": {
+    "cerrar": "Schließen",
+    "noSePudieronCargarDatasets": "Verfügbare Datensätze konnten nicht geladen werden.",
+    "camposObligatorios": "E-Mail, Nickname und Ausgangsdatensatz sind erforderlich.",
+    "soloSuperadminCrear": "Nur ein Superadmin kann Benutzer erstellen.",
+    "noSePudoCrear": "Benutzer konnte nicht erstellt werden.",
+    "usuarioCreadoSinEmail": "Benutzer erstellt (E-Mail konnte nicht gesendet werden)",
+    "usuarioCreadoCorrectamente": "Benutzer erstellt",
+    "enlaceCopiado": "Link kopiert",
+    "noSePudoCopiar": "Konnte nicht kopiert werden. Wähle ihn manuell aus.",
+    "noSePudoEnviarEmailTitulo": "E-Mail konnte nicht gesendet werden",
+    "noSePudoEnviarEmailDescripcion": "Die Aktivierungs-E-Mail konnte nicht gesendet werden. Du kannst diesen Link manuell teilen.",
+    "copiarEnlace": "Link kopieren",
+    "simularEnvioMock": "Erfolgreichen Versand simulieren (Mock)",
+    "mockUsuarioCreado": "(Mock) Benutzer erstellt und E-Mail erfolgreich gesendet",
+    "titulo": "Benutzer erstellen",
+    "email": "E-Mail",
+    "nombre": "Vorname",
+    "apellidos": "Nachname",
+    "nickname": "Nickname",
+    "datasetInicial": "Ausgangsdatensatz",
+    "cargando": "Wird geladen…",
+    "seleccionaDataset": "Datensatz auswählen",
+    "sinDatasets": "Keine Datensätze verfügbar",
+    "idioma": "Sprache",
+    "nota": "Der gewählte Datensatz lädt automatisch Schulen, Kurse, Tarife, Provisionen und anfängliche Zahlungskataloge. Die Person erhält eine E-Mail mit einem einmaligen Link, um sich anzumelden und ihr eigenes Passwort zu erstellen.",
+    "creando": "Wird erstellt…",
+    "crearUsuario": "Benutzer erstellen"
+  },
+  "usersDirectory": {
+    "buscarPlaceholder": "Suchen...",
+    "buscarAria": "Benutzer suchen",
+    "leyendaEstadoAria": "Was jede Statusfarbe bedeutet",
+    "crearUsuario": "Benutzer erstellen",
+    "noSePudoCargarListado": "Benutzerliste konnte nicht geladen werden.",
+    "errorDesconocido": "Unbekannter Fehler",
+    "errorCargarListado": "Liste konnte nicht geladen werden: {{error}}",
+    "cargandoUsuarios": "Benutzer werden geladen…",
+    "sinResultados": "Keine Ergebnisse.",
+    "soloSuperadminRol": "Nur ein Superadmin kann die Admin-Rolle eines anderen Kontos ändern.",
+    "noSePudoActualizarRol": "Rolle konnte nicht aktualisiert werden.",
+    "rolActualizado": "Rolle aktualisiert",
+    "soloSuperadminEliminar": "Nur ein Superadmin kann Benutzer löschen.",
+    "noSePudoEliminar": "Benutzer konnte nicht gelöscht werden.",
+    "usuarioEliminado": "Benutzer gelöscht",
+    "soloSuperadminActivar": "Nur ein Superadmin kann Benutzer aktivieren oder deaktivieren.",
+    "noSePudoActualizarEstado": "Status konnte nicht aktualisiert werden.",
+    "usuarioDesactivado": "Benutzer deaktiviert",
+    "soloSuperadminEnlace": "Nur ein Superadmin kann Konten aktivieren oder deren Zugangslink neu erstellen.",
+    "noSePudoGenerarEnlace": "Link konnte nicht erstellt werden.",
+    "enlaceGeneradoSinEmail": "Link erstellt (E-Mail konnte nicht an {{nickname}} gesendet werden)",
+    "enlaceActivacionTitulo": "Aktivierungslink erstellt",
+    "enlaceActivacionDescripcion": "Teile diesen Link mit {{nickname}}. Er wird weiterhin als \"Ausstehend\" angezeigt, bis er ihn verwendet, um sein Passwort zu erstellen.",
+    "emailActivacionEnviado": "Aktivierungs-E-Mail an {{nickname}} gesendet",
+    "soloSuperadminContrasena": "Nur ein Superadmin kann das Passwort eines anderen Kontos neu erstellen.",
+    "noSePudoRegenerarContrasena": "Passwort konnte nicht neu erstellt werden.",
+    "contrasenaRegeneradaSinEmail": "Passwort neu erstellt (E-Mail konnte nicht an {{nickname}} gesendet werden)",
+    "contrasenaRegeneradaTitulo": "Passwort neu erstellt",
+    "contrasenaRegeneradaDescripcion": "Das vorherige Passwort von {{nickname}} ist nicht mehr gültig. Teile diesen Link, damit ein neues erstellt wird — das Konto kehrt bis dahin zu \"Ausstehend\" zurück.",
+    "contrasenaRegeneradaEmailEnviado": "Passwort neu erstellt und E-Mail an {{nickname}} gesendet",
+    "nicknameVacio": "Der Nickname darf nicht leer sein.",
+    "datosActualizados": "Daten aktualisiert",
+    "noSePudieronGuardarCambios": "Änderungen konnten nicht gespeichert werden.",
+    "cambiarRolAdminTitulo": "Admin-Rolle ändern",
+    "usuarioLabel": "Benutzer: {{nickname}}",
+    "adminLabel": "Admin: {{from}} → {{to}}",
+    "confirmar": "Bestätigen",
+    "eliminarUsuarioTitulo": "Benutzer löschen",
+    "eliminarUsuarioMensaje": "Das Konto von <strong>{{nickname}}</strong> und alle seine Daten (Schulen, Tarife, Buchungen...) werden dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "eliminarUsuarioAlternativa": "Wenn du nur den Zugang widerrufen und die Daten behalten möchtest, verwende stattdessen \"Deaktivieren\".",
+    "eliminar": "Löschen",
+    "desactivarUsuarioTitulo": "Benutzer deaktivieren",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> kann sich nicht mehr anmelden. Alle Daten (Schulen, Tarife, Buchungen...) bleiben unverändert erhalten — du kannst ihn jederzeit reaktivieren, indem du einen neuen Aktivierungslink erstellst.",
+    "desactivar": "Deaktivieren",
+    "generarEnlaceTitulo": "Aktivierungslink erstellen",
+    "generarEnlaceMensaje": "Es wird ein neuer, einmaliger Link für <strong>{{nickname}}</strong> erstellt. Jeder vorherige Link wird ungültig. Das Konto erhält erst Zugang, sobald der Vorgang abgeschlossen ist.",
+    "generarEnlace": "Link erstellen",
+    "regenerarContrasenaTitulo": "Passwort neu erstellen",
+    "regenerarContrasenaMensaje": "Das aktuelle Passwort von <strong>{{nickname}}</strong> funktioniert sofort nicht mehr. Er/sie muss über einen neuen Aktivierungslink ein neues erstellen — die Daten sind davon nicht betroffen.",
+    "regenerar": "Neu erstellen",
+    "generarInvitacion": "Einladungslink erstellen",
+    "soloSuperadminInvitacion": "Nur ein Superadmin kann Einladungslinks erstellen.",
+    "noSePudoGenerarInvitacion": "Einladungslink konnte nicht erstellt werden.",
+    "enlaceInvitacionTitulo": "Einladungslink",
+    "enlaceInvitacionDescripcion": "24 Stunden gültig und einmalig verwendbar. Teile ihn mit der Person, die du einladen möchtest — sie kann sich registrieren, auch wenn die externe Registrierung geschlossen ist."
+  },
+  "sections": {
+    "escuelas": {
+      "label": "Schulen",
+      "description": "Wo du unterrichtest, mit ihrer Farbe"
+    },
+    "cursos": {
+      "label": "Kurse",
+      "description": "Was du unterrichtest, mit seiner Farbe"
+    },
+    "tarifas": {
+      "label": "Tarife",
+      "description": "Wie viel du pro Schule und Kurs berechnest"
+    },
+    "estadosPago": {
+      "label": "Zahlungsstatus",
+      "description": "Ausstehend, erhalten..."
+    },
+    "monedas": {
+      "label": "Währungen",
+      "description": "In der gesamten App verfügbarer Katalog"
+    },
+    "navegacion": {
+      "label": "Navigationsfarben",
+      "description": "Visuelle Identität jedes Bereichs"
+    },
+    "ajustes": {
+      "label": "Allgemeine Einstellungen",
+      "description": "Ladesymbol der App"
+    },
+    "usuarios": {
+      "label": "Benutzer",
+      "description": "Konten mit Zugang zur App"
+    },
+    "datasets": {
+      "label": "Ausgangsdatensätze",
+      "description": "Beim Anlegen eines Kontos geklonte Konfiguration"
+    }
+  },
+  "menu": {
+    "administracion": "Verwaltung",
+    "superadmin": "Superadmin",
+    "configuracion": "Einstellungen"
+  },
+  "crud": {
+    "nuevaEscuela": "Neue Schule",
+    "editarEscuela": "Schule bearbeiten",
+    "nombreCampo": "Name",
+    "colorCampo": "Farbe",
+    "nuevoCurso": "Neuer Kurs",
+    "editarCurso": "Kurs bearbeiten",
+    "nuevoEstadoPago": "Neuer Zahlungsstatus",
+    "editarEstadoPago": "Zahlungsstatus bearbeiten",
+    "nuevaMoneda": "Neue Währung",
+    "editarMoneda": "Währung bearbeiten",
+    "monedasDescripcion": "Wähle hier die Ersatzwährung der gesamten App: Sie wird verwendet, wenn ein Benutzer in Mein Profil noch keine eigene bevorzugte Währung gewählt hat. Es ist keine persönliche Präferenz — sie wird standardmäßig auf jedes neue Konto angewendet.",
+    "monedaPorDefectoApp": "Standard der App",
+    "codigoCampo": "Code (z. B. EUR)",
+    "simboloCampo": "Symbol"
+  }
+}

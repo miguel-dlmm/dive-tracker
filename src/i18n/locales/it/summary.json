@@ -1,0 +1,41 @@
+{
+  "months": {
+    "long": ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"],
+    "short": ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"]
+  },
+  "granularity": {
+    "mensual": "Mese",
+    "trimestral": "Trimestre",
+    "semestral": "Semestre",
+    "anual": "Anno",
+    "personalizado": "Intervallo"
+  },
+  "granularityLabel": "Granularità del periodo",
+  "quarterAbbr": "T",
+  "halfYearAbbr": "S",
+  "trend": {
+    "heading": "Andamento — tocca un periodo per navigare",
+    "goTo": "Vai a {{period}}",
+    "currentSuffix": " (periodo attuale)"
+  },
+  "from": "Dal",
+  "to": "Al",
+  "chooseRange": "Scegli un intervallo",
+  "total": "Totale",
+  "totalCombined": "Totale combinato",
+  "totalOf": "Totale {{source}}",
+  "trendVsPreviousPeriod": "{{delta}} rispetto al periodo precedente",
+  "sections": {
+    "bySchool": "Per scuola",
+    "byActivity": "Per corso",
+    "commissions": "Commissioni",
+    "colleagueAdjustments": "Rettifiche di corso",
+    "calendar": "Calendario"
+  },
+  "empty": {
+    "noData": "Nessun dato.",
+    "noCoursesInPeriod": "Nessun corso in questo periodo.",
+    "noMovementsInPeriod": "Nessun movimento in questo periodo.",
+    "noColleagueAdjustmentsInPeriod": "Nessuna rettifica di corso in questo periodo."
+  }
+}

@@ -31,7 +31,6 @@ import App from "./App";
 import { useSession } from "./useSession";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { supabase } from "./supabaseClient";
-import { APP_VERSION } from "./version";
 
 const SESSION = { user: { id: "u1", email: "diver@example.com" } };
 
@@ -226,7 +225,7 @@ describe("AuthGate", () => {
   // localStorage antes de renderizar, para probar la reapertura de verdad
   // en vez de que ya estuviera abierto por no haberse visto todavía).
   it("Fase 4 — 'Ver qué hay de nuevo' en Ayuda reabre el slide de novedades ya visto", async () => {
-    localStorage.setItem("oceanpulse:whatsNewSeen:u1", APP_VERSION);
+    localStorage.setItem("oceanpulse:whatsNewSeen:u1", "1.0.0");
     mockUseSession({
       session: SESSION,
       profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
@@ -236,12 +235,12 @@ describe("AuthGate", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText("Ocean Flow");
-    expect(screen.queryByText("Llévala en el bolsillo, de verdad")).not.toBeInTheDocument();
+    expect(screen.queryByText("Rediseño completo, cara nueva")).not.toBeInTheDocument();
 
     await user.click(screen.getByLabelText("Ayuda"));
     await user.click(await screen.findByText("Ver qué hay de nuevo en esta versión"));
 
-    expect(await screen.findByText("Llévala en el bolsillo, de verdad")).toBeInTheDocument();
+    expect(await screen.findByText("Rediseño completo, cara nueva")).toBeInTheDocument();
   });
 
   // 2026-09-07, pedido explícito: "cuando el usuario accede después del

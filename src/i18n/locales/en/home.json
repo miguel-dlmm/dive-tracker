@@ -14,11 +14,8 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "subtitle": "Generate each student's signed SSI progress record, ready to hand over"
+    "ctaFirstTime": "Generate your first Training Record",
+    "generatedLabel": "Generated"
   },
-  "installBanner": {
-    "title": "Install Ocean Flow on your phone",
-    "subtitle": "Open it like an app, without going through the browser",
-    "dismiss": "Don't show again"
-  }
+  "installApp": "Download app"
 }

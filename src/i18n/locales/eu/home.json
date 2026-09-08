@@ -1,0 +1,21 @@
+{
+  "calendarCaption": "Sakatu egun bat xehetasunak ikusteko, edo egun huts bat mugimendu bat gehitzeko",
+  "activeSchoolThisMonth": "Eskolarik aktiboena",
+  "activeSchoolCount_one": "Mugimendu {{count}} hilabete honetan",
+  "activeSchoolCount_other": "{{count}} mugimendu hilabete honetan",
+  "activeSchoolCountAndOthers_one": "Mugimendu {{count}} · {{schools}} eskola hilabete honetan",
+  "activeSchoolCountAndOthers_other": "{{count}} mugimendu · {{schools}} eskola hilabete honetan",
+  "noActivityThisMonth": "Ez dago jarduerarik hilabete honetan",
+  "kpis": {
+    "sectionTitle": "Zure eragina hilabete honetan",
+    "studentsThisMonth": "Ikasleak",
+    "coursesTotal": "Ikastaroak",
+    "referredThisMonth": "Erakarritakoak"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "ctaFirstTime": "Sortu zure lehen Training Record",
+    "generatedLabel": "Sortutakoak"
+  },
+  "installApp": "Deskargatu aplikazioa"
+}

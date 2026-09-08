@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "personalData": "Données personnelles",
+    "instructor": "Données d'instructeur",
+    "favoriteCurrency": "Devise favorite",
+    "language": "Langue",
+    "security": "Sécurité",
+    "privacy": "Confidentialité"
+  },
+  "signOut": {
+    "button": "Se déconnecter"
+  },
+  "avatar": {
+    "changeAvatar": "Changer d'avatar",
+    "closeAvatarPicker": "Fermer le sélecteur d'avatar",
+    "colorLabel": "Couleur {{name}}",
+    "iconLabel": "Icône {{name}}",
+    "previousIcon": "Icône précédente",
+    "nextIcon": "Icône suivante",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "cancel": "Annuler",
+    "toastSuccess": "Avatar mis à jour",
+    "toastError": "Impossible d'enregistrer l'avatar. Réessayez."
+  },
+  "personalData": {
+    "nameLine": "Prénom :",
+    "nicknameLine": "Pseudo :",
+    "professionalLine": "Professionnel :",
+    "birthDateLine": "Date de naissance :",
+    "countryLine": "Pays de résidence :",
+    "edit": "Modifier",
+    "nameLabel": "Prénom",
+    "lastNameLabel": "Nom",
+    "nicknameLabel": "Pseudo",
+    "professionalLabel": "Professionnel",
+    "professionalPlaceholder": "Non renseigné",
+    "birthDateLabel": "Date de naissance",
+    "countryLabel": "Pays de résidence",
+    "countryPlaceholder": "Choisissez un pays",
+    "nicknameAtError": "Ne peut pas contenir \"@\".",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "toastSuccess": "Profil mis à jour",
+    "errors": {
+      "nicknameTaken": "Ce pseudo est déjà utilisé.",
+      "nicknameAt": "Le pseudo ne peut pas contenir \"@\".",
+      "generic": "Impossible d'enregistrer. Réessayez."
+    }
+  },
+  "instructor": {
+    "hint": "Utilisées pour remplir automatiquement vos Training Records — enregistrées ici une seule fois, pas par appareil.",
+    "card": {
+      "role": "Professionnel SSI",
+      "roleWithLevel": "SSI {{level}}",
+      "noSignature": "Sans signature",
+      "signatureAlt": "Signature de {{name}}",
+      "initialsLabel": "Initiales",
+      "numberLabel": "SSI PRO"
+    },
+    "signatureLabel": "Votre signature",
+    "edit": "Modifier",
+    "initialsLabel": "Initiales",
+    "numberLabel": "Numéro SSI Pro",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "toastSuccess": "Données d'instructeur mises à jour",
+    "toastError": "Impossible d'enregistrer les données d'instructeur. Réessayez."
+  },
+  "currency": {
+    "hint": "Utilisée comme devise par défaut dans Ajustement de cours, quand aucun tarif ne la détermine. Les autres mouvements utilisent toujours la devise de leur propre tarif.",
+    "placeholder": "Non choisie — utilise la devise par défaut de l'application",
+    "toastSuccess": "Devise favorite mise à jour"
+  },
+  "language": {
+    "placeholder": "Sélectionnez une langue",
+    "toastSuccess": "Langue mise à jour",
+    "toastError": "Impossible de changer la langue. Réessayez."
+  },
+  "password": {
+    "currentLabel": "Mot de passe actuel",
+    "newLabel": "Nouveau mot de passe",
+    "confirmLabel": "Confirmer le mot de passe",
+    "showCurrent": "Afficher le mot de passe actuel",
+    "hideCurrent": "Masquer le mot de passe actuel",
+    "show": "Afficher le mot de passe",
+    "hide": "Masquer le mot de passe",
+    "minLength": "8 caractères minimum",
+    "matches": "Les mots de passe correspondent",
+    "submit": "Changer le mot de passe",
+    "toastSuccess": "Mot de passe mis à jour",
+    "toastError": "Impossible de changer le mot de passe. Réessayez.",
+    "wrongCurrent": "Mot de passe actuel incorrect."
+  },
+  "deleteAccount": {
+    "confirmWord": "ANNULER",
+    "description": "Supprimer votre compte efface définitivement votre accès et toutes vos données d'Ocean Flow : écoles, cours, tarifs, registre de cours, commissions et ajustements avec des collègues. Aucune copie n'est conservée. Cette action est irréversible.",
+    "button": "Supprimer mon compte",
+    "confirmTitle": "Supprimer votre compte ?",
+    "confirmMessage": "Vous allez supprimer définitivement le compte \"{{nickname}}\" et toutes ses données. Vous ne pourrez pas annuler cette action.",
+    "continue": "Continuer",
+    "finalCheckTitle": "Dernière vérification",
+    "typeWordPrefix": "Tapez",
+    "typeWordSuffix": "pour confirmer que vous voulez supprimer définitivement votre compte.",
+    "typeWordAriaLabel": "Tapez {{word}} pour confirmer",
+    "back": "Retour",
+    "deleteButton": "Supprimer le compte",
+    "toastSuccess": "Compte supprimé",
+    "genericError": "Impossible de supprimer le compte. Réessayez.",
+    "networkError": "Impossible de supprimer le compte. Vérifiez votre connexion et réessayez."
+  }
+}

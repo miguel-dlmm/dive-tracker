@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { colorFor, applyListFilters, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect } from "./shared";
 
@@ -259,5 +259,57 @@ describe("useFloatingPosition (vía SearchSelect) — la dirección arriba/abajo
 
     expect(panel.style.top).toBe("");
     expect(panel.style.bottom).not.toBe("");
+  });
+
+  // Bug real reportado 2026-09-08 (misma pantalla, otra vez): "la lista
+  // aparece encima del propio campo y se hace difícil hacer select sobre
+  // él". Causa: al tocar un SearchSelect, el teclado virtual de iOS abre
+  // A LA VEZ que el panel — la decisión arriba/abajo de arriba se toma
+  // con `visualViewport` TODAVÍA sin encoger (la animación del teclado
+  // tarda ~250-300ms), así que puede quedar mal elegida desde el
+  // principio y quedarse así el resto de la apertura. Fix: escuchar un
+  // único evento `resize` de `visualViewport` tras abrir para
+  // corregir la decisión una vez, ya con el teclado asentado — sin
+  // volver a decidir en los siguientes (eso reintroduciría el bug
+  // anterior, el salto continuo mientras se escribe).
+  it("si el teclado abre justo después (visualViewport encoge), la dirección se corrige una vez — y no vuelve a moverse después", async () => {
+    const user = userEvent.setup();
+    // Al abrir: 400px libres debajo (por encima del umbral de 280) -> abre
+    // hacia abajo. jsdom no tiene visualViewport por defecto — se simula
+    // uno mínimo (EventTarget real, para que addEventListener/
+    // removeEventListener y dispatchEvent funcionen de verdad).
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
+      { top: 300, bottom: 330, left: 0, right: 300, width: 300, height: 30 }
+    );
+    const vv = Object.assign(new EventTarget(), { height: 730, width: 400 });
+    const originalVv = window.visualViewport;
+    Object.defineProperty(window, "visualViewport", { value: vv, configurable: true, writable: true });
+
+    render(<SearchSelect value="" onChange={() => {}} options={[{ value: "a", label: "Alpha" }]} placeholder="Elige" />);
+    await user.click(screen.getByRole("textbox", { name: "Elige" }));
+    const panel = screen.getByRole("listbox");
+    expect(panel.style.bottom).toBe(""); // abrió hacia abajo
+
+    // El teclado termina de abrirse: visualViewport se encoge de golpe
+    // (400 -> 300, deja menos de 280px libres debajo) y dispara su propio
+    // resize — la dirección debe corregirse a "arriba" esta vez sí. El
+    // dispatch ocurre fuera del ciclo de eventos de React (no es un
+    // evento de usuario simulado por Testing Library), así que la
+    // actualización de estado que dispara se confirma con waitFor, no
+    // leyendo el DOM en la misma línea.
+    vv.height = 300;
+    vv.dispatchEvent(new Event("resize"));
+    await waitFor(() => expect(panel.style.top).toBe(""));
+    expect(panel.style.bottom).not.toBe("");
+
+    // Un segundo resize de visualViewport (p. ej. el usuario escribe y el
+    // teclado se reacomoda un poco) NO debe volver a mover el panel —
+    // solo la primera corrección tras abrir está permitida.
+    vv.height = 730;
+    vv.dispatchEvent(new Event("resize"));
+    await waitFor(() => expect(panel.style.top).toBe(""));
+    expect(panel.style.bottom).not.toBe("");
+
+    Object.defineProperty(window, "visualViewport", { value: originalVv, configurable: true, writable: true });
   });
 });

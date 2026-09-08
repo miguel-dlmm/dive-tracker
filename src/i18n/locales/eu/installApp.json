@@ -1,0 +1,18 @@
+{
+  "intro": "Gehitu Ocean Flow zure mugikorreko hasierako pantailan eta ireki beste edozein aplikazio bezala, arakatzailetik pasatu gabe bakoitzean.",
+  "ios": {
+    "title": "iPhone / iPad (Safari)",
+    "step1": "Ireki Ocean Flow Safarin — Safari izan behar du, ez du funtzionatzen iOSeko beste arakatzaile batzuetatik.",
+    "step2": "Sakatu Partekatu ikonoa beheko barran.",
+    "step3": "Egin scroll behera eta sakatu \"Hasiera-pantailan\".",
+    "step4": "Sakatu \"Gehitu\" goian eskuinean — prest."
+  },
+  "android": {
+    "title": "Android (Chrome)",
+    "step1": "Ireki Ocean Flow Chrome-n.",
+    "step2": "Sakatu menua (⋮) goian eskuinean.",
+    "step3": "Sakatu \"Instalatu aplikazioa\" edo \"Gehitu hasierako pantailan\".",
+    "step4": "Berretsi \"Instalatu\" sakatuta — prest."
+  },
+  "note": "Ikonoa zure beste aplikazioekin batera agertuko da. Ez du beste edozeinek baino leku gehiago hartzen."
+}

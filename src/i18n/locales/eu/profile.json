@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "personalData": "Datu pertsonalak",
+    "instructor": "Irakaslearen datuak",
+    "favoriteCurrency": "Dibisa gogokoena",
+    "language": "Hizkuntza",
+    "security": "Segurtasuna",
+    "privacy": "Pribatutasuna"
+  },
+  "signOut": {
+    "button": "Saioa itxi"
+  },
+  "avatar": {
+    "changeAvatar": "Aldatu avatarra",
+    "closeAvatarPicker": "Itxi avatar-hautatzailea",
+    "colorLabel": "{{name}} kolorea",
+    "iconLabel": "{{name}} ikonoa",
+    "previousIcon": "Aurreko ikonoa",
+    "nextIcon": "Hurrengo ikonoa",
+    "save": "Gorde",
+    "saving": "Gordetzen…",
+    "cancel": "Utzi",
+    "toastSuccess": "Avatarra eguneratuta",
+    "toastError": "Ezin izan da avatarra gorde. Saiatu berriro."
+  },
+  "personalData": {
+    "nameLine": "Izena:",
+    "nicknameLine": "Ezizena:",
+    "professionalLine": "Profesionala:",
+    "birthDateLine": "Jaiotze-data:",
+    "countryLine": "Bizileku herrialdea:",
+    "edit": "Editatu",
+    "nameLabel": "Izena",
+    "lastNameLabel": "Abizenak",
+    "nicknameLabel": "Ezizena",
+    "professionalLabel": "Profesionala",
+    "professionalPlaceholder": "Aukeratu gabe",
+    "birthDateLabel": "Jaiotze-data",
+    "countryLabel": "Bizileku herrialdea",
+    "countryPlaceholder": "Aukeratu herrialde bat",
+    "nicknameAtError": "Ezin du \"@\" eduki.",
+    "save": "Gorde",
+    "saving": "Gordetzen…",
+    "toastSuccess": "Profila eguneratuta",
+    "errors": {
+      "nicknameTaken": "Ezizen hori dagoeneko erabilita dago.",
+      "nicknameAt": "Ezizenak ezin du \"@\" eduki.",
+      "generic": "Ezin izan da gorde. Saiatu berriro."
+    }
+  },
+  "instructor": {
+    "hint": "Zure Training Recordak automatikoki betetzeko erabiltzen dira — hemen behin bakarrik gordetzen dira, ez gailuka.",
+    "card": {
+      "role": "SSI profesionala",
+      "roleWithLevel": "SSI {{level}}",
+      "noSignature": "Sinadurarik gabe",
+      "signatureAlt": "{{name}}(r)en sinadura",
+      "initialsLabel": "Inizialak",
+      "numberLabel": "SSI PRO"
+    },
+    "signatureLabel": "Zure sinadura",
+    "edit": "Editatu",
+    "initialsLabel": "Inizialak",
+    "numberLabel": "SSI Pro zenbakia",
+    "save": "Gorde",
+    "saving": "Gordetzen…",
+    "toastSuccess": "Irakaslearen datuak eguneratuta",
+    "toastError": "Ezin izan dira irakaslearen datuak gorde. Saiatu berriro."
+  },
+  "currency": {
+    "hint": "Ikastaro doikuntzan lehenetsitako dibisa gisa erabiltzen da, hori zehazten duen tarifarik ez dagoenean. Gainerako mugimenduek beti erabiltzen dute beren tarifaren dibisa.",
+    "placeholder": "Aukeratu gabe — aplikazioaren dibisa lehenetsia erabiltzen du",
+    "toastSuccess": "Dibisa gogokoena eguneratuta"
+  },
+  "language": {
+    "placeholder": "Aukeratu hizkuntza bat",
+    "toastSuccess": "Hizkuntza eguneratuta",
+    "toastError": "Ezin izan da hizkuntza aldatu. Saiatu berriro."
+  },
+  "password": {
+    "currentLabel": "Uneko pasahitza",
+    "newLabel": "Pasahitz berria",
+    "confirmLabel": "Berretsi pasahitza",
+    "showCurrent": "Erakutsi uneko pasahitza",
+    "hideCurrent": "Ezkutatu uneko pasahitza",
+    "show": "Erakutsi pasahitza",
+    "hide": "Ezkutatu pasahitza",
+    "minLength": "Gutxienez 8 karaktere",
+    "matches": "Pasahitzak bat datoz",
+    "submit": "Aldatu pasahitza",
+    "toastSuccess": "Pasahitza eguneratuta",
+    "toastError": "Ezin izan da pasahitza aldatu. Saiatu berriro.",
+    "wrongCurrent": "Uneko pasahitza okerra."
+  },
+  "deleteAccount": {
+    "confirmWord": "UTZI",
+    "description": "Zure kontua ezabatzeak zure sarbidea eta Ocean Flow-eko datu guztiak betiko ezabatzen ditu: eskolak, ikastaroak, tarifak, klase-erregistroa, komisioak eta lankideekiko doikuntzak. Ez da kopiarik gordetzen. Ekintza hau ezin da desegin.",
+    "button": "Ezabatu nire kontua",
+    "confirmTitle": "Zure kontua ezabatu nahi duzu?",
+    "confirmMessage": "\"{{nickname}}\" kontua eta bere datu guztiak betiko ezabatzera zoaz. Ezingo duzu ekintza hau desegin.",
+    "continue": "Jarraitu",
+    "finalCheckTitle": "Azken egiaztapena",
+    "typeWordPrefix": "Idatzi",
+    "typeWordSuffix": "zure kontua betiko ezabatu nahi duzula berresteko.",
+    "typeWordAriaLabel": "Idatzi {{word}} berresteko",
+    "back": "Atzera",
+    "deleteButton": "Ezabatu kontua",
+    "toastSuccess": "Kontua ezabatuta",
+    "genericError": "Ezin izan da kontua ezabatu. Saiatu berriro.",
+    "networkError": "Ezin izan da kontua ezabatu. Egiaztatu zure konexioa eta saiatu berriro."
+  }
+}

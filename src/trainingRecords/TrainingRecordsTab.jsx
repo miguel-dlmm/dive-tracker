@@ -25,6 +25,7 @@ import { InstructorCardEditable } from "../ProfileTab";
 import { fillTrainingRecordPdf } from "./pdfFill";
 import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
 import { buildDefaultConfig, validateRecordConfig, validateStudentFields, buildFillData, availableAdventureOptions } from "./recordConfig";
+import { addGeneratedCount } from "./generatedCounter";
 import StudentQuickEntrySheet from "./StudentQuickEntrySheet";
 
 // Generador de Training Records (Release V1, Fase 5) — rediseño
@@ -553,6 +554,10 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
       }
       setSession((s) => ({ ...s, students: updated }));
       toast?.success(t("studentSheet.generadoCorrectamente"));
+      // Contador decorativo de Home (2026-09-08) — ver generatedCounter.js
+      // para el porqué de sumar aquí (generación real de PDF) y no en la
+      // descarga/compartir, que son solo formas de entregar lo ya generado.
+      addGeneratedCount(profile?.user_id, updated.length);
     } catch (err) {
       console.error(err);
       toast?.error(t("studentSheet.noSePudoGenerar"));
@@ -582,6 +587,12 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
       const pdfBytes = await fillTrainingRecordPdf(templateBytes, templateMap, data);
       setSession((s) => ({ ...s, students: s.students.map((x) => (x.id === student.id ? { ...x, pdfBytes, generatedAt: Date.now() } : x)) }));
       toast?.success(t("roster.regeneradoCorrectamente"));
+      // Contador decorativo de Home (2026-09-08) — bug real reportado: esta
+      // llamada individual (un alumno a la vez) no sumaba nada, solo
+      // generateAll lo hacía. "para contar los generados tienes q tener en
+      // cuenta cada vez q se llame a la app de generar, la puedo llamar
+      // individualmente para cada alumno o en el generar todos".
+      addGeneratedCount(profile?.user_id, 1);
     } catch (err) {
       console.error(err);
       toast?.error(t("studentSheet.noSePudoGenerar"));
@@ -767,22 +778,6 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                 accentColor={accentColor}
               />
               <FieldError message={configErrors.examVersion} />
-            </section>
-          )}
-
-          {templateMap.upgradeCheckboxes && (
-            <section>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.certificacion")}</h3>
-              <RadioChoice
-                value={config.upgrade}
-                onChange={(v) => updateConfig({ upgrade: v })}
-                options={[
-                  { value: "openWaterDiver", label: t("studentSheet.openWaterDiver") },
-                  { value: "scubaDiver", label: t("studentSheet.scubaDiver") },
-                ]}
-                accentColor={accentColor}
-              />
-              <FieldError message={configErrors.upgrade} />
             </section>
           )}
 

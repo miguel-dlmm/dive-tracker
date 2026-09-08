@@ -4063,3 +4063,1285 @@ probar a mano en un iPhone real y, si es posible, en un Android real,
 el recorrido completo de esta sesión (banner de instalar, KPIs con
 icono fijo, colores de marca de Comisión/Ajuste, "Escuela más activa"
 en Home).
+
+### 12.19 — Preparar la release a producción: hecho hasta donde es seguro sin supervisión
+
+**Pedido**: "mañana quiero hacer release a PRO, prepara todo: tags
+migrations rollback general rollback BBDD protocolo de subida...
+piensa todo para dejar rediseño listo para hacer una release a pro".
+
+**Criterio seguido, explícito**: este punto sigue el proceso YA
+decidido en `docs/ADR/0010-proceso-de-release.md` (no se inventa nada
+nuevo) hasta donde llega sin tocar producción de verdad — desplegar a
+producción y migrar la base de datos real son acciones de alto impacto
+e irreversibles (memoria: "cualquier plan de despliegue a producción
+debe incluir un rollback ligero explícito"; `CLAUDE.md`: "nunca
+implementar cambios de esquema/permisos en un solo paso, siempre
+proponer plan de migración antes"). Con el usuario dormido y sin poder
+confirmar en tiempo real, se prepara TODO lo seguro y reversible, y se
+deja el resto como checklist explícito para ejecutar con supervisión.
+
+**Hecho ya, en `develop` y en la rama `release/v1.1.0` (ambas
+empujadas a `origin`, ninguna toca producción)**:
+
+1. `feature/rediseno-v2` → `develop`: fast-forward limpio (`develop`
+   era ancestro directo, cero conflictos), `npm run test`/`lint`/
+   `build` verificados sobre `develop` ya actualizada, `git push
+   origin develop` — dispara solo el deploy de TEST
+   (`dive-tracker-three.vercel.app`), nunca producción.
+2. Rama `release/v1.1.0` creada desde `develop` (paso 2 del proceso de
+   `ADR-0010`/`ADR-0006`). Versión decidida: **`v1.1.0`** — SemVer
+   `MINOR`, porque el proyecto ya pasó de `0.y.z` a `1.0.0` (última
+   release), y este lote es funcionalidad nueva compatible hacia atrás
+   (rediseño visual + banner de instalar + colores de marca +
+   mejoras), no un cambio incompatible.
+3. Sobre `release/v1.1.0`: `CHANGELOG.md` — `Unreleased` movido a
+   `[1.1.0] - 2026-09-07`, `Unreleased` nuevo vacío abierto encima;
+   `APP_VERSION` subido a `"1.1.0"` (`src/version.js`); contenido de
+   "Qué hay de nuevo" reescrito para esta release (instalar la app,
+   Home/Escuela más activa, colores de marca por tipo de movimiento,
+   KPIs de Mi trabajo más claros — 4 diapositivas + el cierre evergreen
+   ya existente), en `es`/`en`. Un test obsoleto encontrado y corregido
+   de paso (`App.test.jsx` sembraba `"1.0.0"` a mano como "versión ya
+   vista" — con `APP_VERSION` en `"1.1.0"` eso dejaba de representar
+   "ya visto", así que WhatsNew volvía a aparecer donde el test no lo
+   esperaba; corregido a importar `APP_VERSION` en vez de un literal,
+   para que no vuelva a quedarse desactualizado en la próxima release).
+4. Validaciones completas sobre `release/v1.1.0`: 824/824 tests, lint 0
+   errores, build correcto, `npm run mobile-check` sin errores de
+   consola (47 capturas, incluida la nueva diapositiva 1 de "Qué hay de
+   nuevo" verificada visualmente).
+5. Commit `chore: preparar release v1.1.0`, rama empujada a
+   `origin/release/v1.1.0` — visible y revisable, nada fusionado
+   todavía sobre `main`.
+
+**Hallazgo real durante la preparación — producción está más
+desactualizada de lo que parecía**: comparando `scripts/migrations/`
+entre `main` y esta rama, `main` (y por tanto producción) le faltan
+**4 migraciones ya aplicadas a TEST** (`develop` las incluye desde
+antes de esta sesión, no son nuevas de este lote):
+
+| Migración | Qué hace | Riesgo |
+|---|---|---|
+| `0014-registro-externo-produccion.sql` | Columna `app_config.allow_external_registration` + función `external_registration_enabled()` | Bajo — aditiva, idempotente, mismo DDL que ya documenta `schema.sql` |
+| `0015-tarifas-vigencia.sql` | `is_active` en `rates`/`commission_rates` + índice único parcial (una tarifa activa por escuela+curso) | **Medio — ver aviso abajo** |
+| `0016-baja-logica-movimientos.sql` | Baja lógica (`deleted_at`) + `created_at`/`updated_at` con trigger en `worklog`/`comisiones`/`colleague_payments` | Bajo — aditiva, rollback ya escrito dentro del propio fichero |
+| `0017-datos-personales-perfil.sql` | `birth_date`/`country_of_residence` en `profiles` | Bajo — aditiva, sin lógica |
+
+**Aviso real sobre `0015`, léelo antes de ejecutarla contra
+producción**: el propio fichero documenta que, al escribirla, SÍ había
+tarifas duplicadas en TEST (datos de prueba del dataset "Ihasia"
+clonado varias veces) y la migración las desactiva automáticamente
+antes de crear el índice único. **Nunca se comprobó contra producción
+real** — si tu cuenta real tiene, por lo que sea, dos tarifas activas
+para la misma escuela+curso, la migración las desactivará solas (sin
+perder datos, solo deja de ofrecer la más antigua como activa) en vez
+de fallar, así que es segura en cualquier caso — pero conviene mirar
+`select school, activity, count(*) from rates where is_active group by
+1,2 having count(*) > 1;` (y lo mismo en `commission_rates`) ANTES de
+aplicarla, para saber si te vas a encontrar alguna tarifa desactivada
+sola que no esperabas.
+
+**Ninguna herramienta segura existe hoy para aplicar migraciones
+contra producción** — `scripts/apply-migration.mjs` se niega
+explícitamente a correr contra nada que no sea
+`SUPABASE_TEST_DB_URL` (guarda de seguridad deliberada, no un
+descuido). `docs/ADR/0025-gestion-de-migraciones-para-release.md` ya
+proponía extenderlo para producción de forma segura y trazable (tabla
+`schema_migrations`), pero sigue "Propuesto — sin implementar,
+pendiente de aprobación explícita" — no se implementa aquí sin esa
+aprobación, coherente con el propio pie de esa ADR. La vía segura HOY es
+manual: SQL editor del Dashboard de Supabase de producción, pegando
+cada fichero de `scripts/migrations/0014-*.sql` a `0017-*.sql` en
+orden, uno a uno, verificando que cada uno termina sin error antes de
+pasar al siguiente.
+
+**Checklist final — queda para ejecutar con supervisión (nunca
+autónomo, exactamente lo que las reglas de este proyecto piden para
+tocar producción)**:
+
+```
+□ 1. Backup manual de producción antes de tocar nada (npm run backup:db
+     — ver docs/ADR/0017-politica-de-backups-mvp.md; el plan Free de
+     Supabase no hace backups automáticos, esta es la única red real).
+□ 2. Comprobar duplicados de tarifas activas en producción (query de
+     0015 arriba) — informativo, no bloqueante.
+□ 3. Aplicar 0014 → 0015 → 0016 → 0017 contra producción, en ese
+     orden, vía SQL editor del Dashboard de Supabase (contenido exacto
+     en scripts/migrations/). Verificar cada una sin error antes de
+     seguir a la siguiente.
+□ 4. git checkout release/v1.1.0 && git pull
+□ 5. Fusionar release/v1.1.0 sobre main:
+     git checkout main && git pull && git merge --no-ff release/v1.1.0
+     (no debería haber conflictos — confirmado: los únicos commits de
+     main que develop no tiene son un hotfix ya sin diferencias de
+     contenido, ver detalle técnico más abajo)
+□ 6. npm run test && npm run build sobre main ya fusionada — deben
+     pasar limpios (ya verificados sobre release/v1.1.0, pero repetir
+     sobre el commit real de main que se va a desplegar, por si acaso).
+□ 7. git push origin main — dispara el deploy automático de
+     producción (dive-tracker-exgg.vercel.app / alias
+     oceanflow-web.vercel.app).
+□ 8. Verificar el despliegue real: abrir la URL de producción, sin
+     errores de consola, recorrido básico (login, Home, Mi trabajo).
+□ 9. Solo si el paso 8 sale limpio: git tag -a v1.1.0 -m "v1.1.0" 
+     (sobre el commit de main recién desplegado) && git push origin 
+     main --tags
+□ 10. gh release create v1.1.0 --notes-file <extracto de CHANGELOG.md,
+      sección [1.1.0]> — gh SÍ está disponible en este entorno
+      (v2.98.0, confirmado), a diferencia de cuando se escribió
+      ADR-0010 originalmente.
+□ 11. Borrar release/v1.1.0 (local y remota) una vez fusionada:
+      git branch -d release/v1.1.0 && git push origin --delete
+      release/v1.1.0
+```
+
+**Rollback si algo sale mal** (consolidado de `ADR-0010` +
+`docs/BACKLOG.md` + los propios ficheros de migración — nada inventado
+aquí):
+
+- **Más rápido — código**: Vercel "Instant Rollback" sobre el
+  deployment anterior de `main`, sin tocar Git ni esperar build nuevo.
+  Primera opción mientras se decide la causa raíz.
+- **Git**: `git revert` del commit problemático sobre `main` (nunca
+  `reset --hard` sobre una rama compartida) + push — nuevo deploy
+  automático con el estado revertido. Reversión etiquetada como
+  `v1.1.1`, nunca reescribiendo `v1.1.0`.
+- **Base de datos** (solo si hace falta, cada migración ya trae su
+  propio rollback documentado dentro del fichero): `0014` — 
+  `drop function`/`alter table drop column`, sin riesgo de dato real
+  perdido; `0015` — `drop index`/`drop column` (documentado en el
+  propio fichero); `0016` — mismo patrón, con un aviso explícito ya
+  escrito ahí: revertir sus columnas perdería para siempre cualquier
+  fila dada de baja solo mediante `deleted_at` (nunca tuvo DELETE
+  real) — no ejecutar ese rollback concreto sin decidir antes,
+  explícitamente, descartar esas filas.
+
+**Confirmado, sin ejecutar**: `main`↔`develop` — los únicos 2 commits
+de diferencia son un merge de la propia `v1.0.0` y un hotfix
+(`sembrar Pendiente/Cobrado en payment_statuses`) cuyo diff de
+contenido contra `develop` es CERO (mismo resultado ya presente en
+`develop` por otra vía) — la fusión de `release/v1.1.0` sobre `main`
+en el paso 5 de arriba no debería generar ningún conflicto real.
+
+### 12.20 — Ayuda con GIFs animados: recuperada, con el bloqueo real corregido de raíz
+
+**Pedido**: "recupera el rehacer la ayuda con gifs animados. corrige lo
+que necesites para poder generar los gifs, quiero una ayuda dinámica,
+entretenida, útil, fácil de consumir, rápida de leer y de entender."
+
+**El bloqueo real de la sesión anterior (9.14) se investigó, no se dio
+por definitivo**: el piloto anterior encontró un GIF con "fantasma"/
+doble exposición, compatible con un fotograma capturado a media
+transición CSS de una `Sheet` — se aparcó tras dos intentos, sin
+descartar del todo la causa. Esta sesión, antes de reintentarlo con la
+misma técnica, se investigó la causa real: `gif_creator`
+(Claude-in-Chrome) captura estados discretos ligados a acciones
+(clics/scroll/navegación), no un vídeo continuo — si una captura cae
+justo a mitad de una transición CSS en curso (p. ej. una `Sheet`
+deslizándose hacia arriba), ese fotograma concreto puede quedar mal
+compuesto.
+
+**Corrección de raíz, no un parche sobre el síntoma**: en vez de seguir
+intentando "esperar más" entre capturas (ya probado sin éxito antes),
+se elimina la CAUSA — que exista una transición CSS en curso en el
+momento de una captura. `?captureGif=1` (nuevo, `usePrefersReducedMotion`,
+`src/motion.js`) fuerza `reduced=true` sin depender de la preferencia
+real del sistema operativo, solo bajo `npm run dev`
+(`import.meta.env.MODE === "development"`, mismo doble candado que el
+bypass de login — nunca en producción, `vite build` elimina la rama
+del bundle). Con las animaciones a duración ~0 (mismo mecanismo que ya
+usa `prefers-reduced-motion` real en toda la app), cualquier captura
+cae siempre sobre un estado ya asentado — nunca a media transición.
+
+**Verificado, no solo asumido**: pilotado primero contra el mismo flujo
+del intento anterior ("Crear un movimiento") — GIF exportado, extraídos
+sus 4 fotogramas con Pillow (sin herramientas de imagen del sistema
+disponibles: `convert`/`magick`/`ffmpeg` no instalados) y revisados uno
+a uno. Los 4, limpios. Confirmado también en el GIF más largo de los 3
+producidos (`configurar-app`, 9 fotogramas) — igual de limpio en todos.
+
+**Contenido producido**: 3 GIFs (no los 9 artículos — ver más abajo),
+grabados contra la cuenta demo real de TEST (ya confirmada presentable
+en 9.14, sin más limpieza necesaria):
+- `crear-movimiento.gif` (4 fotogramas, 294KB) — Home → "+" en
+  "Pendiente de cobrar" → curso ya precargado → Guardar → navega a Mi
+  trabajo.
+- `cobrar-movimientos.gif` (2 fotogramas, 211KB) — Mi trabajo →
+  "Confirmar cobro" en una fila pendiente → desaparece de Pendientes,
+  el total se actualiza.
+- `configurar-app.gif` (9 fotogramas, 401KB) — Configuración → Escuelas
+  → FAB → nombre + color → Guardar → aparece en la lista.
+
+**Alcance deliberado — no todos los artículos**: solo los 3 "Quiero..."
+con el flujo más básico (crear, cobrar, configurar por primera vez)
+llevan GIF — el resto de los 9 artículos de Ayuda (referencia por
+pantalla, filtros, perfil...) sigue sin ninguna imagen. Un GIF por cada
+uno de los 9 sería mucho mantenimiento (queda desactualizado en cuanto
+cambia una pantalla) para contenido que un usuario ya orientado consulta
+puntualmente, no en su primer contacto con la app.
+
+**Implementación**: campo `gif` opcional por artículo en
+`content.js` (nombre de fichero en `public/help/`, no traducible — la
+misma animación en cualquier idioma), traído hasta `HelpArticleBody.jsx`
+vía `resolveArticle()` (`HelpTab.jsx`) y renderizado como imagen de
+cabecera del artículo, decorativa (`alt=""`/`aria-hidden`, la
+información completa ya vive en "Pasos" en texto). `docs/ADR/0011-rediseno-ayuda.md`
+recibe un addendum explicando la reversión parcial de la decisión "sin
+capturas" original, sin borrar el histórico de por qué se tomó
+entonces.
+
+**Test de regresión actualizado**: `HelpTab.test.jsx` tenía un test
+guardando la decisión "sin capturas" ("ningún artículo... renderiza un
+`<img>`") — reescrito para reflejar el nuevo contrato: los 3 artículos
+con `gif` en `content.js` sí renderizan su imagen, el resto sigue sin
+ninguna.
+
+**Hallazgo real no relacionado, corregido de paso porque bloqueaba
+CUALQUIER push**: al ejecutar la suite completa, un test de
+`HomeTab.test.jsx` (sin relación con Ayuda) empezó a fallar —
+`TODAY`/`LAST_MONTH`/`earlierDay` se calculaban con
+`NOW.toISOString().slice(0, 10)`, que convierte a medianoche UTC en vez
+de usar la fecha LOCAL. En un huso con offset positivo (este entorno
+corre en Asia/Bangkok, UTC+7), entre la medianoche local y la medianoche
+UTC (~17h de cada día) esto devuelve el día ANTERIOR al que la propia
+app considera "hoy" (`todayStr()`, `shared.jsx`, que sí usa componentes
+locales). Cruzar la medianoche local a mitad de esta sesión lo expuso en
+vivo. **Mismo bug ya encontrado y corregido una vez antes** (2026-08-30,
+`SummaryTab.test.jsx`, ver la nota junto a "suma correcta en los límites
+del periodo" ahí) — esa vez solo se corrigió el test nuevo que lo
+encontró, no los `THIS_MONTH`/`LAST_MONTH` ya existentes en ese mismo
+archivo, que siguen teniendo el mismo riesgo latente (no falla hoy
+porque usan el día 10 de cada mes, lejos del borde) — señalado aquí
+como pendiente de una limpieza futura, fuera de alcance de este punto.
+Corregido en `HomeTab.test.jsx` con el mismo patrón ya establecido
+(`localDateStr`, componentes de fecha locales, nunca `toISOString`).
+
+**Verificado**: 824/824 tests (suite completa, incluidos los 2 tests
+nuevos de contrato GIF y el fix de zona horaria), lint 0 errores, build
+correcto — `dist/help/*.gif` confirmado en el build real. Confirmado en
+Chrome real: el artículo "Registrar un movimiento" muestra su GIF
+(carga diferida — `loading="lazy"`, tarda un instante en aparecer tras
+expandir, esperado), sin errores de consola.
+
+### 12.21 — Cinco idiomas nuevos: francés, italiano, alemán, catalán y euskera (último punto de la cola)
+
+Punto final explícitamente puesto en cola por el usuario ("para poner al
+final de la cola"), trabajado en modo autónomo tras el aviso de que se
+iba a dormir ("intenta avanzar todo lo posible... mockea, aísla
+problemas y continúa pero no me puedes preguntar hasta q yo te diga q he
+vuelto"). El usuario pidió verificar explícitamente si catalán y euskera
+eran viables — respuesta más abajo.
+
+**Alcance**: los 13 ficheros de namespace por idioma que ya existían
+para `es`/`en` (`common`, `auth`, `app`, `home`, `trabajo`, `summary`,
+`config`, `profile`, `help`, `notices`, `rates`, `trainingRecords`,
+`installApp` — 1281 líneas en total por idioma en `es`), traducidos
+íntegros a los 5 idiomas nuevos: 65 ficheros JSON nuevos bajo
+`src/i18n/locales/{fr,it,de,ca,eu}/`. `auth.json` incluye la Política de
+Privacidad y los Términos de Uso completos, con el mismo patrón de
+placeholder `[PENDIENTE: ...]` que ya usaba `es` (`[EN ATTENTE: ...]`,
+`[IN ATTESA: ...]`, `[AUSSTEHEND: ...]`, `[PENDENT: ...]`, `[ZAIN: ...]`
+respectivamente) — esos huecos siguen sin rellenar en ningún idioma,
+tarea aparte ya conocida, no de esta sesión. `config.json` (contenido de
+administración) se tradujo también íntegro — la regla de "la Ayuda nunca
+documenta funcionalidades de admin" (CLAUDE.md, Release V1) aplica al
+contenido de la guía de Ayuda, no a las cadenas de la propia interfaz de
+administración, que ya existía en `es`/`en`.
+
+**Terminología por idioma** (glosario interno para mantener
+consistencia entre los 65 ficheros): movimiento → mouvement/movimento/
+Buchung/moviment/mugimendua; Escuela → École/Scuola/Schule/Escola/
+Eskola; Curso → Cours/Corso/Kurs/Curs/Ikastaroa; Comisión → Commission/
+Commissione/Provision/Comissió/Komisioa; Ajuste → Ajustement/Rettifica/
+Ausgleich/Ajust/Doikuntza; Pendiente → En attente/In attesa/Ausstehend/
+Pendent/Zain; Cobrado → Encaissé/Incassato/Kassiert (con "erhalten"
+también en algunas cadenas)/Cobrat/Kobratuta; Mi trabajo → Mon activité/
+Il mio lavoro/Meine Arbeit/La meva feina/Nire lana.
+
+**Infraestructura**: `src/i18n/index.js` — 65 imports nuevos, `fr`/`it`/
+`de`/`ca`/`eu` añadidos al objeto `resources` (mismo patrón `{ common,
+auth, app, ... }` por idioma) y a `SUPPORTED_LANGUAGES`. Los 3 sitios
+donde el idioma se elegía desde un array/objeto hardcodeado en UI se
+actualizaron con las 5 etiquetas nuevas en su propio idioma nativo
+(convención ya establecida — "Español"/"English" nunca se traducen entre
+sí): `ConfigTab.jsx` (`LANGUAGE_OPTIONS`, hoja de alta de usuario por
+superadmin), `ProfileTab.jsx` (`LANGUAGE_OPTIONS`, selector en Mi
+perfil), `RegisterScreen.jsx` (`LANGUAGE_NATIVE_NAME`, objeto — el
+`<Select>` ya recorría `SUPPORTED_LANGUAGES` dinámicamente, solo hacía
+falta añadir las etiquetas).
+
+**Bug real encontrado y corregido — bloqueaba guardar el idioma
+nuevo**: al probar el selector en Mi perfil (cuenta demo de TEST), elegir
+"Euskara" devolvía el toast de error "No se pudo cambiar el idioma.
+Inténtalo de nuevo." `profiles.language` tenía un `check (language in
+('es', 'en'))` desde la migración 0007 (`scripts/migrations/0007-idioma-perfil.sql`)
+— el cliente (i18next) acepta cualquier código nuevo sin problema, pero
+Supabase rechazaba el `UPDATE` a nivel de base de datos. Corregido con
+una migración nueva, aditiva y no destructiva (ninguna fila existente
+cambia, solo se amplía la lista de valores permitidos):
+`scripts/migrations/0018-idiomas-adicionales.sql` — sustituye el check
+por `check (language in ('es', 'en', 'fr', 'it', 'de', 'ca', 'eu'))`.
+Aplicada contra Supabase TEST con `node --env-file=.env.local
+scripts/apply-migration.mjs scripts/migrations/0018-idiomas-adicionales.sql`
+(el mismo script que ya se niega a ejecutar contra nada que no sea
+`SUPABASE_TEST_DB_URL`). `schema.sql` actualizado para reflejar el nuevo
+check y documentar la migración para instalaciones existentes, mismo
+patrón que las migraciones anteriores. **Pendiente, fuera de alcance
+autónomo**: aplicar la misma migración contra producción antes de que la
+release llegue allí — no se ha tocado producción esta sesión (regla
+general de la iniciativa: nada de alto riesgo sin supervisión humana).
+Rollback documentado en la cabecera del propio fichero de migración.
+
+**Respuesta a la pregunta del usuario — ¿son viables catalán y
+euskera?**: sí, ambos son técnicamente viables sin ninguna limitación —
+i18next es agnóstico del idioma, y la base de datos ya queda preparada
+con este punto. La diferencia real está en la confianza de la
+traducción, no en la viabilidad técnica: catalán es una lengua románica
+muy cercana al español/francés/italiano ya traducidos, con terminología
+de software bien asentada — confianza alta, comparable a los otros 4
+idiomas. Euskera (euskara) es una lengua aislada, sin relación con
+ninguna otra lengua europea, de morfología aglutinante y con un sistema
+de casos ergativo-absolutivo — no hay ningún atajo de "derivar del
+español" como sí lo hay entre las lenguas románicas entre sí. La
+traducción de esta sesión sigue las convenciones ya asentadas de
+localización de software en euskera batua (euskera unificado, el
+estándar de facto en interfaces — mismo criterio que usan Google, KDE,
+GNOME, Mozilla en sus localizaciones), pero **se recomienda revisión por
+un hablante nativo antes de que euskera llegue a usuarios reales** — a
+diferencia de los otros 4 idiomas, donde el riesgo de un matiz mal
+traducido es bajo. No es un bloqueador para tener euskera disponible en
+TEST/producción — es una recomendación de calidad antes de darlo por
+"terminado" de cara a un usuario vascoparlante real.
+
+**Verificado**: 65/65 ficheros JSON válidos (`json.load` de Python sobre
+cada uno — detectó y permitió corregir una coma sobrante en
+`eu/trabajo.json` antes de seguir). 824/824 tests, lint 0 errores
+(mismos 10 warnings ya auditados), build correcto. Verificado en Chrome
+real contra la cuenta demo de TEST: los 7 idiomas aparecen en el
+selector de Mi perfil, euskera (el de más riesgo) se probó a fondo —
+Home, Mi trabajo y Ayuda (incluida la expansión de un artículo con GIF)
+renderizan íntegros, sin ninguna clave sin traducir visible y sin
+errores de consola. Cuenta demo devuelta a español al terminar la
+verificación, para no dejarla en un estado distinto al habitual.
+
+**Con esto se cierra la cola pendiente** que abrió esta sesión — no
+quedan puntos pendientes en `docs/REDISENO-V2-PROGRESS.md` a fecha de
+este cierre.
+
+### 12.22 — WhatsNew reescrito con las 6 novedades reales del rediseño
+
+Petición explícita del usuario, ya con la cola anterior cerrada: el
+contenido de WhatsNew (`src/i18n/locales/*/notices.json`,
+`whatsNew.slides`) todavía reflejaba el paquete de novedades de una
+fase intermedia (idioma es/en, cabecera simplificada, carnet de
+instructor) — no el alcance real y completo de todo el rediseño que se
+ha ido cerrando en esta sesión. El usuario pidió 6 puntos concretos, en
+este orden:
+
+1. Rediseño completo, logo y look&feel nuevos.
+2. Mi perfil — carnet de instructor.
+3. Training Records.
+4. Multi idioma.
+5. Home y Mi trabajo, más claros y estructurados.
+6. Consúltalo de nuevo en Ayuda (el cierre habitual, ya existente).
+
+**Reescrito en los 7 idiomas** (`es/en/fr/it/de/ca/eu`), no solo en
+`es`/`en` — coherente con que el punto 4 de la propia lista es
+precisamente el multi idioma recién añadido (12.21). Título/cuerpo
+cortos, mismo tono ya establecido ("instructor con las manos mojadas",
+sin tecnicismos) — ver CLAUDE.md, Reglas permanentes Release V1, regla
+2 y 3.
+
+**`SLIDE_ICONS` (`WhatsNew.jsx`) actualizado a 6 entradas**: Palette/
+`BRAND_OCEAN` (rediseño), IdCard/`TEAL` (carnet, ya existía), 
+GraduationCap/`SUN` (Training Records), Languages/`GREEN` (idiomas),
+LayoutGrid/`CORAL` (Home/Mi trabajo), Sparkles/`BRAND_NAVY` (cierre, ya
+existía). La diapositiva de cierre se mantiene última a propósito,
+mismo criterio que siempre: es un meta-mensaje sobre el propio
+WhatsNew, no una funcionalidad más de la lista.
+
+**Training Records, reintroducido tras haberse retirado explícitamente
+el 2026-09-03** (entonces, pedido del usuario, porque todavía no era
+una funcionalidad real y accesible) — documentado en el propio
+`WhatsNew.jsx` para que quede claro que no es una contradicción, sino
+el mismo criterio aplicado dos veces en momentos distintos ("no
+anunciar algo que el usuario no puede usar todavía"): ahora Training
+Records ya es real y accesible desde Home, así que sí se anuncia.
+
+**Test desactualizado, corregido**: `App.test.jsx` (test de Fase 4,
+"Ver qué hay de nuevo" reabre el slide ya visto) tenía hardcodeado el
+título de la antigua primera diapositiva ("La app ya habla tu idioma")
+para comprobar que aparece/desaparece — actualizado al nuevo primer
+título ("Rediseño completo, cara nueva"). `WhatsNew.test.jsx` no
+necesitó cambios: ya estaba escrito deliberadamente sin asumir cuántas
+diapositivas hay ni su contenido exacto (ver el comentario junto al
+`describe`, referencia a `docs/ADR/0010-proceso-de-release.md`).
+
+**Verificado**: 824/824 tests, lint 0 errores, build correcto.
+Confirmado en Chrome real contra la cuenta demo de TEST: las 6
+diapositivas navegadas una a una con "Siguiente", icono/color/título/
+cuerpo correctos en cada una, el botón final dice "Empezar" en la 6ª
+en vez de "Siguiente", sin errores de consola.
+
+### 12.23 — Banner "Instalar la app" retirado de Home, dos puntos de entrada permanentes en su lugar
+
+Petición explícita del usuario en dos vueltas seguidas. Primera: "el
+banner de descargar la app para iOS y Android... no me convence,
+búscale otro sitio, integrado q siempre esté disponible y que no
+moleste". Segunda, tras ver la primera solución (solo en Ayuda): "pero
+quiero q haya un algo en la home q me lleve a ver las instrucciones:
+botón, pastilla.. innova y crea tu como head designer y siempre en la
+línea ocean flow".
+
+**Retirado por completo el banner de `HomeTab.jsx`**: la tarjeta con
+título/subtítulo/✕ y su estado de "descartado" en localStorage
+(`oceanpulse:installBannerDismissed`) — ya no existe ningún sitio de la
+app con esa lógica de "cerrar para siempre en este dispositivo".
+
+**Dos puntos de entrada nuevos, permanentes, sin estado de
+descartado**:
+1. **Ayuda** (`HelpTab.jsx`): enlace de texto fijo "Instalar la app en
+   tu móvil", mismo patrón visual y de comportamiento que el ya
+   existente "Ver qué hay de nuevo en esta versión" justo encima —
+   ambos son la respuesta a "acciones que existen pero no hace falta
+   empujar en el flujo principal, siempre accesibles".
+2. **Home** (`HomeTab.jsx`): un icono sin texto ni tarjeta, junto al
+   título "TU IMPACTO ESTE MES" (flex `justify-between`) — decisión de
+   diseño propia como respuesta a "innova, tú como head designer": en
+   vez de repetir el patrón de tarjeta/banner que ya se había
+   descartado, un icono de acción minimalista, del mismo peso visual
+   que cualquier icono de la cabecera de la app, que no compite por
+   atención con "Pendiente de cobrar" ni con la tarjeta de Training
+   Records. Círculo visual de 32px (mismo lenguaje que los badges de
+   icono de KPI) envuelto en un botón de 44×44px reales mediante margen
+   negativo — mismo truco ya usado en los botones de navegación del
+   calendario (`shared.jsx`) para cumplir el mínimo táctil de la
+   convención 7 sin agrandar el icono visualmente. Se oculta solo
+   cuando deja de aplicar (la app ya corre instalada), nunca por
+   decisión del usuario de "no volver a mostrar".
+
+**Traducciones**: `installBanner` (title/subtitle/dismiss) eliminado de
+`home.json` en los 7 idiomas — ya no queda ningún banner que traducir.
+Clave nueva `installAppLink` en `help.json` (frase larga, para el
+enlace de texto) y `installApp` en `home.json` (frase corta, para el
+`aria-label` del icono — reutiliza la misma traducción ya existente en
+`app.json` → `secondaryTitles["install-app"]`, sin duplicar esfuerzo de
+traducción), ambas en los 7 idiomas.
+
+**Tests**: el `describe` de banner en `HomeTab.test.jsx` (3 tests sobre
+descartar/recordar) se sustituye por uno de icono (2 tests: ausente sin
+handler, click llama al handler — ya no hay nada que "recordar" al no
+tener estado de descartado). `HelpTab.test.jsx` gana un `describe`
+gemelo al de "Ver qué hay de nuevo" para el enlace de "Instalar la
+app".
+
+**Verificado**: 825/825 tests, lint 0 errores (mismos 10 warnings ya
+auditados), build correcto. Confirmado en Chrome real: el icono en Home
+navega a la pantalla de instrucciones; el enlace en Ayuda hace lo
+mismo; sin errores de consola en ningún caso.
+
+### 12.24 — WhatsNew: desplazamiento real de carrusel + acceso de Home a texto
+
+Dos peticiones seguidas del usuario, ambas resueltas en el mismo lote.
+
+**1. Animación de WhatsNew, tercera revisión**: "no acaba de gustarme
+la animación, quiero q se aprecie la salida de un slide y la entrada
+de otro". `WhatsNew.jsx` reutilizaba `monthSlideVariants` (`motion.js`)
+— pensada para la rejilla pequeña del calendario, con un desplazamiento
+de solo ±20px, casi imperceptible en una diapositiva a ancho completo
+(~330px): el efecto real que se veía era solo un fundido, no un
+deslizamiento. Nueva función `carouselSlideVariants` (`motion.js`),
+misma convención de dirección/easing que `monthSlideVariants` pero con
+desplazamiento real del 100% del propio ancho — la diapositiva saliente
+recorre visiblemente toda la anchura del diálogo mientras la entrante
+hace lo mismo desde el lado contrario, apoyado en el
+`overflow-hidden` que ya tenía el contenedor. Verificado en Chrome
+capturando el fotograma intermedio de una transición: ambos iconos
+(el que sale, el que entra) visibles a la vez en posiciones horizontales
+claramente distintas, confirmando el desplazamiento real — antes de
+este cambio ese mismo fotograma intermedio habría mostrado ambos textos
+casi superpuestos.
+
+Sobre el pedido de "muéstrame el slide para todos los usuarios después
+de cada cambio, solo ahora en el test": no hizo falta ningún cambio de
+código para eso — el enlace "Ver qué hay de nuevo en esta versión" que
+ya vive en Ayuda (Fase 4, Release V1) abre WhatsNew sin comprobar el
+gate de "una vez por versión" (`showWhatsNewAgain`, `App.jsx`), así que
+ya servía tal cual para verificar la animación repetidamente sin tocar
+`localStorage` a mano ni añadir ningún interruptor nuevo — se ha usado
+ese mecanismo ya existente para toda la verificación de este punto.
+
+**2. El icono de Home, pedido de cambiarlo por texto**: "cambia el
+icono por un texto pequeño que ponga Descargar app". Sustituido el
+icono solo (`Smartphone` en círculo, 12.23) por un botón de texto
+pequeño ("Descargar app"/traducido en los 7 idiomas), mismo criterio de
+objetivo táctil de 44px vía margen negativo, sin fondo ni icono. La
+clave `installApp` (`home.json`, ya existía como aria-label del icono)
+pasa a ser el propio texto visible en los 7 idiomas — ya no hace falta
+aria-label aparte, el texto ya es descriptivo por sí mismo.
+
+**Verificado**: 825/825 tests (incluye la actualización de
+`HomeTab.test.jsx` al nuevo texto), lint 0 errores, build correcto.
+Confirmado en Chrome real: el enlace de texto en Home navega
+correctamente, y la animación de WhatsNew se aprecia con claridad en
+las 6 diapositivas, sin errores de consola.
+
+### 12.25 — Generador de TR: filas de progreso obligatorias por plantilla, pedido explícito curso a curso
+
+Petición explícita del usuario, especificación completa curso a curso
+en un único mensaje: qué filas de "Progreso del curso" pasan a
+`fixed: true` (marcadas, deshabilitadas, con etiqueta "Obligatorio" —
+mecanismo ya existente desde el 2026-09-04 para OWD/AOWD, ver
+`ProgressRowToggle`, `TrainingRecordsTab.jsx`) en cada una de las 8
+plantillas que todavía no lo tenían configurado así.
+
+**Filas marcadas `fixed: true`** (`src/trainingRecords/templateFieldMaps.js`,
+índices 0-based dentro de `sessionRows`):
+- **Nitrox** (`SC-EAN`): las 3 primeras — `[0, 1, 2]`.
+- **Deep Diving** (`SC-DD`): 1ª, 3ª y 4ª — `[0, 2, 3]`.
+- **Basic Diver** (`BD`): todas — `[0, 1, 2]`.
+- **Diver Stress & Rescue** (`SC-SR`): las 7 primeras — `[0..6]`.
+- **Navigation** (`SC-NV`): las 4 primeras — `[0, 1, 2, 3]`.
+- **Night & Limited Visibility** (`SC-LV`): 1ª y 3ª — `[0, 2]`.
+- **Perfect Buoyancy** (`SC-PB`): las 3 primeras — `[0, 1, 2]`.
+- **React Right** (`SC-RR`): todas — `[0..6]`.
+
+**"...y examen"/"...confirmación del cuestionario": ya estaba resuelto,
+sin código nuevo.** `examConfirmation` (la fecha de examen, o en Basic
+Diver la "Confirmación del Cuestionario") se renderiza siempre como
+`DateOnlyRow` — una fecha suelta sin casilla, nunca desmarcable — y
+`validateRecordConfig` (`recordConfig.js`) ya exige esa fecha en
+cualquier plantilla que la tenga, desde el 2026-09-04. El flag `fixed`
+no se le añade a `examConfirmation` en ninguna plantilla (tampoco lo
+tenía OWD/AOWD) porque sería inerte ahí — se documenta explícitamente
+en cada plantilla tocada para que quede claro que no es un olvido.
+
+**Bug potencial evitado, no solo un cambio mecánico**: 3 de las
+plantillas (Nitrox, Navigation, Perfect Buoyancy) tenían alguna de las
+filas ahora obligatorias marcada `optional: true` — flag que significa
+"esta fila puede quedar en blanco porque no aplica a esta variante del
+curso" (p. ej. Open Water en 2 días vs. 3 días), un eje totalmente
+distinto de `fixed`. `buildDefaultConfig` (`recordConfig.js`) inicializa
+`includedRows[i]` a `!row.optional` — si se hubiera añadido `fixed: true`
+sin retirar `optional: true`, la fila se habría visto en la UI como
+marcada/deshabilitada con la etiqueta "Obligatorio" (`fixed` fuerza esa
+apariencia) pero habría quedado **excluida en silencio del documento
+generado** (`includedRows[i]` seguiría en `false`) — un Training Record
+oficial incompleto sin ningún aviso visible. Se retiró `optional: true`
+de esas filas al añadirles `fixed: true` en las 3 plantillas afectadas.
+
+**Test de regresión nuevo** (`templateFieldMaps.test.js`): (1) para las
+10 plantillas con `sessionRows`, ninguna fila `fixed` lleva también
+`optional: true` — cubre exactamente la clase de bug de arriba para
+cualquier cambio futuro, no solo el de hoy; (2) tabla explícita de los
+índices `fixed` esperados por plantilla (incluye OWD/AOWD, que ya los
+tenían, como referencia); (3) las 8 plantillas con `examConfirmation`
+lo tienen definido.
+
+**Verificado**: 853/853 tests (134 en `src/trainingRecords/`, incluidos
+los 2 bloques de tests nuevos), lint 0 errores, build correcto.
+Confirmado en Chrome real contra la cuenta demo de TEST: Nitrox (filas
+2ª/3ª, antes desmarcables, ahora "Obligatorio"), Navigation (4 filas
+"Obligatorio", incluida la de piscina que antes era opcional) y React
+Right (las 7 filas "Obligatorio", incluidas las 3 de "Actualización de
+React Right" con su layout de 3 columnas propio) revisadas fila a fila
+contra el pedido exacto del usuario — sin errores de consola.
+
+### 12.26 — Tarjeta de Training Records en Home: contador dinámico + insignia con respiración
+
+Pregunta abierta del usuario ("¿se te ocurriría otra manera dinámica y
+atractiva de integrarlo en la home?") sobre la tarjeta estática de
+Training Records — propuesta hecha y aprobada ("continúa con lo que
+estabas haciendo") antes de implementar, no una decisión unilateral.
+
+**Restricción real que descarta la opción obvia**: un contador "de
+verdad" (cuántos certificados ha emitido el instructor) necesitaría
+guardar algo sobre cada Training Record generado — rompe la garantía ya
+documentada en toda la app ("nada de lo que rellenes aquí se guarda en
+la nube, solo se descarga"). Se descartó esa vía a propósito, no por
+olvido.
+
+**Solución elegida**: contador puramente local (`localStorage`, nueva
+clave `oceanpulse:trainingRecordsGeneratedCount`, extraído a
+`src/trainingRecords/generatedCounter.js` para poder probarlo sin
+montar UI) que suma cuando `generateAll` (`TrainingRecordsTab.jsx`)
+termina con éxito — no identifica a ningún alumno, solo cuenta
+generaciones desde ese dispositivo. Limitación aceptada y documentada
+en el propio código: regenerar el mismo listado (p. ej. tras corregir
+una fecha) vuelve a sumar — es un indicador de actividad/uso, no un
+libro de certificados emitidos, y sigue cumpliendo el objetivo real
+(que la tarjeta se sienta viva) sin necesitar guardar nada nuevo.
+
+**En `HomeTab.jsx`**: mientras el contador está en 0, la tarjeta
+mantiene el texto explicativo de siempre (más útil para quien nunca ha
+usado la herramienta que una cifra en cero); en cuanto hay alguno,
+cambia a "Ya has generado N Training Records" con la cifra animada
+(mismo `useCountUp` que ya usan los KPI de arriba). La insignia del
+icono gana además una respiración sutil en bucle (escala 1 → 1.06 → 1,
+2.4s, `Infinity`), apagada del todo con `prefers-reduced-motion` — vida
+sin distraer, no un adorno que compita con el resto de la pantalla.
+
+**Bug real encontrado y corregido en `useCountUp`** (`motion.js`),
+compartido por todos los contadores animados de la app (KPIs de Home,
+esta tarjeta): `progress` no tenía suelo por abajo — un primer
+`now` de `requestAnimationFrame` anterior a `performance.now()`
+(reproducido en jsdom, donde ambos relojes no siempre coinciden) dejaba
+`progress` negativo, y la curva de easing cúbica (pensada solo para
+`[0,1]`) devolvía un resultado disparatado — se vio en vivo un
+contador saltar a **-154** en vez de crecer desde 0. Corregido con
+`Math.max(..., 0)` además del `Math.min(..., 1)` que ya tenía — blinda
+también el caso real (no solo de test) de un reloj de rAF
+momentáneamente desincronizado, no solo el síntoma en jsdom.
+
+**Flakiness real descubierta al arreglarlo, corregida de paso**: con la
+suite completa (861 tests, muchos archivos en paralelo, CPU bajo
+presión real), tanto el nuevo test de esta tarjeta como un test ya
+existente de los KPIs de Home (mismo patrón, `useCountUp` + `waitFor`)
+fallaban de forma intermitente — nunca en solitario, solo bajo
+contención real. No es un cambio de comportamiento: se amplió el
+`timeout` de `waitFor` en ambos (de 2000 a 4000ms) para dar margen real
+al bucle de `requestAnimationFrame` cuando el hilo principal está
+ocupado por el resto de la suite — documentado en el propio test para
+que quede claro por qué, no un número mágico.
+
+**Verificado**: 861/861 tests (incluye el contador probado de extremo a
+extremo — generar con éxito en `TrainingRecordsTab.test.jsx` suma en
+`localStorage`, y `HomeTab.test.jsx` prueba que la tarjeta lo refleja),
+suite completa repetida dos veces seguidas sin fallos intermitentes,
+lint 0 errores, build correcto. Confirmado en Chrome real: con el
+contador a 0, texto explicativo de siempre; con un valor simulado en
+`localStorage`, la tarjeta cambia al mensaje de actividad con la cifra
+animada asentándose en el valor correcto, sin errores de consola.
+
+### 12.27 — Training Records en Home: de tarjeta a fila fina, con mockups antes de tocar código
+
+Feedback directo tras 12.26: "no iba tanto por hacer esto sino por el
+estilo y como se integra en la home el acceso al TR... creo que es muy
+grande y queda como pegada donde está, no lo veo muy integrado en la
+home el diseño". Pedido explícito de proceso, no solo de resultado:
+"haz varias propuestas antes de implementar con un diseño/imagen de q
+opciones planteas, rollo mockup y elijo una" — la primera vez en esta
+sesión que se piden mockups como paso obligatorio antes de escribir
+ningún código de producción para una decisión de diseño.
+
+**Primera ronda de mockups** (Artifact HTML, `https://claude.ai/code/artifact/f0a9bdf3-4a6f-4472-ab18-56a57a7e8f1c`,
+colores/tipografía/cifras reales de la app, 3 pantallas de teléfono
+lado a lado para comparar proporciones de verdad): 3 direcciones para
+sustituir la tarjeta con borde y degradado de 12.26/lanzamiento
+original —
+(A) fila fina sin tarjeta propia, mismo espíritu que el enlace
+"Descargar app";
+(B) cuarta pieza en la rejilla de KPI (Alumnos/Cursos/Captados/TR);
+(C) píldora dentro de la propia cabecera de sección.
+**Elegida A** — "me gusta la opción A".
+
+**Segunda ronda, sobre la A elegida**: "mira de integrarle dinamismo...
+si cabe algo de texto, call to action, Generados... explora e innova".
+Mismo Artifact actualizado (misma URL) con 3 variaciones de contenido
+sobre la fila ya elegida — (1) "Generados" como cuarta palabra del
+mismo vocabulario que ya usan los KPI (mismo patrón número-en-grande +
+etiqueta-pequeña); (2) el texto cambia según haya actividad real (CTA
+de verdad cuando no hay ninguno, cifra cuando ya los hay); (3) píldora
+de pulso semanal (aparcada — necesitaría saber cuántos se generaron en
+los últimos 7 días, y hoy el contador solo guarda un acumulado, no una
+serie temporal). **Elegida la combinación 1+2** — "me gusta la uno más
+dos", coincidiendo con la recomendación propia ya señalada en el propio
+mockup antes de que el usuario respondiera.
+
+**Implementación** (`HomeTab.jsx`): la tarjeta con borde/degradado/
+badge circular de 44px se sustituye por una fila sin tarjeta propia
+(`border-t`/`border-b` finos, sin fondo ni borde lateral, `px-1 py-2.5`
+— mismo contenedor "elemento de lista" que ya usa el enlace "Descargar
+app"), badge más pequeño (26×26px, `rounded-lg` en vez de círculo, para
+no confundirse con los badges redondos de los KPI) que conserva la
+respiración sutil en bucle de 12.26. Dos estados de contenido, no uno:
+- **Sin actividad** (`generatedCount === 0`): badge con tinte suave de
+  `BRAND_OCEAN`, texto "Genera tu primer Training Record" en el mismo
+  azul — una invitación real, nunca "0 Generados".
+- **Con actividad**: badge sólido `BRAND_NAVY`, "Training Records"
+  (título, igual que antes) + línea de cifra: número en `BRAND_OCEAN`
+  grande + "Generados" en mayúsculas pequeñas grises — mismo patrón
+  visual que "39 Alumnos"/"33 Cursos"/"20 Captados" arriba, para que se
+  lea como parte de la misma familia, no como un elemento aparte.
+
+**Traducciones** (`home.json`, 7 idiomas): `trainingRecordsCard.subtitle`
+y `.subtitleWithCount_one/_other` (de 12.26, ya no usados) sustituidos
+por `.ctaFirstTime` (la invitación) y `.generatedLabel` (la palabra
+suelta "Generados"/equivalente) — sin dejar claves muertas.
+
+**Verificado**: 861/861 tests (3 reescritos en `HomeTab.test.jsx` para
+el nuevo contrato de dos estados: invitación real sin actividad, "7" +
+"Generados" como nodos de texto separados con actividad, clic sobre el
+texto visible en cada estado), lint 0 errores, build correcto.
+Confirmado en Chrome real: estado sin actividad muestra la invitación
+en azul océano, mucho más compacto que la tarjeta anterior; con un
+valor simulado en `localStorage`, la cifra se anima hasta 23 y "Training
+Records"/"Generados" aparecen con el patrón de los KPI, coincidiendo
+con el mockup elegido fotograma a fotograma; navegación y ausencia de
+errores de consola confirmadas en ambos estados.
+
+### 12.28 — Dos bugs reales de 12.27, reportados desde el iPhone del usuario en el Preview
+
+Captura real desde Safari/iPhone sobre el Preview Deployment
+(`diseno-v2-ocean-pulse1.vercel.app`), logueado como "admin": "he creado
+un tr con el admin y cuando entro con una cuenta demo mía sigue poniendo
+el número de generados pese a q aún no he generado ninguno. el diseño
+implementado no es exactamente igual al mockup. queda todo muy en el
+lado izquierdo cuando da el número de generados". Dos bugs distintos.
+
+**Bug 1 — contador de Training Records compartido entre cuentas del
+mismo navegador.** `generatedCounter.js` guardaba el acumulado bajo una
+única clave fija de `localStorage`
+(`oceanpulse:trainingRecordsGeneratedCount`), sin distinguir de qué
+cuenta venía — el mismo problema, y la misma solución, que ya resolvió
+`whatsNewSeenKey(userId)` en `App.jsx` para "Novedades de esta versión".
+Cualquier cuenta que abriera el navegador en el que "admin" había
+generado TRs veía su cifra, aunque esa cuenta no hubiera generado nada.
+**Fix**: `getGeneratedCount(userId)`/`addGeneratedCount(userId, by)`
+ahora reciben el `user_id` real del perfil y lo incluyen en la clave
+(`...GeneratedCount:<userId>`, o `:anon` si la sesión aún no se ha
+resuelto). `HomeTab` recibe `userId` como prop nueva desde `App.jsx`
+(`profile?.user_id`) y la usa para leer el contador propio de la cuenta
+activa; `TrainingRecordsTab` pasa ese mismo `user_id` al sumar cada
+generación nueva.
+
+**Bug 2 — fila pegada al borde izquierdo, no como en el mockup.** La
+fila de 12.27 usaba `px-1` (4px), mucho menos margen horizontal que las
+tarjetas de KPI y "Pendiente de cobrar" que la rodean (`px-3`/`p-4`) —
+por eso en pantalla real se veía todo el contenido "colgando" del borde
+izquierdo en vez de alineado con el resto de la Home. **Fix**: `px-1` →
+`px-3`, mismo margen horizontal que sus vecinos.
+
+**Verificado**: 864/864 tests (dos nuevos en `generatedCounter.test.js`
+para el aislamiento por cuenta — incluida la sesión sin resolver que usa
+`:anon` — y uno nuevo en `HomeTab.test.jsx` que reproduce el bug exacto
+del usuario: un contador de 12 generados bajo una cuenta simulada
+`admin-1` en `localStorage`, cambio a `demo-2`, se sigue viendo la
+invitación vacía, nunca "Training Records"), lint 0 errores, build
+correcto. Confirmado en Chrome real contra el propio servidor de
+desarrollo TEST (no solo en tests): con una clave falsa de otra cuenta
+(`admin-fake-id`) puesta a 7 en `localStorage`, la cuenta demo real
+seguía mostrando la invitación vacía; al escribir el contador bajo el
+`user_id` real de la sesión activa y recargar, la fila pasó al estado
+con actividad, alineada al mismo margen que "Alumnos"/"Cursos" y
+"Pendiente de cobrar" — igual que el mockup. Sin errores de consola.
+
+### 12.29 — Fila de Training Records: causa real del hueco a la derecha + contador por cada llamada a generar
+
+Con 12.28 ya en el Preview, feedback real desde el móvil sobre la propia
+fila corregida: "no crees q en la banda de training record queda todo
+muy en el lado izquierdo cuando da el número de generados". El `px-3`
+de 12.28 no lo resolvía del todo — hacía falta una tercera ronda,
+pedida explícitamente con mockups antes de tocar código otra vez
+(mismo Artifact reutilizado en el mismo enlace en las tres rondas:
+`https://claude.ai/code/artifact/f0a9bdf3-4a6f-4472-ab18-56a57a7e8f1c`).
+
+**Causa real, medida en píxeles sobre la captura del usuario** (no una
+suposición): el propio `<button>` de la fila nunca llevó `w-full` — se
+encogía al ancho de su contenido (línea divisoria incluida) en vez de
+estirarse como el resto de Home. Medido con precisión sobre la foto
+real: la línea solo llegaba hasta la mitad de la pantalla en el estado
+con actividad y hasta más allá en el estado vacío (contenido distinto,
+ancho distinto) — de ahí que "sobrara aire a la derecha": literalmente
+no había fila ahí, no era un problema de padding. Confirmado también
+que el dispositivo real es de 430pt CSS de ancho, con 16pt de margen de
+página y 8pt de separación entre las tres tarjetas KPI — cifras usadas
+para calibrar los mockups de esta ronda a escala real en vez de a ojo
+(pedido explícito: "los mockups q hiciste quedaban bien pero no
+reflejaban la realidad de anchos").
+
+**Proceso de mockups (varias rondas sobre el mismo Artifact):** primero
+3 opciones con el valor a la derecha/tinte de fondo/segunda línea de
+tendencia — descartadas ("me resulta muy pobre el diseño de la
+pastilla... quiero centrando la info"); tras eso, 3 opciones con
+contenido centrado (A: minimal: B: cifra en mini-insignia; C: halo
+dinámico sutil) — elegida la C. Ajustada dos veces más tras feedback
+directo sobre cómo se veía el icono: primero quitando el halo del
+estado vacío (se veía sucio sobre el badge claro — un resplandor
+difuminado necesita un fondo sólido/oscuro detrás para leerse limpio,
+no funciona sobre un tinte pálido), después quitando también el anillo
+que lo sustituía (su propia sombra volvía a leerse oscura alrededor de
+un icono claro) — el estado vacío se queda sin ningún efecto extra,
+solo el icono en azul océano sobre el tinte claro.
+
+**Implementación** (`HomeTab.jsx`): `w-full` + `justify-center` en el
+botón (arreglo real del bug de base, no solo un parche de padding);
+icono+título+cifra+flecha ahora van agrupados y centrados como un único
+bloque, nunca pegados a la izquierda. Con actividad, la insignia lleva
+un halo radial sutil detrás (mismo criterio de opacidad hexadecimal
+`${BRAND_OCEAN}66/1A` que ya usan otras insignias del archivo) además
+de la respiración en bucle que ya tenía; sin actividad, sin ningún
+efecto extra.
+
+**Segundo hallazgo, de correctness, del propio usuario**: "para contar
+los generados tienes q tener en cuenta cada vez q se llame a la app de
+generar, la puedo llamar individualmente para cada alumno o en el
+generar todos que sumará una por alumno". Al revisar `TrainingRecordsTab.jsx`
+se confirmó un bug real: `addGeneratedCount` solo se llamaba desde
+`generateAll` ("Generar para todos los alumnos") — la acción de
+regenerar UN solo alumno (`regenerateStudent`, botón "Regenerar TR",
+pensada para no repetir el resto del listado) no sumaba nada al
+contador. **Fix**: `regenerateStudent` también llama a
+`addGeneratedCount(profile?.user_id, 1)` tras generar con éxito.
+
+**Verificado**: 865/865 tests (1 nuevo en `TrainingRecordsTab.test.jsx`
+que reproduce exactamente el caso reportado: pulsar "Regenerar TR" sin
+haber pasado nunca por "Generar para todos" también suma al contador),
+lint 0 errores, build correcto. Confirmado en Chrome real contra el
+dev server TEST: estado vacío con el icono+texto centrados como grupo
+(ya no pegados a la izquierda); simulando un contador de 23 vía
+`localStorage`, estado con actividad con el halo visible detrás del
+badge navy, icono legible, "Training Records"/"23 GENERADOS" centrados.
+Sin errores de consola en ningún estado.
+
+**Pendiente, explícitamente aparcado por el propio usuario para el
+siguiente turno** ("implementa la opción C... y luego ponte con esto
+del logo"): la legibilidad del icono (Award, lucide-react) en blanco
+sobre el badge navy de 26px — el mismo patrón "icono blanco sobre
+fondo navy sólido" se usa en muchos otros sitios de la app (Login,
+Crear contraseña, Registro, Configuración, Mi perfil...), pero siempre
+en insignias bastante más grandes (44-56px) que las 26px de esta fila;
+antes de tocar `ESTILO.md` hace falta que el usuario confirme, mirando
+el badge de 26px en el Artifact, si el problema es el tamaño/grosor de
+trazo concreto de esta fila (fix puntual, subir `strokeWidth`) o si se
+aprecia igual de débil en las insignias grandes ya existentes (ahí sí
+sería una revisión transversal real del libro de estilo).
+
+### 12.30 — KPIs de Mi trabajo: icono más grande y centrado + red de seguridad real contra importes de 6+ dígitos
+
+Encargo nuevo, cambiando de pantalla (Training Records queda aparcado,
+ver 12.29): "quiero revisar KPIs de movimientos [Mi trabajo] el icono
+es muy chico y las cifras con icono no quedan centradas", más un
+requisito explícito de robustez: "los kpis tienen q cumplir q con
+cifras grandes de 6 dígitos o más no se sale del diseño de la box".
+
+**Icono más grande y centrado** (`MoneyKpiTile`, `MiTrabajoTab.jsx`):
+- Icono 16px → 18px (mismo tamaño que `KpiTile` de Home), badge
+  seguía en 28px (no 32, para no perder espacio para el importe).
+- `items-start` → `items-center`: el `items-start` original respondía
+  a que la cifra podía ocupar dos líneas — pero desde Fase 11.2 (ya
+  documentada, mismo fichero) la cifra NUNCA se parte en dos líneas, el
+  icono se encoge en su lugar. Con una sola línea siempre, ya no había
+  ninguna razón real para no centrar icono+cifra verticalmente — el
+  `items-start` era una rareza heredada de una restricción que ya no
+  existe, no una decisión que siguiera aplicando.
+
+**Causa real del riesgo de desbordamiento con 6+ dígitos**: el sistema
+existente (Fase 13, `kpiIconScale`) solo protegía el ICONO — puede
+encogerse hasta desaparecer del todo, pero nunca protegía el propio
+NÚMERO. Con un importe de 6 dígitos y separador de miles/símbolo de
+moneda (p. ej. "114.609,14 ฿"), el ancho real del texto puede superar
+el ancho disponible de la tarjeta (~127pt en móvil real, con 3
+columnas) INCLUSO con el icono ya a escala 0 — un caso real, no
+hipotético, confirmado con Playwright en emulación de iPhone 14 Pro Max
+contra datos reales de TEST (ver "Verificado" abajo).
+
+**Fix — segunda red de seguridad** (`kpiTextScale`, mismo
+`useLayoutEffect` que ya calculaba `kpiIconScale`): con el icono ya en
+su escala mínima compartida, si el número de una tarjeta concreta
+sigue sin caber, se reduce el `font-size` de ESE número lo justo para
+que quepa — nunca el de las otras dos tarjetas, que no tienen el
+problema (a diferencia del icono, que se encoge en las 3 a la vez por
+coherencia visual, esto es puramente funcional). Suelo de escala
+`TEXT_SCALE_FLOOR = 0.75` para que nunca se vuelva ilegible. Misma
+filosofía de todo este sistema desde Fase 11.2: medir el DOM real
+(`scrollWidth`/`clientWidth`), nunca contar caracteres ni adivinar un
+umbral — sigue siendo la única forma que ha demostrado funcionar igual
+en Chromium y en Safari/iOS real.
+
+**Verificado**: 867/867 tests (2 nuevos en `MiTrabajoTab.test.jsx`:
+número que no cabe ni con icono a 0 reduce su `font-size` al suelo de
+0.75, y número con espacio de sobra no lleva ningún estilo inline),
+lint 0 errores, build correcto. **Probado en mobile de verdad**
+(pedido explícito: "probar todo en mobile y en pantallas reducidas"):
+script Playwright puntual con emulación de iPhone 14 Pro Max (mismo
+motor/dispositivo que `mobile-check`) contra el dev server TEST con
+datos reales — tarjetas de 127px de ancho real, importes reales de
+"32.945,45 ฿" y "114.609,14 ฿" (5-6 dígitos) cayeron directamente en
+escala de icono 0 (oculto) y `font-size` reducido a 10.5px (suelo),
+sin desbordar la tarjeta en ningún momento y sin errores de consola.
+
+### 12.31 — KPIs de Mi trabajo: segunda vuelta, icono pequeño sin insignia junto a la cifra
+
+Experimento explícito a continuación de 12.30, con aviso previo del
+propio usuario de que podía no convencerle y pedir revertirlo: "quiero
+probar a poner el icono en pequeño como está pero al lado de la
+cifra, y q todo quede centrado".
+
+**Cambio** (`MoneyKpiTile`, `MiTrabajoTab.jsx`): la insignia circular
+de 28px con icono a 18px (12.30) se sustituye por un icono suelto de
+10px — mismo tamaño que el icono fijo de la etiqueta, no un tercer
+tamaño nuevo — sin ningún fondo/badge detrás, pegado directamente a la
+cifra. La fila pasa a `justify-center` (antes ocupaba el ancho
+disponible sin centrarse como grupo). `ICON_FOOTPRINT`/
+`TRANSITION_ZONE` (sistema de encogido de Fase 13) bajan de 34/36 a
+14/14 para seguir siendo proporcionales al nuevo tamaño de icono; la
+red de seguridad del número (`kpiTextScale`, 12.30) no cambia de
+fórmula, solo el footprint que resta.
+
+**Diseñado para ser fácil de revertir**: cambio quirúrgico y aislado
+(un solo commit, sin tocar la arquitectura del sistema de medición
+existente) — si no convence, `git revert` de este commit por sí solo
+deja 12.30 intacto.
+
+**Verificado**: 867/867 tests (3 tests existentes actualizados —
+localizan el icono por `.h-4` en vez de `.rounded-full`, ya no hay
+badge; valores de ancho actualizados de 28px a 10px), lint 0 errores,
+build correcto. Confirmado en mobile real (Playwright, iPhone 14 Pro
+Max) contra datos reales de TEST: sin desbordamiento ni errores de
+consola — con estos importes concretos (5-6 dígitos, ya casi llenan la
+tarjeta por sí solos) el icono compartido cae en escala 0 igual que
+antes, comportamiento ya existente (Fase 13: los 3 KPI comparten
+escala), no un efecto nuevo de este cambio.
+
+### 12.32 — Revisión de la Ayuda: Training Records y el carnet de instructor, ausentes por completo
+
+Pedido explícito: "cuando acabes haz una revisión rápida por la ayuda
+por si sobra o falta algo". Auditoría de `src/help/content.js` y los 7
+`help.json` contra el estado real de la app (no contra lo que el propio
+contenido de Ayuda decía) — 4 hallazgos, los dos primeros de bastante
+peso:
+
+1. **Training Records no tenía ninguna mención** — pantalla completa,
+   con generador de 10 plantillas SSI, sin una sola categoría/artículo
+   que la documentara.
+2. **"Mi perfil, de un vistazo" no mencionaba el carnet de instructor**
+   (iniciales, número SSI Pro, firma) — una de las 6 novedades
+   destacadas del propio rediseño (WhatsNew) y además el dato que
+   rellena los Training Records automáticamente.
+3. **Contenido desactualizado, no solo incompleto**: "Consultar cuánto
+   has generado" decía que "Generado este mes" vive en Home con un
+   indicador de tendencia — ya no es así, esa cifra vive en Mi trabajo
+   desde el rediseño; y "Empezar a usar Ocean Flow" describía Home con
+   "un widget con tus deudas más antiguas" (ya no existe) sin mencionar
+   los KPI de Alumnos/Cursos/Captados ni el acceso a Training Records.
+4. Menor: el multi-idioma (7 idiomas, otra novedad destacada) tampoco
+   tenía ninguna mención.
+
+**Fix, en los 7 idiomas** (es/en/fr/it/de/ca/eu): nueva categoría
+"Quiero..." + artículo "Generar un Training Record" (pasos con las
+etiquetas reales de la pantalla: "Añadir alumno", "Generar para todos
+los alumnos", "Regenerar TR", descargas individuales/en lote); "Mi
+perfil, de un vistazo" reescrito para incluir el carnet de instructor
+y el cambio de idioma; "Empezar a usar Ocean Flow" y "Consultar cuánto
+has generado" corregidos para reflejar el Home/Mi trabajo actuales.
+
+**Bug real encontrado en la propia verificación visual** (no solo en
+el contenido): el icono elegido para la categoría nueva ("Award", el
+mismo que usa Training Records en el resto de la app) se veía como un
+"?" genérico — `HelpTab.jsx` mantiene su propio mapa `CATEGORY_ICONS`
+con imports nombrados (decisión deliberada de tamaño de bundle, no un
+wildcard `import * as Icons`), y "Award" no estaba en ese mapa. Añadido
+al import y al mapa.
+
+**Verificado**: 867/867 tests (incluye el guard existente de
+`content.test.js` que escanea es/en en busca de vocabulario de
+admin/superadmin — regla permanente, CLAUDE.md §"Reglas permanentes —
+Release V1", punto 1), lint 0 errores, build correcto. Confirmado en
+Chrome real: la categoría nueva se expande con el icono correcto
+(ribbon/medalla, no "?"), el contenido coincide con las etiquetas
+reales de la pantalla, "Mi perfil" ya menciona "carnet de instructor,
+idioma y moneda favorita" en su descripción. Sin errores de consola.
+
+### 12.33 — KPIs de Mi trabajo: causa real del comportamiento roto, corregida de raíz
+
+Pedido explícito, con una captura real del iPhone del usuario delante:
+"no sé qué pasa pero algo no está funcionando... mira como sale ahora
+en mi iphone, se ve muy mal los kpi" — más una especificación completa
+del comportamiento esperado (icono que se encoge de forma continua
+según crece la cifra hasta desaparecer, escala compartida entre los 3
+KPI, nada se sale de la caja con importes de 6-7 dígitos, cifras
+centradas) y un pedido de proceso explícito: guardar la versión del
+código actual para poder revertir si la nueva no cumple, y "rediseñar
+desde cero" en vez de otro parche más sobre 12.30/12.31.
+
+**Causa real, no un ajuste más de constantes**: `rowMeasureRef` (la
+referencia que mide "cuánto espacio hay disponible") apuntaba al
+`<span>` de la propia cifra — un elemento con `w-full` dentro de una
+fila flex junto al icono. Ese `clientWidth` NO era el ancho disponible
+real: era el resultado de que flexbox ya lo había encogido para
+dejarle sitio al icono, a la escala del fotograma ANTERIOR. La fórmula
+restaba `ICON_FOOTPRINT` una segunda vez sobre un valor que ya lo
+llevaba descontado — una referencia circular, no un bug de una
+constante mal calibrada. Con datos reales esto podía subestimar el
+espacio disponible y encoger/ocultar el icono de forma incorrecta e
+inconsistente entre renders, exactamente el "no sé qué pasa" reportado.
+
+**Fix de raíz**: `rowMeasureRef` pasa a apuntar al `<div>` contenedor
+de la fila (icono+cifra), no al span de la cifra. Ese div es un hijo
+flex de la tarjeta en `flex-col` con `align-items: stretch` (valor por
+defecto), así que su ancho es siempre el 100% del contenido de la
+tarjeta — estable, nunca afectado por la escala del icono o el tamaño
+de la cifra dentro. Se retira además el `w-full` del span de la cifra
+(ya no hace falta para medir nada, y forzaba una caja más ancha que el
+texto real, dejando la cifra pegada a su borde izquierdo en vez de
+centrada de verdad junto al icono — un segundo síntoma visual del
+mismo diseño equivocado). El icono pasa a `initial={false}` en Motion
+para que la escala correcta esté ya aplicada en el primer pintado, sin
+ninguna animación de encogimiento visible nada más cargar — pedido
+explícito ("en primera carga aparecerán todos los elementos").
+
+**Verificado**: 867/867 tests (3 tests existentes actualizados — el
+span visible de la cifra se localiza ahora por `leading-tight`, no por
+`w-full`, que ya no lleva), lint 0 errores, build correcto. Confirmado
+en mobile real (Playwright, iPhone 14 Pro Max) contra datos reales de
+TEST: el ancho de la fila medido (`rowWidth`) sale idéntico en las 3
+tarjetas (101px), confirmando que ya es una medida estable e
+independiente del contenido de cada una — antes de este fix no había
+ninguna garantía de eso. Ninguna cifra real (5-6 dígitos) se sale del
+recuadro de su tarjeta (`overflowsCard: false` verificado por código,
+no solo a ojo), sin errores de consola. La versión anterior del
+archivo se guardó fuera del repositorio durante el rediseño y se
+eliminó tras confirmar que la nueva cumple con la especificación
+completa, tal como se pidió.
+
+### 12.34 — Icono de KPI a 14px (tercera vuelta) + Training Records de OW sin el campo Certificación
+
+Dos correcciones puntuales encargadas en el mismo lote, sin relación
+entre sí.
+
+**KPIs de Mi trabajo — tamaño del icono**: pedido explícito tras
+confirmar 12.33 ("coloca el icono estéticamente al tamaño q creas al
+lado de la cifra, ambos centrados en la caja"). El icono sube de 10px
+(sin badge, igual que el icono fijo de la etiqueta) a **14px** — el
+mismo tamaño de fuente que la propia cifra en su variante más común
+(`text-sm`), para que lea como "de la misma familia visual" que el
+número en vez de verse desproporcionado. `ICON_FOOTPRINT`/
+`TRANSITION_ZONE` suben de 14/14 a 20/20 (14px de icono + 6px de gap,
+antes 10+4) para seguir siendo proporcionales.
+
+**Training Records de Open Water — quitar "Certificación"**: pedido
+explícito, con una segunda vuelta que confirmó la interpretación
+correcta ("quita directamente ese campo del formulario", no solo la
+opción "Scuba Diver" dentro de él). Con solo una opción real quedando
+("Open Water Diver"), el `RadioChoice` completo (sección
+"Certificación") no ofrecía ninguna elección de verdad — se retira
+entero de `TrainingRecordsTab.jsx`. `recordConfig.js` ya fijaba
+`upgrade: "openWaterDiver"` por defecto cuando la plantilla tiene
+`upgradeCheckboxes`, así que el PDF sigue marcando exactamente la
+misma casilla que antes ("Open Water Diver"), nunca "Scuba Diver" —
+sin ningún cambio de comportamiento en el documento generado, solo se
+retira una elección que ya no existía de verdad. Las 3 claves de
+traducción que quedaban huérfanas (`certificacion`, `openWaterDiver`,
+`scubaDiver` bajo `studentSheet`) se eliminan en los 7 idiomas.
+
+**Verificado**: 867/867 tests (selectores/valores actualizados en
+`MiTrabajoTab.test.jsx` para el nuevo tamaño de icono — `.h-5`/14px en
+vez de `.h-4`/10px; 142/142 tests de Training Records sin cambios,
+ninguno dependía del campo retirado), lint 0 errores, build correcto.
+Confirmado en mobile real (Playwright, iPhone 14 Pro Max) contra datos
+reales de TEST: el ancho de fila sigue midiendo idéntico en las 3
+tarjetas (101px) con el nuevo tamaño de icono, ninguna cifra real se
+sale del recuadro, sin errores de consola.
+
+### 12.35 — País de residencia: segunda vuelta del bug del teclado en móvil
+
+Pedido explícito: "el combo país de residencia no funciona bien en
+registrarse y en editar perfil". Investigación previa a tocar nada:
+el propio `SearchSelect` (buscador + lista con scroll, ya usado en
+Registro y Mi perfil) ya hace exactamente lo que se pedía como
+solución ("un buscador para teclear... y sino scrollear"), y un bug
+casi idéntico en el mismo campo ya se había corregido antes (Fase 7,
+2026-09-07: el panel saltaba de posición mientras el usuario escribía,
+al abrirse el teclado). Probado a mano (buscar "fran" → filtra a
+Francia; scroll sin escribir → funciona) sin reproducir nada raro en
+Chrome. Pedida una descripción más concreta al usuario en vez de tocar
+a ciegas código ya cuidadosamente depurado — respuesta: "la lista
+aparece encima del propio campo y se hace difícil hacer select sobre
+él".
+
+**Causa real, una variante nueva del mismo bug de fondo**: el fix de
+Fase 7 congela la decisión arriba/abajo EN EL INSTANTE de abrir el
+panel, precisamente para evitar que salte mientras el usuario escribe.
+Pero en un campo de texto, TOCARLO abre el teclado A LA VEZ que el
+panel — la animación del teclado en iOS tarda ~250-300ms, así que la
+decisión se congela con el viewport TODAVÍA sin encoger. Si en ese
+instante había sitio de sobra debajo (antes de que el teclado se lo
+coma), el panel elige abrir hacia abajo — y se queda así el resto de
+la apertura, aunque el teclado reduzca el espacio real justo después,
+dejando el panel comprimido contra el propio campo.
+
+**Fix** (`useFloatingPosition`, `shared.jsx`): además de la decisión
+inicial (congelada, sin tocar), se escucha un ÚNICO evento `resize` de
+`visualViewport` tras abrir para corregir la dirección una vez más, ya
+con el teclado asentado — nunca una segunda vez (eso reintroduciría el
+salto continuo que motivó congelarla en primer lugar). `maxHeight`/
+`top`/`bottom` seguían recalculándose siempre, como ya hacían.
+
+**Verificado**: 868/868 tests (1 test nuevo en `shared.test.jsx` que
+reproduce el caso exacto: el panel abre hacia abajo con espacio de
+sobra, luego `visualViewport` se encoge de golpe simulando el teclado
+— la dirección se corrige una vez, y un segundo `resize` ya no la
+vuelve a mover; el test existente de Fase 7 sigue en verde sin
+cambios), lint 0 errores, build correcto.
+
+### 12.36 — Instalada como acceso directo en iOS: el pie tapaba el FAB y el final de las pantallas
+
+Pedido explícito: "cuando me instalo la web como acceso directo en
+iOS, al no tener el envoltorio del navegador la pantalla es más alta,
+creo q el contenido 'se estira' y el pie corta algunos elementos como
+el + flotante para crear movimientos y tarifas o el bloque de escuela
+favorita".
+
+**Causa real**: `env(safe-area-inset-bottom)` (el hueco del indicador
+de inicio del iPhone) vale **0 en una pestaña normal de Safari** — la
+propia barra de Safari ya ocupa ese espacio — y solo toma su valor real
+(varios px) **cuando la app corre instalada**, sin ninguna barra de
+navegador que lo absorba. La barra de navegación inferior (`App.jsx`)
+ya sumaba ese inset a su propio alto desde antes, así que en el acceso
+directo se vuelve más alta de verdad — pero dos elementos seguían
+calculando su distancia al borde con un valor FIJO, igual en los dos
+casos:
+- El FAB (`Fab`, `shared.jsx`, usado por Mi trabajo/Tarifas/
+  Configuración vía convención #3): `bottom-24` fijo, sin sumar el
+  inset — en el acceso directo quedaba demasiado cerca de la barra, ya
+  más alta.
+- El `<main>` compartido por TODAS las pantallas (`App.jsx`): `pb-24`
+  fijo — el mismo motivo, aplicado al final de cualquier pantalla en
+  vez de a un botón concreto (de ahí que el bloque de escuela favorita
+  u otro contenido cerca del final también pudiera quedar tapado).
+
+**Fix**: los dos pasan de una clase Tailwind fija (`bottom-24`/`pb-24`)
+a un `calc(6rem + env(safe-area-inset-bottom))` por estilo en línea —
+mismo criterio que ya usan `paddingBottom` en ComisionesTab/WorkLogTab/
+MovementSheet/CompanerosTab y `paddingTop`/`top` en la cabecera y el
+indicador TEST para el mismo tipo de inset. En una pestaña normal de
+Safari el resultado es idéntico a antes (inset 0 → 6rem exactos); en el
+acceso directo, crece exactamente lo que crece la barra inferior real.
+
+**Fuera de alcance a propósito**: `WorkLogTab.jsx`/`ComisionesTab.jsx`/
+`CompanerosTab.jsx`/`PaymentsTab.jsx` tienen su propio FAB/banner
+duplicado con el mismo `bottom-24` sin corregir — no son pantallas
+alcanzables desde la navegación real hoy (`PRIMARY_TABS` en `App.jsx`
+solo lista Home/Mi trabajo/Resumen; estas tres son las pantallas
+previas a la unificación de ADR-0005, todavía importadas pero sin
+ningún botón que lleve a ellas) — corregirlas sería tocar código sin
+usuarios reales detrás, no parte de este bug.
+
+**Verificado**: 868/868 tests, lint 0 errores, build correcto.
+Confirmado en Chrome real que el caso normal (navegador, inset 0) no
+cambia — mismo FAB, misma posición, sin regresión. El propio caso que
+motiva el fix (`display-mode: standalone`/`navigator.standalone`) no
+se puede emular desde este entorno (ni Playwright ni la extensión de
+Chrome de esta sesión reproducen el modo de app instalada de iOS) —
+limitación ya documentada en CLAUDE.md §8; sigue haciendo falta que el
+usuario lo confirme en su iPhone real con el acceso directo.
+
+### 12.37 — KPIs de Mi trabajo: cuarta vuelta, con tres capturas reales del móvil delante
+
+Pedido explícito, con tres capturas reales adjuntas del Preview en el
+iPhone del usuario: "cuando no hay movimientos sale el icono, qno
+debería. a partir de unidades de millar desaparece el icono y antes es
+enano. quiero quitar el icono del texto y más o menos en ese tamaño se
+puede colocar al lado de la cifra si q se salga nada de la caja. cuando
+sean tan grande como para salirse desaparece el icono siguiendo la
+regla definida. y a partir de ahí ya solo se iría encogiendo el
+número".
+
+Tres correcciones sobre el mismo sistema de escala continua de 12.33
+(que se mantiene: sigue midiendo el DOM real, nunca contando
+caracteres) — el diseño de fondo no cambia, sí tres detalles concretos
+del propio icono:
+
+1. **Icono junto a la etiqueta, retirado.** El añadido en 12.30 (icono
+   fijo junto a "Generado"/"Pendiente"/"Cobrado", que nunca se ocultaba)
+   quitaba claridad en vez de darla con dos iconos por KPI — queda uno
+   solo, el de junto a la cifra.
+2. **Icono junto a la cifra, de 14px a 10px** (tercera vuelta, 12.34,
+   había vuelto a subirlo a 14px por indicación anterior; con capturas
+   reales delante, el usuario confirma que 10px es el tamaño correcto
+   "que no se salga nada de la caja"). `ICON_FOOTPRINT`/
+   `TRANSITION_ZONE` bajan de 20/20 a 14/14 y `iconAndGap` de
+   `14 * minScale + 6` a `10 * minScale + 4`, en línea con el nuevo
+   tamaño.
+3. **Icono oculto por completo cuando el KPI no tiene datos** ("—").
+   Bug real: antes, un KPI sin movimientos de ese tipo mostraba el
+   icono a escala completa junto al guion — al ser un texto tan corto,
+   nunca llegaba a activar el encogimiento por falta de espacio, así
+   que el "sin datos" y el "con datos y espacio de sobra" eran
+   visualmente indistinguibles del lado del icono. Ahora el icono (el
+   `<motion.span>` entero) solo se renderiza cuando `entries.length >
+   0`.
+
+**Verificación**: 870/870 tests (incluye un test explícito del punto 3:
+sin movimientos, ningún `<svg>` en la fila de la cifra), lint 0 errores
+nuevos, build correcto. Verificado con Playwright + emulación de
+iPhone 14 Pro Max contra el dataset real de test (importes de 5-6
+dígitos en THB): icono visible y proporcionado con datos, ningún
+`overflowsCard`, y para los importes más grandes el icono se encoge
+hasta quedar casi invisible en vez de desaparecer de golpe — el mismo
+comportamiento ya verificado en 12.33, ahora con el tamaño de icono
+correcto. El caso "sin datos → sin icono" queda cubierto por el test
+unitario nuevo (no se pudo forzar de forma fiable desde la UI real sin
+crear datos de prueba espurios en la cuenta demo compartida).
+
+Al hilo de esta ronda, también se registra en `docs/BACKLOG.md`
+(prioridad alta) la eliminación de las cuatro pantallas huérfanas
+previas a la unificación de Mi trabajo (`WorkLogTab.jsx`,
+`ComisionesTab.jsx`, `CompanerosTab.jsx`, `PaymentsTab.jsx`) — siguen
+importadas en `App.jsx` pero inalcanzables desde `PRIMARY_TABS` desde
+el ADR-0005, ya señaladas como fuera de alcance en 12.36.
+
+**Añadido sobre la marcha, mismo hilo** ("centra los textos también"):
+la etiqueta de cada KPI (`flex items-center gap-1`, sin `justify-center`
+ni `text-center`) quedaba alineada a la izquierda en cuanto ocupaba dos
+líneas ("Generado este" / "mes"), mientras que el icono+cifra de arriba
+sí estaban centrados — inconsistente dentro de la misma tarjeta. Fix:
+añadir `justify-center text-center` a ese `<span>`. Verificado con la
+misma captura de Playwright — las tres etiquetas quedan centradas,
+también en su segunda línea.
+
+### 12.38 — Ayuda: cada categoría se abre alineada bajo la cabecera, no donde caiga
+
+Pedido explícito: "en la ayuda cuando abro el primer item bien, pero a
+partir de ahí si abro el siguiente al acabar de leer el desplegado, me
+cierra el desplegado y me abre el seleccionado arriba del todo. Cada
+vez que abra un item de la ayuda este quedará abierto y alineado justo
+debajo de la cabecera con una animación".
+
+**Causa real**: Ayuda es un acordeón (como mucho una categoría
+desplegada a la vez, `openId`, ver 12.31/HelpTab.jsx) sin ningún
+desplazamiento propio. Al pulsar la siguiente categoría, la anterior se
+colapsa — si el usuario ya había bajado la página para terminar de
+leerla y esa categoría anterior está POR ENCIMA de la que acaba de
+pulsar, colapsarla desplaza de golpe todo el contenido de debajo hacia
+arriba (incluida la categoría recién abierta) sin que el scroll se
+corrija, dejando la categoría nueva en cualquier posición — a veces por
+encima de la propia cabecera.
+
+**Fix**: mismo criterio ya resuelto para el calendario de Home/Resumen
+(`MonthCalendar`, "cuarto ajuste" de 12.x anterior — medir en el propio
+clic, nunca esperar a que la animación termine). `HelpTab.jsx` mide,
+en el manejador de `onToggle` y ANTES de cambiar `openId`:
+1. La posición actual (`getBoundingClientRect()`) de la tarjeta que se
+   acaba de pulsar.
+2. Si había una categoría abierta y su tarjeta está POR ENCIMA de la
+   que se pulsa, cuánto va a encoger al colapsarse (su altura actual
+   menos la altura de solo su cabecera, midiendo el `<button>` — esa
+   altura es la misma abierta o cerrada) — y resta esa diferencia de la
+   posición predicha, sin esperar a que la animación de colapso llegue
+   a ese estado.
+3. Anima el scroll (`animateScrollBy`, `motion.js`, ya usado por el
+   calendario) hasta que esa posición final predicha quede justo debajo
+   de `<header>` con 12px de margen — mismo `animateScrollBy`,
+   `duration`/`ease` por defecto (`DURATION.md`/`EASE.standard`).
+
+Solo al ABRIR (nunca al cerrar), igual criterio que el calendario. Cada
+`ExpandableCard` de categoría se envuelve ahora en un `<div ref={...}>`
+propio (`cardRefs`, keyed por `category.id`) — `ExpandableCard` no
+expone ref propia y hace falta medir cualquiera de las tarjetas
+(abierta o colapsada) en cualquier momento, no solo la que se acaba de
+tocar.
+
+**Verificado**: 870/870 tests (el acordeón en sí no cambia de
+comportamiento, mismos 13 tests de `HelpTab.test.jsx` en verde — sin
+test dedicado a la geometría del scroll, mismo criterio que 12.36/el
+commit `d61ae7f` del calendario: la posición exacta en píxeles no se
+presta a un test unitario fiable, se verifica con Playwright). Lint 0
+errores, build correcto. Verificado con Playwright + emulación de
+iPhone 14 Pro Max: se abre "Mi trabajo", se baja la página 400px
+(simulando "seguir leyendo, ya bajado"), se abre "Resumen" (por debajo
+de "Mi trabajo" en la lista) — tras la animación, el botón de "Resumen"
+queda a 15px del borde inferior de la cabecera (objetivo 12px, dentro
+de tolerancia visual), sin errores de consola.

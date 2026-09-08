@@ -87,7 +87,15 @@ const PRIMARY_TABS = [
 // la app a tu escritorio como acceso directo, en iOS y en android...
 // una página que se abre sobre toda la pantalla como la ayuda") — mismo
 // patrón que "training-records": pestaña secundaria independiente,
-// cerrar siempre vuelve a Home (ver closeSecondary más abajo).
+// cerrar siempre vuelve a Home (ver closeSecondary más abajo). El banner
+// descartable de Home (2026-09-07) se retiró el 2026-09-08 ("no me
+// convence, búscale otro sitio, integrado, que siempre esté disponible
+// y que no moleste"): ahora hay dos puntos de entrada permanentes y sin
+// estado de "descartado" — un enlace de texto fijo en Ayuda
+// (HelpTab.jsx) y un icono solo, sin tarjeta ni banner, junto al título
+// de los KPIs en Home (HomeTab.jsx, pedido explícito de después: "quiero
+// q haya un algo en la home"). La pestaña "install-app" en sí no
+// cambia, solo desde dónde se llega a ella.
 const SECONDARY_TABS = ["config", "help", "pagos", "perfil", "training-records", "install-app"];
 
 // Recuerda la pestaña activa y a cuál "volver" desde una pantalla
@@ -480,7 +488,20 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 pb-24 pt-5 sm:px-5">
+      {/* pb-24 base + env(safe-area-inset-bottom) (2026-09-08, bug real
+          reportado — "instalada como acceso directo en iOS... el pie
+          corta el + flotante para crear movimientos y tarifas o el
+          bloque de escuela favorita"): la barra inferior fija (más
+          abajo) ya suma ese mismo inset a SU alto para el indicador de
+          inicio del iPhone, pero ese inset vale 0 en una pestaña normal
+          de Safari (la propia barra de Safari ya ocupa ese hueco) y
+          crece de verdad solo cuando la app corre instalada, sin
+          ninguna barra de navegador que lo absorba — la barra inferior
+          real se vuelve más alta ahí. Un `pb-24` fijo (96px, igual en
+          los dos casos) ya no daba margen suficiente para que el
+          contenido del final de cualquier pantalla no quedara tapado
+          por la barra, ahora más alta, en ese caso concreto. */}
+      <main className="mx-auto max-w-3xl px-4 pt-5 sm:px-5" style={{ paddingBottom: "calc(6rem + env(safe-area-inset-bottom))" }}>
       <AnimatePresence mode="wait">
       <motion.div
         key={tab}
@@ -502,6 +523,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             onOpenSummary={() => changeTab("summary")}
             onOpenTrainingRecords={() => changeTab("training-records")}
             onOpenInstallApp={() => changeTab("install-app")}
+            userId={profile?.user_id}
           />
         )}
         {tab === "log" && (
@@ -543,7 +565,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             onOpenProfile={() => changeTab("perfil")} onProfileUpdated={onProfileUpdated}
           />
         )}
-        {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} />}
+        {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} onOpenInstallApp={() => changeTab("install-app")} />}
         {tab === "install-app" && <InstallAppTab />}
         {tab === "perfil" && (
           <ProfileTab

@@ -1,0 +1,249 @@
+{
+  "emptyState": "Non c'è ancora contenuto di aiuto.",
+  "whatsNewReplay": "Vedi le novità di questa versione",
+  "installAppLink": "Installa l'app sul tuo cellulare",
+  "groupLabels": {
+    "quiero": "Voglio...",
+    "funcionalidades": "Funzionalità"
+  },
+  "sections": {
+    "whatYouCanDo": "Cosa puoi fare",
+    "whenToUseIt": "Quando usarlo",
+    "steps": "Passaggi",
+    "tips": "Consigli ed errori comuni",
+    "expectedResult": "Risultato atteso"
+  },
+  "categories": {
+    "bienvenida": {
+      "label": "Primi passi",
+      "description": "Cos'è Ocean Flow e come è organizzata"
+    },
+    "quiero-configurar": {
+      "label": "Configurare la tua applicazione",
+      "description": "Scuole, corsi, tariffe e cataloghi"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Registrare un movimento",
+      "description": "Un corso tenuto, una commissione o una rettifica"
+    },
+    "quiero-cobrar": {
+      "label": "Incassare movimenti in sospeso",
+      "description": "Segnare come incassato, uno alla volta o tutti insieme"
+    },
+    "quiero-consultar-generado": {
+      "label": "Consultare quanto hai generato",
+      "description": "A colpo d'occhio, o in dettaglio per periodo"
+    },
+    "quiero-generar-tr": {
+      "label": "Generare un Training Record",
+      "description": "Il documento ufficiale di progresso di ogni allievo"
+    },
+    "func-mi-trabajo": {
+      "label": "Il mio lavoro",
+      "description": "Creare, modificare, incassare ed eliminare movimenti"
+    },
+    "func-resumen": {
+      "label": "Riepilogo",
+      "description": "Sguardo rapido e approfondimento a richiesta"
+    },
+    "func-configuracion": {
+      "label": "Configurazione",
+      "description": "Il menu, e cosa c'è in ogni sezione"
+    },
+    "func-perfil": {
+      "label": "Il mio profilo",
+      "description": "Avatar, tesserino istruttore, lingua e valuta preferita"
+    },
+    "func-filtros": {
+      "label": "Filtri e ricerca",
+      "description": "Lo stesso schema in tutta l'app"
+    }
+  },
+  "articles": {
+    "primeros-pasos": {
+      "title": "Iniziare a usare Ocean Flow",
+      "summary": "Un rapido giro tra le tre schermate principali prima di registrare il tuo primo movimento.",
+      "whatYouCanDo": "Ocean Flow ti aiuta a tenere sotto controllo le tue entrate come istruttore freelance. Sotto un unico concetto, \"movimento\", raggruppa le lezioni che tieni, le commissioni per i clienti procurati e le rettifiche economiche con altri istruttori.",
+      "whenToUseIt": "La prima volta che apri l'app, o quando vuoi ricordare a cosa serve ogni schermata.",
+      "steps": [
+        "Home: i tuoi allievi, corsi e clienti procurati a colpo d'occhio, l'accesso a Training Records, quanto hai da incassare, il calendario del mese e un accesso rapido per creare un movimento.",
+        "Il mio lavoro: l'elenco completo dei tuoi movimenti (corsi, commissioni e rettifiche), per crearli, modificarli, incassarli o eliminarli.",
+        "Riepilogo: il tuo bilancio per il periodo che scegli, con la possibilità di approfondire per scuola, per corso o per commissioni."
+      ],
+      "tips": [
+        "Per un account nuovo, inizia da \"Configurare la tua applicazione\" (scuole, corsi, tariffe).",
+        "Continua registrando un movimento di ogni tipo che userai.",
+        "Finisci incassando: uno quando ti pagano, o tutti insieme se controlli periodicamente. Ogni passaggio ha la sua guida in \"Voglio...\" più sotto."
+      ],
+      "expectedResult": "Sai quale schermata usare per ogni situazione e in che ordine procedere per avere l'app pronta per il tuo lavoro quotidiano."
+    },
+    "configurar-app": {
+      "title": "Configurare la tua applicazione",
+      "summary": "Nulla è fisso nell'app: scuole, corsi, tariffe e cataloghi di pagamento si modificano da Configurazione.",
+      "whatYouCanDo": "Configurazione è dove mantieni i tuoi dati base: quali scuole lavorano con te, quali corsi tieni e a quale tariffa. Tutto modificabile, niente fisso nel codice.",
+      "whenToUseIt": "Prima di registrare il tuo primo movimento, e poi ogni volta che inizi a lavorare con una scuola o un corso nuovo, o cambi un prezzo.",
+      "steps": [
+        "Entra in Configurazione (icona ingranaggio, in alto a destra) e tocca la sezione che ti serve.",
+        "Crea prima le tue Scuole e Corsi — una Tariffa collega sempre una scuola a un corso, quindi devono esistere entrambi prima.",
+        "All'interno di una sezione, premi il pulsante \"+\" flottante per creare; \"‹ Configurazione\" ti riporta al menu.",
+        "Tocca il colore di una riga per personalizzarlo, e la stella per segnarla come preferita."
+      ],
+      "tips": [
+        "Una scuola, corso o valuta segnata come preferita appare preselezionata nei moduli di creazione.",
+        "Chiudere Configurazione (la \"✕\" dell'intestazione) ti riporta sempre alla scheda da cui sei entrato."
+      ],
+      "expectedResult": "La nuova scuola, corso o tariffa è disponibile subito quando crei un movimento — con questo puoi proseguire con \"Registrare un movimento\"."
+    },
+    "crear-movimiento": {
+      "title": "Creare un movimento",
+      "summary": "Lo stesso modulo serve per un corso tenuto, una commissione o una rettifica con un collega — ogni tipo ha i propri campi.",
+      "whatYouCanDo": "\"Aggiungi movimento\" è l'unico punto di creazione di tutta l'app — il modulo stesso ti lascia scegliere il tipo, non serve indovinare un pulsante diverso per ogni caso.",
+      "whenToUseIt": "Subito dopo aver tenuto una lezione, chiudendo una commissione, o quando concordi una rettifica con un altro istruttore.",
+      "steps": [
+        "Premi \"Aggiungi movimento\": il pulsante \"+\" della scheda \"Da incassare\" in Home, lo stesso pulsante toccando un giorno del calendario di Home, o il \"+\" flottante de Il mio lavoro.",
+        "In cima al modulo, scegli il tipo: Corso tenuto, Commissione o Rettifica di corso.",
+        "Corso tenuto: scuola, corso, data e numero di persone — la tariffa per corso calcola l'importo da sola.",
+        "Commissione: come un corso, ma per un cliente che hai procurato e che forma un altro istruttore — usa la propria tariffa di commissione, non quella del corso.",
+        "Rettifica di corso: non dipende da nessuna tariffa — indichi tu l'importo (positivo se ti devono, negativo se devi tu) e con quale collega è la rettifica.",
+        "Salva. Se hai aperto il modulo da Home, vedrai il movimento in Il mio lavoro subito dopo il salvataggio."
+      ],
+      "tips": [
+        "Se non esiste ancora una tariffa per quella scuola + corso, il modulo ti lascia crearla al volo senza uscire dalla schermata (\"Aggiungi tariffa\") — vale solo per Corso e Commissione, una Rettifica non ha mai bisogno di tariffa.",
+        "Annullare o chiudere il modulo senza salvare non crea nulla — puoi aprirlo e chiuderlo senza timore di lasciare movimenti a metà."
+      ],
+      "expectedResult": "Il movimento compare in Il mio lavoro, dentro \"In sospeso\", e si somma a \"Generato questo mese\" in Home (tranne una Rettifica a tuo sfavore, che non conta come generato)."
+    },
+    "cobrar-movimientos": {
+      "title": "Segnare i movimenti come incassati",
+      "summary": "Controlla cosa hai da incassare e aggiorna lo stato appena ti pagano — uno alla volta, o tutti insieme.",
+      "whatYouCanDo": "Ogni movimento ha uno stato (in sospeso o incassato). Cambiarlo è immediato, con un solo tocco, con la possibilità di annullare se sbagli. Puoi farlo movimento per movimento, o in blocco su tutto l'elenco visibile.",
+      "whenToUseIt": "Appena una scuola o un collega ti paga (uno alla volta), o in blocco quando controlli periodicamente e ti hanno già pagato più elementi in sospeso insieme.",
+      "steps": [
+        "Per incassarne uno: entra in Il mio lavoro (la scheda \"In sospeso\" si apre per impostazione predefinita) e premi \"Conferma incasso\" sulla sua riga (o \"Segna saldato\" se è una rettifica a tuo sfavore).",
+        "La scheda \"Da incassare\" di Home ti porta direttamente a quella stessa scheda — un tocco dalla schermata principale.",
+        "Per incassarne più insieme: in Il mio lavoro, usa \"Incassa tutti\" sopra l'elenco — riguarda tutto ciò che è visibile in quel momento.",
+        "Prima di \"Incassa tutti\", usa \"Filtra\" (per data, scuola, corso o tipo) per limitare l'elenco a esattamente ciò che vuoi incassare in blocco."
+      ],
+      "tips": [
+        "Un toast con \"Annulla\" compare dopo ogni modifica — hai qualche secondo per annullarlo senza dover ricercare il movimento.",
+        "\"Incassa tutti\" chiede conferma prima di applicarsi — non c'è \"Annulla\" per l'intero lotto, a differenza dell'incasso uno alla volta."
+      ],
+      "expectedResult": "Il movimento (o tutti quelli filtrati) passa alla scheda \"Incassati\" e il suo importo smette di contare in \"Da incassare\" in Home."
+    },
+    "consultar-generado": {
+      "title": "Consultare quanto hai generato",
+      "summary": "Uno sguardo rapido in Il mio lavoro, o il dettaglio completo per il periodo che scegli in Riepilogo.",
+      "whatYouCanDo": "\"Generato questo mese\" in Il mio lavoro ti dà la cifra del mese in corso, sempre visibile sopra l'elenco. Riepilogo va oltre: qualsiasi periodo, confrontato con quello precedente, con la possibilità di approfondire per scuola o per corso.",
+      "whenToUseIt": "Il mio lavoro, per uno sguardo rapido durante il lavoro quotidiano. Riepilogo, quando vuoi un periodo diverso dal mese attuale o capire da dove viene il denaro.",
+      "steps": [
+        "In Il mio lavoro, la scheda \"Generato questo mese\" è sempre visibile sopra l'elenco, senza toccare nulla.",
+        "In Riepilogo, scegli la granularità e il periodo nel controllo in alto (mensile, trimestrale, semestrale, annuale o un intervallo personalizzato) e, se vuoi, il tipo (Corso, Commissione o Rettifica).",
+        "La scheda principale mostra il totale del periodo e quanto è cambiato rispetto al periodo precedente.",
+        "Tocca \"Per scuola\", \"Per corso\", \"Commissioni\", \"Rettifiche di corso\" o \"Calendario\" per approfondire — ognuno si apre solo se lo richiedi."
+      ],
+      "tips": [
+        "Dentro \"Per scuola\", tocca una scuola per vedere il suo dettaglio per corso sul posto, senza cambiare schermata.",
+        "Il confronto con il periodo precedente non compare se mescoli più di una valuta nello stesso periodo — per evitare di mostrare un calcolo non esatto."
+      ],
+      "expectedResult": "Hai una cifra di bilancio del periodo scelto, con il dettaglio di dove viene ogni entrata se ti serve."
+    },
+    "generar-training-record": {
+      "title": "Generare un Training Record",
+      "summary": "Il documento ufficiale di progresso SSI di ogni allievo, con la sua firma e la tua — nulla si salva nel cloud, si scarica soltanto.",
+      "whatYouCanDo": "Da Training Records generi il documento di progresso ufficiale di una qualsiasi dei 10 modelli SSI, con i dati di ogni allievo e la tua firma di istruttore già inclusi. Puoi generarli uno alla volta o tutti insieme, e scaricarli in PDF, in immagine, o condividerli direttamente.",
+      "whenToUseIt": "Alla fine di un corso, quando un allievo ha bisogno del suo Training Record su carta o per inviarlo a SSI.",
+      "steps": [
+        "Entra in Training Records dall'accesso in Home.",
+        "Scegli il modello SSI del corso e compila la configurazione condivisa (versione dell'esame, certificazione, progresso del corso...) — si compila una sola volta per tutta la classe.",
+        "\"Aggiungi allievo\" per ogni allievo: chiede solo il suo nome, le iniziali e la firma — se è minorenne, anche il nome e la firma del tutore.",
+        "\"Genera per tutti gli allievi\" crea il documento di tutto l'elenco insieme; \"Rigenera il TR\" sulla riga di un allievo specifico rigenera solo il suo, senza ripetere il resto.",
+        "Per ogni allievo: \"Scarica il PDF\", \"Scarica l'immagine (JPG)\" o \"Condividi\". Per tutti insieme: \"Scarica tutto in PDF/JPG\" o \"Condividi tutto\", in un unico archivio."
+      ],
+      "tips": [
+        "Ti serve il tesserino istruttore completo in Il mio profilo (iniziali, numero SSI Pro e firma) prima di poter generare qualsiasi cosa — è ciò che viene stampato su ogni Training Record.",
+        "Nulla di ciò che compili qui si salva in Ocean Flow: ogni documento si genera al momento e si scarica soltanto."
+      ],
+      "expectedResult": "Hai il Training Record di ogni allievo pronto da scaricare o condividere, con la sua firma e la tua già incluse."
+    },
+    "mi-trabajo-referencia": {
+      "title": "Il mio lavoro, a colpo d'occhio",
+      "summary": "L'elenco completo dei tuoi movimenti — corsi, commissioni e rettifiche — con le loro azioni.",
+      "whatYouCanDo": "Il mio lavoro unifica quelle che prima erano tre schermate separate (Registro, Commissioni e Colleghi) in un unico posto, raggruppato per stato di incasso.",
+      "whenToUseIt": "È la tua schermata di lavoro quotidiana — creare, rivedere, incassare e modificare movimenti.",
+      "steps": [
+        "In sospeso / Incassati: le due schede in alto, con il totale in sospeso nella scheda superiore.",
+        "\"Filtra\": limita l'elenco per periodo, scuola, corso o tipo di movimento.",
+        "In ogni riga: \"Conferma incasso\"/\"Segna in sospeso\" per cambiare lo stato, e il menu \"⋯\" per Modifica o Elimina.",
+        "Il pulsante \"+\" flottante apre lo stesso modulo di creazione del resto dell'app."
+      ],
+      "tips": [
+        "\"Incassa tutti\"/\"Segna tutti come in sospeso\" agiscono sull'elenco visibile — con filtri attivi, riguardano solo ciò che è filtrato.",
+        "Eliminare chiede conferma e anima l'uscita della riga, così vedi esattamente cosa hai cancellato."
+      ],
+      "expectedResult": "Trovi e aggiorni qualsiasi movimento senza uscire da questa schermata."
+    },
+    "resumen-referencia": {
+      "title": "Riepilogo, a colpo d'occhio",
+      "summary": "Un unico totale protagonista in alto; tutto il resto si apre solo se lo richiedi.",
+      "whatYouCanDo": "Riepilogo combina una risposta rapida (il totale del periodo, confrontato con quello precedente) con schede pieghevoli per chi vuole approfondire.",
+      "whenToUseIt": "Per capire come va un periodo, confrontare scuole o corsi, o rivedere commissioni e rettifiche con colleghi.",
+      "steps": [
+        "Scegli la granularità (mensile, trimestrale, semestrale, annuale o personalizzato); la striscia di periodi sotto naviga da sola — tocca uno qualsiasi per ricentrarti lì.",
+        "Filtra per tipo (Totale, Corso, Commissione o Rettifica) con il selettore sotto.",
+        "La scheda principale mostra il totale e, quando ha senso calcolarlo, il confronto con il periodo precedente.",
+        "Tocca qualsiasi scheda (Per scuola, Per corso, Commissioni, Rettifiche di corso, Calendario) per aprirla."
+      ],
+      "tips": [
+        "Con più di una scuola, \"Per scuola\" inizia aperta perché è la domanda più frequente dopo il totale; con una sola, quella sezione non compare (non ci sarebbe nulla da confrontare) ed è \"Per corso\" a iniziare aperta. Le altre iniziano sempre chiuse.",
+        "Dentro \"Per scuola\", tocca una scuola per vedere il suo dettaglio per corso senza uscire dalla scheda."
+      ],
+      "expectedResult": "Hai la cifra che cercavi, con tanto o poco dettaglio quanto hai richiesto."
+    },
+    "configuracion-referencia": {
+      "title": "Configurazione, a colpo d'occhio",
+      "summary": "Il menu dove mantieni i tuoi dati base: scuole, corsi e tariffe.",
+      "whatYouCanDo": "Scuole, Corsi e Tariffe — i cataloghi che usi quando registri un movimento in Il mio lavoro.",
+      "whenToUseIt": "Per mantenere aggiornati i tuoi dati base: aggiungere una scuola nuova, un corso nuovo, o modificare una tariffa.",
+      "steps": [
+        "Tocca qualsiasi riga del menu per entrare in quella sezione; \"‹ Configurazione\" torna al menu.",
+        "Scuole e Corsi si creano con il pulsante \"+\" flottante, come in Il mio lavoro.",
+        "Tariffe mostra Corso e Commissione in un unico elenco (il tipo si sceglie come filtro, o creando, dentro il foglio stesso) — stesso schema visivo di Il mio lavoro."
+      ],
+      "expectedResult": "Trovi qualsiasi catalogo o impostazione senza dover ricordare in quale scheda si trovava prima."
+    },
+    "perfil-referencia": {
+      "title": "Il mio profilo, a colpo d'occhio",
+      "summary": "Il tuo avatar, i tuoi dati, il tuo tesserino istruttore, la tua valuta preferita e la tua password — tutto in un unico posto, accessibile dal tuo nome nell'intestazione.",
+      "whatYouCanDo": "Tocca il tuo avatar o il tuo nickname (in alto a destra in qualsiasi schermata) per entrare in Il mio profilo: la tua identità, il tuo tesserino istruttore, la tua lingua, la tua valuta preferita e la tua password, tutto in un unico posto.",
+      "whenToUseIt": "Quando vuoi personalizzare il tuo account, correggere un dato, o cambiare la password senza dover uscire e passare per \"password dimenticata\".",
+      "steps": [
+        "Tocca l'avatar/nickname dell'intestazione per entrare in Il mio profilo.",
+        "La matita sull'avatar apre il selettore di icona e colore — la modifica si salva alla scelta, senza un pulsante \"Salva\" separato.",
+        "\"Modifica\" in Dati personali apre nome, cognome e nickname; il nickname non può contenere \"@\" né coincidere con quello di un altro account.",
+        "\"Dati istruttore\" è il tuo tesserino: iniziali, numero SSI Pro e la tua firma — si salvano qui una sola volta e servono a compilare automaticamente i tuoi Training Records.",
+        "La valuta preferita si usa come riserva in Rettifica di corso quando non c'è una tariffa che la determini — gli altri movimenti usano sempre la valuta della propria tariffa."
+      ],
+      "tips": [
+        "Cambiare la password qui non richiede la password attuale — se sei già dentro l'app, si fida che la sessione attiva sia sufficiente.",
+        "Anche la lingua di tutta l'app si cambia da qui, senza dover uscire.",
+        "Eliminare il tuo account è permanente e cancella tutti i tuoi dati — per confermarlo devi scrivere la parola ANNULLA, così non si cancella nulla per un tocco accidentale."
+      ],
+      "expectedResult": "Il tuo account riflette l'avatar, i dati, il tesserino istruttore e la valuta che scegli, e puoi cambiare la password o la lingua quando vuoi senza uscire dall'app."
+    },
+    "filtros-referencia": {
+      "title": "Filtrare e cercare",
+      "summary": "Il mio lavoro, Tariffe e i cataloghi di Configurazione condividono lo stesso schema di filtri.",
+      "whatYouCanDo": "Un pulsante \"Filtra\" (con il numero di filtri attivi) apre un pannello con i campi disponibili — periodo, scuola, corso, tipo... — invece di mostrarli sempre sopra l'elenco.",
+      "whenToUseIt": "Quando l'elenco ha troppi elementi per rivederli tutti a vista.",
+      "steps": [
+        "Premi \"Filtra\" per aprire il pannello dei campi disponibili in quella schermata.",
+        "Scegline uno o più — il filtro per corso ammette selezione multipla.",
+        "\"Cancella filtri\" compare non appena ce n'è almeno uno attivo."
+      ],
+      "tips": [
+        "La ricerca nei cataloghi (Corsi, Valute) filtra mentre scrivi, senza distinguere maiuscole né accenti."
+      ],
+      "expectedResult": "L'elenco mostra solo ciò che ti interessa, senza perdere di vista quanti filtri hai attivi."
+    }
+  }
+}

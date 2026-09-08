@@ -1,0 +1,266 @@
+{
+  "datasets": {
+    "copySuffix": "kopia",
+    "summary_one": "Hasierako konfigurazioa (eskolak, ikastaroak eta tarifak), kontu berri bakoitzean klonatzen dena. {{count}} aktibo {{total}}-etik.",
+    "summary_other": "Hasierako konfigurazioa (eskolak, ikastaroak eta tarifak), kontu berri bakoitzean klonatzen dena. {{count}} aktibo {{total}}-etik.",
+    "inactive": "Inaktiboa",
+    "setDefault": "Markatu lehenetsi gisa",
+    "setDefaultAria": "Markatu \"{{label}}\" lehenetsi gisa",
+    "duplicate": "Bikoiztu",
+    "duplicateAria": "Bikoiztu \"{{label}}\"",
+    "activeAria": "\"{{label}}\" datu-multzoa aktibo",
+    "deleteItemLabel": "\"{{label}}\" datu-multzoa",
+    "empty": "Oraindik ez dago datu-multzorik.",
+    "fab": "Datu-multzo berria",
+    "sheetTitle": "Datu-multzo berria",
+    "sheetHint": "Hutsik eta inaktibo sortzen da — bikoiztu lehendik dagoen bat jada kargatutako edukitik abiatu nahi baduzu.",
+    "nameLabel": "Izena",
+    "create": "Sortu",
+    "toasts": {
+      "created": "Datu-multzoa sortuta — gehitu bere edukia aktibatu aurretik",
+      "duplicated": "\"{{newLabel}}\" sortu da \"{{sourceLabel}}\"(r)en eduki berarekin",
+      "duplicateError": "Ezin izan da bikoiztu. Saiatu berriro.",
+      "keyTaken": "Jada badago gako horrekin datu-multzo bat.",
+      "createError": "Ezin izan da sortu. Saiatu berriro.",
+      "updateError": "Ezin izan da eguneratu."
+    },
+    "errors": {
+      "isDefault": "Datu-multzo lehenetsia da — markatu beste bat lehenetsi gisa hau ezabatu aurretik.",
+      "lastOne": "Ezin duzu datu-multzo bakarra ezabatu — kanpo-erregistroak eta alta eskuzkoak gutxienez bat behar dute."
+    }
+  },
+  "crudTable": {
+    "buscarPlaceholder": "Bilatu...",
+    "buscarAria": "Bilatu",
+    "cambiarColor": "Aldatu kolorea",
+    "favorita": "Gogokoena",
+    "marcarPredeterminado": "Markatu lehenetsi gisa",
+    "esteElemento": "elementu hau",
+    "sinResultados": "Emaitzarik ez.",
+    "cerrar": "Itxi",
+    "guardar": "Gorde",
+    "cambiosGuardados": "Aldaketak gordeta",
+    "anadidoCorrectamente": "Gehituta",
+    "noSePudoGuardar": "Ezin izan da gorde. Saiatu berriro.",
+    "noSePudoGuardarCambio": "Ezin izan da aldaketa gorde.",
+    "estadoPredeterminadoRazon": "Egoera lehenetsia da (\"zain\" adierazten du) — markatu beste bat lehenetsi gisa hau ezabatu aurretik"
+  },
+  "sectionColors": {
+    "descripcion": "Nabigazio-barran eta area bakoitzeko erregistroa sortzeko botoietan erabiltzen dira."
+  },
+  "generalSettings": {
+    "iconoCarga": "Kargatze-ikonoa",
+    "descripcion": "Aplikazio osoaren \"kargatzen\" animazioan erabiltzen da. Ocean Flow-en logo ofiziala izatean, esan iezadazu eta zerrenda honen ordez ikono erreala jarriko dut.",
+    "iconoActualizado": "Ikonoa eguneratuta",
+    "noSePudoGuardar": "Ezin izan da gorde. Saiatu berriro.",
+    "vistaPrevia": "Aurrebista"
+  },
+  "externalRegistration": {
+    "titulo": "Baimendu kanpo-erregistroa",
+    "descripcion": "\"Erregistratu\" erakusten du saioa hasteko pantailan, edozeinek bere kontua sortu ahal izateko.",
+    "activado": "Kanpo-erregistroa aktibatuta",
+    "desactivado": "Kanpo-erregistroa desaktibatuta",
+    "noSePudoGuardar": "Ezin izan da gorde. Saiatu berriro."
+  },
+  "roleCheckbox": {
+    "rolProtegido": "{{label}} — sistemaren rol babestua, ez editagarria",
+    "si": "bai",
+    "no": "ez",
+    "etiquetaAria": "{{label}}: {{value}}"
+  },
+  "roleIcon": {
+    "superadmin": "Superadmin",
+    "admin": "Administratzailea"
+  },
+  "userStatus": {
+    "activo": "Aktibo",
+    "pendiente": "Zain",
+    "desactivado": "Desaktibatuta",
+    "nunca": "Inoiz ez"
+  },
+  "swipeToDelete": {
+    "eliminar": "Ezabatu",
+    "eliminarA": "Ezabatu {{nickname}}"
+  },
+  "userListRow": {
+    "alta": "Alta: {{date}}",
+    "ultimoAcceso": "Azken sarbidea: {{date}}",
+    "baja": "Baja: {{date}}",
+    "fechaNoRegistrada": "data erregistratu gabe"
+  },
+  "userDetailSheet": {
+    "cerrar": "Itxi",
+    "nombre": "Izena",
+    "apellidos": "Abizenak",
+    "nickname": "Ezizena",
+    "editarDatos": "Editatu datuak",
+    "email": "Emaila",
+    "altaLabel": "Alta",
+    "ultimoAcceso": "Azken sarbidea",
+    "movimientos": "Mugimenduak",
+    "ultimaActividad": "Azken jarduera",
+    "baja": "Baja",
+    "estado": "Egoera",
+    "activarUsuario": "Aktibatu erabiltzailea",
+    "desactivarUsuario": "Desaktibatu erabiltzailea",
+    "pendienteTexto": "Pertsonak esteka ireki eta bere pasahitza sortu zain.",
+    "regenerarEnlace": "Sortu esteka berriro",
+    "admin": "Admin",
+    "superadmin": "Superadmin",
+    "regenerarContrasena": "Sortu pasahitza berriro",
+    "eliminarUsuario": "Ezabatu erabiltzailea"
+  },
+  "activationLinkPanel": {
+    "cerrar": "Itxi",
+    "enlaceCopiado": "Esteka kopiatuta",
+    "noSePudoCopiar": "Ezin izan da kopiatu. Hautatu eskuz.",
+    "copiarEnlace": "Kopiatu esteka",
+    "simularEnvioMock": "Simulatu bidalketa arrakastatsua (mock)",
+    "mockEmailEnviado": "(Mock) Emaila ondo bidalita"
+  },
+  "createUserSheet": {
+    "cerrar": "Itxi",
+    "noSePudieronCargarDatasets": "Ezin izan dira eskuragarri dauden datu-multzoak kargatu.",
+    "camposObligatorios": "Emaila, ezizena eta hasierako datu-multzoa beharrezkoak dira.",
+    "soloSuperadminCrear": "Superadmin batek bakarrik sor ditzake erabiltzaileak.",
+    "noSePudoCrear": "Ezin izan da erabiltzailea sortu.",
+    "usuarioCreadoSinEmail": "Erabiltzailea sortuta (emaila ezin izan da bidali)",
+    "usuarioCreadoCorrectamente": "Erabiltzailea sortuta",
+    "enlaceCopiado": "Esteka kopiatuta",
+    "noSePudoCopiar": "Ezin izan da kopiatu. Hautatu eskuz.",
+    "noSePudoEnviarEmailTitulo": "Ezin izan da emaila bidali",
+    "noSePudoEnviarEmailDescripcion": "Ezin izan da aktibazio-emaila bidali. Esteka hau eskuz parteka dezakezu.",
+    "copiarEnlace": "Kopiatu esteka",
+    "simularEnvioMock": "Simulatu bidalketa arrakastatsua (mock)",
+    "mockUsuarioCreado": "(Mock) Erabiltzailea sortuta eta emaila ondo bidalita",
+    "titulo": "Sortu erabiltzailea",
+    "email": "Emaila",
+    "nombre": "Izena",
+    "apellidos": "Abizenak",
+    "nickname": "Ezizena",
+    "datasetInicial": "Hasierako datu-multzoa",
+    "cargando": "Kargatzen…",
+    "seleccionaDataset": "Aukeratu datu-multzo bat",
+    "sinDatasets": "Ez dago datu-multzo eskuragarririk",
+    "idioma": "Hizkuntza",
+    "nota": "Aukeratutako datu-multzoak automatikoki kargatzen ditu eskolak, ikastaroak, tarifak, komisioak eta hasierako ordainketa-katalogoak. Pertsonak erabilera bakarreko esteka duen email bat jasoko du, sartu eta bere pasahitza sortzeko.",
+    "creando": "Sortzen…",
+    "crearUsuario": "Sortu erabiltzailea"
+  },
+  "usersDirectory": {
+    "buscarPlaceholder": "Bilatu...",
+    "buscarAria": "Bilatu erabiltzaileak",
+    "leyendaEstadoAria": "Egoera-kolore bakoitzak zer esan nahi duen",
+    "crearUsuario": "Sortu erabiltzailea",
+    "noSePudoCargarListado": "Ezin izan da erabiltzaile-zerrenda kargatu.",
+    "errorDesconocido": "Errore ezezaguna",
+    "errorCargarListado": "Ezin izan da zerrenda kargatu: {{error}}",
+    "cargandoUsuarios": "Erabiltzaileak kargatzen…",
+    "sinResultados": "Emaitzarik ez.",
+    "soloSuperadminRol": "Superadmin batek bakarrik alda dezake beste kontu baten admin rola.",
+    "noSePudoActualizarRol": "Ezin izan da rola eguneratu.",
+    "rolActualizado": "Rola eguneratuta",
+    "soloSuperadminEliminar": "Superadmin batek bakarrik ezaba ditzake erabiltzaileak.",
+    "noSePudoEliminar": "Ezin izan da erabiltzailea ezabatu.",
+    "usuarioEliminado": "Erabiltzailea ezabatuta",
+    "soloSuperadminActivar": "Superadmin batek bakarrik aktiba edo desaktiba ditzake erabiltzaileak.",
+    "noSePudoActualizarEstado": "Ezin izan da egoera eguneratu.",
+    "usuarioDesactivado": "Erabiltzailea desaktibatuta",
+    "soloSuperadminEnlace": "Superadmin batek bakarrik aktiba ditzake kontuak edo sor dezake berriro haien sarbide-esteka.",
+    "noSePudoGenerarEnlace": "Ezin izan da esteka sortu.",
+    "enlaceGeneradoSinEmail": "Esteka sortuta (emaila ezin izan da {{nickname}}(r)i bidali)",
+    "enlaceActivacionTitulo": "Aktibazio-esteka sortuta",
+    "enlaceActivacionDescripcion": "Partekatu esteka hau {{nickname}}(r)ekin. \"Zain\" gisa agertzen jarraituko du bere pasahitza sortzeko erabili arte.",
+    "emailActivacionEnviado": "Aktibazio-emaila {{nickname}}(r)i bidalita",
+    "soloSuperadminContrasena": "Superadmin batek bakarrik sor dezake berriro beste kontu baten pasahitza.",
+    "noSePudoRegenerarContrasena": "Ezin izan da pasahitza berriro sortu.",
+    "contrasenaRegeneradaSinEmail": "Pasahitza berriro sortuta (emaila ezin izan da {{nickname}}(r)i bidali)",
+    "contrasenaRegeneradaTitulo": "Pasahitza berriro sortuta",
+    "contrasenaRegeneradaDescripcion": "{{nickname}}(r)en aurreko pasahitzak ez du balio jada. Partekatu esteka hau berri bat sor dezan — kontua \"Zain\" egoerara itzuliko da harik eta hori gertatu arte.",
+    "contrasenaRegeneradaEmailEnviado": "Pasahitza berriro sortuta eta emaila {{nickname}}(r)i bidalita",
+    "nicknameVacio": "Ezizena ezin da hutsik egon.",
+    "datosActualizados": "Datuak eguneratuta",
+    "noSePudieronGuardarCambios": "Ezin izan dira aldaketak gorde.",
+    "cambiarRolAdminTitulo": "Aldatu admin rola",
+    "usuarioLabel": "Erabiltzailea: {{nickname}}",
+    "adminLabel": "Admin: {{from}} → {{to}}",
+    "confirmar": "Berretsi",
+    "eliminarUsuarioTitulo": "Ezabatu erabiltzailea",
+    "eliminarUsuarioMensaje": "<strong>{{nickname}}</strong>(r)en kontua eta bere datu guztiak (eskolak, tarifak, mugimenduak...) betiko ezabatuko dira. Ekintza hau ezin da desegin.",
+    "eliminarUsuarioAlternativa": "Sarbidea bakarrik kentu nahi baduzu bere datuak gordez, erabili \"Desaktibatu\" horren ordez.",
+    "eliminar": "Ezabatu",
+    "desactivarUsuarioTitulo": "Desaktibatu erabiltzailea",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong>(e)k ezingo du saioa hasi jada. Bere datu guztiak (eskolak, tarifak, mugimenduak...) osorik gordetzen dira — nahi duzunean berraktiba dezakezu aktibazio-esteka berri bat sortuz.",
+    "desactivar": "Desaktibatu",
+    "generarEnlaceTitulo": "Sortu aktibazio-esteka",
+    "generarEnlaceMensaje": "<strong>{{nickname}}</strong>(r)entzat erabilera bakarreko esteka berri bat sortuko da. Aurreko edozein estekak funtzionatzeari utziko dio. Kontuak ez du sarbiderik lortuko prozesua osatu arte.",
+    "generarEnlace": "Sortu esteka",
+    "regenerarContrasenaTitulo": "Sortu pasahitza berriro",
+    "regenerarContrasenaMensaje": "<strong>{{nickname}}</strong>(r)en uneko pasahitzak berehala funtzionatzeari utziko dio. Aktibazio-esteka berri batetik berri bat sortu beharko du — bere datuei ez die eragiten.",
+    "regenerar": "Sortu berriro",
+    "generarInvitacion": "Sortu gonbidapen-esteka",
+    "soloSuperadminInvitacion": "Superadmin batek bakarrik sor ditzake gonbidapen-estekak.",
+    "noSePudoGenerarInvitacion": "Ezin izan da gonbidapen-esteka sortu.",
+    "enlaceInvitacionTitulo": "Gonbidapen-esteka",
+    "enlaceInvitacionDescripcion": "24 orduz baliozkoa eta erabilera bakarrekoa. Partekatu gonbidatu nahi duzun pertsonarekin — erregistratu ahal izango da kanpo-erregistroa itxita badago ere."
+  },
+  "sections": {
+    "escuelas": {
+      "label": "Eskolak",
+      "description": "Non irakasten duzun, bere kolorearekin"
+    },
+    "cursos": {
+      "label": "Ikastaroak",
+      "description": "Zer irakasten duzun, bere kolorearekin"
+    },
+    "tarifas": {
+      "label": "Tarifak",
+      "description": "Eskola eta ikastaro bakoitzeko zenbat kobratzen duzun"
+    },
+    "estadosPago": {
+      "label": "Ordainketa-egoerak",
+      "description": "Zain, kobratuta..."
+    },
+    "monedas": {
+      "label": "Dibisak",
+      "description": "Aplikazio osoan eskuragarri dagoen katalogoa"
+    },
+    "navegacion": {
+      "label": "Nabigazio-koloreak",
+      "description": "Area bakoitzaren identitate bisuala"
+    },
+    "ajustes": {
+      "label": "Ezarpen orokorrak",
+      "description": "Aplikazioaren kargatze-ikonoa"
+    },
+    "usuarios": {
+      "label": "Erabiltzaileak",
+      "description": "Aplikaziora sarbidea duten kontuak"
+    },
+    "datasets": {
+      "label": "Hasierako datu-multzoak",
+      "description": "Kontu bat sortzean klonatzen den konfigurazioa"
+    }
+  },
+  "menu": {
+    "administracion": "Administrazioa",
+    "superadmin": "Superadmin",
+    "configuracion": "Ezarpenak"
+  },
+  "crud": {
+    "nuevaEscuela": "Eskola berria",
+    "editarEscuela": "Editatu eskola",
+    "nombreCampo": "Izena",
+    "colorCampo": "Kolorea",
+    "nuevoCurso": "Ikastaro berria",
+    "editarCurso": "Editatu ikastaroa",
+    "nuevoEstadoPago": "Ordainketa-egoera berria",
+    "editarEstadoPago": "Editatu ordainketa-egoera",
+    "nuevaMoneda": "Dibisa berria",
+    "editarMoneda": "Editatu dibisa",
+    "monedasDescripcion": "Aukeratu hemen aplikazio osoaren erreserba-dibisa: erabiltzaile batek Nire profilan bere dibisa gogokoena aukeratu ez duenean erabiltzen da. Ez da lehentasun pertsonal bat — kontu berri edozeini lehenetsita aplikatzen zaiona da.",
+    "monedaPorDefectoApp": "Aplikazioaren lehenetsia",
+    "codigoCampo": "Kodea (adib. EUR)",
+    "simboloCampo": "Ikurra"
+  }
+}

@@ -24,6 +24,12 @@ export function buildDefaultConfig(templateMap) {
     includedRows: (templateMap?.sessionRows || []).map((row) => !row.optional),
     rowDates: {},
     examVersion: templateMap?.examVersion ? "online" : null, // premarcado Online — pedido explícito del usuario.
+    // Certificación de OW: siempre "openWaterDiver", fijo — pedido
+    // explícito 2026-09-08 ("quitar la opción de scuba diver"). Ya no hay
+    // un RadioChoice para elegirlo en TrainingRecordsTab.jsx (con una sola
+    // opción real no había nada que elegir); el checkbox "Scuba Diver" del
+    // PDF sigue existiendo en templateFieldMaps.js, simplemente nunca se
+    // marca porque `upgrade` nunca vale "scubaDiver".
     upgrade: templateMap?.upgradeCheckboxes ? "openWaterDiver" : null,
     // EAN32 premarcado (2026-09-04, pedido explícito) — la variante más
     // habitual con diferencia, mismo criterio que "Online" en examVersion.

@@ -7,10 +7,23 @@ Registro de cambios relevantes de Ocean Flow.
 ## [1.1.0] - 2026-09-07
 
 ### Added
-- **Instalar la app**: nuevo banner en Home con instrucciones paso a
-  paso para añadir Ocean Flow a la pantalla de inicio, tanto en iOS
-  (Safari) como en Android (Chrome) — descartable, y oculto solo si ya
-  se está usando la app instalada.
+- **Ayuda → "Generar un Training Record"**: nueva categoría/artículo
+  (en los 7 idiomas) que explica cómo generar el documento de progreso
+  de un alumno desde Training Records — antes no tenía ninguna mención
+  en la Ayuda, pese a ser una pantalla completa con su propio generador.
+- **Cinco idiomas nuevos**: francés, italiano, alemán, catalán y
+  euskera, junto a español e inglés — toda la interfaz, incluida la
+  Política de Privacidad y los Términos de Uso, elegibles desde Mi
+  perfil (y desde el alta de usuario para superadmin/registro).
+- **Ayuda**: los 3 artículos más básicos ("Registrar un movimiento",
+  "Cobrar movimientos pendientes", "Configurar tu aplicación") ya
+  incluyen un GIF animado con el flujo real, además del paso a paso en
+  texto.
+- **Instalar la app**: nueva pantalla con instrucciones paso a paso para
+  añadir Ocean Flow a la pantalla de inicio, tanto en iOS (Safari) como
+  en Android (Chrome) — accesible desde un enlace fijo en Ayuda y un
+  enlace de texto ("Descargar app") junto a los KPIs de Home, ambos
+  siempre visibles (oculto solo si ya se está usando la app instalada).
 - **Training Records ya tiene acceso propio**, desde una tarjeta en
   Home. Genera el registro de progreso oficial (Training Record) de
   cada alumno para las 10 plantillas SSI, con firma incluida — nada de
@@ -43,10 +56,41 @@ Registro de cambios relevantes de Ocean Flow.
   altas masivas automatizadas (Vercel BotID).
 
 ### Changed
-- **Mi trabajo**: cada KPI de cabecera lleva ahora un icono fijo junto a
-  su etiqueta, además del que ya se encoge junto a la cifra — la
-  identidad de color del KPI no desaparece del todo aunque la cifra sea
-  muy larga.
+- **KPIs de Mi trabajo**: el icono junto a cada cifra queda en 10px, sin
+  icono aparte junto a la etiqueta (un solo icono por KPI, no dos) y
+  ahora se oculta por completo cuando ese KPI no tiene ningún
+  movimiento — antes se veía a tamaño completo junto al "—", igual que
+  si hubiera datos. La etiqueta ("Generado este mes"/"Pendiente de
+  cobrar"/"Cobrado este mes") queda centrada, también cuando ocupa dos
+  líneas — antes se alineaba a la izquierda pese a que el icono y la
+  cifra de arriba sí estaban centrados.
+- **Training Records de Open Water**: se retira el paso "Certificación"
+  (elegir entre Open Water Diver / Scuba Diver) — con Scuba Diver ya
+  descartado, solo quedaba una opción real, así que no había nada que
+  elegir. El documento sigue marcando "Open Water Diver", como siempre.
+- **Training Records en Home**: la tarjeta con borde y degradado pasa a
+  ser una fila fina, sin tarjeta propia — igual de accesible, mucho
+  menos pesada visualmente. Sin ningún documento generado todavía es una
+  invitación real ("Genera tu primer Training Record"); en cuanto lo hay,
+  muestra la cifra animada junto a "Generados", mismo patrón que
+  Alumnos/Cursos/Captados justo arriba, alineada al mismo margen que el
+  resto de tarjetas de Home. El contenido (icono, título, cifra, flecha)
+  va agrupado y centrado en la fila, ahora de ancho completo — antes se
+  encogía al ancho de su propio contenido y por eso quedaba todo pegado
+  a la izquierda con un hueco vacío a la derecha. Con actividad, la
+  insignia lleva además un resplandor sutil detrás.
+- **Training Records**: en Nitrox, Deep Diving, Basic Diver, Diver
+  Stress & Rescue, Navigation, Night & Limited Visibility, Perfect
+  Buoyancy y React Right, las filas de progreso del curso que de verdad
+  son necesarias para certificarlo pasan a marcarse como "Obligatorio"
+  (ya no se pueden desmarcar por error) — mismo criterio que ya tenían
+  Open Water Diver y Advanced Open Water Diver.
+- **Novedades de esta versión (WhatsNew)**: reescrito con las 6
+  novedades reales de este rediseño — rediseño e imagen nueva, carnet
+  de instructor, Training Records, multi idioma, Home/Mi trabajo más
+  claros, y cómo repasarlo luego desde Ayuda. Animación entre
+  diapositivas también mejorada: ahora se aprecia con claridad la
+  salida de una y la entrada de la siguiente, en vez de solo un fundido.
 - **Comisión y Ajuste** tienen ahora su propio color de marca dedicado
   (antes reutilizaban colores de estado como "pendiente" o un gris
   genérico) — pensado también para material de campaña/redes, no solo
@@ -183,6 +227,56 @@ Registro de cambios relevantes de Ocean Flow.
   "pendiente de configurar" que ya está configurado).
 
 ### Fixed
+- **Ayuda: al abrir una categoría distinta, la que quedaba abierta se
+  cerraba de golpe y la nueva podía acabar en cualquier posición de la
+  pantalla** (a veces por encima de la propia cabecera), sobre todo si
+  ya se había bajado la página para terminar de leer la anterior. Ahora
+  cada categoría que se abre queda alineada justo debajo de la
+  cabecera, con una animación de scroll.
+- **Instalada como acceso directo en iOS: el botón "+" flotante y el
+  final de cualquier pantalla podían quedar tapados por la barra
+  inferior** — la barra crece de verdad al no tener el navegador (para
+  el indicador de inicio del iPhone), pero el botón y el margen final
+  de las pantallas seguían calculando su distancia al borde con un
+  valor fijo, igual que en una pestaña normal de Safari. Corregido para
+  los dos casos.
+- **País de residencia (Registro y Mi perfil): la lista de países podía
+  quedar comprimida contra el propio campo, difícil de usar** — al
+  tocar el campo, el teclado del móvil se abre a la vez que la lista;
+  si la lista decidía su posición justo antes de que el teclado
+  terminara de abrirse, se quedaba mal colocada el resto de la
+  apertura. Ahora se corrige una vez, en cuanto el teclado se asienta.
+- **KPIs de Mi trabajo: el cálculo de espacio disponible para el icono
+  y la cifra tenía una referencia circular** — medía un elemento que ya
+  había sido encogido por el propio icono, así que podía encoger u
+  ocultar el icono de forma incorrecta e inconsistente según el
+  dispositivo. Corregido de raíz (mide ahora un contenedor de ancho
+  estable, no afectado por el propio icono/cifra); de paso, la cifra
+  queda centrada de verdad junto al icono, no solo dentro de una caja
+  más ancha que su propio texto.
+- **Ayuda → "Mi perfil" y "Consultar cuánto has generado" tenían
+  contenido desactualizado** — "Mi perfil" no mencionaba el carnet de
+  instructor (una de las novedades del rediseño), y "Consultar cuánto
+  has generado" seguía diciendo que "Generado este mes" vivía en Home
+  con un indicador de tendencia — hoy esa cifra vive en Mi trabajo.
+  Corregidos, en los 7 idiomas.
+- **KPIs de Mi trabajo (Generado/Pendiente/Cobrado): un importe de 6+
+  dígitos podía llegar a salirse del recuadro** — el icono ya podía
+  ocultarse del todo para dejarle sitio, pero el propio número no tenía
+  ninguna protección si aun así no cabía. Ahora, en ese caso extremo, el
+  número reduce su propio tamaño de letra lo justo para caber, sin
+  afectar a los otros dos KPI. De paso, el icono junto a cada cifra
+  queda centrado con el número (antes se alineaba arriba) y pasa a ser
+  un icono suelto, sin insignia de fondo, pegado a la cifra.
+- **Regenerar un solo Training Record ("Regenerar TR") no sumaba al
+  contador de Home** — solo "Generar para todos los alumnos" lo hacía.
+  Ahora cuenta cualquier generación con éxito, se llame de una en una o
+  para todo el listado a la vez.
+- **El contador de Training Records generados se compartía entre
+  cuentas del mismo navegador** — al entrar con otra cuenta se seguía
+  viendo la cifra generada por la cuenta anterior, aunque la nueva no
+  hubiera generado ninguno todavía. Ahora cada cuenta tiene su propio
+  contador, igual que ya pasa con "Qué hay de nuevo".
 - **`manifest.json` nunca llegaba al build de producción** (vivía en la
   raíz del repositorio, no en `public/` — Vite solo empaqueta esa
   carpeta): probable causa de que el icono de la app no aparezca bien

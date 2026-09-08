@@ -222,11 +222,15 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: P("23152421-0"),
       lastName: P("23152421-1"),
     },
+    // `fixed` (2026-09-08, pedido explícito): la 1ª (sesiones académicas),
+    // 3ª (Aguas Abiertas 1) y 4ª (Aguas Abiertas 2) pasan a obligatorias de
+    // verdad — la 2ª (piscina) y la 5ª/6ª (Aguas Abiertas 3/adicional)
+    // siguen siendo desmarcables, mismo criterio que antes.
     sessionRows: [
-      progressRow("23152425", { label: "Sesiones Académicas Finalizadas" }),
+      progressRow("23152425", { label: "Sesiones Académicas Finalizadas", fixed: true }),
       progressRow("23152427", { label: "Habilidades en Piscina/Aguas Confinadas", optional: true }),
-      progressRow("23152429", { label: "Inmersión de Formación en Aguas Abiertas 1 Completada" }),
-      progressRow("23152431", { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
+      progressRow("23152429", { label: "Inmersión de Formación en Aguas Abiertas 1 Completada", fixed: true }),
+      progressRow("23152431", { label: "Inmersión de Formación en Aguas Abiertas 2 Completada", fixed: true }),
       progressRow("23152433", { label: "Inmersión de Formación en Aguas Abiertas 3 Completada" }),
       progressRow("23152435", { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
     ],
@@ -253,10 +257,17 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: P("36027014-0"),
       lastName: P("36027014-1"),
     },
+    // `fixed` (2026-09-08, pedido explícito): las 3 primeras filas pasan a
+    // obligatorias de verdad — antes la 2ª (piscina) y la 3ª (aguas
+    // abiertas) eran desmarcables (`optional: true`, pensado para variantes
+    // del curso sin esa sesión); se retira `optional` de ambas porque una
+    // fila `fixed` no puede quedar excluida del documento generado (ver
+    // buildDefaultConfig, recordConfig.js: `includedRows` parte de
+    // `!row.optional`). La 4ª (inmersión adicional) sigue siendo opcional.
     sessionRows: [
-      progressRow("36027018", { label: "Sesiones Académicas Finalizadas" }),
-      progressRow("36027020", { label: "Habilidades en Piscina/Aguas Confinadas", optional: true }),
-      progressRow("36027022", { label: "Inmersión de Formación en Aguas Abiertas Completada", optional: true }),
+      progressRow("36027018", { label: "Sesiones Académicas Finalizadas", fixed: true }),
+      progressRow("36027020", { label: "Habilidades en Piscina/Aguas Confinadas", fixed: true }),
+      progressRow("36027022", { label: "Inmersión de Formación en Aguas Abiertas Completada", fixed: true }),
       progressRow("36027024", { label: "Inmersión de Formación en Aguas Abiertas Adicional Completada", optional: true }),
     ],
     examVersion: { printed: P("36027032-0"), online: P("36027034-0") },
@@ -281,9 +292,14 @@ export const TEMPLATE_FIELD_MAPS = {
   // training-records-debug/BD-rects-overlay.png (2026-09-04): curso corto
   // de una sola sesión, sin versión de examen (es un cuestionario V/F, sin
   // checkbox impresa/online) y sin ninguna fila marcada "(opcional)" en el
-  // PDF real — las 3 filas de progreso y la confirmación del cuestionario
-  // se dejan `optional:false` (premarcadas, aún así desmarcables), mismo
-  // criterio por defecto que SC-DD/SC-EAN.
+  // PDF real.
+  // `fixed` (2026-09-08, pedido explícito): las 3 filas de progreso pasan
+  // a obligatorias de verdad, no solo premarcadas — "todas incluida
+  // confirmación del cuestionario". La confirmación del cuestionario
+  // (`examConfirmation` más abajo) ya era obligatoria de por sí desde
+  // 2026-09-04 (se renderiza como fecha suelta sin casilla, DateOnlyRow en
+  // TrainingRecordsTab.jsx, y validateRecordConfig la exige siempre que la
+  // plantilla la tenga) — no necesita ningún flag `fixed` para serlo.
   BD: {
     name: "Basic Diver",
     sourcePdfPage: 1,
@@ -292,9 +308,9 @@ export const TEMPLATE_FIELD_MAPS = {
       lastName: R(336.24, 754.805, 217.26, 17),
     },
     sessionRows: [
-      rectRow([[40.5, 647.65, 51.75, 17], [101.25, 647.65, 51.75, 17], [162, 647.65, 51.75, 17], [222.75, 647.65, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
-      rectRow([[40.5, 584.192, 51.75, 17], [101.25, 584.192, 51.75, 17], [162, 584.192, 51.75, 17], [222.75, 584.192, 51.75, 17]], { label: "Habilidades de Buceo en Piscina/Aguas Confinadas Completadas" }),
-      rectRow([[40.5, 520.734, 51.75, 17], [101.25, 520.734, 51.75, 17], [162, 520.734, 51.75, 17], [222.75, 520.734, 51.75, 17]], { label: "Introducción al Buceo en Aguas Abiertas Completado" }),
+      rectRow([[40.5, 647.65, 51.75, 17], [101.25, 647.65, 51.75, 17], [162, 647.65, 51.75, 17], [222.75, 647.65, 51.75, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
+      rectRow([[40.5, 584.192, 51.75, 17], [101.25, 584.192, 51.75, 17], [162, 584.192, 51.75, 17], [222.75, 584.192, 51.75, 17]], { label: "Habilidades de Buceo en Piscina/Aguas Confinadas Completadas", fixed: true }),
+      rectRow([[40.5, 520.734, 51.75, 17], [101.25, 520.734, 51.75, 17], [162, 520.734, 51.75, 17], [222.75, 520.734, 51.75, 17]], { label: "Introducción al Buceo en Aguas Abiertas Completado", fixed: true }),
     ],
     // El PDF no tiene checkbox de "versión impresa/online" — es un
     // cuestionario verdadero/falso que el instructor revisa con el
@@ -323,10 +339,15 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: R(109.98, 754.805, 217.26, 17),
       lastName: R(336.24, 754.805, 217.26, 17),
     },
+    // `fixed` (2026-09-08, pedido explícito): la 1ª (sesiones académicas) y
+    // la 3ª (Aguas Abiertas 1) pasan a obligatorias de verdad — la 2ª
+    // (piscina) y la 4ª/5ª (Aguas Abiertas 2/adicional) siguen siendo
+    // desmarcables. La fecha de examen (más abajo) ya era obligatoria de
+    // por sí, no necesita `fixed`.
     sessionRows: [
-      rectRow([[40.5, 627.473, 51.75, 17], [101.25, 627.473, 51.75, 17], [162, 627.473, 51.75, 17], [222.75, 627.473, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
+      rectRow([[40.5, 627.473, 51.75, 17], [101.25, 627.473, 51.75, 17], [162, 627.473, 51.75, 17], [222.75, 627.473, 51.75, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
       rectRow([[40.5, 521.72, 51.75, 17], [101.25, 521.72, 51.75, 17], [162, 521.72, 51.75, 17], [222.75, 521.72, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", optional: true }),
-      rectRow([[40.5, 415.967, 51.75, 17], [101.25, 415.967, 51.75, 17], [162, 415.967, 51.75, 17], [222.75, 415.967, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada" }),
+      rectRow([[40.5, 415.967, 51.75, 17], [101.25, 415.967, 51.75, 17], [162, 415.967, 51.75, 17], [222.75, 415.967, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada", fixed: true }),
       rectRow([[40.5, 310.213, 51.75, 17], [101.25, 310.213, 51.75, 17], [162, 310.213, 51.75, 17], [222.75, 310.213, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
       rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
     ],
@@ -348,11 +369,18 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: R(109.98, 754.805, 217.26, 17),
       lastName: R(336.24, 754.805, 217.26, 17),
     },
+    // `fixed` (2026-09-08, pedido explícito): las 4 primeras filas pasan a
+    // obligatorias de verdad ("4 primeras y examen") — incluida la 2ª
+    // (piscina), que antes era desmarcable (`optional: true`); se retira
+    // ese `optional` porque una fila `fixed` no puede quedar excluida del
+    // documento generado (ver buildDefaultConfig, recordConfig.js). Solo
+    // la 5ª (inmersión adicional) sigue siendo opcional. La fecha de
+    // examen ya era obligatoria de por sí, no necesita `fixed`.
     sessionRows: [
-      rectRow([[40.5, 627.473, 51.75, 17], [101.25, 627.473, 51.75, 17], [162, 627.473, 51.75, 17], [222.75, 627.473, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
-      rectRow([[40.5, 521.72, 51.75, 17], [101.25, 521.72, 51.75, 17], [162, 521.72, 51.75, 17], [222.75, 521.72, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", optional: true }),
-      rectRow([[40.5, 415.967, 51.75, 17], [101.25, 415.967, 51.75, 17], [162, 415.967, 51.75, 17], [222.75, 415.967, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada" }),
-      rectRow([[40.5, 310.213, 51.75, 17], [101.25, 310.213, 51.75, 17], [162, 310.213, 51.75, 17], [222.75, 310.213, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
+      rectRow([[40.5, 627.473, 51.75, 17], [101.25, 627.473, 51.75, 17], [162, 627.473, 51.75, 17], [222.75, 627.473, 51.75, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
+      rectRow([[40.5, 521.72, 51.75, 17], [101.25, 521.72, 51.75, 17], [162, 521.72, 51.75, 17], [222.75, 521.72, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", fixed: true }),
+      rectRow([[40.5, 415.967, 51.75, 17], [101.25, 415.967, 51.75, 17], [162, 415.967, 51.75, 17], [222.75, 415.967, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada", fixed: true }),
+      rectRow([[40.5, 310.213, 51.75, 17], [101.25, 310.213, 51.75, 17], [162, 310.213, 51.75, 17], [222.75, 310.213, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada", fixed: true }),
       rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
     ],
     examVersion: { printed: R(339.5265, 391.9896, 6, 6), online: R(342.3975, 326.4176, 6, 6) },
@@ -376,10 +404,17 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: R(109.98, 754.805, 217.26, 17),
       lastName: R(336.24, 754.805, 217.26, 17),
     },
+    // `fixed` (2026-09-08, pedido explícito): las 3 primeras filas pasan a
+    // obligatorias de verdad ("tres primeras y examen") — incluida la 2ª
+    // (piscina), que antes era desmarcable (`optional: true`); se retira
+    // ese `optional` porque una fila `fixed` no puede quedar excluida del
+    // documento generado (ver buildDefaultConfig, recordConfig.js). Solo la
+    // 4ª (segunda inmersión) y la 5ª (adicional) siguen siendo opcionales.
+    // La fecha de examen ya era obligatoria de por sí, no necesita `fixed`.
     sessionRows: [
-      rectRow([[40.5, 639.718, 51.75, 17], [101.25, 639.718, 51.75, 17], [162, 639.718, 51.75, 17], [222.75, 639.718, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
-      rectRow([[40.5, 558.453, 51.75, 17], [101.25, 558.453, 51.75, 17], [162, 558.453, 51.75, 17], [222.75, 558.453, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", optional: true }),
-      rectRow([[40.5, 440.455, 51.75, 17], [101.25, 440.455, 51.75, 17], [162, 440.455, 51.75, 17], [222.75, 440.455, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas 1 Completada" }),
+      rectRow([[40.5, 639.718, 51.75, 17], [101.25, 639.718, 51.75, 17], [162, 639.718, 51.75, 17], [222.75, 639.718, 51.75, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
+      rectRow([[40.5, 558.453, 51.75, 17], [101.25, 558.453, 51.75, 17], [162, 558.453, 51.75, 17], [222.75, 558.453, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", fixed: true }),
+      rectRow([[40.5, 440.455, 51.75, 17], [101.25, 440.455, 51.75, 17], [162, 440.455, 51.75, 17], [222.75, 440.455, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas 1 Completada", fixed: true }),
       rectRow([[40.5, 322.457, 51.75, 17], [101.25, 322.457, 51.75, 17], [162, 322.457, 51.75, 17], [222.75, 322.457, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas 2 Completada" }),
       rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas Adicional Completada", optional: true }),
     ],
@@ -401,14 +436,18 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: R(109.98, 754.805, 217.26, 17),
       lastName: R(336.24, 754.805, 217.26, 17),
     },
+    // `fixed` (2026-09-08, pedido explícito): las 7 primeras filas pasan a
+    // obligatorias de verdad ("las 7 primeras y examen") — solo la 8ª
+    // (inmersión adicional) sigue siendo opcional. La fecha de examen ya
+    // era obligatoria de por sí, no necesita `fixed`.
     sessionRows: [
-      rectRow([[40.5, 647.65, 51.75, 17], [101.25, 647.65, 51.75, 17], [162, 647.65, 51.75, 17], [222.75, 647.65, 51.75, 17]], { label: "Sesiones Académicas Completadas" }),
-      rectRow([[40.5, 584.381, 51.75, 17], [101.25, 584.381, 51.75, 17], [162, 584.381, 51.75, 17], [222.75, 584.381, 51.75, 17]], { label: "Piscina/Aguas Confinadas 1 Completada" }),
-      rectRow([[40.5, 521.111, 51.75, 17], [101.25, 521.111, 51.75, 17], [162, 521.111, 51.75, 17], [222.75, 521.111, 51.75, 17]], { label: "Piscina/Aguas Confinadas 2 Completada" }),
-      rectRow([[40.5, 457.842, 51.75, 17], [101.25, 457.842, 51.75, 17], [162, 457.842, 51.75, 17], [222.75, 457.842, 51.75, 17]], { label: "Piscina/Aguas Confinadas 3 Completada" }),
-      rectRow([[40.5, 394.572, 51.75, 17], [101.25, 394.572, 51.75, 17], [162, 394.572, 51.75, 17], [222.75, 394.572, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada" }),
-      rectRow([[40.5, 331.303, 51.75, 17], [101.25, 331.303, 51.75, 17], [162, 331.303, 51.75, 17], [222.75, 331.303, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
-      rectRow([[40.5, 268.034, 51.75, 17], [101.25, 268.034, 51.75, 17], [162, 268.034, 51.75, 17], [222.75, 268.034, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 3 Completada" }),
+      rectRow([[40.5, 647.65, 51.75, 17], [101.25, 647.65, 51.75, 17], [162, 647.65, 51.75, 17], [222.75, 647.65, 51.75, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
+      rectRow([[40.5, 584.381, 51.75, 17], [101.25, 584.381, 51.75, 17], [162, 584.381, 51.75, 17], [222.75, 584.381, 51.75, 17]], { label: "Piscina/Aguas Confinadas 1 Completada", fixed: true }),
+      rectRow([[40.5, 521.111, 51.75, 17], [101.25, 521.111, 51.75, 17], [162, 521.111, 51.75, 17], [222.75, 521.111, 51.75, 17]], { label: "Piscina/Aguas Confinadas 2 Completada", fixed: true }),
+      rectRow([[40.5, 457.842, 51.75, 17], [101.25, 457.842, 51.75, 17], [162, 457.842, 51.75, 17], [222.75, 457.842, 51.75, 17]], { label: "Piscina/Aguas Confinadas 3 Completada", fixed: true }),
+      rectRow([[40.5, 394.572, 51.75, 17], [101.25, 394.572, 51.75, 17], [162, 394.572, 51.75, 17], [222.75, 394.572, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada", fixed: true }),
+      rectRow([[40.5, 331.303, 51.75, 17], [101.25, 331.303, 51.75, 17], [162, 331.303, 51.75, 17], [222.75, 331.303, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada", fixed: true }),
+      rectRow([[40.5, 268.034, 51.75, 17], [101.25, 268.034, 51.75, 17], [162, 268.034, 51.75, 17], [222.75, 268.034, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 3 Completada", fixed: true }),
       rectRow([[40.5, 204.764, 51.75, 17], [101.25, 204.764, 51.75, 17], [162, 204.764, 51.75, 17], [222.75, 204.764, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
     ],
     examVersion: { printed: R(339.5265, 362.8077, 6, 6), online: R(342.3975, 307.7731, 6, 6) },
@@ -440,14 +479,17 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: R(109.98, 754.805, 217.26, 17),
       lastName: R(336.24, 754.805, 217.26, 17),
     },
+    // `fixed` (2026-09-08, pedido explícito): las 7 filas de progreso
+    // pasan a obligatorias de verdad ("todas y examen"). La fecha de
+    // examen (más abajo) ya era obligatoria de por sí, no necesita `fixed`.
     sessionRows: [
-      rectRow([[40.5, 641.862, 171, 17], [40.5, 593.595, 171, 17], [40.5, 545.327, 171, 17]], { label: "Sesiones Académicas Completadas" }),
-      rectRow([[311, 394.434, 75, 17], [395, 394.434, 75, 17], [479, 394.434, 75, 17]], { label: "Sesión de Aplicación Práctica — Oxígeno" }),
-      rectRow([[310.17, 297.911, 75, 17], [394.17, 297.911, 75, 17], [478.17, 297.911, 75, 17]], { label: "Sesión de Aplicación Práctica — DEA" }),
-      rectRow([[40.5, 164.357, 75, 17], [124.5, 164.357, 75, 17], [208.5, 164.357, 75, 17]], { label: "Sesión de Aplicación Práctica — RCP/Primeros Auxilios" }),
-      rectRow([[311, 238.419, 75, 17], [395, 238.419, 75, 17], [479, 238.419, 75, 17]], { label: "Actualización de React Right Completada (1)" }),
-      rectRow([[311, 201.388, 75, 17], [395, 201.388, 75, 17], [479, 201.388, 75, 17]], { label: "Actualización de React Right Completada (2)" }),
-      rectRow([[311, 164.357, 75, 17], [395, 164.357, 75, 17], [479, 164.357, 75, 17]], { label: "Actualización de React Right Completada (3)" }),
+      rectRow([[40.5, 641.862, 171, 17], [40.5, 593.595, 171, 17], [40.5, 545.327, 171, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
+      rectRow([[311, 394.434, 75, 17], [395, 394.434, 75, 17], [479, 394.434, 75, 17]], { label: "Sesión de Aplicación Práctica — Oxígeno", fixed: true }),
+      rectRow([[310.17, 297.911, 75, 17], [394.17, 297.911, 75, 17], [478.17, 297.911, 75, 17]], { label: "Sesión de Aplicación Práctica — DEA", fixed: true }),
+      rectRow([[40.5, 164.357, 75, 17], [124.5, 164.357, 75, 17], [208.5, 164.357, 75, 17]], { label: "Sesión de Aplicación Práctica — RCP/Primeros Auxilios", fixed: true }),
+      rectRow([[311, 238.419, 75, 17], [395, 238.419, 75, 17], [479, 238.419, 75, 17]], { label: "Actualización de React Right Completada (1)", fixed: true }),
+      rectRow([[311, 201.388, 75, 17], [395, 201.388, 75, 17], [479, 201.388, 75, 17]], { label: "Actualización de React Right Completada (2)", fixed: true }),
+      rectRow([[311, 164.357, 75, 17], [395, 164.357, 75, 17], [479, 164.357, 75, 17]], { label: "Actualización de React Right Completada (3)", fixed: true }),
     ],
     examVersion: { printed: R(273.9015, 668.73, 6, 6), online: R(448.5225, 668.73, 6, 6) },
     // Fila de 3 recuadros (sin Número SSI Pro), igual que las demás de esta

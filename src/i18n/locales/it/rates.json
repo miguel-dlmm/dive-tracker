@@ -1,0 +1,52 @@
+{
+  "filter": {
+    "button": "Filtra",
+    "type": "Tipo",
+    "typeAll": "Tutti",
+    "school": "Scuola",
+    "schoolAll": "Tutte",
+    "course": "Corso",
+    "courseAll": "Tutti",
+    "clear": "Cancella filtri",
+    "showInactive": "Mostra disattivate"
+  },
+  "search": {
+    "placeholder": "Cerca",
+    "ariaLabel": "Cerca tariffa"
+  },
+  "list": {
+    "count": "{{count}} tariffe",
+    "empty": "Nessun risultato.",
+    "createdOn": "Creata: {{date}} · {{type}}",
+    "inactive": "Disattivata"
+  },
+  "fab": "Nuova tariffa",
+  "sheet": {
+    "editTitle": "Modifica tariffa di {{school}} - {{activity}}",
+    "createTitle": "Nuova tariffa di {{type}}",
+    "close": "Chiudi",
+    "typeTablistLabel": "Tipo di tariffa",
+    "hintGanado": "Quanto ti fai pagare per tenere tu il corso.",
+    "hintComision": "Quanto ti fai pagare per portare un cliente.",
+    "school": "Scuola",
+    "course": "Corso",
+    "rateLabel": "Tariffa · {{currency}}",
+    "save": "Salva"
+  },
+  "toasts": {
+    "saved": "Modifiche salvate",
+    "added": "Tariffa aggiunta",
+    "saveError": "Impossibile salvare. Riprova.",
+    "duplicate": "Hai già una tariffa attiva per questa scuola e questo corso. Disattivala prima di crearne un'altra.",
+    "reactivateBlocked": "Impossibile riattivare: esiste già un'altra tariffa attiva per questa scuola e questo corso.",
+    "deactivated": "Tariffa disattivata",
+    "reactivated": "Tariffa riattivata"
+  },
+  "deleteInUse_one": "Impossibile eliminare: c'è {{count}} registro che usa questa tariffa.",
+  "deleteInUse_other": "Impossibile eliminare: ci sono {{count}} registri che usano questa tariffa.",
+  "rowMenu": {
+    "itemLabel": "la tariffa di {{school}} - {{activity}}",
+    "deactivate": "Disattiva",
+    "reactivate": "Riattiva"
+  }
+}

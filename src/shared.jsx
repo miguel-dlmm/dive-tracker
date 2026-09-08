@@ -1810,14 +1810,43 @@ function useFloatingPosition(open, anchorRef, align = "left") {
   // ver el comentario de `maxHeight` más abajo) — solo la elección
   // arriba/abajo queda fija mientras el panel siga abierto.
   const openUpRef = useRef(false);
-  useEffect(() => {
-    if (!open) return;
+  const decideOpenUp = useCallback(() => {
     const el = anchorRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
     const vh = window.visualViewport?.height || window.innerHeight;
     openUpRef.current = (vh - rect.bottom) < 280 && rect.top > 280;
-  }, [open, anchorRef]);
+  }, [anchorRef]);
+  useEffect(() => {
+    if (!open) return;
+    decideOpenUp();
+  }, [open, decideOpenUp]);
+  // Segunda decisión, solo la primera vez que cambia visualViewport tras
+  // abrir (2026-09-08, bug real reportado — "la lista aparece encima del
+  // propio campo y se hace difícil hacer select sobre él"): en un campo
+  // de texto (SearchSelect, país de residencia p.ej.), tocarlo ABRE EL
+  // TECLADO a la vez que el panel — la decisión de arriba/abajo de justo
+  // encima se toma con el viewport TODAVÍA SIN encoger (la animación del
+  // teclado en iOS tarda ~250-300ms), así que puede quedar mal elegida
+  // desde el principio y quedarse así el resto de la apertura (a
+  // propósito no se re-decide en cada recálculo, ver el comentario de
+  // arriba). Escuchar un único evento `resize` de visualViewport después
+  // de abrir permite corregir la decisión una vez, ya con el teclado
+  // asentado, sin reintroducir el salto continuo mientras se escribe que
+  // motivó congelarla en primer lugar.
+  useEffect(() => {
+    if (!open) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let handled = false;
+    function onSettle() {
+      if (handled) return;
+      handled = true;
+      decideOpenUp();
+    }
+    vv.addEventListener("resize", onSettle);
+    return () => vv.removeEventListener("resize", onSettle);
+  }, [open, decideOpenUp]);
   const recalc = useCallback(() => {
     const el = anchorRef.current;
     if (!open || !el) return;
@@ -2001,15 +2030,27 @@ export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = BRAND_
 }
 
 // Botón flotante de creación — convención #3 (CLAUDE.md): mismo lenguaje
-// visual (fixed bottom-24 right-4, 52×52, color de acento de la sección)
-// en toda pantalla de lista con FAB+hoja (Mi trabajo, Tarifas,
-// Configuración). Extraído 2026-08-30 tras encontrar el mismo bloque de
-// clases/estilo copiado en cada una de ellas. `visible` es opcional
-// (por defecto siempre visible/interactivo): Mi trabajo lo usa para
-// ocultar el FAB mientras el usuario baja por la lista, pero ninguna
-// otra pantalla necesita ese comportamiento hoy — con `visible` sin
-// pasar, el componente se comporta exactamente igual que un botón fijo
-// normal.
+// visual (fixed a 6rem del borde inferior + right-4, 52×52, color de
+// acento de la sección) en toda pantalla de lista con FAB+hoja (Mi
+// trabajo, Tarifas, Configuración). Extraído 2026-08-30 tras encontrar
+// el mismo bloque de clases/estilo copiado en cada una de ellas.
+// `visible` es opcional (por defecto siempre visible/interactivo): Mi
+// trabajo lo usa para ocultar el FAB mientras el usuario baja por la
+// lista, pero ninguna otra pantalla necesita ese comportamiento hoy —
+// con `visible` sin pasar, el componente se comporta exactamente igual
+// que un botón fijo normal.
+// `bottom` por estilo en línea, no `bottom-24` de Tailwind (2026-09-08,
+// bug real reportado — "instalada como acceso directo en iOS... el pie
+// corta el + flotante"): la barra inferior (App.jsx) suma
+// `env(safe-area-inset-bottom)` a su alto para el indicador de inicio,
+// pero ese inset vale 0 en una pestaña normal de Safari (la propia
+// barra de Safari ya ocupa ese espacio) y crece de verdad solo cuando
+// la app corre instalada, sin ninguna barra de navegador que lo
+// absorba — la barra inferior real se vuelve más alta ahí, y un
+// `bottom-24` fijo (96px, igual en los dos casos) deja de guardar
+// distancia suficiente con ella. Mismo `calc()` que ya usan
+// paddingBottom en ComisionesTab/WorkLogTab/MovementSheet/CompanerosTab
+// para el mismo inset, aplicado aquí a `bottom` en vez de a un padding.
 export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }) {
   return (
     <button
@@ -2017,9 +2058,10 @@ export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }
       aria-label={label}
       aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
-      className="fixed bottom-24 right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 active:scale-90"
+      className="fixed right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 active:scale-90"
       style={{
         backgroundColor: color, width: 52, height: 52,
+        bottom: "calc(6rem + env(safe-area-inset-bottom))",
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.7)",
         pointerEvents: visible ? "auto" : "none",

@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { GraduationCap, Award, Handshake, ChevronRight, Building2, Smartphone, X } from "lucide-react";
+import { GraduationCap, Award, Handshake, ChevronRight, Building2 } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import PendingCollectionCard from "./PendingCollectionCard";
+import { getGeneratedCount } from "./trainingRecords/generatedCounter";
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
 // schools / currencies / paymentStatuses: hooks de useSupabaseTable
@@ -89,28 +90,33 @@ function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-// Preferencia de dispositivo, no de cuenta — ver comentario junto a su uso.
-const INSTALL_BANNER_DISMISSED_KEY = "oceanpulse:installBannerDismissed";
-
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
   const { t } = useTranslation("home");
-  const [installBannerDismissed, setInstallBannerDismissed] = useState(() => {
-    try { return localStorage.getItem(INSTALL_BANNER_DISMISSED_KEY) === "true"; } catch { return false; }
-  });
-  // De dispositivo, no de cuenta (a diferencia de la moneda favorita,
-  // ver ADR-0007): "ya lo he visto" es sobre este navegador/móvil, no
-  // sobre qué usuario haya iniciado sesión en él. Oculto también si la
-  // propia app ya se está ejecutando instalada (display-mode:
-  // standalone en Chromium/Android, navigator.standalone en iOS Safari
-  // — ningún estándar cubre ambos con la misma propiedad) — no tiene
-  // sentido ofrecer instalar algo que ya está instalado.
+  // Oculta el punto de entrada de "Instalar la app" si la propia app ya
+  // corre instalada (display-mode: standalone en Chromium/Android,
+  // navigator.standalone en iOS Safari — ningún estándar cubre ambos con
+  // la misma propiedad): no tiene sentido ofrecer instalar algo que ya
+  // está instalado.
   const alreadyInstalled = typeof window !== "undefined" && (window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator?.standalone === true);
-  const dismissInstallBanner = () => {
-    setInstallBannerDismissed(true);
-    try { localStorage.setItem(INSTALL_BANNER_DISMISSED_KEY, "true"); } catch { /* no-op — preferencia de UI, no crítica */ }
-  };
   const translatedTypeMeta = useTranslatedMovementTypeMeta(t);
   const reducedMotion = usePrefersReducedMotion();
+  // Contador decorativo de la tarjeta de Training Records (2026-09-08,
+  // "otra manera dinámica y atractiva de integrarlo en la home") — ver
+  // generatedCounter.js para el porqué de vivir solo en localStorage
+  // (nunca se guardan datos de alumnos, así que no hay ningún sitio real
+  // donde llevar la cuenta de certificados emitidos sin romper esa
+  // garantía). Leído una vez al montar Home — TrainingRecordsTab.jsx es
+  // una pestaña hermana que se desmonta al salir de ella, así que no
+  // hace falta sincronización en vivo entre las dos, solo que Home lea
+  // el valor actual cada vez que se vuelve a montar.
+  // Por CUENTA (`userId`), no por dispositivo — bug real reportado
+  // 2026-09-08: con el bypass de login/varias cuentas de prueba en el
+  // mismo navegador, una cuenta demo recién entrada mostraba los
+  // Training Records ya generados por la cuenta admin usada antes en ese
+  // mismo dispositivo. Ver generatedCounter.js, mismo criterio que
+  // whatsNewSeenKey (App.jsx).
+  const [generatedCount] = useState(() => getGeneratedCount(userId));
+  const animatedGeneratedCount = useCountUp(generatedCount, { reduced: reducedMotion });
   const now = new Date();
   const currentMonthKey = monthKey(now);
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
@@ -227,9 +233,34 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           ascendente + entrada escalonada (KpiTile, arriba) en vez de
           aparecer estáticas de golpe. */}
       <div>
-        <h2 className="mb-2 px-0.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
-          {t("kpis.sectionTitle")}
-        </h2>
+        <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            {t("kpis.sectionTitle")}
+          </h2>
+          {/* Instalar la app (2026-09-08, tercera vuelta): el banner
+              descartable de antes "no convencía" — pedido explícito de
+              moverlo a un sitio integrado que siempre esté disponible y
+              no moleste (ver el enlace fijo en Ayuda, HelpTab.jsx). El
+              usuario pidió además un punto de entrada en Home
+              ("botón, pastilla... innova"), primero como icono solo;
+              después, pedido explícito de cambiarlo por texto pequeño
+              ("Descargar app"). Nunca se cierra ni se recuerda como
+              "descartado" — solo se oculta cuando ya no aplica (la app
+              ya corre instalada). Mismo truco de margen negativo que ya
+              usan los botones de navegación del calendario (más abajo)
+              para que el objetivo táctil llegue a 44px de alto sin que
+              la fila crezca visualmente con él. */}
+          {onOpenInstallApp && !alreadyInstalled && (
+            <button
+              type="button"
+              onClick={onOpenInstallApp}
+              className="-my-3 flex min-h-11 shrink-0 items-center rounded-md px-1 text-[11px] font-semibold active:opacity-70"
+              style={{ color: BRAND_OCEAN }}
+            >
+              {t("installApp")}
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-3 gap-2">
           <KpiTile icon={GraduationCap} color={TEAL} value={peopleTrainedThisMonth} label={t("kpis.studentsThisMonth")} index={0} reduced={reducedMotion} />
           <KpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
@@ -237,69 +268,94 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         </div>
       </div>
 
-      {/* 2. Training Records (2026-09-04, pedido explícito: "el generador de
-          TR es una herramienta de uso frecuente, colócalo más arriba y con
-          un estilo acorde a la Home") — rediseñada más prominente y subida
-          justo debajo de los KPIs (antes cerraba la pantalla, compitiendo
-          por atención con "Generado este mes"). Mismo lenguaje visual que
-          el resto de tarjetas de Home (rounded-xl, tinte de color de
-          marca), pero con más peso — icono más grande en badge circular
-          con el propio BRAND_NAVY de fondo (no solo un 10% de opacidad
-          como el resto de filas de icono+chevron) y un borde sutil a juego, para
-          que destaque como acceso directo a una herramienta, no como una
-          fila más de ajustes.
-          onOpenTrainingRecords (App.jsx) simplemente cambia a la pestaña
-          secundaria "training-records" (rediseño de navegación 2026-09-07:
-          antes se abría "dentro" de Configuración vía setStoredSection(),
-          así que su "‹ atrás" real acababa en el menú de Configuración —
-          una pantalla que ni siquiera la lista. Ahora es independiente,
-          al mismo nivel que Ayuda/Configuración/Mi perfil, y cerrar
-          siempre vuelve aquí, a Home).
-          Reactivado de forma permanente el 2026-09-06 (decisión del
-          usuario: "ya irá a la próxima release" — ver
-          docs/RELEASE-V1-PROGRESS.md, Fase 9 y el bloque de reversión
-          justo debajo). Estuvo desconectado a propósito solo para el
-          lanzamiento de v1.0.0. */}
+      {/* 2. Training Records — tercera vuelta de diseño (2026-09-08).
+          Historial: nació como tarjeta grande con borde y degradado
+          (2026-09-04); feedback directo "es muy grande y queda como
+          pegada, no lo veo muy integrado" llevó a explorar mockups
+          (Artifact, 3 direcciones) — elegida "Opción A" (fila fina, sin
+          tarjeta propia, mismo espíritu que el enlace "Descargar app" de
+          arriba). Segunda vuelta de mockups sobre esa misma opción,
+          pidiendo "dinamismo, texto, call to action, Generados" — elegida
+          la combinación de dos ideas:
+          (1) "Generados" como cuarta palabra del mismo vocabulario que ya
+              usan los KPI de arriba (Alumnos/Cursos/Captados) — mismo
+              patrón número-en-grande + etiqueta-pequeña, no un contador
+              inventado aparte.
+          (2) el texto CAMBIA según haya actividad real: sin ningún
+              documento generado todavía, es una invitación de verdad
+              ("Genera tu primer Training Record", en azul océano — nunca
+              un "0 Generados" desangelado); en cuanto hay alguno, pasa a
+              contar lo ya hecho.
+          Insignia rounded-lg (no circular, para no confundirse con los
+          badges redondos de los KPI) con la misma respiración sutil en
+          bucle que ya tenía, apagada con prefers-reduced-motion.
+          `px-3` (2026-09-08, bug real reportado: "queda todo muy en el
+          lado izquierdo") — el `px-1` original dejaba el icono/texto de
+          esta fila varios píxeles más a la izquierda que el resto de
+          elementos de Home (las KPI tiles tienen su propio `p-[9px]`
+          interno, la tarjeta "Pendiente de cobrar" `p-4`): sin ningún
+          borde/fondo propio que lo compense, el contenido se veía pegado
+          al borde en vez de guardar el mismo ritmo horizontal que sus
+          vecinos.
+
+          Cuarta vuelta (2026-09-08, con captura real del móvil delante):
+          el `px-3` de arriba resultó ser un parche sobre un problema más
+          de fondo, medido en píxeles reales sobre la captura — el propio
+          `<button>` no llegaba a `w-full`, así que se encogía al ancho de
+          su contenido (línea divisoria incluida) en vez de estirarse
+          como el resto de Home; por eso cambiaba de ancho entre el
+          estado vacío y el estado con actividad, y por eso a la derecha
+          "no había aire de más", literalmente no había fila ahí. Se
+          añade `w-full` y el contenido pasa a ir CENTRADO (no pegado a
+          la izquierda) — pedido explícito tras ver la fila ya
+          implementada: "queda todo muy a la izquierda y demasiado aire a
+          la derecha... plantea más mockups centrando la info". Con
+          actividad, la insignia lleva además un halo sutil detrás
+          (mismo tono que ya usa `${BRAND_OCEAN}1A` en otras insignias
+          del archivo) para reforzar la respiración ya existente — solo
+          en ese estado: en el estado vacío un halo difuminado detrás de
+          una insignia clara se veía sucio en vez de vistoso, así que ahí
+          se queda sin ningún efecto extra. */}
       {onOpenTrainingRecords && (
         <button
           type="button"
           onClick={onOpenTrainingRecords}
-          className="flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-transform active:scale-[0.98]"
-          style={{ borderColor: `${BRAND_NAVY}40`, background: `linear-gradient(135deg, ${BRAND_NAVY}17 0%, ${BRAND_NAVY}05 100%)` }}
+          className="flex w-full items-center justify-center gap-2.5 border-b border-t border-gray-100 px-3 py-2.5 text-center"
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: BRAND_NAVY }}>
-            <Award size={22} className="text-white" aria-hidden="true" />
+          <span className="relative flex shrink-0 items-center justify-center">
+            {generatedCount > 0 && (
+              <span
+                className="absolute h-11 w-11 rounded-full"
+                style={{ background: `radial-gradient(circle, ${BRAND_OCEAN}66 0%, ${BRAND_OCEAN}1A 55%, transparent 78%)` }}
+                aria-hidden="true"
+              />
+            )}
+            <motion.span
+              className="relative flex h-[26px] w-[26px] items-center justify-center rounded-lg"
+              style={{ backgroundColor: generatedCount > 0 ? BRAND_NAVY : `${BRAND_OCEAN}1A` }}
+              animate={reducedMotion ? undefined : { scale: [1, 1.06, 1] }}
+              transition={reducedMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Award size={13} style={{ color: generatedCount > 0 ? "#fff" : BRAND_OCEAN }} aria-hidden="true" />
+            </motion.span>
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</span>
-            <span className="block text-xs text-gray-500">{t("trainingRecordsCard.subtitle")}</span>
+          <span className="flex flex-col">
+            {generatedCount > 0 ? (
+              <>
+                <span className="text-[11.5px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</span>
+                <span className="flex items-baseline gap-1">
+                  <span className="text-xs font-extrabold leading-none tabular-nums" style={{ color: BRAND_OCEAN }}>{animatedGeneratedCount}</span>
+                  <span className="text-[9.5px] font-semibold uppercase leading-none tracking-wide text-gray-400">{t("trainingRecordsCard.generatedLabel")}</span>
+                </span>
+              </>
+            ) : (
+              <span className="text-[11.5px] font-bold leading-tight" style={{ color: BRAND_OCEAN }}>{t("trainingRecordsCard.ctaFirstTime")}</span>
+            )}
           </span>
-          <ChevronRight size={20} className="shrink-0" style={{ color: BRAND_NAVY }} aria-hidden="true" />
+          <ChevronRight size={16} className="shrink-0" style={{ color: generatedCount > 0 ? "#CBD5E1" : BRAND_OCEAN }} aria-hidden="true" />
         </button>
       )}
 
-      {/* Banner "Instalar la app" (2026-09-07, pedido explícito) —
-          distinto a propósito de la tarjeta de Training Records de
-          arriba: es descartable (✕, oculto para siempre en este
-          dispositivo tras cerrarlo) y de menor peso visual (banner
-          fino, no una tarjeta de acceso a una herramienta que se usa a
-          diario). Oculto también si la app ya corre instalada, o si
-          `onOpenInstallApp` no llega (defensivo, mismo criterio que
-          `onOpenTrainingRecords` arriba). */}
-      {onOpenInstallApp && !installBannerDismissed && !alreadyInstalled && (
-        <div className="flex items-center gap-3 rounded-xl border p-3" style={{ borderColor: `${BRAND_OCEAN}40`, backgroundColor: `${BRAND_OCEAN}0D` }}>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_OCEAN}1A` }}>
-            <Smartphone size={16} style={{ color: BRAND_OCEAN }} aria-hidden="true" />
-          </span>
-          <button type="button" onClick={onOpenInstallApp} className="min-w-0 flex-1 text-left">
-            <span className="block text-xs font-semibold" style={{ color: BRAND_OCEAN }}>{t("installBanner.title")}</span>
-            <span className="block text-xs text-gray-500">{t("installBanner.subtitle")}</span>
-          </button>
-          <button type="button" onClick={dismissInstallBanner} className="-m-2 flex h-9 w-9 shrink-0 items-center justify-center p-2 text-gray-400" aria-label={t("installBanner.dismiss")}>
-            <X size={16} aria-hidden="true" />
-          </button>
-        </div>
-      )}
 
       {/* 3. Pendiente de cobrar — información financiera principal, la más
           visible de la pantalla. Integra también el acceso rápido de

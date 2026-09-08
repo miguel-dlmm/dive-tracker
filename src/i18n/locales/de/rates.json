@@ -1,0 +1,52 @@
+{
+  "filter": {
+    "button": "Filtern",
+    "type": "Typ",
+    "typeAll": "Alle",
+    "school": "Schule",
+    "schoolAll": "Alle",
+    "course": "Kurs",
+    "courseAll": "Alle",
+    "clear": "Filter löschen",
+    "showInactive": "Inaktive anzeigen"
+  },
+  "search": {
+    "placeholder": "Suchen",
+    "ariaLabel": "Tarif suchen"
+  },
+  "list": {
+    "count": "{{count}} Tarife",
+    "empty": "Keine Ergebnisse.",
+    "createdOn": "Angelegt: {{date}} · {{type}}",
+    "inactive": "Inaktiv"
+  },
+  "fab": "Neuer Tarif",
+  "sheet": {
+    "editTitle": "Tarif von {{school}} - {{activity}} bearbeiten",
+    "createTitle": "Neuer Tarif für {{type}}",
+    "close": "Schließen",
+    "typeTablistLabel": "Tariftyp",
+    "hintGanado": "Was du dafür berechnest, den Kurs selbst zu geben.",
+    "hintComision": "Was du dafür berechnest, einen Kunden zu vermitteln.",
+    "school": "Schule",
+    "course": "Kurs",
+    "rateLabel": "Tarif · {{currency}}",
+    "save": "Speichern"
+  },
+  "toasts": {
+    "saved": "Änderungen gespeichert",
+    "added": "Tarif hinzugefügt",
+    "saveError": "Konnte nicht gespeichert werden. Versuch es erneut.",
+    "duplicate": "Du hast bereits einen aktiven Tarif für diese Schule und diesen Kurs. Deaktiviere ihn, bevor du einen neuen anlegst.",
+    "reactivateBlocked": "Kann nicht reaktiviert werden: Es gibt bereits einen anderen aktiven Tarif für diese Schule und diesen Kurs.",
+    "deactivated": "Tarif deaktiviert",
+    "reactivated": "Tarif reaktiviert"
+  },
+  "deleteInUse_one": "Kann nicht gelöscht werden: {{count}} Eintrag verwendet diesen Tarif.",
+  "deleteInUse_other": "Kann nicht gelöscht werden: {{count}} Einträge verwenden diesen Tarif.",
+  "rowMenu": {
+    "itemLabel": "den Tarif von {{school}} - {{activity}}",
+    "deactivate": "Deaktivieren",
+    "reactivate": "Reaktivieren"
+  }
+}

@@ -76,6 +76,7 @@ function renderTab(props = {}) {
 
 beforeEach(() => {
   sessionStorage.clear();
+  localStorage.clear();
   endStrokeHandlers = [];
   templatesQuery.order.mockResolvedValue({ data: [TEMPLATE_ROW], error: null });
   adventuresQuery.order.mockResolvedValue({ data: ADVENTURE_ROWS, error: null });
@@ -314,6 +315,45 @@ it("'Menor de edad' revela el nombre/firma del tutor y los exige antes de guarda
   endStrokeHandlers[guardianHandlerIndex]();
   await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
   await screen.findByText("Ana Garcia");
+}, 15000);
+
+// Contador decorativo de la tarjeta de Home (2026-09-08) — ver
+// generatedCounter.js. Se suma en el mismo punto que ya prueba el test de
+// arriba (generación con éxito de "Generar para todos los alumnos"), solo
+// que aquí se comprueba el efecto secundario en localStorage en vez del
+// PDF en sí. Clave con sufijo `:u1` (COMPLETE_PROFILE.user_id) — el
+// contador es por CUENTA, no por dispositivo (bug real corregido
+// 2026-09-08: una cuenta demo en el mismo navegador heredaba el contador
+// de la cuenta admin usada antes).
+it("generar con éxito suma al contador de Training Records generados de ESTA cuenta (localStorage)", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount:u1")).toBeNull();
+
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount:u1")).toBe("1");
+}, 15000);
+
+// Bug real reportado 2026-09-08: "para contar los generados tienes q tener
+// en cuenta cada vez q se llame a la app de generar, la puedo llamar
+// individualmente para cada alumno o en el generar todos" — "Regenerar TR"
+// (un alumno a la vez, sin repetir el resto del listado) no sumaba nada al
+// contador, solo "Generar para todos los alumnos" lo hacía.
+it("regenerar UN alumno (sin pasar por 'Generar para todos') también suma al contador", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount:u1")).toBeNull();
+
+  await user.click(screen.getByRole("button", { name: "Regenerar TR" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount:u1")).toBe("1");
 }, 15000);
 
 it("el listado y los documentos ya generados sobreviven a un remontaje (recarga de página)", async () => {

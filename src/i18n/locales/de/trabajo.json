@@ -1,0 +1,144 @@
+{
+  "actionLabel": {
+    "markPending": "Als ausstehend markieren",
+    "markSettled": "Als beglichen markieren",
+    "confirmCollection": "Zahlungseingang bestätigen"
+  },
+  "dateGroup": {
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "weekdaysShort": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+    "monthsShort": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "Keine ausstehenden Einträge mit diesen Filtern.",
+    "pendingNoFilters": "Du bist auf dem Laufenden — nichts ausstehend.",
+    "paidWithFilters": "Keine erhaltenen Einträge mit diesen Filtern.",
+    "paidNoFilters": "Du hast noch nichts als erhalten markiert."
+  },
+  "rowMenu": {
+    "adjustmentWith": "den Ausgleich mit {{name}}",
+    "courseAt": "{{activity}} bei {{school}}",
+    "deleteConfirmMessage": "Du bist dabei, {{item}} zu löschen. Du hast ein paar Sekunden Zeit, das über den Hinweis rückgängig zu machen.",
+    "undoAction": "Rückgängig",
+    "deleteUndoneToast": "Wiederhergestellt",
+    "deleteUndoError": "Konnte nicht rückgängig gemacht werden. Versuch es erneut."
+  },
+  "tabs": {
+    "pending": "Ausstehend",
+    "paid": "Erhalten"
+  },
+  "filter": {
+    "label": "Filtern",
+    "period": "Zeitraum",
+    "school": "Schule",
+    "course": "Kurs",
+    "type": "Typ",
+    "allFeminine": "Alle",
+    "allMasculine": "Alle",
+    "clear": "Filter löschen"
+  },
+  "collectAll": {
+    "button": "Alle einziehen",
+    "confirmLabel": "Einziehen",
+    "title_one": "{{count}} ausstehende Buchung einziehen?",
+    "title_other": "{{count}} ausstehende Buchungen einziehen?",
+    "messageAjuste_one": "Du markierst diese Buchung auf einmal als erhalten oder beglichen, je nachdem. Du kannst jede einzeln rückgängig machen, genau wie bei der Bestätigung nacheinander.",
+    "messageAjuste_other": "Du markierst diese {{count}} Buchungen auf einmal als erhalten oder beglichen, je nachdem. Du kannst jede einzeln rückgängig machen, genau wie bei der Bestätigung nacheinander.",
+    "messageSimple_one": "Du markierst diese Buchung auf einmal als erhalten. Du kannst sie danach einzeln rückgängig machen, genau wie bei der Bestätigung nacheinander.",
+    "messageSimple_other": "Du markierst diese {{count}} Buchungen auf einmal als erhalten. Du kannst jede einzeln rückgängig machen, genau wie bei der Bestätigung nacheinander.",
+    "toastSwitch_one": "{{count}} Buchung als {{verb}} markiert — wechsle zu \"Erhalten\", um sie zu sehen",
+    "toastSwitch_other": "{{count}} Buchungen als {{verbPlural}} markiert — wechsle zu \"Erhalten\", um sie zu sehen",
+    "toastNoSwitch_one": "{{count}} Buchung als {{verb}} markiert",
+    "toastNoSwitch_other": "{{count}} Buchungen als {{verbPlural}} markiert",
+    "verbCobrado": "erhalten",
+    "verbCobradoPlural": "erhalten",
+    "verbCobradoOLiquidado": "erhalten oder beglichen",
+    "verbCobradoOLiquidadoPlural": "erhalten oder beglichen"
+  },
+  "markAllPending": {
+    "button": "Alle als ausstehend markieren",
+    "confirmLabel": "Als ausstehend markieren",
+    "title_one": "{{count}} erhaltene Buchung als ausstehend markieren?",
+    "title_other": "{{count}} erhaltene Buchungen als ausstehend markieren?",
+    "message_one": "Du setzt diese Buchung auf einmal zurück auf ausstehend. Du kannst das danach einzeln rückgängig machen, genau wie einzeln vorzugehen.",
+    "message_other": "Du setzt diese {{count}} Buchungen auf einmal zurück auf ausstehend. Du kannst das danach für jede einzeln rückgängig machen, genau wie einzeln vorzugehen.",
+    "toast_one": "{{count}} Buchung als ausstehend markiert",
+    "toast_other": "{{count}} Buchungen als ausstehend markiert"
+  },
+  "paidCapHint": "Die {{limit}} neuesten erhaltenen von {{total}} werden angezeigt — nutze \"Filtern\", um einen bestimmten Zeitraum zu sehen.",
+  "fabAdd": "Hinzufügen",
+  "toggleStatus": {
+    "undoneToast": "Rückgängig gemacht",
+    "undoError": "Konnte nicht rückgängig gemacht werden. Versuch es erneut.",
+    "undoAction": "Rückgängig",
+    "markedPending": "Als ausstehend markiert",
+    "markedPaidSwitchTab": "Als erhalten markiert — wechsle zu \"Erhalten\", um es zu sehen",
+    "markedPaid": "Als erhalten markiert"
+  },
+  "genericUpdateError": "Konnte nicht aktualisiert werden. Versuch es erneut.",
+  "sheet": {
+    "close": "Schließen",
+    "typeSelectorAria": "Buchungstyp",
+    "createTypes": {
+      "ganado": "Erteilter Kurs",
+      "comision": "Provision",
+      "companeros": "Kursausgleich"
+    },
+    "titleEdit": {
+      "ganado": "Erteilten Kurs bearbeiten",
+      "comision": "Provision bearbeiten",
+      "companeros": "Kursausgleich bearbeiten"
+    },
+    "titleNew": {
+      "ganado": "Neuer erteilter Kurs",
+      "comision": "Neue Provision",
+      "companeros": "Neuer Kursausgleich"
+    },
+    "fields": {
+      "course": "Kurs",
+      "school": "Schule",
+      "date": "Datum",
+      "relatedColleague": "Zugehöriger Instructor",
+      "amount": "Betrag · {{currency}}",
+      "amountHint": "Positiv, wenn er dir zahlt; negativ, wenn du ihm/ihr zahlst",
+      "colleaguePlaceholder": "Anna, Max...",
+      "amountPlaceholder": "90 oder -30",
+      "peopleCount": "Anzahl Personen",
+      "lessPeople": "Weniger Personen",
+      "morePeople": "Mehr Personen",
+      "total": "Gesamt",
+      "perPerson": "/ Person",
+      "addRate": "Tarif hinzufügen",
+      "notes": "Notizen",
+      "notesPlaceholder": "Optional",
+      "addNote": "Notiz hinzufügen"
+    },
+    "rate": {
+      "label": "Tarif — {{school}} · {{activity}}",
+      "cancel": "Abbrechen",
+      "placeholder": "Tarif",
+      "ariaLabel": "Tarif · {{currency}}",
+      "saving": "Tarif wird gespeichert",
+      "save": "Tarif speichern"
+    },
+    "save": "Speichern",
+    "toasts": {
+      "changesSaved": "Änderungen gespeichert",
+      "adjustmentAdded": "Ausgleich hinzugefügt",
+      "courseAdded": "Kurs hinzugefügt",
+      "commissionAdded": "Provision hinzugefügt",
+      "saveError": "Konnte nicht gespeichert werden. Versuch es erneut.",
+      "rateAdded": "Tarif hinzugefügt",
+      "rateSaveError": "Tarif konnte nicht gespeichert werden. Versuch es erneut."
+    }
+  },
+  "kpis": {
+    "generatedThisMonth": "Diesen Monat erzielt",
+    "pendingToCollect": "Ausstehend",
+    "pendingTooltip": "Dieser Betrag umfasst ausstehende Zahlungen aus vorherigen Monaten.",
+    "pendingTooltipShow": "Info: Ausstehend",
+    "pendingTooltipHide": "Info ausblenden: Ausstehend",
+    "collectedThisMonth": "Diesen Monat erhalten"
+  }
+}

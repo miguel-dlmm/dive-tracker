@@ -1,0 +1,144 @@
+{
+  "actionLabel": {
+    "markPending": "Marca com a pendent",
+    "markSettled": "Marca com a liquidat",
+    "confirmCollection": "Confirma el cobrament"
+  },
+  "dateGroup": {
+    "today": "Avui",
+    "yesterday": "Ahir",
+    "weekdaysShort": ["dl.", "dt.", "dc.", "dj.", "dv.", "ds.", "dg."],
+    "monthsShort": ["gen.", "feb.", "març", "abr.", "maig", "juny", "jul.", "ag.", "set.", "oct.", "nov.", "des."]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "Sense elements pendents amb aquests filtres.",
+    "pendingNoFilters": "Estàs al dia — res pendent.",
+    "paidWithFilters": "Sense elements cobrats amb aquests filtres.",
+    "paidNoFilters": "Encara no has marcat res com a cobrat."
+  },
+  "rowMenu": {
+    "adjustmentWith": "l'ajust amb {{name}}",
+    "courseAt": "{{activity}} a {{school}}",
+    "deleteConfirmMessage": "Estàs a punt d'eliminar {{item}}. Tindràs uns segons per desfer-ho des de l'avís.",
+    "undoAction": "Desfés",
+    "deleteUndoneToast": "Recuperat",
+    "deleteUndoError": "No s'ha pogut desfer. Torna-ho a provar."
+  },
+  "tabs": {
+    "pending": "Pendents",
+    "paid": "Cobrats"
+  },
+  "filter": {
+    "label": "Filtra",
+    "period": "Període",
+    "school": "Escola",
+    "course": "Curs",
+    "type": "Tipus",
+    "allFeminine": "Totes",
+    "allMasculine": "Tots",
+    "clear": "Neteja els filtres"
+  },
+  "collectAll": {
+    "button": "Cobra-ho tot",
+    "confirmLabel": "Cobra",
+    "title_one": "Vols cobrar {{count}} moviment pendent?",
+    "title_other": "Vols cobrar {{count}} moviments pendents?",
+    "messageAjuste_one": "Marcaràs aquest moviment com a cobrat o liquidat de cop, segons correspongui. Pots revertir-ho per separat després, igual que en confirmar-ho un a un.",
+    "messageAjuste_other": "Marcaràs aquests {{count}} moviments com a cobrats o liquidats de cop, segons correspongui a cadascun. Pots revertir cadascun per separat després, igual que en confirmar-ho un a un.",
+    "messageSimple_one": "Marcaràs aquest moviment com a cobrat de cop. Pots revertir-ho després, igual que en confirmar-ho un a un.",
+    "messageSimple_other": "Marcaràs aquests {{count}} moviments com a cobrats de cop. Pots revertir cadascun per separat després, igual que en confirmar-ho un a un.",
+    "toastSwitch_one": "{{count}} moviment marcat com a {{verb}} — canvia a \"Cobrats\" per veure'l",
+    "toastSwitch_other": "{{count}} moviments marcats com a {{verbPlural}} — canvia a \"Cobrats\" per veure'ls",
+    "toastNoSwitch_one": "{{count}} moviment marcat com a {{verb}}",
+    "toastNoSwitch_other": "{{count}} moviments marcats com a {{verbPlural}}",
+    "verbCobrado": "cobrat",
+    "verbCobradoPlural": "cobrats",
+    "verbCobradoOLiquidado": "cobrat o liquidat",
+    "verbCobradoOLiquidadoPlural": "cobrats o liquidats"
+  },
+  "markAllPending": {
+    "button": "Marca-ho tot com a pendent",
+    "confirmLabel": "Marca com a pendents",
+    "title_one": "Vols marcar {{count}} moviment cobrat com a pendent?",
+    "title_other": "Vols marcar {{count}} moviments cobrats com a pendents?",
+    "message_one": "Tornaràs aquest moviment a pendent de cop. Pots revertir-ho després, igual que fent-ho un a un.",
+    "message_other": "Tornaràs aquests {{count}} moviments a pendent de cop. Pots revertir cadascun per separat després, igual que fent-ho un a un.",
+    "toast_one": "{{count}} moviment marcat com a pendent",
+    "toast_other": "{{count}} moviments marcats com a pendents"
+  },
+  "paidCapHint": "Es mostren els {{limit}} cobrats més recents de {{total}} — usa \"Filtra\" per veure un període concret.",
+  "fabAdd": "Afegeix",
+  "toggleStatus": {
+    "undoneToast": "Desfet",
+    "undoError": "No s'ha pogut desfer. Torna-ho a provar.",
+    "undoAction": "Desfés",
+    "markedPending": "Marcat com a pendent",
+    "markedPaidSwitchTab": "Marcat com a cobrat — canvia a \"Cobrats\" per veure'l",
+    "markedPaid": "Marcat com a cobrat"
+  },
+  "genericUpdateError": "No s'ha pogut actualitzar. Torna-ho a provar.",
+  "sheet": {
+    "close": "Tanca",
+    "typeSelectorAria": "Tipus de moviment",
+    "createTypes": {
+      "ganado": "Curs impartit",
+      "comision": "Comissió",
+      "companeros": "Ajust de curs"
+    },
+    "titleEdit": {
+      "ganado": "Edita el curs impartit",
+      "comision": "Edita la comissió",
+      "companeros": "Edita l'ajust de curs"
+    },
+    "titleNew": {
+      "ganado": "Nou curs impartit",
+      "comision": "Nova comissió",
+      "companeros": "Nou ajust de curs"
+    },
+    "fields": {
+      "course": "Curs",
+      "school": "Escola",
+      "date": "Data",
+      "relatedColleague": "Instructor relacionat",
+      "amount": "Import · {{currency}}",
+      "amountHint": "Positiu si et paga a tu; negatiu si li pagues tu a ell/ella",
+      "colleaguePlaceholder": "Anna, Marc...",
+      "amountPlaceholder": "90 o -30",
+      "peopleCount": "Núm. persones",
+      "lessPeople": "Menys persones",
+      "morePeople": "Més persones",
+      "total": "Total",
+      "perPerson": "/ persona",
+      "addRate": "Afegeix tarifa",
+      "notes": "Notes",
+      "notesPlaceholder": "Opcional",
+      "addNote": "Afegeix nota"
+    },
+    "rate": {
+      "label": "Tarifa — {{school}} · {{activity}}",
+      "cancel": "Cancel·la",
+      "placeholder": "Tarifa",
+      "ariaLabel": "Tarifa · {{currency}}",
+      "saving": "Desant la tarifa",
+      "save": "Desa la tarifa"
+    },
+    "save": "Desa",
+    "toasts": {
+      "changesSaved": "Canvis desats",
+      "adjustmentAdded": "Ajust afegit",
+      "courseAdded": "Curs afegit",
+      "commissionAdded": "Comissió afegida",
+      "saveError": "No s'ha pogut desar. Torna-ho a provar.",
+      "rateAdded": "Tarifa afegida",
+      "rateSaveError": "No s'ha pogut desar la tarifa. Torna-ho a provar."
+    }
+  },
+  "kpis": {
+    "generatedThisMonth": "Generat aquest mes",
+    "pendingToCollect": "Pendent de cobrar",
+    "pendingTooltip": "Aquesta quantitat reflecteix pagaments pendents de mesos anteriors.",
+    "pendingTooltipShow": "Info: Pendent de cobrar",
+    "pendingTooltipHide": "Amaga la info: Pendent de cobrar",
+    "collectedThisMonth": "Cobrat aquest mes"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "tabs": {
+    "home": "Accueil",
+    "trabajo": "Mon activité",
+    "summary": "Résumé"
+  },
+  "secondaryTitles": {
+    "config": "Configuration",
+    "help": "Aide",
+    "pagos": "Paiements",
+    "perfil": "Mon profil",
+    "training-records": "Training Records",
+    "install-app": "Installer l'app"
+  },
+  "aria": {
+    "close": "Fermer",
+    "back": "Retour",
+    "goHome": "Aller à l'accueil",
+    "help": "Aide",
+    "config": "Configuration",
+    "profile": "Mon profil",
+    "signOut": "Se déconnecter",
+    "mainNav": "Navigation principale"
+  }
+}

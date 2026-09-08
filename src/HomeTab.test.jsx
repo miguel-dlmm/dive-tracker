@@ -15,9 +15,26 @@ import HomeTab from "./HomeTab";
 // nada — acotar por tarjeta evita ese falso positivo/negativo.
 const rowsHook = (rows) => ({ rows, loaded: true, insertRow: vi.fn(), updateRow: vi.fn(), deleteRow: vi.fn(), bulkUpdateWhere: vi.fn(), setDefault: vi.fn() });
 
+// Bug real de zona horaria (mismo ya corregido 2026-08-30 en
+// SummaryTab.test.jsx — ver la nota extensa junto a
+// "suma correcta en los límites del periodo" ahí): toISOString()
+// convierte a medianoche UTC, no a la fecha LOCAL de "hoy" — en un huso
+// con offset positivo (este entorno corre en Asia/Bangkok, UTC+7), entre
+// la medianoche local y la medianoche UTC (las primeras ~17h de cada
+// día local) toISOString().slice(0,10) devuelve el día ANTERIOR al que
+// la propia app considera "hoy" (todayStr(), shared.jsx, que sí usa
+// getFullYear()/getMonth()/getDate() locales). `TODAY` desincronizado de
+// lo que la app real considera hoy rompía en directo, no en teoría, el
+// 2026-09-08 — reproducido: un test que sembraba un movimiento con
+// `date: TODAY` esperando que el calendario lo auto-seleccionara como
+// "de hoy" fallaba porque el componente ya había cruzado la medianoche
+// local. `localDateStr` sustituye a toISOString en todo este archivo.
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 const NOW = new Date();
-const TODAY = NOW.toISOString().slice(0, 10);
-const LAST_MONTH = new Date(NOW.getFullYear(), NOW.getMonth() - 1, 15).toISOString().slice(0, 10);
+const TODAY = localDateStr(NOW);
+const LAST_MONTH = localDateStr(new Date(NOW.getFullYear(), NOW.getMonth() - 1, 15));
 
 const PAYMENT_STATUSES = rowsHook([
   { name: "Pending", is_default: true },
@@ -333,7 +350,7 @@ describe("HomeTab — calendario: navegación entre meses", () => {
   // caía al primer día CON actividad del mes, aunque hoy también
   // tuviera la suya y no fuera el primero.
   it("con actividad en un día anterior y también hoy, se auto-selecciona hoy (no el primer día del mes)", () => {
-    const earlierDay = new Date(NOW.getFullYear(), NOW.getMonth(), Math.max(1, NOW.getDate() - 1)).toISOString().slice(0, 10);
+    const earlierDay = localDateStr(new Date(NOW.getFullYear(), NOW.getMonth(), Math.max(1, NOW.getDate() - 1)));
     renderHome({
       worklog: [
         { id: "w1", date: earlierDay, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }, // 20€
@@ -394,22 +411,29 @@ describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", (
     expect(screen.getByText("Cursos")).toBeInTheDocument();
     expect(screen.getByText("Captados")).toBeInTheDocument();
 
+    // timeout 4000 (2026-09-08, hallazgo real): con la suite completa
+    // corriendo (muchos archivos de test en paralelo, CPU bajo presión
+    // real), el bucle de requestAnimationFrame de useCountUp (motion.js)
+    // puede tardar bastante más de 2s en asentarse en su valor final —
+    // visto fallar en vivo con la suite completa, nunca en solitario.
+    // 2000ms bastaba en aislamiento pero era un margen demasiado justo
+    // bajo contención real; no es un cambio de comportamiento, solo más
+    // paciencia para el mismo resultado esperado.
     await waitFor(() => {
       expect(screen.getByText("Alumnos").previousSibling).toHaveTextContent("3"); // 2 + 1, solo este mes
       expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("2"); // w1 + w2, solo este mes (w3 es del mes pasado)
       expect(screen.getByText("Captados").previousSibling).toHaveTextContent("4"); // solo c1, este mes
-    }, { timeout: 2000 });
+    }, { timeout: 4000 });
   });
 });
 
-// Banner "Instalar la app" (2026-09-07, pedido explícito) — descartable
-// (✕, oculto para siempre en ESTE dispositivo, no por cuenta) y ausente
-// si `onOpenInstallApp` no llega (mismo criterio defensivo que
-// onOpenTrainingRecords) o si la app ya corre instalada.
-describe("HomeTab — banner 'Instalar la app'", () => {
-  beforeEach(() => { localStorage.clear(); });
-
-  function renderHomeWithInstallBanner(onOpenInstallApp = vi.fn()) {
+// "Instalar la app" (2026-09-08, tercera vuelta): el banner descartable
+// de antes se retiró entero — sustituido por un texto pequeño
+// ("Descargar app"), junto al título de los KPIs. Sin estado de
+// "descartado": solo se oculta si no llega el handler (mismo criterio
+// defensivo que onOpenTrainingRecords) o si la app ya corre instalada.
+describe("HomeTab — enlace 'Descargar app'", () => {
+  function renderHomeWithInstall(onOpenInstallApp = vi.fn()) {
     render(
       <HomeTab
         worklog={rowsHook([])} comisiones={rowsHook([])} colleaguePayments={rowsHook([])}
@@ -431,26 +455,79 @@ describe("HomeTab — banner 'Instalar la app'", () => {
         paymentStatuses={PAYMENT_STATUSES} onQuickCreate={vi.fn()}
       />
     );
-    expect(screen.queryByText("Instala Ocean Flow en tu móvil")).not.toBeInTheDocument();
+    expect(screen.queryByText("Descargar app")).not.toBeInTheDocument();
   });
 
-  it("pulsar el banner llama a onOpenInstallApp", async () => {
+  it("pulsar el texto llama a onOpenInstallApp", async () => {
     const user = userEvent.setup();
     const onOpenInstallApp = vi.fn();
-    renderHomeWithInstallBanner(onOpenInstallApp);
-    await user.click(screen.getByText("Instala Ocean Flow en tu móvil"));
+    renderHomeWithInstall(onOpenInstallApp);
+    await user.click(screen.getByText("Descargar app"));
     expect(onOpenInstallApp).toHaveBeenCalledTimes(1);
   });
+});
 
-  it("cerrar con la ✕ lo oculta y recuerda la decisión en este dispositivo (localStorage)", async () => {
+// Tarjeta de Training Records — subtítulo dinámico (2026-09-08, pedido
+// explícito: "otra manera dinámica y atractiva de integrarlo en la
+// home"). El contador vive en localStorage (generatedCounter.js, misma
+// clave que TrainingRecordsTab.jsx incrementa al generar con éxito) —
+// aquí solo se prueba que HomeTab lo lee y lo refleja, no la lógica de
+// sumar (ya cubierta en generatedCounter.test.js).
+describe("HomeTab — tarjeta de Training Records", () => {
+  beforeEach(() => { localStorage.clear(); });
+
+  function renderHomeWithTR(onOpenTrainingRecords = vi.fn(), userId = "u1") {
+    render(
+      <HomeTab
+        worklog={rowsHook([])} comisiones={rowsHook([])} colleaguePayments={rowsHook([])}
+        rates={rowsHook([])} commissionRates={rowsHook([])}
+        activities={rowsHook([{ name: "Open Water" }])} schools={rowsHook([{ name: "PADI Cozumel" }])}
+        currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])} navSections={rowsHook([])}
+        paymentStatuses={PAYMENT_STATUSES} onQuickCreate={vi.fn()} onOpenTrainingRecords={onOpenTrainingRecords}
+        userId={userId}
+      />
+    );
+  }
+
+  it("sin ningún Training Record generado todavía, es una invitación de verdad, no un contador en cero", () => {
+    renderHomeWithTR();
+    expect(screen.getByText("Genera tu primer Training Record")).toBeInTheDocument();
+    expect(screen.queryByText("Training Records")).not.toBeInTheDocument();
+    expect(screen.queryByText("Generados")).not.toBeInTheDocument();
+  });
+
+  it("con Training Records ya generados, cambia a 'Training Records' + la cifra + 'Generados' (mismo patrón que los KPI)", async () => {
+    localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount:u1", "7");
+    renderHomeWithTR();
+    expect(screen.getByText("Training Records")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("7")).toBeInTheDocument();
+    }, { timeout: 4000 });
+    expect(screen.getByText("Generados")).toBeInTheDocument();
+    expect(screen.queryByText("Genera tu primer Training Record")).not.toBeInTheDocument();
+  });
+
+  // Bug real (2026-09-08): "he creado un TR con el admin y cuando entro
+  // con una cuenta demo mía sigue poniendo el número de generados pese a
+  // q aún no he generado ninguno" — el contador vivía en una clave de
+  // localStorage compartida por cualquier cuenta del mismo navegador.
+  it("los Training Records generados por otra cuenta en el mismo navegador no se cuelan aquí", () => {
+    localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount:admin-1", "12");
+    renderHomeWithTR(vi.fn(), "demo-2");
+    // Si el bug se reprodujera, esta cuenta ("demo-2") vería el estado
+    // "con actividad" (título + cifra) heredado de "admin-1" en vez de la
+    // invitación real — comprobar la invitación ya es suficiente, sin
+    // buscar "12" suelto en el documento (coincide por casualidad con el
+    // día 12 del calendario de abajo).
+    expect(screen.getByText("Genera tu primer Training Record")).toBeInTheDocument();
+    expect(screen.queryByText("Training Records")).not.toBeInTheDocument();
+  });
+
+  it("pulsar la fila llama a onOpenTrainingRecords", async () => {
     const user = userEvent.setup();
-    renderHomeWithInstallBanner();
-    await user.click(screen.getByRole("button", { name: "No volver a mostrar" }));
-    expect(screen.queryByText("Instala Ocean Flow en tu móvil")).not.toBeInTheDocument();
-    expect(localStorage.getItem("oceanpulse:installBannerDismissed")).toBe("true");
-
-    // Remontar (p. ej. recargar la página) — sigue sin aparecer.
-    renderHomeWithInstallBanner();
-    expect(screen.queryByText("Instala Ocean Flow en tu móvil")).not.toBeInTheDocument();
+    const onOpenTrainingRecords = vi.fn();
+    renderHomeWithTR(onOpenTrainingRecords);
+    await user.click(screen.getByText("Genera tu primer Training Record"));
+    expect(onOpenTrainingRecords).toHaveBeenCalledTimes(1);
   });
 });

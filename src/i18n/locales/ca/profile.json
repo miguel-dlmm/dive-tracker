@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "personalData": "Dades personals",
+    "instructor": "Dades d'instructor",
+    "favoriteCurrency": "Moneda preferida",
+    "language": "Idioma",
+    "security": "Seguretat",
+    "privacy": "Privacitat"
+  },
+  "signOut": {
+    "button": "Tanca la sessió"
+  },
+  "avatar": {
+    "changeAvatar": "Canvia l'avatar",
+    "closeAvatarPicker": "Tanca el selector d'avatar",
+    "colorLabel": "Color {{name}}",
+    "iconLabel": "Icona {{name}}",
+    "previousIcon": "Icona anterior",
+    "nextIcon": "Icona següent",
+    "save": "Desa",
+    "saving": "Desant…",
+    "cancel": "Cancel·la",
+    "toastSuccess": "Avatar actualitzat",
+    "toastError": "No s'ha pogut desar l'avatar. Torna-ho a provar."
+  },
+  "personalData": {
+    "nameLine": "Nom:",
+    "nicknameLine": "Nickname:",
+    "professionalLine": "Professional:",
+    "birthDateLine": "Data de naixement:",
+    "countryLine": "País de residència:",
+    "edit": "Edita",
+    "nameLabel": "Nom",
+    "lastNameLabel": "Cognoms",
+    "nicknameLabel": "Nickname",
+    "professionalLabel": "Professional",
+    "professionalPlaceholder": "Sense triar",
+    "birthDateLabel": "Data de naixement",
+    "countryLabel": "País de residència",
+    "countryPlaceholder": "Tria un país",
+    "nicknameAtError": "No pot contenir \"@\".",
+    "save": "Desa",
+    "saving": "Desant…",
+    "toastSuccess": "Perfil actualitzat",
+    "errors": {
+      "nicknameTaken": "Aquest nickname ja s'està fent servir.",
+      "nicknameAt": "El nickname no pot contenir \"@\".",
+      "generic": "No s'ha pogut desar. Torna-ho a provar."
+    }
+  },
+  "instructor": {
+    "hint": "S'utilitzen per emplenar els teus Training Records automàticament — es desen aquí una sola vegada, no per dispositiu.",
+    "card": {
+      "role": "Professional SSI",
+      "roleWithLevel": "SSI {{level}}",
+      "noSignature": "Sense signatura",
+      "signatureAlt": "Signatura de {{name}}",
+      "initialsLabel": "Inicials",
+      "numberLabel": "SSI PRO"
+    },
+    "signatureLabel": "La teva signatura",
+    "edit": "Edita",
+    "initialsLabel": "Inicials",
+    "numberLabel": "Número SSI Pro",
+    "save": "Desa",
+    "saving": "Desant…",
+    "toastSuccess": "Dades d'instructor actualitzades",
+    "toastError": "No s'han pogut desar les dades d'instructor. Torna-ho a provar."
+  },
+  "currency": {
+    "hint": "S'utilitza com a moneda per defecte a Ajust de curs, quan no hi ha cap tarifa que la determini. La resta de moviments sempre fan servir la moneda de la seva tarifa.",
+    "placeholder": "Sense triar — fa servir la moneda per defecte de l'app",
+    "toastSuccess": "Moneda preferida actualitzada"
+  },
+  "language": {
+    "placeholder": "Selecciona un idioma",
+    "toastSuccess": "Idioma actualitzat",
+    "toastError": "No s'ha pogut canviar l'idioma. Torna-ho a provar."
+  },
+  "password": {
+    "currentLabel": "Contrasenya actual",
+    "newLabel": "Contrasenya nova",
+    "confirmLabel": "Confirma la contrasenya",
+    "showCurrent": "Mostra la contrasenya actual",
+    "hideCurrent": "Amaga la contrasenya actual",
+    "show": "Mostra la contrasenya",
+    "hide": "Amaga la contrasenya",
+    "minLength": "Mínim 8 caràcters",
+    "matches": "Les contrasenyes coincideixen",
+    "submit": "Canvia la contrasenya",
+    "toastSuccess": "Contrasenya actualitzada",
+    "toastError": "No s'ha pogut canviar la contrasenya. Torna-ho a provar.",
+    "wrongCurrent": "Contrasenya actual incorrecta."
+  },
+  "deleteAccount": {
+    "confirmWord": "CANCEL·LA",
+    "description": "Eliminar el teu compte esborra el teu accés i totes les teves dades d'Ocean Flow de forma permanent: escoles, cursos, tarifes, registre de classes, comissions i ajustos amb companys. No es conserva cap còpia. Aquesta acció no es pot desfer.",
+    "button": "Elimina el meu compte",
+    "confirmTitle": "Vols eliminar el teu compte?",
+    "confirmMessage": "Estàs a punt d'eliminar el compte \"{{nickname}}\" i totes les seves dades de forma permanent. No podràs desfer aquesta acció.",
+    "continue": "Continua",
+    "finalCheckTitle": "Última comprovació",
+    "typeWordPrefix": "Escriu",
+    "typeWordSuffix": "per confirmar que vols eliminar el teu compte de forma permanent.",
+    "typeWordAriaLabel": "Escriu {{word}} per confirmar",
+    "back": "Enrere",
+    "deleteButton": "Elimina el compte",
+    "toastSuccess": "Compte eliminat",
+    "genericError": "No s'ha pogut eliminar el compte. Torna-ho a provar.",
+    "networkError": "No s'ha pogut eliminar el compte. Comprova la connexió i torna-ho a provar."
+  }
+}

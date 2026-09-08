@@ -37,6 +37,18 @@ export default function HelpArticleBody({ article, accentColor }) {
     <div className="space-y-3">
       <p className="text-sm text-gray-500">{article.summary}</p>
 
+      {/* GIF animado (2026-09-08, ver content.js) — un vistazo real del
+          flujo completo, antes de bajar al detalle escrito paso a paso.
+          Decorativo (alt=""/aria-hidden): la información completa ya
+          vive en "Pasos" más abajo en texto, el GIF es un apoyo visual,
+          no la única fuente — mismo criterio que cualquier icono
+          decorativo del resto de la app (convención 7, CLAUDE.md). */}
+      {article.gif && (
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+          <img src={`/help/${article.gif}`} alt="" aria-hidden="true" className="w-full" loading="lazy" />
+        </div>
+      )}
+
       <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-4">
         <div className="flex gap-2.5">
           <Sparkles size={16} className="mt-0.5 shrink-0" style={{ color: accentColor }} aria-hidden="true" />

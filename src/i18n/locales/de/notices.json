@@ -1,0 +1,56 @@
+{
+  "whatsNew": {
+    "close": "Schließen",
+    "eyebrow": "Neuigkeiten dieser Version",
+    "slideTablist": "Folie",
+    "back": "Zurück",
+    "next": "Weiter",
+    "start": "Los geht's",
+    "slides": [
+      {
+        "title": "Komplett neu gestaltet, ein neues Gesicht",
+        "body": "Neues Logo, neue Farben, ein rundum erneuertes Erscheinungsbild — dieselbe Ocean Flow, mit einer eigenen Identität."
+      },
+      {
+        "title": "Dein Instructor-Ausweis",
+        "body": "Mein Profil hat jetzt deinen eigenen Ausweis: Berufslevel, persönliche Daten und bevorzugte Währung, alles an einem Ort."
+      },
+      {
+        "title": "Training Records, direkt aus der App",
+        "body": "Erstelle das SSI-Fortschrittsprotokoll jedes Teilnehmers, signiert und versandbereit — ohne Ocean Flow zu verlassen."
+      },
+      {
+        "title": "Die App spricht jetzt deine Sprache",
+        "body": "Spanisch, Englisch, Französisch, Italienisch, Deutsch, Katalanisch oder Baskisch — wechsle jederzeit, direkt in deinem Profil."
+      },
+      {
+        "title": "Home und Meine Arbeit, klarer als je zuvor",
+        "body": "Alles besser organisiert, damit du auf einen Blick findest, was du suchst: deine KPIs, deine Buchungen, deinen Alltag."
+      },
+      {
+        "title": "Sieh es dir jederzeit wieder an",
+        "body": "Kehre zu diesen Neuigkeiten über Hilfe → \"Neuigkeiten ansehen\" zurück, wann immer du willst."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Schließen",
+    "eyebrow": "Neues Release",
+    "branchLabel": "Branch",
+    "commitLabel": "Commit",
+    "technicalChanges": "Technische Änderungen",
+    "functionalChanges": "Funktionale Änderungen",
+    "uiChangesLabel": "UI-Änderungen:",
+    "uiChangesYes": "Ja",
+    "uiChangesNo": "Nein",
+    "stepsHeading": "Was zu testen / zu tun ist",
+    "testsLabel": "Tests:",
+    "buildLabel": "Build:",
+    "notReported": "nicht gemeldet",
+    "previewCommit": "Vorschau des Commits",
+    "previewCommitEmpty": "Vorschau des Commits: noch keine Vorschau",
+    "previewIntegrated": "Integrierte Vorschau (Release-V1)",
+    "previewIntegratedEmpty": "Integrierte Vorschau: noch keine Vorschau",
+    "understood": "Verstanden"
+  }
+}

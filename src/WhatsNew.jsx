@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Smartphone, Building2, Palette, GraduationCap, Sparkles } from "lucide-react";
-import { BRAND_OCEAN, TEAL, BRAND_GOLD, BRAND_NAVY } from "./App";
+import { X, Languages, LayoutGrid, IdCard, GraduationCap, Palette, Sparkles } from "lucide-react";
+import { TEAL, SUN, GREEN, CORAL, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
-import { usePrefersReducedMotion, monthSlideVariants, useSwipeHorizontal } from "./motion";
+import { usePrefersReducedMotion, carouselSlideVariants, useSwipeHorizontal } from "./motion";
 
 // Píldora de novedades — no un manual: pocas frases por diapositiva,
 // navegable con "Siguiente"/"Atrás", puntos, o deslizando lateralmente
@@ -22,13 +22,13 @@ import { usePrefersReducedMotion, monthSlideVariants, useSwipeHorizontal } from 
 // mojadas" — frases cortas, sin tecnicismos, el detalle completo vive en
 // CHANGELOG.md para quien lo quiera.
 //
-// Training Records retirado de aquí (y de Ayuda, que nunca llegó a
-// documentarlo) el mismo 2026-09-03, pedido explícito del usuario: no
-// sale en este paquete de Release V1, se desplegará en una versión
-// posterior como feature nueva — no tiene sentido anunciarla antes de
-// que esté disponible de verdad para el usuario final. El código de
-// Training Records en sí (generador, acceso desde Home) sigue en la
-// rama tal cual, solo se retira de los sitios que la ANUNCIAN.
+// Training Records retirado de aquí el 2026-09-03 (pedido explícito del
+// usuario: no salía en ese paquete de Release V1 porque todavía no
+// estaba disponible de verdad para el usuario final). Reintroducido el
+// 2026-09-08, también pedido explícito del usuario, una vez Training
+// Records ya es una funcionalidad real y accesible desde Home — mismo
+// criterio de fondo en ambos momentos ("no anunciar algo que el usuario
+// no puede usar todavía"), no una contradicción.
 //
 // Sin capturas de pantalla, mismo motivo que la versión anterior de este
 // archivo: ninguna captura real de esta sesión queda presentable para un
@@ -36,23 +36,22 @@ import { usePrefersReducedMotion, monthSlideVariants, useSwipeHorizontal } from 
 // coherente con el resto de la app cumple igual el objetivo ("muy
 // visual") sin ese riesgo.
 //
-// Diapositiva "Mi perfil" añadida 2026-09-04 (ya en producción sin
-// anunciar desde Release V1: carnet de instructor, datos personales,
-// nivel profesional, moneda favorita, contraseña, borrado de cuenta).
-// Ángulo elegido: el carnet — es lo más visual y lo único realmente nuevo
-// como concepto (el resto son campos de datos, no una pieza de UI nueva).
-// icon/color no son traducibles — título/cuerpo de cada diapositiva viven en
-// notices.json (whatsNew.slides, mismo orden por índice) y se combinan con
-// este array en el componente.
+// Contenido reescrito 2026-09-08 (cierre de la cola de Release V1,
+// pedido explícito del usuario) para reflejar el alcance real de este
+// rediseño completo: 6 diapositivas, una por bloque grande de la
+// iniciativa. icon/color no son traducibles — título/cuerpo de cada
+// diapositiva viven en notices.json (whatsNew.slides, mismo orden por
+// índice) y se combinan con este array en el componente. La última
+// diapositiva se queda última a propósito, como siempre: es un
+// meta-mensaje sobre el propio WhatsNew ("consúltalo de nuevo en
+// Ayuda"), no una funcionalidad más.
 const SLIDE_ICONS = [
-  { icon: Smartphone, color: BRAND_OCEAN },
-  { icon: Building2, color: TEAL },
-  { icon: Palette, color: BRAND_GOLD },
-  { icon: GraduationCap, color: TEAL },
-  // Se inserta antes de la diapositiva de cierre ("Repásalo cuando
-  // quieras"), que se queda última a propósito porque es un meta-mensaje
-  // sobre el propio WhatsNew, no sobre una funcionalidad concreta.
-  { icon: Sparkles, color: BRAND_NAVY },
+  { icon: Palette, color: BRAND_OCEAN }, // 1. Rediseño completo, logo y look&feel nuevos
+  { icon: IdCard, color: TEAL }, // 2. Mi perfil — carnet de instructor
+  { icon: GraduationCap, color: SUN }, // 3. Training Records
+  { icon: Languages, color: GREEN }, // 4. Multi idioma
+  { icon: LayoutGrid, color: CORAL }, // 5. Home y Mi trabajo, más claros y estructurados
+  { icon: Sparkles, color: BRAND_NAVY }, // 6. Repásalo cuando quieras, desde Ayuda
 ];
 
 export default function WhatsNew({ onClose }) {
@@ -60,7 +59,7 @@ export default function WhatsNew({ onClose }) {
   const [step, setStep] = useState(0);
   // direction: misma idea que monthDirection en MonthCalendar
   // (shared.jsx) — de qué lado entra/sale cada diapositiva en
-  // monthSlideVariants, para que "Atrás" siempre deslice al revés que
+  // carouselSlideVariants, para que "Atrás" siempre deslice al revés que
   // "Siguiente"/deslizar hacia la izquierda, sea cual sea el punto de
   // partida.
   const [direction, setDirection] = useState(1);
@@ -132,13 +131,26 @@ export default function WhatsNew({ onClose }) {
             MonthCalendar, nunca probado aquí hasta ahora) + swipeProps
             nativo en vez de `drag` — recupera el slide lateral real
             (entra/sale por el lado correcto según `direction`) sin
-            reproducir el bug. */}
+            reproducir el bug.
+
+            Desplazamiento ampliado a un 100% real (2026-09-08, "quiero
+            q se aprecie la salida de un slide y la entrada de otro"):
+            monthSlideVariants (motion.js) se quedaba en unos pocos px,
+            pensado para la rejilla pequeña del calendario, no para una
+            diapositiva a ancho completo — apenas se notaba el
+            desplazamiento, solo el fundido. carouselSlideVariants
+            (motion.js) es la misma convención de dirección/easing con
+            un desplazamiento del 100% del propio ancho, para un
+            carrusel de verdad: la que sale se ve salir del todo, la que
+            entra se ve entrar del todo. Depende de `overflow-hidden`
+            en el contenedor de abajo para no desbordar el diálogo
+            mientras la diapositiva saliente atraviesa el 100%. */}
         <div className="min-h-[220px] touch-pan-y overflow-hidden px-6 pb-2 text-center" {...swipeProps}>
           <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             <motion.div
               key={step}
               custom={direction}
-              variants={monthSlideVariants(reduced)}
+              variants={carouselSlideVariants(reduced)}
               initial="initial"
               animate="animate"
               exit="exit"

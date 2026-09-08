@@ -8,20 +8,24 @@
     "start": "Empezar",
     "slides": [
       {
-        "title": "Llévala en el bolsillo, de verdad",
-        "body": "Añade Ocean Flow a la pantalla de inicio de tu móvil y ábrela como cualquier otra app — el aviso está en Home."
+        "title": "Rediseño completo, cara nueva",
+        "body": "Logo, colores e imagen renovados de arriba abajo — la misma Ocean Flow, con un aspecto propio."
       },
       {
-        "title": "Home, más útil de un vistazo",
-        "body": "La tarjeta de abajo ahora te dice qué escuela ha sido la más activa este mes, en vez de repetir una cifra que ya ves arriba."
+        "title": "Tu carnet de instructor",
+        "body": "Mi perfil ahora tiene tu propio carnet: nivel profesional, datos personales y moneda favorita, todo en un sitio."
       },
       {
-        "title": "Un color para cada tipo de movimiento",
-        "body": "Comisiones y Ajustes ya tienen su propio color de marca — se reconocen de un vistazo, igual que ya pasaba con Curso."
+        "title": "Training Records, desde la app",
+        "body": "Genera el registro de progreso SSI de cada alumno, firmado y listo para entregar — sin salir de Ocean Flow."
       },
       {
-        "title": "Los KPIs de Mi trabajo, más claros",
-        "body": "El icono de cada cifra se encoge con suavidad si el número es largo, y su color siempre queda a la vista junto a la etiqueta."
+        "title": "La app ya habla tu idioma",
+        "body": "Español, inglés, francés, italiano, alemán, catalán o euskera — cambia cuando quieras desde tu perfil."
+      },
+      {
+        "title": "Home y Mi trabajo, más claros",
+        "body": "Todo mejor organizado, para encontrar lo que buscas de un vistazo: tus KPIs, tus movimientos, tu día a día."
       },
       {
         "title": "Repásalo cuando quieras",
