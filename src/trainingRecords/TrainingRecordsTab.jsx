@@ -25,6 +25,7 @@ import { InstructorCardEditable } from "../ProfileTab";
 import { fillTrainingRecordPdf } from "./pdfFill";
 import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
 import { buildDefaultConfig, validateRecordConfig, validateStudentFields, buildFillData, availableAdventureOptions } from "./recordConfig";
+import { addGeneratedCount } from "./generatedCounter";
 import StudentQuickEntrySheet from "./StudentQuickEntrySheet";
 
 // Generador de Training Records (Release V1, Fase 5) — rediseño
@@ -553,6 +554,10 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
       }
       setSession((s) => ({ ...s, students: updated }));
       toast?.success(t("studentSheet.generadoCorrectamente"));
+      // Contador decorativo de Home (2026-09-08) — ver generatedCounter.js
+      // para el porqué de sumar aquí (generación real de PDF) y no en la
+      // descarga/compartir, que son solo formas de entregar lo ya generado.
+      addGeneratedCount(updated.length);
     } catch (err) {
       console.error(err);
       toast?.error(t("studentSheet.noSePudoGenerar"));

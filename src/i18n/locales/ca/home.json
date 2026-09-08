@@ -14,7 +14,9 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "subtitle": "Genera el registre de progrés SSI de cada alumne, signat i llest per lliurar"
+    "subtitle": "Genera el registre de progrés SSI de cada alumne, signat i llest per lliurar",
+    "subtitleWithCount_one": "Ja has generat {{count}} Training Record",
+    "subtitleWithCount_other": "Ja has generat {{count}} Training Records"
   },
   "installApp": "Descarrega l'app"
 }

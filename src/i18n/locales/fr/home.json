@@ -14,7 +14,9 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "subtitle": "Générez le registre de progression SSI de chaque élève, signé et prêt à remettre"
+    "subtitle": "Générez le registre de progression SSI de chaque élève, signé et prêt à remettre",
+    "subtitleWithCount_one": "Vous avez déjà généré {{count}} Training Record",
+    "subtitleWithCount_other": "Vous avez déjà généré {{count}} Training Records"
   },
   "installApp": "Télécharger l'app"
 }

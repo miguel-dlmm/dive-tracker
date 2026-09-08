@@ -211,7 +211,16 @@ export function useCountUp(target, { duration = 1.1, reduced = false } = {}) {
     let raf;
     const startTime = performance.now();
     const animate = (now) => {
-      const progress = Math.min((now - startTime) / (duration * 1000), 1);
+      // Math.max(..., 0) (2026-09-08, hallazgo real en tests): sin este
+      // suelo, un primer `now` de requestAnimationFrame anterior a
+      // `startTime` (visto en jsdom, donde el timestamp del callback no
+      // siempre comparte reloj con performance.now()) deja `progress`
+      // negativo — la curva de easing cúbica no está pensada para valores
+      // fuera de [0,1] y devuelve un resultado disparatado (se llegó a ver
+      // un contador saltar a -154 en vez de crecer desde 0). Clamping por
+      // abajo también blinda el caso real (no solo de test) de un
+      // navegador con el reloj de rAF desincronizado momentáneamente.
+      const progress = Math.min(Math.max((now - startTime) / (duration * 1000), 0), 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.round(target * eased));
       if (progress < 1) raf = requestAnimationFrame(animate);

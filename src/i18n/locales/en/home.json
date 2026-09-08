@@ -14,7 +14,9 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "subtitle": "Generate each student's signed SSI progress record, ready to hand over"
+    "subtitle": "Generate each student's signed SSI progress record, ready to hand over",
+    "subtitleWithCount_one": "You've already generated {{count}} Training Record",
+    "subtitleWithCount_other": "You've already generated {{count}} Training Records"
   },
   "installApp": "Download app"
 }

@@ -4647,3 +4647,69 @@ Confirmado en Chrome real contra la cuenta demo de TEST: Nitrox (filas
 Right (las 7 filas "Obligatorio", incluidas las 3 de "Actualización de
 React Right" con su layout de 3 columnas propio) revisadas fila a fila
 contra el pedido exacto del usuario — sin errores de consola.
+
+### 12.26 — Tarjeta de Training Records en Home: contador dinámico + insignia con respiración
+
+Pregunta abierta del usuario ("¿se te ocurriría otra manera dinámica y
+atractiva de integrarlo en la home?") sobre la tarjeta estática de
+Training Records — propuesta hecha y aprobada ("continúa con lo que
+estabas haciendo") antes de implementar, no una decisión unilateral.
+
+**Restricción real que descarta la opción obvia**: un contador "de
+verdad" (cuántos certificados ha emitido el instructor) necesitaría
+guardar algo sobre cada Training Record generado — rompe la garantía ya
+documentada en toda la app ("nada de lo que rellenes aquí se guarda en
+la nube, solo se descarga"). Se descartó esa vía a propósito, no por
+olvido.
+
+**Solución elegida**: contador puramente local (`localStorage`, nueva
+clave `oceanpulse:trainingRecordsGeneratedCount`, extraído a
+`src/trainingRecords/generatedCounter.js` para poder probarlo sin
+montar UI) que suma cuando `generateAll` (`TrainingRecordsTab.jsx`)
+termina con éxito — no identifica a ningún alumno, solo cuenta
+generaciones desde ese dispositivo. Limitación aceptada y documentada
+en el propio código: regenerar el mismo listado (p. ej. tras corregir
+una fecha) vuelve a sumar — es un indicador de actividad/uso, no un
+libro de certificados emitidos, y sigue cumpliendo el objetivo real
+(que la tarjeta se sienta viva) sin necesitar guardar nada nuevo.
+
+**En `HomeTab.jsx`**: mientras el contador está en 0, la tarjeta
+mantiene el texto explicativo de siempre (más útil para quien nunca ha
+usado la herramienta que una cifra en cero); en cuanto hay alguno,
+cambia a "Ya has generado N Training Records" con la cifra animada
+(mismo `useCountUp` que ya usan los KPI de arriba). La insignia del
+icono gana además una respiración sutil en bucle (escala 1 → 1.06 → 1,
+2.4s, `Infinity`), apagada del todo con `prefers-reduced-motion` — vida
+sin distraer, no un adorno que compita con el resto de la pantalla.
+
+**Bug real encontrado y corregido en `useCountUp`** (`motion.js`),
+compartido por todos los contadores animados de la app (KPIs de Home,
+esta tarjeta): `progress` no tenía suelo por abajo — un primer
+`now` de `requestAnimationFrame` anterior a `performance.now()`
+(reproducido en jsdom, donde ambos relojes no siempre coinciden) dejaba
+`progress` negativo, y la curva de easing cúbica (pensada solo para
+`[0,1]`) devolvía un resultado disparatado — se vio en vivo un
+contador saltar a **-154** en vez de crecer desde 0. Corregido con
+`Math.max(..., 0)` además del `Math.min(..., 1)` que ya tenía — blinda
+también el caso real (no solo de test) de un reloj de rAF
+momentáneamente desincronizado, no solo el síntoma en jsdom.
+
+**Flakiness real descubierta al arreglarlo, corregida de paso**: con la
+suite completa (861 tests, muchos archivos en paralelo, CPU bajo
+presión real), tanto el nuevo test de esta tarjeta como un test ya
+existente de los KPIs de Home (mismo patrón, `useCountUp` + `waitFor`)
+fallaban de forma intermitente — nunca en solitario, solo bajo
+contención real. No es un cambio de comportamiento: se amplió el
+`timeout` de `waitFor` en ambos (de 2000 a 4000ms) para dar margen real
+al bucle de `requestAnimationFrame` cuando el hilo principal está
+ocupado por el resto de la suite — documentado en el propio test para
+que quede claro por qué, no un número mágico.
+
+**Verificado**: 861/861 tests (incluye el contador probado de extremo a
+extremo — generar con éxito en `TrainingRecordsTab.test.jsx` suma en
+`localStorage`, y `HomeTab.test.jsx` prueba que la tarjeta lo refleja),
+suite completa repetida dos veces seguidas sin fallos intermitentes,
+lint 0 errores, build correcto. Confirmado en Chrome real: con el
+contador a 0, texto explicativo de siempre; con un valor simulado en
+`localStorage`, la tarjeta cambia al mensaje de actividad con la cifra
+animada asentándose en el valor correcto, sin errores de consola.

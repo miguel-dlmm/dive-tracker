@@ -14,7 +14,9 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "subtitle": "Sortu ikasle bakoitzaren SSI aurrerapen-erregistroa, sinatuta eta emateko prest"
+    "subtitle": "Sortu ikasle bakoitzaren SSI aurrerapen-erregistroa, sinatuta eta emateko prest",
+    "subtitleWithCount_one": "Jada {{count}} Training Record sortu duzu",
+    "subtitleWithCount_other": "Jada {{count}} Training Record sortu dituzu"
   },
   "installApp": "Deskargatu aplikazioa"
 }

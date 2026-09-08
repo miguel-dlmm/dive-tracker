@@ -411,11 +411,19 @@ describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", (
     expect(screen.getByText("Cursos")).toBeInTheDocument();
     expect(screen.getByText("Captados")).toBeInTheDocument();
 
+    // timeout 4000 (2026-09-08, hallazgo real): con la suite completa
+    // corriendo (muchos archivos de test en paralelo, CPU bajo presión
+    // real), el bucle de requestAnimationFrame de useCountUp (motion.js)
+    // puede tardar bastante más de 2s en asentarse en su valor final —
+    // visto fallar en vivo con la suite completa, nunca en solitario.
+    // 2000ms bastaba en aislamiento pero era un margen demasiado justo
+    // bajo contención real; no es un cambio de comportamiento, solo más
+    // paciencia para el mismo resultado esperado.
     await waitFor(() => {
       expect(screen.getByText("Alumnos").previousSibling).toHaveTextContent("3"); // 2 + 1, solo este mes
       expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("2"); // w1 + w2, solo este mes (w3 es del mes pasado)
       expect(screen.getByText("Captados").previousSibling).toHaveTextContent("4"); // solo c1, este mes
-    }, { timeout: 2000 });
+    }, { timeout: 4000 });
   });
 });
 
@@ -456,5 +464,49 @@ describe("HomeTab — enlace 'Descargar app'", () => {
     renderHomeWithInstall(onOpenInstallApp);
     await user.click(screen.getByText("Descargar app"));
     expect(onOpenInstallApp).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Tarjeta de Training Records — subtítulo dinámico (2026-09-08, pedido
+// explícito: "otra manera dinámica y atractiva de integrarlo en la
+// home"). El contador vive en localStorage (generatedCounter.js, misma
+// clave que TrainingRecordsTab.jsx incrementa al generar con éxito) —
+// aquí solo se prueba que HomeTab lo lee y lo refleja, no la lógica de
+// sumar (ya cubierta en generatedCounter.test.js).
+describe("HomeTab — tarjeta de Training Records", () => {
+  beforeEach(() => { localStorage.clear(); });
+
+  function renderHomeWithTR(onOpenTrainingRecords = vi.fn()) {
+    render(
+      <HomeTab
+        worklog={rowsHook([])} comisiones={rowsHook([])} colleaguePayments={rowsHook([])}
+        rates={rowsHook([])} commissionRates={rowsHook([])}
+        activities={rowsHook([{ name: "Open Water" }])} schools={rowsHook([{ name: "PADI Cozumel" }])}
+        currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])} navSections={rowsHook([])}
+        paymentStatuses={PAYMENT_STATUSES} onQuickCreate={vi.fn()} onOpenTrainingRecords={onOpenTrainingRecords}
+      />
+    );
+  }
+
+  it("sin ningún Training Record generado todavía, muestra el texto explicativo de siempre", () => {
+    renderHomeWithTR();
+    expect(screen.getByText("Genera el registro de progreso SSI de cada alumno, firmado y listo para entregar")).toBeInTheDocument();
+  });
+
+  it("con Training Records ya generados, cambia a un mensaje de actividad con la cifra", async () => {
+    localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount", "7");
+    renderHomeWithTR();
+    await waitFor(() => {
+      expect(screen.getByText("Ya has generado 7 Training Records")).toBeInTheDocument();
+    }, { timeout: 4000 });
+    expect(screen.queryByText("Genera el registro de progreso SSI de cada alumno, firmado y listo para entregar")).not.toBeInTheDocument();
+  });
+
+  it("pulsar la tarjeta llama a onOpenTrainingRecords", async () => {
+    const user = userEvent.setup();
+    const onOpenTrainingRecords = vi.fn();
+    renderHomeWithTR(onOpenTrainingRecords);
+    await user.click(screen.getByText("Training Records"));
+    expect(onOpenTrainingRecords).toHaveBeenCalledTimes(1);
   });
 });

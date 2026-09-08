@@ -7,6 +7,7 @@ import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./
 import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import PendingCollectionCard from "./PendingCollectionCard";
+import { getGeneratedCount } from "./trainingRecords/generatedCounter";
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
 // schools / currencies / paymentStatuses: hooks de useSupabaseTable
@@ -99,6 +100,17 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const alreadyInstalled = typeof window !== "undefined" && (window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator?.standalone === true);
   const translatedTypeMeta = useTranslatedMovementTypeMeta(t);
   const reducedMotion = usePrefersReducedMotion();
+  // Contador decorativo de la tarjeta de Training Records (2026-09-08,
+  // "otra manera dinámica y atractiva de integrarlo en la home") — ver
+  // generatedCounter.js para el porqué de vivir solo en localStorage
+  // (nunca se guardan datos de alumnos, así que no hay ningún sitio real
+  // donde llevar la cuenta de certificados emitidos sin romper esa
+  // garantía). Leído una vez al montar Home — TrainingRecordsTab.jsx es
+  // una pestaña hermana que se desmonta al salir de ella, así que no
+  // hace falta sincronización en vivo entre las dos, solo que Home lea
+  // el valor actual cada vez que se vuelve a montar.
+  const [generatedCount] = useState(getGeneratedCount);
+  const animatedGeneratedCount = useCountUp(generatedCount, { reduced: reducedMotion });
   const now = new Date();
   const currentMonthKey = monthKey(now);
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
@@ -280,12 +292,37 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           className="flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-transform active:scale-[0.98]"
           style={{ borderColor: `${BRAND_NAVY}40`, background: `linear-gradient(135deg, ${BRAND_NAVY}17 0%, ${BRAND_NAVY}05 100%)` }}
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: BRAND_NAVY }}>
+          {/* Insignia con respiración sutil (2026-09-08) — antes un
+              círculo estático; un latido lento (escala 1 → 1.05, ida y
+              vuelta, en bucle) le da vida sin distraer, apagado del todo
+              con prefers-reduced-motion (motion.span sin `animate` cuando
+              reducedMotion, se queda en su tamaño base). */}
+          <motion.span
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
+            style={{ backgroundColor: BRAND_NAVY }}
+            animate={reducedMotion ? undefined : { scale: [1, 1.06, 1] }}
+            transition={reducedMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          >
             <Award size={22} className="text-white" aria-hidden="true" />
-          </span>
+          </motion.span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</span>
-            <span className="block text-xs text-gray-500">{t("trainingRecordsCard.subtitle")}</span>
+            {/* Subtítulo dinámico (2026-09-08, pedido explícito: "otra
+                manera dinámica y atractiva de integrarlo en la home") —
+                mientras no se ha generado ningún documento todavía, se
+                mantiene el texto explicativo de siempre (más útil para
+                quien nunca ha usado la herramienta que una cifra en
+                cero); en cuanto hay alguno, pasa a un mensaje de
+                actividad real con la cifra animada (mismo useCountUp que
+                los KPI de arriba) — ver generatedCounter.js para qué
+                cuenta exactamente y por qué. */}
+            {generatedCount > 0 ? (
+              <span className="block text-xs text-gray-500">
+                {t("trainingRecordsCard.subtitleWithCount", { count: animatedGeneratedCount })}
+              </span>
+            ) : (
+              <span className="block text-xs text-gray-500">{t("trainingRecordsCard.subtitle")}</span>
+            )}
           </span>
           <ChevronRight size={20} className="shrink-0" style={{ color: BRAND_NAVY }} aria-hidden="true" />
         </button>

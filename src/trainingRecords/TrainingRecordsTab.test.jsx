@@ -76,6 +76,7 @@ function renderTab(props = {}) {
 
 beforeEach(() => {
   sessionStorage.clear();
+  localStorage.clear();
   endStrokeHandlers = [];
   templatesQuery.order.mockResolvedValue({ data: [TEMPLATE_ROW], error: null });
   adventuresQuery.order.mockResolvedValue({ data: ADVENTURE_ROWS, error: null });
@@ -314,6 +315,24 @@ it("'Menor de edad' revela el nombre/firma del tutor y los exige antes de guarda
   endStrokeHandlers[guardianHandlerIndex]();
   await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
   await screen.findByText("Ana Garcia");
+}, 15000);
+
+// Contador decorativo de la tarjeta de Home (2026-09-08) — ver
+// generatedCounter.js. Se suma en el mismo punto que ya prueba el test de
+// arriba (generación con éxito de "Generar para todos los alumnos"), solo
+// que aquí se comprueba el efecto secundario en localStorage en vez del
+// PDF en sí.
+it("generar con éxito suma al contador de Training Records generados (localStorage)", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount")).toBeNull();
+
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount")).toBe("1");
 }, 15000);
 
 it("el listado y los documentos ya generados sobreviven a un remontaje (recarga de página)", async () => {
