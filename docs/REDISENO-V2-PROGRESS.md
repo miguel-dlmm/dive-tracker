@@ -5414,3 +5414,153 @@ migraciones contra producción, fusionar sobre `main`, verificar el
 despliegue real, taguear, publicar el release en GitHub): todos tocan
 producción de verdad o son irreversibles sin supervisión activa, así
 que ninguno se ejecuta en modo autónomo, sin excepción.
+
+## Cierre de la release v1.1.0 en producción (2026-09-08) — checklist de 12.19 ejecutado con el usuario presente
+
+Sesión de ejecución supervisada del checklist dejado pendiente en el
+cierre anterior — parando en cada paso que tocara producción para
+confirmación explícita, tal y como pidió el usuario al empezar. Estado
+final: **`main` en `v1.1.0`, tag y release de GitHub publicados,
+producción verificada sin errores.**
+
+**1. Backup.** `npm run backup:db` falló la primera vez: la versión de
+`pg_dump` del sistema (Homebrew, 16.15) no soporta el servidor de
+Supabase (Postgres 17.6) — `pg_dump: error: aborting because of server
+version mismatch`. `postgresql@17` ya estaba instalado en el sistema
+(keg-only, sin estar en el `PATH`); resuelto anteponiendo su `bin/` al
+`PATH` solo para ese comando, sin tocar el `pg_dump` por defecto del
+sistema. Backup real guardado en `backups/ocean-flow-2026-09-08.dump`
+(368 KB).
+
+**2. Comprobación de tarifas duplicadas (paso informativo de 12.19) —
+sí había un caso real.** La query de 12.19 encontró 3 grupos duplicados
+en `rates` para la cuenta real del usuario (nickname "admin",
+`migueldlmm@gmail.com`), todos bajo la escuela semilla "Ihasia"
+(dataset de `seed.sql`, no una escuela de prueba aislada — la propia
+cuenta del usuario usa ese dataset como si fuera su catálogo real):
+Advanced (2000 vs 900 THB), Open Water (2000 vs 900 THB), Try Scuba
+(800 vs 800, sin diferencia real). Investigado a fondo antes de dejar
+que la migración decidiera sola:
+- `commission_rates` ya tenía las entradas correctas de comisión para
+  esas dos actividades (900 THB, sembradas correctamente por
+  `clone_setup_dataset()`, `schema.sql:840-869` — la función reparte
+  bien `setup_dataset_rates`→`rates` y
+  `setup_dataset_commission_rates`→`commission_rates`, sin mezclar).
+- Las filas de 900 THB dentro de `rates` (Work Log, no comisión) eran
+  un resto suelto sin función real — confirmado por el usuario: el
+  rate real de Work Log para Advanced/Open Water es 2000 THB.
+- La migración 0015 desempata por `created_at desc, id desc`; con
+  `created_at` idéntico en los 6 duplicados (mismo instante exacto,
+  `2026-08-30 04:15:30.888573+00`), el desempate por `id` es arbitrario
+  y de hecho iba a dejar activas las de 900 (incorrectas).
+- **Corrección manual aplicada tras 0015** (transacción `UPDATE`, no
+  parte del fichero de migración): `is_active = false` en las 2 filas
+  de 900 THB, `is_active = true` en las 2 de 2000 THB. Las de 900 se
+  quedan en la tabla como histórico inactivo, no se borran.
+- Comprobado que **no es un problema sistémico**: de las 16 cuentas
+  reales de producción, solo esta tenía duplicados.
+
+**3. Migraciones `0014`→`0018`.** Aplicadas en orden vía
+`scripts/apply-migration-prod.mjs` (no vía SQL editor manual como
+preveía 12.19 — ese script ya existía desde la preparación de v1.0.0,
+`dd44a7c`, y 12.19 estaba desactualizado en ese punto). El clasificador
+de modo automático bloqueó cada invocación por separado (escritura
+contra producción) — aprobación explícita del usuario pedida y
+concedida en cada una, migración a migración, tal y como se pidió al
+empezar la sesión.
+
+**4. Fusión `release/v1.1.0` → `main`.** Sin conflictos, como preveía
+el análisis de 12.19. `870/870` tests, lint 0 errores, build correcto
+sobre el commit real. Push a `origin/main` tras confirmación explícita
+— disparó el deploy automático de producción.
+
+**5. Verificación del despliegue — bug real encontrado, no en el
+checklist original.** Consola limpia, login/branding correctos. Pero
+al pedir al usuario que confirmara el recorrido con su cuenta real, un
+movimiento de Work Log (OW, Ihasia) mostraba **900 en el listado y
+2000 en el popup de edición** para el mismo registro — justo el tipo
+de tarifa que se acababa de corregir en el paso 2. Investigado a
+fondo, encontrado el bug de raíz:
+- `src/rateCalc.js` (`buildEntriesBySource`, usado por Home/Mi
+  trabajo/Resumen), `src/WorkLogTab.jsx` y `src/ComisionesTab.jsx`
+  resolvían la tarifa de un movimiento con un `.find()` simple, **sin
+  filtrar por `isRateActive`** — podían coger una tarifa desactivada si
+  el array la devolvía antes que la activa.
+- Solo `src/MovementSheet.jsx` (el popup de edición) ya tenía el
+  filtro correcto, aplicado el 2026-09-07 (comentario ya existente en
+  `rateCalc.js` documentaba ese fix puntual, pero nunca se replicó a
+  los otros 3 sitios que leen la misma tabla).
+- **No es un bug de datos ni de esta cuenta**: es un bug de código que
+  cualquier usuario puede disparar en cuanto desactive una tarifa
+  antigua al crear una nueva — el caso de uso central que la propia
+  migración 0015 acaba de habilitar en producción. Ya estaba en el
+  código de `main` desde antes de esta sesión (no lo introdujo el
+  trabajo de hoy), solo se ha vuelto visible ahora que hay datos reales
+  con tarifas desactivadas.
+- **Corregido de raíz** en los 3 sitios (mismo filtro `isRateActive`
+  que ya usaba `MovementSheet.jsx`) + test de regresión nuevo en
+  `rateCalc.test.js` (tarifa desactivada listada antes que la activa
+  en el array → debe usar la activa, no la primera). `871/871` tests,
+  lint 0 errores, build correcto.
+- Rama `fix/tarifa-activa-en-listado` creada desde `develop` (nunca
+  commit directo, según regla del proyecto), fusionada a `develop` y
+  después a `main`, incluida en el mismo tag `v1.1.0` — no salió como
+  `v1.1.1` aparte porque el tag todavía no se había publicado.
+
+**6. Hallazgo aparte al fusionar de vuelta a `develop`: el CHANGELOG
+llevaba una release entera de retraso.** Al preparar el merge de
+`fix/tarifa-activa-en-listado` a `develop`, el hook `pre-push` bloqueó
+el push (regla real del propio proyecto: todo commit `feat`/`fix` debe
+traer su línea de `CHANGELOG.md`). Al ir a añadirla se descubrió que
+`develop` seguía con el `## Unreleased` completo de todo el rediseño
+v2 (nunca se había movido a `## [1.1.0]`) — porque `release/v1.1.0`
+solo se había fusionado sobre `main`, nunca de vuelta a `develop`.
+Corregido fusionando `main` → `develop` (conflicto real solo en un
+comentario de `src/App.test.jsx`, mismo código a ambos lados, resuelto
+quedándose con la versión más detallada) antes de continuar. **Lección
+para la próxima release**: el checklist de 12.19/ADR-0010 no incluye
+un paso explícito "fusionar `main` de vuelta a `develop` tras el
+release" — lo hizo falta añadirlo aquí a mano. Pendiente de decisión
+del usuario si se añade como paso permanente del proceso en
+`docs/ADR/0010-proceso-de-release.md` (no se ha tocado esa ADR en esta
+sesión, solo se ha resuelto el síntoma puntual).
+
+**7. Tag y release.** `git tag -a v1.1.0` sobre el commit final
+(`c01bf53`, ya con el fix de tarifas incluido) + `gh release create`
+con las notas extraídas de `## [1.1.0]` del CHANGELOG. Publicado:
+https://github.com/miguel-dlmm/dive-tracker/releases/tag/v1.1.0
+
+**8. Limpieza.** `release/v1.1.0` y `fix/tarifa-activa-en-listado`
+borradas (local y remoto, la segunda nunca había llegado a existir en
+remoto).
+
+**9. Dominio de producción — decisión del usuario, no de esta
+sesión.** Durante la verificación se detectó que
+`dive-tracker-exgg.vercel.app` redirige (307) a
+`oceanflow-web.vercel.app` — contradecía lo que decía `CLAUDE.md`
+("nunca es una redirección"). Confirmado por el usuario: configuración
+suya en el dashboard de Vercel, eligiendo `oceanflow-web.vercel.app`
+como dominio "final" del proyecto. `CLAUDE.md` → "Ramas y entornos" ya
+actualizado con el estado real (dominio original sigue sirviendo vía
+redirección, ya no es el enlace canónico; protección SSO confirmada
+sin bloquear).
+
+**Estado final verificado:**
+- `main` = `v1.1.0` (tag publicado), desplegado en producción, consola
+  limpia, sin errores.
+- `develop` sincronizada con `main` (incluido el fix de tarifas y el
+  `CHANGELOG.md` real).
+- Producción en Postgres con `0014`→`0018` aplicadas.
+- Datos de tarifas de la cuenta real corregidos (2000 THB activo en
+  Work Log para Advanced/Open Water de Ihasia).
+- Sin ramas colgadas.
+
+**Pendiente, no bloqueante, para una futura sesión (no se ha tocado
+nada de esto)**:
+- Decidir si "fusionar `main` de vuelta a `develop` tras cada release"
+  se añade como paso permanente a `docs/ADR/0010-proceso-de-release.md`
+  (hallazgo 6 de arriba).
+- Las filas de 900 THB en `rates` para Advanced/Open Water (Ihasia,
+  cuenta real) siguen en la tabla, desactivadas — decisión pendiente
+  del usuario si tienen algún valor histórico que conservar o si se
+  pueden borrar sin más.

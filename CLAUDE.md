@@ -53,16 +53,16 @@ dominio sigue siendo `dive-tracker-exgg.vercel.app`, sin cambios).
 mismo proyecto (`oceanflow.vercel.app`/`ocean-flow.vercel.app` ya
 estaban cogidos por terceros; `oceanflow-app.vercel.app` se probó y se
 descartó por decisión del usuario — "app" quedaba repetido demasiado
-cerca del propio `.vercel.app`) — el dominio original NUNCA se toca,
-así que nunca hay enlaces rotos; no es una redirección, ambos sirven
-la misma producción a la vez. **Pendiente de un paso manual en el
-dashboard de Vercel** (no expuesto por la CLI): el alias nuevo hereda
-la protección SSO de equipo por defecto de Vercel y hoy pide login de
-Vercel antes de servir la app — hay que excluirlo en Project Settings →
-Deployment Protection, igual que ya debe estar excluido
-`dive-tracker-exgg.vercel.app`, antes de darlo como URL pública. Hasta
-entonces, seguir usando `dive-tracker-exgg.vercel.app` como el enlace
-real a compartir.
+cerca del propio `.vercel.app`). **Actualizado 2026-09-08**: el usuario
+configuró `oceanflow-web.vercel.app` en el dashboard de Vercel como el
+dominio "final" del proyecto — `dive-tracker-exgg.vercel.app` ahora
+SÍ redirige (307) hacia él, decisión tomada fuera de este repo, no un
+efecto secundario de ningún despliegue. El dominio original sigue sin
+romperse (redirige, no desaparece), pero deja de ser el enlace
+canónico: `oceanflow-web.vercel.app` es ya el enlace real a compartir.
+La protección SSO de equipo que pedía login de Vercel antes de servir
+la app ya no bloquea — confirmado sirviendo 200 sin login al verificar
+el despliegue de v1.1.0 (2026-09-08).
 `develop` es la rama de
 integración/preparación, que además hace de entorno TEST de facto para el
 proyecto Vercel `dive-tracker` (`dive-tracker-three.vercel.app`), con su
