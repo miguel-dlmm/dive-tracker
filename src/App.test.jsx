@@ -235,12 +235,12 @@ describe("AuthGate", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText("Ocean Flow");
-    expect(screen.queryByText("La app ya habla tu idioma")).not.toBeInTheDocument();
+    expect(screen.queryByText("Rediseño completo, cara nueva")).not.toBeInTheDocument();
 
     await user.click(screen.getByLabelText("Ayuda"));
     await user.click(await screen.findByText("Ver qué hay de nuevo en esta versión"));
 
-    expect(await screen.findByText("La app ya habla tu idioma")).toBeInTheDocument();
+    expect(await screen.findByText("Rediseño completo, cara nueva")).toBeInTheDocument();
   });
 
   // 2026-09-07, pedido explícito: "cuando el usuario accede después del

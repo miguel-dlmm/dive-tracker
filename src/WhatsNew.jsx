@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Languages, TrendingUp, UserCircle, IdCard, Sparkles } from "lucide-react";
-import { TEAL, SUN, GREEN, CORAL, BRAND_NAVY } from "./App";
+import { X, Languages, LayoutGrid, IdCard, GraduationCap, Palette, Sparkles } from "lucide-react";
+import { TEAL, SUN, GREEN, CORAL, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { usePrefersReducedMotion, monthSlideVariants, useSwipeHorizontal } from "./motion";
 
@@ -22,13 +22,13 @@ import { usePrefersReducedMotion, monthSlideVariants, useSwipeHorizontal } from 
 // mojadas" — frases cortas, sin tecnicismos, el detalle completo vive en
 // CHANGELOG.md para quien lo quiera.
 //
-// Training Records retirado de aquí (y de Ayuda, que nunca llegó a
-// documentarlo) el mismo 2026-09-03, pedido explícito del usuario: no
-// sale en este paquete de Release V1, se desplegará en una versión
-// posterior como feature nueva — no tiene sentido anunciarla antes de
-// que esté disponible de verdad para el usuario final. El código de
-// Training Records en sí (generador, acceso desde Home) sigue en la
-// rama tal cual, solo se retira de los sitios que la ANUNCIAN.
+// Training Records retirado de aquí el 2026-09-03 (pedido explícito del
+// usuario: no salía en ese paquete de Release V1 porque todavía no
+// estaba disponible de verdad para el usuario final). Reintroducido el
+// 2026-09-08, también pedido explícito del usuario, una vez Training
+// Records ya es una funcionalidad real y accesible desde Home — mismo
+// criterio de fondo en ambos momentos ("no anunciar algo que el usuario
+// no puede usar todavía"), no una contradicción.
 //
 // Sin capturas de pantalla, mismo motivo que la versión anterior de este
 // archivo: ninguna captura real de esta sesión queda presentable para un
@@ -36,23 +36,22 @@ import { usePrefersReducedMotion, monthSlideVariants, useSwipeHorizontal } from 
 // coherente con el resto de la app cumple igual el objetivo ("muy
 // visual") sin ese riesgo.
 //
-// Diapositiva "Mi perfil" añadida 2026-09-04 (ya en producción sin
-// anunciar desde Release V1: carnet de instructor, datos personales,
-// nivel profesional, moneda favorita, contraseña, borrado de cuenta).
-// Ángulo elegido: el carnet — es lo más visual y lo único realmente nuevo
-// como concepto (el resto son campos de datos, no una pieza de UI nueva).
-// icon/color no son traducibles — título/cuerpo de cada diapositiva viven en
-// notices.json (whatsNew.slides, mismo orden por índice) y se combinan con
-// este array en el componente.
+// Contenido reescrito 2026-09-08 (cierre de la cola de Release V1,
+// pedido explícito del usuario) para reflejar el alcance real de este
+// rediseño completo: 6 diapositivas, una por bloque grande de la
+// iniciativa. icon/color no son traducibles — título/cuerpo de cada
+// diapositiva viven en notices.json (whatsNew.slides, mismo orden por
+// índice) y se combinan con este array en el componente. La última
+// diapositiva se queda última a propósito, como siempre: es un
+// meta-mensaje sobre el propio WhatsNew ("consúltalo de nuevo en
+// Ayuda"), no una funcionalidad más.
 const SLIDE_ICONS = [
-  { icon: Languages, color: SUN },
-  { icon: TrendingUp, color: GREEN },
-  { icon: UserCircle, color: CORAL },
-  // Mi perfil / carnet de instructor (2026-09-04) — se inserta antes de la
-  // diapositiva de cierre ("Repásalo cuando quieras"), que se queda última
-  // a propósito porque es un meta-mensaje sobre el propio WhatsNew.
-  { icon: IdCard, color: TEAL },
-  { icon: Sparkles, color: BRAND_NAVY },
+  { icon: Palette, color: BRAND_OCEAN }, // 1. Rediseño completo, logo y look&feel nuevos
+  { icon: IdCard, color: TEAL }, // 2. Mi perfil — carnet de instructor
+  { icon: GraduationCap, color: SUN }, // 3. Training Records
+  { icon: Languages, color: GREEN }, // 4. Multi idioma
+  { icon: LayoutGrid, color: CORAL }, // 5. Home y Mi trabajo, más claros y estructurados
+  { icon: Sparkles, color: BRAND_NAVY }, // 6. Repásalo cuando quieras, desde Ayuda
 ];
 
 export default function WhatsNew({ onClose }) {

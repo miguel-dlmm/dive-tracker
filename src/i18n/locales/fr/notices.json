@@ -8,24 +8,28 @@
     "start": "Commencer",
     "slides": [
       {
-        "title": "L'app parle déjà votre langue",
-        "body": "Passez de l'espagnol à l'anglais quand vous voulez, depuis votre profil."
-      },
-      {
-        "title": "Accueil, plus pratique",
-        "body": "Vos indicateurs du mois (élèves, cours, parrainages) sont maintenant la première chose que vous voyez en ouvrant l'accueil."
-      },
-      {
-        "title": "En-tête plus simple",
-        "body": "\"Se déconnecter\" se trouve maintenant dans Mon profil — moins d'icônes en haut, plus de place pour ce que vous utilisez chaque jour."
+        "title": "Une refonte complète, un nouveau visage",
+        "body": "Nouveau logo, nouvelles couleurs, une image renouvelée de fond en comble — la même Ocean Flow, avec une identité qui lui est propre."
       },
       {
         "title": "Votre carte d'instructeur",
         "body": "Mon profil a maintenant sa propre carte : niveau professionnel, données personnelles et devise favorite, tout au même endroit."
       },
       {
-        "title": "Revoyez-le quand vous voulez",
-        "body": "Retrouvez ces nouveautés depuis Aide → \"Voir les nouveautés\", sans attendre le prochain changement."
+        "title": "Training Records, depuis l'application",
+        "body": "Générez le registre de progression SSI de chaque élève, signé et prêt à remettre — sans quitter Ocean Flow."
+      },
+      {
+        "title": "L'application parle déjà votre langue",
+        "body": "Espagnol, anglais, français, italien, allemand, catalan ou basque — changez quand vous voulez, depuis votre profil."
+      },
+      {
+        "title": "Accueil et Mon activité, plus clairs",
+        "body": "Tout est mieux organisé, pour trouver ce que vous cherchez d'un coup d'œil : vos indicateurs, vos mouvements, votre quotidien."
+      },
+      {
+        "title": "Revoyez-les quand vous voulez",
+        "body": "Retrouvez ces nouveautés depuis Aide → \"Voir les nouveautés\", quand vous le souhaitez."
       }
     ]
   },

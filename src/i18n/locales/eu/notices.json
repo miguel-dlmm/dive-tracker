@@ -8,24 +8,28 @@
     "start": "Hasi",
     "slides": [
       {
-        "title": "Aplikazioak zure hizkuntza hitz egiten du jada",
-        "body": "Aldatu gaztelaniaren eta ingelesaren artean nahi duzunean, zure profiletik."
-      },
-      {
-        "title": "Hasiera, eskura hurbilago",
-        "body": "Hilabeteko zure KPIak (ikasleak, ikastaroak, erakarritakoak) dira orain Hasiera irekitzean ikusten duzun lehen gauza."
-      },
-      {
-        "title": "Goiburu sinpleagoa",
-        "body": "\"Saioa itxi\" orain Nire profilan dago — ikono gutxiago goian, leku gehiago egunero erabiltzen duzunarentzat."
+        "title": "Diseinu berria erabat",
+        "body": "Logo berria, kolore berriak, itxura guztiz berritua — Ocean Flow bera, bere nortasun propioarekin."
       },
       {
         "title": "Zure irakasle-txartela",
         "body": "Nire profilak orain zure txartel propioa du: maila profesionala, datu pertsonalak eta dibisa gogokoena, denak leku bakarrean."
       },
       {
+        "title": "Training Records, aplikaziotik bertatik",
+        "body": "Sortu ikasle bakoitzaren SSI aurrerapen-erregistroa, sinatuta eta emateko prest — Ocean Flow-etik atera gabe."
+      },
+      {
+        "title": "Aplikazioak zure hizkuntza hitz egiten du jada",
+        "body": "Gaztelania, ingelesa, frantsesa, italiera, alemana, katalana edo euskara — aldatu nahi duzunean, zure profiletik."
+      },
+      {
+        "title": "Hasiera eta Nire lana, argiago",
+        "body": "Dena hobeto antolatuta, behar duzuna begirada batean aurkitzeko: zure KPIak, zure mugimenduak, zure eguneroko lana."
+      },
+      {
         "title": "Berrikusi nahi duzunean",
-        "body": "Itzuli berritasun hauetara Laguntza → \"Ikusi berritasunak\" bidez, hurrengo aldaketaren zain egon gabe."
+        "body": "Itzuli berritasun hauetara Laguntza → \"Ikusi berritasunak\" bidez, nahi duzunean."
       }
     ]
   },

@@ -8,24 +8,28 @@
     "start": "Comença",
     "slides": [
       {
-        "title": "L'app ja parla el teu idioma",
-        "body": "Canvia entre espanyol i anglès quan vulguis, des del teu perfil."
-      },
-      {
-        "title": "Home, més a mà",
-        "body": "Els teus KPI del mes (alumnes, cursos, captats) són ara el primer que veus en obrir Home."
-      },
-      {
-        "title": "Capçalera més senzilla",
-        "body": "\"Tanca la sessió\" viu ara a El meu perfil — menys icones a dalt, més espai per al que uses cada dia."
+        "title": "Redisseny complet, cara nova",
+        "body": "Logo, colors i imatge renovats de dalt a baix — el mateix Ocean Flow, amb una identitat pròpia."
       },
       {
         "title": "El teu carnet d'instructor",
         "body": "El meu perfil ara té el teu propi carnet: nivell professional, dades personals i moneda preferida, tot en un mateix lloc."
       },
       {
+        "title": "Training Records, des de l'app",
+        "body": "Genera el registre de progrés SSI de cada alumne, signat i llest per lliurar — sense sortir d'Ocean Flow."
+      },
+      {
+        "title": "L'app ja parla el teu idioma",
+        "body": "Espanyol, anglès, francès, italià, alemany, català o euskera — canvia quan vulguis, des del teu perfil."
+      },
+      {
+        "title": "Home i La meva feina, més clars",
+        "body": "Tot millor organitzat, per trobar el que busques d'una ullada: els teus KPI, els teus moviments, el teu dia a dia."
+      },
+      {
         "title": "Repassa-ho quan vulguis",
-        "body": "Torna a aquestes novetats des d'Ajuda → \"Veure què hi ha de nou\", sense esperar el proper canvi."
+        "body": "Torna a aquestes novetats des d'Ajuda → \"Veure què hi ha de nou\", quan vulguis."
       }
     ]
   },

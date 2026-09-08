@@ -49,6 +49,10 @@ Registro de cambios relevantes de Ocean Flow.
   altas masivas automatizadas (Vercel BotID).
 
 ### Changed
+- **Novedades de esta versión (WhatsNew)**: reescrito con las 6
+  novedades reales de este rediseño — rediseño e imagen nueva, carnet
+  de instructor, Training Records, multi idioma, Home/Mi trabajo más
+  claros, y cómo repasarlo luego desde Ayuda.
 - **Mi trabajo**: cada KPI de cabecera lleva ahora un icono fijo junto a
   su etiqueta, además del que ya se encoge junto a la cifra — la
   identidad de color del KPI no desaparece del todo aunque la cifra sea

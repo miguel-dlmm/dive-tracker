@@ -4428,3 +4428,58 @@ verificación, para no dejarla en un estado distinto al habitual.
 **Con esto se cierra la cola pendiente** que abrió esta sesión — no
 quedan puntos pendientes en `docs/REDISENO-V2-PROGRESS.md` a fecha de
 este cierre.
+
+### 12.22 — WhatsNew reescrito con las 6 novedades reales del rediseño
+
+Petición explícita del usuario, ya con la cola anterior cerrada: el
+contenido de WhatsNew (`src/i18n/locales/*/notices.json`,
+`whatsNew.slides`) todavía reflejaba el paquete de novedades de una
+fase intermedia (idioma es/en, cabecera simplificada, carnet de
+instructor) — no el alcance real y completo de todo el rediseño que se
+ha ido cerrando en esta sesión. El usuario pidió 6 puntos concretos, en
+este orden:
+
+1. Rediseño completo, logo y look&feel nuevos.
+2. Mi perfil — carnet de instructor.
+3. Training Records.
+4. Multi idioma.
+5. Home y Mi trabajo, más claros y estructurados.
+6. Consúltalo de nuevo en Ayuda (el cierre habitual, ya existente).
+
+**Reescrito en los 7 idiomas** (`es/en/fr/it/de/ca/eu`), no solo en
+`es`/`en` — coherente con que el punto 4 de la propia lista es
+precisamente el multi idioma recién añadido (12.21). Título/cuerpo
+cortos, mismo tono ya establecido ("instructor con las manos mojadas",
+sin tecnicismos) — ver CLAUDE.md, Reglas permanentes Release V1, regla
+2 y 3.
+
+**`SLIDE_ICONS` (`WhatsNew.jsx`) actualizado a 6 entradas**: Palette/
+`BRAND_OCEAN` (rediseño), IdCard/`TEAL` (carnet, ya existía), 
+GraduationCap/`SUN` (Training Records), Languages/`GREEN` (idiomas),
+LayoutGrid/`CORAL` (Home/Mi trabajo), Sparkles/`BRAND_NAVY` (cierre, ya
+existía). La diapositiva de cierre se mantiene última a propósito,
+mismo criterio que siempre: es un meta-mensaje sobre el propio
+WhatsNew, no una funcionalidad más de la lista.
+
+**Training Records, reintroducido tras haberse retirado explícitamente
+el 2026-09-03** (entonces, pedido del usuario, porque todavía no era
+una funcionalidad real y accesible) — documentado en el propio
+`WhatsNew.jsx` para que quede claro que no es una contradicción, sino
+el mismo criterio aplicado dos veces en momentos distintos ("no
+anunciar algo que el usuario no puede usar todavía"): ahora Training
+Records ya es real y accesible desde Home, así que sí se anuncia.
+
+**Test desactualizado, corregido**: `App.test.jsx` (test de Fase 4,
+"Ver qué hay de nuevo" reabre el slide ya visto) tenía hardcodeado el
+título de la antigua primera diapositiva ("La app ya habla tu idioma")
+para comprobar que aparece/desaparece — actualizado al nuevo primer
+título ("Rediseño completo, cara nueva"). `WhatsNew.test.jsx` no
+necesitó cambios: ya estaba escrito deliberadamente sin asumir cuántas
+diapositivas hay ni su contenido exacto (ver el comentario junto al
+`describe`, referencia a `docs/ADR/0010-proceso-de-release.md`).
+
+**Verificado**: 824/824 tests, lint 0 errores, build correcto.
+Confirmado en Chrome real contra la cuenta demo de TEST: las 6
+diapositivas navegadas una a una con "Siguiente", icono/color/título/
+cuerpo correctos en cada una, el botón final dice "Empezar" en la 6ª
+en vez de "Siguiente", sin errores de consola.

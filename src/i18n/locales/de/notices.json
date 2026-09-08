@@ -8,24 +8,28 @@
     "start": "Los geht's",
     "slides": [
       {
-        "title": "Die App spricht jetzt deine Sprache",
-        "body": "Wechsle jederzeit zwischen Spanisch und Englisch, direkt in deinem Profil."
-      },
-      {
-        "title": "Home, griffbereiter",
-        "body": "Deine KPIs des Monats (Teilnehmer, Kurse, geworben) sind jetzt das Erste, was du beim Öffnen von Home siehst."
-      },
-      {
-        "title": "Einfachere Kopfzeile",
-        "body": "\"Abmelden\" befindet sich jetzt in Mein Profil — weniger Symbole oben, mehr Platz für das, was du täglich nutzt."
+        "title": "Komplett neu gestaltet, ein neues Gesicht",
+        "body": "Neues Logo, neue Farben, ein rundum erneuertes Erscheinungsbild — dieselbe Ocean Flow, mit einer eigenen Identität."
       },
       {
         "title": "Dein Instructor-Ausweis",
         "body": "Mein Profil hat jetzt deinen eigenen Ausweis: Berufslevel, persönliche Daten und bevorzugte Währung, alles an einem Ort."
       },
       {
+        "title": "Training Records, direkt aus der App",
+        "body": "Erstelle das SSI-Fortschrittsprotokoll jedes Teilnehmers, signiert und versandbereit — ohne Ocean Flow zu verlassen."
+      },
+      {
+        "title": "Die App spricht jetzt deine Sprache",
+        "body": "Spanisch, Englisch, Französisch, Italienisch, Deutsch, Katalanisch oder Baskisch — wechsle jederzeit, direkt in deinem Profil."
+      },
+      {
+        "title": "Home und Meine Arbeit, klarer als je zuvor",
+        "body": "Alles besser organisiert, damit du auf einen Blick findest, was du suchst: deine KPIs, deine Buchungen, deinen Alltag."
+      },
+      {
         "title": "Sieh es dir jederzeit wieder an",
-        "body": "Kehre zu diesen Neuigkeiten über Hilfe → \"Neuigkeiten ansehen\" zurück, ohne auf die nächste Version zu warten."
+        "body": "Kehre zu diesen Neuigkeiten über Hilfe → \"Neuigkeiten ansehen\" zurück, wann immer du willst."
       }
     ]
   },
