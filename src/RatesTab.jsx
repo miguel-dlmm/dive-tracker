@@ -1,23 +1,38 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Check, X, Search, SlidersHorizontal, GraduationCap, Handshake } from "lucide-react";
-import { NAVY, TEAL } from "./App";
+import { motion, AnimatePresence } from "motion/react";
+import { Plus, Check, X, Search, SlidersHorizontal, Eye, EyeOff } from "lucide-react";
+import { BRAND_NAVY, TEAL } from "./App";
 import {
   inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, MoneyInput,
-  EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate,
+  EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate, BooleanToggle,
 } from "./shared";
+import { listItemVariants, usePrefersReducedMotion } from "./motion";
+import { isRateActive } from "./rateCalc";
 
 // Rediseño 2026-08-30 — Tarifas pasa a hablar el mismo idioma visual que Mi
 // trabajo: una única lista (antes dos pestañas de página, "Instructor"/
-// "Comisión", cada una con su propia tabla montada por separado) con
-// acento de color por tipo a la izquierda de cada fila (mismo criterio que
-// EntryRow — TEAL para Curso, SUN para Comisión, ver MOVEMENT_TYPE_META),
-// y el tipo como un filtro más dentro de "Filtrar" en vez de un modo de
+// "Comisión", cada una con su propia tabla montada por separado) con el
+// tipo como un filtro más dentro de "Filtrar" en vez de un modo de
 // página — igual que Mi trabajo NO usa el tipo como control de primer
 // nivel (ver docs/ADR/0005). Rates y commission_rates SIGUEN siendo dos
 // tablas separadas (ninguna decisión de negocio cambia aquí, solo
 // presentación) — se combinan únicamente en esta capa, con el mismo
 // patrón que buildActivityEntries ya usa para worklog/comisiones.
+//
+// Reconocimiento visual del tipo por icono, no por borde (Fase 7,
+// 2026-09-07): la fila usaba un borde izquierdo de color de 4px
+// (`border-l-4`) — el mismo patrón que Mi trabajo ya había retirado en
+// la ronda anterior (5.9, "esa franja vertical finita a la izquierda")
+// en favor de un icono en una chip circular (`TypeIconChip`,
+// MiTrabajoTab.jsx). Tarifas seguía con la franja, un desvío real frente
+// a Movimientos pese al comentario de arriba ("mismo idioma visual"):
+// pedido explícito del usuario ("la pantalla de tarifas debe ser
+// consistente con los nuevos cambios de diseño implementados en
+// movimientos"). Ver RateTypeIconChip más abajo, mismo criterio visual,
+// sin duplicar el componente entero porque Tarifas nunca tiene el tipo
+// "companeros" (solo ganado/comision) y no comparte el resto de props de
+// EntryRow (pendiente/deshacer/animación de borrado).
 const TYPE_META = { ganado: MOVEMENT_TYPE_META.ganado, comision: MOVEMENT_TYPE_META.comision };
 // TYPE_OPTIONS/TYPE_KEY se quedan en español fijo a propósito (i18n, Fase 2):
 // son a la vez el texto mostrado y la clave de búsqueda del Select de
@@ -31,10 +46,29 @@ const TYPE_META = { ganado: MOVEMENT_TYPE_META.ganado, comision: MOVEMENT_TYPE_M
 // aplicado en MiTrabajoTab.jsx.
 const TYPE_OPTIONS = ["Curso", "Comisión"];
 const TYPE_KEY = { "Curso": "ganado", "Comisión": "comision" };
+// CREATE_TYPES ya no repite su propio icono por tipo (GraduationCap/
+// Handshake hardcodeados aquí, 2026-09-07: encontrado un desvío real
+// frente a MOVEMENT_TYPE_META.companeros, que usaba un icono distinto al
+// de MovementSheet.jsx pese a significar lo mismo) — deriva de TYPE_META,
+// la misma fuente de color, para que el icono de "Curso"/"Comisión" no
+// pueda desincronizarse de MOVEMENT_TYPE_META en ningún sitio de la app.
 const CREATE_TYPES = [
-  { key: "ganado", icon: GraduationCap },
-  { key: "comision", icon: Handshake },
+  { key: "ganado", icon: TYPE_META.ganado.icon },
+  { key: "comision", icon: TYPE_META.comision.icon },
 ];
+
+// Mismo lenguaje visual que TypeIconChip (MiTrabajoTab.jsx): icono del
+// tipo en una chip circular con tinte de fondo al 10% de su propio
+// color, en vez del borde izquierdo de 4px que usaba esta pantalla
+// hasta ahora — ver comentario largo junto a TYPE_META.
+function RateTypeIconChip({ source }) {
+  const { icon: Icon, color } = TYPE_META[source];
+  return (
+    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+      <Icon size={17} style={{ color }} aria-hidden="true" />
+    </span>
+  );
+}
 
 // schools / activities / currencies: { rows: [...] } — de useSupabaseTable
 // rates / commissionRates: { rows, insertRow, updateRow, deleteRow }
@@ -44,6 +78,7 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
   const { t } = useTranslation("rates");
   const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
   const toast = useToast();
+  const reducedMotion = usePrefersReducedMotion();
 
   const tableFor = (source) => (source === "ganado" ? rates : commissionRates);
   const entriesForSource = (source) => (source === "ganado" ? worklog.rows : comisiones.rows);
@@ -62,6 +97,19 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
   // trabajo, ver filtersOpen/activeFilterCount en MiTrabajoTab.jsx).
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({ type: "", school: "", activity: [] });
+  // Las tarifas desactivadas se ocultan por defecto (2026-09-04) — es la
+  // lista de "lo que cobro hoy", no un archivo histórico. Aparte de
+  // `filters` a propósito: no es un filtro que ACOTE resultados con un
+  // criterio de negocio (escuela/curso/tipo), es una preferencia de
+  // visibilidad ("enséñame también lo que ya no está vigente") — por eso
+  // vive fuera de hasFilters/activeFilterCount y "Limpiar filtros" no lo
+  // toca. Por el mismo motivo el control ya no vive dentro del panel de
+  // "Filtrar" (Fase 8, 2026-09-07, pedido explícito: "quiero probar el
+  // mostrar desactivadas fuera del filtro, para q no cueste encontrarlo o
+  // saber q hay ítems desactivados") — ver el interruptor junto al
+  // contador de la lista más abajo, siempre visible sin tener que abrir
+  // nada antes.
+  const [showInactive, setShowInactive] = useState(false);
   // creating: tipo elegido en la hoja — solo relevante al CREAR (ver
   // switchType); al editar, se fija al tipo real de la fila y no cambia
   // (mover una tarifa de tabla sería un cambio de modelo, fuera de
@@ -107,6 +155,7 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
 
   const filtered = useMemo(() => {
     let list = allRows;
+    if (!showInactive) list = list.filter(isRateActive);
     if (filters.type) list = list.filter((r) => r._source === TYPE_KEY[filters.type]);
     if (filters.school) list = list.filter((r) => r.school === filters.school);
     if (filters.activity && filters.activity.length > 0) list = list.filter((r) => filters.activity.includes(r.activity));
@@ -115,7 +164,18 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
       list = list.filter((r) => [r.school, r.activity].some((v) => String(v ?? "").toLowerCase().includes(q)));
     }
     return list;
-  }, [allRows, query, filters]);
+  }, [allRows, query, filters, showInactive]);
+
+  // Única fuente de verdad de "¿ya hay una tarifa activa para esta
+  // escuela+curso?" — usada tanto al crear/editar (submitSheet) como al
+  // reactivar (toggleActive), para dar un error claro ANTES de golpear el
+  // índice único parcial de BD (rates_active_school_activity_unique /
+  // commission_rates_active_school_activity_unique, ver
+  // scripts/migrations/0015-tarifas-vigencia.sql) con un 23505 crudo.
+  // excludeId: la propia fila al editar/reactivar, para no chocar consigo
+  // misma.
+  const hasActiveDuplicate = (source, school, activity, excludeId) =>
+    tableFor(source).rows.some((r) => r.id !== excludeId && isRateActive(r) && r.school === school && r.activity === activity);
 
   const closeSheet = () => { setSheetOpen(false); setEditingEntry(null); };
 
@@ -157,8 +217,24 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
     setForm({ ...form, rate: "" });
   };
 
+  // 23505 = unique_violation del índice único parcial de la migración 0015
+  // (una tarifa activa duplicada coló pese a la comprobación de cliente en
+  // submitSheet/toggleActive — p. ej. dos pestañas a la vez). Mismo
+  // criterio que friendlyProfileError en ProfileTab.jsx: la BD es la
+  // frontera real, el cliente solo falla rápido con un mensaje mejor.
+  const friendlyRateError = (err) =>
+    (err?.code === "23505" || err?.message?.includes("_active_school_activity_unique")) ? t("toasts.duplicate") : t("toasts.saveError");
+
   const submitSheet = async () => {
     if (!form.school || !form.activity || !form.rate) return;
+    // No permitir dos tarifas ACTIVAS para la misma escuela+curso — punto
+    // 1 de la migración 0015. Comprobación de cliente para fallar rápido
+    // con un mensaje claro; el índice único parcial en BD es la frontera
+    // real (ver friendlyRateError arriba).
+    if (hasActiveDuplicate(creating, form.school, form.activity, editingEntry?.id)) {
+      toast?.error(t("toasts.duplicate"));
+      return;
+    }
     try {
       if (editingEntry) {
         await tableFor(creating).updateRow(editingEntry.id, { ...form, rate: Number(form.rate) });
@@ -168,8 +244,29 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
         toast?.success(t("toasts.added"));
       }
       closeSheet();
-    } catch {
-      toast?.error(t("toasts.saveError"));
+    } catch (err) {
+      toast?.error(friendlyRateError(err));
+    }
+  };
+
+  // Baja lógica (punto 2 de la migración 0015) — desactivar nunca falla
+  // por estar "en uso" (a diferencia de deleteRate más abajo): no borra
+  // nada, así que los movimientos ya guardados que la usaron siguen
+  // calculando su importe igual (rateCalc.js sigue encontrando la fila).
+  // Reactivar sí puede chocar con otra tarifa activa que se haya creado
+  // mientras tanto para la misma escuela+curso — misma comprobación que
+  // submitSheet.
+  const toggleActive = async (r) => {
+    const next = !isRateActive(r);
+    if (next && hasActiveDuplicate(r._source, r.school, r.activity, r.id)) {
+      toast?.error(t("toasts.reactivateBlocked"));
+      return;
+    }
+    try {
+      await tableFor(r._source).updateRow(r.id, { is_active: next });
+      toast?.success(next ? t("toasts.reactivated") : t("toasts.deactivated"));
+    } catch (err) {
+      toast?.error(friendlyRateError(err));
     }
   };
 
@@ -184,7 +281,8 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
     await tableFor(r._source).deleteRow(r.id);
   };
 
-  const sheetTypeColor = TYPE_META[creating]?.color || NAVY;
+  const sheetTypeColor = TYPE_META[creating]?.color || BRAND_NAVY;
+  const SheetTypeIcon = TYPE_META[creating]?.icon || CREATE_TYPES[0].icon;
 
   return (
     <div className="relative space-y-4 pb-16">
@@ -193,7 +291,7 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
           onClick={() => setFiltersOpen((o) => !o)}
           aria-expanded={filtersOpen}
           className={`flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors ${filtersOpen ? "border-transparent text-white" : "border-gray-200 bg-white text-gray-600"}`}
-          style={filtersOpen ? { backgroundColor: TEAL } : {}}
+          style={filtersOpen ? { backgroundColor: BRAND_NAVY } : {}}
         >
           <SlidersHorizontal size={15} aria-hidden="true" /> {t("filter.button")}{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
         </button>
@@ -234,42 +332,105 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
       )}
 
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div className="border-b border-gray-100 px-4 py-3">
-          <h3 className="text-sm font-semibold" style={{ color: NAVY }}>{t("list.count", { count: filtered.length })}</h3>
+        {/* "Mostrar desactivadas" se saca del panel de "Filtrar" (pedido
+            explícito, 2026-09-07: "quiero probar el mostrar desactivadas
+            fuera del filtro, para q no cueste encontrarlo o saber q hay
+            ítems desactivados") — siempre visible junto al contador de la
+            lista, no escondido detrás de un botón que hay que abrir antes
+            de descubrir que existen tarifas desactivadas. BooleanToggle en
+            vez del checkbox nativo anterior: mismo patrón de interruptor
+            que ya usa el resto de la app para un booleano persistente. */}
+        <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-3">
+          <h3 className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{t("list.count", { count: filtered.length })}</h3>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-gray-500">{t("filter.showInactive")}</span>
+            <BooleanToggle checked={showInactive} onChange={() => setShowInactive((v) => !v)} ariaLabel={t("filter.showInactive")} />
+          </div>
         </div>
 
         <div>
-          {filtered.length === 0 && <p className="px-4 py-6 text-center text-sm text-gray-400">{t("list.empty")}</p>}
-          {filtered.map((r) => (
-            // Vuelta explícita al lenguaje de EntryRow en Mi trabajo
-            // (feedback 2026-08-30, tercera vuelta: "no quiero seguir con
-            // la versión de una sola línea... quiero que vuelva a una
-            // presentación más parecida a Movimientos" — la versión de una
-            // sola línea de la vuelta anterior queda descartada, no
-            // conservada como alternativa). Borde izquierdo de color por
-            // tipo, título+importe arriba, metadato (fecha de alta + tipo,
-            // mismo formato "fecha · tipo" que la fila de Movimientos)
-            // + RowMenu abajo — misma estructura de dos líneas, no una
-            // tercera variante propia de Tarifas. Sin "divide-y" entre
-            // filas (feedback explícito, cuarta vuelta): la línea de
-            // separación entre cards ya se descartó en Mi trabajo por
-            // ruido visual — el borde izquierdo de color y el propio
-            // padding ya distinguen una fila de la siguiente.
-            <div key={r.id} className="border-l-4 px-4 py-3.5 text-sm" style={{ borderColor: TYPE_META[r._source].color }}>
-              <div className="flex items-start justify-between gap-2">
-                <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
-                <span className="shrink-0 font-semibold tabular-nums" style={{ color: NAVY }}>
-                  <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: NAVY }} />
-                </span>
-              </div>
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <span className="truncate text-xs text-gray-400">
-                  {t("list.createdOn", { date: shortDate(r.created_at), type: t(`common:movementTypes.${r._source}`) })}
-                </span>
-                <RowMenu onEdit={() => startEdit(r)} onDelete={() => deleteRate(r)} itemLabel={t("rowMenu.itemLabel", { school: r.school, activity: r.activity })} />
-              </div>
+          {/* Vacío: mismo tratamiento neutro que Mi trabajo (centrado,
+              py-10 — auditoría de estilo 2026-09-04, antes py-6 sin
+              centrar verticalmente, un desvío accidental de la misma
+              "sin resultados" que ESTILO.md ya documenta como estado
+              neutro). Sin icono (a diferencia de "estás al día" en Mi
+              trabajo): un catálogo vacío no es una buena noticia que
+              confirmar, solo una lista sin filas todavía. */}
+          {filtered.length === 0 && (
+            <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+              <p className="text-sm text-gray-400">{t("list.empty")}</p>
             </div>
-          ))}
+          )}
+          {/* AnimatePresence + listItemVariants (motion.js) — mismo
+              vocabulario de "fila de lista que entra/sale" que ya usan
+              ExpandableCard y el desglose de Resumen (auditoría de estilo
+              2026-09-04): antes una fila desaparecía de golpe al borrarla,
+              la única lista con alta/baja de la app sin ninguna
+              transición. No se toca la coreografía a medida de Mi trabajo
+              (colapso de alto con retraso, toggle de estado, "Deshacer")
+              — mucho más compleja por motivos propios (cambiar de pestaña
+              sin perder la fila) que Tarifas no tiene: aquí borrar es
+              definitivo, listItemVariants ya cubre el caso entero. */}
+          <AnimatePresence initial={false}>
+            {filtered.map((r) => (
+              // Vuelta explícita al lenguaje de EntryRow en Mi trabajo
+              // (feedback 2026-08-30, tercera vuelta: "no quiero seguir con
+              // la versión de una sola línea... quiero que vuelva a una
+              // presentación más parecida a Movimientos" — la versión de una
+              // sola línea de la vuelta anterior queda descartada, no
+              // conservada como alternativa). Borde izquierdo de color por
+              // tipo, título+importe arriba, metadato (fecha de alta + tipo,
+              // mismo formato "fecha · tipo" que la fila de Movimientos)
+              // + RowMenu abajo — misma estructura de dos líneas, no una
+              // tercera variante propia de Tarifas. Sin "divide-y" entre
+              // filas (feedback explícito, cuarta vuelta): la línea de
+              // separación entre cards ya se descartó en Mi trabajo por
+              // ruido visual — el borde izquierdo de color y el propio
+              // padding ya distinguen una fila de la siguiente.
+              // Fila desactivada: fondo gris + opacidad reducida (Fase 8,
+              // 2026-09-07 — antes solo opacidad, feedback explícito:
+              // "quiero q las filas desactivadas se muestren en un color
+              // de fondo q lo indique visualmente rápido", para reconocerlo
+              // de un vistazo sin tener que leer el metadato) + "·
+              // Desactivada" en el metadato como confirmación textual —
+              // solo se ve cuando showInactive está activo, ya que si no la
+              // propia lista las filtra fuera. Opacidad bajada de 70% a
+              // 60% (Fase 10, mismo criterio ya aplicado a la fila de
+              // usuario desactivado en ConfigTab, pedido explícito "para
+              // las tarifas también"): a 70% la diferencia con una fila
+              // activa seguía siendo demasiado sutil, mismo defecto que
+              // ya se corrigió ahí.
+              <motion.div key={r.id} {...listItemVariants(reducedMotion)} className={`px-4 py-3.5 text-sm ${!isRateActive(r) ? "bg-gray-50 opacity-60" : ""}`}>
+                <div className="flex items-start gap-2.5">
+                  <RateTypeIconChip source={r._source} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <EntryTitle school={r.school} activity={r.activity} schoolColor={schoolColor(r.school)} activityColor={activityColor(r.activity)} />
+                      <span className="shrink-0 font-semibold tabular-nums" style={{ color: BRAND_NAVY }}>
+                        <Money amount={r.rate} code={r.currency} currencyRows={currencies.rows} style={{ color: BRAND_NAVY }} />
+                      </span>
+                    </div>
+                    <div className="mt-1.5 flex items-center justify-between gap-2">
+                      <span className="truncate text-xs text-gray-400">
+                        {t("list.createdOn", { date: shortDate(r.created_at), type: t(`common:movementTypes.${r._source}`) })}
+                        {!isRateActive(r) && ` · ${t("list.inactive")}`}
+                      </span>
+                      <RowMenu
+                        onEdit={() => startEdit(r)}
+                        onDelete={() => deleteRate(r)}
+                        itemLabel={t("rowMenu.itemLabel", { school: r.school, activity: r.activity })}
+                        extraActions={[{
+                          label: isRateActive(r) ? t("rowMenu.deactivate") : t("rowMenu.reactivate"),
+                          icon: isRateActive(r) ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />,
+                          onClick: () => toggleActive(r),
+                        }]}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -279,7 +440,7 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
         <div className="mb-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: lighten(sheetTypeColor) }}>
-              {creating === "ganado" ? <GraduationCap size={14} style={{ color: sheetTypeColor }} aria-hidden="true" /> : <Handshake size={14} style={{ color: sheetTypeColor }} aria-hidden="true" />}
+              <SheetTypeIcon size={14} style={{ color: sheetTypeColor }} aria-hidden="true" />
             </span>
             {/* Sin subtítulo de fecha aquí (una vuelta anterior la puso al
                 retirarla del listado) — la fecha de alta ha vuelto al

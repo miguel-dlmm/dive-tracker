@@ -1,0 +1,56 @@
+{
+  "whatsNew": {
+    "close": "Itxi",
+    "eyebrow": "Bertsio honetako berritasunak",
+    "slideTablist": "Diapositiba",
+    "back": "Atzera",
+    "next": "Hurrengoa",
+    "start": "Hasi",
+    "slides": [
+      {
+        "title": "Diseinu berria erabat",
+        "body": "Logo berria, kolore berriak, itxura guztiz berritua — Ocean Flow bera, bere nortasun propioarekin."
+      },
+      {
+        "title": "Zure irakasle-txartela",
+        "body": "Nire profilak orain zure txartel propioa du: maila profesionala, datu pertsonalak eta dibisa gogokoena, denak leku bakarrean."
+      },
+      {
+        "title": "Training Records, aplikaziotik bertatik",
+        "body": "Sortu ikasle bakoitzaren SSI aurrerapen-erregistroa, sinatuta eta emateko prest — Ocean Flow-etik atera gabe."
+      },
+      {
+        "title": "Aplikazioak zure hizkuntza hitz egiten du jada",
+        "body": "Gaztelania, ingelesa, frantsesa, italiera, alemana, katalana edo euskara — aldatu nahi duzunean, zure profiletik."
+      },
+      {
+        "title": "Hasiera eta Nire lana, argiago",
+        "body": "Dena hobeto antolatuta, behar duzuna begirada batean aurkitzeko: zure KPIak, zure mugimenduak, zure eguneroko lana."
+      },
+      {
+        "title": "Berrikusi nahi duzunean",
+        "body": "Itzuli berritasun hauetara Laguntza → \"Ikusi berritasunak\" bidez, nahi duzunean."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Itxi",
+    "eyebrow": "Hedapen berria",
+    "branchLabel": "Adarra",
+    "commitLabel": "commit",
+    "technicalChanges": "Aldaketa teknikoak",
+    "functionalChanges": "Funtzionalitate-aldaketak",
+    "uiChangesLabel": "UI aldaketak:",
+    "uiChangesYes": "Bai",
+    "uiChangesNo": "Ez",
+    "stepsHeading": "Zer probatu / zer egin",
+    "testsLabel": "Testak:",
+    "buildLabel": "Build:",
+    "notReported": "jakinarazi gabe",
+    "previewCommit": "Commit-aren aurrebista",
+    "previewCommitEmpty": "Commit-aren aurrebista: oraindik aurrebistarik ez",
+    "previewIntegrated": "Aurrebista integratua (Release-V1)",
+    "previewIntegratedEmpty": "Aurrebista integratua: oraindik aurrebistarik ez",
+    "understood": "Ulertuta"
+  }
+}

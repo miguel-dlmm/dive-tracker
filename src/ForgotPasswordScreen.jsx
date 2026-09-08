@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Waves, Loader2, ArrowLeft, MailCheck } from "lucide-react";
-import { NAVY, TEAL, BG, BODY_FONT } from "./App";
+import { Loader2, ArrowLeft, MailCheck } from "lucide-react";
+import { BG, BODY_FONT, BRAND_NAVY } from "./App";
 import { inputCls, Field } from "./shared";
 
 // Mismo mensaje SIEMPRE, exista o no la cuenta — el backend
@@ -43,18 +43,18 @@ export default function ForgotPasswordScreen({ onBack }) {
     <div className="flex min-h-dvh items-center justify-center px-5" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-2">
-          <Waves size={28} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
-          <h1 className="text-lg font-bold tracking-tight" style={{ color: NAVY }}>Ocean Flow</h1>
+          <img src="/brand/logo-mark-navy.svg" alt="" width={44} height={44} aria-hidden="true" />
+          <h1 className="text-lg font-bold tracking-tight" style={{ color: BRAND_NAVY }}>Ocean Flow</h1>
         </div>
 
         {sent ? (
           <div className="flex flex-col items-center gap-3 rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
-            <MailCheck size={28} style={{ color: TEAL }} aria-hidden="true" />
+            <MailCheck size={28} style={{ color: BRAND_NAVY }} aria-hidden="true" />
             <p className="text-sm text-gray-700">{t("forgotPassword.confirmationMessage")}</p>
             <button
               onClick={onBack}
               className="mt-2 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white"
-              style={{ backgroundColor: TEAL }}
+              style={{ backgroundColor: BRAND_NAVY }}
             >
               {t("forgotPassword.backToLogin")}
             </button>
@@ -69,7 +69,7 @@ export default function ForgotPasswordScreen({ onBack }) {
               <ArrowLeft size={16} aria-hidden="true" /> {t("forgotPassword.backToLogin")}
             </button>
             <div>
-              <h2 className="text-sm font-semibold" style={{ color: NAVY }}>{t("forgotPassword.title")}</h2>
+              <h2 className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{t("forgotPassword.title")}</h2>
               <p className="mt-1 text-xs text-gray-500">{t("forgotPassword.description")}</p>
             </div>
             <Field label={t("forgotPassword.emailLabel")}>
@@ -87,7 +87,7 @@ export default function ForgotPasswordScreen({ onBack }) {
               type="submit"
               disabled={loading}
               className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white disabled:opacity-70"
-              style={{ backgroundColor: TEAL }}
+              style={{ backgroundColor: BRAND_NAVY }}
             >
               {loading && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
               {t("forgotPassword.submit")}

@@ -2,10 +2,11 @@ import { render, screen, within, waitFor, fireEvent } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import HomeTab from "./HomeTab";
 
-// Cubre "Generado este mes" y "Pendiente de cobrar" (ADR-0004) — las dos
-// parten de la misma base de datos (worklog + comisiones + compañeros
-// positivos) y solo difieren en el filtro que aplican. El resto de la
-// pantalla (accesos rápidos, calendario) ya existía y no cambia.
+// Cubre "Pendiente de cobrar" (ADR-0004) y "Escuela más activa este mes"
+// (2026-09-07, sustituye a la antigua tarjeta "Generado este mes" —
+// duplicaba el KPI "Generado este mes" que ya muestra Mi trabajo). El
+// resto de la pantalla (accesos rápidos, calendario) ya existía y no
+// cambia.
 //
 // Las aserciones de importe se acotan con data-testid a cada tarjeta (no al
 // documento entero): el calendario de abajo también muestra dinero en su
@@ -14,9 +15,26 @@ import HomeTab from "./HomeTab";
 // nada — acotar por tarjeta evita ese falso positivo/negativo.
 const rowsHook = (rows) => ({ rows, loaded: true, insertRow: vi.fn(), updateRow: vi.fn(), deleteRow: vi.fn(), bulkUpdateWhere: vi.fn(), setDefault: vi.fn() });
 
+// Bug real de zona horaria (mismo ya corregido 2026-08-30 en
+// SummaryTab.test.jsx — ver la nota extensa junto a
+// "suma correcta en los límites del periodo" ahí): toISOString()
+// convierte a medianoche UTC, no a la fecha LOCAL de "hoy" — en un huso
+// con offset positivo (este entorno corre en Asia/Bangkok, UTC+7), entre
+// la medianoche local y la medianoche UTC (las primeras ~17h de cada
+// día local) toISOString().slice(0,10) devuelve el día ANTERIOR al que
+// la propia app considera "hoy" (todayStr(), shared.jsx, que sí usa
+// getFullYear()/getMonth()/getDate() locales). `TODAY` desincronizado de
+// lo que la app real considera hoy rompía en directo, no en teoría, el
+// 2026-09-08 — reproducido: un test que sembraba un movimiento con
+// `date: TODAY` esperando que el calendario lo auto-seleccionara como
+// "de hoy" fallaba porque el componente ya había cruzado la medianoche
+// local. `localDateStr` sustituye a toISOString en todo este archivo.
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 const NOW = new Date();
-const TODAY = NOW.toISOString().slice(0, 10);
-const LAST_MONTH = new Date(NOW.getFullYear(), NOW.getMonth() - 1, 15).toISOString().slice(0, 10);
+const TODAY = localDateStr(NOW);
+const LAST_MONTH = localDateStr(new Date(NOW.getFullYear(), NOW.getMonth() - 1, 15));
 
 const PAYMENT_STATUSES = rowsHook([
   { name: "Pending", is_default: true },
@@ -56,14 +74,14 @@ function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rat
     />
   );
   return {
-    generated: within(screen.getByTestId("generated-this-month-card")),
+    activeSchool: within(screen.getByTestId("active-school-this-month-card")),
     pending: within(screen.getByTestId("pending-collection-card")),
   };
 }
 
-describe("HomeTab — Generado este mes y Pendiente de cobrar", () => {
-  it("las dos métricas parten de la misma base, con distinto filtro (ejemplo de referencia)", () => {
-    const { generated, pending } = renderHome({
+describe("HomeTab — Pendiente de cobrar", () => {
+  it("suma pendientes de Registro, Comisiones y Compañeros, de cualquier mes (ejemplo de referencia)", () => {
+    const { pending } = renderHome({
       worklog: [
         { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }, // 40€, pagado, este mes
         { id: "w2", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }, // 20€, pendiente, este mes
@@ -79,39 +97,26 @@ describe("HomeTab — Generado este mes y Pendiente de cobrar", () => {
       commissionRates: COMMISSION_RATES,
     });
 
-    // Generado este mes: 40 (pagado) + 20 (pendiente) + 15 (comisión) + 30 (compañero) = 105 — el de mes anterior (60) queda fuera por fecha, el estado no filtra.
-    expect(generated.getByText(money("105,00 €"))).toBeInTheDocument();
-
     // Pendiente de cobrar: 20 (este mes) + 60 (mes anterior) + 15 (comisión) + 30 (compañero) = 125 — el pagado (40) queda fuera por estado, sin filtro de fecha.
     expect(pending.getByText(money("125,00 €"))).toBeInTheDocument();
   });
 
-  it("Generado este mes no filtra por estado (cuenta lo pagado igual que lo pendiente)", () => {
-    const { generated } = renderHome({
-      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }], // 20€, pagado
-      rates: RATES,
-    });
-    expect(generated.getByText(money("20,00 €"))).toBeInTheDocument();
-  });
-
-  it("Generado este mes excluye entradas de meses anteriores, aunque Pendiente sí las cuente", () => {
-    const { generated, pending } = renderHome({
+  it("Pendiente de cobrar SÍ cuenta entradas de meses anteriores (a diferencia de los KPIs financieros del mes en curso)", () => {
+    const { pending } = renderHome({
       worklog: [{ id: "w1", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }], // 20€, mes anterior
       rates: RATES,
     });
     expect(pending.getByText(money("20,00 €"))).toBeInTheDocument();
-    expect(generated.queryByText(money("20,00 €"))).not.toBeInTheDocument();
   });
 
-  it("excluye pagos de compañeros con importe negativo de ambas métricas (es lo que tú debes, no lo que generas ni te deben)", () => {
-    const { generated, pending } = renderHome({
+  it("excluye pagos de compañeros con importe negativo (es lo que tú debes, no lo que te deben)", () => {
+    const { pending } = renderHome({
       colleaguePayments: [
         { id: "p1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", colleague_name: "Marc", amount: -10, currency: "EUR", status: "Pending" },
       ],
     });
     expect(pending.getByText("Nada pendiente")).toBeInTheDocument();
     expect(pending.queryByText(money("10,00 €"))).not.toBeInTheDocument();
-    expect(generated.queryByText(money("10,00 €"))).not.toBeInTheDocument();
   });
 
   it("agrupa Pendiente de cobrar por moneda cuando hay más de una", () => {
@@ -172,21 +177,20 @@ describe("HomeTab — acceso rápido integrado en Pendiente de cobrar", () => {
   });
 });
 
-// "Generado este mes" como puente hacia Resumen (2026-08-29, ver
-// docs/PROPUESTA-home-resumen.md) — sustituye al widget "Los más antiguos
-// por cobrar" (retirado por duplicar una acción que "Pendiente de cobrar"
-// → Mi trabajo ya resolvía mejor). La tarjeta gana: (1) navegación táctil
-// a Resumen, y (2) un indicio de tendencia de una línea vs. el mes
-// anterior, reutilizando comparePeriods (misma regla que HeroTotal).
-describe("HomeTab — 'Generado este mes' como puente hacia Resumen", () => {
+// "Escuela más activa" como puente hacia Resumen (2026-09-07) — sustituye
+// a "Generado este mes", que duplicaba el KPI del mismo nombre ya visible
+// en la cabecera de Mi trabajo. La tarjeta nueva aporta información de
+// menor "peso" (qué escuela ha dado más movimientos este mes, no una
+// cifra de dinero) pero conserva el mismo rol de puente táctil a Resumen.
+describe("HomeTab — 'Escuela más activa' como puente hacia Resumen", () => {
   it("pulsar la tarjeta llama a onOpenSummary", async () => {
     const onOpenSummary = vi.fn();
     render(
       <HomeTab
-        worklog={rowsHook([])}
+        worklog={rowsHook([{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }])}
         comisiones={rowsHook([])}
         colleaguePayments={rowsHook([])}
-        rates={rowsHook([])}
+        rates={rowsHook(RATES)}
         commissionRates={rowsHook([])}
         activities={rowsHook([{ name: "Open Water" }])}
         schools={rowsHook([{ name: "PADI Cozumel" }])}
@@ -198,28 +202,35 @@ describe("HomeTab — 'Generado este mes' como puente hacia Resumen", () => {
       />
     );
 
-    await userEvent.click(screen.getByTestId("generated-this-month-card"));
+    await userEvent.click(screen.getByTestId("active-school-this-month-card"));
     expect(onOpenSummary).toHaveBeenCalledTimes(1);
   });
 
-  it("muestra el indicio de tendencia vs. el mes anterior cuando ambos meses están en una única moneda", () => {
-    const { generated } = renderHome({
-      worklog: [
-        { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }, // 40€, este mes
-        { id: "w2", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }, // 20€, mes anterior
-      ],
-      rates: RATES,
-    });
-    // 40 vs 20 el mes anterior -> +100%
-    expect(generated.getByText(/\+100% vs mes anterior/)).toBeInTheDocument();
-  });
-
-  it("no muestra tendencia si no hay datos del mes anterior que comparar", () => {
-    const { generated } = renderHome({
+  it("muestra el nombre de la única escuela con movimientos este mes, en singular", () => {
+    const { activeSchool } = renderHome({
       worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }],
       rates: RATES,
     });
-    expect(generated.queryByText(/vs mes anterior/)).not.toBeInTheDocument();
+    expect(activeSchool.getByText("PADI Cozumel")).toBeInTheDocument();
+    expect(activeSchool.getByText("1 movimiento este mes")).toBeInTheDocument();
+  });
+
+  it("cuando hay varias escuelas, muestra la de más movimientos y cuenta cuántas escuelas hay en total", () => {
+    const { activeSchool } = renderHome({
+      worklog: [
+        { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" },
+        { id: "w2", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" },
+        { id: "w3", date: TODAY, school: "SSI Tulum", activity: "Open Water", people: 1, status: "Paid" },
+      ],
+      rates: RATES,
+    });
+    expect(activeSchool.getByText("PADI Cozumel")).toBeInTheDocument();
+    expect(activeSchool.getByText("2 movimientos · 2 escuelas este mes")).toBeInTheDocument();
+  });
+
+  it("sin movimientos este mes, muestra el estado vacío en vez de una escuela", () => {
+    const { activeSchool } = renderHome({ worklog: [], rates: RATES });
+    expect(activeSchool.getByText("Sin actividad este mes")).toBeInTheDocument();
   });
 });
 
@@ -332,6 +343,25 @@ describe("HomeTab — calendario: navegación entre meses", () => {
     const label = screen.getByText("Generado el día");
     expect(label.parentElement).toHaveTextContent("20,00");
   });
+
+  // Pedido explícito (Fase 9, 2026-09-07): "aparecerá marcado el día de
+  // hoy si tiene alguna entrada... en caso de estar vacío se
+  // seleccionará el primer día del mes con movimientos" — antes siempre
+  // caía al primer día CON actividad del mes, aunque hoy también
+  // tuviera la suya y no fuera el primero.
+  it("con actividad en un día anterior y también hoy, se auto-selecciona hoy (no el primer día del mes)", () => {
+    const earlierDay = localDateStr(new Date(NOW.getFullYear(), NOW.getMonth(), Math.max(1, NOW.getDate() - 1)));
+    renderHome({
+      worklog: [
+        { id: "w1", date: earlierDay, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }, // 20€
+        { id: "w2", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }, // 40€
+      ],
+      rates: RATES,
+    });
+
+    const label = screen.getByText("Generado el día");
+    expect(label.parentElement).toHaveTextContent("40,00"); // el de hoy, no los 20€ del día anterior
+  });
 });
 
 // Feedback explícito 2026-08-30: total combinado (Curso+Comisión+Ajuste,
@@ -381,10 +411,123 @@ describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", (
     expect(screen.getByText("Cursos")).toBeInTheDocument();
     expect(screen.getByText("Captados")).toBeInTheDocument();
 
+    // timeout 4000 (2026-09-08, hallazgo real): con la suite completa
+    // corriendo (muchos archivos de test en paralelo, CPU bajo presión
+    // real), el bucle de requestAnimationFrame de useCountUp (motion.js)
+    // puede tardar bastante más de 2s en asentarse en su valor final —
+    // visto fallar en vivo con la suite completa, nunca en solitario.
+    // 2000ms bastaba en aislamiento pero era un margen demasiado justo
+    // bajo contención real; no es un cambio de comportamiento, solo más
+    // paciencia para el mismo resultado esperado.
     await waitFor(() => {
       expect(screen.getByText("Alumnos").previousSibling).toHaveTextContent("3"); // 2 + 1, solo este mes
       expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("2"); // w1 + w2, solo este mes (w3 es del mes pasado)
       expect(screen.getByText("Captados").previousSibling).toHaveTextContent("4"); // solo c1, este mes
-    }, { timeout: 2000 });
+    }, { timeout: 4000 });
+  });
+});
+
+// "Instalar la app" (2026-09-08, tercera vuelta): el banner descartable
+// de antes se retiró entero — sustituido por un texto pequeño
+// ("Descargar app"), junto al título de los KPIs. Sin estado de
+// "descartado": solo se oculta si no llega el handler (mismo criterio
+// defensivo que onOpenTrainingRecords) o si la app ya corre instalada.
+describe("HomeTab — enlace 'Descargar app'", () => {
+  function renderHomeWithInstall(onOpenInstallApp = vi.fn()) {
+    render(
+      <HomeTab
+        worklog={rowsHook([])} comisiones={rowsHook([])} colleaguePayments={rowsHook([])}
+        rates={rowsHook([])} commissionRates={rowsHook([])}
+        activities={rowsHook([{ name: "Open Water" }])} schools={rowsHook([{ name: "PADI Cozumel" }])}
+        currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])} navSections={rowsHook([])}
+        paymentStatuses={PAYMENT_STATUSES} onQuickCreate={vi.fn()} onOpenInstallApp={onOpenInstallApp}
+      />
+    );
+  }
+
+  it("no aparece si no se pasa onOpenInstallApp", () => {
+    render(
+      <HomeTab
+        worklog={rowsHook([])} comisiones={rowsHook([])} colleaguePayments={rowsHook([])}
+        rates={rowsHook([])} commissionRates={rowsHook([])}
+        activities={rowsHook([{ name: "Open Water" }])} schools={rowsHook([{ name: "PADI Cozumel" }])}
+        currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])} navSections={rowsHook([])}
+        paymentStatuses={PAYMENT_STATUSES} onQuickCreate={vi.fn()}
+      />
+    );
+    expect(screen.queryByText("Descargar app")).not.toBeInTheDocument();
+  });
+
+  it("pulsar el texto llama a onOpenInstallApp", async () => {
+    const user = userEvent.setup();
+    const onOpenInstallApp = vi.fn();
+    renderHomeWithInstall(onOpenInstallApp);
+    await user.click(screen.getByText("Descargar app"));
+    expect(onOpenInstallApp).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Tarjeta de Training Records — subtítulo dinámico (2026-09-08, pedido
+// explícito: "otra manera dinámica y atractiva de integrarlo en la
+// home"). El contador vive en localStorage (generatedCounter.js, misma
+// clave que TrainingRecordsTab.jsx incrementa al generar con éxito) —
+// aquí solo se prueba que HomeTab lo lee y lo refleja, no la lógica de
+// sumar (ya cubierta en generatedCounter.test.js).
+describe("HomeTab — tarjeta de Training Records", () => {
+  beforeEach(() => { localStorage.clear(); });
+
+  function renderHomeWithTR(onOpenTrainingRecords = vi.fn(), userId = "u1") {
+    render(
+      <HomeTab
+        worklog={rowsHook([])} comisiones={rowsHook([])} colleaguePayments={rowsHook([])}
+        rates={rowsHook([])} commissionRates={rowsHook([])}
+        activities={rowsHook([{ name: "Open Water" }])} schools={rowsHook([{ name: "PADI Cozumel" }])}
+        currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])} navSections={rowsHook([])}
+        paymentStatuses={PAYMENT_STATUSES} onQuickCreate={vi.fn()} onOpenTrainingRecords={onOpenTrainingRecords}
+        userId={userId}
+      />
+    );
+  }
+
+  it("sin ningún Training Record generado todavía, es una invitación de verdad, no un contador en cero", () => {
+    renderHomeWithTR();
+    expect(screen.getByText("Genera tu primer Training Record")).toBeInTheDocument();
+    expect(screen.queryByText("Training Records")).not.toBeInTheDocument();
+    expect(screen.queryByText("Generados")).not.toBeInTheDocument();
+  });
+
+  it("con Training Records ya generados, cambia a 'Training Records' + la cifra + 'Generados' (mismo patrón que los KPI)", async () => {
+    localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount:u1", "7");
+    renderHomeWithTR();
+    expect(screen.getByText("Training Records")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("7")).toBeInTheDocument();
+    }, { timeout: 4000 });
+    expect(screen.getByText("Generados")).toBeInTheDocument();
+    expect(screen.queryByText("Genera tu primer Training Record")).not.toBeInTheDocument();
+  });
+
+  // Bug real (2026-09-08): "he creado un TR con el admin y cuando entro
+  // con una cuenta demo mía sigue poniendo el número de generados pese a
+  // q aún no he generado ninguno" — el contador vivía en una clave de
+  // localStorage compartida por cualquier cuenta del mismo navegador.
+  it("los Training Records generados por otra cuenta en el mismo navegador no se cuelan aquí", () => {
+    localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount:admin-1", "12");
+    renderHomeWithTR(vi.fn(), "demo-2");
+    // Si el bug se reprodujera, esta cuenta ("demo-2") vería el estado
+    // "con actividad" (título + cifra) heredado de "admin-1" en vez de la
+    // invitación real — comprobar la invitación ya es suficiente, sin
+    // buscar "12" suelto en el documento (coincide por casualidad con el
+    // día 12 del calendario de abajo).
+    expect(screen.getByText("Genera tu primer Training Record")).toBeInTheDocument();
+    expect(screen.queryByText("Training Records")).not.toBeInTheDocument();
+  });
+
+  it("pulsar la fila llama a onOpenTrainingRecords", async () => {
+    const user = userEvent.setup();
+    const onOpenTrainingRecords = vi.fn();
+    renderHomeWithTR(onOpenTrainingRecords);
+    await user.click(screen.getByText("Genera tu primer Training Record"));
+    expect(onOpenTrainingRecords).toHaveBeenCalledTimes(1);
   });
 });

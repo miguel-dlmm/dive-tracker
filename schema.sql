@@ -92,12 +92,13 @@ create table if not exists public.profiles (
   -- desactivar, y regenerateActivationLink.js la limpia a null al
   -- reactivar (quitar el baneo) — mismo criterio que activated_at.
   deactivated_at timestamptz,
-  -- Idioma preferido de la interfaz (Release V1 Fase 2, multidioma
-  -- es/en). 'es' por defecto en todo alta nueva (registro, alta admin) —
-  -- regla del documento maestro de la iniciativa. check limita a los 2
-  -- idiomas soportados hoy; ampliar la lista es un check nuevo, no una
+  -- Idioma preferido de la interfaz (Release V1 Fase 2, multidioma,
+  -- ampliado en la migración 0018-idiomas-adicionales.sql). 'es' por
+  -- defecto en todo alta nueva (registro, alta admin) — regla del
+  -- documento maestro de la iniciativa. check limita a los idiomas
+  -- soportados hoy; ampliar la lista es un check nuevo, no una
   -- migración de datos.
-  language text not null default 'es' check (language in ('es', 'en')),
+  language text not null default 'es' check (language in ('es', 'en', 'fr', 'it', 'de', 'ca', 'eu')),
   -- Datos de instructor para el generador de Training Records (Release V1
   -- Fase 5, 2026-09-02) — viven en el perfil, no en localStorage por
   -- dispositivo, para que se rellenen una vez y sirvan en cualquier sesión.
@@ -116,9 +117,22 @@ create table if not exists public.profiles (
   -- en vez de una tabla catálogo aparte. Se muestra en "Datos personales"
   -- y en el carnet de instructor de Mi perfil.
   professional_level text check (professional_level in ('divemaster', 'instructor')),
+  -- Fecha de nacimiento + país de residencia (Fase 9, 2026-09-07) —
+  -- solo para mostrar en "Datos personales" de Mi perfil, ambos
+  -- opcionales, sin validación ni uso en ningún otro flujo por ahora
+  -- (confirmado con el usuario antes de esta migración).
+  birth_date date,
+  -- ISO 3166-1 alpha-2 ('ES', 'MX'...) — taxonomía universal fija,
+  -- mismo criterio que `language`, no una tabla catálogo aparte.
+  country_of_residence text,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
+
+-- Migración aditiva Fase 9 (2026-09-07, fecha de nacimiento + país de
+-- residencia) para instalaciones existentes —
+-- scripts/migrations/0017-datos-personales-perfil.sql tiene el mismo
+-- DDL, aplicarlo con scripts/apply-migration.mjs.
 
 -- Migración aditiva Release V1, Fase 2 (2026-09-01) para instalaciones
 -- existentes:
@@ -128,6 +142,11 @@ create table if not exists public.profiles (
 --     check (language in ('es', 'en'));
 --
 -- (scripts/migrations/0007-idioma-perfil.sql tiene el mismo DDL)
+
+-- Migración aditiva Release V1 (2026-09-08, francés/italiano/alemán/
+-- catalán/euskera) para instalaciones existentes —
+-- scripts/migrations/0018-idiomas-adicionales.sql tiene el mismo DDL,
+-- aplicarlo con scripts/apply-migration.mjs.
 
 -- Migración aditiva Bloque 11 (2026-09-01) para instalaciones existentes:
 --
@@ -267,7 +286,7 @@ create policy "admin write" on nav_sections for all using (public.is_admin(auth.
 -- representaba el concepto correcto — ver migración de arquitectura.)
 create table if not exists app_config (
   id boolean primary key default true,
-  logo_icon text not null default 'Waves',
+  logo_icon text not null default 'Logo',
   -- Si "Regístrate" aparece en el login (ver ADR-0023). Off por defecto:
   -- una instalación nueva nunca expone alta pública sin que un superadmin
   -- lo active a propósito.
@@ -306,12 +325,24 @@ create table if not exists rates (
   -- interfaz como "Alta: <fecha>" (RatesTab.jsx), mismo criterio que
   -- profiles.created_at en Usuarios. Ver docs/ADR/0019.
   created_at timestamptz not null default now(),
+  -- Baja lógica (2026-09-04, ver scripts/migrations/0015): false = tarifa
+  -- desactivada, oculta por defecto en RatesTab.jsx pero conservada para
+  -- que los movimientos ya guardados que la referenciaron sigan
+  -- calculando su importe (rateCalc.js). Fuera del índice único de abajo.
+  is_active boolean not null default true,
   user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
 alter table rates enable row level security;
 drop policy if exists "allow all" on rates;
 create policy "own rows" on rates for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Como mucho una tarifa ACTIVA por escuela+curso y usuario — cualquier
+-- número de tarifas desactivadas (histórico de precios) puede coexistir.
+-- Índice parcial, no un unique(...) de tabla, precisamente para que
+-- desactivar libere el hueco sin tocar las filas desactivadas.
+create unique index if not exists rates_active_school_activity_unique
+  on public.rates (user_id, school, activity) where is_active;
 
 -- Lo que cobras por traer un cliente que hace la actividad con otra persona.
 create table if not exists commission_rates (
@@ -322,6 +353,7 @@ create table if not exists commission_rates (
   rate numeric not null,
   currency text not null default 'EUR',
   created_at timestamptz not null default now(), -- ver nota en rates.created_at
+  is_active boolean not null default true, -- ver nota en rates.is_active
   user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
 );
 
@@ -329,9 +361,43 @@ alter table commission_rates enable row level security;
 drop policy if exists "allow all" on commission_rates;
 create policy "own rows" on commission_rates for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+create unique index if not exists commission_rates_active_school_activity_unique
+  on public.commission_rates (user_id, school, activity) where is_active;
+
+-- Migración aditiva (2026-09-04) para instalaciones existentes —
+-- scripts/migrations/0015-tarifas-vigencia.sql tiene el mismo DDL, más la
+-- limpieza previa de duplicados reales que este bloque no repite:
+--
+--   alter table public.rates add column if not exists is_active boolean not null default true;
+--   alter table public.commission_rates add column if not exists is_active boolean not null default true;
+--   create unique index if not exists rates_active_school_activity_unique on public.rates (user_id, school, activity) where is_active;
+--   create unique index if not exists commission_rates_active_school_activity_unique on public.commission_rates (user_id, school, activity) where is_active;
+
 -- ---------- Movimientos ----------
 
+-- Trigger reutilizable de `updated_at` (migración 0015, 2026-09-04) —
+-- primero de este tipo en el esquema; cualquier tabla futura que
+-- necesite "se autorrellena sola en cada UPDATE" puede reutilizarlo, no
+-- solo los 3 movimientos de abajo. SECURITY INVOKER (por defecto): corre
+-- con los permisos de quien hace el UPDATE, ya sujeto a la política RLS
+-- "own rows" de cada tabla — no necesita privilegios elevados.
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
 -- Work Log: actividades que impartes tú.
+-- deleted_at/created_at/updated_at (migración 0015, 2026-09-04): baja
+-- lógica — nunca se borra de verdad un movimiento con dinero real del
+-- instructor. Toda lectura de la app (useSupabaseTable con
+-- softDelete: true, ver src/App.jsx) filtra `deleted_at is null`; el
+-- índice parcial de abajo cubre exactamente esa consulta. Decisión de
+-- "columnas directas, no una tabla de auditoría aparte" documentada en
+-- la cabecera de 0016-baja-logica-movimientos.sql.
 create table if not exists worklog (
   id uuid primary key default gen_random_uuid(),
   date date not null,
@@ -341,14 +407,21 @@ create table if not exists worklog (
   notes text default '',
   status text not null default 'Pending',
   currency text not null default 'EUR', -- legado; el importe real usa la moneda de `rates`, no esta columna
-  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  deleted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 alter table worklog enable row level security;
 drop policy if exists "allow all" on worklog;
 create policy "own rows" on worklog for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists worklog_not_deleted_idx on worklog (user_id) where deleted_at is null;
+drop trigger if exists set_updated_at on worklog;
+create trigger set_updated_at before update on worklog for each row execute function public.set_updated_at();
 
 -- Comisiones: clientes que refieres a la escuela (no los impartes tú).
+-- deleted_at/created_at/updated_at: ver nota en worklog, mismo criterio.
 create table if not exists comisiones (
   id uuid primary key default gen_random_uuid(),
   date date not null,
@@ -358,14 +431,21 @@ create table if not exists comisiones (
   currency text not null default 'EUR', -- legado; ver nota en worklog.currency
   notes text default '',
   status text not null default 'Pending',
-  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  deleted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 alter table comisiones enable row level security;
 drop policy if exists "allow all" on comisiones;
 create policy "own rows" on comisiones for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists comisiones_not_deleted_idx on comisiones (user_id) where deleted_at is null;
+drop trigger if exists set_updated_at on comisiones;
+create trigger set_updated_at before update on comisiones for each row execute function public.set_updated_at();
 
 -- Pagos entre compañeros (cubrirse turnos, etc.) — independiente de rates.
+-- deleted_at/created_at/updated_at: ver nota en worklog, mismo criterio.
 create table if not exists colleague_payments (
   id uuid primary key default gen_random_uuid(),
   date date not null,
@@ -376,12 +456,18 @@ create table if not exists colleague_payments (
   status text not null default 'Pending',
   notes text default '',
   currency text not null default 'EUR',
-  user_id uuid not null references auth.users(id) on delete cascade default auth.uid()
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  deleted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 alter table colleague_payments enable row level security;
 drop policy if exists "allow all" on colleague_payments;
 create policy "own rows" on colleague_payments for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists colleague_payments_not_deleted_idx on colleague_payments (user_id) where deleted_at is null;
+drop trigger if exists set_updated_at on colleague_payments;
+create trigger set_updated_at before update on colleague_payments for each row execute function public.set_updated_at();
 
 -- ---------- Auth (Supabase Auth) y perfiles ----------
 

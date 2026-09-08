@@ -1,13 +1,31 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2 } from "lucide-react";
+import { zipSync } from "fflate";
+import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2, Info } from "lucide-react";
 import { supabase } from "../supabaseClient";
-import { useToast, Fab, RowMenu, DatePicker, Select, ConfirmDialog, Avatar } from "../shared";
-import { resolveAvatar } from "../avatarCatalog";
+import { useToast, RowMenu, DatePicker, Select, ConfirmDialog } from "../shared";
+// TEAL: solo queda como último respaldo (`accentColor || TEAL`) si por lo
+// que sea no llega accentColor — feedback real 2026-09-07 ("los campos
+// versión del examen, certificación... se ven del tono verde anterior al
+// rediseño"): el componente ya recibía `accentColor` (el color real de
+// la sección "trabajo", navy) desde App.jsx, pero solo el botón
+// "Generar para todos" (más abajo) lo usaba de verdad — el resto de
+// componentes de este archivo (RadioChoice, ProgressRowToggle,
+// BatchActionTile, StudentRow, InstructorMissingNotice, y
+// StudentQuickEntrySheet.jsx entero) seguían con el TEAL genérico
+// hardcodeado, sin ni siquiera recibir `accentColor` como prop. Barrido
+// completo del archivo — no queda ningún componente de TR con el TEAL
+// como único color.
 import { TEAL } from "../App";
+// Reutiliza el MISMO carnet editable que "Mi perfil" → "Datos de
+// instructor" (2026-09-04, pedido explícito: "una única fuente de
+// verdad, no dos copias") — en vez de una tarjeta compacta propia de
+// esta pantalla, editable solo aquí y desincronizada del perfil real.
+import { InstructorCardEditable } from "../ProfileTab";
 import { fillTrainingRecordPdf } from "./pdfFill";
 import { TEMPLATE_FIELD_MAPS } from "./templateFieldMaps";
-import { buildDefaultConfig, validateRecordConfig, validateStudentFields, buildFillData } from "./recordConfig";
+import { buildDefaultConfig, validateRecordConfig, validateStudentFields, buildFillData, availableAdventureOptions } from "./recordConfig";
+import { addGeneratedCount } from "./generatedCounter";
 import StudentQuickEntrySheet from "./StudentQuickEntrySheet";
 
 // Generador de Training Records (Release V1, Fase 5) — rediseño
@@ -109,6 +127,24 @@ function filenameFor(student, templateCode, ext = "pdf") {
   return `${safeFilePart(student.firstName)}_${safeFilePart(student.lastName)}_${templateCode}.${ext}`;
 }
 
+// Dos alumnos con el mismo nombre y apellidos generan el mismo
+// filenameFor(...) — antes eran descargas sueltas, así que el propio
+// navegador añadía "(1)" al segundo fichero sin que el código tuviera que
+// hacer nada. Empaquetado en un único ZIP (ver downloadAllAs más abajo),
+// una colisión de nombre pisaría de verdad el primer archivo dentro del
+// ZIP — esta función numera el segundo/tercer... duplicado a mano.
+function uniqueZipFilename(name, usedNames) {
+  if (!usedNames.has(name)) { usedNames.add(name); return name; }
+  const dot = name.lastIndexOf(".");
+  const base = dot === -1 ? name : name.slice(0, dot);
+  const ext = dot === -1 ? "" : name.slice(dot);
+  let n = 2;
+  let candidate = `${base}_${n}${ext}`;
+  while (usedNames.has(candidate)) { n += 1; candidate = `${base}_${n}${ext}`; }
+  usedNames.add(candidate);
+  return candidate;
+}
+
 function canShareFiles(files) {
   if (typeof navigator === "undefined" || !navigator.share || !navigator.canShare) return false;
   try {
@@ -122,30 +158,7 @@ function formatGeneratedAt(timestamp, locale) {
   return new Date(timestamp).toLocaleString(locale === "en" ? "en-GB" : "es-ES", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-// Card de instructor (rediseño 2026-09-03, pedido explícito del usuario:
-// "algo como una pequeña card con el avatar de mi perfil, nombre,
-// iniciales, SSI PRO Number, firma") — sustituye a la única línea de texto
-// anterior. El avatar reutiliza exactamente el mismo icono/color que "Mi
-// perfil" (resolveAvatar), nunca una foto: mismo criterio que el resto de
-// la app (ver avatarCatalog.js).
-function InstructorCard({ profile, instructor }) {
-  const { t } = useTranslation("trainingRecords");
-  const { icon, color } = resolveAvatar(profile);
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3">
-      <Avatar icon={icon} color={color} size={44} />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-gray-800">{instructor.namePrinted}</p>
-        <p className="text-xs text-gray-500">{t("instructorSummary.datos", { initials: instructor.initials, number: instructor.number })}</p>
-      </div>
-      {instructor.signature && (
-        <img src={instructor.signature} alt={t("instructorSummary.firmaAlt")} className="h-9 w-16 shrink-0 rounded border border-gray-100 bg-white object-contain" />
-      )}
-    </div>
-  );
-}
-
-function InstructorMissingNotice({ onOpenProfile }) {
+function InstructorMissingNotice({ onOpenProfile, accentColor }) {
   const { t } = useTranslation("trainingRecords");
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-5 text-center">
@@ -154,7 +167,7 @@ function InstructorMissingNotice({ onOpenProfile }) {
       <button
         onClick={onOpenProfile}
         className="flex min-h-11 items-center justify-center rounded-md px-4 text-sm font-medium text-white"
-        style={{ backgroundColor: TEAL }}
+        style={{ backgroundColor: accentColor || TEAL }}
       >
         {t("instructorMissing.boton")}
       </button>
@@ -174,30 +187,126 @@ function FieldError({ message }) {
 // Envolverlo en un contenedor de ancho fijo basta para que quepa junto al
 // checkbox sin tocar el componente compartido (DatePicker sigue siendo
 // w-full de su propio contenedor, igual que en cualquier otro formulario).
-function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, dateError, dateLabel }) {
+//
+// La etiqueta YA NO se trunca (corrección 2026-09-04, reportado por el
+// usuario: con el campo de fecha ocupando ancho fijo al lado, títulos
+// largos como "Inmersión de Formación en Aguas Abiertas 3" se cortaban y
+// dejaban de distinguirse entre filas) — se deja envolver a varias líneas
+// en vez de recortarse; items-start (no items-center) para que el
+// checkbox/indicador y el campo de fecha se alineen con la PRIMERA línea
+// del texto, no con el centro vertical del bloque ya envuelto.
+//
+// `fixed` (nuevo, 2026-09-04): algunas filas son obligatorias de verdad,
+// no una casilla más — "no debe poder desmarcarse" (pedido explícito para
+// Aguas Abiertas/Sesiones de OW, y para las 3 filas de AOWD). En vez de un
+// checkbox interactivo se muestra un indicador fijo (marcado, deshabilitado)
+// más una etiqueta "Obligatorio" — la fecha se pide siempre, igual que una
+// fila normal ya marcada.
+function ProgressRowToggle({ label, checked, onChange, dateValue, onDateChange, dateError, dateLabel, fixed, accentColor }) {
   const { t } = useTranslation("trainingRecords");
+  const showDate = (fixed || checked) && onDateChange;
   return (
     <div className="rounded-md border border-gray-200 px-3 py-2">
-      <div className="flex min-h-11 items-center gap-2.5">
-        <label className="flex min-w-0 flex-1 items-center gap-2.5 text-sm text-gray-700">
-          <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: TEAL }} />
-          <span className="min-w-0 flex-1 truncate">{label}</span>
-        </label>
-        {checked && onDateChange && (
+      <div className="flex min-h-11 items-start gap-2.5 py-1">
+        {fixed ? (
+          <span className="flex min-w-0 flex-1 items-start gap-2.5 text-sm text-gray-700">
+            <input type="checkbox" checked disabled aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 opacity-70" style={{ accentColor: accentColor || TEAL }} />
+            <span className="min-w-0 flex-1">
+              {label}
+              <span className="ml-1.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.obligatorio")}</span>
+            </span>
+          </span>
+        ) : (
+          <label className="flex min-w-0 flex-1 items-start gap-2.5 text-sm text-gray-700">
+            <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300" style={{ accentColor: accentColor || TEAL }} />
+            <span className="min-w-0 flex-1">{label}</span>
+          </label>
+        )}
+        {showDate && (
           <div className="w-36 shrink-0">
             {/* placeholder corto porque el campo ya va pegado a su propia
-                etiqueta (checked && onDateChange) — el texto completo
-                sigue disponible para lectores de pantalla vía ariaLabel */}
-            <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} />
+                etiqueta — el texto completo sigue disponible para
+                lectores de pantalla vía ariaLabel. align="right": el
+                disparador es estrecho y va pegado al lado derecho de la
+                fila — con el align="left" por defecto, el calendario que
+                se abre (ancho fijo, w-72) apenas tenía sitio y salía
+                comprimido contra el borde de la pantalla (bug real
+                reportado 2026-09-07, "demasiado vertical y muy pegado al
+                lateral"). Con align="right" se ancla por el lado que sí
+                tiene sitio de sobra dentro de la fila. */}
+            <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} align="right" />
           </div>
         )}
       </div>
-      {checked && onDateChange && <FieldError message={dateError} />}
+      {showDate && <FieldError message={dateError} />}
     </div>
   );
 }
 
-function RadioChoice({ options, value, onChange }) {
+// Fecha suelta, sin casilla — mismo contenedor y misma línea que
+// ProgressRowToggle (2026-09-07, pedido explícito: "los campos de fecha
+// deberían salir en la misma línea"). Antes "Fecha de examen"/
+// "Confirmación del Cuestionario" vivían como una sección aparte (título
+// arriba, DatePicker suelto a todo el ancho debajo) — un tercer
+// vocabulario visual frente a las filas de progreso y de aventuras, sin
+// motivo real para ser distinto.
+function DateOnlyRow({ label, dateValue, onDateChange, dateError, dateLabel }) {
+  const { t } = useTranslation("trainingRecords");
+  return (
+    <div className="rounded-md border border-gray-200 px-3 py-2">
+      <div className="flex min-h-11 items-center gap-2.5 py-1">
+        <span className="min-w-0 flex-1 text-sm text-gray-700">{label}</span>
+        <div className="w-36 shrink-0">
+          <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} align="right" />
+        </div>
+      </div>
+      <FieldError message={dateError} />
+    </div>
+  );
+}
+
+// Fila de aventura electiva de AOWD (2026-09-04, pedido explícito: "las
+// mismas 5 filas de aventura tienen la misma forma visual"; unificada de
+// nuevo 2026-09-07 — seguía siendo distinta en la práctica: apilaba la
+// fecha DEBAJO en móvil en vez de en la misma línea que el resto de filas
+// de progreso). Mismo contenedor que ProgressRowToggle (rounded-md border
+// px-3 py-2) y ya SIEMPRE en una sola línea, sin el `flex-col`/`sm:` que
+// solo apilaba en pantallas estrechas — exactamente donde vive esta app.
+// Select en vez de una casilla porque aquí lo que varía por alumno no es
+// "sí/no" sino "cuál aventura". `options` ya llega filtrada por exclusión
+// cruzada (availableAdventureOptions, recordConfig.js) — la aventura
+// elegida en otra fila no puede repetirse aquí.
+//
+// Etiqueta "Obligatorio" (2026-09-07, feedback real: "en TR de Advance
+// no se ve de primeras que las aventuras sean obligatorias") — el
+// campo no tenía ningún indicio visual de serlo, a diferencia de las
+// filas `fixed` (ProgressRowToggle), aunque validateRecordConfig ya las
+// trataba como tal desde el "ALL AOWD fields obligatory" del 2026-09-04.
+function AdventureRow({ label, value, options, onSelect, dateValue, onDateChange, dateError, dateLabel }) {
+  const { t } = useTranslation("trainingRecords");
+  return (
+    <div className="rounded-md border border-gray-200 px-3 py-2">
+      <div className="flex items-start gap-2.5 py-1">
+        <div className="min-w-0 flex-1">
+          <p className="mb-1 text-sm text-gray-700">
+            {label}
+            <span className="ml-1.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.obligatorio")}</span>
+          </p>
+          <Select value={value} onChange={onSelect} options={options} placeholder={t("studentSheet.elegirAventura")} />
+        </div>
+        {value && (
+          <div className="mt-6 w-36 shrink-0">
+            <DatePicker value={dateValue} onChange={onDateChange} placeholder={t("studentSheet.elegirFechaCorta")} ariaLabel={dateLabel} align="right" />
+          </div>
+        )}
+      </div>
+      {value && <FieldError message={dateError} />}
+    </div>
+  );
+}
+
+function RadioChoice({ options, value, onChange, accentColor }) {
+  const color = accentColor || TEAL;
   return (
     <div className="flex flex-wrap gap-2">
       {options.map((opt) => (
@@ -206,7 +315,7 @@ function RadioChoice({ options, value, onChange }) {
           type="button"
           onClick={() => onChange(value === opt.value ? null : opt.value)}
           className="flex min-h-11 items-center rounded-md border px-3 text-sm font-medium"
-          style={value === opt.value ? { borderColor: TEAL, backgroundColor: "#F0FDFA", color: TEAL } : { borderColor: "#E5E7EB", color: "#4B5563" }}
+          style={value === opt.value ? { borderColor: color, backgroundColor: `${color}1A`, color } : { borderColor: "#E5E7EB", color: "#4B5563" }}
         >
           {opt.label}
         </button>
@@ -221,7 +330,7 @@ function RadioChoice({ options, value, onChange }) {
 function configHasData(config) {
   if (!config) return false;
   if (Object.values(config.rowDates || {}).some(Boolean)) return true;
-  if (config.examConfirmed || config.examConfirmedDate) return true;
+  if (config.examConfirmedDate) return true;
   if ((config.specialtyDives || []).some((d) => d.adventureId)) return true;
   return false;
 }
@@ -231,7 +340,8 @@ function configHasData(config) {
 // mucho más visual") — sustituye los 3 botones planos de contorno por
 // tarjetas icono+etiqueta, mismo lenguaje visual que la lista de
 // plantillas de arriba (icono en badge de color).
-function BatchActionTile({ icon: Icon, label, onClick, disabled }) {
+function BatchActionTile({ icon: Icon, label, onClick, disabled, accentColor }) {
+  const color = accentColor || TEAL;
   return (
     <button
       type="button"
@@ -239,7 +349,7 @@ function BatchActionTile({ icon: Icon, label, onClick, disabled }) {
       disabled={disabled}
       className="flex min-h-[76px] flex-col items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-3 text-center disabled:opacity-50"
     >
-      <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: "#F0FDFA", color: TEAL }}>
+      <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A`, color }}>
         <Icon size={17} aria-hidden="true" />
       </span>
       <span className="px-1 text-xs font-medium text-gray-700">{label}</span>
@@ -247,8 +357,9 @@ function BatchActionTile({ icon: Icon, label, onClick, disabled }) {
   );
 }
 
-function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf, onDownloadJpg, onShare, onRegenerate, regenerating }) {
+function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf, onDownloadJpg, onShare, onRegenerate, regenerating, accentColor }) {
   const { t } = useTranslation("trainingRecords");
+  const color = accentColor || TEAL;
   const hasGenerated = !!student.pdfBytes;
   return (
     <li className="flex items-center gap-1.5 px-4 py-2.5 text-sm">
@@ -260,7 +371,11 @@ function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf
           {student.initials}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium text-gray-800">{student.firstName} {student.lastName}</span>
+          {/* truncate + title (2026-09-04): un nombre largo no rompe la
+              fila — se corta con "…" y el nombre completo sigue disponible
+              al pasar el puntero (desktop) o, en móvil, tocando la fila
+              abre la edición del alumno, que ya lo muestra entero. */}
+          <span className="block truncate font-medium text-gray-800" title={`${student.firstName} ${student.lastName}`}>{student.firstName} {student.lastName}</span>
           {hasGenerated && <span className="block text-xs text-gray-400">{t("roster.generadoEl", { date: formatGeneratedAt(student.generatedAt, locale) })}</span>}
           {!hasGenerated && hasError && <span className="block text-xs text-red-600">{t("roster.faltanDatos")}</span>}
         </span>
@@ -275,20 +390,20 @@ function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf
         aria-label={t("roster.regenerarTr")}
         title={t("roster.regenerarTr")}
         className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 disabled:opacity-30"
-        style={{ color: TEAL }}
+        style={{ color }}
       >
         {regenerating ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <RefreshCw size={16} aria-hidden="true" />}
       </button>
       {hasGenerated && (
         <>
-          <button onClick={() => onDownloadPdf(student)} aria-label={t("roster.descargarPdf")} title={t("roster.descargarPdf")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
+          <button onClick={() => onDownloadPdf(student)} aria-label={t("roster.descargarPdf")} title={t("roster.descargarPdf")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color }}>
             <FileText size={17} aria-hidden="true" />
           </button>
-          <button onClick={() => onDownloadJpg(student)} aria-label={t("roster.descargarJpg")} title={t("roster.descargarJpg")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
+          <button onClick={() => onDownloadJpg(student)} aria-label={t("roster.descargarJpg")} title={t("roster.descargarJpg")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color }}>
             <ImageDown size={17} aria-hidden="true" />
           </button>
           {onShare && (
-            <button onClick={() => onShare(student)} aria-label={t("roster.compartir")} title={t("roster.compartir")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color: TEAL }}>
+            <button onClick={() => onShare(student)} aria-label={t("roster.compartir")} title={t("roster.compartir")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color }}>
               <Share2 size={17} aria-hidden="true" />
             </button>
           )}
@@ -299,7 +414,7 @@ function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf
   );
 }
 
-export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile }) {
+export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile, onProfileUpdated }) {
   const { t, i18n } = useTranslation("trainingRecords");
   const toast = useToast();
   const [templates, setTemplates] = useState([]);
@@ -439,6 +554,10 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
       }
       setSession((s) => ({ ...s, students: updated }));
       toast?.success(t("studentSheet.generadoCorrectamente"));
+      // Contador decorativo de Home (2026-09-08) — ver generatedCounter.js
+      // para el porqué de sumar aquí (generación real de PDF) y no en la
+      // descarga/compartir, que son solo formas de entregar lo ya generado.
+      addGeneratedCount(profile?.user_id, updated.length);
     } catch (err) {
       console.error(err);
       toast?.error(t("studentSheet.noSePudoGenerar"));
@@ -468,6 +587,12 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
       const pdfBytes = await fillTrainingRecordPdf(templateBytes, templateMap, data);
       setSession((s) => ({ ...s, students: s.students.map((x) => (x.id === student.id ? { ...x, pdfBytes, generatedAt: Date.now() } : x)) }));
       toast?.success(t("roster.regeneradoCorrectamente"));
+      // Contador decorativo de Home (2026-09-08) — bug real reportado: esta
+      // llamada individual (un alumno a la vez) no sumaba nada, solo
+      // generateAll lo hacía. "para contar los generados tienes q tener en
+      // cuenta cada vez q se llame a la app de generar, la puedo llamar
+      // individualmente para cada alumno o en el generar todos".
+      addGeneratedCount(profile?.user_id, 1);
     } catch (err) {
       console.error(err);
       toast?.error(t("studentSheet.noSePudoGenerar"));
@@ -476,16 +601,37 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     }
   };
 
+  // Antes: N descargas sueltas, una por alumno, con una pausa de 200ms
+  // entre cada una (varias descargas simultáneas se bloquean en algunos
+  // navegadores) — el propio usuario tenía que ir aceptando cada fichero
+  // uno a uno. Pedido explícito (2026-09-07): "debería de descargar un
+  // fichero comprimido con todos los archivos". Se genera cada PDF/JPG en
+  // memoria igual que antes (secuencial: cada JPG depende de renderizar
+  // su PDF, sin independencia real que paralelizar) pero en vez de
+  // descargarlo, se añade a un ZIP con fflate (~8kB, sin dependencias) —
+  // una única descarga al final con downloadBytes, mismo mecanismo ya
+  // probado en Safari iOS (revocar el blob: URL con retraso) que
+  // downloadPdf/downloadJpg.
   const downloadAllAs = async (format) => {
     setBatchWorking(true);
     try {
+      const files = {};
+      const usedNames = new Set();
       for (const student of generatedStudents) {
-        // Descargas secuenciales a propósito: varias descargas simultáneas
-        // se bloquean en algunos navegadores.
-        if (format === "pdf") downloadPdf(student);
-        else await downloadJpg(student);
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        if (format === "pdf") {
+          files[uniqueZipFilename(filenameFor(student, templateCode), usedNames)] = student.pdfBytes;
+        } else {
+          const { renderPdfToJpgBytes } = await import("./pdfToJpg");
+          const jpgBytes = await renderPdfToJpgBytes(student.pdfBytes);
+          files[uniqueZipFilename(filenameFor(student, templateCode, "jpg"), usedNames)] = jpgBytes;
+        }
       }
+      const zipped = zipSync(files);
+      downloadBytes(zipped, `${safeFilePart(templateMap?.name || templateCode)}.zip`, "application/zip");
+      toast?.success(t("roster.zipDescargado"));
+    } catch (err) {
+      console.error(err);
+      toast?.error(t("roster.noSePudoDescargarZip"));
     } finally {
       setBatchWorking(false);
     }
@@ -505,7 +651,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   if (!instructorComplete) {
     return (
       <div className="space-y-4 pb-16">
-        <InstructorMissingNotice onOpenProfile={onOpenProfile} />
+        <InstructorMissingNotice onOpenProfile={onOpenProfile} accentColor={accentColor} />
       </div>
     );
   }
@@ -513,15 +659,19 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   const editingEntry = entrySheet?.mode === "edit" ? students.find((s) => s.id === entrySheet.id) : null;
 
   return (
-    <div className="space-y-5 pb-24">
+    // pb-16 (no pb-24): ya no hay un FAB flotante que necesite ese hueco
+    // extra abajo (2026-09-04, quitado — ver "+ Añadir alumno" dentro del
+    // propio listado) — mismo valor que ProfileTab/ConfigTab, pantallas
+    // igual de "planas" sin botón flotante.
+    <div className="space-y-5 pb-16">
       <p className="text-sm text-gray-500">{t("intro")}</p>
-      <InstructorCard profile={profile} instructor={instructor} />
+      <InstructorCardEditable profile={profile} onProfileUpdated={onProfileUpdated} />
 
       <section>
         <div className="mb-2 flex items-center justify-between gap-2">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentForm.plantilla")}</h3>
           {templateCode && (
-            <button onClick={requestTemplateChange} className="flex min-h-9 shrink-0 items-center gap-1 text-xs font-medium" style={{ color: TEAL }}>
+            <button onClick={requestTemplateChange} className="flex min-h-9 shrink-0 items-center gap-1 text-xs font-medium" style={{ color: accentColor || TEAL }}>
               {t("studentForm.cambiarPlantilla")}
             </button>
           )}
@@ -533,7 +683,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
             <div className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
               {templates.map((tpl) => (
                 <button key={tpl.code} onClick={() => selectTemplate(tpl.code)} className="flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: "#F0FDFA", color: TEAL }}>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: `${accentColor || TEAL}1A`, color: accentColor || TEAL }}>
                     <Award size={18} aria-hidden="true" />
                   </span>
                   <span className="flex-1 text-sm font-medium text-gray-800">{tpl.name}</span>
@@ -549,89 +699,93 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
 
       {templateMap && config && (
         <>
+          {/* Aviso de "qué hace este formulario" (2026-09-04, pedido
+              explícito: "no me disgusta la línea, pero me parece difícil
+              de entender qué hace") — lo que sigue hasta el listado de
+              Alumnos es UNA configuración compartida para toda la clase,
+              no un formulario por alumno; cada alumno solo aporta su
+              nombre y su firma. Es la confusión más probable de esta
+              pantalla, así que se explicita en vez de darla por sabida. */}
+          <div className="flex items-start gap-2 rounded-lg border px-3 py-2.5 text-xs" style={{ borderColor: `${accentColor || TEAL}33`, backgroundColor: `${accentColor || TEAL}1A`, color: accentColor || TEAL }}>
+            <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <p>{t("studentSheet.configCompartidaHint")}</p>
+          </div>
+
           <section>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.progreso")}</h3>
+            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.progreso")}</h3>
+            <p className="mb-2 text-xs text-gray-400">{t("studentSheet.progresoHint")}</p>
             <div className="space-y-1.5">
               {templateMap.sessionRows.map((r, i) => (
                 <ProgressRowToggle
                   key={i}
                   label={r.label}
+                  fixed={r.fixed}
                   checked={config.includedRows[i]}
                   onChange={(checked) => toggleRow(i, checked)}
                   dateValue={config.rowDates[i]}
                   onDateChange={(v) => setRowDate(i, v)}
                   dateError={configErrors.rowDates?.[i]}
                   dateLabel={t("studentSheet.fechaDeFila", { label: r.label })}
+                  accentColor={accentColor}
                 />
               ))}
+              {/* Aventuras electivas de AOWD (2026-09-04, pedido explícito:
+                  "las mismas 5 filas de aventura tienen la misma forma
+                  visual") — se integran como filas más de Progreso del
+                  curso, en vez de una sección aparte con otro estilo. */}
+              {templateMap.optionalSpecialtyDives && (
+                <>
+                  <p className="px-1 pt-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.aventuras")}</p>
+                  {templateMap.optionalSpecialtyDives.map((dive, i) => {
+                    const current = config.specialtyDives[i];
+                    const options = availableAdventureOptions(adventures, config.specialtyDives, i).map((a) => a.name);
+                    return (
+                      <AdventureRow
+                        key={i}
+                        label={dive.label}
+                        value={current.adventureName || ""}
+                        options={options}
+                        onSelect={(name) => {
+                          const found = adventures.find((a) => a.name === name);
+                          updateDive(i, { adventureId: found?.id || null, adventureName: name || "", completed: !!found });
+                        }}
+                        dateValue={current.date}
+                        onDateChange={(v) => updateDive(i, { date: v })}
+                        dateError={configErrors.specialtyDates?.[i]}
+                        dateLabel={t("studentSheet.fechaDeFila", { label: dive.label })}
+                      />
+                    );
+                  })}
+                </>
+              )}
             </div>
             <FieldError message={configErrors.rows} />
           </section>
 
-          {templateMap.optionalSpecialtyDives && (
-            <section>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.inmersionesEspecialidad")}</h3>
-              <div className="space-y-2">
-                {templateMap.optionalSpecialtyDives.map((dive, i) => {
-                  const current = config.specialtyDives[i];
-                  return (
-                    <div key={i} className="rounded-md border border-gray-200 p-2.5">
-                      <p className="mb-1.5 text-xs font-medium text-gray-500">{dive.label}</p>
-                      <Select
-                        value={current.adventureName || ""}
-                        onChange={(name) => {
-                          const found = adventures.find((a) => a.name === name);
-                          updateDive(i, { adventureId: found?.id || null, adventureName: name || "", completed: !!found });
-                        }}
-                        options={adventures.map((a) => a.name)}
-                        placeholder={t("studentSheet.elegirAventura")}
-                      />
-                      {current.adventureId && (
-                        <div className="mt-1.5">
-                          <DatePicker value={current.date} onChange={(v) => updateDive(i, { date: v })} placeholder={t("studentSheet.fechaDeFila", { label: dive.label })} />
-                          <FieldError message={configErrors.specialtyDates?.[i]} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
           {templateMap.examVersion && (
             <section>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.versionExamen")}</h3>
+              {/* "Online" primero (2026-09-04, pedido explícito) — es la
+                  opción premarcada por defecto y, en la práctica, casi la
+                  única que se usa. */}
               <RadioChoice
                 value={config.examVersion}
                 onChange={(v) => updateConfig({ examVersion: v })}
                 options={[
-                  { value: "printed", label: t("studentSheet.examenImpreso") },
                   { value: "online", label: t("studentSheet.examenOnline") },
+                  { value: "printed", label: t("studentSheet.examenImpreso") },
                 ]}
+                accentColor={accentColor}
               />
               <FieldError message={configErrors.examVersion} />
-            </section>
-          )}
-
-          {templateMap.upgradeCheckboxes && (
-            <section>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.certificacion")}</h3>
-              <RadioChoice
-                value={config.upgrade}
-                onChange={(v) => updateConfig({ upgrade: v })}
-                options={[
-                  { value: "openWaterDiver", label: t("studentSheet.openWaterDiver") },
-                  { value: "scubaDiver", label: t("studentSheet.scubaDiver") },
-                ]}
-              />
-              <FieldError message={configErrors.upgrade} />
             </section>
           )}
 
           {templateMap.courseVariant && (
             <section>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.varianteCurso")}</h3>
+              {/* EAN32 premarcado (2026-09-04, pedido explícito) — la
+                  variante más habitual, ver buildDefaultConfig. */}
               <RadioChoice
                 value={config.courseVariant}
                 onChange={(v) => updateConfig({ courseVariant: v })}
@@ -639,31 +793,34 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                   { value: "ean32", label: t("studentSheet.ean32") },
                   { value: "ean40", label: t("studentSheet.ean40") },
                 ]}
+                accentColor={accentColor}
               />
             </section>
           )}
 
+          {/* "Fecha de examen" (2026-09-04, pedido explícito, OWD/SC-DD/
+              SC-EAN): ya no es una casilla de "confirmación" con fecha —
+              es directamente un campo de fecha obligatorio. Vive dentro de
+              DateOnlyRow desde 2026-09-07 (mismo contenedor y misma línea
+              que el resto de filas de progreso, en vez de una sección
+              aparte con el título arriba y la fecha suelta debajo). */}
           {templateMap.examConfirmation && (
-            <section>
-              <ProgressRowToggle
-                label={templateMap.examConfirmation.label}
-                checked={config.examConfirmed}
-                onChange={(v) => updateConfig({ examConfirmed: v })}
-                dateValue={config.examConfirmedDate}
-                onDateChange={(v) => updateConfig({ examConfirmedDate: v })}
-                dateError={configErrors.examConfirmationDate}
-                dateLabel={t("studentSheet.fechaDeFila", { label: templateMap.examConfirmation.label })}
-              />
-              <FieldError message={configErrors.examConfirmation} />
-            </section>
+            <DateOnlyRow
+              label={templateMap.examConfirmation.label}
+              dateValue={config.examConfirmedDate}
+              onDateChange={(v) => updateConfig({ examConfirmedDate: v })}
+              dateError={configErrors.examConfirmationDate}
+              dateLabel={templateMap.examConfirmation.label}
+            />
           )}
 
           <section>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("roster.titulo")}</h3>
+            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("roster.titulo")}</h3>
+            <p className="mb-2 text-xs text-gray-400">{t("roster.hint")}</p>
             {students.length === 0 ? (
               <div className="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-gray-400">
                 <p className="mb-2">{t("roster.vacio")}</p>
-                <button onClick={() => setEntrySheet({ mode: "add" })} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium" style={{ color: TEAL }}>
+                <button onClick={() => setEntrySheet({ mode: "add" })} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium" style={{ color: accentColor || TEAL }}>
                   <UserPlus size={15} aria-hidden="true" /> {t("roster.anadirPrimerAlumno")}
                 </button>
               </div>
@@ -682,8 +839,23 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                     onShare={canShareFiles([new File([""], "t.pdf", { type: "application/pdf" })]) ? shareRecord : null}
                     onRegenerate={regenerateStudent}
                     regenerating={regeneratingId === student.id}
+                    accentColor={accentColor}
                   />
                 ))}
+                {/* "+ Añadir alumno" como fila del propio listado
+                    (2026-09-04, pedido explícito: quitar el FAB flotante —
+                    con la pantalla ya scrollable, un FAB no se lee como
+                    "añadir alumno") — sustituye al Fab de más abajo. */}
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setEntrySheet({ mode: "add" })}
+                    className="flex min-h-11 w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium"
+                    style={{ color: accentColor || TEAL }}
+                  >
+                    <UserPlus size={16} aria-hidden="true" /> {t("roster.anadirAlumno")}
+                  </button>
+                </li>
               </ul>
             )}
           </section>
@@ -692,7 +864,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
             onClick={generateAll}
             disabled={generating}
             className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
-            style={{ backgroundColor: TEAL }}
+            style={{ backgroundColor: accentColor || TEAL }}
           >
             {generating ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Download size={16} aria-hidden="true" />}
             {generating ? t("studentSheet.generando") : t("studentSheet.generarTodos")}
@@ -705,14 +877,12 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                 <span className="text-xs text-gray-400">{t("roster.enLoteCount", { count: generatedStudents.length })}</span>
               </div>
               <div className={`grid gap-2 ${shareAllSupported ? "grid-cols-3" : "grid-cols-2"}`}>
-                <BatchActionTile icon={FileText} label={t("roster.descargarTodoPdf")} onClick={() => downloadAllAs("pdf")} disabled={batchWorking} />
-                <BatchActionTile icon={ImageDown} label={t("roster.descargarTodoJpg")} onClick={() => downloadAllAs("jpg")} disabled={batchWorking} />
-                {shareAllSupported && <BatchActionTile icon={Share2} label={t("roster.compartirTodo")} onClick={shareAll} />}
+                <BatchActionTile icon={FileText} label={t("roster.descargarTodoPdf")} onClick={() => downloadAllAs("pdf")} disabled={batchWorking} accentColor={accentColor} />
+                <BatchActionTile icon={ImageDown} label={t("roster.descargarTodoJpg")} onClick={() => downloadAllAs("jpg")} disabled={batchWorking} accentColor={accentColor} />
+                {shareAllSupported && <BatchActionTile icon={Share2} label={t("roster.compartirTodo")} onClick={shareAll} accentColor={accentColor} />}
               </div>
             </section>
           )}
-
-          <Fab onClick={() => setEntrySheet({ mode: "add" })} label={t("roster.anadirAlumno")} color={accentColor || TEAL} icon={UserPlus} />
         </>
       )}
 
@@ -722,6 +892,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
         mode={entrySheet?.mode}
         initial={editingEntry}
         onSaved={handleStudentSaved}
+        accentColor={accentColor}
       />
       <ConfirmDialog
         open={confirmingTemplateChange}

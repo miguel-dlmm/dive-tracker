@@ -1,16 +1,29 @@
-import { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
-import { useTranslation } from "react-i18next";
+import { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext, Component } from "react";
+import { useTranslation, withTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
-import * as Icons from "lucide-react";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, Waves, Anchor, Sailboat, Compass, Fish, GraduationCap, Handshake, Users } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
-import { NAVY, TEAL, SUN, CORAL, GREEN } from "./colors";
-import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, usePrefersReducedMotion } from "./motion";
+import { TEAL, CORAL, GREEN, BRAND_NAVY, BRAND_GOLD, BRAND_SLATE, ENTITY_COLOR_PALETTE } from "./colors";
+import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, monthSlideVariants, usePrefersReducedMotion, useSwipeHorizontal, animateScrollBy } from "./motion";
+import { AVATAR_ICON_MAP } from "./avatarCatalog";
 
-export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-gray-400 focus-visible:ring-2 focus-visible:ring-offset-1";
+// Catálogo cerrado del icono de carga configurable (GeneralSettings,
+// ConfigTab.jsx, ICON_OPTIONS) — imports nombrados en vez de `import * as
+// Icons from "lucide-react"` (hallazgo de bundle, rediseño 2026-09-06,
+// docs/REDISENO-V2-PROGRESS.md): ese wildcard obligaba a incluir la
+// librería de iconos entera en el bundle de producción (36% del peso
+// final) para poder resolver un icono por nombre en runtime, aunque la
+// app solo usa un puñado de nombres reales. Debe tener exactamente las
+// mismas claves que ICON_OPTIONS — si se añade un icono nuevo ahí, se
+// añade aquí también.
+const LOADING_ICONS = { Waves, Anchor, Sailboat, LifeBuoy, Fish, Compass };
+
+// focus: borde navy de marca + halo sky suave (docs/DESIGN-SYSTEM.md §6.3)
+// — antes un gris genérico sin relación con la marca nueva.
+export const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800 outline-none transition-colors focus:border-[#063256] focus-visible:ring-2 focus-visible:ring-[#8AACCE] focus-visible:ring-offset-1";
 
 // =================================================================
 // Toasts — mensaje genérico de confirmación/error para cualquier
@@ -104,13 +117,48 @@ export function useToast() {
 // Loading genérico de la app — un icono que "se rellena" en bucle.
 // El icono es configurable desde Configuración (tabla app_config),
 // para poder cambiarlo por el logo oficial cuando esté listo, sin
-// tocar código.
+// tocar código. Rediseño 2026-09-06: "Logo" ya es esa opción — el logo
+// real, no un icono de lucide-react. Es un <img> apuntando a un SVG en
+// public/brand/ (vectorial desde Fase 7, 2026-09-07 — antes un PNG
+// rasterizado), pero sigue sin poder recolorearse con `color` como los
+// iconos de stroke: un SVG cargado por src, a diferencia de uno inline,
+// no hereda `currentColor` de fuera. El mismo efecto de "relleno" se
+// consigue superponiendo dos copias de la imagen (una atenuada de
+// fondo, otra a opacidad completa recortada por la animación), en vez
+// de dos copias coloreadas distinto del mismo icono.
 // =================================================================
-export function AppLoading({ iconName = "Waves", color = TEAL, size = 40, label }) {
+export function AppLoading({ iconName = "Logo", color = BRAND_NAVY, size = 40, label }) {
   const { t } = useTranslation("common");
-  const Icon = Icons[iconName] || Icons.Waves;
+  const statusProps = { role: "status", "aria-label": label || t("loading.defaultLabel") };
+  if (iconName === "Logo") {
+    // Feedback explícito (2026-09-07: "podrías animar la parte q parece
+    // una ola para q vaya apareciendo esa parte del logo hacia arriba en
+    // lugar de solo rellenarse el color como ahora?") — antes `oceanFill`
+    // recortaba el logo ENTERO de golpe (los dos trazos del SVG a la vez,
+    // ver logo-mark-navy.svg), sin distinguir la ola del aro que la
+    // envuelve. El propio SVG se separó en dos ficheros (mismo viewBox,
+    // para que sigan encajando exactamente al superponerse):
+    // logo-mark-navy-ring.svg (el aro/media luna, siempre visible, sin
+    // animar) y logo-mark-navy-wave.svg (solo el trazo que de verdad
+    // parece una ola rompiendo). Solo la ola anima con `oceanFill`
+    // (mismo keyframe que ya existía, sin duplicar) — sube y baja dentro
+    // del aro fijo, en vez de todo el icono apareciendo/desapareciendo a
+    // la vez.
+    return (
+      <div className="flex flex-col items-center gap-3" {...statusProps}>
+        <div className="relative" style={{ width: size, height: size }}>
+          <img src="/brand/logo-mark-navy.svg" width={size} height={size} alt="" aria-hidden="true" style={{ opacity: 0.2 }} />
+          <img className="absolute inset-0" src="/brand/logo-mark-navy-ring.svg" width={size} height={size} alt="" aria-hidden="true" />
+          <div className="absolute inset-0" style={{ animation: "oceanFill 1.6s ease-in-out infinite" }}>
+            <img src="/brand/logo-mark-navy-wave.svg" width={size} height={size} alt="" aria-hidden="true" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  const Icon = LOADING_ICONS[iconName] || Waves;
   return (
-    <div className="flex flex-col items-center gap-3" role="status" aria-label={label || t("loading.defaultLabel")}>
+    <div className="flex flex-col items-center gap-3" {...statusProps}>
       <div className="relative" style={{ width: size, height: size }}>
         <Icon size={size} style={{ color: "#E5E7EB" }} strokeWidth={2} aria-hidden="true" />
         <div className="absolute inset-0" style={{ animation: "oceanFill 1.6s ease-in-out infinite" }}>
@@ -121,19 +169,80 @@ export function AppLoading({ iconName = "Waves", color = TEAL, size = 40, label 
   );
 }
 
+// Red de seguridad ante un error de render no previsto (Bug real,
+// 2026-09-04): sin esto, cualquier excepción durante el render de una
+// pantalla desmontaba TODO el árbol de React sin ningún aviso — pantalla
+// en blanco total, sin cabecera ni forma de recuperarse salvo recargar a
+// mano. Encontrado con una plantilla de Training Records de una preview
+// desactualizada (RPC devolvía un valor que el código de esa build no
+// sabía interpretar), pero la falta de red de seguridad es un problema
+// real independiente de esa causa concreta — cualquier error futuro no
+// previsto tendría el mismo efecto en cualquier pantalla.
+//
+// Clase, no función: los error boundaries de React exigen
+// getDerivedStateFromError/componentDidCatch, sin equivalente en hooks
+// todavía. withTranslation() (HOC, no el hook useTranslation) es la
+// forma estándar de dar acceso a t() a un componente de clase.
+class ErrorBoundaryBase extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, info) {
+    console.error("ErrorBoundary — error de render no capturado:", error, info?.componentStack);
+  }
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    const { t } = this.props;
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-6 text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${CORAL}1A` }}>
+          <LifeBuoy size={26} style={{ color: CORAL }} aria-hidden="true" />
+        </span>
+        <h2 className="text-base font-bold" style={{ color: BRAND_NAVY }}>{t("errorBoundary.title")}</h2>
+        <p className="max-w-xs text-sm text-gray-500">{t("errorBoundary.body")}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-1 flex min-h-11 items-center rounded-md px-4 text-sm font-semibold text-white"
+          style={{ backgroundColor: BRAND_NAVY }}
+        >
+          {t("errorBoundary.reload")}
+        </button>
+      </div>
+    );
+  }
+}
+export const ErrorBoundary = withTranslation("common")(ErrorBoundaryBase);
+
 // Avatar circular icono+color (Bloque 5, 2026-09-01) — icon/color ya
 // resueltos por avatarCatalog.js (resolveAvatar), este componente solo
-// dibuja. Mismo lookup dinámico por nombre que AppLoading, con el mismo
-// respaldo a Waves si el nombre no existe en el catálogo (nunca un hueco
-// en blanco).
-export function Avatar({ icon, color = TEAL, size = 36 }) {
-  const Icon = Icons[icon] || Icons.Waves;
+// dibuja. iconByName() (avatarCatalog.js) resuelve el nombre — mismo
+// helper que usa el resto de la app, nunca un lookup propio (antes
+// duplicaba la resolución con `import * as Icons`, ver LOADING_ICONS
+// más arriba para el porqué de quitarlo).
+// Blanco necesita su propio tratamiento (2026-09-07, "blanco también" en
+// la paleta de avatar): el fondo tintado (`${color}1A`) es prácticamente
+// invisible en blanco sobre el fondo casi-blanco de la app, y un icono
+// blanco encima sería directamente invisible — mismo criterio que
+// ColorSwatchPicker (borde gris siempre visible, icono en un neutro
+// oscuro en vez del color literal).
+export function Avatar({ icon, color = BRAND_NAVY, size = 36 }) {
+  const Icon = AVATAR_ICON_MAP[icon] || AVATAR_ICON_MAP.Fish;
+  const isWhite = color?.toLowerCase() === "#ffffff";
   return (
     <span
       className="inline-flex shrink-0 items-center justify-center rounded-full"
-      style={{ width: size, height: size, backgroundColor: `${color}1A` }}
+      style={{
+        width: size, height: size,
+        backgroundColor: isWhite ? "#FFFFFF" : `${color}1A`,
+        border: isWhite ? "1.5px solid #D1D5DB" : "none",
+      }}
     >
-      <Icon size={Math.round(size * 0.55)} style={{ color }} aria-hidden="true" />
+      <Icon size={Math.round(size * 0.55)} style={{ color: isWhite ? "#475569" : color }} aria-hidden="true" />
     </span>
   );
 }
@@ -165,7 +274,7 @@ export function Sheet({ open, onClose, children, className = "", zIndexClass = "
     <AnimatePresence>
       {open && (
         <motion.div
-          className={`fixed inset-0 ${zIndexClass} flex items-end justify-center bg-black/25`}
+          className={`fixed inset-0 ${zIndexClass} flex items-end justify-center bg-[#191919]/45`}
           onClick={onClose}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, transition: { duration: reducedMotion ? 0.01 : DURATION.sm } }}
@@ -185,7 +294,7 @@ export function Sheet({ open, onClose, children, className = "", zIndexClass = "
               lo que cueste de espacio vacío de más cuando la barra sí
               está oculta. */}
           <motion.div
-            className={`flex max-h-[85svh] w-full max-w-3xl flex-col overflow-hidden rounded-t-xl bg-white shadow-xl ${className}`}
+            className={`flex max-h-[85svh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[20px] bg-white shadow-xl ${className}`}
             variants={sheetVariants(reducedMotion)}
             initial="initial" animate="animate" exit="exit"
             drag="y"
@@ -258,7 +367,7 @@ export function ConfirmDialog({ open, title, message, onConfirm, onCancel, loadi
             onClick={onConfirm}
             disabled={loading}
             className="flex min-h-11 items-center gap-1.5 rounded-md px-3.5 text-sm font-medium text-white disabled:opacity-70"
-            style={{ backgroundColor: danger ? CORAL : TEAL }}
+            style={{ backgroundColor: danger ? CORAL : BRAND_NAVY }}
           >
             {loading && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}
             {confirmLabel || t("confirmDialog.defaultConfirmLabel")}
@@ -275,7 +384,7 @@ export function EditActions({ onSave, onCancel, saveLabel }) {
   const { t } = useTranslation("common");
   return (
     <div className="flex justify-end gap-2">
-      <button onClick={onSave} className="flex min-h-9 items-center gap-1 rounded-lg px-3 text-xs font-medium text-white" style={{ backgroundColor: TEAL }}>
+      <button onClick={onSave} className="flex min-h-9 items-center gap-1 rounded-lg px-3 text-xs font-medium text-white" style={{ backgroundColor: BRAND_NAVY }}>
         <Check size={13} aria-hidden="true" /> {saveLabel || t("editActions.defaultSaveLabel")}
       </button>
       <button onClick={onCancel} className="min-h-9 rounded-lg border border-gray-200 px-3 text-xs font-medium text-gray-500">
@@ -295,10 +404,22 @@ export function shortDate(iso) {
   return iso ? new Date(iso).toLocaleDateString("es-ES") : "—";
 }
 
+// useGrouping: "always" — bug real reportado (2026-09-07): sin esto,
+// Intl con locale "es-ES" en modo "auto" (su valor por defecto) no pone
+// el punto de millar cuando el primer grupo tendría un solo dígito —
+// 4.400 se veía bien, pero cualquier cifra de 1000 a 9999 salía sin
+// punto ("4400,00" en vez de "4.400,00"; comprobado en Node:
+// `(4400).toLocaleString("es-ES", {minimumFractionDigits:2,
+// maximumFractionDigits:2})` da "4400,00", `(44000)...` da
+// "44.000,00" — el propio motor de JS, no un bug de esta app, pero sí
+// una inconsistencia visible que había que corregir). Mismo motivo y
+// misma corrección en `Money` (aquí abajo), `MoneyInput` y
+// `fmtInt` (SummaryTab.jsx) — cualquier cifra formateada en la app pasa
+// por una de estas cuatro funciones.
 export function formatMoney(amount, code, currencyRows) {
   const cur = currencyRows.find((c) => c.code === code);
   const symbol = cur?.symbol || code || "";
-  const n = (amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const n = (amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" });
   return `${n} ${symbol}`;
 }
 
@@ -325,7 +446,8 @@ export function setFavoriteCurrency(userId, code) {
 export function Money({ amount, code, currencyRows, className = "", muted = false, style = {} }) {
   const cur = currencyRows.find((c) => c.code === code);
   const symbol = cur?.symbol || code || "";
-  const n = (amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // useGrouping: "always" — ver comentario largo de formatMoney más arriba.
+  const n = (amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" });
   return (
     <span className={`tabular-nums ${className}`} style={{ color: muted ? "#6B7280" : undefined, ...style }}>
       {n}
@@ -411,7 +533,15 @@ export function Field({ label, hint, children }) {
 // animación, esta transcurre oculta detrás y nunca se llega a ver). El
 // error, si lo hay, se sigue avisando por toast — solo cambia cuándo se
 // cierra el diálogo, no el manejo de errores.
-export function DeleteButton({ onConfirm, size = 15, label, itemLabel, variant = "icon", optimistic = false }) {
+// confirmMessage/successMessage/successAction (opcionales, Bloque baja
+// lógica de movimientos, 2026-09-04): permiten a quien usa DeleteButton
+// personalizar el texto del diálogo y el toast de éxito, y añadir una
+// acción "Deshacer" al toast (mismo mecanismo de acción ya usado por
+// toggleStatus en MiTrabajoTab.jsx — nunca se reinventa un segundo
+// patrón de undo). Sin ellos, el comportamiento es exactamente el de
+// siempre (mensaje genérico, sin acción) — los demás usos de
+// DeleteButton en la app no cambian.
+export function DeleteButton({ onConfirm, size = 15, label, itemLabel, variant = "icon", optimistic = false, confirmMessage, successMessage, successAction }) {
   const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -419,12 +549,14 @@ export function DeleteButton({ onConfirm, size = 15, label, itemLabel, variant =
   const resolvedLabel = label || t("deleteButton.defaultLabel");
   const resolvedItemLabel = itemLabel || t("deleteButton.defaultItemLabel");
 
+  const notifySuccess = () => toast?.success(successMessage || t("deleteButton.deletedToast"), successAction ? { action: successAction } : undefined);
+
   const handleConfirm = async () => {
     if (optimistic) {
       setOpen(false);
       try {
         await onConfirm();
-        toast?.success(t("deleteButton.deletedToast"));
+        notifySuccess();
       } catch (e) {
         toast?.error(e?.message || t("deleteButton.errorToast"));
       }
@@ -433,7 +565,7 @@ export function DeleteButton({ onConfirm, size = 15, label, itemLabel, variant =
     setLoading(true);
     try {
       await onConfirm();
-      toast?.success(t("deleteButton.deletedToast"));
+      notifySuccess();
       setOpen(false);
     } catch (e) {
       toast?.error(e?.message || t("deleteButton.errorToast"));
@@ -466,7 +598,7 @@ export function DeleteButton({ onConfirm, size = 15, label, itemLabel, variant =
       <ConfirmDialog
         open={open}
         title={t("deleteButton.confirmTitle")}
-        message={t("deleteButton.confirmMessage", { item: resolvedItemLabel })}
+        message={confirmMessage || t("deleteButton.confirmMessage", { item: resolvedItemLabel })}
         onConfirm={handleConfirm}
         onCancel={() => setOpen(false)}
         loading={loading}
@@ -504,9 +636,14 @@ function parseDateStr(s) {
 // otros iguales en la misma pantalla para lectores de pantalla (ver
 // ProgressRowToggle en trainingRecords/TrainingRecordsTab.jsx). Por
 // defecto sigue siendo el propio placeholder, igual que siempre.
-export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
+// align="right" (2026-09-07): para un disparador estrecho pegado al lado
+// derecho de su contenedor (fecha de una fila de progreso, Training
+// Records) — ver la nota junto a useFloatingPosition. El resto de usos
+// (el campo Fecha normal de un formulario, con espacio de sobra a su
+// derecha) siguen con el "left" por defecto, sin cambio de comportamiento.
+export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "left", quickAccess = true }) {
   const { t, months, weekdays } = useCalendarLabels();
-  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown(align);
   const parsed = parseDateStr(value);
   const today = new Date();
   const [viewY, setViewY] = useState(parsed?.y ?? today.getFullYear());
@@ -532,18 +669,39 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
     onChange(`${viewY}-${pad2(viewM + 1)}-${pad2(d)}`);
     setOpen(false);
   };
-  // Aparte de selectDay: usa el año/mes REALES de hoy, no viewY/viewM —
-  // si el usuario ya navegó a otro mes, selectDay(today.getDate())
-  // seleccionaría ese día en el mes que se está viendo, no en el de hoy.
-  const selectToday = () => {
-    onChange(`${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`);
+  // Accesos rápidos (feedback 2026-09-07: "añade... los días hoy, ayer,
+  // mañana y antes de ayer... ahora solo sale hoy") — un único offset en
+  // días respecto a hoy, usando `addDays`/`todayStr` (ya existían para
+  // los presets de DateRangePicker, más abajo en este mismo archivo;
+  // declaraciones `function` con hoisting, por eso se pueden usar aquí
+  // aunque su definición textual quede después) en vez de un cálculo de
+  // fecha aparte por cada botón.
+  const selectQuick = (offsetDays) => {
+    onChange(addDays(todayStr(), offsetDays));
     setOpen(false);
   };
   const goPrev = () => { if (viewM === 0) { setViewM(11); setViewY(viewY - 1); } else setViewM(viewM - 1); };
   const goNext = () => { if (viewM === 11) { setViewM(0); setViewY(viewY + 1); } else setViewM(viewM + 1); };
+  // Salto de año (feedback 2026-09-07, fecha de nacimiento: "poder ir
+  // atrás varios años fácilmente" en vez de navegar mes a mes) — un
+  // segundo par de flechas junto al de mes, útil en cualquier fecha
+  // lejana, no solo nacimiento (a diferencia de quickAccess, que sí es
+  // específico de ese caso).
+  const goPrevYear = () => setViewY(viewY - 1);
+  const goNextYear = () => setViewY(viewY + 1);
 
   return (
     <>
+      {/* Rediseño 2026-09-07 (feedback explícito: "no me ajusta nada con
+          el diseño Ocean Flow, quiero algo más estético, redondeado,
+          usable") — antes reutilizaba `inputCls` tal cual, el mismo
+          rectángulo gris que cualquier campo de texto, con el icono de
+          calendario suelto en gris. Ahora el icono vive en su propia
+          "chip" circular tintada de marca (mismo lenguaje visual que los
+          iconos de los KPI y de las filas de menú de esta misma ronda de
+          rediseño) y el borde pasa a `navy-100` (`docs/DESIGN-SYSTEM.md`
+          §3.2), con radio de 10px (`radius-control`, mismo documento §4)
+          en vez del `rounded-md` genérico de 6px de cualquier input. */}
       <button
         ref={anchorRef}
         type="button"
@@ -551,32 +709,71 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={ariaLabel || placeholder || t("datePicker.defaultAriaLabel")}
-        className={`${inputCls} flex min-h-11 w-full items-center gap-1.5 text-left`}
+        className="flex min-h-11 w-full items-center gap-2 rounded-[10px] border bg-white px-2.5 py-1.5 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#8AACCE] focus-visible:ring-offset-1"
+        style={{ borderColor: open ? BRAND_NAVY : "#CCDBE6" }}
       >
-        <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
+          <CalendarIcon size={14} style={{ color: BRAND_NAVY }} aria-hidden="true" />
+        </span>
         <span className={`min-w-0 flex-1 truncate ${parsed ? "text-gray-800" : "text-gray-400"}`}>{display}</span>
       </button>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-72 p-3">
-        {/* Acceso directo a "Hoy" — el caso más común con diferencia (una
-            fecha de curso casi siempre es la de hoy o un día muy reciente),
-            un toque en vez de navegar el calendario. Vive en el componente
-            compartido, no en cada pantalla que lo usa. */}
-        <button
-          type="button"
-          onClick={selectToday}
-          className="mb-2 flex min-h-9 w-full items-center justify-center gap-1.5 rounded-md text-xs font-medium"
-          style={{ backgroundColor: "#F0FDFA", color: TEAL }}
-        >
-          {t("datePicker.today")}
-        </button>
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align={align} role="dialog" aria-label={t("datePicker.pickerAriaLabel")} className="w-72 rounded-xl p-3">
+        {/* Accesos directos — el caso más común con diferencia (una fecha
+            de curso casi siempre es hoy o un día muy reciente), un toque
+            en vez de navegar el calendario. Opcional (`quickAccess`):
+            para una fecha de nacimiento no hay "ayer/mañana" que valga
+            (feedback explícito 2026-09-07), así que ProfileTab lo
+            desactiva del todo en vez de mostrar accesos irrelevantes.
+            Una sola fila de 4, no la rejilla 2x2 de antes — esa versión
+            duplicaba la altura del panel entero (dos filas de 44px) y
+            era la causa real de que la capa del datepicker necesitara
+            scroll interno en móvil para llegar a ver el propio
+            calendario. "Antes de ayer" ya no se trunca porque el texto
+            puede envolver a 2 líneas DENTRO del mismo botón de 44px de
+            alto (`leading-tight`, sin `whitespace-nowrap`) — la fila
+            entera sigue midiendo una sola altura de fila, no dos. */}
+        {quickAccess && (
+          <div className="mb-2 flex gap-1.5">
+            {[
+              { offset: -2, key: "dayBeforeYesterday" },
+              { offset: -1, key: "yesterday" },
+              { offset: 0, key: "today" },
+              { offset: 1, key: "tomorrow" },
+            ].map(({ offset, key }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => selectQuick(offset)}
+                className="flex min-h-11 flex-1 items-center justify-center rounded-full px-1 text-center text-[10.5px] font-semibold leading-tight"
+                style={{ backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }}
+              >
+                {t(`datePicker.${key}`)}
+              </button>
+            ))}
+          </div>
+        )}
+        {/* Salto de año (`«`/`»`) junto al de mes (`‹`/`›`) — pedido
+            explícito para fecha de nacimiento ("poder ir atrás varios
+            años fácilmente"), pero útil en cualquier fecha lejana, así
+            que no es condicional a `quickAccess`: siempre visible. */}
         <div className="mb-2 flex items-center justify-between">
-          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
-          <span className="text-sm font-semibold text-gray-800">{months[viewM]} {viewY}</span>
-          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+          <div className="flex items-center">
+            <button type="button" onClick={goPrevYear} aria-label={t("calendar.prevYear")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronsLeft size={16} /></button>
+            <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          </div>
+          <span className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{months[viewM]} {viewY}</span>
+          <div className="flex items-center">
+            <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+            <button type="button" onClick={goNextYear} aria-label={t("calendar.nextYear")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronsRight size={16} /></button>
+          </div>
         </div>
         <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
           {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}
         </div>
+        {/* Celdas de día: círculo dentro de un objetivo táctil de 44px
+            (h-11), no un rectángulo `rounded-md` plano — mismo patrón que
+            la cuadrícula de MonthCalendar (más abajo en este archivo), en
+            vez de un segundo vocabulario visual propio del selector. */}
         <div className="grid grid-cols-7 gap-0.5">
           {cells.map((d, i) => {
             const isSelected = d && parsed && parsed.y === viewY && parsed.m === viewM && parsed.d === d;
@@ -589,10 +786,20 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel }) {
                 aria-label={d ? t("datePicker.dayAriaLabel", { day: d, month: months[viewM] }) : undefined}
                 aria-selected={isSelected || undefined}
                 onClick={() => d && selectDay(d)}
-                className="flex h-10 items-center justify-center rounded-md text-xs transition-colors"
-                style={isSelected ? { backgroundColor: TEAL, color: "white", fontWeight: 600 } : isToday ? { color: TEAL, fontWeight: 600 } : { color: d ? "#374151" : "transparent" }}
+                className="flex h-11 items-center justify-center transition-transform active:scale-90"
               >
-                {d || ""}
+                {d && (
+                  <span
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-xs"
+                    style={isSelected
+                      ? { backgroundColor: BRAND_NAVY, color: "white", fontWeight: 600 }
+                      : isToday
+                      ? { border: `1.5px solid ${BRAND_NAVY}`, color: BRAND_NAVY, fontWeight: 600 }
+                      : { color: "#374151" }}
+                  >
+                    {d}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -697,17 +904,22 @@ export function DateRangePicker({ from, to, onChange }) {
 
   return (
     <div ref={anchorRef}>
-      <div className={`${inputCls} flex min-h-11 w-full items-stretch gap-0 p-0`}>
-        <button type="button" onClick={openFrom} aria-label={t("dateRangePicker.fromAriaLabel")} className="flex flex-1 items-center gap-1.5 truncate px-2.5 text-left">
-          <CalendarIcon size={14} className="shrink-0 text-gray-400" aria-hidden="true" />
+      {/* Mismo rediseño que DatePicker (feedback 2026-09-07): borde
+          navy-100, radio de 10px en vez del `rounded-md` genérico, icono
+          en su propia chip circular tintada de marca. */}
+      <div className="flex min-h-11 w-full items-stretch gap-0 rounded-[10px] border bg-white p-0" style={{ borderColor: "#CCDBE6" }}>
+        <button type="button" onClick={openFrom} aria-label={t("dateRangePicker.fromAriaLabel")} className="flex flex-1 items-center gap-2 truncate py-1.5 pl-2 pr-1.5 text-left">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
+            <CalendarIcon size={13} style={{ color: BRAND_NAVY }} aria-hidden="true" />
+          </span>
           <span className={`truncate text-sm ${from ? "text-gray-800" : "text-gray-400"}`}>{from ? formatDMY(from) : t("dateRangePicker.from")}</span>
         </button>
         <span className="flex items-center text-gray-300" aria-hidden="true"><ArrowRight size={13} /></span>
-        <button type="button" onClick={openTo} aria-label={t("dateRangePicker.toAriaLabel")} className="flex flex-1 items-center truncate px-2.5 text-left">
+        <button type="button" onClick={openTo} aria-label={t("dateRangePicker.toAriaLabel")} className="flex flex-1 items-center truncate py-1.5 pl-1.5 pr-2.5 text-left">
           <span className={`truncate text-sm ${to ? "text-gray-800" : "text-gray-400"}`}>{to ? formatDMY(to) : t("dateRangePicker.to")}</span>
         </button>
       </div>
-      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("dateRangePicker.pickerAriaLabel")} className="w-72 max-w-[90vw] p-3">
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} role="dialog" aria-label={t("dateRangePicker.pickerAriaLabel")} className="w-72 max-w-[90vw] rounded-xl p-3">
         <p className="mb-2 text-xs font-medium text-gray-500">
           {step === "from" ? t("dateRangePicker.chooseStart") : mode === "range" ? t("dateRangePicker.chooseEnd") : t("dateRangePicker.chooseDate")}
         </p>
@@ -716,7 +928,7 @@ export function DateRangePicker({ from, to, onChange }) {
             {presets.map((p) => (
               <button
                 key={p.key} type="button" onClick={() => applyPreset(p)}
-                className="rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
+                className="min-h-8 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
               >
                 {p.label}
               </button>
@@ -724,13 +936,18 @@ export function DateRangePicker({ from, to, onChange }) {
           </div>
         )}
         <div className="mb-2 flex items-center justify-between">
-          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
-          <span className="text-sm font-semibold text-gray-800">{months[viewM]} {viewY}</span>
-          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
+          <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          <span className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{months[viewM]} {viewY}</span>
+          <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
         </div>
         <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
           {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}
         </div>
+        {/* h-11 (44px, convención 7 de CLAUDE.md) en vez de h-9 (36px) —
+            el endpoint sigue siendo un círculo (borderRadius 9999) y el
+            tramo intermedio del rango sigue siendo un rectángulo continuo
+            de lado a lado (sin redondear), para no perder la lectura de
+            "banda seleccionada" entre las dos fechas. */}
         <div className="grid grid-cols-7 gap-0.5">
           {cells.map((d, i) => {
             if (!d) return <div key={i} />;
@@ -743,11 +960,11 @@ export function DateRangePicker({ from, to, onChange }) {
                 type="button" key={i} onClick={() => selectDay(dateStr)}
                 aria-label={t("datePicker.dayAriaLabel", { day: d, month: months[viewM] })}
                 aria-selected={isEndpoint || undefined}
-                className="flex h-9 items-center justify-center text-xs transition-colors"
+                className="flex h-11 items-center justify-center text-xs transition-colors"
                 style={
-                  isEndpoint ? { backgroundColor: TEAL, color: "white", fontWeight: 600, borderRadius: 9999 }
-                  : inRange ? { backgroundColor: "#F0FDFA", color: "#0F766E" }
-                  : isToday ? { color: TEAL, fontWeight: 600 }
+                  isEndpoint ? { backgroundColor: BRAND_NAVY, color: "white", fontWeight: 600, borderRadius: 9999 }
+                  : inRange ? { backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }
+                  : isToday ? { border: `1.5px solid ${BRAND_NAVY}`, color: BRAND_NAVY, fontWeight: 600, borderRadius: 9999 }
                   : { color: "#374151" }
                 }
               >
@@ -759,8 +976,8 @@ export function DateRangePicker({ from, to, onChange }) {
         {mode === "range" && step === "to" && (
           <button
             type="button" onClick={() => setOpen(false)}
-            className="mt-2 w-full rounded-md py-2 text-xs font-semibold text-white"
-            style={{ backgroundColor: TEAL }}
+            className="mt-2 min-h-11 w-full rounded-full py-2 text-sm font-semibold text-white"
+            style={{ backgroundColor: BRAND_NAVY }}
           >
             {t("dateRangePicker.okFrom", { date: formatDMY(from) })}
           </button>
@@ -792,9 +1009,10 @@ export function MoneyInput({ value, onChange, className = "", placeholder, "aria
     if (!editing) setRaw(value != null && value !== "" ? String(value) : "");
   }, [value, editing]);
 
+  // useGrouping: "always" — ver comentario largo de formatMoney más arriba.
   const display = editing
     ? raw
-    : (value !== "" && value != null ? Number(value).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "");
+    : (value !== "" && value != null ? Number(value).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" }) : "");
   const isNegative = Number(value) < 0;
 
   const toggleSign = () => {
@@ -857,15 +1075,30 @@ const CAL_NEUTRAL = "#94A3B8";
 // propia copia (Home y Resumen decían "Ganado"/"Compañeros", vocabulario
 // previo a la unificación en Mi trabajo, ADR-0005, que ya usa "Curso"/
 // "Ajuste"; encontrado como bug real de datos desincronizados, no solo de
-// estilo, al auditar Home). Curso/Comisión tienen color de marca fijo
-// (TEAL/SUN, igual que en MiTrabajoTab); Ajuste no tiene uno propio en
-// ningún sitio de la app — su color depende del signo del importe (ver
-// rowAccent en MiTrabajoTab) — así que aquí usa el neutro del propio
-// calendario en vez de inventarle una identidad de marca que no tiene.
+// estilo, al auditar Home). Los 3 tienen color de marca fijo dedicado
+// (TEAL/BRAND_GOLD/BRAND_SLATE — 2026-09-07, pedido explícito: "define
+// colores de marca para cursos, comisiones y ajustes"; Comisión usaba
+// antes SUN, un semántico de ESTADO — ver docs/DESIGN-SYSTEM.md §3.4 —
+// que no debía compartirse con un tipo de movimiento). El color fijo de
+// Ajuste es solo para esta chip/badge — el importe en sí sigue siguiendo
+// el signo (CORAL/GREEN, ver rowAccent en MiTrabajoTab), eso no cambia.
+// `icon`: añadido 2026-09-07 (feedback explícito: "mejorar la manera de
+// reconocer el tipo de movimiento, ahora es esa franja vertical finita a
+// la izquierda") — sustituye el borde de acento de EntryRow (MiTrabajoTab)
+// por una chip circular icono+color, mismo lenguaje visual que los KPI y
+// los campos de fecha de esta misma ronda de rediseño. Los tres iconos
+// NO son una elección nueva: GraduationCap/Handshake/Users ya eran el
+// `CREATE_TYPES` del selector de tipo de RatesTab.jsx y MovementSheet.jsx
+// desde antes — dos copias sueltas del mismo vocabulario, con un desvío
+// real entre ellas (esta tabla usaba ArrowLeftRight para Ajuste hasta
+// verificar contra las otras dos y encontrar que ya usaban Users). Ahora
+// es la única fuente: RatesTab.jsx/MovementSheet.jsx derivan su propio
+// `CREATE_TYPES` de aquí en vez de mantener su lista aparte (pedido
+// explícito: "que se muestren igual por toda la app").
 export const MOVEMENT_TYPE_META = {
-  ganado: { label: "Curso", color: TEAL },
-  comision: { label: "Comisión", color: SUN },
-  companeros: { label: "Ajuste", color: CAL_NEUTRAL },
+  ganado: { label: "Curso", color: TEAL, icon: GraduationCap },
+  comision: { label: "Comisión", color: BRAND_GOLD, icon: Handshake },
+  companeros: { label: "Ajuste", color: BRAND_SLATE, icon: Users },
 };
 
 // Mini calendario del mes — el día con actividad lleva un anillo de color;
@@ -924,6 +1157,46 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
   useEffect(() => {
     userSelectedRef.current = false;
   }, [monthKey_]);
+  // Desplazamiento automático al panel de detalle (feedback real,
+  // 2026-09-07: "cuando hago click en un día del calendario de la home no
+  // sé q se está cargando info abajo") — sin esto, tocar un día con
+  // actividad no daba ninguna pista de que algo había pasado si el panel
+  // de detalle quedaba fuera de la parte visible de la pantalla (Home
+  // apila KPIs + tarjeta de "Pendiente de cobrar" antes del propio
+  // calendario). Reordenar el detalle ANTES de la cuadrícula se descartó
+  // (mismo feedback): con un día de muchas líneas, el calendario en sí
+  // acabaría cayendo muy abajo, peor que el problema que se intenta
+  // resolver.
+  //
+  // Tercer rediseño de este mecanismo (2026-09-07, feedback real tras el
+  // segundo intento: "lo hace de vez en cuando pero con un retraso muy
+  // grande y solo se ve la cabecera... no está animado... en Chrome PC
+  // tampoco hace el salto"). El segundo intento (medir el panel ya
+  // abierto con getBoundingClientRect() dentro de onAnimationComplete +
+  // requestAnimationFrame) tenía un defecto de raíz encontrado en vivo:
+  // `panelVariants` anima `height: 0 → "auto"` con una animación cuya
+  // DURACIÓN REAL varía según cuánto contenido tenga el día (verificado
+  // con `window.scrollY` en consola — un día con poco contenido disparaba
+  // el scroll casi al instante; uno con más contenido tardaba varios
+  // segundos) — esperar a "que la animación termine" es depender de un
+  // tiempo que ni siquiera es constante, nunca iba a ser fiable.
+  //
+  // Este tercer intento no espera a NADA: se desplaza en el propio
+  // manejador de clic (más abajo, `handleClick`), usando la posición de
+  // un elemento que no cambia de tamaño ni anima, así que su posición se
+  // conoce con certeza en el mismo instante del clic, sin depender de
+  // cuándo (ni de si) el panel de debajo termina de crecer.
+  // `behavior: "auto"` (nunca "smooth") a propósito — hallazgo real de
+  // una ronda anterior: `behavior: "smooth"` (por `scrollIntoView` o por
+  // `scrollTo`, da igual la API) no desplazaba la página EN ABSOLUTO en
+  // este entorno de pruebas, verificado con la consola — sospecha
+  // razonable de que el mismo tipo de opción falla también en Safari
+  // real. Instantáneo es peor cosméticamente pero es la única opción
+  // verificada como fiable. (Cuarto ajuste, mismo día: qué elemento se
+  // usa como referencia y a qué posición se lleva cambió — ver el
+  // comentario junto a `handleClick` más abajo — pero el principio de
+  // fondo de este bloque, "medir en el clic, no esperar a nada", sigue
+  // siendo el mismo.)
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
 
@@ -948,15 +1221,27 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
     return map;
   }, [entries, year, month]);
 
-  // Si se pide auto-selección, marca el primer día con datos en cuanto
-  // llegan (p. ej. tras la carga asíncrona de Supabase) — pero solo
-  // mientras el usuario no haya tocado el calendario, para no pisar una
-  // selección manual con un re-render posterior.
+  // Si se pide auto-selección, marca el día de HOY si tiene actividad
+  // (Fase 9, 2026-09-07, pedido explícito: "aparecerá marcado el día de
+  // hoy si tiene alguna entrada, con la lista desplegada") — y solo si
+  // hoy está vacío, cae al primer día del mes con movimientos, igual
+  // que antes. Se recalcula en cuanto llegan los datos (p. ej. tras la
+  // carga asíncrona de Supabase) — pero solo mientras el usuario no haya
+  // tocado el calendario, para no pisar una selección manual con un
+  // re-render posterior. "Hoy" solo puede estar entre los días con
+  // actividad si el mes que se está pintando ES el mes actual — en
+  // cualquier otro mes (navegado con las flechas o deslizando), todoDay
+  // no puede coincidir con ningún día de esta cuadrícula, así que el
+  // criterio cae solo al primer día con actividad automáticamente, sin
+  // necesitar una rama aparte para "no es el mes actual".
   useEffect(() => {
     if (!autoSelectFirstDay || userSelectedRef.current) return;
     const days = Object.keys(byDay).map(Number);
-    if (days.length > 0) setSelection({ monthKey: monthKey_, day: Math.min(...days) });
-  }, [autoSelectFirstDay, byDay, monthKey_]);
+    if (days.length === 0) return;
+    const today = parseDateStr(todayStr());
+    const todayHasActivity = today && today.y === year && today.m === month && byDay[today.d];
+    setSelection({ monthKey: monthKey_, day: todayHasActivity ? today.d : Math.min(...days) });
+  }, [autoSelectFirstDay, byDay, monthKey_, year, month]);
 
   const cells = [];
   for (let i = 0; i < firstWeekday; i++) cells.push(null);
@@ -1025,8 +1310,25 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
     }));
   };
 
+  // Deslizar el calendario entero cambia de mes (rediseño estructural
+  // 2026-09-06) — solo si el propio caller ofrece navegación de mes
+  // (onPrevMonth/onNextMonth, igual condición que las flechas de abajo);
+  // Resumen y Home ya las pasan, cualquier uso futuro sin ellas no gana
+  // el gesto tampoco, en vez de fallar en silencio contra un handler que
+  // no existe.
+  // Dirección de la última navegación de mes (1 = avanzar, -1 = retroceder)
+  // — determina de qué lado entra/sale la cuadrícula en monthSlideVariants.
+  // Se fija tanto al deslizar como al pulsar una flecha, para que ambos
+  // gestos animen igual (antes solo cambiaba el mes al instante, sin
+  // transición, la única navegación de la app que "saltaba").
+  const [monthDirection, setMonthDirection] = useState(1);
+  const containerRef = useRef(null);
+  const goPrevMonth = () => { setMonthDirection(-1); onPrevMonth?.(); };
+  const goNextMonth = () => { setMonthDirection(1); onNextMonth?.(); };
+  const swipeMonthProps = useSwipeHorizontal({ onSwipeLeft: goNextMonth, onSwipeRight: goPrevMonth, enabled: !!(onPrevMonth || onNextMonth) });
+
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
+    <div ref={containerRef} className="rounded-lg border border-gray-200 bg-white p-4" {...swipeMonthProps}>
       {/* Encima de los días de la semana, dentro de la propia tarjeta —
           antes vivía como un párrafo aparte debajo de todo el calendario
           (feedback 2026-08-30: se leía como una nota a pie de página, no
@@ -1036,14 +1338,14 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
         <div className="mb-2 flex items-center justify-between">
           <button
             type="button"
-            onClick={onPrevMonth}
+            onClick={goPrevMonth}
             aria-label={t("calendar.prevMonth")}
             className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
           >
             <ChevronLeft size={18} aria-hidden="true" />
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold" style={{ color: NAVY }}>{CAL_MONTHS[month]} {year}</span>
+            <span className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{CAL_MONTHS[month]} {year}</span>
             {!isCurrentMonth && onGoToday && (
               <button
                 type="button"
@@ -1056,7 +1358,7 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           </div>
           <button
             type="button"
-            onClick={onNextMonth}
+            onClick={goNextMonth}
             aria-label={t("calendar.nextMonth")}
             className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
           >
@@ -1070,7 +1372,16 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
       <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-gray-400">
         {CAL_WEEKDAYS.map((w, i) => <div key={i}>{w}</div>)}
       </div>
-      <div className="grid grid-cols-7 gap-1">
+      <AnimatePresence mode="popLayout" initial={false} custom={monthDirection}>
+      <motion.div
+        key={monthKey_}
+        custom={monthDirection}
+        variants={monthSlideVariants(reducedMotion)}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="grid grid-cols-7 gap-1"
+      >
         {cells.map((d, i) => {
           const list = d ? dayList(d) : [];
           const hasActivity = d && list.length > 0;
@@ -1087,8 +1398,48 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           // de Date() propia — cero riesgo de desajuste de huso horario.
           const isToday = d && dateStr === todayStr();
           const handleClick = () => {
-            if (hasActivity) setSelectedDay(isSelected ? null : d);
-            else if (creatable) onCreateForDay(dateStr);
+            if (hasActivity) {
+              const opening = !isSelected;
+              setSelectedDay(isSelected ? null : d);
+              // Ver el comentario largo más arriba — se desplaza en el
+              // propio clic, nunca esperando a que el panel de debajo
+              // termine de animarse. Solo al ABRIR (nunca al cerrar) y
+              // solo si el día no estaba ya seleccionado — cambiar de un
+              // día a otro con el panel ya abierto no necesita desplazar
+              // nada, el contenido ya está a la vista.
+              //
+              // Cuarto ajuste de este mecanismo (2026-09-07, pedido
+              // explícito tras el tercero: "el calendario estará alineado
+              // con la parte superior de la pantalla, justo debajo de la
+              // cabecera con algo de aire"). Antes `scrollIntoView({block:
+              // "center"})` centraba el DÍA pulsado en el viewport; ahora
+              // se calcula manualmente cuánto desplazar para que la
+              // TARJETA del calendario entera (`containerRef`, no el día
+              // suelto) quede pegada justo debajo de la cabecera fija
+              // (`<header>`, `sticky top-0` en App.jsx) con un margen
+              // pequeño — así se ve el mes completo (contexto) y el
+              // detalle del día debajo, en vez de centrar el día en medio
+              // de la pantalla. Se mide la cabecera real con
+              // `getBoundingClientRect()` en vez de asumir su altura a
+              // mano (varía con `env(safe-area-inset-top)` según el
+              // dispositivo) — mismo criterio que `useFloatingPosition`
+              // (más abajo en este archivo) de medir antes que adivinar.
+              // Quinto ajuste (2026-09-07, pedido explícito: "haz una
+              // animación al scroll down al calendario al pulsar en un
+              // día") — el delta a desplazar se sigue midiendo igual
+              // (medir en el clic, no esperar a nada, ver el comentario
+              // largo más arriba), pero ya no se aplica al instante:
+              // animateScrollBy (motion.js) lo anima con el mismo tween
+              // de la app, tras reconfirmar en vivo que `behavior:
+              // "smooth"` nativo sigue sin desplazar nada en este
+              // entorno de pruebas.
+              if (opening) {
+                const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+                const gap = 12;
+                const rect = containerRef.current?.getBoundingClientRect();
+                if (rect) animateScrollBy(rect.top - headerBottom - gap, { reduced: reducedMotion });
+              }
+            } else if (creatable) onCreateForDay(dateStr);
           };
           return (
             <button
@@ -1116,12 +1467,13 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
                 </span>
               )}
               {d && (
-                <span className="h-1 w-1 rounded-full" style={{ backgroundColor: NAVY, opacity: isToday ? 1 : 0 }} aria-hidden="true" />
+                <span className="h-1 w-1 rounded-full" style={{ backgroundColor: BRAND_NAVY, opacity: isToday ? 1 : 0 }} aria-hidden="true" />
               )}
             </button>
           );
         })}
-      </div>
+      </motion.div>
+      </AnimatePresence>
 
       {legend && legend.length > 0 && (
         <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1.5 border-t border-gray-100 pt-3">
@@ -1152,7 +1504,13 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
           llega a pintarse, ni un fotograma. */}
       <AnimatePresence key={monthKey_} initial={false}>
         {selectedDay && (
-        <motion.div {...panelVariants(reducedMotion)} className="mt-3 overflow-hidden rounded-md bg-gray-50">
+        <motion.div
+          variants={panelVariants(reducedMotion)}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          className="mt-3 overflow-hidden rounded-md bg-gray-50"
+        >
         <div className="p-3">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-600">{t("monthCalendar.dayHeading", { day: selectedDay, month: CAL_MONTHS[month] })}</span>
@@ -1424,8 +1782,71 @@ export function useBodyScrollLock(active) {
 // window.visualViewport (la API correcta para detectar el teclado
 // virtual, a diferencia de window.innerHeight, que no cambia con él) y
 // scroll/resize normales.
-function useFloatingPosition(open, anchorRef) {
+// align: "left" (por defecto) ancla el panel por su borde izquierdo al
+// borde izquierdo del disparador, creciendo hacia la derecha — el maxWidth
+// se calcula como el espacio libre HASTA el borde derecho del viewport.
+// "right" hace lo simétrico (ancla por la derecha, crece hacia la
+// izquierda, maxWidth = espacio libre hasta el borde IZQUIERDO). Bug real
+// corregido 2026-09-07: un disparador estrecho pegado al lado derecho de
+// su contenedor (el DatePicker de una fila de progreso en Training
+// Records, w-36) con align="left" por defecto dejaba un maxWidth
+// minúsculo (apenas el margen hasta el borde derecho de la pantalla),
+// forzando un calendario de ancho fijo (w-72) a comprimirse muchísimo —
+// "demasiado vertical y muy pegado al lateral". Antes de este fix, la
+// fórmula de maxWidth no distinguía el modo de alineación en absoluto.
+function useFloatingPosition(open, anchorRef, align = "left") {
   const [pos, setPos] = useState(null);
+  // Dirección (arriba/abajo) decidida UNA VEZ al abrir, no en cada
+  // recálculo — bug real reportado 2026-09-07 (país de residencia en Mi
+  // perfil, un SearchSelect con campo de búsqueda): en móvil, escribir
+  // en el campo abre el teclado virtual, que encoge
+  // `visualViewport.height` de golpe; sin congelar la dirección, ese
+  // encogimiento podía hacer que `openUp` cambiara de valor MIENTRAS el
+  // panel ya estaba abierto y el usuario escribiendo, y el panel entero
+  // saltaba de estar debajo del campo a estar encima (o viceversa) sin
+  // ninguna interacción directa del usuario con la dirección ("si lo
+  // toco salta"). `maxHeight`/`top`/`bottom` siguen recalculándose con
+  // cada cambio de viewport (necesario para no salirse de la pantalla,
+  // ver el comentario de `maxHeight` más abajo) — solo la elección
+  // arriba/abajo queda fija mientras el panel siga abierto.
+  const openUpRef = useRef(false);
+  const decideOpenUp = useCallback(() => {
+    const el = anchorRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const vh = window.visualViewport?.height || window.innerHeight;
+    openUpRef.current = (vh - rect.bottom) < 280 && rect.top > 280;
+  }, [anchorRef]);
+  useEffect(() => {
+    if (!open) return;
+    decideOpenUp();
+  }, [open, decideOpenUp]);
+  // Segunda decisión, solo la primera vez que cambia visualViewport tras
+  // abrir (2026-09-08, bug real reportado — "la lista aparece encima del
+  // propio campo y se hace difícil hacer select sobre él"): en un campo
+  // de texto (SearchSelect, país de residencia p.ej.), tocarlo ABRE EL
+  // TECLADO a la vez que el panel — la decisión de arriba/abajo de justo
+  // encima se toma con el viewport TODAVÍA SIN encoger (la animación del
+  // teclado en iOS tarda ~250-300ms), así que puede quedar mal elegida
+  // desde el principio y quedarse así el resto de la apertura (a
+  // propósito no se re-decide en cada recálculo, ver el comentario de
+  // arriba). Escuchar un único evento `resize` de visualViewport después
+  // de abrir permite corregir la decisión una vez, ya con el teclado
+  // asentado, sin reintroducir el salto continuo mientras se escribe que
+  // motivó congelarla en primer lugar.
+  useEffect(() => {
+    if (!open) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let handled = false;
+    function onSettle() {
+      if (handled) return;
+      handled = true;
+      decideOpenUp();
+    }
+    vv.addEventListener("resize", onSettle);
+    return () => vv.removeEventListener("resize", onSettle);
+  }, [open, decideOpenUp]);
   const recalc = useCallback(() => {
     const el = anchorRef.current;
     if (!open || !el) return;
@@ -1434,16 +1855,29 @@ function useFloatingPosition(open, anchorRef) {
     const vw = window.visualViewport?.width || window.innerWidth;
     const spaceBelow = vh - rect.bottom;
     const spaceAbove = rect.top;
-    const openUp = spaceBelow < 280 && spaceAbove > 280;
+    const openUp = openUpRef.current;
     setPos({
       left: rect.left,
       right: vw - rect.right, // alineación por la derecha (p. ej. RowMenu) — evita salirse por el borde derecho en vez de calcular un ancho que no se conoce de antemano
       width: rect.width,
-      maxWidth: Math.max(160, vw - rect.left - 8),
+      maxWidth: align === "right" ? Math.max(160, rect.right - 8) : Math.max(160, vw - rect.left - 8),
+      // Bug real reportado (Fase 7, 2026-09-07): el calendario de rango de
+      // fechas (Periodo, en el filtro de Mi trabajo) se salía por debajo
+      // del viewport sin ninguna forma de hacer scroll para ver el resto
+      // — ni el panel en sí, ni la página de detrás (con el scroll de
+      // fondo bloqueado mientras el panel está abierto, ver
+      // useBodyScrollLock). No es un caso aislado de ese calendario: este
+      // hook es el que usan TODOS los paneles flotantes de la app
+      // (Select, MultiSelect, SearchSelect, DatePicker, DateRangePicker,
+      // RowMenu...), así que faltaba aquí, no en cada uno por separado —
+      // sin `maxHeight`, cualquier panel más alto que el hueco disponible
+      // se sale del viewport igual. Margen de 12px, mismo criterio que
+      // el margen de 8px que ya usa `maxWidth`.
+      maxHeight: Math.max(160, (openUp ? spaceAbove : spaceBelow) - 12),
       top: openUp ? null : rect.bottom + 4,
       bottom: openUp ? vh - rect.top + 4 : null,
     });
-  }, [open, anchorRef]);
+  }, [open, anchorRef, align]);
 
   useEffect(() => { recalc(); }, [recalc]);
   useEffect(() => {
@@ -1470,7 +1904,7 @@ function useFloatingPosition(open, anchorRef) {
 // input que abre el panel); panelRef va en <FloatingPanel> — el clic
 // fuera comprueba los dos, porque una vez portado a document.body el
 // panel deja de ser un descendiente DOM del disparador.
-export function useFloatingDropdown() {
+export function useFloatingDropdown(align = "left") {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
   const panelRef = useRef(null);
@@ -1492,7 +1926,7 @@ export function useFloatingDropdown() {
   // bloquea el scroll de fondo mientras está abierto — ver useBodyScrollLock.
   useBodyScrollLock(open);
 
-  const pos = useFloatingPosition(open, anchorRef);
+  const pos = useFloatingPosition(open, anchorRef, align);
   return { open, setOpen, anchorRef, panelRef, pos };
 }
 
@@ -1514,6 +1948,17 @@ export function FloatingPanel({ open, pos, panelRef, matchWidth = true, align = 
         left: align === "left" ? pos.left : undefined,
         right: align === "right" ? pos.right : undefined,
         maxWidth: pos.maxWidth,
+        maxHeight: pos.maxHeight,
+        // overflowY inline, no una clase de Tailwind (`overflow-y-auto`)
+        // — algún llamador (RowMenu) ya trae su propio `overflow-hidden`
+        // en `className` (para recortar las esquinas redondeadas de sus
+        // opciones, nada que ver con altura); qué clase de Tailwind "gana"
+        // entre dos que tocan `overflow` depende del orden en que
+        // Tailwind las genera en la hoja de estilos, no del orden en el
+        // propio `className` — un inline style siempre gana sin ese
+        // riesgo, y solo se fija el eje Y (el eje X de RowMenu sigue
+        // oculto por su propio `overflow-hidden`, sin tocarlo).
+        overflowY: "auto",
         width: matchWidth ? pos.width : undefined,
         top: pos.top ?? undefined,
         bottom: pos.bottom ?? undefined,
@@ -1553,7 +1998,7 @@ export function FloatingPanel({ open, pos, panelRef, matchWidth = true, align = 
 // cuál está abierta para persistirlo en sessionStorage (ver HelpTab.jsx,
 // "recargar mantiene la pantalla actual") y para que el gesto de "atrás"
 // sepa qué colapsar.
-export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = NAVY, defaultOpen = false, open: controlledOpen, onToggle, children }) {
+export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = BRAND_NAVY, defaultOpen = false, open: controlledOpen, onToggle, children }) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -1585,15 +2030,27 @@ export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = NAVY, 
 }
 
 // Botón flotante de creación — convención #3 (CLAUDE.md): mismo lenguaje
-// visual (fixed bottom-24 right-4, 52×52, color de acento de la sección)
-// en toda pantalla de lista con FAB+hoja (Mi trabajo, Tarifas,
-// Configuración). Extraído 2026-08-30 tras encontrar el mismo bloque de
-// clases/estilo copiado en cada una de ellas. `visible` es opcional
-// (por defecto siempre visible/interactivo): Mi trabajo lo usa para
-// ocultar el FAB mientras el usuario baja por la lista, pero ninguna
-// otra pantalla necesita ese comportamiento hoy — con `visible` sin
-// pasar, el componente se comporta exactamente igual que un botón fijo
-// normal.
+// visual (fixed a 6rem del borde inferior + right-4, 52×52, color de
+// acento de la sección) en toda pantalla de lista con FAB+hoja (Mi
+// trabajo, Tarifas, Configuración). Extraído 2026-08-30 tras encontrar
+// el mismo bloque de clases/estilo copiado en cada una de ellas.
+// `visible` es opcional (por defecto siempre visible/interactivo): Mi
+// trabajo lo usa para ocultar el FAB mientras el usuario baja por la
+// lista, pero ninguna otra pantalla necesita ese comportamiento hoy —
+// con `visible` sin pasar, el componente se comporta exactamente igual
+// que un botón fijo normal.
+// `bottom` por estilo en línea, no `bottom-24` de Tailwind (2026-09-08,
+// bug real reportado — "instalada como acceso directo en iOS... el pie
+// corta el + flotante"): la barra inferior (App.jsx) suma
+// `env(safe-area-inset-bottom)` a su alto para el indicador de inicio,
+// pero ese inset vale 0 en una pestaña normal de Safari (la propia
+// barra de Safari ya ocupa ese espacio) y crece de verdad solo cuando
+// la app corre instalada, sin ninguna barra de navegador que lo
+// absorba — la barra inferior real se vuelve más alta ahí, y un
+// `bottom-24` fijo (96px, igual en los dos casos) deja de guardar
+// distancia suficiente con ella. Mismo `calc()` que ya usan
+// paddingBottom en ComisionesTab/WorkLogTab/MovementSheet/CompanerosTab
+// para el mismo inset, aplicado aquí a `bottom` en vez de a un padding.
 export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }) {
   return (
     <button
@@ -1601,9 +2058,10 @@ export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }
       aria-label={label}
       aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
-      className="fixed bottom-24 right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 active:scale-90"
+      className="fixed right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 active:scale-90"
       style={{
         backgroundColor: color, width: 52, height: 52,
+        bottom: "calc(6rem + env(safe-area-inset-bottom))",
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.7)",
         pointerEvents: visible ? "auto" : "none",
@@ -1621,7 +2079,7 @@ export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }
 // destructivo abajo). Evita que cada pantalla con una necesidad extra tenga
 // que inventar su propio menú de "⋯" desde cero — RowMenu ya es el patrón
 // compartido de "más opciones" en Mi trabajo/Configuración/Tarifas.
-export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, deleteDisabledReason, extraActions = [] }) {
+export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, deleteDisabledReason, extraActions = [], deleteConfirmMessage, deleteSuccessAction }) {
   const { t } = useTranslation("common");
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   // Cierra el menú "⋯" en el mismo instante en que se CONFIRMA el borrado
@@ -1683,7 +2141,14 @@ export function RowMenu({ onEdit, onDelete, itemLabel, deleteDisabled = false, d
             <Trash2 size={14} aria-hidden="true" /> {t("rowMenu.delete")}
           </div>
         ) : (
-          <DeleteButton variant="menuItem" onConfirm={handleDeleteConfirmed} itemLabel={itemLabel} optimistic />
+          <DeleteButton
+            variant="menuItem"
+            onConfirm={handleDeleteConfirmed}
+            itemLabel={itemLabel}
+            optimistic
+            confirmMessage={deleteConfirmMessage}
+            successAction={deleteSuccessAction}
+          />
         )}
       </FloatingPanel>
     </>
@@ -1735,7 +2200,7 @@ export function Select({ value, onChange, options, placeholder, label, className
             aria-selected={value === o}
             onClick={() => { onChange(o); setOpen(false); }}
             className="flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
-            style={value === o ? { color: TEAL, backgroundColor: "#F0FDFA" } : { color: "#374151" }}
+            style={value === o ? { color: BRAND_NAVY, backgroundColor: `${BRAND_NAVY}1A` } : { color: "#374151" }}
           >
             {o}
             {value === o && <Check size={14} />}
@@ -1791,7 +2256,7 @@ export function MultiSelect({ value = [], onChange, options, placeholder }) {
             >
               <span
                 className="flex h-4 w-4 shrink-0 items-center justify-center rounded border"
-                style={checked ? { backgroundColor: TEAL, borderColor: TEAL } : { borderColor: "#D1D5DB" }}
+                style={checked ? { backgroundColor: BRAND_NAVY, borderColor: BRAND_NAVY } : { borderColor: "#D1D5DB" }}
               >
                 {checked && <Check size={12} className="text-white" aria-hidden="true" />}
               </span>
@@ -1925,6 +2390,51 @@ export function colorFor(rows, name, fallback = "#6B7280") {
   return rows.find((r) => r.name === name)?.color || fallback;
 }
 
+// ENTITY_COLOR_PALETTE vive en colors.js, no aquí — la reutiliza también
+// avatarCatalog.js (colores de avatar "integrados con la paleta de la
+// app", pedido explícito 2026-09-07) y shared.jsx ya importa de
+// avatarCatalog.js (AVATAR_ICON_MAP): declararla en shared.jsx crearía el
+// mismo ciclo de imports que colors.js existe para evitar (ver la nota
+// de cabecera de ese archivo).
+
+// Selector de color de entidad — rejilla de swatches tocables en vez del
+// `<input type="color">` nativo (rueda de color sin restricción alguna).
+// El blanco lleva un anillo gris siempre visible (si no, es invisible
+// sobre el propio fondo blanco de la hoja); el seleccionado se marca con
+// un check, blanco sobre oscuro o navy sobre claro/blanco según su propio
+// contraste.
+export function ColorSwatchPicker({ value, onChange, label }) {
+  return (
+    <div className="flex flex-col gap-1 text-sm">
+      {label && <span className="font-medium text-gray-700">{label}</span>}
+      <div className="grid grid-cols-6 gap-2">
+        {ENTITY_COLOR_PALETTE.map((hex) => {
+          const selected = value?.toLowerCase() === hex.toLowerCase();
+          const needsRing = hex.toLowerCase() === "#ffffff";
+          const checkColor = ["#ffffff", "#d97706"].includes(hex.toLowerCase()) ? BRAND_NAVY : "white";
+          return (
+            <button
+              key={hex}
+              type="button"
+              onClick={() => onChange(hex)}
+              aria-label={hex}
+              aria-pressed={selected}
+              className="flex h-9 w-9 items-center justify-center rounded-full transition-transform active:scale-90"
+              style={{
+                backgroundColor: hex,
+                border: needsRing ? "1.5px solid #D1D5DB" : selected ? "2px solid white" : "none",
+                boxShadow: selected ? `0 0 0 2px ${hex}` : "none",
+              }}
+            >
+              {selected && <Check size={15} style={{ color: checkColor }} aria-hidden="true" />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // Aclara un color hex mezclándolo con blanco — para fondos de pill.
 export function lighten(hex, amount = 0.88) {
   const c = (hex || "#6B7280").replace("#", "");
@@ -1936,23 +2446,23 @@ export function lighten(hex, amount = 0.88) {
 }
 
 // Cabecera "Actividad + Escuela" estandarizada en las filas de listado de
-// Registro/Comisiones/Tarifas/Pagos: la actividad es el dato principal (su
-// propio color + un punto de acento, para escanear la lista de un vistazo),
-// la escuela queda debajo como contexto secundario, más pequeña y con su
-// propio acento pero sin competir en peso — sustituye al antiguo
-// "Escuela - Actividad" en una sola línea, donde ambos datos competían por
-// la misma jerarquía visual.
-export function EntryTitle({ school, activity, schoolColor, activityColor }) {
+// Registro/Comisiones/Tarifas/Pagos: la actividad es el dato principal, la
+// escuela queda debajo como contexto secundario, más pequeña y sin competir
+// en peso — sustituye al antiguo "Escuela - Actividad" en una sola línea,
+// donde ambos datos competían por la misma jerarquía visual.
+// Sin puntos de acento delante del texto (retirados 2026-09-07, feedback
+// explícito: "quiero quitar los puntos que salen delante de los textos" en
+// Tarifas y Mi trabajo, las dos pantallas que usan este componente) — el
+// color de cada uno ya se lee directamente en el propio texto (antes solo
+// la actividad lo hacía; la escuela pasa a teñirse igual, para no perder
+// esa distinción visual al quitar su punto).
+// schoolSuffix (opcional): texto añadido tras el nombre de la escuela, sin
+// tocar su color (p. ej. " · con Ana" en un Ajuste de curso, Mi trabajo).
+export function EntryTitle({ school, activity, schoolColor, activityColor, schoolSuffix }) {
   return (
     <div className="min-w-0">
-      <div className="flex items-center gap-1.5">
-        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: activityColor }} aria-hidden="true" />
-        <span className="truncate text-[15px] font-semibold leading-tight" style={{ color: activityColor }}>{activity}</span>
-      </div>
-      <div className="mt-1 flex items-center gap-1.5">
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: schoolColor }} aria-hidden="true" />
-        <span className="truncate text-[11.5px] font-medium text-gray-400">{school}</span>
-      </div>
+      <p className="truncate text-[15px] font-semibold leading-tight" style={{ color: activityColor }}>{activity || "—"}</p>
+      <p className="mt-0.5 truncate text-[11.5px] font-medium" style={{ color: schoolColor }}>{school}{schoolSuffix || ""}</p>
     </div>
   );
 }
@@ -1960,7 +2470,7 @@ export function EntryTitle({ school, activity, schoolColor, activityColor }) {
 // Switch on/off genérico — extraído de ConfigTab.jsx (Bloque 4, 2026-09-01)
 // al necesitarlo también DatasetsSection.jsx: hasta entonces vivía privado
 // ahí, usado solo por "Permitir registro externo".
-export function BooleanToggle({ checked, onChange, disabled, ariaLabel, color = TEAL }) {
+export function BooleanToggle({ checked, onChange, disabled, ariaLabel, color = BRAND_NAVY }) {
   return (
     <button
       type="button"
@@ -2051,7 +2561,7 @@ export function ChipGroup({ value, onChange, options }) {
             onClick={() => onChange(o)}
             className="min-h-11 rounded border px-3 py-1.5 text-sm font-medium transition-colors"
             style={active
-              ? { backgroundColor: "#F0FDFA", borderColor: TEAL, color: TEAL }
+              ? { backgroundColor: `${BRAND_NAVY}1A`, borderColor: BRAND_NAVY, color: BRAND_NAVY }
               : { backgroundColor: "white", borderColor: "#E5E7EB", color: "#4B5563" }}
           >
             {o}

@@ -1,0 +1,14 @@
+# Instaladores sueltos en la raíz del proyecto (nunca deberían haber
+# estado ahí — no son parte del código, solo herramientas descargadas
+# durante alguna sesión de configuración local: postgresql.dmg, gh CLI).
+# Bloqueaban `vercel deploy` manual con "File size limit exceeded (100 MB)"
+# al subir 304MB de contexto — encontrado 2026-09-04 al intentar generar
+# un Preview manual para revisar una rama sin fusionar todavía.
+postgresql.dmg
+gh_*.pkg
+gh_*_amd64/
+gh_*_amd64.zip
+
+# Datos financieros reales — igual que backups/ en .gitignore, nunca
+# deben subirse a ningún sitio, ni siquiera a un build de Vercel.
+backups/

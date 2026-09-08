@@ -53,7 +53,8 @@ un entorno real nuevo.
 | `main` | Rama de producción real. | Creada el 2026-08-30 como copia exacta de `develop` en ese momento. Production Branch del proyecto Vercel productivo, `dive-tracker-exgg` — ver "Cuándo crear `main`" más abajo para el detalle de la migración. |
 | `develop` | Rama de integración/preparación. | Deja de ser simultáneamente producción — ese rol pasa a `main`. Sigue siendo donde se fusiona cada `feature/*`/`fix/*` validada y donde se prepara cada release (`ADR-0010`), y será la base del futuro entorno `test`. Protegida frente a push directo (ver Fase 6 operativa). |
 | `feature/*`, `fix/*` | Ramas efímeras de trabajo diario. | Nacen de `develop` actualizado, se prueban en su Preview Deployment automático de Vercel (equivalente funcional de las "Review Apps" de GitLab), se fusionan a `develop` y se borran (local y remoto) al mergear. |
-| `hotfix/*` | Corrección urgente sobre `develop`. | Mismo ciclo que `feature/*`, simplificado: no hay entorno downstream todavía al que propagar. |
+| `hotfix/*` | Corrección urgente sobre `develop` o, desde `v1.0.0`, directamente sobre `main` si no puede esperar al próximo `release/*`. | Mismo ciclo que `feature/*`. Si nace de `main`, se refleja como mínimo en `develop` después (merge o cherry-pick) — ver "Rama `release/*`" más abajo. |
+| `release/*` | Rama efímera que prepara una release y la fusiona sobre `main` (desde `v1.0.0`). | Nace de `develop`, nunca se fusiona `develop` directo sobre `main`. Ver sección dedicada más abajo. |
 
 Ramas experimentales sin intención de merge (ej. `feature/design-lab-preview`,
 sandbox visual referenciado desde `docs/BACKLOG.md`) son una excepción
@@ -176,6 +177,53 @@ Se mantiene lo ya existente — `CHANGELOG.md` + semver + tag `vX.Y.Z` —
 sin cambios de fondo. Mientras `develop` sea la única rama de entorno
 real, los tags marcan su estado (como ya ocurre con `v0.1.0`). El día que
 `main` sea la producción real, los tags se mueven a marcar `main`.
+
+**Disparador cumplido — `v1.0.0` (2026-09-04):** primera release con
+`main` como producción real ya publicada. A partir de aquí los tags
+marcan `main`, no `develop`, tal como ya anticipaba el párrafo anterior.
+
+### Rama `release/*` — obligatoria para llegar a `main` (añadido 2026-09-04)
+
+Decisión del usuario al cerrar `v1.0.0`: fusionar `develop` directamente
+sobre `main` (lo hecho esta noche, bajo el proceso todavía vigente de
+`ADR-0010`) deja de ser el camino a partir de ahora. Se añade una rama
+de entorno efímera más al modelo, coherente con la variante "release
+branches" de GitLab Flow que esta ADR ya sigue (no es un estándar nuevo,
+es el mismo GitLab Flow aplicado un paso más allá) — el patrón general
+del documento no cambia: seguir añadiendo la pieza exacta que un
+disparador real pide, nunca por adelantado.
+
+- **Cambios menores contra `develop`:** sin cambios — `feature/*`/
+  `fix/*`/`hotfix/*` nacidas de `develop`, fusionadas ahí directamente,
+  sin rama de release. Es el flujo normal del día a día.
+- **Cambios grandes contra `develop`:** cuando el trabajo es demasiado
+  grande para una sola `feature/*` (varias fases, varias sesiones), se
+  sigue permitiendo una rama de integración larga nacida de `develop`
+  (el patrón que ya usaron `Release-V1` o `feature/training-records`
+  esta misma iniciativa) — se fusiona a `develop` igual que cualquier
+  otra, sin convertirse todavía en la rama de release hacia `main`.
+- **Fusionar con `main`: siempre a través de una rama `release/vX.Y.Z`**,
+  nunca `develop` directo. Nomenclatura `release/vX.Y.Z` (mismo número
+  que el tag que producirá, ej. `release/v1.1.0`) — es la convención más
+  extendida para esta rama en GitLab Flow/Git Flow, ningún nombre propio
+  inventado. Pasos: crear `release/vX.Y.Z` desde `develop` actualizado →
+  ahí viven los pasos de "preparar la release" que ya define `ADR-0010`
+  (mover `CHANGELOG.md`, bump de versión, `npm run test`/`build`/
+  `mobile-check`) → fusionar `release/vX.Y.Z` sobre `main` → tag sobre
+  ese commit de `main` → `gh release create` → borrar `release/vX.Y.Z`
+  (local y remoto) una vez fusionada. Ligero a propósito: no es un
+  periodo de estabilización con QA aparte (eso es lo que Git Flow
+  completo añade y esta ADR ya descartó arriba) — es solo el sitio
+  correcto donde vive la preparación de la release, separado de
+  `develop` para que un `push` a `develop` mientras se prepara una
+  release no la contamine.
+- **`hotfix/*` puede nacer también de `main`** (no solo de `develop`,
+  como decía la tabla de la fase actual) para una corrección urgente en
+  producción que no puede esperar al próximo `release/*`. Se fusiona
+  directa sobre `main` (con su propio tag `vX.Y.Z+1` de tipo `PATCH`,
+  `ADR-0010`), y **como mínimo se refleja en `develop`** después
+  (merge o cherry-pick del mismo commit) para que `develop` nunca quede
+  por detrás de un fix que ya está en producción real.
 
 ### Protección de ramas
 

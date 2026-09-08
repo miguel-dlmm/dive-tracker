@@ -1,0 +1,92 @@
+{
+  "loading": { "defaultLabel": "Wird geladen" },
+  "errorBoundary": {
+    "title": "Ups, etwas ist schiefgelaufen",
+    "body": "Bei diesem Bildschirm ist ein unerwartetes Problem aufgetreten. Das liegt nicht an dir — versuch es neu zu laden, dann sollte wieder alles normal sein.",
+    "reload": "Neu laden"
+  },
+  "movementTypes": {
+    "ganado": "Kurs",
+    "comision": "Provision",
+    "companeros": "Ausgleich"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "Ausstehend",
+    "empty": "Nichts offen",
+    "count_one": "{{count}} ausstehende Zahlung",
+    "count_other": "{{count}} ausstehende Zahlungen",
+    "addMovement": "Buchung hinzufügen"
+  },
+  "confirmDialog": { "cancel": "Abbrechen", "defaultConfirmLabel": "Löschen" },
+  "editActions": { "defaultSaveLabel": "Speichern", "cancel": "Abbrechen" },
+  "deleteButton": {
+    "defaultLabel": "Löschen",
+    "defaultItemLabel": "dieses Element",
+    "deletedToast": "Gelöscht",
+    "errorToast": "Konnte nicht gelöscht werden. Versuch es erneut.",
+    "confirmTitle": "Diesen Eintrag löschen?",
+    "confirmMessage": "Du bist dabei, {{item}} zu löschen. Diese Aktion kann nicht rückgängig gemacht werden."
+  },
+  "field": { "hideHelp": "Hilfe ausblenden", "help": "Hilfe" },
+  "calendar": {
+    "months": ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+    "weekdays": ["M", "D", "M", "D", "F", "S", "S"],
+    "prevMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "prevYear": "Vorheriges Jahr",
+    "nextYear": "Nächstes Jahr",
+    "today": "Heute"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "Datum",
+    "defaultAriaLabel": "Datum wählen",
+    "pickerAriaLabel": "Datumsauswahl",
+    "dayAriaLabel": "{{day}} {{month}}",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "tomorrow": "Morgen",
+    "dayBeforeYesterday": "Vorgestern"
+  },
+  "dateRangePicker": {
+    "from": "Von",
+    "to": "Bis",
+    "fromAriaLabel": "Startdatum",
+    "toAriaLabel": "Enddatum",
+    "pickerAriaLabel": "Zeitraumauswahl",
+    "chooseStart": "Startdatum wählen",
+    "chooseEnd": "Enddatum wählen",
+    "chooseDate": "Datum wählen",
+    "okFrom": "OK — nur ab {{date}}",
+    "presets": { "today": "Heute", "thisWeek": "Diese Woche", "thisMonth": "Dieser Monat", "last30Days": "Letzte 30 Tage" }
+  },
+  "monthCalendar": {
+    "addOnDay": "Buchung am {{day}} {{month}} hinzufügen",
+    "addOnDayToday": "Buchung am {{day}} {{month}} (heute) hinzufügen",
+    "dayToday": "{{day}} {{month}} (heute)",
+    "closeDayDetail": "Tagesdetail schließen",
+    "dayHeading": "Tag {{day}} {{month}}",
+    "generatedOnDay": "An diesem Tag erzielt",
+    "table": { "course": "Kurs", "comment": "Kommentar", "people": "Pers.", "amount": "Betrag" }
+  },
+  "select": { "placeholder": "Auswählen..." },
+  "multiSelect": { "placeholder": "Alle", "clearSelection": "Auswahl löschen", "selectedCount": "{{count}} ausgewählt" },
+  "searchSelect": { "placeholder": "Suchen...", "ariaLabel": "Suchen", "noResults": "Keine Ergebnisse" },
+  "currencySearchSelect": { "placeholder": "Währung suchen..." },
+  "listFilterBar": {
+    "from": "Von",
+    "to": "Bis",
+    "school": "Schule",
+    "activity": "Aktivität",
+    "noLimit": "Kein Limit",
+    "all": "Alle",
+    "clearFilters": "Filter löschen"
+  },
+  "rowMenu": { "moreActions": "Weitere Aktionen", "edit": "Bearbeiten", "delete": "Löschen" },
+  "statusSwitch": { "ariaLabel": "Status: {{value}}. Tippen, um zu {{next}} zu wechseln", "title": "{{value}} — klicken, um zu \"{{next}}\" zu wechseln" },
+  "signature": {
+    "opcional": "optional",
+    "borrar": "Löschen",
+    "firmadoAria": "{{label}}: unterschrieben",
+    "sinFirmarAria": "{{label}}: nicht unterschrieben"
+  }
+}

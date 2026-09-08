@@ -1,0 +1,249 @@
+{
+  "emptyState": "Noch keine Hilfeinhalte vorhanden.",
+  "whatsNewReplay": "Neuigkeiten dieser Version ansehen",
+  "installAppLink": "Installiere die App auf deinem Handy",
+  "groupLabels": {
+    "quiero": "Ich möchte...",
+    "funcionalidades": "Funktionen"
+  },
+  "sections": {
+    "whatYouCanDo": "Was du tun kannst",
+    "whenToUseIt": "Wann du es verwendest",
+    "steps": "Schritte",
+    "tips": "Tipps und häufige Fehler",
+    "expectedResult": "Erwartetes Ergebnis"
+  },
+  "categories": {
+    "bienvenida": {
+      "label": "Erste Schritte",
+      "description": "Was Ocean Flow ist und wie es aufgebaut ist"
+    },
+    "quiero-configurar": {
+      "label": "Deine Anwendung einrichten",
+      "description": "Schulen, Kurse, Tarife und Kataloge"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Eine Buchung erfassen",
+      "description": "Ein erteilter Kurs, eine Provision oder ein Ausgleich"
+    },
+    "quiero-cobrar": {
+      "label": "Ausstehende Buchungen einziehen",
+      "description": "Als erhalten markieren, einzeln oder alle auf einmal"
+    },
+    "quiero-consultar-generado": {
+      "label": "Nachsehen, wie viel du erzielt hast",
+      "description": "Auf einen Blick, oder im Detail nach Zeitraum"
+    },
+    "quiero-generar-tr": {
+      "label": "Ein Training Record erstellen",
+      "description": "Das offizielle Fortschrittsdokument jedes Teilnehmers"
+    },
+    "func-mi-trabajo": {
+      "label": "Meine Arbeit",
+      "description": "Buchungen erstellen, bearbeiten, einziehen und löschen"
+    },
+    "func-resumen": {
+      "label": "Übersicht",
+      "description": "Schneller Überblick und Detailtiefe bei Bedarf"
+    },
+    "func-configuracion": {
+      "label": "Einstellungen",
+      "description": "Das Menü und was in jedem Bereich steckt"
+    },
+    "func-perfil": {
+      "label": "Mein Profil",
+      "description": "Avatar, Instructor-Ausweis, Sprache und bevorzugte Währung"
+    },
+    "func-filtros": {
+      "label": "Filter und Suche",
+      "description": "Dasselbe Muster in der gesamten App"
+    }
+  },
+  "articles": {
+    "primeros-pasos": {
+      "title": "Mit Ocean Flow loslegen",
+      "summary": "Ein kurzer Rundgang durch die drei Hauptbildschirme, bevor du deine erste Buchung erfasst.",
+      "whatYouCanDo": "Ocean Flow hilft dir, deine Einnahmen als freiberuflicher Instructor im Blick zu behalten. Unter einem gemeinsamen Konzept, \"Buchung\", fasst es die Kurse, die du gibst, die Provisionen für vermittelte Kunden und die finanziellen Ausgleiche mit anderen Instructors zusammen.",
+      "whenToUseIt": "Beim ersten Öffnen der App, oder wenn du dich daran erinnern möchtest, wofür jeder Bildschirm da ist.",
+      "steps": [
+        "Home: deine Teilnehmer, Kurse und Vermittlungen auf einen Blick, der Zugang zu Training Records, wie viel du noch einziehen musst, der Kalender des Monats und ein direkter Zugang, um eine Buchung zu erstellen.",
+        "Meine Arbeit: die vollständige Liste deiner Buchungen (Kurse, Provisionen und Ausgleiche), um sie zu erstellen, zu bearbeiten, einzuziehen oder zu löschen.",
+        "Übersicht: deine Bilanz für den gewählten Zeitraum, mit der Möglichkeit, nach Schule, nach Kurs oder nach Provisionen zu vertiefen."
+      ],
+      "tips": [
+        "Bei einem neuen Konto beginne mit \"Deine Anwendung einrichten\" (Schulen, Kurse, Tarife).",
+        "Erfasse dann eine Buchung jeden Typs, den du verwenden wirst.",
+        "Beende mit dem Einziehen: eine, sobald du bezahlt wirst, oder alle auf einmal, wenn du regelmäßig prüfst. Jeder Schritt hat seine eigene Anleitung unter \"Ich möchte...\" weiter unten."
+      ],
+      "expectedResult": "Du weißt, welchen Bildschirm du für welche Situation verwendest und in welcher Reihenfolge du vorgehst, um die App für deinen Alltag startklar zu machen."
+    },
+    "configurar-app": {
+      "title": "Deine Anwendung einrichten",
+      "summary": "Nichts ist in der App fest vorgegeben: Schulen, Kurse, Tarife und Zahlungskataloge werden in den Einstellungen bearbeitet.",
+      "whatYouCanDo": "In den Einstellungen pflegst du deine Grunddaten: welche Schulen mit dir zusammenarbeiten, welche Kurse du gibst und zu welchem Tarif. Alles bearbeitbar, nichts im Code fest verankert.",
+      "whenToUseIt": "Bevor du deine erste Buchung erfasst, und danach jedes Mal, wenn du mit einer neuen Schule oder einem neuen Kurs beginnst oder einen Preis änderst.",
+      "steps": [
+        "Öffne die Einstellungen (Zahnrad-Symbol oben rechts) und tippe auf den benötigten Bereich.",
+        "Lege zuerst deine Schulen und Kurse an — ein Tarif verknüpft immer eine Schule mit einem Kurs, daher müssen beide vorher existieren.",
+        "Tippe innerhalb eines Bereichs auf den schwebenden \"+\"-Button zum Erstellen; \"‹ Einstellungen\" bringt dich zurück zum Menü.",
+        "Tippe auf die Farbe einer Zeile, um sie anzupassen, und auf den Stern, um sie als Favorit zu markieren."
+      ],
+      "tips": [
+        "Eine als Favorit markierte Schule, Kurs oder Währung erscheint in den Erstellungsformularen vorausgewählt.",
+        "Das Schließen der Einstellungen (das \"✕\" in der Kopfzeile) bringt dich immer zu der Registerkarte zurück, von der aus du eingetreten bist."
+      ],
+      "expectedResult": "Die neue Schule, der neue Kurs oder der neue Tarif ist sofort verfügbar, wenn du eine Buchung erstellst — damit kannst du mit \"Eine Buchung erfassen\" fortfahren."
+    },
+    "crear-movimiento": {
+      "title": "Eine Buchung erstellen",
+      "summary": "Dasselbe Formular dient für einen erteilten Kurs, eine Provision oder einen Ausgleich mit einem Kollegen — jeder Typ hat seine eigenen Felder.",
+      "whatYouCanDo": "\"Buchung hinzufügen\" ist der einzige Erstellungspunkt der gesamten App — im Formular selbst wählst du den Typ, du musst keinen anderen Button für jeden Fall treffen.",
+      "whenToUseIt": "Direkt nach einem Kurs, beim Abschluss einer Provision, oder wenn du einen Ausgleich mit einem anderen Instructor vereinbarst.",
+      "steps": [
+        "Drücke \"Buchung hinzufügen\": den \"+\"-Button der Karte \"Ausstehend\" in Home, denselben Button durch Antippen eines Tages im Home-Kalender, oder den schwebenden \"+\" in Meine Arbeit.",
+        "Wähle oben im Formular den Typ: Erteilter Kurs, Provision oder Kursausgleich.",
+        "Erteilter Kurs: Schule, Kurs, Datum und Personenzahl — der Kurstarif berechnet den Betrag automatisch.",
+        "Provision: wie ein Kurs, aber für einen Kunden, den du vermittelt hast und der bei einem anderen Instructor ausgebildet wird — verwendet den eigenen Provisionstarif, nicht den des Kurses.",
+        "Kursausgleich: hängt von keinem Tarif ab — du gibst selbst den Betrag an (positiv, wenn man dir schuldet, negativ, wenn du schuldest) und mit welchem Kollegen der Ausgleich ist.",
+        "Speichern. Wenn du das Formular von Home aus geöffnet hast, siehst du die Buchung direkt nach dem Speichern in Meine Arbeit."
+      ],
+      "tips": [
+        "Falls noch kein Tarif für diese Schule + diesen Kurs existiert, kannst du ihn direkt im Formular anlegen, ohne den Bildschirm zu verlassen (\"Tarif hinzufügen\") — gilt nur für Kurs und Provision, ein Ausgleich braucht nie einen Tarif.",
+        "Abbrechen oder Schließen des Formulars ohne Speichern erstellt nichts — du kannst es öffnen und schließen, ohne halb fertige Buchungen zu hinterlassen."
+      ],
+      "expectedResult": "Die Buchung erscheint in Meine Arbeit unter \"Ausstehend\" und wird zu \"Diesen Monat erzielt\" in Home addiert (außer bei einem Ausgleich zu deinen Ungunsten, der nicht als erzielt zählt)."
+    },
+    "cobrar-movimientos": {
+      "title": "Buchungen als erhalten markieren",
+      "summary": "Behalte den Überblick, was du noch einziehen musst, und aktualisiere den Status, sobald du bezahlt wirst — einzeln oder alle auf einmal.",
+      "whatYouCanDo": "Jede Buchung hat einen Status (ausstehend oder erhalten). Ihn zu ändern geht sofort, mit nur einem Tipp, mit der Möglichkeit, rückgängig zu machen, falls du dich irrst. Du kannst es Buchung für Buchung tun, oder auf einmal für die gesamte sichtbare Liste.",
+      "whenToUseIt": "Sobald dich eine Schule oder ein Kollege bezahlt (einzeln), oder auf einmal, wenn du regelmäßig prüfst und bereits mehrere ausstehende Posten gleichzeitig bezahlt bekommen hast.",
+      "steps": [
+        "Um eine einzuziehen: Gehe zu Meine Arbeit (die Registerkarte \"Ausstehend\" öffnet sich standardmäßig) und drücke \"Zahlungseingang bestätigen\" in ihrer Zeile (oder \"Als beglichen markieren\" bei einem Ausgleich zu deinen Ungunsten).",
+        "Die Karte \"Ausstehend\" in Home bringt dich direkt zu genau dieser Registerkarte — ein Tipp vom Hauptbildschirm aus.",
+        "Um mehrere auf einmal einzuziehen: Verwende in Meine Arbeit \"Alle einziehen\" oberhalb der Liste — betrifft alles, was in diesem Moment sichtbar ist.",
+        "Verwende vor \"Alle einziehen\" den Filter \"Filtern\" (nach Datum, Schule, Kurs oder Typ), um die Liste genau auf das einzugrenzen, was du auf einmal einziehen möchtest."
+      ],
+      "tips": [
+        "Nach jeder Änderung erscheint ein Hinweis mit \"Rückgängig\" — du hast ein paar Sekunden Zeit, sie umzukehren, ohne die Buchung erneut suchen zu müssen.",
+        "\"Alle einziehen\" verlangt vor der Anwendung eine Bestätigung — es gibt kein \"Rückgängig\" für den gesamten Vorgang, anders als beim einzelnen Einziehen."
+      ],
+      "expectedResult": "Die Buchung (oder alle gefilterten) wechselt zur Registerkarte \"Erhalten\", und ihr Betrag zählt nicht mehr zu \"Ausstehend\" in Home."
+    },
+    "consultar-generado": {
+      "title": "Nachsehen, wie viel du erzielt hast",
+      "summary": "Ein schneller Blick in Meine Arbeit, oder das vollständige Detail für den in Übersicht gewählten Zeitraum.",
+      "whatYouCanDo": "\"Diesen Monat erzielt\" in Meine Arbeit zeigt dir die Zahl des laufenden Monats, immer sichtbar oberhalb der Liste. Übersicht geht weiter: jeder Zeitraum, verglichen mit dem vorherigen, mit der Möglichkeit, nach Schule oder nach Kurs zu vertiefen.",
+      "whenToUseIt": "Meine Arbeit, für einen schnellen Überblick bei der täglichen Arbeit. Übersicht, wenn du einen anderen Zeitraum als den aktuellen Monat möchtest oder verstehen willst, woher das Geld kommt.",
+      "steps": [
+        "In Meine Arbeit ist die Karte \"Diesen Monat erzielt\" immer oberhalb der Liste sichtbar, ohne dass du etwas tippen musst.",
+        "Wähle in der Übersicht die Granularität und den Zeitraum im oberen Steuerelement (monatlich, vierteljährlich, halbjährlich, jährlich oder ein individueller Zeitraum) und, falls gewünscht, den Typ (Kurs, Provision oder Ausgleich).",
+        "Die Hauptkarte zeigt den Gesamtbetrag des Zeitraums und wie er sich gegenüber dem vorherigen Zeitraum verändert hat.",
+        "Tippe auf \"Nach Schule\", \"Nach Kurs\", \"Provisionen\", \"Kursausgleiche\" oder \"Kalender\", um zu vertiefen — jede Karte öffnet sich nur, wenn du es anforderst."
+      ],
+      "tips": [
+        "Tippe innerhalb von \"Nach Schule\" auf eine Schule, um ihre Aufschlüsselung nach Kurs direkt vor Ort zu sehen, ohne den Bildschirm zu wechseln.",
+        "Der Vergleich mit dem vorherigen Zeitraum erscheint nicht, wenn du mehr als eine Währung im selben Zeitraum mischst — um eine nicht exakte Berechnung zu vermeiden."
+      ],
+      "expectedResult": "Du hast eine Bilanzzahl für den gewählten Zeitraum, mit dem Detail, woher jede Einnahme kommt, wenn du es brauchst."
+    },
+    "generar-training-record": {
+      "title": "Ein Training Record erstellen",
+      "summary": "Das offizielle SSI-Fortschrittsdokument jedes Teilnehmers, mit dessen Unterschrift und deiner — nichts wird in der Cloud gespeichert, es wird nur heruntergeladen.",
+      "whatYouCanDo": "In Training Records erstellst du das offizielle Fortschrittsdokument für jede der 10 SSI-Vorlagen, mit den Daten jedes Teilnehmers und deiner Instructor-Unterschrift bereits eingefügt. Du kannst sie einzeln oder alle auf einmal erstellen und als PDF, als Bild herunterladen oder direkt teilen.",
+      "whenToUseIt": "Wenn ein Kurs endet, oder wenn ein Teilnehmer sein Training Record auf Papier oder zum Versenden an SSI benötigt.",
+      "steps": [
+        "Öffne Training Records über den Zugang in Home.",
+        "Wähle die SSI-Vorlage des Kurses und fülle die gemeinsame Konfiguration aus (Prüfungsversion, Zertifizierung, Kursfortschritt...) — wird einmal für die ganze Klasse ausgefüllt.",
+        "\"Teilnehmer hinzufügen\" für jeden Teilnehmer: verlangt nur Name, Initialen und Unterschrift — bei Minderjährigen zusätzlich Name und Unterschrift des Erziehungsberechtigten.",
+        "\"Für alle Teilnehmer erstellen\" erstellt das Dokument für die ganze Liste auf einmal; \"TR neu erstellen\" in der Zeile eines einzelnen Teilnehmers erstellt nur dessen neu, ohne den Rest zu wiederholen.",
+        "Pro Teilnehmer: \"PDF herunterladen\", \"Bild herunterladen (JPG)\" oder \"Teilen\". Für alle auf einmal: \"Alle als PDF/JPG herunterladen\" oder \"Alle teilen\", als ein einziges Archiv."
+      ],
+      "tips": [
+        "Du brauchst deinen vollständigen Instructor-Ausweis in Mein Profil (Initialen, SSI-Pro-Nummer und Unterschrift), bevor du irgendetwas erstellen kannst — das wird auf jedem Training Record gedruckt.",
+        "Nichts von dem, was du hier ausfüllst, wird in Ocean Flow gespeichert: Jedes Dokument wird im Moment erstellt und nur heruntergeladen."
+      ],
+      "expectedResult": "Du hast das Training Record jedes Teilnehmers bereit zum Herunterladen oder Teilen, mit dessen Unterschrift und deiner bereits enthalten."
+    },
+    "mi-trabajo-referencia": {
+      "title": "Meine Arbeit, auf einen Blick",
+      "summary": "Die vollständige Liste deiner Buchungen — Kurse, Provisionen und Ausgleiche — mit ihren Aktionen.",
+      "whatYouCanDo": "Meine Arbeit vereint das, was früher drei getrennte Bildschirme waren (Protokoll, Provisionen und Kollegen), an einem einzigen Ort, gruppiert nach Zahlungsstatus.",
+      "whenToUseIt": "Es ist dein täglicher Arbeitsbildschirm — Buchungen erstellen, prüfen, einziehen und bearbeiten.",
+      "steps": [
+        "Ausstehend / Erhalten: die zwei Registerkarten oben, mit dem ausstehenden Gesamtbetrag in der oberen Karte.",
+        "\"Filtern\": grenzt die Liste nach Zeitraum, Schule, Kurs oder Buchungstyp ein.",
+        "In jeder Zeile: \"Zahlungseingang bestätigen\"/\"Als ausstehend markieren\" zum Ändern des Status, und das Menü \"⋯\" für Bearbeiten oder Löschen.",
+        "Der schwebende \"+\"-Button öffnet dasselbe Erstellungsformular wie der Rest der App."
+      ],
+      "tips": [
+        "\"Alle einziehen\"/\"Alle als ausstehend markieren\" wirken auf die sichtbare Liste — bei aktiven Filtern betrifft es nur das Gefilterte.",
+        "Das Löschen verlangt eine Bestätigung und animiert das Ausblenden der Zeile, damit du genau siehst, was du gelöscht hast."
+      ],
+      "expectedResult": "Du findest und aktualisierst jede Buchung, ohne diesen Bildschirm zu verlassen."
+    },
+    "resumen-referencia": {
+      "title": "Übersicht, auf einen Blick",
+      "summary": "Eine einzige Gesamtsumme im Mittelpunkt oben; alles andere klappt sich nur auf, wenn du es anforderst.",
+      "whatYouCanDo": "Übersicht kombiniert eine schnelle Antwort (die Gesamtsumme des Zeitraums, verglichen mit der vorherigen) mit ausklappbaren Karten für alle, die tiefer gehen möchten.",
+      "whenToUseIt": "Um zu verstehen, wie ein Zeitraum läuft, Schulen oder Kurse zu vergleichen, oder Provisionen und Ausgleiche mit Kollegen durchzusehen.",
+      "steps": [
+        "Wähle die Granularität (monatlich, vierteljährlich, halbjährlich, jährlich oder individuell); die Zeitraum-Leiste darunter navigiert von selbst — tippe auf einen beliebigen, um dorthin zu wechseln.",
+        "Filtere nach Typ (Gesamt, Kurs, Provision oder Ausgleich) mit dem Segmentschalter darunter.",
+        "Die Hauptkarte zeigt die Gesamtsumme und, wenn es sinnvoll ist, sie zu berechnen, den Vergleich mit dem vorherigen Zeitraum.",
+        "Tippe auf eine beliebige Karte (Nach Schule, Nach Kurs, Provisionen, Kursausgleiche, Kalender), um sie aufzuklappen."
+      ],
+      "tips": [
+        "Bei mehr als einer Schule beginnt \"Nach Schule\" aufgeklappt, da es die häufigste Frage nach der Gesamtsumme ist; bei nur einer erscheint dieser Abschnitt nicht (es gäbe nichts zu vergleichen), und \"Nach Kurs\" beginnt stattdessen aufgeklappt. Die übrigen beginnen immer eingeklappt.",
+        "Tippe innerhalb von \"Nach Schule\" auf eine Schule, um ihre Aufschlüsselung nach Kurs zu sehen, ohne die Karte zu verlassen."
+      ],
+      "expectedResult": "Du hast die gesuchte Zahl, mit so viel oder so wenig Detail, wie du angefordert hast."
+    },
+    "configuracion-referencia": {
+      "title": "Einstellungen, auf einen Blick",
+      "summary": "Das Menü, in dem du deine eigenen Grunddaten pflegst: Schulen, Kurse und Tarife.",
+      "whatYouCanDo": "Schulen, Kurse und Tarife — die Kataloge, die du beim Erfassen einer Buchung in Meine Arbeit verwendest.",
+      "whenToUseIt": "Um deine Grunddaten aktuell zu halten: eine neue Schule, einen neuen Kurs hinzuzufügen oder einen Tarif anzupassen.",
+      "steps": [
+        "Tippe auf eine beliebige Menüzeile, um in diesen Bereich zu gelangen; \"‹ Einstellungen\" bringt dich zurück zum Menü.",
+        "Schulen und Kurse werden über den schwebenden \"+\"-Button erstellt, genau wie in Meine Arbeit.",
+        "Tarife zeigt Kurs und Provision in einer einzigen Liste (der Typ wird als Filter oder beim Erstellen im Formular selbst gewählt) — dasselbe visuelle Muster wie Meine Arbeit."
+      ],
+      "expectedResult": "Du findest jeden Katalog oder jede Einstellung, ohne dich erinnern zu müssen, in welcher Registerkarte er/sie früher war."
+    },
+    "perfil-referencia": {
+      "title": "Mein Profil, auf einen Blick",
+      "summary": "Dein Avatar, deine Daten, dein Instructor-Ausweis, deine bevorzugte Währung und dein Passwort — alles an einem Ort, zugänglich über deinen Namen in der Kopfzeile.",
+      "whatYouCanDo": "Tippe auf deinen Avatar oder deinen Nickname (oben rechts auf jedem Bildschirm), um in Mein Profil zu gelangen: deine Identität, deinen Instructor-Ausweis, deine Sprache, deine bevorzugte Währung und dein Passwort, alles an einem Ort.",
+      "whenToUseIt": "Wenn du dein Konto personalisieren, ein Datum korrigieren oder das Passwort ändern möchtest, ohne dich abzumelden und über \"Passwort vergessen\" zu gehen.",
+      "steps": [
+        "Tippe auf Avatar/Nickname in der Kopfzeile, um in Mein Profil zu gelangen.",
+        "Der Stift über dem Avatar öffnet die Symbol- und Farbauswahl — die Änderung wird bei der Auswahl gespeichert, ohne separaten \"Speichern\"-Button.",
+        "\"Bearbeiten\" bei Persönliche Daten öffnet Vorname, Nachname und Nickname; der Nickname darf kein \"@\" enthalten und nicht mit dem eines anderen Kontos übereinstimmen.",
+        "\"Instructor-Daten\" ist dein Ausweis: Initialen, SSI-Pro-Nummer und deine Unterschrift — werden hier einmalig gespeichert und dienen dazu, deine Training Records automatisch auszufüllen.",
+        "Die bevorzugte Währung wird bei Kursausgleich als Ersatz verwendet, wenn kein Tarif sie bestimmt — alle anderen Buchungen verwenden immer die Währung ihres eigenen Tarifs."
+      ],
+      "tips": [
+        "Das Ändern des Passworts hier verlangt nicht das aktuelle Passwort — wenn du bereits in der App angemeldet bist, wird davon ausgegangen, dass die aktive Sitzung ausreicht.",
+        "Auch die Sprache der gesamten App wird hier geändert, ohne dass du dich abmelden musst.",
+        "Das Löschen deines Kontos ist endgültig und löscht alle deine Daten — zur Bestätigung musst du das Wort ABBRECHEN eingeben, damit nichts durch einen versehentlichen Tipp gelöscht wird."
+      ],
+      "expectedResult": "Dein Konto spiegelt den gewählten Avatar, die Daten, den Instructor-Ausweis und die Währung wider, und du kannst dein Passwort oder deine Sprache jederzeit ändern, ohne die App zu verlassen."
+    },
+    "filtros-referencia": {
+      "title": "Filtern und Suchen",
+      "summary": "Meine Arbeit, Tarife und die Kataloge in Einstellungen teilen dasselbe Filtermuster.",
+      "whatYouCanDo": "Ein \"Filtern\"-Button (mit der Anzahl aktiver Filter) öffnet ein Panel mit den verfügbaren Feldern — Zeitraum, Schule, Kurs, Typ... — statt sie immer über der Liste anzuzeigen.",
+      "whenToUseIt": "Wenn die Liste zu viele Elemente hat, um sie alle auf einen Blick zu überprüfen.",
+      "steps": [
+        "Drücke \"Filtern\", um das Panel mit den auf diesem Bildschirm verfügbaren Feldern zu öffnen.",
+        "Wähle eines oder mehrere aus — der Kursfilter erlaubt Mehrfachauswahl.",
+        "\"Filter löschen\" erscheint, sobald mindestens einer aktiv ist."
+      ],
+      "tips": [
+        "Die Suche in den Katalogen (Kurse, Währungen) filtert während der Eingabe, ohne zwischen Groß-/Kleinschreibung oder Akzenten zu unterscheiden."
+      ],
+      "expectedResult": "Die Liste zeigt nur das, was dich interessiert, ohne den Überblick zu verlieren, wie viele Filter aktiv sind."
+    }
+  }
+}

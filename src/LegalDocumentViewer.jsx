@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
-import { NAVY, TEAL } from "./App";
+import { BRAND_NAVY } from "./App";
 
 // Overlay de lectura para un documento legal (Política de Privacidad /
 // Términos de Uso) — usado hoy desde AcceptLegalScreen; reutilizable más
@@ -29,7 +29,7 @@ export default function LegalDocumentViewer({ title, sections, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h2 id="legal-document-title" className="text-base font-bold tracking-tight" style={{ color: NAVY }}>
+          <h2 id="legal-document-title" className="text-base font-bold tracking-tight" style={{ color: BRAND_NAVY }}>
             {title}
           </h2>
           <button
@@ -45,7 +45,7 @@ export default function LegalDocumentViewer({ title, sections, onClose }) {
         <div className="overflow-y-auto px-5 py-4">
           {sections.map((section) => (
             <section key={section.heading} className="mb-4 last:mb-0">
-              <h3 className="mb-1 text-sm font-semibold" style={{ color: TEAL }}>
+              <h3 className="mb-1 text-sm font-semibold" style={{ color: BRAND_NAVY }}>
                 {section.heading}
               </h3>
               {section.body.split("\n\n").map((paragraph, i) => (

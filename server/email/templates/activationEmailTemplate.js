@@ -1,4 +1,4 @@
-import { renderEmailShell, escapeHtml, TEAL, NAVY } from "./emailLayout.js";
+import { renderEmailShell, escapeHtml, BRAND_NAVY } from "./emailLayout.js";
 
 // Generalización de la plantilla de bienvenida (antes welcomeEmailTemplate.js)
 // para que un único template sirva a los tres flujos que envían "aquí tienes
@@ -37,7 +37,7 @@ export const ACTIVATION_EMAIL_COPY = {
     preheader: "Entra y crea tu contraseña para volver a acceder.",
     title: "Bienvenido/a de nuevo a Ocean Flow",
     greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
-    intro: "Tu cuenta en Ocean Flow ha sido reactivada.",
+    intro: "¡Buenas noticias! Tu cuenta en Ocean Flow ya está activa de nuevo.",
     ctaLabel: "Entrar en Ocean Flow",
     securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu propia contraseña.",
     expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
@@ -48,7 +48,7 @@ export const ACTIVATION_EMAIL_COPY = {
     preheader: "Crea tu nueva contraseña para volver a acceder.",
     title: "Restablece tu contraseña",
     greeting: (firstName) => `Hola${firstName ? ` ${firstName}` : ""},`,
-    intro: "Se ha invalidado tu contraseña anterior en Ocean Flow. Usa el siguiente enlace para crear una nueva.",
+    intro: "Hemos restablecido tu contraseña en Ocean Flow — crea una nueva con el siguiente enlace.",
     ctaLabel: "Crear nueva contraseña",
     securityNote: "Al pulsar el botón entrarás directamente. Como primer paso, te pediremos que crees tu nueva contraseña.",
     expiryNote: "Este enlace es de un solo uso y caduca pronto — si ha caducado, pide a un administrador que te lo reenvíe.",
@@ -76,22 +76,22 @@ export const ACTIVATION_EMAIL_COPY = {
 // sobre todo) no soportan Flexbox/Grid ni <style> externo, así que este
 // template no puede reutilizar las clases Tailwind del resto de la app —
 // es su propio sistema reducido, coherente en color/tipografía con el
-// resto de la app (mismo NAVY/TEAL, mismo icono Waves que el login —
-// ver emailLayout.js). Una sola columna, mobile-first.
+// resto de la app (mismo BRAND_NAVY, mismo logo real que el resto de la
+// app — ver emailLayout.js). Una sola columna, mobile-first.
 export function renderActivationEmailHtml({ firstName, actionLink, copy = ACTIVATION_EMAIL_COPY.signup }) {
   const safeName = escapeHtml(firstName);
   const safeLink = escapeHtml(actionLink);
   const bodyRows = `
     <tr>
       <td style="padding:12px 28px 0 28px;">
-        <h1 style="margin:0 0 16px 0;font-size:20px;color:${NAVY};">${escapeHtml(copy.title)}</h1>
+        <h1 style="margin:0 0 16px 0;font-size:20px;color:${BRAND_NAVY};">${escapeHtml(copy.title)}</h1>
         <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#374151;">${copy.greeting(safeName)}</p>
         <p style="margin:0 0 24px 0;font-size:14px;line-height:1.6;color:#374151;">${escapeHtml(copy.intro)}</p>
       </td>
     </tr>
     <tr>
       <td style="padding:0 28px;text-align:center;">
-        <a href="${safeLink}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;background-color:${TEAL};color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 24px;border-radius:8px;">${escapeHtml(copy.ctaLabel)}</a>
+        <a href="${safeLink}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;background-color:${BRAND_NAVY};color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 24px;border-radius:8px;">${escapeHtml(copy.ctaLabel)}</a>
       </td>
     </tr>
     <tr>

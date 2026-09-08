@@ -127,7 +127,16 @@ export async function handleRegeneratePassword({ method, headers, body }) {
   // CreatePasswordScreen (que exige aceptar de nuevo las bases legales).
   // Corrección 2026-09-01: antes no se pasaba `flow`, así que este enlace
   // mostraba la pantalla de bienvenida/alta por error.
-  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email, { flow: "recovery" });
+  // baseUrl del host real de la petición — mismo bug que el email de
+  // recuperación de contraseña de "olvidé mi contraseña" (ver
+  // activationLink.js), aplicado aquí: sin esto, este enlace (regenerar
+  // contraseña desde Configuración) siempre caía a la URL fija de
+  // APP_URL en vez del dominio real desde el que el superadmin lo pidió.
+  const proto = getHeader(headers, "x-forwarded-proto") || "https";
+  const host = getHeader(headers, "host");
+  const baseUrl = host ? `${proto}://${host}` : undefined;
+
+  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email, { flow: "recovery", baseUrl });
   if (linkErrorMessage) {
     return { status: 500, payload: { error: linkErrorMessage } };
   }

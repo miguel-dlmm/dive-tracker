@@ -1,0 +1,52 @@
+{
+  "filter": {
+    "button": "Filtrer",
+    "type": "Type",
+    "typeAll": "Tous",
+    "school": "École",
+    "schoolAll": "Toutes",
+    "course": "Cours",
+    "courseAll": "Tous",
+    "clear": "Effacer les filtres",
+    "showInactive": "Afficher les désactivés"
+  },
+  "search": {
+    "placeholder": "Rechercher",
+    "ariaLabel": "Rechercher un tarif"
+  },
+  "list": {
+    "count": "{{count}} tarifs",
+    "empty": "Aucun résultat.",
+    "createdOn": "Créé le : {{date}} · {{type}}",
+    "inactive": "Désactivé"
+  },
+  "fab": "Nouveau tarif",
+  "sheet": {
+    "editTitle": "Modifier le tarif de {{school}} - {{activity}}",
+    "createTitle": "Nouveau tarif de {{type}}",
+    "close": "Fermer",
+    "typeTablistLabel": "Type de tarif",
+    "hintGanado": "Ce que vous facturez pour dispenser vous-même le cours.",
+    "hintComision": "Ce que vous facturez pour avoir amené un client.",
+    "school": "École",
+    "course": "Cours",
+    "rateLabel": "Tarif · {{currency}}",
+    "save": "Enregistrer"
+  },
+  "toasts": {
+    "saved": "Modifications enregistrées",
+    "added": "Tarif ajouté",
+    "saveError": "Impossible d'enregistrer. Réessayez.",
+    "duplicate": "Vous avez déjà un tarif actif pour cette école et ce cours. Désactivez-le avant d'en créer un autre.",
+    "reactivateBlocked": "Réactivation impossible : un autre tarif est déjà actif pour cette école et ce cours.",
+    "deactivated": "Tarif désactivé",
+    "reactivated": "Tarif réactivé"
+  },
+  "deleteInUse_one": "Suppression impossible : {{count}} enregistrement utilise ce tarif.",
+  "deleteInUse_other": "Suppression impossible : {{count}} enregistrements utilisent ce tarif.",
+  "rowMenu": {
+    "itemLabel": "le tarif de {{school}} - {{activity}}",
+    "deactivate": "Désactiver",
+    "reactivate": "Réactiver"
+  }
+}

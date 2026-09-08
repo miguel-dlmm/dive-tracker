@@ -97,8 +97,9 @@
     "email": "Email",
     "altaLabel": "Joined",
     "ultimoAcceso": "Last access",
+    "movimientos": "Movements",
+    "ultimaActividad": "Last activity",
     "baja": "Deactivated",
-    "fechaNoRegistrada": "date not recorded",
     "estado": "Status",
     "activarUsuario": "Activate user",
     "desactivarUsuario": "Deactivate user",
@@ -149,6 +150,7 @@
   "usersDirectory": {
     "buscarPlaceholder": "Search...",
     "buscarAria": "Search users",
+    "leyendaEstadoAria": "What each status color means",
     "crearUsuario": "Create user",
     "noSePudoCargarListado": "Couldn't load the user list.",
     "errorDesconocido": "Unknown error",
@@ -238,10 +240,6 @@
     "datasets": {
       "label": "Starting datasets",
       "description": "Configuration cloned when creating an account"
-    },
-    "trainingRecords": {
-      "label": "Training Records",
-      "description": "Generate signed SSI training progress records per student"
     }
   },
   "menu": {

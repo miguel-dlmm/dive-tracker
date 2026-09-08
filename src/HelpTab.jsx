@@ -1,32 +1,35 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import * as Icons from "lucide-react";
-import { TEAL } from "./App";
+import { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Smartphone, Award } from "lucide-react";
+import { BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { ExpandableCard } from "./shared";
-import { useSwipeBack } from "./motion";
+import { useSwipeBack, animateScrollBy, usePrefersReducedMotion } from "./motion";
 import { HELP_CATEGORIES } from "./help/content";
 import HelpArticleBody from "./help/HelpArticleBody";
 
+// Catálogo cerrado de iconos de categoría (help/content.js, campo `icon`)
+// — imports nombrados en vez de `import * as Icons from "lucide-react"`,
+// mismo hallazgo de bundle que en shared.jsx (ver LOADING_ICONS ahí). Si
+// se añade una categoría con un icono nuevo en content.js, se añade aquí
+// también.
+const CATEGORY_ICONS = { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Award };
+
 // Combina el texto traducido (namespace "help", claves `articles.<id>.*`)
-// con los metadatos no traducibles de content.js (`stepImages`: índice de
-// paso -> src de la captura) para dar a HelpArticleBody el mismo shape de
-// `article` que tenía antes de la Fase 2 (steps: string | { text, image }).
+// con el id del artículo en content.js para dar a HelpArticleBody el
+// shape de `article` que espera. `steps` son strings simples, sin
+// variante `{ text, image }` — el GIF (2026-09-08, ver content.js) es
+// una sola pieza de cabecera del artículo, no por paso.
 function resolveArticle(articleMeta, t) {
   const base = `articles.${articleMeta.id}`;
-  const steps = t(`${base}.steps`, { returnObjects: true });
-  const tips = t(`${base}.tips`, { returnObjects: true, defaultValue: [] });
   return {
     title: t(`${base}.title`),
     summary: t(`${base}.summary`),
     whatYouCanDo: t(`${base}.whatYouCanDo`),
     whenToUseIt: t(`${base}.whenToUseIt`),
-    steps: steps.map((step, i) => {
-      const src = articleMeta.stepImages?.[i];
-      if (typeof step === "string") return src ? { text: step, image: { src, alt: "" } } : step;
-      return src ? { text: step.text, image: { src, alt: step.imageAlt } } : step.text;
-    }),
-    tips,
+    steps: t(`${base}.steps`, { returnObjects: true }),
+    tips: t(`${base}.tips`, { returnObjects: true, defaultValue: [] }),
     expectedResult: t(`${base}.expectedResult`),
+    gif: articleMeta.gif,
   };
 }
 
@@ -86,9 +89,9 @@ export function clearStoredHelpOpen() {
   try { sessionStorage.removeItem(HELP_OPEN_KEY); } catch { /* no-op */ }
 }
 
-export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
+export default function HelpTab({ navSections, onClose, onShowWhatsNew, onOpenInstallApp }) {
   const { t } = useTranslation("help");
-  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
+  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || BRAND_NAVY;
   const [openId, setOpenIdState] = useState(readStoredOpen);
   const setOpenId = (id) => {
     setOpenIdState(id);
@@ -96,6 +99,51 @@ export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
       if (id) sessionStorage.setItem(HELP_OPEN_KEY, id);
       else sessionStorage.removeItem(HELP_OPEN_KEY);
     } catch { /* no-op */ }
+  };
+  // Bug real reportado 2026-09-08: "abro el primer item bien, pero a
+  // partir de ahí si abro el siguiente al acabar de leer el desplegado,
+  // me cierra el desplegado y me abre el seleccionado arriba del todo".
+  // Causa: al ser un acordeón (como mucho una categoría abierta a la
+  // vez), abrir la siguiente colapsa la anterior — si la anterior está
+  // POR ENCIMA de la que se pulsa y el usuario ya había bajado la
+  // página para leerla entera, colapsarla desplaza todo el contenido de
+  // debajo hacia arriba de golpe sin que el scroll se corrija, dejando
+  // la categoría recién abierta en cualquier sitio (a veces por encima
+  // de la cabecera). Pedido explícito: "Cada vez que abra un item de la
+  // ayuda este quedará abierto y alineado justo debajo de la cabecera
+  // con una animación" — mismo criterio ya resuelto para el calendario
+  // de Home/Resumen (MonthCalendar, shared.jsx, "cuarto ajuste"): medir
+  // en el propio clic, nunca esperar a que la animación termine (con
+  // duración fija — DURATION.md/sm, listItemVariants — la posición
+  // final se puede calcular de antemano sin esperar a nada).
+  const reducedMotionForScroll = usePrefersReducedMotion();
+  const cardRefs = useRef({});
+  const HEADER_GAP = 12;
+  const handleToggle = (categoryId, next) => {
+    if (next) {
+      const clickedEl = cardRefs.current[categoryId];
+      const clickedRect = clickedEl?.getBoundingClientRect();
+      if (clickedRect) {
+        // Si la categoría que estaba abierta queda por ENCIMA de la que
+        // se acaba de pulsar, al colapsarse (vuelve a la altura de su
+        // sola cabecera) todo lo de debajo — incluida la que se acaba
+        // de abrir — sube esa misma diferencia. Se descuenta esa altura
+        // de antemano para predecir la posición FINAL, sin esperar a
+        // que la animación de colapso termine.
+        let predictedTop = clickedRect.top;
+        const previousEl = openId && openId !== categoryId ? cardRefs.current[openId] : null;
+        if (previousEl) {
+          const previousRect = previousEl.getBoundingClientRect();
+          if (previousRect.top < clickedRect.top) {
+            const collapsedHeight = previousEl.querySelector("button")?.getBoundingClientRect().height ?? 0;
+            predictedTop -= previousRect.height - collapsedHeight;
+          }
+        }
+        const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+        animateScrollBy(predictedTop - headerBottom - HEADER_GAP, { reduced: reducedMotionForScroll });
+      }
+    }
+    setOpenId(next ? categoryId : null);
   };
   // Deslizar hacia la derecha = "atrás", recursivo (feedback explícito
   // 2026-08-30, mismo criterio que ConfigTab): con una categoría abierta,
@@ -128,8 +176,28 @@ export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
           onClick={onShowWhatsNew}
           className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700"
         >
-          <Icons.Sparkles size={16} style={{ color: TEAL }} aria-hidden="true" />
+          <Sparkles size={16} style={{ color: BRAND_NAVY }} aria-hidden="true" />
           {t("whatsNewReplay")}
+        </button>
+      )}
+      {/* "Instalar la app" (2026-09-08, pedido explícito: el banner
+          descartable de Home "no convence... búscale otro sitio,
+          integrado, que siempre esté disponible y que no moleste") —
+          mismo patrón visual que el enlace de arriba, mismo criterio de
+          fondo: Ayuda ya es el sitio natural para "acciones que existen
+          pero no hace falta empujar en el flujo principal", siempre
+          accesible sin ocupar espacio en Home ni poder cerrarse/
+          desaparecer por accidente. Sustituye al banner de HomeTab.jsx,
+          que se retira entero (icono, estado de "descartado" en
+          localStorage y todo). */}
+      {onOpenInstallApp && (
+        <button
+          type="button"
+          onClick={onOpenInstallApp}
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700"
+        >
+          <Smartphone size={16} style={{ color: BRAND_OCEAN }} aria-hidden="true" />
+          {t("installAppLink")}
         </button>
       )}
       {GROUP_ORDER.map((group) => {
@@ -144,21 +212,29 @@ export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
             )}
             <div className="space-y-2">
               {rows.map((category) => {
-                const Icon = Icons[category.icon] || Icons.HelpCircle;
+                const Icon = CATEGORY_ICONS[category.icon] || HelpCircle;
                 const color = sectionColor(category.sectionKey);
                 const article = resolveArticle(category.articles[0], t);
                 return (
-                  <ExpandableCard
-                    key={category.id}
-                    title={t(`categories.${category.id}.label`)}
-                    subtitle={t(`categories.${category.id}.description`)}
-                    icon={Icon}
-                    iconColor={color}
-                    open={openId === category.id}
-                    onToggle={(next) => setOpenId(next ? category.id : null)}
-                  >
-                    <HelpArticleBody article={article} accentColor={color} />
-                  </ExpandableCard>
+                  // Wrapper con ref propia (2026-09-08, ver handleToggle
+                  // más arriba): ExpandableCard no expone su propio ref,
+                  // y hace falta medir la posición/altura real de cada
+                  // tarjeta (abierta o colapsada) para alinear la que se
+                  // abre justo debajo de la cabecera. Div simple, sin
+                  // estilo propio — no cambia el espaciado de space-y-2
+                  // de arriba, sigue siendo el hijo directo.
+                  <div key={category.id} ref={(el) => (cardRefs.current[category.id] = el)}>
+                    <ExpandableCard
+                      title={t(`categories.${category.id}.label`)}
+                      subtitle={t(`categories.${category.id}.description`)}
+                      icon={Icon}
+                      iconColor={color}
+                      open={openId === category.id}
+                      onToggle={(next) => handleToggle(category.id, next)}
+                    >
+                      <HelpArticleBody article={article} accentColor={color} />
+                    </ExpandableCard>
+                  </div>
                 );
               })}
             </div>

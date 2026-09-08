@@ -64,7 +64,7 @@ async function validateNickname(client, nickname) {
 // is_admin / is_superadmin NUNCA se pasan aquí a propósito: handle_new_user()
 // no los toca al crear la fila de profiles, así que nace siempre con ambos
 // en false, sin importar el origen de la llamada.
-export async function provisionUser({ email, first_name, last_name, nickname, dataset_key, reason = "signup", language }) {
+export async function provisionUser({ email, first_name, last_name, nickname, dataset_key, reason = "signup", language, baseUrl, birth_date, country_of_residence }) {
   const client = getServiceRoleClient();
 
   const nicknameError = await validateNickname(client, nickname);
@@ -104,13 +104,40 @@ export async function provisionUser({ email, first_name, last_name, nickname, da
     return { error: cloneError };
   }
 
+  // Fecha de nacimiento / país de residencia (2026-09-07, pedido
+  // explícito: "añade al formulario de registro los campos fecha de
+  // nacimiento y país de residencia") — ambos opcionales, solo se
+  // muestran en Mi perfil (mismo criterio ya establecido ahí, ver
+  // ProfileTab.jsx), sin validación ni uso en ningún otro flujo. No van
+  // en user_metadata/handle_new_user() (evita tocar el trigger de alta,
+  // un cambio de esquema que CLAUDE.md pide planificar aparte) — se
+  // escriben con un UPDATE normal sobre la fila de profiles que el
+  // propio trigger ya acaba de crear, con el mismo criterio best-effort
+  // que el email de más abajo: si falla, la cuenta ya existe igual, solo
+  // faltarían estos dos datos decorativos (el usuario puede rellenarlos
+  // después desde Mi perfil).
+  if (birth_date || country_of_residence) {
+    const { error: profileUpdateError } = await client
+      .from("profiles")
+      .update({ birth_date: birth_date || null, country_of_residence: country_of_residence || null })
+      .eq("user_id", created.user.id);
+    if (profileUpdateError) console.error("provisionUser: no se pudo guardar fecha de nacimiento/país de residencia", profileUpdateError);
+  }
+
   // Enlace de primer acceso + email de activación — best-effort: la cuenta
   // ya está creada, así que un fallo aquí no debe impedir la respuesta de
   // éxito. Si falla, quien llamó puede seguir compartiendo el enlace a
   // mano (ver action_link más abajo).
+  //
+  // baseUrl (opcional, del host real de la petición entrante — ver
+  // createUser.js/externalRegister.js): mismo bug ya corregido para
+  // "olvidé mi contraseña" (ADR/comentario en activationLink.js), pero
+  // aplicaba también aquí — el email de bienvenida de CUALQUIER alta
+  // (por superadmin o autoregistro) seguía cayendo siempre a la URL fija
+  // de APP_URL en vez del dominio real desde el que se pidió el alta.
   let emailSent = false;
   let emailError = null;
-  const { activationLink, error: linkErrorMessage } = await generateActivationLink(email);
+  const { activationLink, error: linkErrorMessage } = await generateActivationLink(email, { baseUrl });
 
   if (linkErrorMessage) {
     emailError = linkErrorMessage;

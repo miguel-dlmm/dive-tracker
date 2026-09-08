@@ -23,7 +23,7 @@ import { supabase } from "./supabaseClient";
 // cada cadena.
 function chainMock(result) {
   const chain = {};
-  ["select", "insert", "update", "delete", "eq", "order", "in"].forEach((method) => {
+  ["select", "insert", "update", "delete", "eq", "order", "in", "is"].forEach((method) => {
     chain[method] = vi.fn(() => chain);
   });
   chain.then = (resolve, reject) => Promise.resolve(result).then(resolve, reject);
@@ -188,6 +188,97 @@ describe("useSupabaseTable — bulkUpdateWhere", () => {
 
     expect(count).toBe(0);
     expect(supabase.from).not.toHaveBeenCalled();
+  });
+});
+
+// Bloque baja lógica de movimientos, 2026-09-04 (migración 0015): con
+// softDelete activado, reload() nunca debe traer una fila ya dada de
+// baja, deleteRow() nunca debe hacer un DELETE real, y restoreRow()
+// (usado por el "Deshacer" del toast) debe limpiar deleted_at y recargar.
+describe("useSupabaseTable — softDelete", () => {
+  it("reload() filtra deleted_at is null cuando softDelete está activo", async () => {
+    const chain = chainMock({ data: [{ id: "1" }], error: null });
+    supabase.from.mockReturnValue(chain);
+
+    const { result } = renderHook(() => useSupabaseTable("worklog", "date", "id", { softDelete: true }));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    expect(chain.is).toHaveBeenCalledWith("deleted_at", null);
+    expect(result.current.rows).toEqual([{ id: "1" }]);
+  });
+
+  it("reload() NO filtra deleted_at cuando softDelete está desactivado (comportamiento por defecto, sin cambios)", async () => {
+    const chain = chainMock({ data: [{ id: "1" }], error: null });
+    supabase.from.mockReturnValue(chain);
+
+    const { result } = renderHook(() => useSupabaseTable("schools"));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    expect(chain.is).not.toHaveBeenCalled();
+  });
+
+  it("deleteRow() con softDelete hace un UPDATE (deleted_at), nunca un DELETE real", async () => {
+    supabase.from.mockReturnValue(chainMock({ data: [{ id: "1" }, { id: "2" }], error: null }));
+    const { result } = renderHook(() => useSupabaseTable("worklog", "date", "id", { softDelete: true }));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    const chain = chainMock({ data: null, error: null });
+    supabase.from.mockReturnValue(chain);
+
+    await act(async () => {
+      await result.current.deleteRow("1");
+    });
+
+    expect(chain.delete).not.toHaveBeenCalled();
+    expect(chain.update).toHaveBeenCalledWith(expect.objectContaining({ deleted_at: expect.any(String) }));
+    expect(chain.eq).toHaveBeenCalledWith("id", "1");
+    expect(result.current.rows).toEqual([{ id: "2" }]); // sigue desapareciendo de rows al instante
+  });
+
+  it("deleteRow() sin softDelete sigue haciendo un DELETE real (comportamiento por defecto, sin cambios)", async () => {
+    supabase.from.mockReturnValue(chainMock({ data: [{ id: "1" }], error: null }));
+    const { result } = renderHook(() => useSupabaseTable("schools"));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    const chain = chainMock({ data: null, error: null });
+    supabase.from.mockReturnValue(chain);
+
+    await act(async () => {
+      await result.current.deleteRow("1");
+    });
+
+    expect(chain.delete).toHaveBeenCalled();
+    expect(chain.update).not.toHaveBeenCalled();
+  });
+
+  it("restoreRow() limpia deleted_at y recarga desde la BD", async () => {
+    supabase.from.mockReturnValue(chainMock({ data: [], error: null }));
+    const { result } = renderHook(() => useSupabaseTable("worklog", "date", "id", { softDelete: true }));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    const updateChain = chainMock({ data: null, error: null });
+    const reloadChain = chainMock({ data: [{ id: "1" }], error: null });
+    supabase.from
+      .mockReturnValueOnce(updateChain) // el propio UPDATE de restoreRow
+      .mockReturnValueOnce(reloadChain); // el reload() que dispara después
+
+    await act(async () => {
+      await result.current.restoreRow("1");
+    });
+
+    expect(updateChain.update).toHaveBeenCalledWith({ deleted_at: null });
+    expect(updateChain.eq).toHaveBeenCalledWith("id", "1");
+    expect(result.current.rows).toEqual([{ id: "1" }]); // reload() trajo la fila recuperada
+  });
+
+  it("restoreRow() lanza si Supabase devuelve error, sin recargar", async () => {
+    supabase.from.mockReturnValue(chainMock({ data: [], error: null }));
+    const { result } = renderHook(() => useSupabaseTable("worklog", "date", "id", { softDelete: true }));
+    await waitFor(() => expect(result.current.loaded).toBe(true));
+
+    supabase.from.mockReturnValue(chainMock({ data: null, error: { message: "not found" } }));
+
+    await expect(result.current.restoreRow("1")).rejects.toBeTruthy();
   });
 });
 

@@ -10,7 +10,13 @@ export default defineConfig([
   // esto `npm run lint` local igual lo recorre y reporta cientos de
   // falsos positivos sobre JS ya minificado (detectado 2026-09-03,
   // auditoría previa a fusionar Release-V1 en develop).
-  globalIgnores(['dist', '.vercel']),
+  // '.claude/worktrees': checkouts completos de git worktree para agentes
+  // en paralelo (cada uno con su propio código, potencialmente idéntico al
+  // del checkout principal) — sin esto, npm run lint desde la raíz cuenta
+  // los mismos avisos una vez por worktree activo, además del propio
+  // checkout (visto en vivo la noche del despliegue de v1.0.0, mismo
+  // problema real que el exclude de Vitest en vite.config.js).
+  globalIgnores(['dist', '.vercel', '.claude']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [

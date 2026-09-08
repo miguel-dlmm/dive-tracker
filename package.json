@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "postinstall": "git config core.hooksPath scripts/hooks || true",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
@@ -20,6 +21,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
+    "botid": "^1.5.11",
+    "fflate": "^0.8.3",
     "i18next": "^26.4.1",
     "lucide-react": "^1.33.0",
     "motion": "^13.1.1",

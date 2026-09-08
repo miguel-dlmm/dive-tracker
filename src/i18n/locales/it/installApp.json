@@ -1,0 +1,18 @@
+{
+  "intro": "Aggiungi Ocean Flow alla schermata home del tuo cellulare e aprila come qualsiasi altra app, senza passare dal browser ogni volta.",
+  "ios": {
+    "title": "iPhone / iPad (Safari)",
+    "step1": "Apri Ocean Flow in Safari — deve essere Safari, non funziona da altri browser su iOS.",
+    "step2": "Tocca l'icona Condividi nella barra in basso.",
+    "step3": "Scorri verso il basso e tocca \"Aggiungi a Home\".",
+    "step4": "Tocca \"Aggiungi\" in alto a destra — fatto."
+  },
+  "android": {
+    "title": "Android (Chrome)",
+    "step1": "Apri Ocean Flow in Chrome.",
+    "step2": "Tocca il menu (⋮) in alto a destra.",
+    "step3": "Tocca \"Installa app\" o \"Aggiungi a schermata Home\".",
+    "step4": "Conferma toccando \"Installa\" — fatto."
+  },
+  "note": "L'icona apparirà insieme alle tue altre app. Non occupa più spazio di qualsiasi altra."
+}

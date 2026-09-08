@@ -8,10 +8,13 @@
     "config": "Settings",
     "help": "Help",
     "pagos": "Payments",
-    "perfil": "My profile"
+    "perfil": "My profile",
+    "training-records": "Training Records",
+    "install-app": "Install the app"
   },
   "aria": {
     "close": "Close",
+    "back": "Back",
     "goHome": "Go to Home",
     "help": "Help",
     "config": "Settings",

@@ -19,11 +19,14 @@ vi.mock("signature_pad", () => ({
     };
   }),
 }));
-// Cada apertura de StudentQuickEntrySheet monta 2 SignatureCapture a la
-// vez (alumno primero, tutor después) — el handler del ALUMNO es el
-// penúltimo empujado en esta apertura, no el último (ese es el del tutor).
+// Con "Menor de edad" sin marcar (caso por defecto de estos tests) solo se
+// monta el SignatureCapture del alumno — el del tutor queda oculto del
+// todo (2026-09-04, pedido explícito: antes era un campo "opcional"
+// siempre visible; ahora el checkbox "Menor de edad" decide si existe
+// siquiera). El handler del alumno es, por tanto, el ÚLTIMO empujado en
+// esta apertura.
 function signStudentInOpenSheet() {
-  endStrokeHandlers[endStrokeHandlers.length - 2]?.();
+  endStrokeHandlers[endStrokeHandlers.length - 1]?.();
 }
 
 const fillTrainingRecordPdf = vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3]));
@@ -73,6 +76,7 @@ function renderTab(props = {}) {
 
 beforeEach(() => {
   sessionStorage.clear();
+  localStorage.clear();
   endStrokeHandlers = [];
   templatesQuery.order.mockResolvedValue({ data: [TEMPLATE_ROW], error: null });
   adventuresQuery.order.mockResolvedValue({ data: ADVENTURE_ROWS, error: null });
@@ -114,19 +118,99 @@ async function pickToday(user, dateFieldLabel) {
 async function selectTemplateAndFillSharedConfig(user) {
   await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
   for (const label of OWD_MANDATORY_ROW_LABELS) await pickToday(user, `Fecha: ${label}`);
-  await user.click(screen.getByRole("checkbox", { name: "Confirmación de Examen Final" }));
-  await pickToday(user, "Fecha: Confirmación de Examen Final");
+  // "Fecha de examen" (2026-09-04): ya no es una casilla + fecha, es
+  // directamente un campo de fecha obligatorio — ver ProgressRowToggle/
+  // examConfirmation en TrainingRecordsTab.jsx.
+  await pickToday(user, "Fecha de examen");
 }
 
-// Añade un alumno con nombre/apellidos/firma vía el FAB "Añadir alumno".
+// Abre la hoja de alta de alumno — el control cambia según si el listado
+// ya tiene algún alumno (2026-09-04, quitado el FAB flotante): con el
+// listado vacío es el enlace "Añade tu primer alumno" del estado vacío;
+// con al menos un alumno ya añadido, es la fila "+ Añadir alumno" al
+// final del propio listado.
+async function openAddStudentSheet(user) {
+  const inlineRow = screen.queryByRole("button", { name: "Añadir alumno" });
+  await user.click(inlineRow || screen.getByRole("button", { name: "Añade tu primer alumno" }));
+}
+
+// Añade un alumno con nombre/apellidos/firma.
 async function addStudent(user, { firstName, lastName }) {
-  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
+  await openAddStudentSheet(user);
   await user.type(screen.getByRole("textbox", { name: "Nombre" }), firstName);
   await user.type(screen.getByRole("textbox", { name: "Apellidos" }), lastName);
   signStudentInOpenSheet();
   await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
   await screen.findByText(`${firstName} ${lastName}`);
 }
+
+// Feedback explícito del usuario (2026-09-07): "el generar todos de TR
+// sigue en verde, no cumple con el libro de estilos nuevo" — el botón
+// tenía el TEAL genérico hardcodeado en vez del accentColor real de la
+// sección ("trabajo", navy #00335A vía nav_sections), a pesar de que el
+// componente ya recibía accentColor como prop. TEAL solo debe quedar
+// como respaldo si accentColor no llega (accentColor || TEAL).
+it("el botón 'Generar para todos los alumnos' usa accentColor, no el TEAL genérico", async () => {
+  const user = userEvent.setup();
+  renderTab({ accentColor: "#00335A" });
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+
+  const button = screen.getByRole("button", { name: "Generar para todos los alumnos" });
+  expect(button.style.backgroundColor).toBe("rgb(0, 51, 90)");
+}, 15000);
+
+// Barrido completo del archivo (2026-09-07, feedback real: "los campos
+// versión del examen, certificación... se ven del tono verde anterior al
+// rediseño") — la corrección anterior solo tocó el botón "Generar para
+// todos"; el resto de controles (RadioChoice de "versión de examen"/
+// "certificación", checkboxes de progreso, avisos...) seguían con el
+// TEAL genérico, algunos sin ni siquiera recibir accentColor como prop.
+it("'Versión de examen' (RadioChoice) usa accentColor en la opción marcada, no el TEAL genérico", async () => {
+  const user = userEvent.setup();
+  renderTab({ accentColor: "#00335A" });
+  await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
+
+  // "Online" viene premarcado por defecto (buildDefaultConfig) — no hace
+  // falta pulsarlo, solo comprobar el estilo con el que ya se pinta.
+  const onlineButton = screen.getByRole("button", { name: "Online" });
+  expect(onlineButton.style.color).toBe("rgb(0, 51, 90)");
+  expect(onlineButton.style.borderColor).toBe("rgb(0, 51, 90)");
+});
+
+it("el checkbox de una fila de progreso obligatoria usa accentColor, no el TEAL genérico", async () => {
+  const user = userEvent.setup();
+  renderTab({ accentColor: "#00335A" });
+  await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
+  await screen.findByText("Sesiones Académicas");
+  const checkbox = document.querySelector('input[type="checkbox"][disabled]');
+  expect(checkbox).toBeTruthy();
+  expect(checkbox.style.accentColor).toBe("rgb(0, 51, 90)");
+});
+
+// Feedback real del usuario (2026-09-07): "en TR de Advance no se ve de
+// primeras que las aventuras sean obligatorias" — validateRecordConfig ya
+// las trataba como tal desde el "ALL AOWD fields obligatory" del
+// 2026-09-04, pero AdventureRow (a diferencia de ProgressRowToggle) no
+// mostraba ningún indicio visual de serlo.
+it("las 'Aventuras' de AOWD muestran la etiqueta 'Obligatorio', igual que las filas fijas", async () => {
+  const user = userEvent.setup();
+  templatesQuery.order.mockResolvedValue({
+    data: [{ code: "AOWD", name: "Advanced Open Water Diver", storage_path: "AOWD/AOWD_Spanish_Record.pdf" }],
+    error: null,
+  });
+  renderTab();
+  await user.click(await screen.findByRole("button", { name: "Advanced Open Water Diver" }));
+
+  const adventureLabel = await screen.findByText("Aventura 1");
+  expect(adventureLabel.closest("p")).toHaveTextContent("Aventura 1Obligatorio");
+});
+
+it("el aviso de 'completa tu perfil' usa accentColor en su botón, no el TEAL genérico", async () => {
+  renderTab({ accentColor: "#00335A", profile: { ...COMPLETE_PROFILE, instructor_signature: null } });
+  const button = await screen.findByRole("button", { name: "Ir a mi perfil" });
+  expect(button.style.backgroundColor).toBe("rgb(0, 51, 90)");
+});
 
 it("configura una vez para todo el listado, añade 2 alumnos y genera los 2 documentos de golpe", async () => {
   const user = userEvent.setup();
@@ -151,6 +235,30 @@ it("configura una vez para todo el listado, añade 2 alumnos y genera los 2 docu
   expect(screen.getByRole("button", { name: "Descargar todo en PDF" })).toBeInTheDocument();
 }, 15000);
 
+// Pedido explícito del usuario (2026-09-07): "debería de descargar un
+// fichero comprimido con todos los archivos" — antes eran 2 descargas
+// sueltas (una por alumno). Ahora debe ser UNA sola descarga, de un
+// Blob application/zip, con los 2 documentos dentro (no se
+// descomprime el ZIP aquí para comprobar el contenido byte a byte —
+// eso ya lo cubre fflate, una librería de terceros; solo interesa que
+// la pantalla arme y descargue exactamente un ZIP).
+it("'Descargar todo en PDF' genera un único ZIP, no una descarga por alumno", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  await addStudent(user, { firstName: "Luis", lastName: "Perez" });
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(2));
+
+  await user.click(screen.getByRole("button", { name: "Descargar todo en PDF" }));
+
+  await waitFor(() => expect(globalThis.URL.createObjectURL).toHaveBeenCalledTimes(1));
+  const [blob] = globalThis.URL.createObjectURL.mock.calls[0];
+  expect(blob.type).toBe("application/zip");
+  expect(await screen.findByText("Comprimido descargado con todos los archivos.")).toBeInTheDocument();
+}, 15000);
+
 it("no genera si falta la configuración compartida o los datos de algún alumno, y lo dice en un solo aviso", async () => {
   const user = userEvent.setup();
   renderTab();
@@ -160,7 +268,7 @@ it("no genera si falta la configuración compartida o los datos de algún alumno
 
   expect(fillTrainingRecordPdf).not.toHaveBeenCalled();
   expect(screen.getAllByText("Falta la fecha de esta fila.").length).toBe(6);
-});
+}, 15000);
 
 it("marca con un aviso al alumno al que le falta la firma, y bloquea Generar sin borrar a los demás", async () => {
   const user = userEvent.setup();
@@ -168,13 +276,84 @@ it("marca con un aviso al alumno al que le falta la firma, y bloquea Generar sin
   await selectTemplateAndFillSharedConfig(user);
 
   // Alumno sin firmar — guardarlo debe fallar con su propio aviso.
-  await user.click(screen.getByRole("button", { name: "Añadir alumno" }));
+  await openAddStudentSheet(user);
   await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ana");
   await user.type(screen.getByRole("textbox", { name: "Apellidos" }), "Garcia");
   await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
 
   expect(screen.getByText("Falta la firma del alumno.")).toBeInTheDocument();
   expect(fillTrainingRecordPdf).not.toHaveBeenCalled();
+}, 15000);
+
+// 2026-09-04, pedido explícito (OW): "Menor de edad" revela nombre/firma
+// del tutor, normalmente ocultos — y los exige en cuanto se marca. Firma
+// los pads por índice explícito (no con el helper compartido, que asume
+// un único SignatureCapture montado) porque marcar la casilla monta un
+// SEGUNDO SignatureCapture (el del tutor) sobre el mismo alumno.
+it("'Menor de edad' revela el nombre/firma del tutor y los exige antes de guardar", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+
+  await openAddStudentSheet(user);
+  expect(screen.queryByRole("textbox", { name: "Nombre del padre/madre/tutor" })).not.toBeInTheDocument();
+  const studentHandlerIndex = endStrokeHandlers.length - 1; // solo el del alumno, todavía sin tutor
+
+  await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ana");
+  await user.type(screen.getByRole("textbox", { name: "Apellidos" }), "Garcia");
+  await user.click(screen.getByRole("checkbox", { name: "Menor de edad" }));
+  expect(screen.getByRole("textbox", { name: "Nombre del padre/madre/tutor" })).toBeInTheDocument();
+  const guardianHandlerIndex = endStrokeHandlers.length - 1; // el del tutor, montado justo ahora
+
+  await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
+  expect(screen.getByText("Falta la firma del alumno.")).toBeInTheDocument();
+  expect(screen.getByText("Falta el nombre del padre, madre o tutor.")).toBeInTheDocument();
+  expect(screen.getByText("Falta la firma del padre, madre o tutor.")).toBeInTheDocument();
+
+  await user.type(screen.getByRole("textbox", { name: "Nombre del padre/madre/tutor" }), "Juana Perez");
+  endStrokeHandlers[studentHandlerIndex]();
+  endStrokeHandlers[guardianHandlerIndex]();
+  await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
+  await screen.findByText("Ana Garcia");
+}, 15000);
+
+// Contador decorativo de la tarjeta de Home (2026-09-08) — ver
+// generatedCounter.js. Se suma en el mismo punto que ya prueba el test de
+// arriba (generación con éxito de "Generar para todos los alumnos"), solo
+// que aquí se comprueba el efecto secundario en localStorage en vez del
+// PDF en sí. Clave con sufijo `:u1` (COMPLETE_PROFILE.user_id) — el
+// contador es por CUENTA, no por dispositivo (bug real corregido
+// 2026-09-08: una cuenta demo en el mismo navegador heredaba el contador
+// de la cuenta admin usada antes).
+it("generar con éxito suma al contador de Training Records generados de ESTA cuenta (localStorage)", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount:u1")).toBeNull();
+
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount:u1")).toBe("1");
+}, 15000);
+
+// Bug real reportado 2026-09-08: "para contar los generados tienes q tener
+// en cuenta cada vez q se llame a la app de generar, la puedo llamar
+// individualmente para cada alumno o en el generar todos" — "Regenerar TR"
+// (un alumno a la vez, sin repetir el resto del listado) no sumaba nada al
+// contador, solo "Generar para todos los alumnos" lo hacía.
+it("regenerar UN alumno (sin pasar por 'Generar para todos') también suma al contador", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount:u1")).toBeNull();
+
+  await user.click(screen.getByRole("button", { name: "Regenerar TR" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount:u1")).toBe("1");
 }, 15000);
 
 it("el listado y los documentos ya generados sobreviven a un remontaje (recarga de página)", async () => {
@@ -208,4 +387,4 @@ it("pide confirmación antes de cambiar de plantilla solo si ya hay progreso rel
   expect(await screen.findByText("¿Cambiar de plantilla?")).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Cancelar" }));
   expect(screen.getByRole("button", { name: "Cambiar plantilla" })).toBeInTheDocument();
-});
+}, 15000);

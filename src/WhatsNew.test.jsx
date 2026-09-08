@@ -1,6 +1,21 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import WhatsNew from "./WhatsNew";
+
+// Mismo patrón ya usado en ConfigTab.test.jsx/HelpTab.test.jsx para
+// useSwipeHorizontal (motion.js) — el hook solo escucha eventos de touch
+// reales (onTouchStart/onTouchEnd), nunca de ratón/puntero, así que
+// fireEvent.touchStart/touchEnd es la única forma de probarlo de verdad
+// (ni userEvent.pointer ni una simulación de arrastre con ratón lo
+// activan — confirmado al auditar `npm run mobile-check`, que simulaba
+// el swipe con page.mouse y por eso nunca lo había estado probando de
+// verdad desde que se reintrodujo, ver 12.5/12.17 de
+// docs/REDISENO-V2-PROGRESS.md).
+function swipe(container, dx) {
+  const el = container.querySelector(".touch-pan-y");
+  fireEvent.touchStart(el, { touches: [{ clientX: 200, clientY: 100 }] });
+  fireEvent.touchEnd(el, { changedTouches: [{ clientX: 200 + dx, clientY: 100 }] });
+}
 
 // Ver docs/ADR/0010-proceso-de-release.md — cubre el contrato de
 // navegación (Siguiente/Atrás/puntos/Empezar), no el contenido exacto de
@@ -17,6 +32,51 @@ describe("WhatsNew", () => {
 
     expect(screen.getByRole("button", { name: "Atrás" })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole("heading").textContent).not.toBe(firstTitle));
+  });
+
+  // Cobertura nueva (2026-09-07, auditoría de `npm run mobile-check` en
+  // la ronda de QA pre-release): el gesto de deslizar en sí (no solo los
+  // botones "Siguiente"/"Atrás", ya cubiertos arriba) nunca había tenido
+  // un test dedicado — ni aquí ni en mobile-check, que lo simulaba con
+  // eventos de ratón, invisibles para el handler de touch real.
+  it("deslizar hacia la izquierda avanza a la siguiente diapositiva (gesto táctil real)", async () => {
+    const { container } = render(<WhatsNew onClose={vi.fn()} />);
+    const firstTitle = screen.getByRole("heading").textContent;
+
+    swipe(container, -150);
+
+    await waitFor(() => expect(screen.getByRole("heading").textContent).not.toBe(firstTitle));
+  });
+
+  it("deslizar hacia la derecha vuelve a la diapositiva anterior (gesto táctil real)", async () => {
+    const { container } = render(<WhatsNew onClose={vi.fn()} />);
+    const firstTitle = screen.getByRole("heading").textContent;
+    swipe(container, -150);
+    await waitFor(() => expect(screen.getByRole("heading").textContent).not.toBe(firstTitle));
+
+    swipe(container, 150);
+
+    await waitFor(() => expect(screen.getByRole("heading").textContent).toBe(firstTitle));
+  });
+
+  // Regresión (Bloque 8, job nocturno 2026-09-03): un <AnimatePresence>
+  // mal combinado con el `drag` de Motion dejaba la diapositiva ANTERIOR
+  // permanentemente en el DOM al avanzar — dos títulos a la vez PARA
+  // SIEMPRE, no solo mientras dura la transición de salida (eso sí es
+  // normal e intencionado: es justo lo que anima la salida). Se
+  // reintrodujo AnimatePresence el 2026-09-07 (mode="popLayout" + swipe
+  // nativo en vez de drag, ver WhatsNew.jsx) para recuperar el slide
+  // lateral; este test comprueba que, pasada la animación, vuelve a
+  // quedar un único heading — nunca dos de forma permanente.
+  it("tras avanzar dos veces, no quedan dos headings permanentemente en el DOM (no reaparece el bug de la diapositiva duplicada)", async () => {
+    const user = userEvent.setup();
+    render(<WhatsNew onClose={vi.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: "Siguiente" }));
+    await waitFor(() => expect(screen.getAllByRole("heading")).toHaveLength(1));
+
+    await user.click(screen.getByRole("button", { name: "Siguiente" }));
+    await waitFor(() => expect(screen.getAllByRole("heading")).toHaveLength(1));
   });
 
   it("'Atrás' vuelve a la diapositiva anterior", async () => {

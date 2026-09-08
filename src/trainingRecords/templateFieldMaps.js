@@ -32,14 +32,80 @@ const P = (id) => `undefined.tr-input-${id}`;
 // directamente desde esa fila (pedido explícito del usuario, Release V1,
 // Fase 5, corrección 2026-09-02) — no se agrupan varias filas bajo una
 // fecha compartida de "Día 1"/"Día 2".
-function progressRow(base, { optional = false, label } = {}) {
+//
+// `fixed` (2026-09-04, pedido explícito): en OW, "Sesiones académicas",
+// "Sesiones en piscina" y Aguas Abiertas 1-4 dejan de ser una casilla más
+// que se pueda desmarcar — de verdad son obligatorias para certificar el
+// curso. En AOWD, TODAS las filas de progreso son obligatorias (las 5
+// inmersiones de aventura + sesiones académicas). `fixed` es un flag
+// aparte de `optional` (no su negación): las filas normales de SC-DD/
+// SC-EAN siguen siendo `optional:false` (premarcadas) pero SÍ se pueden
+// desmarcar — solo OW/AOWD piden bloquearlas del todo.
+function progressRow(base, { optional = false, fixed = false, label } = {}) {
   return {
     label,
     optional,
+    fixed,
     studentInitials: P(`${base}-0`),
     date: P(`${base}-1`),
     instructorInitials: P(`${base}-2`),
     instructorNumber: P(`${base}-3`),
+  };
+}
+
+// ---------------------------------------------------------------------
+// Plantillas SIN AcroForm (BD, SC-LV, SC-NV, SC-PB, SC-RR, SC-SR) —
+// Release V1, Fase 5, "plantillas restantes" (2026-09-04). Estas 6 no
+// tienen ningún campo de formulario interactivo, solo recuadros grises
+// impresos como arte estático — así que aquí un "field" es
+// { rect: {x,y,width,height} } en vez de un string P(id) (ver
+// isRectField/resolveRect en pdfFill.js). Coordenadas en puntos PDF
+// (origen abajo-izquierda), extraídas de verdad del content stream real
+// del PDF con scripts/extract-flat-template-rects.mjs — nunca a ojo — y
+// verificadas visualmente una a una contra el PDF real con
+// scripts/render-flat-template-rects-overlay.mjs antes de incorporarlas
+// aquí (ver docs/RELEASE-V1-PROGRESS.md, Fase 5, técnica validada con
+// SC-LV como piloto). Los datos crudos de cada plantilla quedan en
+// training-records-debug/<CÓDIGO>-rects.json y -rects-overlay.png (no
+// versionados) por si hace falta volver a contrastarlos.
+const R = (x, y, width, height) => ({ rect: { x, y, width, height } });
+
+// Fila de progreso por coordenadas — mismo significado que progressRow()
+// de arriba (Iniciales del Alumno/Fecha/Iniciales del Instructor/Número
+// SSI Pro), pero cada sub-campo es un rect real en vez de un P(id).
+// `instructorNumber` es opcional: SC-RR tiene varias filas de solo 3
+// recuadros impresos (sin "Número SSI Pro"), confirmado visualmente, no
+// un olvido — cuando `cells` solo trae 3 posiciones, ese sub-campo se deja
+// sin mapear y pdfFill.js simplemente no dibuja nada ahí (mismo criterio
+// que un valor vacío, ver pushIfValue).
+function rectRow(cells, { optional = false, fixed = false, label } = {}) {
+  const [si, date, ii, inum] = cells;
+  const row = {
+    label,
+    optional,
+    fixed,
+    studentInitials: R(...si),
+    date: R(...date),
+    instructorInitials: R(...ii),
+  };
+  if (inum) row.instructorNumber = R(...inum);
+  return row;
+}
+
+// Bloque de firmas por coordenadas, mismo layout en las 6 plantillas
+// (verificado en cada una): fila 1 = alumno + fecha | nombre del
+// instructor (en imprenta) + fecha; fila 2 = padre/madre/tutor + fecha |
+// firma del instructor + número SSI Pro.
+function rectSignatures([student, studentDate, instructorNamePrinted, instructorDate, parent, parentDate, instructor, instructorNumber]) {
+  return {
+    student: R(...student),
+    studentDate: R(...studentDate),
+    instructorNamePrinted: R(...instructorNamePrinted),
+    instructorDate: R(...instructorDate),
+    parent: R(...parent),
+    parentDate: R(...parentDate),
+    instructor: R(...instructor),
+    instructorNumber: R(...instructorNumber),
   };
 }
 
@@ -52,15 +118,16 @@ export const TEMPLATE_FIELD_MAPS = {
       lastName: P("23905082-1"),
     },
     sessionRows: [
-      progressRow("23905086", { label: "Sesiones Académicas" }),
-      progressRow("23905088", { label: "Sesiones en Piscina/Aguas Confinadas" }),
-      progressRow("23905090", { label: "Inmersión de Formación en Aguas Abiertas 1" }),
-      progressRow("23905092", { label: "Inmersión de Formación en Aguas Abiertas 2" }),
-      progressRow("23905094", { label: "Inmersión de Formación en Aguas Abiertas 3" }),
-      progressRow("23905096", { label: "Inmersión de Formación en Aguas Abiertas 4" }),
+      progressRow("23905086", { label: "Sesiones Académicas", fixed: true }),
+      progressRow("23905088", { label: "Sesiones en Piscina/Aguas Confinadas", fixed: true }),
+      progressRow("23905090", { label: "Inmersión de Formación en Aguas Abiertas 1", fixed: true }),
+      progressRow("23905092", { label: "Inmersión de Formación en Aguas Abiertas 2", fixed: true }),
+      progressRow("23905094", { label: "Inmersión de Formación en Aguas Abiertas 3", fixed: true }),
+      progressRow("23905096", { label: "Inmersión de Formación en Aguas Abiertas 4", fixed: true }),
       // Las dos siguientes son las "inmersiones opcionales del tercer día"
       // que menciona el encargo original — el generador debe poder
-      // dejarlas en blanco cuando el curso se hizo en 2 días.
+      // dejarlas en blanco cuando el curso se hizo en 2 días. Estas SÍ
+      // siguen siendo una casilla real (no `fixed`).
       progressRow("23905098", { label: "Inmersión de Formación en Aguas Abiertas 5", optional: true }),
       progressRow("23905100", { label: "Inmersión de formación en aguas abiertas 6", optional: true }),
     ],
@@ -68,7 +135,11 @@ export const TEMPLATE_FIELD_MAPS = {
     // Checkboxes de actualización opcional (el alumno certifica Scuba
     // Diver u Open Water Diver completo) — casi siempre Open Water Diver.
     upgradeCheckboxes: { scubaDiver: P("23905152-0"), openWaterDiver: P("23905152-1") },
-    examConfirmation: progressRow("23905153", { label: "Confirmación de Examen Final" }),
+    // "Fecha de examen" (2026-09-04, pedido explícito) — ya no es una
+    // casilla de "confirmación" + fecha, es directamente un campo de
+    // fecha obligatorio. Ver recordConfig.js (examConfirmedDate, sin
+    // `examConfirmed`) y TrainingRecordsTab.jsx.
+    examConfirmation: progressRow("23905153", { label: "Fecha de examen" }),
     signatures: {
       student: P("23905104-0"),
       studentDate: P("23905104-1"),
@@ -87,35 +158,49 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: P("30037160-0"),
       lastName: P("30037160-1"),
     },
+    // Rediseño 2026-09-04, pedido explícito: "ALL AOWD fields become
+    // obligatory" — las 3 filas (sesiones académicas + las 2 aventuras
+    // fijas del curso) pasan a `fixed`, igual que OW. Las filas 2 y 3
+    // ganan una etiqueta fija ("Buceo Profundo"/"Navegación", el nombre
+    // real de cada aventura) en vez del texto largo/técnico anterior — así
+    // las 5 filas de aventura (estas 2 + las 3 electivas de abajo) tienen
+    // la misma forma visual.
     sessionRows: [
-      progressRow("30037164", { label: "Sesiones Académicas Finalizadas" }),
-      progressRow("30037167", { label: "Inmersión de Formación en Aguas Abiertas Completada | Deep Diving" }),
-      progressRow("30037170", { label: "Inmersión de Formación en Aguas Abiertas Completada | Navegación" }),
+      progressRow("30037164", { label: "Sesiones Académicas Finalizadas", fixed: true }),
+      progressRow("30037167", { label: "Buceo Profundo", fixed: true }),
+      progressRow("30037170", { label: "Navegación", fixed: true }),
     ],
-    // Las 3 inmersiones optativas de especialidad — cada una tiene un
-    // combo (nombre de la aventura, catálogo en BBDD, ver
-    // training_record_adventures) y una fila de finalización con su propia
-    // fecha. La fila de "sesión de piscina" se deja sin usar desde este
-    // combo — el encargo pide rellenar solo la fila de finalización, ver
-    // TrainingRecordsTab.jsx.
+    // Las 3 "Aventuras" electivas (antes "Inmersiones de Especialidad" —
+    // renombrado, pedido explícito) — cada una tiene un combo (nombre de
+    // la aventura, catálogo en BBDD, ver training_record_adventures) y una
+    // fila de finalización con su propia fecha. La fila de "sesión de
+    // piscina" se deja sin usar desde este combo — el encargo pide
+    // rellenar solo la fila de finalización, ver TrainingRecordsTab.jsx.
+    // Con "ALL AOWD fields obligatory" estas 3 dejan de ser electivas de
+    // verdad en el sentido de "se pueden saltar": hay que elegir una
+    // aventura distinta en cada una — sigue siendo `optional` en el
+    // sentido de "no tiene un campo PDF fijo", el nombre de la propiedad
+    // (optionalSpecialtyDives) se conserva por compatibilidad con
+    // pdfFill.js/recordConfig.js, no implica que la validación las trate
+    // como opcionales.
     optionalSpecialtyDives: [
       {
-        label: "Inmersión de Formación en Aguas Abiertas 3",
+        label: "Aventura 1",
         specialtyName: P("30037175-0"),
         poolSession: progressRow("30037177", { label: "Sesión en la Piscina/Aguas Confinadas | Si es necesario" }),
-        completed: progressRow("30037179", { label: "Inmersión de Formación en Aguas Abiertas 3 Completada" }),
+        completed: progressRow("30037179", { label: "Aventura 1 completada" }),
       },
       {
-        label: "Inmersión de Formación en Aguas Abiertas 4",
+        label: "Aventura 2",
         specialtyName: P("30037181-0"),
         poolSession: progressRow("30037183", { label: "Sesión en la Piscina/Aguas Confinadas | Si es necesario" }),
-        completed: progressRow("30037185", { label: "Inmersión de Formación en Aguas Abiertas 4 Completada" }),
+        completed: progressRow("30037185", { label: "Aventura 2 completada" }),
       },
       {
-        label: "Inmersión de Formación en Aguas Abiertas 5",
+        label: "Aventura 3",
         specialtyName: P("30037187-0"),
         poolSession: progressRow("30037189", { label: "Sesión en la Piscina/Aguas Confinadas | Si es necesario" }),
-        completed: progressRow("30037191", { label: "Inmersión de Formación en Aguas Abiertas 5 Completada" }),
+        completed: progressRow("30037191", { label: "Aventura 3 completada" }),
       },
     ],
     signatures: {
@@ -137,16 +222,22 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: P("23152421-0"),
       lastName: P("23152421-1"),
     },
+    // `fixed` (2026-09-08, pedido explícito): la 1ª (sesiones académicas),
+    // 3ª (Aguas Abiertas 1) y 4ª (Aguas Abiertas 2) pasan a obligatorias de
+    // verdad — la 2ª (piscina) y la 5ª/6ª (Aguas Abiertas 3/adicional)
+    // siguen siendo desmarcables, mismo criterio que antes.
     sessionRows: [
-      progressRow("23152425", { label: "Sesiones Académicas Finalizadas" }),
+      progressRow("23152425", { label: "Sesiones Académicas Finalizadas", fixed: true }),
       progressRow("23152427", { label: "Habilidades en Piscina/Aguas Confinadas", optional: true }),
-      progressRow("23152429", { label: "Inmersión de Formación en Aguas Abiertas 1 Completada" }),
-      progressRow("23152431", { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
+      progressRow("23152429", { label: "Inmersión de Formación en Aguas Abiertas 1 Completada", fixed: true }),
+      progressRow("23152431", { label: "Inmersión de Formación en Aguas Abiertas 2 Completada", fixed: true }),
       progressRow("23152433", { label: "Inmersión de Formación en Aguas Abiertas 3 Completada" }),
       progressRow("23152435", { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
     ],
     examVersion: { printed: P("23152439-0"), online: P("23152441-0") },
-    examConfirmation: progressRow("23152443", { label: "Confirmación de Examen Final" }),
+    // "Fecha de examen" (2026-09-04, pedido explícito, mismo criterio que
+    // OWD) — campo de fecha obligatorio, sin casilla de confirmación.
+    examConfirmation: progressRow("23152443", { label: "Fecha de examen" }),
     signatures: {
       student: P("23152445-0"),
       studentDate: P("23152445-1"),
@@ -166,14 +257,23 @@ export const TEMPLATE_FIELD_MAPS = {
       firstName: P("36027014-0"),
       lastName: P("36027014-1"),
     },
+    // `fixed` (2026-09-08, pedido explícito): las 3 primeras filas pasan a
+    // obligatorias de verdad — antes la 2ª (piscina) y la 3ª (aguas
+    // abiertas) eran desmarcables (`optional: true`, pensado para variantes
+    // del curso sin esa sesión); se retira `optional` de ambas porque una
+    // fila `fixed` no puede quedar excluida del documento generado (ver
+    // buildDefaultConfig, recordConfig.js: `includedRows` parte de
+    // `!row.optional`). La 4ª (inmersión adicional) sigue siendo opcional.
     sessionRows: [
-      progressRow("36027018", { label: "Sesiones Académicas Finalizadas" }),
-      progressRow("36027020", { label: "Habilidades en Piscina/Aguas Confinadas", optional: true }),
-      progressRow("36027022", { label: "Inmersión de Formación en Aguas Abiertas Completada", optional: true }),
+      progressRow("36027018", { label: "Sesiones Académicas Finalizadas", fixed: true }),
+      progressRow("36027020", { label: "Habilidades en Piscina/Aguas Confinadas", fixed: true }),
+      progressRow("36027022", { label: "Inmersión de Formación en Aguas Abiertas Completada", fixed: true }),
       progressRow("36027024", { label: "Inmersión de Formación en Aguas Abiertas Adicional Completada", optional: true }),
     ],
     examVersion: { printed: P("36027032-0"), online: P("36027034-0") },
-    examConfirmation: progressRow("36027036", { label: "Confirmación de Examen Final" }),
+    // "Fecha de examen" (2026-09-04, pedido explícito, mismo criterio que
+    // OWD) — campo de fecha obligatorio, sin casilla de confirmación.
+    examConfirmation: progressRow("36027036", { label: "Fecha de examen" }),
     // Variante del curso — solo una de las dos aplica.
     courseVariant: { ean32: P("36027038-0"), ean40: P("36027038-1") },
     signatures: {
@@ -186,5 +286,218 @@ export const TEMPLATE_FIELD_MAPS = {
       instructor: P("36027043-0"),
       instructorNumber: P("36027043-1"),
     },
+  },
+
+  // Sin AcroForm — ver bloque de arriba. Verificado visualmente con
+  // training-records-debug/BD-rects-overlay.png (2026-09-04): curso corto
+  // de una sola sesión, sin versión de examen (es un cuestionario V/F, sin
+  // checkbox impresa/online) y sin ninguna fila marcada "(opcional)" en el
+  // PDF real.
+  // `fixed` (2026-09-08, pedido explícito): las 3 filas de progreso pasan
+  // a obligatorias de verdad, no solo premarcadas — "todas incluida
+  // confirmación del cuestionario". La confirmación del cuestionario
+  // (`examConfirmation` más abajo) ya era obligatoria de por sí desde
+  // 2026-09-04 (se renderiza como fecha suelta sin casilla, DateOnlyRow en
+  // TrainingRecordsTab.jsx, y validateRecordConfig la exige siempre que la
+  // plantilla la tenga) — no necesita ningún flag `fixed` para serlo.
+  BD: {
+    name: "Basic Diver",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    sessionRows: [
+      rectRow([[40.5, 647.65, 51.75, 17], [101.25, 647.65, 51.75, 17], [162, 647.65, 51.75, 17], [222.75, 647.65, 51.75, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
+      rectRow([[40.5, 584.192, 51.75, 17], [101.25, 584.192, 51.75, 17], [162, 584.192, 51.75, 17], [222.75, 584.192, 51.75, 17]], { label: "Habilidades de Buceo en Piscina/Aguas Confinadas Completadas", fixed: true }),
+      rectRow([[40.5, 520.734, 51.75, 17], [101.25, 520.734, 51.75, 17], [162, 520.734, 51.75, 17], [222.75, 520.734, 51.75, 17]], { label: "Introducción al Buceo en Aguas Abiertas Completado", fixed: true }),
+    ],
+    // El PDF no tiene checkbox de "versión impresa/online" — es un
+    // cuestionario verdadero/falso que el instructor revisa con el
+    // participante, ver la fila de confirmación de abajo.
+    examConfirmation: rectRow([[319.5, 204.748, 51.75, 17], [380.25, 204.748, 51.75, 17], [441, 204.748, 51.75, 17], [501.75, 204.748, 51.75, 17]], { label: "Confirmación del Cuestionario" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
+
+  // Verificado visualmente con training-records-debug/SC-LV-rects-overlay.png
+  // (2026-09-04) — plantilla piloto de la técnica (ver
+  // docs/RELEASE-V1-PROGRESS.md, Fase 5, "Técnica validada..."). Checkboxes
+  // de versión de examen: el PDF no las dibuja como recuadro relleno (solo
+  // contorno), así que no las captura la extracción de rects — posición
+  // derivada por patrón desde una plantilla con AcroForm real (SC-DD: hueco
+  // de 5.4pt entre el borde derecho del checkbox de 6×6pt y el inicio del
+  // texto de la etiqueta, constante confirmada exacta contra SC-DD),
+  // aplicada a la posición real del texto de esta plantilla via
+  // page.getTextContent().
+  "SC-LV": {
+    name: "Night & Limited Visibility",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    // `fixed` (2026-09-08, pedido explícito): la 1ª (sesiones académicas) y
+    // la 3ª (Aguas Abiertas 1) pasan a obligatorias de verdad — la 2ª
+    // (piscina) y la 4ª/5ª (Aguas Abiertas 2/adicional) siguen siendo
+    // desmarcables. La fecha de examen (más abajo) ya era obligatoria de
+    // por sí, no necesita `fixed`.
+    sessionRows: [
+      rectRow([[40.5, 627.473, 51.75, 17], [101.25, 627.473, 51.75, 17], [162, 627.473, 51.75, 17], [222.75, 627.473, 51.75, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
+      rectRow([[40.5, 521.72, 51.75, 17], [101.25, 521.72, 51.75, 17], [162, 521.72, 51.75, 17], [222.75, 521.72, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", optional: true }),
+      rectRow([[40.5, 415.967, 51.75, 17], [101.25, 415.967, 51.75, 17], [162, 415.967, 51.75, 17], [222.75, 415.967, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada", fixed: true }),
+      rectRow([[40.5, 310.213, 51.75, 17], [101.25, 310.213, 51.75, 17], [162, 310.213, 51.75, 17], [222.75, 310.213, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada" }),
+      rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 419.1378, 6, 6), online: R(342.3975, 343.6479, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.716, 51.75, 17], [380.25, 204.716, 51.75, 17], [441, 204.716, 51.75, 17], [501.75, 204.716, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
+
+  // Verificado visualmente con training-records-debug/SC-NV-rects-overlay.png
+  // (2026-09-04) — mismo layout exacto que SC-LV, ver esa entrada para el
+  // criterio de checkboxes.
+  "SC-NV": {
+    name: "Navigation",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    // `fixed` (2026-09-08, pedido explícito): las 4 primeras filas pasan a
+    // obligatorias de verdad ("4 primeras y examen") — incluida la 2ª
+    // (piscina), que antes era desmarcable (`optional: true`); se retira
+    // ese `optional` porque una fila `fixed` no puede quedar excluida del
+    // documento generado (ver buildDefaultConfig, recordConfig.js). Solo
+    // la 5ª (inmersión adicional) sigue siendo opcional. La fecha de
+    // examen ya era obligatoria de por sí, no necesita `fixed`.
+    sessionRows: [
+      rectRow([[40.5, 627.473, 51.75, 17], [101.25, 627.473, 51.75, 17], [162, 627.473, 51.75, 17], [222.75, 627.473, 51.75, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
+      rectRow([[40.5, 521.72, 51.75, 17], [101.25, 521.72, 51.75, 17], [162, 521.72, 51.75, 17], [222.75, 521.72, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", fixed: true }),
+      rectRow([[40.5, 415.967, 51.75, 17], [101.25, 415.967, 51.75, 17], [162, 415.967, 51.75, 17], [222.75, 415.967, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada", fixed: true }),
+      rectRow([[40.5, 310.213, 51.75, 17], [101.25, 310.213, 51.75, 17], [162, 310.213, 51.75, 17], [222.75, 310.213, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada", fixed: true }),
+      rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 391.9896, 6, 6), online: R(342.3975, 326.4176, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.841, 51.75, 17], [380.25, 204.841, 51.75, 17], [441, 204.841, 51.75, 17], [501.75, 204.841, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
+
+  // Verificado visualmente con training-records-debug/SC-PB-rects-overlay.png
+  // (2026-09-04) — mismo layout que SC-LV/SC-NV; la única diferencia real
+  // es el texto de las etiquetas (esta plantilla alterna piscina/aguas
+  // abiertas en las 2 inmersiones principales, el PDF las etiqueta con el
+  // texto partido en 2 líneas — "Inmersión de formación en piscina/aguas
+  // confinadas o aguas abiertas N completada").
+  "SC-PB": {
+    name: "Perfect Buoyancy",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    // `fixed` (2026-09-08, pedido explícito): las 3 primeras filas pasan a
+    // obligatorias de verdad ("tres primeras y examen") — incluida la 2ª
+    // (piscina), que antes era desmarcable (`optional: true`); se retira
+    // ese `optional` porque una fila `fixed` no puede quedar excluida del
+    // documento generado (ver buildDefaultConfig, recordConfig.js). Solo la
+    // 4ª (segunda inmersión) y la 5ª (adicional) siguen siendo opcionales.
+    // La fecha de examen ya era obligatoria de por sí, no necesita `fixed`.
+    sessionRows: [
+      rectRow([[40.5, 639.718, 51.75, 17], [101.25, 639.718, 51.75, 17], [162, 639.718, 51.75, 17], [222.75, 639.718, 51.75, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
+      rectRow([[40.5, 558.453, 51.75, 17], [101.25, 558.453, 51.75, 17], [162, 558.453, 51.75, 17], [222.75, 558.453, 51.75, 17]], { label: "Habilidades en la Piscina/Aguas Confinadas", fixed: true }),
+      rectRow([[40.5, 440.455, 51.75, 17], [101.25, 440.455, 51.75, 17], [162, 440.455, 51.75, 17], [222.75, 440.455, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas 1 Completada", fixed: true }),
+      rectRow([[40.5, 322.457, 51.75, 17], [101.25, 322.457, 51.75, 17], [162, 322.457, 51.75, 17], [222.75, 322.457, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas 2 Completada" }),
+      rectRow([[40.5, 204.46, 51.75, 17], [101.25, 204.46, 51.75, 17], [162, 204.46, 51.75, 17], [222.75, 204.46, 51.75, 17]], { label: "Inmersión de Formación en Piscina/Aguas Confinadas o Aguas Abiertas Adicional Completada", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 419.1378, 6, 6), online: R(342.3975, 343.6479, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.716, 51.75, 17], [380.25, 204.716, 51.75, 17], [441, 204.716, 51.75, 17], [501.75, 204.716, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
+
+  // Verificado visualmente con training-records-debug/SC-SR-rects-overlay.png
+  // (2026-09-04) — mismo patrón, 7 filas de progreso (3 de piscina + 3 de
+  // aguas abiertas + 1 adicional opcional) en vez de las 2+1 habituales.
+  "SC-SR": {
+    name: "Diver Stress & Rescue",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    // `fixed` (2026-09-08, pedido explícito): las 7 primeras filas pasan a
+    // obligatorias de verdad ("las 7 primeras y examen") — solo la 8ª
+    // (inmersión adicional) sigue siendo opcional. La fecha de examen ya
+    // era obligatoria de por sí, no necesita `fixed`.
+    sessionRows: [
+      rectRow([[40.5, 647.65, 51.75, 17], [101.25, 647.65, 51.75, 17], [162, 647.65, 51.75, 17], [222.75, 647.65, 51.75, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
+      rectRow([[40.5, 584.381, 51.75, 17], [101.25, 584.381, 51.75, 17], [162, 584.381, 51.75, 17], [222.75, 584.381, 51.75, 17]], { label: "Piscina/Aguas Confinadas 1 Completada", fixed: true }),
+      rectRow([[40.5, 521.111, 51.75, 17], [101.25, 521.111, 51.75, 17], [162, 521.111, 51.75, 17], [222.75, 521.111, 51.75, 17]], { label: "Piscina/Aguas Confinadas 2 Completada", fixed: true }),
+      rectRow([[40.5, 457.842, 51.75, 17], [101.25, 457.842, 51.75, 17], [162, 457.842, 51.75, 17], [222.75, 457.842, 51.75, 17]], { label: "Piscina/Aguas Confinadas 3 Completada", fixed: true }),
+      rectRow([[40.5, 394.572, 51.75, 17], [101.25, 394.572, 51.75, 17], [162, 394.572, 51.75, 17], [222.75, 394.572, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 1 Completada", fixed: true }),
+      rectRow([[40.5, 331.303, 51.75, 17], [101.25, 331.303, 51.75, 17], [162, 331.303, 51.75, 17], [222.75, 331.303, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 2 Completada", fixed: true }),
+      rectRow([[40.5, 268.034, 51.75, 17], [101.25, 268.034, 51.75, 17], [162, 268.034, 51.75, 17], [222.75, 268.034, 51.75, 17]], { label: "Inmersión de Formación en Aguas Abiertas 3 Completada", fixed: true }),
+      rectRow([[40.5, 204.764, 51.75, 17], [101.25, 204.764, 51.75, 17], [162, 204.764, 51.75, 17], [222.75, 204.764, 51.75, 17]], { label: "Inmersión Adicional en Aguas Abiertas", optional: true }),
+    ],
+    examVersion: { printed: R(339.5265, 362.8077, 6, 6), online: R(342.3975, 307.7731, 6, 6) },
+    examConfirmation: rectRow([[319.5, 204.638, 51.75, 17], [380.25, 204.638, 51.75, 17], [441, 204.638, 51.75, 17], [501.75, 204.638, 51.75, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
+  },
+
+  // Verificado visualmente con training-records-debug/SC-RR-rects-overlay.png
+  // + recortes ampliados (training-records-debug/SC-RR-crop.png, 2026-09-04)
+  // — layout genuinamente distinto al resto de las 6: NO es la fila
+  // habitual de 4 columnas (Iniciales del Alumno/Fecha/Iniciales del
+  // Instructor/Número SSI Pro). Cada fila de progreso aquí son solo 3
+  // recuadros impresos (sin "Número SSI Pro" — confirmado visualmente
+  // ampliando la zona, no es un descuido), y hay 7 filas repartidas en 2
+  // columnas de la página en vez de una sola columna vertical: Sesiones
+  // Académicas, confirmación de examen, Sesión de aplicación práctica de
+  // Oxígeno, de DEA, de RCP/Primeros Auxilios, y 3 filas idénticas bajo
+  // "Actualización de React Right completada" (el propio PDF repite la
+  // misma fila 3 veces bajo un único encabezado, sin distinguir cada una —
+  // se etiquetan aquí "1/2/3" únicamente para diferenciarlas en la UI, no
+  // es un significado añadido).
+  "SC-RR": {
+    name: "React Right",
+    sourcePdfPage: 1,
+    fields: {
+      firstName: R(109.98, 754.805, 217.26, 17),
+      lastName: R(336.24, 754.805, 217.26, 17),
+    },
+    // `fixed` (2026-09-08, pedido explícito): las 7 filas de progreso
+    // pasan a obligatorias de verdad ("todas y examen"). La fecha de
+    // examen (más abajo) ya era obligatoria de por sí, no necesita `fixed`.
+    sessionRows: [
+      rectRow([[40.5, 641.862, 171, 17], [40.5, 593.595, 171, 17], [40.5, 545.327, 171, 17]], { label: "Sesiones Académicas Completadas", fixed: true }),
+      rectRow([[311, 394.434, 75, 17], [395, 394.434, 75, 17], [479, 394.434, 75, 17]], { label: "Sesión de Aplicación Práctica — Oxígeno", fixed: true }),
+      rectRow([[310.17, 297.911, 75, 17], [394.17, 297.911, 75, 17], [478.17, 297.911, 75, 17]], { label: "Sesión de Aplicación Práctica — DEA", fixed: true }),
+      rectRow([[40.5, 164.357, 75, 17], [124.5, 164.357, 75, 17], [208.5, 164.357, 75, 17]], { label: "Sesión de Aplicación Práctica — RCP/Primeros Auxilios", fixed: true }),
+      rectRow([[311, 238.419, 75, 17], [395, 238.419, 75, 17], [479, 238.419, 75, 17]], { label: "Actualización de React Right Completada (1)", fixed: true }),
+      rectRow([[311, 201.388, 75, 17], [395, 201.388, 75, 17], [479, 201.388, 75, 17]], { label: "Actualización de React Right Completada (2)", fixed: true }),
+      rectRow([[311, 164.357, 75, 17], [395, 164.357, 75, 17], [479, 164.357, 75, 17]], { label: "Actualización de React Right Completada (3)", fixed: true }),
+    ],
+    examVersion: { printed: R(273.9015, 668.73, 6, 6), online: R(448.5225, 668.73, 6, 6) },
+    // Fila de 3 recuadros (sin Número SSI Pro), igual que las demás de esta
+    // plantilla — no la habitual de 4.
+    examConfirmation: rectRow([[231, 545.02, 93.5, 17], [345.5, 545.02, 93.5, 17], [460, 545.02, 93.5, 17]], { label: "Fecha de examen" }),
+    signatures: rectSignatures([
+      [40.5, 86.695, 171, 17], [220.5, 86.695, 63, 17], [310.5, 86.42, 171, 17], [490.5, 86.42, 63, 17],
+      [40.5, 55.5, 171, 17], [220.5, 55.5, 63, 17], [310.5, 55.5, 171, 17], [490.5, 55.5, 63, 17],
+    ]),
   },
 };

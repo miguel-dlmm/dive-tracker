@@ -1,0 +1,25 @@
+{
+  "tabs": {
+    "home": "Home",
+    "trabajo": "La meva feina",
+    "summary": "Resum"
+  },
+  "secondaryTitles": {
+    "config": "Configuració",
+    "help": "Ajuda",
+    "pagos": "Pagaments",
+    "perfil": "El meu perfil",
+    "training-records": "Training Records",
+    "install-app": "Instal·la l'app"
+  },
+  "aria": {
+    "close": "Tanca",
+    "back": "Enrere",
+    "goHome": "Vés a Home",
+    "help": "Ajuda",
+    "config": "Configuració",
+    "profile": "El meu perfil",
+    "signOut": "Tanca la sessió",
+    "mainNav": "Navegació principal"
+  }
+}

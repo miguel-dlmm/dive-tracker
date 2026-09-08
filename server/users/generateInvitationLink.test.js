@@ -108,6 +108,19 @@ describe("con permisos válidos", () => {
     expect(result.payload.expires_at).toBeTruthy();
   });
 
+  // Fase 10, 2026-09-07 — "aplica a todos los enlaces generados en la
+  // app": el enlace de invitación usaba siempre APP_URL, ignorando el
+  // dominio real desde el que el superadmin lo generó (producción, TEST
+  // o un Preview de rama), rompiendo la invitación en cuanto se
+  // generaba desde cualquier sitio distinto de APP_URL. El host real de
+  // la petición gana sobre APP_URL cuando llega.
+  it("usa el host real de la petición en vez de APP_URL, cuando llega ese header", async () => {
+    const result = await handleGenerateInvitationLink(request({ headers: { authorization: "Bearer valid-token", host: "dive-tracker-git-mi-rama.vercel.app" } }));
+
+    const url = new URL(result.payload.invitation_link);
+    expect(url.origin).toBe("https://dive-tracker-git-mi-rama.vercel.app");
+  });
+
   it("devuelve 500 si Supabase falla al insertar la fila", async () => {
     single.mockResolvedValue({ data: null, error: { message: "boom" } });
 

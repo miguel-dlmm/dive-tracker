@@ -4,6 +4,438 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.1.0] - 2026-09-07
+
+### Added
+- **Ayuda → "Generar un Training Record"**: nueva categoría/artículo
+  (en los 7 idiomas) que explica cómo generar el documento de progreso
+  de un alumno desde Training Records — antes no tenía ninguna mención
+  en la Ayuda, pese a ser una pantalla completa con su propio generador.
+- **Cinco idiomas nuevos**: francés, italiano, alemán, catalán y
+  euskera, junto a español e inglés — toda la interfaz, incluida la
+  Política de Privacidad y los Términos de Uso, elegibles desde Mi
+  perfil (y desde el alta de usuario para superadmin/registro).
+- **Ayuda**: los 3 artículos más básicos ("Registrar un movimiento",
+  "Cobrar movimientos pendientes", "Configurar tu aplicación") ya
+  incluyen un GIF animado con el flujo real, además del paso a paso en
+  texto.
+- **Instalar la app**: nueva pantalla con instrucciones paso a paso para
+  añadir Ocean Flow a la pantalla de inicio, tanto en iOS (Safari) como
+  en Android (Chrome) — accesible desde un enlace fijo en Ayuda y un
+  enlace de texto ("Descargar app") junto a los KPIs de Home, ambos
+  siempre visibles (oculto solo si ya se está usando la app instalada).
+- **Training Records ya tiene acceso propio**, desde una tarjeta en
+  Home. Genera el registro de progreso oficial (Training Record) de
+  cada alumno para las 10 plantillas SSI, con firma incluida — nada de
+  lo que rellenes se guarda en la nube, solo se descarga.
+- Generador de Training Records: las 6 plantillas SSI que no tienen
+  campos de formulario rellenable (Basic Diver, Night & Limited
+  Visibility, Navigation, Perfect Buoyancy, React Right, Diver Stress &
+  Rescue) ya se pueden generar, con un segundo modo de relleno por
+  coordenadas verificadas visualmente contra cada PDF real.
+- Red de seguridad general ante errores de render: un `ErrorBoundary`
+  envuelve el contenido de cada pestaña, así que si una pantalla falla
+  de forma inesperada se ve una tarjeta de aviso con botón de recargar
+  en vez de una pantalla en blanco, y cabecera/navegación siguen
+  funcionando.
+- Configuración → Usuarios: la hoja de detalle de un usuario muestra
+  cuántos movimientos tiene dados de alta y cuándo fue su última
+  actividad (crear, editar o eliminar un movimiento).
+- El selector de fecha (usado en Mi trabajo, Comisiones, Pagos,
+  Training Records...) ya ofrece accesos rápidos a ayer y mañana,
+  además de hoy y antes de ayer, no solo hoy.
+- Training Records: "Descargar todo en PDF/JPG" ya descarga un único
+  fichero ZIP con todos los documentos, en vez de una descarga por
+  alumno una detrás de otra.
+- Mi perfil: campos opcionales de fecha de nacimiento y país de
+  residencia en "Datos personales".
+- La pantalla de registro también pide (opcionalmente) fecha de
+  nacimiento y país de residencia, para no tener que añadirlos después
+  desde Mi perfil.
+- (Interno, seguridad) El registro externo ya está protegido contra
+  altas masivas automatizadas (Vercel BotID).
+
+### Changed
+- **KPIs de Mi trabajo**: el icono junto a cada cifra queda en 10px, sin
+  icono aparte junto a la etiqueta (un solo icono por KPI, no dos) y
+  ahora se oculta por completo cuando ese KPI no tiene ningún
+  movimiento — antes se veía a tamaño completo junto al "—", igual que
+  si hubiera datos. La etiqueta ("Generado este mes"/"Pendiente de
+  cobrar"/"Cobrado este mes") queda centrada, también cuando ocupa dos
+  líneas — antes se alineaba a la izquierda pese a que el icono y la
+  cifra de arriba sí estaban centrados.
+- **Training Records de Open Water**: se retira el paso "Certificación"
+  (elegir entre Open Water Diver / Scuba Diver) — con Scuba Diver ya
+  descartado, solo quedaba una opción real, así que no había nada que
+  elegir. El documento sigue marcando "Open Water Diver", como siempre.
+- **Training Records en Home**: la tarjeta con borde y degradado pasa a
+  ser una fila fina, sin tarjeta propia — igual de accesible, mucho
+  menos pesada visualmente. Sin ningún documento generado todavía es una
+  invitación real ("Genera tu primer Training Record"); en cuanto lo hay,
+  muestra la cifra animada junto a "Generados", mismo patrón que
+  Alumnos/Cursos/Captados justo arriba, alineada al mismo margen que el
+  resto de tarjetas de Home. El contenido (icono, título, cifra, flecha)
+  va agrupado y centrado en la fila, ahora de ancho completo — antes se
+  encogía al ancho de su propio contenido y por eso quedaba todo pegado
+  a la izquierda con un hueco vacío a la derecha. Con actividad, la
+  insignia lleva además un resplandor sutil detrás.
+- **Training Records**: en Nitrox, Deep Diving, Basic Diver, Diver
+  Stress & Rescue, Navigation, Night & Limited Visibility, Perfect
+  Buoyancy y React Right, las filas de progreso del curso que de verdad
+  son necesarias para certificarlo pasan a marcarse como "Obligatorio"
+  (ya no se pueden desmarcar por error) — mismo criterio que ya tenían
+  Open Water Diver y Advanced Open Water Diver.
+- **Novedades de esta versión (WhatsNew)**: reescrito con las 6
+  novedades reales de este rediseño — rediseño e imagen nueva, carnet
+  de instructor, Training Records, multi idioma, Home/Mi trabajo más
+  claros, y cómo repasarlo luego desde Ayuda. Animación entre
+  diapositivas también mejorada: ahora se aprecia con claridad la
+  salida de una y la entrada de la siguiente, en vez de solo un fundido.
+- **Comisión y Ajuste** tienen ahora su propio color de marca dedicado
+  (antes reutilizaban colores de estado como "pendiente" o un gris
+  genérico) — pensado también para material de campaña/redes, no solo
+  para la app.
+- **Icono de carga (logo)**: ahora solo la parte que parece una ola sube
+  y baja en bucle, con el aro que la envuelve fijo — antes el logo
+  entero se recortaba de golpe.
+- **Color de avatar**: la misma paleta curada de 12 colores que escuelas/
+  cursos (incluye blanco), en vez de una paleta propia sin relación con
+  el resto de la app.
+- **Curso/Comisión/Ajuste**: el mismo icono por tipo en cualquier sitio
+  donde aparezca (Tarifas, Mi trabajo, Home) — antes "Ajuste" podía
+  mostrar un icono distinto según la pantalla.
+- **Color de escuelas y cursos**: ya se elige de una paleta de 12 colores
+  ya pensados para quedar bien con el resto de la app (incluye blanco y
+  negro), en vez de un selector de color libre sin ninguna restricción.
+- **Mi trabajo**: el tipo de movimiento (Curso/Comisión/Ajuste) ya se
+  reconoce por un icono en su propia chip de color, no por una franja
+  fina a la izquierda; los puntos de color delante de escuela/curso
+  desaparecen (en Mi trabajo y Tarifas) — el color ya se lee en el
+  propio texto.
+- **Logo**: el icono de marca en toda la app usa ahora el vectorial real
+  (más nítido a cualquier tamaño) en vez del PNG anterior.
+- **Login**: nueva frase bajo el nombre de la app — "Bucea más. Gestiona
+  menos." y un subtítulo con lo que hace la app en concreto.
+- **KPIs de Home y Mi trabajo** un poco más grandes y con más aire, tras
+  una primera vuelta que se quedó corta.
+- **Training Records**: la fecha de examen ya va en la misma línea que
+  su etiqueta (antes, título arriba y campo suelto debajo); las
+  aventuras electivas de AOWD ya se ven exactamente igual que el resto
+  de filas de progreso, en vez de apilar la fecha debajo; el calendario
+  que se abre en esas filas ya no sale comprimido contra el borde de la
+  pantalla.
+- **Mi trabajo**: un importe largo (con separador de miles y símbolo de
+  moneda) ya no se corta al crear/editar un movimiento con muchas
+  personas.
+- Últimos restos del navy antiguo (pre-rebrand) al navy de marca:
+  títulos de login/registro/recuperar contraseña/aceptar términos y
+  "Qué hay de nuevo".
+- **Logo más visible** en el login/registro/recuperar contraseña, en la
+  pantalla de carga al abrir la app y en la marca de agua del carnet de
+  instructor (apenas se distinguía).
+- **Training Records** ya es una función independiente, accesible solo
+  desde su tarjeta en Home: antes se abría "dentro" de Configuración
+  (su flecha "‹ atrás" acababa llevando al menú de Configuración);
+  ahora tiene su propia cabecera y cerrarla siempre vuelve a Home.
+- **DatePicker y el selector de rango de fechas (Periodo)**, con un
+  diseño más acorde a Ocean Flow: campo con borde e icono de marca,
+  más redondeado, y "Hoy"/flechas/celdas de día ya cumplen el objetivo
+  táctil mínimo de 44px.
+- **Calendario**: el cambio de mes (flechas o deslizar) ya se anima en
+  vez de saltar al instante.
+- **Configuración** ya no muestra "Configuración" dos veces en la
+  cabecera al entrar en una sección (una para cerrar, otra para volver
+  atrás): ahora hay una única cabecera, igual que en Ayuda — ✕ solo en
+  el menú principal, ‹ y el nombre de la sección al entrar en una.
+- **KPIs más compactos** en Home y Mi trabajo: icono y cifra comparten
+  fila en vez de apilarse en 3 filas centradas, la etiqueta pasa a su
+  propia fila debajo — mismas 3 tarjetas, menos alto.
+- Últimos restos de verde en cabeceras sin sección propia (login, "Qué
+  hay de nuevo", Ayuda/Configuración) corregidos al navy de marca.
+- **Calendario**: ya se puede deslizar hacia los lados para cambiar de
+  mes, no solo con las flechas — igual que cualquier calendario nativo
+  de móvil.
+- **Hojas inferiores** (crear/editar en cualquier pantalla) con esquinas
+  más redondeadas y fondo de marca al abrirse; **campos de formulario**
+  con el foco ya en los colores nuevos.
+- **Últimos rincones en verde ya al navy de marca**: login/registro/
+  recuperar contraseña, "Qué hay de nuevo", el FAB y la pestaña activa
+  de Mi trabajo, y los iconos de categoría de Ayuda (estos últimos
+  porque el color de sección en Configuración → Navegación pasa
+  también al navy nuevo, no solo por código).
+- **Resumen, Tarifas, Configuración, Ayuda y Mi perfil** adoptan el
+  color de marca nuevo (cifras, botones, filtros activos, iconos de
+  menú, selector de icono de carga). El carnet de instructor estrena
+  además un degradado de dos tonos de marca.
+- **Mi trabajo** adopta el color de marca nuevo en los KPIs, las
+  pestañas activas, "Filtrar"/"Cobrar todos"/"Confirmar cobro" y los
+  importes de curso/comisión.
+- **Home** adopta el color de marca nuevo en los KPIs, la cifra de
+  "Generado este mes" y el punto de "hoy" del calendario.
+- **Nuevo logo de Ocean Flow** en la cabecera, el favicon, el icono de
+  la app, la pantalla de carga, el login/registro/recuperar contraseña
+  y el carnet de instructor — primer paso visible del rediseño de
+  marca. La pestaña activa de la navegación inferior ahora se marca con
+  una píldora de fondo, más fácil de distinguir de un vistazo.
+- **Más opciones de avatar**, de 6 a 14, con iconografía real de mar y
+  buceo (ancla, brújula, salvavidas, velero...) además de los animales
+  marinos de siempre — y ahora se eligen deslizando en un carrusel en
+  vez de una rejilla fija, para que el selector no ocupe más pantalla
+  al haber más opciones.
+- Pequeña auditoría de unificación visual (ver `docs/ESTILO.md`): Tarifas
+  ya anima la alta/baja de cada fila y su estado vacío pasa al mismo
+  tratamiento centrado que Mi trabajo; Resumen unifica la tarjeta
+  "HeroTotal" con el resto de tarjetas de cifra protagonista; Mi trabajo
+  y Tarifas consolidan el título de cada fila (escuela + curso) en un
+  único componente compartido, y se retira un esqueleto de carga de Mi
+  trabajo que nunca llegaba a pintarse en la práctica.
+- El desplazamiento de la pantalla al abrir el detalle de un día en el
+  calendario de Home/Resumen ya no es instantáneo — se anima con el
+  mismo estilo de movimiento que el resto de la app.
+- El tooltip de ayuda del KPI "Pendiente de cobrar" (Mi trabajo) solo
+  aparece si de verdad hay algo pendiente de cobrar de un mes anterior
+  — si todo lo pendiente es de este mes, ya no hace falta la aclaración.
+- La pantalla "Crea tu cuenta" tiene textos más cercanos, de bienvenida
+  y menos de trámite ("Únete a Ocean Flow" en vez de "Crea tu cuenta").
+- Justo después de activar la cuenta (primer acceso, reactivación...),
+  la app ya abre en Home con "Qué hay de nuevo" mostrado automáticamente
+  (antes abría directo en Ayuda) — se cierra igual que siempre y no
+  vuelve a aparecer solo hasta la próxima versión.
+- Los KPIs de Mi trabajo animan el icono de forma continua: se va
+  encogiendo mientras el número crece y desaparece justo si hace falta,
+  en vez del salto entre dos tamaños fijos de antes — los 3 KPIs
+  siempre se encogen a la vez.
+- **Home**: la tarjeta "Generado este mes" (duplicaba la misma cifra ya
+  visible en la cabecera de Mi trabajo) pasa a mostrar la escuela con
+  más movimientos este mes ("Escuela más activa"), con el mismo hueco
+  visual y el mismo gesto de pulsar para ir a Resumen.
+- **Training Records (Advanced Open Water Diver)**: las 3 "Aventuras"
+  ya muestran la etiqueta "Obligatorio", igual que el resto de filas de
+  progreso del curso — antes no había ningún indicio visual de que
+  fueran obligatorias.
+
+### Chore
+- QA exhaustivo pre-release: `npm run mobile-check` corregido (4 pasos
+  desactualizados desde el rediseño de navegación del 2026-09-06,
+  incluido un swipe que se simulaba con eventos de ratón en vez de
+  touch); recorrido completo de 47 capturas sin errores de consola.
+  Nueva cobertura unitaria del gesto de deslizar en "Qué hay de nuevo".
+- Limpieza de ficheros SVG obsoletos sin ninguna referencia en el código
+  (`public/favicon.svg`, `public/icons.svg`) y de dos afirmaciones ya
+  falsas en `CLAUDE.md`/`docs/BACKLOG.md` (iconos "pendientes de
+  generar" que ya son el logo real; entorno TEST de `dive-tracker`
+  "pendiente de configurar" que ya está configurado).
+
+### Fixed
+- **Ayuda: al abrir una categoría distinta, la que quedaba abierta se
+  cerraba de golpe y la nueva podía acabar en cualquier posición de la
+  pantalla** (a veces por encima de la propia cabecera), sobre todo si
+  ya se había bajado la página para terminar de leer la anterior. Ahora
+  cada categoría que se abre queda alineada justo debajo de la
+  cabecera, con una animación de scroll.
+- **Instalada como acceso directo en iOS: el botón "+" flotante y el
+  final de cualquier pantalla podían quedar tapados por la barra
+  inferior** — la barra crece de verdad al no tener el navegador (para
+  el indicador de inicio del iPhone), pero el botón y el margen final
+  de las pantallas seguían calculando su distancia al borde con un
+  valor fijo, igual que en una pestaña normal de Safari. Corregido para
+  los dos casos.
+- **País de residencia (Registro y Mi perfil): la lista de países podía
+  quedar comprimida contra el propio campo, difícil de usar** — al
+  tocar el campo, el teclado del móvil se abre a la vez que la lista;
+  si la lista decidía su posición justo antes de que el teclado
+  terminara de abrirse, se quedaba mal colocada el resto de la
+  apertura. Ahora se corrige una vez, en cuanto el teclado se asienta.
+- **KPIs de Mi trabajo: el cálculo de espacio disponible para el icono
+  y la cifra tenía una referencia circular** — medía un elemento que ya
+  había sido encogido por el propio icono, así que podía encoger u
+  ocultar el icono de forma incorrecta e inconsistente según el
+  dispositivo. Corregido de raíz (mide ahora un contenedor de ancho
+  estable, no afectado por el propio icono/cifra); de paso, la cifra
+  queda centrada de verdad junto al icono, no solo dentro de una caja
+  más ancha que su propio texto.
+- **Ayuda → "Mi perfil" y "Consultar cuánto has generado" tenían
+  contenido desactualizado** — "Mi perfil" no mencionaba el carnet de
+  instructor (una de las novedades del rediseño), y "Consultar cuánto
+  has generado" seguía diciendo que "Generado este mes" vivía en Home
+  con un indicador de tendencia — hoy esa cifra vive en Mi trabajo.
+  Corregidos, en los 7 idiomas.
+- **KPIs de Mi trabajo (Generado/Pendiente/Cobrado): un importe de 6+
+  dígitos podía llegar a salirse del recuadro** — el icono ya podía
+  ocultarse del todo para dejarle sitio, pero el propio número no tenía
+  ninguna protección si aun así no cabía. Ahora, en ese caso extremo, el
+  número reduce su propio tamaño de letra lo justo para caber, sin
+  afectar a los otros dos KPI. De paso, el icono junto a cada cifra
+  queda centrado con el número (antes se alineaba arriba) y pasa a ser
+  un icono suelto, sin insignia de fondo, pegado a la cifra.
+- **Regenerar un solo Training Record ("Regenerar TR") no sumaba al
+  contador de Home** — solo "Generar para todos los alumnos" lo hacía.
+  Ahora cuenta cualquier generación con éxito, se llame de una en una o
+  para todo el listado a la vez.
+- **El contador de Training Records generados se compartía entre
+  cuentas del mismo navegador** — al entrar con otra cuenta se seguía
+  viendo la cifra generada por la cuenta anterior, aunque la nueva no
+  hubiera generado ninguno todavía. Ahora cada cuenta tiene su propio
+  contador, igual que ya pasa con "Qué hay de nuevo".
+- **`manifest.json` nunca llegaba al build de producción** (vivía en la
+  raíz del repositorio, no en `public/` — Vite solo empaqueta esa
+  carpeta): probable causa de que el icono de la app no aparezca bien
+  en Safari iOS al añadirla a la pantalla de inicio.
+- **`robots.txt` tampoco llegaba a producción** — mismo bug que
+  `manifest.json` de arriba: devolvía 404, dejando la propia
+  instrucción de "no indexar esta app" sin una de sus dos capas.
+- **Vista previa al compartir un enlace de Ocean Flow** (WhatsApp,
+  email...) — la imagen de vista previa usaba una ruta relativa, que la
+  mayoría de generadores de vista previa no resuelve.
+- "Qué hay de nuevo" (Ayuda) vuelve a deslizar de verdad entre
+  diapositivas, en vez de solo aparecer con un fundido — un bug real
+  había obligado a quitar esa animación antes.
+- Training Records: "Versión del examen", "Certificación" y los
+  checkboxes de "Progreso del curso" seguían con el tono verde anterior
+  al rediseño — ahora usan el mismo azul marino que el resto de la
+  pantalla (el botón "Generar para todos" ya se había corregido antes).
+- El calendario de Home/Resumen ahora sí desplaza la pantalla al detalle
+  del día al tocarlo, siempre al instante — antes dependía de un tiempo
+  variable (a veces varios segundos, a veces nada) según cuánto
+  contenido tuviera el día.
+- El botón "Generar para todos los alumnos" de Training Records usaba un
+  verde genérico en vez del color real de la sección.
+- Perfil: fecha de nacimiento y país de residencia ahora van en la misma
+  línea, con el campo Profesional al final.
+- Config/Usuarios: la fila de una cuenta desactivada ahora se ve
+  claramente "apagada" (colores más tenues en toda la fila, no solo en
+  el punto de estado).
+- El favicon ya no muestra un recuadro azul con el logo en blanco
+  dentro — ahora es solo el logo, vectorial, y se invierte a blanco
+  automáticamente si el navegador/sistema está en modo oscuro.
+- El selector de fecha: los accesos rápidos (hoy/ayer/mañana/antes de
+  ayer) ocupaban dos filas enteras y obligaban a hacer scroll para ver
+  el calendario completo — ahora es una sola fila. Nuevo salto de año
+  (« »), y la fecha de nacimiento del perfil ya no muestra accesos
+  rápidos que no tenían sentido ahí.
+- Tarifas: una tarifa desactivada se ve ahora igual de "apagada" que una
+  cuenta desactivada en Config/Usuarios (antes la diferencia con una
+  fila activa era demasiado sutil).
+- Mi perfil: el formulario de edición de Datos personales ya no aparece
+  con todos los campos pegados unos a otros — ahora respira entre filas.
+- Mi perfil: el selector de país de residencia ahora lista los países en
+  orden alfabético, y ya no "salta" de un lado a otro al escribir en
+  móvil (el teclado virtual ya no le hace cambiar de dirección mientras
+  está abierto) — arreglo que también protege a cualquier otro selector
+  desplegable de la app frente al mismo problema.
+- Mi trabajo: los KPIs con una cifra muy larga ya no se salen del
+  cuadro en móvil — ahora la cifra puede partirse en dos líneas también
+  cuando es un único número sin espacios.
+- El calendario de Home/Resumen ahora se alinea justo debajo de la
+  cabecera al tocar un día, en vez de centrar el día pulsado en medio
+  de la pantalla — se ve el mes completo y el detalle debajo.
+- **(Interno, importante)** Todos los enlaces de email generados por la
+  app (bienvenida al dar de alta un usuario, autoregistro, reactivar
+  cuenta, regenerar contraseña, invitación) ya usan el dominio real
+  desde el que se pidieron, no una URL fija — antes solo "olvidé mi
+  contraseña" tenía este arreglo; los otros cinco flujos podían enviar
+  un enlace al dominio equivocado si se generaban desde un Preview
+  Deployment o desde TEST.
+- **(Interno, Training Records) Generar imagen (JPG) fallaba en Safari
+  real** — "Setting up fake worker failed". Causa confirmada leyendo el
+  código fuente de pdfjs-dist: en su modo de reserva "fake worker",
+  esperaba encontrar `WorkerMessageHandler` donde no se exportaba.
+- **(Interno, crítico) Todos los deployments de Vercel fallaban** desde
+  que se añadió el endpoint de actividad de usuario — superaba el
+  límite de 12 Serverless Functions del plan Hobby. Fusionado dentro de
+  `/api/list-user-status` en vez de vivir en su propio fichero — ver
+  "Límite de Serverless Functions" en `CLAUDE.md`.
+- (Interno) El email de "olvidé mi contraseña" podía llevar a la URL
+  fija de TEST en vez de al Preview Deployment concreto desde el que se
+  pidió — ya usa el dominio real de la petición.
+- El KPI "Pendiente de cobrar" (Mi trabajo) podía seguir cortando la
+  cifra con importes de 6 cifras — el tamaño de letra ya se ajusta a lo
+  largo que sea el número.
+- (Interno, Training Records) La exportación a JPG podía fallar con un
+  error genérico sin ninguna pista de la causa real si la conversión a
+  imagen fallaba a mitad — ahora el mensaje dice en qué paso exacto.
+- El menú inferior podía quedar oculto tras la propia barra de Safari en
+  una pantalla con poco contenido (p. ej. Mi trabajo sin movimientos) —
+  el navegador no tenía nada que desplazar para colapsar su barra.
+- (Interno, Training Records) Al firmar en la hoja de alta de alumno,
+  un trazo de firma con componente horizontal hacia la derecha (una
+  firma normal) podía interpretarse también como el gesto de "deslizar
+  para volver" del contenedor de Configuración, devolviendo de golpe al
+  menú de Configuración a mitad de firmar. `signature_pad` nunca corta
+  la propagación del toque tras dibujar; ahora sí se corta en el propio
+  lienzo de firma.
+- (Interno, Training Records) La generación de PDF/JPG fallaba en
+  Safari real ("Promise.try is not a function" seguido de un
+  DataCloneError) porque el Web Worker de pdfjs-dist corre en su propio
+  ámbito global, sin heredar los polyfills ya aplicados al hilo
+  principal — ahora se le aplican los mismos dentro de él antes de
+  cargar su código real.
+- Los KPIs de la cabecera de Mi trabajo podían seguir cortando la cifra
+  en Safari iOS con importes largos — ahora la cifra puede partirse en
+  dos líneas en vez de depender de acertar un tamaño de letra.
+- El calendario de "Periodo" en el filtro de Mi trabajo podía salirse
+  del viewport sin ninguna forma de hacer scroll para ver el final —
+  afectaba en realidad a cualquier panel flotante de la app (Select,
+  MultiSelect, DatePicker...) más alto que el hueco disponible.
+- Los importes de 4 cifras (1.000 a 9.999) no llevaban el punto de los
+  miles, a diferencia de los de 5 cifras o más — ya se ven igual de
+  consistentes en toda la app.
+- El KPI "Pendiente de cobrar" (Mi trabajo) podía quedar demasiado
+  pegado al margen derecho de la tarjeta con una cifra grande, y su
+  tooltip se acorta.
+- Los 3 KPIs de Mi trabajo reducen u ocultan su icono juntos (nunca solo
+  uno) cuando alguna de las 3 cifras crece demasiado, para dejarle sitio
+  al número.
+- (Interno) Una tarifa desactivada podía usarse igualmente para
+  calcular el importe de un movimiento nuevo — ahora solo cuenta una
+  tarifa activa, igual que si no existiera ninguna cuando no la hay.
+- El calendario de Home y Resumen ya prioriza el día de hoy al abrir la
+  pantalla (si tiene alguna entrada), en vez del primer día del mes con
+  movimientos.
+- (Interno) El desplazamiento automático al panel de detalle del
+  calendario de Home no funcionaba en Safari iOS real — se usaba
+  `behavior: "smooth"`, con soporte poco fiable comprobado en este
+  entorno; ahora el desplazamiento es siempre instantáneo, con la API
+  más simple y fiable disponible.
+- (Interno, Training Records) La fecha de la firma de padre/madre/tutor
+  se rellenaba en el PDF aunque el alumno no fuera menor de edad (y esa
+  fila no tuviera ni nombre ni firma) — ahora solo se rellena si de
+  verdad hay firma de padre/madre/tutor, en las 10 plantillas.
+- Tarifas: "Mostrar desactivadas" ya no está escondido dentro de
+  "Filtrar" (siempre visible junto al contador de la lista), y una
+  tarifa desactivada se reconoce ahora por su propio fondo, no solo por
+  el texto.
+- El calendario de Home (y el de Resumen) desplaza la pantalla
+  automáticamente para mostrar el detalle del día al tocarlo, si no era
+  ya visible — antes no había ninguna pista de que algo hubiera pasado.
+- El icono de Configuración podía reabrir la última sección visitada
+  (p. ej. Tarifas) en vez del menú, si se había salido de Configuración
+  tocando directamente Home/Mi trabajo/Resumen — ya abre siempre el
+  menú, salvo al recargar la página dentro de una sección.
+- Configuración → Usuarios: el estado de una cuenta se reconoce ahora
+  solo por el color (con un botón de ayuda que explica la leyenda) en
+  vez de un texto junto al punto de color.
+- (Interno) Los emails transaccionales (alta, recuperación de
+  contraseña, aviso de despliegue) seguían con los colores de marca
+  previos al rebrand — ahora usan el mismo azul marino que el resto de
+  la app rediseñada.
+- Tarifas seguía marcando el tipo (Curso/Comisión) con una franja de
+  color a la izquierda de cada fila — ahora usa el mismo icono en una
+  chip circular que ya usa Mi trabajo, para reconocerlo igual en las dos
+  pantallas.
+- Los 3 KPIs de Mi trabajo ya no reducen su icono a un tamaño intermedio
+  con una cifra larga — o se ve a tamaño completo, o se oculta del todo
+  (nunca uno solo distinto de sus hermanos), y ahora aparece/desaparece
+  con una animación suave en vez de un cambio instantáneo.
+- (Interno, importante) Los KPIs de Mi trabajo podían partirse en dos
+  líneas en Safari/iOS real con importes que en Chrome se veían bien —
+  la cifra ya no se parte nunca; en su lugar se oculta el icono cuando
+  hace falta, decidido midiendo de verdad el espacio disponible en el
+  propio dispositivo en vez de adivinar un umbral fijo.
+- Los emails (bienvenida, recuperar contraseña, reactivar cuenta...)
+  seguían mostrando el icono antiguo de olas en la cabecera — ahora
+  muestran el logo real de Ocean Flow, igual que el resto de la app.
+
 ## [1.0.0] - 2026-09-04
 
 ### Added

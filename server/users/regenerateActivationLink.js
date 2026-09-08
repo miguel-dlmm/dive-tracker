@@ -140,7 +140,16 @@ export async function handleRegenerateActivationLink({ method, headers, body }) 
   }
   const alreadyAcceptedLegal = Boolean(consentRows && consentRows.length > 0);
 
-  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email, alreadyAcceptedLegal ? { flow: "recovery" } : {});
+  // baseUrl del host real de la petición — mismo bug que el email de
+  // recuperación de contraseña (ver activationLink.js): sin esto, este
+  // enlace (reactivar cuenta / reenviar activación) siempre caía a la
+  // URL fija de APP_URL en vez del dominio real desde el que el
+  // superadmin lo pidió.
+  const proto = getHeader(headers, "x-forwarded-proto") || "https";
+  const host = getHeader(headers, "host");
+  const baseUrl = host ? `${proto}://${host}` : undefined;
+
+  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email, { ...(alreadyAcceptedLegal ? { flow: "recovery" } : {}), baseUrl });
   if (linkErrorMessage) {
     return { status: 500, payload: { error: linkErrorMessage } };
   }

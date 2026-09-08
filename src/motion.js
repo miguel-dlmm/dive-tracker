@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { animate } from "motion/react";
 
 // =================================================================
 // Convención de motion de Ocean Flow — un único vocabulario de
@@ -78,14 +79,112 @@ export function toastVariants(reduced = false) {
   };
 }
 
+// Cuadrícula de días de MonthCalendar al cambiar de mes (deslizar o flechas,
+// rediseño estructural 2026-09-06/07: el gesto de deslizar cambiaba de mes
+// al instante, sin transición, la única navegación de la app que "saltaba"
+// en vez de animarse). direction > 0 = avanzar (el mes nuevo entra desde la
+// derecha, el anterior sale por la izquierda), direction < 0 = retroceder —
+// misma convención de paginación que un carrusel o un libro.
+//
+// initial/exit son funciones de `custom` (no valores fijos) a propósito:
+// el mes que SALE ya está montado con la `direction` de la navegación
+// anterior, así que si se alternara avanzar/retroceder, un valor fijo
+// calculado en el momento del render dejaría su animación de salida un
+// paso por detrás. Pasando `custom` al propio <AnimatePresence> (no solo
+// al <motion.div>), Motion sobrescribe el custom de los hijos que están
+// saliendo con el valor actual — el patrón documentado de Motion para
+// carruseles con dirección variable.
+export function monthSlideVariants(reduced = false) {
+  return {
+    initial: (direction) => ({ opacity: 0, x: direction > 0 ? 20 : -20 }),
+    animate: { opacity: 1, x: 0, transition: { duration: d(reduced, DURATION.sm), ease: EASE.enter } },
+    exit: (direction) => ({ opacity: 0, x: direction > 0 ? -20 : 20, transition: { duration: d(reduced, DURATION.xs), ease: EASE.exit } }),
+  };
+}
+
+// Diapositiva de carrusel a pantalla completa (WhatsNew) — misma
+// convención de dirección/easing que monthSlideVariants, pero con
+// desplazamiento real (100% del propio ancho) en vez de unos pocos
+// píxeles: la rejilla del calendario es pequeña y un desplazamiento
+// grande ahí se vería brusco, pero un carrusel de diapositivas de
+// ancho completo necesita que se aprecie de verdad la salida de una y
+// la entrada de la otra (pedido explícito 2026-09-08, revisión de la
+// animación de WhatsNew: "quiero q se aprecie la salida de un slide y
+// la entrada de otro"). Requiere que el contenedor tenga
+// `overflow-hidden` (ya lo tiene WhatsNew.jsx) para que la diapositiva
+// saliente no se vea fuera de los límites del diálogo mientras
+// atraviesa el 100%.
+export function carouselSlideVariants(reduced = false) {
+  return {
+    initial: (direction) => ({ opacity: 0, x: direction > 0 ? "100%" : "-100%" }),
+    animate: { opacity: 1, x: "0%", transition: { duration: d(reduced, DURATION.md), ease: EASE.enter } },
+    exit: (direction) => ({ opacity: 0, x: direction > 0 ? "-100%" : "100%", transition: { duration: d(reduced, DURATION.sm), ease: EASE.exit } }),
+  };
+}
+
+// Desplaza la ventana un delta (equivalente animado de `window.scrollBy`) —
+// pedido explícito tras el ajuste anterior de MonthCalendar ("haz una
+// animación al scroll down al calendario al pulsar en un día"), que se
+// había dejado instantáneo a propósito. Antes de escribir esto se
+// reconfirmó en vivo (2026-09-07, mismo hallazgo que ya documentaba
+// shared.jsx) que `window.scrollTo({ behavior: "smooth" })`/
+// `scrollIntoView({ behavior: "smooth" })` siguen sin desplazar NADA en
+// este entorno de pruebas (Chromium vía CDP) — no es un problema resuelto
+// entre rondas, así que animar el scroll sigue necesitando un tween
+// propio en vez de delegar en la API nativa del navegador.
+// Se usa `animate()` de Motion (ya una dependencia real de la app, no una
+// nueva) para animar un simple NÚMERO con el mismo par
+// duración/easing que el resto de la app — el patrón documentado de
+// Motion para animar valores arbitrarios ajenos a un elemento (scroll,
+// en este caso), sin tener que resolver a mano la curva cubic-bezier de
+// EASE con un tween manual. reduced=true (o un delta ya nulo) salta
+// directo al destino con `window.scrollBy` normal, igual que antes de
+// este cambio.
+export function animateScrollBy(deltaY, { reduced = false, duration = DURATION.md, ease = EASE.standard } = {}) {
+  if (reduced || Math.abs(deltaY) < 1) {
+    window.scrollBy({ top: deltaY, behavior: "auto" });
+    return;
+  }
+  const startY = window.scrollY;
+  animate(startY, startY + deltaY, {
+    duration,
+    ease,
+    onUpdate: (v) => window.scrollTo(0, v),
+  });
+}
+
+// `?captureGif=1` (2026-09-08, solo `npm run dev`, ver más abajo):
+// fuerza reduced-motion sin depender de la preferencia real del sistema
+// operativo — pensado exclusivamente para grabar los GIFs de Ayuda con
+// gif_creator (Claude-in-Chrome). Hallazgo real al intentarlo antes (ver
+// docs/REDISENO-V2-PROGRESS.md, 9.14): un GIF grabado con las
+// animaciones normales de una Sheet (deslizar hacia arriba) salía con
+// "fantasma"/doble exposición — compatible con un fotograma capturado a
+// media transición CSS. Con las animaciones a duración ~0 (mismo
+// mecanismo que ya usa prefers-reduced-motion real), cada captura cae
+// siempre sobre un estado ya asentado, nunca a mitad de una transición —
+// elimina la causa más probable del artefacto de raíz, en vez de seguir
+// intentando "esperar más" entre capturas (ya probado, sin éxito, en la
+// sesión anterior). Doble candado igual que el bypass de login
+// (`MODE === "development"`, no `DEV`, mismo motivo: `DEV` también es
+// true bajo Vitest) + el propio parámetro explícito en la URL — nunca
+// activo por accidente, y el propio `vite build` elimina esta rama del
+// bundle de producción (verificable con grep sobre dist/, igual que el
+// bypass de login).
+function captureModeForced() {
+  if (typeof window === "undefined" || import.meta.env.MODE !== "development") return false;
+  return new URLSearchParams(window.location.search).get("captureGif") === "1";
+}
+
 // prefers-reduced-motion — cualquier componente que anime debe consultar
 // esto y, si es true, usar duraciones ~0 en vez de desactivar la
 // funcionalidad (el estado final debe seguir siendo el mismo).
 export function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(
-    () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    () => captureModeForced() || (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
   );
   useEffect(() => {
+    if (captureModeForced()) return;
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     if (!mq) return;
     const handler = (e) => setReduced(e.matches);
@@ -112,7 +211,16 @@ export function useCountUp(target, { duration = 1.1, reduced = false } = {}) {
     let raf;
     const startTime = performance.now();
     const animate = (now) => {
-      const progress = Math.min((now - startTime) / (duration * 1000), 1);
+      // Math.max(..., 0) (2026-09-08, hallazgo real en tests): sin este
+      // suelo, un primer `now` de requestAnimationFrame anterior a
+      // `startTime` (visto en jsdom, donde el timestamp del callback no
+      // siempre comparte reloj con performance.now()) deja `progress`
+      // negativo — la curva de easing cúbica no está pensada para valores
+      // fuera de [0,1] y devuelve un resultado disparatado (se llegó a ver
+      // un contador saltar a -154 en vez de crecer desde 0). Clamping por
+      // abajo también blinda el caso real (no solo de test) de un
+      // navegador con el reloj de rAF desincronizado momentáneamente.
+      const progress = Math.min(Math.max((now - startTime) / (duration * 1000), 0), 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.round(target * eased));
       if (progress < 1) raf = requestAnimationFrame(animate);
@@ -170,6 +278,41 @@ export function useSwipeBack(onBack, { enabled = true } = {}) {
       // Predominantemente horizontal (evita interpretar un scroll
       // vertical como "atrás") y por encima de un umbral deliberado.
       if (dx > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) onBack();
+    },
+  };
+}
+
+// Hermano bidireccional de useSwipeBack (rediseño estructural 2026-09-06,
+// primer caso real que lo necesita: navegar mes anterior/siguiente en
+// MonthCalendar deslizando, no solo con las flechas — patrón nativo de
+// cualquier calendario de móvil, iOS/Android incluidos). Mismo umbral y
+// misma lógica de "predominantemente horizontal" que useSwipeBack, para
+// que el gesto se sienta igual de "correcto" en toda la app en vez de
+// inventar un segundo criterio de sensibilidad. Deslizar hacia la
+// izquierda (dedo va de derecha a izquierda) = "siguiente", igual que
+// pasar página; hacia la derecha = "anterior".
+export function useSwipeHorizontal({ onSwipeLeft, onSwipeRight, enabled = true } = {}) {
+  const reduced = usePrefersReducedMotion();
+  const active = enabled && !reduced && (typeof onSwipeLeft === "function" || typeof onSwipeRight === "function");
+  const startRef = useRef(null);
+
+  if (!active) return {};
+
+  return {
+    onTouchStart: (e) => {
+      const t = e.touches[0];
+      startRef.current = { x: t.clientX, y: t.clientY };
+    },
+    onTouchEnd: (e) => {
+      const start = startRef.current;
+      startRef.current = null;
+      if (!start) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - start.x;
+      const dy = t.clientY - start.y;
+      if (Math.abs(dx) < 70 || Math.abs(dx) <= Math.abs(dy) * 1.5) return;
+      if (dx < 0) onSwipeLeft?.();
+      else onSwipeRight?.();
     },
   };
 }

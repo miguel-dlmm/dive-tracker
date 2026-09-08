@@ -1,8 +1,8 @@
-import { renderEmailShell, escapeHtml, TEAL, NAVY } from "./emailLayout.js";
+import { renderEmailShell, escapeHtml, BRAND_NAVY } from "./emailLayout.js";
 
 // Email de "aviso de despliegue" para el superadmin (ADR-0024/0025) —
 // mismo envoltorio visual que el resto de emails transaccionales
-// (emailLayout.js: icono Waves, colores de marca), pero forma de
+// (emailLayout.js: logo real, colores de marca), pero forma de
 // contenido distinta a propósito: no es un CTA de "un solo uso", es un
 // resumen de lo que cambió en un commit.
 //
@@ -29,13 +29,13 @@ function renderSteps(items) {
 
 function renderSection(title, html) {
   if (!html) return "";
-  return `<tr><td style="padding:0 28px;"><p style="margin:0 0 6px 0;font-size:12px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:0.02em;">${title}</p>${html}</td></tr>`;
+  return `<tr><td style="padding:0 28px;"><p style="margin:0 0 6px 0;font-size:12px;font-weight:700;color:${BRAND_NAVY};text-transform:uppercase;letter-spacing:0.02em;">${title}</p>${html}</td></tr>`;
 }
 
 function renderPreviewButton(label, url) {
   return url
     ? `<tr><td style="padding:4px 28px 0 28px;text-align:center;">
-        <a href="${escapeHtml(url)}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;background-color:${TEAL};color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:8px;margin-bottom:8px;">${escapeHtml(label)}</a>
+        <a href="${escapeHtml(url)}" style="display:inline-block;width:100%;max-width:320px;box-sizing:border-box;background-color:${BRAND_NAVY};color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:8px;margin-bottom:8px;">${escapeHtml(label)}</a>
       </td></tr>`
     : `<tr><td style="padding:4px 28px 0 28px;">
         <p style="margin:0 0 8px 0;font-size:12.5px;line-height:1.6;color:#9CA3AF;text-align:center;">${escapeHtml(label)}: todavía no hay Preview Deployment.</p>
@@ -60,7 +60,7 @@ export function renderDeploymentNoticeEmailHtml({ notice }) {
   const bodyRows = `
     <tr>
       <td style="padding:12px 28px 0 28px;">
-        <h1 style="margin:0 0 6px 0;font-size:20px;color:${NAVY};">Nuevo aviso de despliegue</h1>
+        <h1 style="margin:0 0 6px 0;font-size:20px;color:${BRAND_NAVY};">Nuevo aviso de despliegue</h1>
         <p style="margin:0 0 16px 0;font-size:12px;color:#6B7280;">Rama <strong>${escapeHtml(branch)}</strong> &middot; commit <code style="background-color:#F3F4F6;padding:1px 5px;border-radius:4px;">${escapeHtml(shortHash)}</code></p>
         <p style="margin:0 0 20px 0;font-size:14px;line-height:1.6;color:#374151;">${escapeHtml(summary)}</p>
       </td>

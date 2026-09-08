@@ -28,11 +28,11 @@
 | 2 | Multidioma | ✅ Hecho (2026-09-01, noche) |
 | 3 | KPIs en la home | ✅ Hecho (2026-09-01, noche) |
 | 4 | Cabecera y notificaciones | ✅ Hecho (2026-09-01/02, noche) |
-| 5 | Sistema de Training Records | 🟡 En curso — pestaña única, fechas por plantilla, firma de instructor, validación y ajustes visuales del PDF construidos y verificados; rediseño completo del generador y 2 correcciones reales de Safari iOS ya aplicadas (ver detalle); quedan 2 supuestos de fecha por confirmar y las 6 plantillas sin campos |
+| 5 | Sistema de Training Records | ✅ Hecho — 10/10 plantillas completas y verificadas (ver detalle, 2026-09-05); oculto para v1.0.0 por decisión del usuario y **reactivado de forma permanente el 2026-09-06** ("ya irá a la próxima release") en `feature/activar-training-records` |
 | 6 | Slides y avisos | 🟡 En curso — avisos generalizados, WhatsNew sin tocar (ver detalle) |
 | 7 | Usabilidad, carga y escalabilidad | ✅ Hecho (2026-09-02, análisis documental, sin cambios de código) |
 | 8 | Revisión visual y libro de estilo | ✅ Hecho (2026-09-02, `docs/ESTILO.md` actualizado, sin pulido pixel-a-pixel) |
-| 9 | Cierre de Release V1 y despliegue a PRO | 🟡 En curso (2026-09-03/04) — auditoría de lint hecha y fusionada a `develop`; plan de despliegue a PRO diseñado y aprobado en sus decisiones clave, **nada ejecutado todavía** — ver detalle |
+| 9 | Cierre de Release V1 y despliegue a PRO | 🟡 En curso (2026-09-03/04) — **v1.0.0 desplegado en producción**, 13 migraciones aplicadas y verificadas, `main` en `a640de4`; **sin taguear** (bug preexistente de registro externo encontrado en la verificación, migración `0014` lista pero pendiente de aprobación, y verificación de datos reales pendiente del usuario). Además, 8 agentes en paralelo completaron trabajo extra en `develop` (733/733 tests en verde) — ver detalle |
 
 > Ver sección "Análisis de riesgos y decisiones previas al trabajo
 > nocturno" más abajo para el detalle completo de cada fase (riesgo,
@@ -2061,31 +2061,430 @@ retoman una vez v1.0.0 esté desplegada y verificada, no antes:
   cerrar la hoja, o la pantalla secundaria entera?), trabajo de tooling
   aparte del cambio de producto de esta sesión.
 
-### Punto exacto donde se quedó
+### ✅ Despliegue a PRO ejecutado (2026-09-04, madrugada) — desplegado, sin taguear
 
-Bloque A completo (1-5) salvo el propio commit final de A.5 (CHANGELOG +
-versión bump), que se hace junto con el resto de A cuando el usuario dé
-el visto bueno para commitear. **Bloque B bloqueado a propósito**,
-instrucción explícita del usuario: no ejecutar nada de B hasta tener el
-resultado de la consulta de catálogo (paso B.4) sobre `password_set`/
-`default_currency` en producción. Esperando a que el usuario añada
-`SUPABASE_DB_URL` (producción) a `.env.local` — en cuanto avise, ejecutar
-`check-column-deps.sql` (scratchpad de esta sesión) y **parar a enseñar
-el resultado antes de tocar 0002/0005**, tal como se pidió. Bloques C, D
-y E no ejecutados todavía. `scripts/apply-migration-prod.mjs` ya
-construido y con `node --check` en verde, sin usar todavía contra
-producción.
+Catálogo de producción consultado (vistas/funciones/triggers/RLS/índices
+sobre `password_set`/`default_currency`): 0 resultados, verificado con un
+control positivo (`is_superadmin`, 3 coincidencias reales) para confirmar
+que la consulta funciona. Con eso, el usuario aprobó seguir sin esperar
+("sigue con el plan... sin esperarme").
+
+**Bloque A** — commits `1b10f31` (CHANGELOG + version bump + oculta
+Training Records) y `dd44a7c` (`apply-migration-prod.mjs`) en `develop`,
+push hecho.
+
+**Bloque B** — ejecutado en orden: `pg_dump`/`pg_restore` instalados
+(faltaban, Homebrew `postgresql@17` — la 16 no sirve, producción corre
+17.6). Backup (`backups/ocean-flow-2026-09-03.dump`, 297 KB) verificado
+con `pg_restore --list` (495 entradas TOC, exit 0, 5 tablas clave
+presentes). Las 11 migraciones aditivas aplicadas y verificadas por
+catálogo, una a una. `0002` y `0005` aplicadas al final, aisladas,
+verificadas (`password_set`/`default_currency` ya no existen;
+`avatar_icon`/`avatar_color` sí). Las 13 migraciones de esta iniciativa
+están en producción.
+
+**Bloque C** — merge `develop` → `main` sin conflictos (`a640de4`), tests
+695/695 y build en verde sobre `main` fusionada. `EMAIL_FROM` añadido a
+Vercel `oceanflow`/Production con la CLI (acceso confirmado). Push a
+`main` → Vercel desplegó solo, `dive-tracker-exgg.vercel.app` responde
+200, sin badge TEST, login renderiza.
+
+**Bug real encontrado en la verificación (no de esta noche, preexistente)
+y corregido parcialmente**: la RPC `public.external_registration_enabled()`
+no existía en producción (error de consola real, PGRST202) —
+"registro externo" (ADR-0023) es de un ciclo de release anterior a la
+numeración de migraciones (0001+), se aplicó a mano en TEST en su
+momento pero nunca llegó a producción; `schema.sql` ya lo documentaba
+como pendiente de ejecutar a mano. Comprobado de forma sistemática
+(cada función/tabla de `schema.sql` contra el catálogo real de
+producción): es el ÚNICO objeto que falta, nada más. Migración
+`0014-registro-externo-produccion.sql` escrita y comiteada en `develop`
+(`ab85768`) con el DDL exacto, pero **NO aplicada** — el clasificador de
+permisos de Claude Code la bloqueó por no ser parte de las migraciones
+ya aprobadas explícitamente esta noche (0001-0013). No se intentó
+saltar ese bloqueo.
+
+**Por eso, siguiendo tu propia instrucción ("si algo quedó en duda, deja
+el despliegue hecho pero sin taguear y dímelo"): el despliegue está
+hecho y en producción, pero NO se ha taggeado `v1.0.0` ni ejecutado
+`gh release create`.**
+
+### ✅ Actualización 2026-09-04 (mañana) — migración 0014 aprobada y aplicada, sesión extendida durante el día
+
+El usuario aprobó `0014` esta mañana; aplicada contra producción y
+verificada (RPC + columna presentes, sitio real sin errores de
+consola). Pidió además: dejar constancia de causa/solución del límite
+de Vercel (para que no vuelva a pasar), redesplegar Training Records
+con todos sus cambios, procesar las plantillas restantes, y seguir
+trabajando el resto del día en todo lo pendiente mientras él está fuera
+— autorización explícita para continuar de forma autónoma, con aviso
+por email de cada cosa completada.
+
+Hecho en esa ventana (además de lo ya registrado más abajo):
+- Causa real del límite de Vercel encontrada (cada push, de cualquier
+  rama, disparaba build en los 2 proyectos conectados) y corregida
+  (`vercel.json`, `git.deploymentEnabled: {develop, main}` — commit
+  `430f928`). `.vercelignore` añadido (instaladores sueltos bloqueaban
+  `vercel deploy` manual). Confirmado que `vercel deploy` manual sí
+  funciona aunque la integración de Git siga limitada (cuotas
+  distintas) — usado para generar 2 Preview reales: restyling
+  (`https://dive-tracker-hsp462lcx-ocean-pulse1.vercel.app`) y Training
+  Records con todas las correcciones de anoche, luego actualizada de
+  nuevo con las 6 plantillas nuevas
+  (`https://dive-tracker-17r6j1hxo-ocean-pulse1.vercel.app`).
+- ADR-0010 actualizada (addendum, commit `d2b4d5c`): la secuencia de
+  tag/release corregida para reflejar `release/*` de `ADR-0006`.
+- Hook de pre-push nuevo (`scripts/hooks/pre-push`, mismo commit):
+  bloquea cualquier futuro commit `feat`/`fix` sobre `src`/`server` sin
+  `CHANGELOG.md` actualizado — la causa raíz de que quedara vacío ~160
+  commits, ahora con enforcement real, no solo la regla escrita.
+  Activado solo con `npm install` (`postinstall`).
+- Las 6 plantillas restantes de Training Records activadas (ver más
+  abajo, sección propia) — el generador ya cubre las 10 plantillas.
+- `scripts/mobile-check.mjs` reparado de verdad (commit `f300487`): la
+  ambigüedad real de "Cerrar" (aplazada la noche anterior por mezclar
+  tooling con la release) resuelta con intención explícita en los 13
+  puntos del recorrido que la tocan — primera vez que el script termina
+  limpio de principio a fin, 47 capturas, 0 errores/avisos de consola.
+  Usado para verificar visualmente el tooltip de "Pendiente de cobrar"
+  y el resto de cambios de la noche.
+- `docs/BACKLOG.md`: retirado un ítem ya resuelto (test de
+  `PaymentsTab` con fecha hardcodeada, corregido en algún commit de la
+  noche anterior, confirmado ejecutando el test).
+
+**✅ Resuelto — límite de Vercel reseteado** (confirmado ~19h UTC del
+2026-09-04, vía `gh api .../commits/.../status`): `dive-tracker-three.vercel.app`
+vuelve a autodesplegar en cada push a `develop`, verificado en vivo sin
+errores de consola.
+
+**✅ `preview/training-records-review` — pusheada a `origin` y
+redesplegada** (pedido explícito del usuario: "mergea la rama de TR
+[...] para tenerlo y probar todo en una rama"). Ya no es una rama de
+un solo uso solo en local: `git fetch`/`checkout
+preview/training-records-review` la trae en cualquier máquina.
+Actualizada con todo `develop` (las 10 plantillas, el fix de
+mobile-check, todo lo demás) antes de pushear — 754/754 tests y build
+en verde. Sigue siendo la ÚNICA rama con el punto de entrada de
+Training Records reactivado (`App.jsx`/`ConfigTab.jsx`) — `develop`/
+`main` lo mantienen oculto, sin cambios. Preview manual:
+`https://dive-tracker-ojfwgfk1w-ocean-pulse1.vercel.app`.
+
+**Sigue pendiente, para revisión humana** (9+ correos vía
+`scripts/_notify.mjs` entre anoche y esta mañana):
+1. Verificar tus datos reales (movimientos, comisiones, perfil) tras
+   las 13+1 migraciones — pedido explícitamente que lo hicieras tú, no
+   verificado más allá de la comprobación técnica de catálogo.
+2. Con eso resuelto: `git tag -a v1.0.0 -m "v1.0.0"` sobre `a640de4`
+   (el commit ya en `main`), `git push origin main --tags`,
+   `gh release create v1.0.0`.
+3. Decisión sobre `feature/restyling-v1` — revisada por el usuario
+   ("no veo diferencias"), confirmado que es real pero deliberadamente
+   pequeño (3 ajustes: esquinas/sombra de la tarjeta de Resumen,
+   animación de alta/baja en Tarifas, padding del estado vacío) — el
+   hallazgo real de la auditoría fue que Tarifas ya hablaba el lenguaje
+   visual de Mi trabajo, así que no hacía falta un rediseño grande.
+   Pendiente de que el usuario decida: fusionar tal cual, o pedir un
+   pase más ambicioso como una tarea aparte.
+
+### Trabajo overnight adicional — 8 agentes en paralelo, cada uno en su rama
+
+Tras cerrar el despliegue, se lanzaron 8 agentes en paralelo (mismo
+patrón que Fase 2, "reparto en 9 agentes"), cada uno en su propio
+worktree/rama desde `develop`, con instrucción de testear+buildear antes
+de fusionar y avisar por email al terminar: auditoría ESLint completa
+(`fix/eslint-sweep-2`), ajustes pequeños — avatares, slide de Mi perfil
+en WhatsNew, "Último acceso" solo fecha, fecha de baja solo si
+desactivado (`fix/polish-pequenos`), tooltip en KPI "Pendiente de
+cobrar" (`feat/tooltip-pendiente-cobrar`), Tarifas — unicidad
+escuela-curso + baja lógica + ocultar desactivadas (`feat/tarifas-vigencia`,
+migración solo en TEST), baja lógica de movimientos + fecha de
+alta/modificación + UNDO, con evaluación de auditoría en rama aparte sin
+fusionar (`feat/baja-logica-movimientos`, migración solo en TEST), Ayuda
+rediseñada (`feat/ayuda-dinamica`), restyling global — **rama pusheada,
+deliberadamente SIN fusionar a `develop`**, para revisión visual antes
+de integrarla (`feature/restyling-v1`), y el bloque grande de
+correcciones de Training Records — general + OW + AOW + Deep Diving +
+EAN (`fix/training-records-usabilidad`, con cuidado explícito de no
+reexponer el punto de entrada oculto). El "mini carnet" pedido ya
+estaba construido y desplegado (`ProfileTab.jsx`, `InstructorCard`) —
+no se relanzó un agente para eso. Resultado de cada uno pendiente de
+sus propios emails de finalización — actualizar esta sección cuando
+lleguen.
+
+**✅ `feat/ayuda-dinamica` (Ayuda rediseñada) — fusionada a `develop`.**
+Petición explícita del usuario: "veo mucho texto... facilidad de uso y
+facilidad de entendimiento, imágenes, paso a paso de las cosas...
+intenta huir de textos largos, complicados", con autonomía total de
+diseño ("no sé, imagina, inventa, innova, diseña"). La estructura
+"Quiero.../Funcionalidades" + acordeón de `ExpandableCard` (ADR-0011)
+ya era sólida — no se rehizo la IA. Cambios reales, en 4 commits:
+
+1. **Se retiran las 5 capturas de pantalla reales** (`stepImages`,
+   `public/help/*.png`, `scripts/capture-help-screenshots.mjs`): aunque
+   recortaban la cabecera para ocultar la cuenta de desarrollo, el
+   cuerpo seguía mostrando datos reales del dataset de prueba "ihasia"
+   (importes, nombres de escuela/curso) — mismo motivo por el que
+   WhatsNew.jsx nunca ha usado capturas. Los PNG además quedaban
+   servidos como assets públicos aunque nada los referenciara.
+2. **Los pasos numerados y el bloque "Qué puedes hacer" pasan a usar el
+   color de la sección** (`accentColor`, `nav_sections`) en vez de gris
+   neutro — cada categoría se lee como un bloque de color coherente,
+   reutilizando la convención 2 de `CLAUDE.md` en vez de una paleta
+   nueva. "Qué puedes hacer" y "Cuándo usarlo" se funden en una sola
+   tarjeta con dos filas icono+texto (antes dos tarjetas gemelas
+   apiladas) — menos "muro" visual con la misma información.
+3. **Auditoría de contenido admin — incumplimiento real encontrado y
+   corregido**: "configurar-app" mencionaba de pasada el bloque
+   "Administración" (tipos/estados de pago, monedas, colores, usuarios)
+   solo para decir que existía si el usuario era admin — sigue siendo
+   documentar admin, así sea de refilón, contra la regla 1 de "Reglas
+   permanentes — Release V1". Reescrito para hablar solo de
+   Escuelas/Cursos/Tarifas. `src/help/content.test.js` (nuevo) escanea
+   ahora todo el texto de Ayuda, en los dos idiomas, en busca de
+   vocabulario de admin/superadmin — guarda de regresión permanente,
+   no solo un fix puntual.
+4. **Frases más cortas** donde el texto original comprimía demasiado en
+   una sola oración (el resumen de "Primeros pasos", el consejo del
+   orden "1) 2) 3)" separado en tres consejos independientes, dos
+   coletillas redundantes en "Consultar cuánto has generado" y "Mi
+   perfil, de un vistazo").
+
+No se tocó la IA (se evaluó explícitamente reorganizar y se descartó —
+"Quiero.../Funcionalidades" sigue siendo la estructura correcta ahora
+que la app tiene multidioma/invitaciones/carnet, no había una razón
+real para cambiarla). Sin contenido nuevo de Training Records (sigue
+oculto en este release) ni de admin/superadmin en ningún artículo,
+nuevo o existente. `npm run test -- --run` (en verde, incluye 4
+pruebas nuevas de Ayuda) y `npm run build` en verde; verificación visual real con
+Playwright + Chromium (emulación iPhone 14 Pro Max, dev-bypass) sobre
+`npm run dev` — sin errores de consola, capturas revisadas a mano
+(`Ayuda no cubierta por scripts/mobile-check.mjs`, que solo recorre Mi
+trabajo — verificación manual equivalente, mismo criterio que la
+"Limitaciones" de la regla 8 de `CLAUDE.md`). Sin ADR nuevo: es un
+refinamiento de contenido/visual sobre una decisión de IA ya
+documentada en ADR-0011, no una decisión arquitectónica nueva.
+
+**✅ `fix/eslint-sweep-2` — sin cambios.** Re-verificó el estado ya
+auditado (`82eba44`): 0 errores/9 avisos, ninguno de los archivos con
+aviso había cambiado desde esa auditoría. Rama vacía, descartada.
+
+**✅ `fix/tooltip-pendiente-cobrar` — fusionada (`4723dbc`).** Tooltip en
+el KPI "Pendiente de cobrar" de Mi trabajo (icono `HelpCircle` 11px,
+mismo mecanismo `useFloatingDropdown`/`FloatingPanel` que el hint de
+`Field`), confirmando primero que `pendingTotals` de verdad no filtra
+por mes (a diferencia de sus 2 hermanos) antes de escribir la copy.
+`aria-label` propio ("Info: Pendiente de cobrar") en vez de reutilizar
+"Ayuda"/"Ocultar ayuda" de `Field`, para no chocar con el hint de
+Importe de `MovementSheet` si ambos coinciden en el DOM.
+
+**✅ `fix/polish-pequenos` — fusionada (`f9375fc`), 4 commits.** Catálogo
+de avatares a tiburón ballena/manta/tortuga/tiburón/pulpo/pez —
+auditados los 2034 iconos de `lucide-react@1.33.0`: la librería no tiene
+ninguno de tiburón/tiburón ballena/manta/pulpo ni siquiera aproximado,
+así que se documentan sustitutos (`FishSymbol`, `Shell`, `Shrimp`,
+`Snail`) caso a caso en el propio archivo — recomendación explícita del
+agente de revisar esta lista más adelante si la fidelidad visual
+importa. Slide nueva de WhatsNew sobre el carnet de instructor.
+"Último acceso" de Usuarios a solo fecha (reutiliza `shortDate` de
+`shared.jsx`). "Fecha de baja" solo se muestra con un valor real
+(antes aparecía "no registrada" para desactivados de antes de la
+migración 0006).
+
+**✅ `feat/tarifas-vigencia` — fusionada (`1597f54`), migración
+`0015-tarifas-vigencia.sql` (solo TEST).** Índice único parcial
+`(user_id, school, activity) where is_active` en `rates`/
+`commission_rates` — cualquier número de tarifas desactivadas puede
+coexistir, como mucho una activa por escuela+curso. Decisión de
+diseño: "Eliminar" y "Desactivar/Reactivar" quedan como acciones
+distintas (no se repurpuso Delete) porque `deleteRate` ya bloqueaba el
+borrado físico de una tarifa referenciada por movimientos históricos
+(`rateCalc.js` resuelve el importe en vivo con `rates.find()` — borrarla
+dejaría movimientos antiguos sin tarifa) — desactivar no tiene ese
+problema porque la fila sigue existiendo. Desactivadas ocultas por
+defecto, checkbox "Mostrar desactivadas" en el panel de filtros ya
+existente. 3 filas duplicadas reales encontradas y limpiadas en TEST
+(dataset "Ihasia" clonado varias veces sobre la misma cuenta) antes de
+poder crear el índice único.
+
+**✅ `feat/baja-logica-movimientos` — fusionada vía PR #3 (`e4996cb`),
+migración `0016-baja-logica-movimientos.sql`** (renombrada de 0015 —
+colisión real con `feat/tarifas-vigencia`: los dos agentes comprobaron
+el siguiente número libre antes de que ninguno hubiera empujado
+todavía y ambos cogieron 0015; no era un conflicto de git, solo de
+numeración, corregido antes de fusionar). `worklog`/`comisiones`/
+`colleague_payments` ganan `deleted_at`/`created_at`/`updated_at` como
+columnas directas (decisión documentada: sin cardinalidad real que
+justifique una tabla aparte). `useSupabaseTable` gana `options.softDelete`
+(opt-in, sin cambiar ninguna otra tabla) — el filtro `deleted_at is null`
+vive en la carga, así que ningún consumidor (Home/Resumen/Mi
+trabajo/`rateCalc.js`) tiene que acordarse de excluir bajas por su
+cuenta. "Eliminar" ahora ofrece "Deshacer" en el toast (mismo mecanismo
+de acción que ya usa "Confirmar cobro"). **Auditoría (created_by/
+updated_by) evaluada y descartada**, con razón real documentada: bajo
+el modelo RLS actual (`auth.uid() = user_id`, sin ninguna vía de
+admin escribiendo en nombre de otro usuario en estas 3 tablas), esas
+columnas siempre coincidirían con `user_id` — cero información nueva.
+Se reactivaría si se construye edición asistida por admin o
+colaboración multiusuario sobre el mismo movimiento — revisado
+directamente el diff de `useSupabaseTable.js`/`shared.jsx`/`App.jsx`
+antes de fusionar (backward-compatible en los tres, ningún consumidor
+existente cambia de comportamiento).
+
+**✅ `feature/restyling-v1` — pusheada, deliberadamente SIN fusionar,
+pendiente de revisión visual.** Hallazgo real que corrige la premisa
+inicial: Tarifas ya hablaba el lenguaje visual de Mi trabajo (rediseñada
+2026-08-30, sin documentar en `CLAUDE.md`) — los huecos reales eran más
+estrechos (sin animación de alta/baja en su lista, empty-state con
+padding distinto, `EntryTitle` de `shared.jsx` y una copia privada en
+`MiTrabajoTab.jsx` habían divergido en los puntos de color). `HeroTotal`
+de Resumen unificado a `rounded-xl` sin sombra (era el único "número
+héroe" con `rounded-lg`+`shadow-sm`). Confirmado y eliminado código
+muerto real: el esqueleto de carga de Mi trabajo era inalcanzable, y
+`WorkLogTab`/`ComisionesTab`/`CompanerosTab`/`PaymentsTab` siguen sin
+ningún punto de entrada. `docs/ESTILO.md` actualizado con los hallazgos.
+**El Preview Deployment de esta rama no llegó a generarse** — ver hallazgo
+de límite de Vercel más abajo.
+
+**⚠️ Límite de builds de Vercel agotado esta noche (todo el equipo,
+"ocean-pulse1")** — encontrado al revisar por qué el Preview de
+`feature/restyling-v1` no aparecía. Confirmado con
+`gh api repos/.../commits/<sha>/status`: desde el commit `1597f54`
+(fusión de Tarifas, 2026-09-03 ~19:06 UTC) en adelante, **todos** los
+pushes a `develop` devuelven `"Deployment rate limited — retry in 24
+hours"` en los dos proyectos Vercel conectados (`dive-tracker` y
+`oceanflow`), confirmado también en el propio commit del fix de Vitest
+(`3b56f2c`). No es específico de una rama — es un límite de build a
+nivel de cuenta, agotado por el volumen real de pushes de los 8 agentes
+en paralelo. **`main`/producción no está afectado en la práctica**: el
+despliegue real de `v1.0.0` (`a640de4`) ya se completó con éxito antes
+de que el límite se agotara (18:16-18:17 UTC), y no había planeado
+ningún push nuevo a `main` esta noche. Sí significa que **el entorno
+TEST (`dive-tracker-three.vercel.app`, Production Branch = `develop`)
+queda desactualizado a partir de la fusión de Tarifas** — el código está
+correctamente fusionado y empujado a `origin/develop`, solo el build
+automático está bloqueado hasta que el límite se resetee (~24h). No hay
+forma de saltárselo sin pasar a un plan de pago de Vercel — no se ha
+intentado. Cuando se resetee, el siguiente push a `develop` (o un
+redeploy manual desde el dashboard) pondrá TEST al día de golpe con
+todo lo de esta noche.
+
+**✅ Bug de tooling real encontrado y corregido: Vitest recorría
+`.claude/worktrees/**`.** Sin `exclude` explícito, `npm run test` desde
+el checkout principal recogía y ejecutaba también los test files de
+dentro de cada worktree de los 8 agentes — confirmado en vivo: pasó de
+695/696 (1 fallo real, un test lento de renderizado PDF) a 18 fallos
+repartidos en archivos sin relación entre sí (login, perfil,
+configuración, tarifas...) en cuanto había varios worktrees activos a
+la vez. Corregido en `vite.config.js` (`3b56f2c`):
+`exclude: [...configDefaults.exclude, '**/.claude/**']` — sobre la
+base por defecto de Vitest, no en vez de ella. Verificado: 705/705 tras
+el fix, con varios agentes todavía trabajando en paralelo. Mismo bug,
+mismo remedio, encontrado también en ESLint (`eslint.config.js`,
+`b25b4e9`, `globalIgnores` ampliado con `.claude`) — sin él, `npm run
+lint` contaba los 9 avisos preexistentes una vez por worktree activo
+(81 en vez de 9), ninguno real.
+
+**✅ `fix/training-records-usabilidad` — fusionada (`2925a9f`), 8
+commits, el bloque más grande de la noche.** Confirmado antes de
+aceptar la fusión: `git diff` sobre `App.jsx`/`ConfigTab.jsx` vacío — el
+punto de entrada de Training Records sigue oculto, nada se reexpuso.
+733/733 tests y build en verde sobre el estado final. Completado:
+título de fila de progreso ya no se corta, firmas ancladas arriba y más
+grandes (con tests unitarios de la nueva `computeSignaturePlacement()`),
+formulario de creación más claro, FAB de añadir alumno sustituido por
+fila inline en la tabla, sin avatar en el listado (nunca lo tuvo, ya
+estaba así) con tooltip para nombres largos, tarjeta de Home más
+prominente y en 2ª posición (construida, deliberadamente desconectada,
+igual que el resto de la pantalla), carnet de instructor de TR
+reutilizado directamente de Mi perfil (una sola fuente de verdad, ya
+no dos copias). OW: campos obligatorios correctos (Académicas/Piscina/
+Aguas Abiertas 1-4), examen online primero en la lista, "fecha de
+examen" sin check, "Menor de edad" revela tutor+firma como campos
+obligatorios. AOWD: 3 filas de Progreso del curso fijas y obligatorias,
+aventuras electivas integradas ahí mismo con exclusión cruzada real,
+renombradas "Aventuras" en toda la app (ES+EN). Deep Diving/EAN: mismo
+cambio de fecha de examen; EAN32 por defecto.
+
+**Export a JPG en Safari — 2 gaps reales encontrados y corregidos, sin
+poder verificar en Safari real.** Leyendo el código fuente instalado de
+`pdfjs-dist` (no adivinando): la librería usa `Promise.withResolvers()`
+(Safari ≥17.4) y dá por hecho que `Iterator` ya existe como global
+(Safari ≥18.4) para su propio parcheo interno — en un Safari por debajo
+de esas versiones, cualquiera de las dos revienta el export antes de
+llegar al fix del `import()` dinámico que ya existía. `pdfjsPolyfills.js`
+(nuevo, con tests) rellena ambas de forma mínima, importado antes que
+`pdfjs-dist` para que ESM lo evalúe primero. **Sin WebKit disponible en
+este entorno (misma limitación ya documentada en CLAUDE.md para
+`mobile-check`), esto queda como corrección de alta confianza a nivel
+de código fuente, no como arreglo confirmado en un iPhone real** —
+reportado así explícitamente por el agente, sin reclamar más de lo
+verificado.
+
+**✅ Actualización 2026-09-04 (mañana) — las 6 plantillas restantes
+activadas.** `feat/training-records-plantillas-restantes`, fusionada
+(`e7412c2`). Con acceso a Supabase Storage, un segundo agente construyó
+de verdad el modo de relleno por coordenadas que las 6 necesitaban
+(`BD`, `SC-LV`, `SC-NV`, `SC-PB`, `SC-RR`, `SC-SR`) — no era rellenar
+datos en un patrón ya existente, `pdfFill.js` solo sabía dirigirse a
+campos de AcroForm real (los 4 activos: OWD/AOWD/SC-DD/SC-EAN). Añadido
+`isRectField()`/`resolveRect()`: un "field" en `templateFieldMaps.js`
+ahora puede ser el string de siempre (AcroForm) o
+`{ rect: {x,y,width,height} }` (coordenadas reales extraídas del
+content stream del PDF, nunca a ojo) — `drawFieldText`/
+`computeSignaturePlacement` no necesitan saber cuál de los dos modos
+produjo el rect, así que las 4 plantillas ya activas siguen exactamente
+igual. Nuevo `drawCheckboxMark()` para dibujar la marca de una casilla
+sin campo AcroForm (el cuadrado en sí ya está impreso, solo se dibuja
+la "X" cuando está marcada).
+
+**Disciplina de verificación seguida de verdad, no solo declarada**:
+cada plantilla pasó por extracción real de coordenadas
+(`extract-flat-template-rects.mjs`) → overlay visual
+(`render-flat-template-rects-overlay.mjs`) → relleno de prueba real
+generado y renderizado → revisión visual de las imágenes antes de
+marcar la fila `active` en TEST. Verificado independientemente antes de
+aceptar la fusión: `SC-RR-filled.png` inspeccionada a mano (la más
+compleja, layout de 3 columnas distinto al resto, sin número de
+instructor) — casillas, fechas, iniciales y firmas correctamente
+colocadas. `training_record_templates` en TEST: las 10 filas ya
+`active`. `pdfFill.js`/`templateFieldMaps.js` con tests nuevos para el
+modo de coordenadas, sin tocar el comportamiento de las 4 plantillas ya
+activas. 754/754 tests y build en verde sobre `develop`. `git diff`
+sobre `App.jsx`/`ConfigTab.jsx` confirmado vacío — el punto de entrada
+sigue oculto. `CHANGELOG.md` actualizado por el propio agente (exigido
+ahora por el hook de pre-push), dejando explícito que no hay ningún
+cambio de comportamiento visible para ningún usuario todavía (TR sigue
+sin punto de entrada).
+
+Con esto, **las 10 plantillas del generador de Training Records están
+completas y verificadas** — lo único que falta para que el usuario
+final las vea es la decisión, ya tomada para v1.0.0, de mantener la
+sección oculta hasta una versión posterior.
 
 ### Verificación
 
 Auditoría de lint (sesión anterior): `npm run test -- --run` (695/695) y
 `npm run build` en verde, tanto en `Release-V1` como en `develop` tras
-el fast-forward. Esta sesión (bloque A): `npm run lint` (0 errores),
-`npm run test -- --run` (695/695), `npm run build` en verde, tras cada
-uno de los cambios de A.1 y A.3. Verificación manual en navegador
-(Chromium/Playwright, iPhone 14 Pro Max) de A.1 y A.4 — ver detalle en
-cada punto arriba. Bloques B, C, D, E sin ejecutar — sin verificación
-posible todavía.
+el fast-forward. Bloque A de esta sesión: `npm run lint` (0 errores),
+`npm run test -- --run` (695/695), `npm run build` en verde. Bloque C:
+`npm run test -- --run` (695/695) y `npm run build` en verde sobre
+`main` fusionada, verificación real contra
+`https://dive-tracker-exgg.vercel.app` (200, sin badge TEST, sin
+errores de consola salvo el bug de `external_registration_enabled` ya
+descrito). Backup verificado con `pg_restore --list`. Las 13 migraciones
+verificadas una a una por catálogo tras aplicarse. **Con los 8 agentes
+ya terminados** (uno sin cambios — ESLint —, 6 fusionados a `develop`, 1
+—restyling— pusheado sin fusionar a propósito): `npm run test -- --run`
+final sobre `develop` → **733/733 en verde, sin ningún fallo** (una vez
+resuelto el ruido real de carga de máquina de mitad de la noche —
+confirmado no regresión, ver el bug de tooling de Vitest/ESLint más
+arriba) y `npm run build` limpio. Se
+revisó a mano el diff real (no solo el resumen del agente) de cada
+fusión con cambios en código compartido (`useSupabaseTable.js`,
+`shared.jsx`, `App.jsx`) antes de aceptarla — varios agentes dispararon
+el clasificador de permisos de Auto Mode al hacer `git push` sobre
+`develop` (acción sensible, revisada caso a caso, sin encontrar nada
+más allá de la propia acción de escritura ya prevista y autorizada).
 
 ---
 
@@ -2207,3 +2606,112 @@ solo como historial de la cola.
   con `position: absolute`, sin ocupar espacio en el flujo) — corrige
   el problema en el único sitio real donde vivía, sin tocar
   `MovementSheet.jsx`.
+
+- **✅ Bug de Training Records: firmar en la hoja de alta de alumno
+  devolvía a Configuración a mitad de firma (2026-09-04/05).** Causa
+  real: `signature_pad` nunca llama a `stopPropagation()` en sus
+  listeners nativos de touch, así que un trazo de firma con componente
+  horizontal hacia la derecha se confundía con el gesto de
+  `useSwipeBack` (deslizar a la derecha = atrás) del contenedor de
+  Configuración, donde vive Training Records. No era una regresión de
+  código perdido — es un bug preexistente que nunca se había topado
+  con este gesto hasta ahora, porque Training Records nunca se había
+  probado de principio a fin con gestos táctiles reales (los tests
+  anteriores usaban ratón, que no dispara eventos touch). Arreglado en
+  `SignatureCapture.jsx` con `stopPropagation()` en
+  `onTouchStart/Move/End` del lienzo — verificado antes/después con
+  simulación de touch-drag real (CDP). De paso se añadió un
+  `ErrorBoundary` general por pestaña (`shared.jsx` + `App.jsx`) como
+  red de seguridad ante cualquier fallo de render futuro (antes, un
+  error así dejaba la app entera en blanco). Mergeado en `develop`
+  (commit `cbe1759`) y en `preview/training-records-review` (commit
+  `1f5e787`), 754/754 tests y build correctos en ambas ramas.
+  E2E real de las 10 plantillas (seleccionar → rellenar progreso →
+  añadir alumno → firmar con touch real → generar): 7/10 verificadas
+  de punta a punta sin ningún fallo (AOWD, BD, SC-LV, SC-NV, SC-PB,
+  SC-SR, SC-RR) — firma nunca expulsó a Configuración, generación
+  limpia, cero errores de consola. Las otras 3 (OWD, SC-DD, SC-EAN) no
+  se completaron por una limitación del propio script de pruebas (el
+  selector de fecha no abría el calendario en el primer clic, antes de
+  llegar a la firma) — no es una reproducción del bug real, solo
+  quedaron sin verificar en esta pasada.
+  Además, `vercel deploy` manual por CLI resultó bloqueado por Vercel
+  ("commit author doesn't have permission to create deployments for
+  this project" — la identidad de git local no está verificada como
+  miembro del equipo `OceanPulse`); solucionado añadiendo
+  `preview/training-records-review` a `deploymentEnabled` en
+  `vercel.json` (mismo patrón que `develop`/`main`), dejando que el
+  propio push a GitHub dispare el deploy en vez del CLI.
+
+- **✅ Cierre de mecánica de release v1.0.0 + fusión de `feature/restyling-v1` (2026-09-06).** Pedido
+  explícito del usuario ("crea todo lo relacionado con el código ya en
+  producción... está todo validado"):
+  - Tag `v1.0.0` creado sobre `a640de4` (HEAD real de `main`) y
+    publicado con `gh release create` — los dos huecos que quedaban
+    abiertos en la auditoría de mecanismos de despliegue de más arriba
+    ("Tag `vX.Y.Z`" y "`gh release create`") ya están cerrados.
+    Protección de rama `main` sigue sin configurar, a petición expresa
+    del usuario de no entrar en eso ahora.
+  - `feature/restyling-v1` (4 commits: consolidación de `EntryTitle` en
+    Mi trabajo/Tarifas, animación de alta/baja de fila en Tarifas,
+    unificación de `HeroTotal` en Resumen, auditoría de estilo en
+    `ESTILO.md`) fusionada a `develop`. 2 conflictos reales resueltos a
+    mano en `RatesTab.jsx` (combinar la animación+empty-state de
+    restyling con el toggle activar/desactivar tarifa que llegó
+    después) y `MiTrabajoTab.jsx` (combinar `EntryTitle`+`schoolColor`
+    de restyling con el tooltip de "Pendiente de cobrar" y el
+    "Deshacer" de borrado que llegaron después) — el resto del archivo
+    lo fusionó git solo, sin conflicto. 754/754 tests y build en verde
+    tras resolver.
+  - `preview/training-records-review` revisada: el fix de firma +
+    ErrorBoundary ya estaba en `develop` (commit `cbe1759`); lo único
+    que queda sin fusionar es el commit que reactiva el punto de
+    entrada de Training Records para revisión visual (`bb4737c`) — se
+    deja fuera a propósito, fusionarlo revertiría la decisión ya
+    tomada de ocultar TR en este release.
+  - Limpieza: 5 de los 8 worktrees de agentes overnight en
+    `.claude/worktrees/` eliminados (ya fusionados, sin cambios
+    pendientes); 3 siguen bloqueados por una sesión de Claude Code
+    distinta todavía activa en esta máquina (PID real verificado) —
+    no se tocan mientras esa sesión siga viva. Borrados también los
+    instaladores sueltos en la raíz (`gh_2.79.0_macOS_amd64.pkg`,
+    `gh_2.98.0_macOS_amd64/`, `postgresql.dmg`), ajenos al proyecto.
+  - `docs/ADR/0020-migraciones-supabase-y-separacion-test.md` sigue
+    sin comitear a propósito — instrucción explícita del usuario de
+    mantenerlo pendiente de aprobación, no tocarlo todavía.
+
+- **✅ Reversión de la decisión de ocultar Training Records
+  (2026-09-06).** La decisión de ocultarlo para v1.0.0 (Fase 9, más
+  arriba) fue siempre explícita como temporal ("se desplegará en una
+  versión posterior") — el usuario confirma ahora que esa versión
+  posterior es la siguiente release y pide reactivarlo de forma
+  permanente. Rama `feature/activar-training-records` (creada desde
+  `develop`): se restaura exactamente el código que había antes del
+  commit `1b10f31` que lo ocultó — `HIDDEN_SECTIONS` en `ConfigTab.jsx`
+  (Training Records sigue sin listarse en el menú de Configuración,
+  pero es una sección real; Home la abre directamente, patrón sin
+  cambios desde el Bloque 10) y `onOpenTrainingRecords`/`onOpenProfile`
+  de vuelta en `App.jsx`. **No** se hizo con `git revert 1b10f31` — ese
+  commit mezclaba el ocultamiento con el bump de versión a 1.0.0 y el
+  ajuste de `App.test.jsx`, y revertirlo entero deshacía también esas
+  dos cosas (verificado: `package.json`/`version.js` volvían a
+  `0.2.0`). Se aplicaron a mano solo los dos archivos relevantes.
+  Verificado: 754/754 tests y build en verde; comprobación manual real
+  en Chromium (emulación iPhone 14 Pro Max) de principio a fin —
+  Mi perfil (firma capturada e instructor guardado), tarjeta de
+  Training Records visible en Home, apertura de la sección, selección
+  de plantilla "Open Water Diver" — sin ningún error de consola.
+  `npm run mobile-check:training-records` llegó hasta el mismo punto
+  (Mi perfil completo con capturas) y se topó con la ambigüedad de
+  selector "Cerrar" ya documentada y aplazada en el punto 4 de la
+  sección "Pre-flight" de Fase 9 más arriba — no es una regresión de
+  este cambio, es el mismo bug preexistente del script.
+  - **Hallazgo lateral de bundle:** reactivar Training Records añade
+    ~467KB al chunk principal (`pdf-lib`, usado síncronamente desde
+    `pdfFill.js`) más un chunk aparte de 431KB (`pdfToJpg.js`, ya
+    cargado de forma perezosa) y un worker de 2,2MB de `pdfjs-dist`
+    (no bloquea la carga inicial, se pide solo al generar/exportar).
+    Documentado junto con el hallazgo de `lucide-react` en
+    `docs/REDISENO-V2-PROGRESS.md` — el usuario decide si el
+    code-splitting de `pdf-lib` se aborda también en la Fase 2 del
+    rediseño o se deja aparte.

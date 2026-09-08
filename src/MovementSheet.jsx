@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { Plus, Minus, X, Check, Loader2, StickyNote, GraduationCap, Handshake, Users } from "lucide-react";
-import { TEAL, SUN, CORAL, GREEN } from "./App";
+import { Plus, Minus, X, Check, Loader2, StickyNote } from "lucide-react";
+import { TEAL, CORAL, GREEN, BRAND_NAVY, BRAND_GOLD } from "./App";
 import {
   inputCls, formatMoney, Field, Select, MoneyInput,
-  DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency,
+  DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency, MOVEMENT_TYPE_META,
 } from "./shared";
 import { DURATION, sheetVariants, usePrefersReducedMotion } from "./motion";
-import { computeRateTotal, buildActivityEntries } from "./rateCalc";
+import { computeRateTotal, buildActivityEntries, isRateActive } from "./rateCalc";
 
 // Única fuente de verdad para crear/editar un movimiento (Curso/Comisión/
 // Ajuste) — extraído de MiTrabajoTab.jsx para que Home pueda abrir esta
@@ -18,10 +18,17 @@ import { computeRateTotal, buildActivityEntries } from "./rateCalc";
 // cambia según quién lo abra, solo qué pasa después de guardar (eso lo
 // decide `onSaved`, no este componente).
 // label se resuelve en render vía t(`createTypes.${key}`) (namespace "trabajo").
+// icon: deriva de MOVEMENT_TYPE_META (shared.jsx), no una copia propia —
+// esta lista y la de RatesTab.jsx (CREATE_TYPES ahí también) llegaron a
+// desincronizarse en el pasado (Ajuste con un icono distinto en cada
+// sitio) por mantenerse por separado, ver la nota junto a
+// MOVEMENT_TYPE_META. GraduationCap se eligió en su día por ser "más
+// reconocible a tamaño pequeño que un icono náutico genérico" — el
+// criterio se mantiene, solo cambia dónde vive la elección.
 const CREATE_TYPES = [
-  { key: "ganado", icon: GraduationCap }, // formación/certificación — más reconocible a tamaño pequeño que un icono náutico genérico
-  { key: "comision", icon: Handshake },
-  { key: "companeros", icon: Users },
+  { key: "ganado", icon: MOVEMENT_TYPE_META.ganado.icon },
+  { key: "comision", icon: MOVEMENT_TYPE_META.comision.icon },
+  { key: "companeros", icon: MOVEMENT_TYPE_META.companeros.icon },
 ];
 
 // Mismo cálculo que rowAccent en MiTrabajoTab, pero pensado para el
@@ -30,7 +37,9 @@ const CREATE_TYPES = [
 // igual que en la lista una vez guardado.
 function formAccentColor(creating, amount) {
   if (creating === "ganado") return TEAL;
-  if (creating === "comision") return SUN;
+  // BRAND_GOLD (2026-09-07), no SUN — ver MOVEMENT_TYPE_META (shared.jsx):
+  // SUN es un semántico de estado, no el color de marca de "Comisión".
+  if (creating === "comision") return BRAND_GOLD;
   return Number(amount) < 0 ? CORAL : GREEN;
 }
 
@@ -87,7 +96,13 @@ export default function MovementSheet({
 
   const tableFor = (source) => (source === "ganado" ? worklog : source === "comision" ? comisiones : colleaguePayments);
   const ratesTableFor = (type) => (type === "ganado" ? rates : commissionRates);
-  const rateFor = (type, school, activity) => ratesTableFor(type).rows.find((r) => r.school === school && r.activity === activity);
+  // Solo tarifas ACTIVAS (Fase 9, 2026-09-07 — bug real confirmado: sin
+  // este filtro, una tarifa desactivada podía usarse igualmente para
+  // calcular el importe de un movimiento nuevo, o impedir que se
+  // ofreciera "Añadir tarifa" cuando en realidad no había ninguna
+  // vigente para esa escuela+curso). Mismo criterio que RatesTab.jsx,
+  // ver isRateActive en rateCalc.js.
+  const rateFor = (type, school, activity) => ratesTableFor(type).rows.find((r) => r.school === school && r.activity === activity && isRateActive(r));
   // Mismo criterio que RatesTab.jsx (lastCurrencyFor) para la tarifa
   // creada al vuelo desde aquí (feedback 2026-08-30: moneda visible, no
   // editable, en el propio formulario de tarifa) — la de la tarifa más
@@ -390,55 +405,69 @@ export default function MovementSheet({
                   ) : (
                     // Nº personas y Total emparejados: el total es
                     // consecuencia directa de las personas, así que vive
-                    // justo al lado del dato que lo modifica.
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <Field label={t("sheet.fields.peopleCount")}>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, people: String(Math.max(0, Number(form.people || 0) - 1)) })}
-                            aria-label={t("sheet.fields.lessPeople")}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
-                          >
-                            <Minus size={14} aria-hidden="true" />
-                          </button>
-                          <input
-                            type="number" min={0} value={form.people}
-                            onChange={(e) => setForm({ ...form, people: e.target.value })}
-                            className={`${inputCls} w-full text-center`}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, people: String(Number(form.people || 0) + 1) })}
-                            aria-label={t("sheet.fields.morePeople")}
-                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
-                          >
-                            <Plus size={14} aria-hidden="true" />
-                          </button>
-                        </div>
-                      </Field>
-                      <Field label={t("sheet.fields.total")}>
-                        {preview ? (
-                          <div className="flex h-11 flex-col justify-center rounded-md px-2.5" style={{ backgroundColor: "#F0FDFA" }}>
-                            <span className="text-sm font-semibold tabular-nums" style={{ color: TEAL }}>
-                              {formatMoney(preview.total, preview.currency, currencies.rows)}
-                            </span>
-                            <span className="text-[10px] leading-tight text-gray-400">
-                              {formatMoney(preview.rate, preview.currency, currencies.rows)} {t("sheet.fields.perPerson")}
-                            </span>
+                    // justo al lado del dato que lo modifica. `flex` en vez
+                    // de un `grid-cols-2` a partes iguales (bug real
+                    // reportado, "las cifras salen cortadas"): un importe
+                    // con separador de miles y símbolo de moneda es mucho
+                    // más largo que las 1-2 cifras de personas, así que
+                    // repartir el ancho al 50% le dejaba a Total justo el
+                    // espacio que no necesitaba (el contador de personas
+                    // sobraba) — Total ahora se queda con todo el ancho
+                    // restante (`flex-1 min-w-0`, imprescindible para que
+                    // `truncate` funcione dentro de un flex item) y el
+                    // contador de personas con solo el suyo (`shrink-0`).
+                    <div className="flex items-start gap-2.5">
+                      <div className="shrink-0">
+                        <Field label={t("sheet.fields.peopleCount")}>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, people: String(Math.max(0, Number(form.people || 0) - 1)) })}
+                              aria-label={t("sheet.fields.lessPeople")}
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
+                            >
+                              <Minus size={14} aria-hidden="true" />
+                            </button>
+                            <input
+                              type="number" min={0} value={form.people}
+                              onChange={(e) => setForm({ ...form, people: e.target.value })}
+                              className={`${inputCls} w-14 text-center`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, people: String(Number(form.people || 0) + 1) })}
+                              aria-label={t("sheet.fields.morePeople")}
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 active:bg-gray-50"
+                            >
+                              <Plus size={14} aria-hidden="true" />
+                            </button>
                           </div>
-                        ) : form.school && form.activity ? (
-                          <button
-                            type="button" onClick={openInlineRate}
-                            aria-label={t("sheet.fields.addRate")}
-                            className="flex h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 bg-amber-50 px-2 text-xs font-semibold text-amber-700"
-                          >
-                            {t("sheet.fields.addRate")}
-                          </button>
-                        ) : (
-                          <div className="flex h-11 items-center rounded-md bg-gray-50 px-2.5 text-sm text-gray-300">—</div>
-                        )}
-                      </Field>
+                        </Field>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <Field label={t("sheet.fields.total")}>
+                          {preview ? (
+                            <div className="flex h-11 min-w-0 flex-col justify-center rounded-md px-2.5" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
+                              <span className="truncate text-sm font-semibold tabular-nums" style={{ color: BRAND_NAVY }}>
+                                {formatMoney(preview.total, preview.currency, currencies.rows)}
+                              </span>
+                              <span className="truncate text-[10px] leading-tight text-gray-400">
+                                {formatMoney(preview.rate, preview.currency, currencies.rows)} {t("sheet.fields.perPerson")}
+                              </span>
+                            </div>
+                          ) : form.school && form.activity ? (
+                            <button
+                              type="button" onClick={openInlineRate}
+                              aria-label={t("sheet.fields.addRate")}
+                              className="flex h-11 w-full items-center justify-center rounded-md border border-dashed border-amber-300 bg-amber-50 px-2 text-xs font-semibold text-amber-700"
+                            >
+                              {t("sheet.fields.addRate")}
+                            </button>
+                          ) : (
+                            <div className="flex h-11 items-center rounded-md bg-gray-50 px-2.5 text-sm text-gray-300">—</div>
+                          )}
+                        </Field>
+                      </div>
                     </div>
                   )}
 

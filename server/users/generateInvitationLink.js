@@ -28,8 +28,18 @@ export async function handleGenerateInvitationLink({ method, headers }) {
     console.error("generate-invitation-link: faltan variables de entorno de Supabase");
     return { status: 500, payload: { error: "Configuración del servidor incompleta." } };
   }
-  if (!process.env.APP_URL) {
-    console.error("generate-invitation-link: falta APP_URL");
+  // baseUrl del host real de la petición — mismo bug que el email de
+  // recuperación de contraseña (ver activationLink.js): este enlace
+  // siempre caía a la URL fija de APP_URL en vez del dominio real desde
+  // el que el superadmin lo generó (producción, TEST o un Preview de
+  // rama), rompiendo la invitación en cuanto se generaba desde
+  // cualquier sitio que no fuera exactamente ese APP_URL. APP_URL sigue
+  // de respaldo si por lo que sea no llega el header `host`.
+  const proto = getHeader(headers, "x-forwarded-proto") || "https";
+  const host = getHeader(headers, "host");
+  const baseUrl = (host ? `${proto}://${host}` : undefined) || process.env.APP_URL;
+  if (!baseUrl) {
+    console.error("generate-invitation-link: falta baseUrl (host de la petición) y APP_URL de respaldo");
     return { status: 500, payload: { error: "Configuración del servidor incompleta." } };
   }
 
@@ -59,7 +69,7 @@ export async function handleGenerateInvitationLink({ method, headers }) {
     return { status: 500, payload: { error: "No se pudo generar el enlace de invitación." } };
   }
 
-  const url = new URL(process.env.APP_URL);
+  const url = new URL(baseUrl);
   url.searchParams.set("invite", data.token);
 
   return { status: 200, payload: { invitation_link: url.toString(), expires_at: expiresAt } };

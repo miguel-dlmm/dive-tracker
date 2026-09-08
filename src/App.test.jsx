@@ -25,12 +25,13 @@ vi.mock("./supabaseClient", () => ({
   supabase: { rpc: vi.fn(), from: vi.fn(() => emptyQuery()) },
 }));
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { useSession } from "./useSession";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { supabase } from "./supabaseClient";
+import { APP_VERSION } from "./version";
 
 const SESSION = { user: { id: "u1", email: "diver@example.com" } };
 
@@ -224,8 +225,13 @@ describe("AuthGate", () => {
   // tocar su gate de "una vez por versión" (se marca como ya visto en
   // localStorage antes de renderizar, para probar la reapertura de verdad
   // en vez de que ya estuviera abierto por no haberse visto todavía).
+  // Importa APP_VERSION en vez de un literal fijo (bug real ya corregido
+  // una vez, ver docs/REDISENO-V2-PROGRESS.md 12.19): con un literal, cada
+  // release que sube APP_VERSION deja de representar "ya visto" y este
+  // test empieza a fallar porque WhatsNew se abre solo, sin que el
+  // mecanismo que prueba tenga ningún fallo real.
   it("Fase 4 — 'Ver qué hay de nuevo' en Ayuda reabre el slide de novedades ya visto", async () => {
-    localStorage.setItem("oceanpulse:whatsNewSeen:u1", "1.0.0");
+    localStorage.setItem("oceanpulse:whatsNewSeen:u1", APP_VERSION);
     mockUseSession({
       session: SESSION,
       profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
@@ -235,12 +241,47 @@ describe("AuthGate", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText("Ocean Flow");
-    expect(screen.queryByText("La app ya habla tu idioma")).not.toBeInTheDocument();
+    expect(screen.queryByText("Rediseño completo, cara nueva")).not.toBeInTheDocument();
 
     await user.click(screen.getByLabelText("Ayuda"));
     await user.click(await screen.findByText("Ver qué hay de nuevo en esta versión"));
 
-    expect(await screen.findByText("La app ya habla tu idioma")).toBeInTheDocument();
+    expect(await screen.findByText("Rediseño completo, cara nueva")).toBeInTheDocument();
+  });
+
+  // 2026-09-07, pedido explícito: "cuando el usuario accede después del
+  // enlace de activación, le llevará a la home con el WhatsNew abierto.
+  // Una vez que lo cierre, no volverá a verlo hasta la próxima release."
+  // Antes de este cambio, justo tras activar la cuenta la app abría
+  // directamente en Ayuda (initialTab, ya retirado de App.jsx) — se
+  // sustituye por depender solo del mecanismo general de WhatsNew: una
+  // cuenta sin ninguna versión marcada como vista en este navegador
+  // (localStorage limpio, como cualquier usuario recién activado) lo
+  // abre solo, sin ningún caso especial para "recién activado".
+  it("una cuenta que nunca ha visto la versión actual cae en Home con WhatsNew abierto solo; al cerrarlo, Home queda debajo (no Ayuda)", async () => {
+    // sessionStorage limpio: una activación real ocurre siempre en una
+    // sesión nueva (ver "Bypass de login en desarrollo"/nav storage,
+    // App.jsx — sessionStorage nunca sobrevive a cerrar la pestaña), sin
+    // esto un test anterior que navegó a otra pestaña dejaría esa
+    // posición guardada y este test heredaría esa pestaña en vez de
+    // arrancar en Home de verdad.
+    sessionStorage.clear();
+    mockUseSession({
+      session: SESSION,
+      profile: { user_id: "brand-new-user", activated_at: "2026-09-07T00:00:00.000Z", nickname: "ada" },
+      pendingLegalConsents: [],
+    });
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText("Ocean Flow");
+
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Cerrar" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Tu impacto este mes")).toBeInTheDocument();
+    expect(screen.queryByText("Primeros pasos")).not.toBeInTheDocument();
   });
 
   it("activated_at fijado pero con consentimiento legal pendiente, muestra la pantalla de aceptación legal en vez de la app", () => {

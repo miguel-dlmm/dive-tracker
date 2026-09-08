@@ -317,6 +317,19 @@ describe("con permisos válidos", () => {
     });
   });
 
+  // Fase 10, 2026-09-07 — "aplica a todos los enlaces generados en la
+  // app": este enlace usaba siempre APP_URL, ignorando el dominio real
+  // desde el que el superadmin dio de alta al usuario (producción, TEST
+  // o un Preview de rama). Ahora se calcula del header `host` real.
+  it("el enlace de activación usa el host real de la petición, no APP_URL, cuando llega ese header", async () => {
+    createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
+    sendActivationEmail.mockResolvedValue({ sent: false, error: "no importa para este test" });
+
+    const result = await handleCreateUser(request({ headers: { authorization: "Bearer valid-token", host: "dive-tracker-git-mi-rama.vercel.app" } }));
+
+    expect(result.payload.action_link).toMatch(/^https:\/\/dive-tracker-git-mi-rama\.vercel\.app/);
+  });
+
   it("no bloquea la creación ni deja email_sent:true si sendActivationEmail lanza una excepción inesperada", async () => {
     createUser.mockResolvedValue({ data: { user: { id: "new-user-1" } }, error: null });
     sendActivationEmail.mockRejectedValue(new Error("boom"));

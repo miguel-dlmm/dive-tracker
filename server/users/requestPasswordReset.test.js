@@ -124,6 +124,14 @@ it("configuración de servidor incompleta: respuesta genérica, no revela el pro
   expect(generateActivationLink).not.toHaveBeenCalled();
 });
 
+it("pasa baseUrl a generateActivationLink cuando lo recibe (bug real: el email llevaba siempre a la URL fija de TEST, nunca al Preview Deployment concreto)", async () => {
+  const baseUrl = "https://dive-tracker-git-feature-x-ocean-pulse1.vercel.app";
+
+  await handleRequestPasswordReset(request({ baseUrl }));
+
+  expect(generateActivationLink).toHaveBeenCalledWith(EXISTING_EMAIL, { flow: "recovery", baseUrl });
+});
+
 it("no distingue mayúsculas/minúsculas al buscar el email", async () => {
   const result = await handleRequestPasswordReset(request({ body: JSON.stringify({ email: "DIVER@EXAMPLE.COM" }) }));
 

@@ -1,0 +1,52 @@
+{
+  "filter": {
+    "button": "Filtra",
+    "type": "Tipus",
+    "typeAll": "Tots",
+    "school": "Escola",
+    "schoolAll": "Totes",
+    "course": "Curs",
+    "courseAll": "Tots",
+    "clear": "Neteja els filtres",
+    "showInactive": "Mostra desactivades"
+  },
+  "search": {
+    "placeholder": "Cerca",
+    "ariaLabel": "Cerca tarifa"
+  },
+  "list": {
+    "count": "{{count}} tarifes",
+    "empty": "Sense resultats.",
+    "createdOn": "Alta: {{date}} · {{type}}",
+    "inactive": "Desactivada"
+  },
+  "fab": "Nova tarifa",
+  "sheet": {
+    "editTitle": "Edita la tarifa de {{school}} - {{activity}}",
+    "createTitle": "Nova tarifa de {{type}}",
+    "close": "Tanca",
+    "typeTablistLabel": "Tipus de tarifa",
+    "hintGanado": "El que cobres per impartir tu el curs.",
+    "hintComision": "El que cobres per portar un client.",
+    "school": "Escola",
+    "course": "Curs",
+    "rateLabel": "Tarifa · {{currency}}",
+    "save": "Desa"
+  },
+  "toasts": {
+    "saved": "Canvis desats",
+    "added": "Tarifa afegida",
+    "saveError": "No s'ha pogut desar. Torna-ho a provar.",
+    "duplicate": "Ja tens una tarifa activa per a aquesta escola i aquest curs. Desactiva-la abans de crear-ne una altra.",
+    "reactivateBlocked": "No es pot reactivar: ja hi ha una altra tarifa activa per a aquesta escola i aquest curs.",
+    "deactivated": "Tarifa desactivada",
+    "reactivated": "Tarifa reactivada"
+  },
+  "deleteInUse_one": "No es pot eliminar: hi ha {{count}} registre que fa servir aquesta tarifa.",
+  "deleteInUse_other": "No es pot eliminar: hi ha {{count}} registres que fan servir aquesta tarifa.",
+  "rowMenu": {
+    "itemLabel": "la tarifa de {{school}} - {{activity}}",
+    "deactivate": "Desactiva",
+    "reactivate": "Reactiva"
+  }
+}

@@ -1,6 +1,7 @@
 {
   "emptyState": "No help content yet.",
   "whatsNewReplay": "See what's new in this version",
+  "installAppLink": "Install the app on your phone",
   "groupLabels": {
     "quiero": "I want to...",
     "funcionalidades": "Features"
@@ -13,40 +14,76 @@
     "expectedResult": "Expected result"
   },
   "categories": {
-    "bienvenida": { "label": "Getting started", "description": "What Ocean Flow is and how it's organised" },
-    "quiero-configurar": { "label": "Set up your app", "description": "Schools, courses, rates and catalogues" },
-    "quiero-crear-movimiento": { "label": "Log an entry", "description": "A course taught, a commission, or an adjustment" },
-    "quiero-cobrar": { "label": "Collect pending entries", "description": "Mark as collected, one by one or all at once" },
-    "quiero-consultar-generado": { "label": "Check how much you've earned", "description": "At a glance, or in detail by period" },
-    "func-mi-trabajo": { "label": "My work", "description": "Create, edit, collect and delete entries" },
-    "func-resumen": { "label": "Summary", "description": "Quick glance and depth on demand" },
-    "func-configuracion": { "label": "Settings", "description": "The menu, and what's in each section" },
-    "func-perfil": { "label": "My profile", "description": "Avatar, details, favourite currency and password" },
-    "func-filtros": { "label": "Filters and search", "description": "The same pattern across the whole app" }
+    "bienvenida": {
+      "label": "Getting started",
+      "description": "What Ocean Flow is and how it's organised"
+    },
+    "quiero-configurar": {
+      "label": "Set up your app",
+      "description": "Schools, courses, rates and catalogues"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Log an entry",
+      "description": "A course taught, a commission, or an adjustment"
+    },
+    "quiero-cobrar": {
+      "label": "Collect pending entries",
+      "description": "Mark as collected, one by one or all at once"
+    },
+    "quiero-consultar-generado": {
+      "label": "Check how much you've earned",
+      "description": "At a glance, or in detail by period"
+    },
+    "quiero-generar-tr": {
+      "label": "Generate a Training Record",
+      "description": "Each student's official progress document"
+    },
+    "func-mi-trabajo": {
+      "label": "My work",
+      "description": "Create, edit, collect and delete entries"
+    },
+    "func-resumen": {
+      "label": "Summary",
+      "description": "Quick glance and depth on demand"
+    },
+    "func-configuracion": {
+      "label": "Settings",
+      "description": "The menu, and what's in each section"
+    },
+    "func-perfil": {
+      "label": "My profile",
+      "description": "Avatar, instructor card, language and favourite currency"
+    },
+    "func-filtros": {
+      "label": "Filters and search",
+      "description": "The same pattern across the whole app"
+    }
   },
   "articles": {
     "primeros-pasos": {
       "title": "Getting started with Ocean Flow",
       "summary": "A quick tour of the three main screens before you log your first entry.",
-      "whatYouCanDo": "Ocean Flow helps you keep track of your income as a freelance instructor: the classes you teach, the commissions you earn from referred clients, and the money adjustments with other instructors — all under one concept, \"entry\".",
+      "whatYouCanDo": "Ocean Flow helps you keep track of your income as a freelance instructor. Under one concept, \"entry\", it groups the classes you teach, the commissions you earn from referred clients, and the money adjustments with other instructors.",
       "whenToUseIt": "The first time you open the app, or whenever you want a reminder of what each screen is for.",
       "steps": [
-        { "text": "Home: how much you have pending to collect, a widget with your oldest debts, the month's calendar, and a shortcut to create an entry.", "imageAlt": "Home screen with the total pending to collect and the month's calendar" },
+        "Home: your students, courses and referrals at a glance, the Training Records shortcut, how much you have pending to collect, the month's calendar, and a shortcut to create an entry.",
         "My work: the full list of your entries (courses, commissions and adjustments) — create, edit, collect or delete them.",
         "Summary: your balance for whichever period you pick, with the option to drill down by school, by course, or by commissions."
       ],
       "tips": [
-        "The natural order for a new account is: 1) Set up your app (schools, courses, rates), 2) Log one entry of each type you use, 3) Collect — one at a time as you get paid, or all at once if you check in periodically. Each of these three steps has its own guide in \"I want to...\" below."
+        "For a new account, start with \"Set up your app\" (schools, courses, rates).",
+        "Then log one entry of each type you'll use.",
+        "Finish by collecting: one at a time as you get paid, or all at once if you check in periodically. Each step has its own guide in \"I want to...\" below."
       ],
       "expectedResult": "You know which screen to use for each situation, and in what order, so the app is ready for your day-to-day."
     },
     "configurar-app": {
       "title": "Set up your app",
       "summary": "Nothing is fixed in the app: schools, courses, rates and payment catalogues are all edited from Settings.",
-      "whatYouCanDo": "Settings is organised into two blocks: what any user maintains (Schools, Courses, Rates) and, if you have an admin role, an \"Administration\" block with catalogues for the whole app (payment types and statuses, currencies, colours, users).",
+      "whatYouCanDo": "Settings is where you maintain your base data: which schools you work with, which courses you teach, and at what rate. All editable, nothing hard-coded.",
       "whenToUseIt": "Before logging your first entry, and afterwards every time you start working with a new school or course, or change a price.",
       "steps": [
-        { "text": "Go to Settings (gear icon, top right) and tap the section you need.", "imageAlt": "Settings menu with the Schools, Courses and Rates sections" },
+        "Go to Settings (gear icon, top right) and tap the section you need.",
         "Add your Schools and Courses first — a Rate always links a school to a course, so both need to exist beforehand.",
         "Inside a section, tap the floating \"+\" button to create one; \"‹ Settings\" takes you back to the menu.",
         "Tap a row's colour to customise it, and the star to mark it as a favourite."
@@ -64,7 +101,7 @@
       "whenToUseIt": "Right after teaching a class, when closing a commission, or when you agree an adjustment with another instructor.",
       "steps": [
         "Tap \"Add entry\": the \"+\" button on the \"Pending to collect\" card in Home, the same button by tapping a day on Home's calendar, or the floating \"+\" in My work.",
-        { "text": "At the top of the form, choose the type: Course taught, Commission, or Course adjustment.", "imageAlt": "Entry creation sheet with the type selector: Course taught, Commission or Course adjustment" },
+        "At the top of the form, choose the type: Course taught, Commission, or Course adjustment.",
         "Course taught: school, course, date and number of people — the course rate calculates the amount for you.",
         "Commission: same as a course, but for a client you referred who trains with another instructor — it uses its own commission rate, not the course one.",
         "Course adjustment: doesn't depend on any rate — you enter the amount yourself (positive if you're owed, negative if you owe) and which colleague it's with.",
@@ -82,7 +119,7 @@
       "whatYouCanDo": "Every entry has a status (pending or collected). Changing it is instant, a single tap, with the option to undo if you make a mistake. You can do it entry by entry, or all at once across the whole visible list.",
       "whenToUseIt": "As soon as a school or a colleague pays you (one at a time), or all at once when you check in periodically and several payments have already come through.",
       "steps": [
-        { "text": "To collect one: go to My work (the \"Pending\" tab opens by default) and tap \"Confirm payment\" on its row (or \"Mark settled\" if it's an adjustment against you).", "imageAlt": "List of pending entries in My work with the Confirm payment button" },
+        "To collect one: go to My work (the \"Pending\" tab opens by default) and tap \"Confirm payment\" on its row (or \"Mark settled\" if it's an adjustment against you).",
         "The \"Pending to collect\" card on Home takes you straight to that same tab — one tap from the main screen.",
         "To collect several at once: in My work, use \"Collect all\" above the list — it affects everything currently visible.",
         "Before \"Collect all\", use \"Filter\" (by date, school, course or type) to narrow the list down to exactly what you want to collect in one go."
@@ -95,12 +132,12 @@
     },
     "consultar-generado": {
       "title": "Check how much you've earned",
-      "summary": "A quick glance on Home, or the full detail for whichever period you choose in Summary.",
-      "whatYouCanDo": "\"Earned this month\" on Home gives you the current month's figure, with a hint of whether you're doing better or worse than last month, without leaving the main screen. Tapping it takes you straight to Summary, which goes further: any period, compared with the previous one, with the option to drill down by school or by course.",
-      "whenToUseIt": "Home, for a quick glance when you open the app. Summary, when you want a period other than the current month or want to understand where the money is coming from.",
+      "summary": "A quick glance on My work, or the full detail for whichever period you choose in Summary.",
+      "whatYouCanDo": "\"Earned this month\" on My work gives you the current month's figure, always visible above the list. Summary goes further: any period, compared with the previous one, with the option to drill down by school or by course.",
+      "whenToUseIt": "My work, for a quick glance alongside your day-to-day work. Summary, when you want a period other than the current month or want to understand where the money is coming from.",
       "steps": [
-        "On Home, the \"Earned this month\" card is always visible, no need to tap anything — and tapping it takes you to Summary to dig deeper.",
-        { "text": "In Summary, choose the granularity and period in the control at the top (monthly, quarterly, half-yearly, yearly, or a custom range) and, if you want, the type (Course, Commission or Adjustment).", "imageAlt": "Summary screen with the monthly trend strip and the period total" },
+        "On My work, the \"Earned this month\" card is always visible above the list, no need to tap anything.",
+        "In Summary, choose the granularity and period in the control at the top (monthly, quarterly, half-yearly, yearly, or a custom range) and, if you want, the type (Course, Commission or Adjustment).",
         "The main card shows the period's total and how much it's changed compared with the previous period.",
         "Tap \"By school\", \"By course\", \"Commissions\", \"Course adjustments\" or \"Calendar\" to drill down — each one only expands when you ask for it."
       ],
@@ -109,6 +146,24 @@
         "The comparison with the previous period doesn't show up if you mix more than one currency in the same period — this avoids showing a calculation that wouldn't be accurate."
       ],
       "expectedResult": "You have a balance figure for the period you chose, with the detail of where each bit of income comes from if you need it."
+    },
+    "generar-training-record": {
+      "title": "Generate a Training Record",
+      "summary": "Each student's official SSI progress document, with their signature and yours — nothing is stored in the cloud, it's only downloaded.",
+      "whatYouCanDo": "From Training Records you generate the official progress document for any of the 10 SSI templates, with each student's data and your instructor signature already filled in. You can generate them one at a time or all at once, and download them as a PDF, as an image, or share them directly.",
+      "whenToUseIt": "When a course finishes, or whenever a student needs their Training Record on paper or to send to SSI.",
+      "steps": [
+        "Open Training Records from the shortcut on Home.",
+        "Choose the course's SSI template and fill in the shared setup (exam version, certification, course progress...) — filled in once for the whole class.",
+        "\"Add student\" for each student: it only asks for their name, initials and signature — for a minor, also their guardian's name and signature.",
+        "\"Generate for all students\" creates the document for the whole roster at once; \"Regenerate TR\" on a single student's row regenerates just theirs, without redoing the rest.",
+        "Per student: \"Download PDF\", \"Download image (JPG)\" or \"Share\". For everyone at once: \"Download all as PDF/JPG\" or \"Share all\", as a single ZIP file."
+      ],
+      "tips": [
+        "You need your instructor card in My profile complete (initials, SSI Pro number and signature) before you can generate anything — it's what gets printed on every Training Record.",
+        "Nothing you fill in here is stored in Ocean Flow: each document is generated on the spot and only downloaded."
+      ],
+      "expectedResult": "You have every student's Training Record ready to download or share, with their signature and yours already included."
     },
     "mi-trabajo-referencia": {
       "title": "My work, at a glance",
@@ -158,20 +213,22 @@
     },
     "perfil-referencia": {
       "title": "My profile, at a glance",
-      "summary": "Your avatar, your details, your favourite currency and your password — all in one place, reachable from your name in the header.",
-      "whatYouCanDo": "Tap your avatar or your nickname, top right on any screen, to go into My profile: change your avatar (icon and colour), edit your first name/last name/nickname, choose your favourite currency, change your password, and delete your account if you ever need to.",
+      "summary": "Your avatar, your details, your instructor card, your favourite currency and your password — all in one place, reachable from your name in the header.",
+      "whatYouCanDo": "Tap your avatar or your nickname (top right on any screen) to go into My profile: your identity, your instructor card, your language, your favourite currency and your password, all in one place.",
       "whenToUseIt": "Whenever you want to personalise your account, fix a detail, or change your password without having to sign out and go through \"forgot my password\".",
       "steps": [
         "Tap the avatar/nickname in the header to go into My profile.",
         "The pencil over the avatar opens the icon and colour picker — the change saves as soon as you pick it, no separate \"Save\" button.",
         "\"Edit\" in Personal details opens first name, last name and nickname; the nickname can't contain \"@\" or match another account's.",
+        "\"Instructor details\" is your card: initials, SSI Pro number and your signature — saved here once, and used to auto-fill your Training Records.",
         "Favourite currency is used as a fallback in Course adjustment when there's no rate to determine it — every other entry always uses its own rate's currency."
       ],
       "tips": [
         "Changing your password here doesn't ask for your current one — since you're already inside the app, the active session is considered enough.",
+        "The whole app's language can also be changed from here, without signing out.",
         "Deleting your account is permanent and erases all your data — to confirm it you have to type the word CANCEL, so nothing gets deleted by an accidental tap."
       ],
-      "expectedResult": "Your account reflects the avatar, details and currency you choose, and you can change your password whenever you want without leaving the app."
+      "expectedResult": "Your account reflects the avatar, details, instructor card and currency you choose, and you can change your password or your language whenever you want without leaving the app."
     },
     "filtros-referencia": {
       "title": "Filter and search",

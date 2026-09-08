@@ -1,0 +1,229 @@
+{
+  "emptyState": "Aucun contenu d'aide pour le moment.",
+  "whatsNewReplay": "Voir les nouveautés de cette version",
+  "installAppLink": "Installer l'application sur votre mobile",
+  "groupLabels": {
+    "quiero": "Je veux...",
+    "funcionalidades": "Fonctionnalités"
+  },
+  "sections": {
+    "whatYouCanDo": "Ce que vous pouvez faire",
+    "whenToUseIt": "Quand l'utiliser",
+    "steps": "Étapes",
+    "tips": "Conseils et erreurs fréquentes",
+    "expectedResult": "Résultat attendu"
+  },
+  "categories": {
+    "bienvenida": {
+      "label": "Premiers pas",
+      "description": "Ce qu'est Ocean Flow et comment il s'organise"
+    },
+    "quiero-configurar": {
+      "label": "Configurer votre application",
+      "description": "Écoles, cours, tarifs et catalogues"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Enregistrer un mouvement",
+      "description": "Un cours dispensé, une commission ou un ajustement"
+    },
+    "quiero-cobrar": {
+      "label": "Encaisser les mouvements en attente",
+      "description": "Marquer comme encaissé, un par un ou tous d'un coup"
+    },
+    "quiero-consultar-generado": {
+      "label": "Consulter ce que vous avez généré",
+      "description": "D'un coup d'œil, ou en détail par période"
+    },
+    "quiero-generar-tr": {
+      "label": "Générer un Training Record",
+      "description": "Le document officiel de progression de chaque élève"
+    },
+    "func-mi-trabajo": {
+      "label": "Mon activité",
+      "description": "Créer, modifier, encaisser et supprimer des mouvements"
+    },
+    "func-resumen": {
+      "label": "Résumé",
+      "description": "Aperçu rapide et profondeur à la demande"
+    },
+    "func-configuracion": {
+      "label": "Configuration",
+      "description": "Le menu, et ce qu'il y a dans chaque section"
+    },
+    "func-perfil": {
+      "label": "Mon profil",
+      "description": "Avatar, carte d'instructeur, langue et devise favorite"
+    },
+    "func-filtros": {
+      "label": "Filtres et recherche",
+      "description": "Le même modèle dans toute l'app"
+    }
+  },
+  "articles": {
+    "primeros-pasos": {
+      "title": "Commencer à utiliser Ocean Flow",
+      "summary": "Un tour rapide des trois écrans principaux avant d'enregistrer votre premier mouvement.",
+      "whatYouCanDo": "Ocean Flow vous aide à gérer vos revenus en tant qu'instructeur indépendant. Sous un même concept, \"mouvement\", il regroupe les cours que vous dispensez, les commissions pour clients référés et les ajustements financiers avec d'autres instructeurs.",
+      "whenToUseIt": "La première fois que vous ouvrez l'app, ou quand vous voulez vous rappeler à quoi sert chaque écran.",
+      "steps": [
+        "Accueil : vos élèves, cours et clients référés en un coup d'œil, l'accès aux Training Records, ce qui vous reste à encaisser, le calendrier du mois et un accès direct pour créer un mouvement.",
+        "Mon activité : la liste complète de vos mouvements (cours, commissions et ajustements), pour les créer, les modifier, les encaisser ou les supprimer.",
+        "Résumé : votre bilan sur la période de votre choix, avec la possibilité d'approfondir par école, par cours ou par commissions."
+      ],
+      "tips": [
+        "Pour un nouveau compte, commencez par \"Configurer votre application\" (écoles, cours, tarifs).",
+        "Continuez en enregistrant un mouvement de chaque type que vous allez utiliser.",
+        "Terminez en encaissant : un par un quand vous êtes payé, ou tous d'un coup si vous vérifiez périodiquement. Chaque étape a son propre guide dans \"Je veux...\" ci-dessous."
+      ],
+      "expectedResult": "Vous savez quel écran utiliser pour chaque situation et dans quel ordre procéder pour préparer l'app à votre quotidien."
+    },
+    "configurar-app": {
+      "title": "Configurer votre application",
+      "summary": "Rien n'est figé dans l'app : écoles, cours, tarifs et catalogues de paiement se modifient depuis Configuration.",
+      "whatYouCanDo": "Configuration est l'endroit où vous gérez vos données de base : quelles écoles travaillent avec vous, quels cours vous dispensez et à quel tarif. Tout est modifiable, rien n'est fixé dans le code.",
+      "whenToUseIt": "Avant d'enregistrer votre premier mouvement, et ensuite chaque fois que vous commencez à travailler avec une nouvelle école ou un nouveau cours, ou que vous changez un prix.",
+      "steps": [
+        "Entrez dans Configuration (icône d'engrenage, en haut à droite) et touchez la section dont vous avez besoin.",
+        "Créez d'abord vos Écoles et vos Cours — un Tarif relie toujours une école à un cours, il faut donc que les deux existent avant.",
+        "Dans une section, touchez le bouton \"+\" flottant pour créer ; \"‹ Configuration\" vous ramène au menu.",
+        "Touchez la couleur d'une ligne pour la personnaliser, et l'étoile pour la marquer comme favorite."
+      ],
+      "tips": [
+        "Une école, un cours ou une devise marqués comme favoris apparaissent présélectionnés dans les formulaires de création.",
+        "Fermer Configuration (le \"✕\" de l'en-tête) vous ramène toujours à l'onglet depuis lequel vous êtes entré."
+      ],
+      "expectedResult": "La nouvelle école, le nouveau cours ou le nouveau tarif est disponible immédiatement lors de la création d'un mouvement — vous pouvez maintenant continuer avec \"Enregistrer un mouvement\"."
+    },
+    "crear-movimiento": {
+      "title": "Créer un mouvement",
+      "summary": "Le même formulaire sert pour un cours dispensé, une commission ou un ajustement avec un collègue — chaque type a ses propres champs.",
+      "whatYouCanDo": "\"Ajouter un mouvement\" est le seul point de création de toute l'app — le formulaire lui-même vous laisse choisir le type, pas besoin de trouver le bon bouton pour chaque cas.",
+      "whenToUseIt": "Juste après avoir donné un cours, en clôturant une commission, ou quand vous convenez d'un ajustement avec un autre instructeur.",
+      "steps": [
+        "Touchez \"Ajouter un mouvement\" : le bouton \"+\" de la carte \"En attente d'encaissement\" sur l'accueil, le même bouton en touchant un jour du calendrier de l'accueil, ou le \"+\" flottant de Mon activité.",
+        "En haut du formulaire, choisissez le type : Cours dispensé, Commission ou Ajustement de cours.",
+        "Cours dispensé : école, cours, date et nombre de personnes — le tarif du cours calcule le montant tout seul.",
+        "Commission : comme un cours, mais pour un client que vous avez référé et qu'un autre instructeur forme — utilise son propre tarif de commission, pas celui du cours.",
+        "Ajustement de cours : ne dépend d'aucun tarif — indiquez vous-même le montant (positif si on vous doit de l'argent, négatif si vous devez de l'argent) et avec quel collègue est l'ajustement.",
+        "Enregistrez. Si vous avez ouvert le formulaire depuis l'accueil, vous verrez le mouvement dans Mon activité juste après l'enregistrement."
+      ],
+      "tips": [
+        "Si aucun tarif n'existe encore pour cette école + ce cours, le formulaire vous permet de le créer à la volée sans quitter l'écran (\"Ajouter un tarif\") — s'applique uniquement à Cours et Commission, un Ajustement n'a jamais besoin de tarif.",
+        "Annuler ou fermer le formulaire sans enregistrer ne crée rien — vous pouvez l'ouvrir et le fermer sans crainte de laisser des mouvements à moitié remplis."
+      ],
+      "expectedResult": "Le mouvement apparaît dans Mon activité, dans \"En attente\", et s'ajoute à \"Généré ce mois-ci\" sur l'accueil (sauf un Ajustement en votre défaveur, qui ne compte pas comme généré)."
+    },
+    "cobrar-movimientos": {
+      "title": "Marquer des mouvements comme encaissés",
+      "summary": "Gardez le contrôle de ce qu'il vous reste à encaisser et mettez à jour le statut dès que vous êtes payé — un par un, ou tous à la fois.",
+      "whatYouCanDo": "Chaque mouvement a un statut (en attente ou encaissé). Le changer est immédiat, en un seul geste, avec la possibilité d'annuler en cas d'erreur. Vous pouvez le faire mouvement par mouvement, ou d'un coup sur toute la liste visible.",
+      "whenToUseIt": "Dès qu'une école ou un collègue vous paie (un par un), ou d'un coup quand vous vérifiez périodiquement et que plusieurs paiements en attente vous ont déjà été versés.",
+      "steps": [
+        "Pour en encaisser un : allez dans Mon activité (l'onglet \"En attente\" s'ouvre par défaut) et touchez \"Confirmer l'encaissement\" sur sa ligne (ou \"Marquer réglé\" s'il s'agit d'un ajustement en votre défaveur).",
+        "La carte \"En attente d'encaissement\" de l'accueil vous emmène directement à cet onglet — un geste depuis l'écran principal.",
+        "Pour en encaisser plusieurs à la fois : dans Mon activité, utilisez \"Tout encaisser\" en haut de la liste — cela affecte tout ce qui est visible à ce moment-là.",
+        "Avant \"Tout encaisser\", utilisez \"Filtrer\" (par date, école, cours ou type) pour limiter la liste à ce que vous voulez encaisser d'un coup."
+      ],
+      "tips": [
+        "Une notification avec \"Annuler\" apparaît après chaque changement — vous avez quelques secondes pour l'annuler sans avoir à rechercher le mouvement.",
+        "\"Tout encaisser\" demande confirmation avant de s'appliquer — il n'y a pas d'\"Annuler\" pour le lot complet, contrairement à un encaissement un par un."
+      ],
+      "expectedResult": "Le mouvement (ou tous ceux filtrés) passe à l'onglet \"Encaissés\" et son montant cesse de compter dans \"En attente d'encaissement\" sur l'accueil."
+    },
+    "consultar-generado": {
+      "title": "Consulter ce que vous avez généré",
+      "summary": "Un coup d'œil rapide sur Mon activité, ou le détail complet sur la période de votre choix dans Résumé.",
+      "whatYouCanDo": "\"Généré ce mois-ci\" sur Mon activité vous donne le montant du mois en cours, toujours visible au-dessus de la liste. Résumé va plus loin : n'importe quelle période, comparée à la précédente, avec la possibilité d'approfondir par école ou par cours.",
+      "whenToUseIt": "Mon activité, pour un coup d'œil rapide au fil de votre travail quotidien. Résumé, quand vous voulez une période différente du mois actuel ou comprendre d'où vient l'argent.",
+      "steps": [
+        "Sur Mon activité, la carte \"Généré ce mois-ci\" est toujours visible au-dessus de la liste, sans rien toucher.",
+        "Dans Résumé, choisissez la granularité et la période dans le contrôle du haut (mensuel, trimestriel, semestriel, annuel ou une plage personnalisée) et, si vous voulez, le type (Cours, Commission ou Ajustement).",
+        "La carte principale affiche le total de la période et son évolution par rapport à la période précédente.",
+        "Touchez \"Par école\", \"Par cours\", \"Commissions\", \"Ajustements de cours\" ou \"Calendrier\" pour approfondir — chacun se déplie seulement si vous le demandez."
+      ],
+      "tips": [
+        "Dans \"Par école\", touchez une école pour voir son détail par cours sur place, sans changer d'écran.",
+        "La comparaison avec la période précédente n'apparaît pas si vous mélangez plus d'une devise sur la même période — pour éviter d'afficher un calcul qui ne serait pas exact."
+      ],
+      "expectedResult": "Vous avez un montant de bilan pour la période choisie, avec le détail de la provenance de chaque revenu si besoin."
+    },
+    "mi-trabajo-referencia": {
+      "title": "Mon activité, en un coup d'œil",
+      "summary": "La liste complète de vos mouvements — cours, commissions et ajustements — avec leurs actions.",
+      "whatYouCanDo": "Mon activité unifie ce qui était avant trois écrans séparés (Registre, Commissions et Collègues) en un seul endroit, regroupé par statut d'encaissement.",
+      "whenToUseIt": "C'est votre écran de travail quotidien — créer, vérifier, encaisser et modifier des mouvements.",
+      "steps": [
+        "En attente / Encaissés : les deux onglets du haut, avec le total en attente sur la carte supérieure.",
+        "\"Filtrer\" : limite la liste par période, école, cours ou type de mouvement.",
+        "Sur chaque ligne : \"Confirmer l'encaissement\"/\"Marquer en attente\" pour changer le statut, et le menu \"⋯\" pour Modifier ou Supprimer.",
+        "Le bouton \"+\" flottant ouvre le même formulaire de création que le reste de l'app."
+      ],
+      "tips": [
+        "\"Tout encaisser\"/\"Tout remettre en attente\" opèrent sur la liste visible — avec des filtres actifs, cela n'affecte que ce qui est filtré.",
+        "Supprimer demande confirmation et anime la sortie de la ligne, pour que vous voyiez exactement ce que vous avez effacé."
+      ],
+      "expectedResult": "Vous trouvez et mettez à jour n'importe quel mouvement sans quitter cet écran."
+    },
+    "resumen-referencia": {
+      "title": "Résumé, en un coup d'œil",
+      "summary": "Un seul total principal en haut ; tout le reste se déplie seulement si vous le demandez.",
+      "whatYouCanDo": "Résumé combine une réponse rapide (le total de la période, comparé à la précédente) avec des cartes dépliables pour qui veut approfondir.",
+      "whenToUseIt": "Pour comprendre comment se passe une période, comparer des écoles ou des cours, ou revoir les commissions et ajustements avec des collègues.",
+      "steps": [
+        "Choisissez la granularité (mensuelle, trimestrielle, semestrielle, annuelle ou personnalisée) ; la bande de périodes en dessous navigue toute seule — touchez-en une pour recentrer là.",
+        "Filtrez par type (Total, Cours, Commission ou Ajustement) avec le sélecteur segmenté en dessous.",
+        "La carte principale affiche le total et, quand cela a du sens de le calculer, la comparaison avec la période précédente.",
+        "Touchez n'importe quelle carte (Par école, Par cours, Commissions, Ajustements de cours, Calendrier) pour la déplier."
+      ],
+      "tips": [
+        "Avec plus d'une école, \"Par école\" s'ouvre dépliée d'office car c'est la question la plus fréquente après le total ; avec une seule école, cette section n'apparaît pas (il n'y aurait rien à comparer) et c'est \"Par cours\" qui s'ouvre dépliée. Les autres commencent toujours fermées.",
+        "Dans \"Par école\", touchez une école pour voir son détail par cours sans quitter la carte."
+      ],
+      "expectedResult": "Vous avez le chiffre que vous cherchiez, avec autant ou aussi peu de détail que demandé."
+    },
+    "configuracion-referencia": {
+      "title": "Configuration, en un coup d'œil",
+      "summary": "Le menu où vous gérez vos propres données de base : écoles, cours et tarifs.",
+      "whatYouCanDo": "Écoles, Cours et Tarifs — les catalogues que vous utilisez en enregistrant un mouvement dans Mon activité.",
+      "whenToUseIt": "Pour tenir vos données de base à jour : ajouter une nouvelle école, un nouveau cours, ou ajuster un tarif.",
+      "steps": [
+        "Touchez n'importe quelle ligne du menu pour entrer dans cette section ; \"‹ Configuration\" revient au menu.",
+        "Écoles et Cours se créent via le bouton \"+\" flottant, comme dans Mon activité.",
+        "Tarifs affiche Cours et Commission dans une seule liste (le type se choisit en filtre, ou à la création, dans la fiche elle-même) — même modèle visuel que Mon activité."
+      ],
+      "expectedResult": "Vous trouvez n'importe quel catalogue ou réglage sans avoir à vous souvenir de son ancien onglet."
+    },
+    "perfil-referencia": {
+      "title": "Mon profil, en un coup d'œil",
+      "summary": "Votre avatar, vos données, votre devise favorite et votre mot de passe — tout au même endroit, accessible depuis votre nom dans l'en-tête.",
+      "whatYouCanDo": "Touchez votre avatar ou votre pseudo (en haut à droite sur n'importe quel écran) pour entrer dans Mon profil : votre identité, votre devise favorite et votre mot de passe, tout au même endroit.",
+      "whenToUseIt": "Quand vous voulez personnaliser votre compte, corriger une donnée, ou changer le mot de passe sans avoir à vous déconnecter et passer par \"mot de passe oublié\".",
+      "steps": [
+        "Touchez l'avatar/pseudo de l'en-tête pour entrer dans Mon profil.",
+        "Le crayon sur l'avatar ouvre le sélecteur d'icône et de couleur — le changement est enregistré au moment du choix, sans bouton \"Enregistrer\" séparé.",
+        "\"Modifier\" dans Données personnelles ouvre prénom, nom et pseudo ; le pseudo ne peut pas contenir \"@\" ni coïncider avec celui d'un autre compte.",
+        "La devise favorite sert de secours dans Ajustement de cours quand aucun tarif ne la détermine — les autres mouvements utilisent toujours la devise de leur propre tarif."
+      ],
+      "tips": [
+        "Changer le mot de passe ici ne vous demande pas le mot de passe actuel — si vous êtes déjà dans l'app, on fait confiance à la session active.",
+        "Supprimer votre compte est définitif et efface toutes vos données — pour le confirmer, vous devez taper le mot ANNULER, pour éviter toute suppression accidentelle."
+      ],
+      "expectedResult": "Votre compte reflète l'avatar, les données et la devise que vous choisissez, et vous pouvez changer votre mot de passe quand vous voulez sans quitter l'app."
+    },
+    "filtros-referencia": {
+      "title": "Filtrer et rechercher",
+      "summary": "Mon activité, Tarifs et les catalogues de Configuration partagent le même modèle de filtres.",
+      "whatYouCanDo": "Un bouton \"Filtrer\" (avec le nombre de filtres actifs) déplie un panneau avec les champs disponibles — période, école, cours, type... — au lieu de les afficher toujours au-dessus de la liste.",
+      "whenToUseIt": "Quand la liste a trop d'éléments pour tous les voir d'un coup d'œil.",
+      "steps": [
+        "Touchez \"Filtrer\" pour déplier le panneau des champs disponibles sur cet écran.",
+        "Choisissez-en un ou plusieurs — le filtre de cours accepte une sélection multiple.",
+        "\"Effacer les filtres\" apparaît dès qu'au moins un est actif."
+      ],
+      "tips": [
+        "La recherche des catalogues (Cours, Devises) filtre pendant que vous tapez, sans distinguer majuscules ni accents."
+      ],
+      "expectedResult": "La liste affiche seulement ce qui vous intéresse, sans perdre de vue combien de filtres sont actifs."
+    }
+  }
+}

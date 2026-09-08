@@ -97,8 +97,9 @@
     "email": "Email",
     "altaLabel": "Alta",
     "ultimoAcceso": "Último acceso",
+    "movimientos": "Movimientos",
+    "ultimaActividad": "Última actividad",
     "baja": "Baja",
-    "fechaNoRegistrada": "fecha no registrada",
     "estado": "Estado",
     "activarUsuario": "Activar usuario",
     "desactivarUsuario": "Desactivar usuario",
@@ -149,6 +150,7 @@
   "usersDirectory": {
     "buscarPlaceholder": "Buscar...",
     "buscarAria": "Buscar usuarios",
+    "leyendaEstadoAria": "Qué significa cada color de estado",
     "crearUsuario": "Crear usuario",
     "noSePudoCargarListado": "No se pudo cargar el listado de usuarios.",
     "errorDesconocido": "Error desconocido",
@@ -238,10 +240,6 @@
     "datasets": {
       "label": "Datasets iniciales",
       "description": "Configuración clonada al crear una cuenta"
-    },
-    "trainingRecords": {
-      "label": "Training Records",
-      "description": "Genera registros de progreso SSI firmados por alumno"
     }
   },
   "menu": {

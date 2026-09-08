@@ -1,5 +1,10 @@
 {
   "loading": { "defaultLabel": "Loading" },
+  "errorBoundary": {
+    "title": "Oops, something went sideways",
+    "body": "This screen ran into an unexpected problem. It's nothing you did — try reloading and it should be back to normal.",
+    "reload": "Reload"
+  },
   "movementTypes": {
     "ganado": "Course",
     "comision": "Commission",
@@ -28,6 +33,8 @@
     "weekdays": ["M", "T", "W", "T", "F", "S", "S"],
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
+    "prevYear": "Previous year",
+    "nextYear": "Next year",
     "today": "Today"
   },
   "datePicker": {
@@ -35,7 +42,10 @@
     "defaultAriaLabel": "Pick a date",
     "pickerAriaLabel": "Date picker",
     "dayAriaLabel": "{{month}} {{day}}",
-    "today": "Today"
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "dayBeforeYesterday": "Day before yesterday"
   },
   "dateRangePicker": {
     "from": "From",

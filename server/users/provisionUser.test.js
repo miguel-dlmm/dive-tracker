@@ -17,6 +17,7 @@ function makeClient({
   cloneResult = { error: null },
   generateLinkResult = { data: { properties: { hashed_token: "hashed-token-abc" } }, error: null },
   nicknameLookupResult = { data: null, error: null },
+  profileUpdateResult = { error: null },
 } = {}) {
   const createUser = vi.fn().mockResolvedValue(createUserResult);
   const generateLink = vi.fn().mockResolvedValue(generateLinkResult);
@@ -25,8 +26,13 @@ function makeClient({
   const maybeSingle = vi.fn().mockResolvedValue(nicknameLookupResult);
   const ilike = vi.fn(() => ({ maybeSingle }));
   const select = vi.fn(() => ({ ilike }));
-  const from = vi.fn(() => ({ select }));
-  return { auth: { admin: { createUser, generateLink, deleteUser } }, rpc, from, __mocks: { select, ilike, maybeSingle } };
+  // update -> eq: fecha de nacimiento/país de residencia (best-effort,
+  // escrito con un UPDATE normal tras crear la fila vía handle_new_user()
+  // — ver el comentario junto a esa llamada en provisionUser.js).
+  const updateEq = vi.fn().mockResolvedValue(profileUpdateResult);
+  const update = vi.fn(() => ({ eq: updateEq }));
+  const from = vi.fn(() => ({ select, update }));
+  return { auth: { admin: { createUser, generateLink, deleteUser } }, rpc, from, __mocks: { select, ilike, maybeSingle, update, updateEq } };
 }
 
 beforeEach(() => {
@@ -125,6 +131,29 @@ it("email_sent:false con action_link cuando el envío falla — la cuenta ya est
   expect(result.action_link).toContain("hashed-token-abc");
 });
 
+// Fase 10, 2026-09-07 — "aplica a todos los enlaces generados en la
+// app": el email de bienvenida de CUALQUIER alta (superadmin o
+// autoregistro) usaba siempre la URL fija de APP_URL, ignorando el
+// dominio real desde el que se pidió el alta. provisionUser() reenvía
+// baseUrl (si el llamador lo pasa) a generateActivationLink(), que ya
+// sabía priorizarlo sobre APP_URL (ver activationLink.js) desde la
+// corrección anterior de "olvidé mi contraseña".
+it("cuando se pasa baseUrl, el enlace de activación usa ese dominio en vez de APP_URL", async () => {
+  sendActivationEmail.mockResolvedValue({ sent: false, error: "no importa para este test" });
+
+  const result = await provisionUser({ ...ARGS, baseUrl: "https://dive-tracker-git-mi-rama.vercel.app" });
+
+  expect(result.action_link).toMatch(/^https:\/\/dive-tracker-git-mi-rama\.vercel\.app/);
+});
+
+it("sin baseUrl, el enlace de activación sigue usando APP_URL (comportamiento de siempre)", async () => {
+  sendActivationEmail.mockResolvedValue({ sent: false, error: "no importa para este test" });
+
+  const result = await provisionUser(ARGS);
+
+  expect(result.action_link).toMatch(/^https:\/\/app\.example/);
+});
+
 // GoTrue nunca propaga el texto real del error de Postgres cuando
 // handle_new_user() falla dentro de client.auth.admin.createUser() — solo
 // devuelve el genérico "Database error creating new user", sin el nombre
@@ -171,5 +200,52 @@ describe("validación de nickname antes de tocar Supabase Auth", () => {
     await provisionUser(ARGS);
 
     expect(client.auth.admin.createUser).toHaveBeenCalled();
+  });
+});
+
+// Fecha de nacimiento / país de residencia (2026-09-07, pedido explícito:
+// "añade al formulario de registro los campos fecha de nacimiento y
+// país de residencia"). No van en user_metadata/handle_new_user() (evita
+// tocar el trigger de alta, un cambio de esquema aparte) — se escriben
+// con un UPDATE normal sobre la fila que el propio trigger ya creó,
+// best-effort igual que el email.
+describe("fecha de nacimiento / país de residencia (best-effort tras crear la cuenta)", () => {
+  it("con ambos, actualiza la fila de profiles recién creada", async () => {
+    const client = makeClient();
+    getServiceRoleClient.mockReturnValue(client);
+
+    await provisionUser({ ...ARGS, birth_date: "1990-05-12", country_of_residence: "MX" });
+
+    expect(client.from).toHaveBeenCalledWith("profiles");
+    expect(client.__mocks.update).toHaveBeenCalledWith({ birth_date: "1990-05-12", country_of_residence: "MX" });
+    expect(client.__mocks.updateEq).toHaveBeenCalledWith("user_id", "new-user-1");
+  });
+
+  it("con solo uno de los dos, manda el otro como null en el UPDATE", async () => {
+    const client = makeClient();
+    getServiceRoleClient.mockReturnValue(client);
+
+    await provisionUser({ ...ARGS, birth_date: "1990-05-12" });
+
+    expect(client.__mocks.update).toHaveBeenCalledWith({ birth_date: "1990-05-12", country_of_residence: null });
+  });
+
+  it("sin ninguno de los dos, no llama al UPDATE de profiles en absoluto", async () => {
+    const client = makeClient();
+    getServiceRoleClient.mockReturnValue(client);
+
+    await provisionUser(ARGS);
+
+    expect(client.__mocks.update).not.toHaveBeenCalled();
+  });
+
+  it("si el UPDATE falla, el alta sigue completándose con éxito (best-effort, no bloquea)", async () => {
+    const client = makeClient({ profileUpdateResult: { error: { message: "constraint violada" } } });
+    getServiceRoleClient.mockReturnValue(client);
+
+    const result = await provisionUser({ ...ARGS, birth_date: "1990-05-12", country_of_residence: "MX" });
+
+    expect(result.user_id).toBe("new-user-1");
+    expect(result.email_sent).toBe(true);
   });
 });

@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "personalData": "Persönliche Daten",
+    "instructor": "Instructor-Daten",
+    "favoriteCurrency": "Bevorzugte Währung",
+    "language": "Sprache",
+    "security": "Sicherheit",
+    "privacy": "Datenschutz"
+  },
+  "signOut": {
+    "button": "Abmelden"
+  },
+  "avatar": {
+    "changeAvatar": "Avatar ändern",
+    "closeAvatarPicker": "Avatar-Auswahl schließen",
+    "colorLabel": "Farbe {{name}}",
+    "iconLabel": "Symbol {{name}}",
+    "previousIcon": "Vorheriges Symbol",
+    "nextIcon": "Nächstes Symbol",
+    "save": "Speichern",
+    "saving": "Wird gespeichert…",
+    "cancel": "Abbrechen",
+    "toastSuccess": "Avatar aktualisiert",
+    "toastError": "Avatar konnte nicht gespeichert werden. Versuch es erneut."
+  },
+  "personalData": {
+    "nameLine": "Name:",
+    "nicknameLine": "Nickname:",
+    "professionalLine": "Professionell:",
+    "birthDateLine": "Geburtsdatum:",
+    "countryLine": "Wohnsitzland:",
+    "edit": "Bearbeiten",
+    "nameLabel": "Vorname",
+    "lastNameLabel": "Nachname",
+    "nicknameLabel": "Nickname",
+    "professionalLabel": "Professionell",
+    "professionalPlaceholder": "Nicht gewählt",
+    "birthDateLabel": "Geburtsdatum",
+    "countryLabel": "Wohnsitzland",
+    "countryPlaceholder": "Land wählen",
+    "nicknameAtError": "Darf kein \"@\" enthalten.",
+    "save": "Speichern",
+    "saving": "Wird gespeichert…",
+    "toastSuccess": "Profil aktualisiert",
+    "errors": {
+      "nicknameTaken": "Dieser Nickname wird bereits verwendet.",
+      "nicknameAt": "Der Nickname darf kein \"@\" enthalten.",
+      "generic": "Konnte nicht gespeichert werden. Versuch es erneut."
+    }
+  },
+  "instructor": {
+    "hint": "Werden verwendet, um deine Training Records automatisch auszufüllen — sie werden hier einmalig gespeichert, nicht pro Gerät.",
+    "card": {
+      "role": "SSI-Professional",
+      "roleWithLevel": "SSI {{level}}",
+      "noSignature": "Keine Unterschrift",
+      "signatureAlt": "Unterschrift von {{name}}",
+      "initialsLabel": "Initialen",
+      "numberLabel": "SSI PRO"
+    },
+    "signatureLabel": "Deine Unterschrift",
+    "edit": "Bearbeiten",
+    "initialsLabel": "Initialen",
+    "numberLabel": "SSI-Pro-Nummer",
+    "save": "Speichern",
+    "saving": "Wird gespeichert…",
+    "toastSuccess": "Instructor-Daten aktualisiert",
+    "toastError": "Instructor-Daten konnten nicht gespeichert werden. Versuch es erneut."
+  },
+  "currency": {
+    "hint": "Wird als Standardwährung bei Kursausgleich verwendet, wenn kein Tarif sie bestimmt. Alle anderen Buchungen verwenden immer die Währung ihres Tarifs.",
+    "placeholder": "Nicht gewählt — verwendet die Standardwährung der App",
+    "toastSuccess": "Bevorzugte Währung aktualisiert"
+  },
+  "language": {
+    "placeholder": "Sprache auswählen",
+    "toastSuccess": "Sprache aktualisiert",
+    "toastError": "Sprache konnte nicht geändert werden. Versuch es erneut."
+  },
+  "password": {
+    "currentLabel": "Aktuelles Passwort",
+    "newLabel": "Neues Passwort",
+    "confirmLabel": "Passwort bestätigen",
+    "showCurrent": "Aktuelles Passwort anzeigen",
+    "hideCurrent": "Aktuelles Passwort ausblenden",
+    "show": "Passwort anzeigen",
+    "hide": "Passwort ausblenden",
+    "minLength": "Mindestens 8 Zeichen",
+    "matches": "Die Passwörter stimmen überein",
+    "submit": "Passwort ändern",
+    "toastSuccess": "Passwort aktualisiert",
+    "toastError": "Passwort konnte nicht geändert werden. Versuch es erneut.",
+    "wrongCurrent": "Aktuelles Passwort falsch."
+  },
+  "deleteAccount": {
+    "confirmWord": "ABBRECHEN",
+    "description": "Das Löschen deines Kontos entfernt deinen Zugang und alle deine Daten in Ocean Flow dauerhaft: Schulen, Kurse, Tarife, Kursprotokoll, Provisionen und Ausgleiche mit Kollegen. Es wird keine Kopie aufbewahrt. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "button": "Mein Konto löschen",
+    "confirmTitle": "Konto löschen?",
+    "confirmMessage": "Du bist dabei, das Konto \"{{nickname}}\" und alle seine Daten dauerhaft zu löschen. Du kannst diese Aktion nicht rückgängig machen.",
+    "continue": "Weiter",
+    "finalCheckTitle": "Letzte Prüfung",
+    "typeWordPrefix": "Schreibe",
+    "typeWordSuffix": "um zu bestätigen, dass du dein Konto dauerhaft löschen möchtest.",
+    "typeWordAriaLabel": "Schreibe {{word}} zur Bestätigung",
+    "back": "Zurück",
+    "deleteButton": "Konto löschen",
+    "toastSuccess": "Konto gelöscht",
+    "genericError": "Konto konnte nicht gelöscht werden. Versuch es erneut.",
+    "networkError": "Konto konnte nicht gelöscht werden. Überprüfe deine Verbindung und versuch es erneut."
+  }
+}

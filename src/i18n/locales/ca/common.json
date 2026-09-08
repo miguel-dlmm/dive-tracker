@@ -1,0 +1,92 @@
+{
+  "loading": { "defaultLabel": "Carregant" },
+  "errorBoundary": {
+    "title": "Vaja, alguna cosa ha fallat",
+    "body": "Aquesta pantalla ha tingut un problema inesperat. No és culpa teva — prova a recarregar, hauria de tornar a la normalitat.",
+    "reload": "Recarrega"
+  },
+  "movementTypes": {
+    "ganado": "Curs",
+    "comision": "Comissió",
+    "companeros": "Ajust"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "Per cobrar",
+    "empty": "Res pendent",
+    "count_one": "{{count}} pagament pendent",
+    "count_other": "{{count}} pagaments pendents",
+    "addMovement": "Afegeix moviment"
+  },
+  "confirmDialog": { "cancel": "Cancel·la", "defaultConfirmLabel": "Elimina" },
+  "editActions": { "defaultSaveLabel": "Desa", "cancel": "Cancel·la" },
+  "deleteButton": {
+    "defaultLabel": "Elimina",
+    "defaultItemLabel": "aquest element",
+    "deletedToast": "Eliminat",
+    "errorToast": "No s'ha pogut eliminar. Torna-ho a provar.",
+    "confirmTitle": "Vols eliminar aquest registre?",
+    "confirmMessage": "Estàs a punt d'eliminar {{item}}. Aquesta acció no es pot desfer."
+  },
+  "field": { "hideHelp": "Amaga l'ajuda", "help": "Ajuda" },
+  "calendar": {
+    "months": ["Gener", "Febrer", "Març", "Abril", "Maig", "Juny", "Juliol", "Agost", "Setembre", "Octubre", "Novembre", "Desembre"],
+    "weekdays": ["Dl", "Dt", "Dc", "Dj", "Dv", "Ds", "Dg"],
+    "prevMonth": "Mes anterior",
+    "nextMonth": "Mes següent",
+    "prevYear": "Any anterior",
+    "nextYear": "Any següent",
+    "today": "Avui"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "Data",
+    "defaultAriaLabel": "Tria una data",
+    "pickerAriaLabel": "Selector de data",
+    "dayAriaLabel": "{{day}} {{month}}",
+    "today": "Avui",
+    "yesterday": "Ahir",
+    "tomorrow": "Demà",
+    "dayBeforeYesterday": "Abans-d'ahir"
+  },
+  "dateRangePicker": {
+    "from": "Des de",
+    "to": "Fins a",
+    "fromAriaLabel": "Data d'inici",
+    "toAriaLabel": "Data de fi",
+    "pickerAriaLabel": "Selector d'interval de dates",
+    "chooseStart": "Tria la data d'inici",
+    "chooseEnd": "Tria la data de fi",
+    "chooseDate": "Tria una data",
+    "okFrom": "D'acord — només des del {{date}}",
+    "presets": { "today": "Avui", "thisWeek": "Aquesta setmana", "thisMonth": "Aquest mes", "last30Days": "Últims 30 dies" }
+  },
+  "monthCalendar": {
+    "addOnDay": "Afegeix moviment el {{day}} {{month}}",
+    "addOnDayToday": "Afegeix moviment el {{day}} {{month}} (avui)",
+    "dayToday": "{{day}} {{month}} (avui)",
+    "closeDayDetail": "Tanca el detall del dia",
+    "dayHeading": "Dia {{day}} {{month}}",
+    "generatedOnDay": "Generat aquell dia",
+    "table": { "course": "Curs", "comment": "Comentari", "people": "Pers.", "amount": "Import" }
+  },
+  "select": { "placeholder": "Selecciona..." },
+  "multiSelect": { "placeholder": "Totes", "clearSelection": "Esborra la selecció", "selectedCount": "{{count}} seleccionades" },
+  "searchSelect": { "placeholder": "Cerca...", "ariaLabel": "Cerca", "noResults": "Sense resultats" },
+  "currencySearchSelect": { "placeholder": "Cerca moneda..." },
+  "listFilterBar": {
+    "from": "Des de",
+    "to": "Fins a",
+    "school": "Escola",
+    "activity": "Activitat",
+    "noLimit": "Sense límit",
+    "all": "Totes",
+    "clearFilters": "Neteja els filtres"
+  },
+  "rowMenu": { "moreActions": "Més accions", "edit": "Edita", "delete": "Elimina" },
+  "statusSwitch": { "ariaLabel": "Estat: {{value}}. Toca per canviar a {{next}}", "title": "{{value}} — clica per canviar a \"{{next}}\"" },
+  "signature": {
+    "opcional": "opcional",
+    "borrar": "Esborra",
+    "firmadoAria": "{{label}}: signat",
+    "sinFirmarAria": "{{label}}: sense signar"
+  }
+}

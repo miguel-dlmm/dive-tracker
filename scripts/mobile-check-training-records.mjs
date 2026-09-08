@@ -145,7 +145,10 @@ async function main() {
   await shot(page, "instructor-guardado");
 
   console.log("→ Home → tarjeta Training Records (Bloque 10 — ya no vive en el menú de Configuración)");
-  await page.locator('button[aria-label="Cerrar"]').tap();
+  // getByRole("banner") en vez del selector plano: un toast de éxito
+  // ("Perfil actualizado") puede seguir visible en este instante con su
+  // propio botón aria-label="Cerrar", ambiguo contra el de la cabecera.
+  await page.getByRole("banner").getByRole("button", { name: "Cerrar" }).tap();
   await page.waitForTimeout(300);
   await page.getByRole("button", { name: "Home", exact: true }).tap();
   await page.waitForTimeout(300);
@@ -167,15 +170,23 @@ async function main() {
     await pickToday(page, `Fecha: ${label}`);
   }
 
-  console.log("→ Confirmación de examen (con su propia fecha)");
-  await page.getByRole("checkbox", { name: "Confirmación de Examen Final" }).tap();
-  await page.waitForTimeout(200);
-  await pickToday(page, "Fecha: Confirmación de Examen Final");
+  // "Confirmación de Examen Final" dejó de ser un checkbox + fecha aparte
+  // el 2026-09-04 (ver recordConfig.js, "examConfirmed se retira") — hoy
+  // es solo un DatePicker (examConfirmedDate), este script seguía con el
+  // checkbox ya retirado desde entonces sin que nadie lo hubiera vuelto a
+  // ejecutar hasta ahora.
+  console.log("→ Confirmación de examen (fecha)");
+  await pickToday(page, "Fecha de examen");
   await shot(page, "configuracion-compartida-completa");
 
   console.log("→ Añadir 2 alumnos (solo nombre, apellidos, iniciales y firma cada uno)");
-  for (const [firstName, lastName] of [["Marta", "Test Apellido"], ["Diego", "Otro Alumno"]]) {
-    await page.getByRole("button", { name: "Añadir alumno" }).tap();
+  // El botón dice "Añade tu primer alumno" con el listado vacío y
+  // "Añadir alumno" a partir del segundo (roster.anadirPrimerAlumno vs.
+  // roster.anadirAlumno, trainingRecords.json) — la etiqueta antigua del
+  // script ("Añadir alumno" para los dos) nunca encajaba con el primero.
+  for (const [i, [firstName, lastName]] of [["Marta", "Test Apellido"], ["Diego", "Otro Alumno"]].entries()) {
+    const addLabel = i === 0 ? "Añade tu primer alumno" : "Añadir alumno";
+    await page.getByRole("button", { name: addLabel }).tap();
     await page.waitForTimeout(300);
     await page.getByLabel("Nombre", { exact: true }).fill(firstName);
     await page.getByLabel("Apellidos", { exact: true }).fill(lastName);
@@ -236,9 +247,13 @@ async function main() {
   await page.reload();
   await page.waitForSelector("text=Mi trabajo", { timeout: 15000 });
   await dismissWhatsNewIfPresent(page);
-  await page.waitForTimeout(300);
-  // ConfigTab recuerda la última sección abierta — tras recargar puede
-  // reabrir directo en Training Records, sin pasar por el menú de nuevo.
+  // Training Records ya es su propia pestaña independiente (rediseño de
+  // navegación 2026-09-07) — sessionStorage la restaura directamente, sin
+  // pasar por Configuración. La espera sube a 1.5s: 300ms se quedaba
+  // corto frente a la carga real de templates/adventures desde Supabase
+  // (visible como "Cargando..." bastante más de 300ms en pruebas
+  // manuales), dando falsos negativos de "el roster no aparece".
+  await page.waitForTimeout(1500);
   if (!(await page.getByText("Marta Test Apellido").isVisible().catch(() => false))) {
     await page.getByRole("button", { name: "Home", exact: true }).tap();
     await page.waitForTimeout(250);

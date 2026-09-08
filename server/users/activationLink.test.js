@@ -41,6 +41,30 @@ it("con flow: 'recovery' (recuperación autoservicio), el enlace lo incluye — 
   expect(url.searchParams.get("flow")).toBe("recovery");
 });
 
+it("baseUrl gana sobre APP_URL cuando se pasa (bug real: Preview Deployments distintos de APP_URL generaban enlaces al dominio equivocado)", async () => {
+  const previewUrl = "https://dive-tracker-git-feature-x-ocean-pulse1.vercel.app";
+
+  const { activationLink, error } = await generateActivationLink(EMAIL, { flow: "recovery", baseUrl: previewUrl });
+
+  expect(error).toBeNull();
+  expect(activationLink.startsWith(previewUrl)).toBe(true);
+});
+
+it("sin baseUrl, sigue usando APP_URL como antes (compatibilidad de los demás llamadores)", async () => {
+  const { activationLink, error } = await generateActivationLink(EMAIL, { flow: "recovery" });
+
+  expect(error).toBeNull();
+  expect(activationLink.startsWith(APP_URL)).toBe(true);
+});
+
+it("sin baseUrl ni APP_URL: error controlado, no lanza", async () => {
+  delete process.env.APP_URL;
+
+  const result = await generateActivationLink(EMAIL, { flow: "recovery" });
+
+  expect(result).toEqual({ activationLink: null, error: "No se pudo generar el enlace de activación." });
+});
+
 it("devuelve error sin lanzar si falla generateLink, con o sin flow", async () => {
   getServiceRoleClient.mockReturnValue(makeClient({ data: null, error: { message: "rate limit" } }));
 

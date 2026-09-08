@@ -1,0 +1,41 @@
+{
+  "months": {
+    "long": ["Gener", "Febrer", "Març", "Abril", "Maig", "Juny", "Juliol", "Agost", "Setembre", "Octubre", "Novembre", "Desembre"],
+    "short": ["Gen", "Feb", "Març", "Abr", "Maig", "Juny", "Jul", "Ag", "Set", "Oct", "Nov", "Des"]
+  },
+  "granularity": {
+    "mensual": "Mes",
+    "trimestral": "Trimestre",
+    "semestral": "Semestre",
+    "anual": "Any",
+    "personalizado": "Interval"
+  },
+  "granularityLabel": "Granularitat del període",
+  "quarterAbbr": "T",
+  "halfYearAbbr": "S",
+  "trend": {
+    "heading": "Tendència — toca un període per navegar-hi",
+    "goTo": "Vés a {{period}}",
+    "currentSuffix": " (període actual)"
+  },
+  "from": "Des de",
+  "to": "Fins a",
+  "chooseRange": "Tria un interval",
+  "total": "Total",
+  "totalCombined": "Total combinat",
+  "totalOf": "Total {{source}}",
+  "trendVsPreviousPeriod": "{{delta}} respecte al període anterior",
+  "sections": {
+    "bySchool": "Per escola",
+    "byActivity": "Per curs",
+    "commissions": "Comissions",
+    "colleagueAdjustments": "Ajustos de curs",
+    "calendar": "Calendari"
+  },
+  "empty": {
+    "noData": "Sense dades.",
+    "noCoursesInPeriod": "Sense cursos en aquest període.",
+    "noMovementsInPeriod": "Sense moviments en aquest període.",
+    "noColleagueAdjustmentsInPeriod": "Sense ajustos de curs en aquest període."
+  }
+}

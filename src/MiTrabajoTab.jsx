@@ -1,11 +1,12 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2 } from "lucide-react";
+import { Check, RotateCcw, SlidersHorizontal, PartyPopper, TrendingUp, Wallet, CheckCircle2, HelpCircle, Users } from "lucide-react";
 import { motion } from "motion/react";
-import { NAVY, TEAL, SUN, CORAL, GREEN } from "./App";
+import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY, BRAND_GOLD } from "./App";
 import {
-  Money, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
-  isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab,
+  Money, formatMoney, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
+  isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab, EntryTitle,
+  useFloatingDropdown, FloatingPanel,
 } from "./shared";
 import { buildActivityEntries, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
@@ -37,23 +38,6 @@ function matchesEntryFilters(e, f) {
   return true;
 }
 
-// Sin marcador delante del texto (ver Pagos) — para el ajuste, el curso
-// lidera igual que en Curso/Comisión, con el instructor relacionado como
-// detalle secundario, porque el ajuste sigue estando ligado a un curso.
-function EntryRowTitle({ entry, activityColor }) {
-  const isAjuste = entry._source === "companeros";
-  return (
-    <div className="min-w-0">
-      <p className="truncate text-[15px] font-semibold leading-tight" style={{ color: activityColor(entry.activity) }}>
-        {entry.activity || "—"}
-      </p>
-      <p className="mt-0.5 truncate text-[11.5px] font-medium text-gray-400">
-        {entry.school}{isAjuste && entry.colleague_name ? ` · con ${entry.colleague_name}` : ""}
-      </p>
-    </div>
-  );
-}
-
 // "Confirmar cobro" no describe bien saldar una deuda hacia un compañero
 // (importe negativo) — el resto del vocabulario ("Marcar pendiente") se
 // mantiene igual porque sí es correcto en ambos sentidos.
@@ -66,17 +50,33 @@ function actionLabel(entry, isPending, t) {
 // mantiene ligera (texto+icono, sin relleno de color) para no competir con
 // el FAB, que es la única acción con fondo sólido de toda la pantalla (ver
 // misma nota de ADR-0005 sobre jerarquía de acciones).
-// Acento por tipo (borde izquierdo, discreto) — para escanear la lista
-// de un vistazo sin abrir cada fila. Curso/Comisión usan un color fijo de
-// marca por tipo (TEAL/SUN, igual criterio que NAVY/CORAL/GREEN de más
-// abajo — identidad de la app, no dato de negocio configurable). Ajuste
-// reutiliza el color que ya tenía el importe (CORAL/GREEN según signo):
-// esa distinción de "quién debe a quién" ya era más valiosa que un color
-// de tipo uniforme, no había que sustituirla.
+// Acento por tipo — para escanear la lista de un vistazo sin abrir cada
+// fila. Curso/Comisión usan un color fijo de marca por tipo (TEAL/SUN,
+// igual criterio que BRAND_NAVY/CORAL/GREEN de más abajo — identidad de la
+// app, no dato de negocio configurable). Ajuste reutiliza el color que ya
+// tenía el importe (CORAL/GREEN según signo): esa distinción de "quién debe
+// a quién" ya era más valiosa que un color de tipo uniforme, no había que
+// sustituirla.
+// Antes vivía como un borde izquierdo de 4px (feedback explícito
+// 2026-09-07: "esa franja vertical finita a la izquierda" era difícil de
+// reconocer de un vistazo) — ver TypeIconChip, que sustituye el borde por
+// un icono en una chip circular con este mismo color, mismo lenguaje visual
+// que ya usan los KPI y los campos de fecha de esta ronda de rediseño.
 function rowAccent(entry, amountColor) {
   if (entry._source === "ganado") return TEAL;
-  if (entry._source === "comision") return SUN;
+  // BRAND_GOLD (2026-09-07), no SUN — ver MOVEMENT_TYPE_META (shared.jsx):
+  // SUN es un semántico de estado, no el color de marca de "Comisión".
+  if (entry._source === "comision") return BRAND_GOLD;
   return amountColor;
+}
+
+function TypeIconChip({ source, color }) {
+  const Icon = MOVEMENT_TYPE_META[source]?.icon || Users;
+  return (
+    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+      <Icon size={17} style={{ color }} aria-hidden="true" />
+    </span>
+  );
 }
 
 // Salida al eliminar — tres capas de movimiento en vez de un fade plano:
@@ -95,11 +95,15 @@ const HEIGHT_DELAY_MS = 60;
 const HEIGHT_MS = 220;
 const EXIT_MS = HEIGHT_DELAY_MS + HEIGHT_MS + 30; // margen antes de disparar el borrado real
 
-function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onEdit, onDelete, animPhase }) {
+function EntryRow({ entry, activityColor, schoolColor, currencyRows, isPending, onToggle, onEdit, onDelete, onUndoDelete, animPhase }) {
   const { t } = useTranslation("trabajo");
   const isAjuste = entry._source === "companeros";
   const negative = isAjuste && entry.total < 0;
-  const amountColor = isAjuste ? (negative ? CORAL : GREEN) : NAVY;
+  const amountColor = isAjuste ? (negative ? CORAL : GREEN) : BRAND_NAVY;
+  // Usado tanto por el itemLabel del menú "⋯" como por el mensaje de
+  // confirmación del borrado (deleteConfirmMessage) — una única fuente,
+  // sin calcular la misma frase dos veces.
+  const deleteItemLabel = isAjuste ? t("rowMenu.adjustmentWith", { name: entry.colleague_name }) : t("rowMenu.courseAt", { activity: entry.activity, school: entry.school });
 
   // Animación de salida: colapsar altura+opacidad+desplazamiento ANTES de
   // borrar de verdad, no al revés — deleteRow() actualiza el estado en
@@ -206,38 +210,54 @@ function EntryRow({ entry, activityColor, currencyRows, isPending, onToggle, onE
       }}
     >
       <div
-        className="border-l-4 px-4 py-3.5 text-sm"
+        className="px-4 py-3.5 text-sm"
         style={{
-          borderColor: rowAccent(entry, amountColor),
           opacity: collapsed ? 0 : 1,
           transform: collapsed ? "translateX(-16px) scale(0.97)" : "translateX(0) scale(1)",
           transition: `opacity ${CONTENT_MS}ms ${EXIT_EASING}, transform ${CONTENT_MS}ms ${EXIT_EASING}`,
         }}
       >
-        <div className="flex items-start justify-between gap-2">
-          <EntryRowTitle entry={entry} activityColor={activityColor} />
-          <span className="shrink-0 font-semibold tabular-nums" style={{ color: amountColor }}>
-            {isAjuste && (negative ? "− " : "+ ")}
-            <Money amount={Math.abs(entry.total)} code={entry.currency} currencyRows={currencyRows} style={{ color: amountColor }} />
-          </span>
-        </div>
-        {entry.notes && (
-          <p className="mt-1 truncate text-[11px] italic text-gray-400">"{entry.notes}"</p>
-        )}
-        <div className="mt-1.5 flex items-center justify-between gap-2">
-          <span className="truncate text-xs text-gray-400">
-            {entry.date}{MOVEMENT_TYPE_META[entry._source] ? ` · ${t(`common:movementTypes.${entry._source}`)}` : ""}
-          </span>
-          <div className="flex shrink-0 items-center gap-1">
-            <button
-              onClick={onToggle}
-              className="flex min-h-9 items-center gap-1 rounded px-1.5 text-xs font-semibold transition-colors"
-              style={{ color: isPending ? TEAL : "#6B7280" }}
-            >
-              {isPending ? <Check size={14} aria-hidden="true" /> : <RotateCcw size={13} aria-hidden="true" />}
-              {actionLabel(entry, isPending, t)}
-            </button>
-            <RowMenu onEdit={onEdit} onDelete={handleDelete} itemLabel={isAjuste ? t("rowMenu.adjustmentWith", { name: entry.colleague_name }) : t("rowMenu.courseAt", { activity: entry.activity, school: entry.school })} />
+        <div className="flex items-start gap-2.5">
+          <TypeIconChip source={entry._source} color={rowAccent(entry, amountColor)} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <EntryTitle
+                school={entry.school}
+                activity={entry.activity}
+                schoolColor={schoolColor(entry.school)}
+                activityColor={activityColor(entry.activity)}
+                schoolSuffix={isAjuste && entry.colleague_name ? ` · con ${entry.colleague_name}` : ""}
+              />
+              <span className="shrink-0 font-semibold tabular-nums" style={{ color: amountColor }}>
+                {isAjuste && (negative ? "− " : "+ ")}
+                <Money amount={Math.abs(entry.total)} code={entry.currency} currencyRows={currencyRows} style={{ color: amountColor }} />
+              </span>
+            </div>
+            {entry.notes && (
+              <p className="mt-1 truncate text-[11px] italic text-gray-400">"{entry.notes}"</p>
+            )}
+            <div className="mt-1.5 flex items-center justify-between gap-2">
+              <span className="truncate text-xs text-gray-400">
+                {entry.date}{MOVEMENT_TYPE_META[entry._source] ? ` · ${t(`common:movementTypes.${entry._source}`)}` : ""}
+              </span>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  onClick={onToggle}
+                  className="flex min-h-9 items-center gap-1 rounded px-1.5 text-xs font-semibold transition-colors"
+                  style={{ color: isPending ? BRAND_NAVY : "#6B7280" }}
+                >
+                  {isPending ? <Check size={14} aria-hidden="true" /> : <RotateCcw size={13} aria-hidden="true" />}
+                  {actionLabel(entry, isPending, t)}
+                </button>
+                <RowMenu
+                  onEdit={onEdit}
+                  onDelete={handleDelete}
+                  itemLabel={deleteItemLabel}
+                  deleteConfirmMessage={t("rowMenu.deleteConfirmMessage", { item: deleteItemLabel })}
+                  deleteSuccessAction={{ label: t("rowMenu.undoAction"), onClick: onUndoDelete }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -301,27 +321,170 @@ function emptyMessage(statusFilter, hasActiveFilters, t) {
 // sola), se renderiza sin animar, igual que ya hace "Generado este mes"
 // en Home para el mismo caso: la app ya acepta esa degradación en vez de
 // intentar animar N monedas en paralelo con un solo hook.
-function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows }) {
+// `tooltip` (opcional, solo lo usa "Pendiente de cobrar" — ver
+// MiTrabajoTab): mismo mecanismo que el hint de Field en shared.jsx
+// (useFloatingDropdown + FloatingPanel, no un tooltip nuevo — convención
+// MVP/reutilización, CLAUDE.md), con el icono a tamaño reducido (11px vs
+// los 13px de Field) para que no compita visualmente con el label ni
+// rompa la simetría de las 3 tarjetas: los otros dos KPIs no llevan
+// icono, así que este debe leerse como "parte del mismo lenguaje visual
+// ya usado en la app" (mismo HelpCircle gris apagado que Field), no como
+// un elemento nuevo — discreto pero reconocible como pulsable.
+// tooltipShowLabel/tooltipHideLabel (aria-label, requeridos junto con
+// `tooltip`): a propósito NO reutilizan common:field.help/hideHelp
+// ("Ayuda"/"Ocultar ayuda") como hace Field — MovementSheet ya usa esos
+// mismos textos genéricos para su propio hint de "Importe" en Ajuste de
+// curso, y ambos pueden convivir en el DOM a la vez (la hoja se abre
+// encima de esta pantalla, no la desmonta). Un aria-label específico
+// ("Info: Pendiente de cobrar") evita esa ambigüedad para lectores de
+// pantalla y de paso es más claro por sí solo.
+// Texto ya formateado de un KPI de dinero — misma lógica que renderiza
+// MoneyKpiTile, extraída aquí para poder MEDIR la longitud antes de
+// montar los 3 KPI a la vez (ver kpiIconTierFor más abajo), sin duplicar el
+// criterio de "una sola moneda" vs "varias unidas con + ".
+function moneyKpiText(totals, currencyRows) {
+  const entries = Object.entries(totals || {});
+  if (entries.length === 0) return "—";
+  if (entries.length === 1) return formatMoney(entries[0][1], entries[0][0], currencyRows);
+  return entries.map(([code, amt]) => formatMoney(amt, code, currencyRows)).join(" + ");
+}
+
+function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel, iconScale = 1, textScale = 1, rowMeasureRef, finalTextMeasureRef }) {
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const entries = Object.entries(totals || {});
   const single = entries.length === 1 ? entries[0] : null;
   const animatedCents = useCountUp(single ? Math.round(single[1] * 100) : 0, { reduced });
+  // Sexto intento (2026-09-07, pedido explícito tras las rondas
+  // anteriores — Fase 6/7/9/11.1/11.2, todas documentadas en las que ya
+  // no queda ni rastro aquí): "el icono se va encogiendo según crece el
+  // número... en el momento en que vaya a salirse de la caja, el icono
+  // desaparece". Los intentos anteriores eran binarios (normal/hidden,
+  // un salto instantáneo o una animación de entrada/salida) — este ya
+  // no lo es: `iconScale` (0 a 1, calculado en el padre) encoge el
+  // icono de forma continua, nunca de golpe. Sigue midiendo el DOM real
+  // en vez de adivinar caracteres (mismo motivo que las rondas
+  // anteriores: WebKit renderiza más ancho que Chromium) — pero mide la
+  // cifra FINAL, no la que se ve mientras cuenta: `finalTextMeasureRef`
+  // apunta a un span invisible (mismo texto ya formateado, sin animar)
+  // que existe solo para medir su ancho real de una sola vez cuando
+  // cambian los totales, no en cada fotograma del conteo.
+  const amountSizeCls = single ? "text-sm" : "text-xs";
+  // textScale (2026-09-08, ver kpiTextScale en MiTrabajoTab): red de
+  // seguridad para cuando ni siquiera ocultar el icono basta (importes de
+  // 6+ dígitos) — reduce el font-size real de ESTE número lo justo para
+  // que quepa, nunca por Tailwind (no hay clase por cada valor posible),
+  // así que aquí sí hace falta el px exacto de partida (14/text-sm,
+  // 12/text-xs) para calcular el destino.
+  const amountBasePx = single ? 14 : 12;
+  // px-3 (Fase 9, 2026-09-07). El `w-full` que este comentario documentaba
+  // hasta el rediseño de 2026-09-08 (icono+cifra centrados como grupo, en
+  // vez de una fila de ancho completo) se ha retirado — con `w-full` el
+  // span de la cifra reservaba el 100% del ancho de la fila como su
+  // "flex-basis", así que flexbox lo encogía hasta encajar junto al icono
+  // en vez de dimensionarlo a su propio contenido; el resultado era una
+  // caja más ancha que el texto real, con el número pegado a su borde
+  // izquierdo en vez de centrado de verdad junto al icono. Sin `w-full`
+  // (solo `min-w-0 max-w-full`), el span se dimensiona a su contenido, y
+  // es `justify-content:center` en la fila quien centra el grupo entero.
+  const finalText = moneyKpiText(totals, currencyRows);
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex flex-col items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 py-4 text-center"
+      className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
     >
-      <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
-        <Icon size={17} style={{ color }} aria-hidden="true" />
-      </span>
-      <span className="text-base font-bold tabular-nums" style={{ color: NAVY }}>
-        {entries.length === 0 ? "—" : single ? (
-          <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
-        ) : (
-          entries.map(([code, amt], i) => <span key={code}>{i > 0 && " + "}<Money amount={amt} code={code} currencyRows={currencyRows} /></span>)
+      {/* Cuarta vuelta (2026-09-08, pedido explícito con capturas reales
+          delante — tres bugs concretos: "cuando no hay movimientos sale
+          el icono, qno debería. a partir de unidades de millar
+          desaparece el icono y antes es enano. quiero quitar el icono
+          del texto y más o menos en ese tamaño se puede colocar al lado
+          de la cifra"): se retira el icono fijo de la etiqueta de abajo
+          (ver ese bloque) y ESTE icono, el único que queda por KPI, baja
+          de 14px a 10px — el tamaño del que se retira, no uno nuevo.
+          `entries.length > 0 &&`: sin datos ("—"), no se muestra ningún
+          icono — antes se mostraba igual (a escala completa, porque "—"
+          es corto y nunca fuerza el encogimiento compartido), aunque no
+          hay nada que ilustrar. Sin badge de fondo — icono suelto,
+          pegado a la cifra, bloque entero centrado en la tarjeta
+          (`justify-center`, no ocupa el ancho completo). relative:
+          contiene el span invisible de medición (position: absolute,
+          ver más abajo) sin que afecte a la posición de nada visible.
+          iconScale (0 a 1, ver kpiIconScale en MiTrabajoTab): mismo
+          mecanismo de siempre, sobre el nuevo tamaño de 10px. Calculado
+          sobre las 3 cifras a la vez, no cada tarjeta por su cuenta — si
+          una cifra crece tanto que hace falta ocultar el icono, las 3
+          tarjetas cambian juntas, para no romper la alineación entre
+          ellas con solo una distinta. Nunca se desmonta (sin
+          AnimatePresence): el propio ancho/opacidad anima de forma
+          continua con Motion hacia el `iconScale` que le llegue. */}
+      <div ref={rowMeasureRef} className="relative flex items-center justify-center gap-1">
+        {entries.length > 0 && (
+          <motion.span
+            initial={false}
+            animate={{ width: 10 * iconScale, opacity: iconScale, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.standard } }}
+            className="flex h-4 shrink-0 items-center justify-center overflow-hidden"
+          >
+            <Icon size={10} style={{ color }} aria-hidden="true" />
+          </motion.span>
+        )}
+        {/* Sin `break-words` (Fase 11.2): la cifra ya no se parte nunca
+            en dos líneas — si no cabe con el icono puesto, el padre lo
+            detecta MIDIENDO el span invisible de abajo (mismo texto ya
+            formateado, sin animar) y encoge el icono en las 3 tarjetas
+            a la vez, liberando ancho para que quepa en una sola línea. */}
+        <span
+          className={`min-w-0 max-w-full ${amountSizeCls} font-bold leading-tight tabular-nums`}
+          style={{ color: BRAND_NAVY, fontSize: textScale < 1 ? `${amountBasePx * textScale}px` : undefined }}
+        >
+          {entries.length === 0 ? "—" : single ? (
+            <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
+          ) : (
+            entries.map(([code, amt], i) => <span key={code}>{i > 0 && " + "}<Money amount={amt} code={code} currencyRows={currencyRows} /></span>)
+          )}
+        </span>
+        {/* Span de medición, invisible y fuera del flujo (position:
+            absolute + visibility:hidden — nunca display:none, que
+            haría scrollWidth inservible): pinta la cifra FINAL ya
+            formateada, sin animar, solo para que el padre pueda medir
+            su ancho real de una sola vez por cambio de totales. */}
+        <span ref={finalTextMeasureRef} aria-hidden="true" className={`invisible absolute left-0 top-0 whitespace-nowrap ${amountSizeCls} font-bold tabular-nums`}>
+          {finalText}
+        </span>
+      </div>
+      {/* Icono junto a la etiqueta, retirado (2026-09-08, pedido
+          explícito: "quiero quitar el icono del texto") — vivía aquí
+          desde el 2026-09-07 como ancla que nunca se ocultaba, pero con
+          el icono de la cifra ahora también oculto solo cuando de
+          verdad no hay datos (ver arriba), duplicar el icono en dos
+          sitios de la misma tarjeta ya no aportaba nada — un único
+          icono por KPI, junto a la cifra. */}
+      <span className="flex items-center justify-center gap-1 text-center text-[11px] font-medium leading-tight text-gray-500">
+        {label}
+        {tooltip && (
+          // Mismo truco de objetivo táctil que Field: el icono visual se
+          // queda a tamaño pequeño, pero el botón real que lo envuelve es
+          // absoluto (44×44 efectivos) para no ensanchar la fila de label
+          // y descuadrar la altura de esta tarjeta frente a sus dos
+          // hermanas (convención #7, CLAUDE.md).
+          <span className="relative inline-flex h-3 w-3 shrink-0">
+            <button
+              ref={anchorRef}
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-label={open ? tooltipHideLabel : tooltipShowLabel}
+              className="absolute -inset-[15px] flex items-center justify-center text-gray-400"
+            >
+              <HelpCircle size={11} aria-hidden="true" />
+            </button>
+          </span>
         )}
       </span>
-      <span className="text-[10.5px] font-medium leading-tight text-gray-500">{label}</span>
+      {tooltip && (
+        <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} className="w-48 max-w-[75vw] px-2.5 py-1.5">
+          <span className="block text-[11px] font-normal italic normal-case text-gray-500">{tooltip}</span>
+        </FloatingPanel>
+      )}
     </motion.div>
   );
 }
@@ -345,6 +508,7 @@ export default function MiTrabajoTab({
   const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
 
   const activityColor = (name) => colorFor(activities.rows, name, "#374151");
+  const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
 
   const activityEntries = useMemo(
     () => buildActivityEntries({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
@@ -407,6 +571,15 @@ export default function MiTrabajoTab({
   // no solo generado) que completa el cuadro sin repetir los KPIs no
   // financieros que ya tiene Home (alumnos/cursos/captados).
   const currentMonthKey = todayStr().slice(0, 7);
+  // El tooltip de "Pendiente de cobrar" explica por qué esa cifra no
+  // cuadra con Generado/Cobrado (ambos solo de este mes) — pero esa
+  // aclaración solo tiene sentido si de verdad hay algo pendiente de
+  // ANTES de este mes; si todo lo pendiente es del mes en curso, la
+  // cifra ya cuadra sola y el tooltip no aporta nada, solo ruido.
+  const hasPendingBeforeCurrentMonth = useMemo(
+    () => incomeEntries.some((e) => isPendingStatus(e.status, paymentStatuses.rows) && e.date.slice(0, 7) < currentMonthKey),
+    [incomeEntries, paymentStatuses.rows, currentMonthKey]
+  );
   const monthGeneratedTotals = useMemo(() => {
     const map = {};
     incomeEntries.filter((e) => e.date.slice(0, 7) === currentMonthKey).forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
@@ -421,11 +594,6 @@ export default function MiTrabajoTab({
   }, [incomeEntries, currentMonthKey, paymentStatuses.rows]);
 
   const tableFor = (source) => (source === "ganado" ? worklog : source === "comision" ? comisiones : colleaguePayments);
-  // Sin esto, la pantalla mostraba "Estás al día — nada pendiente" durante
-  // el instante entre montar y recibir la primera respuesta de Supabase —
-  // un usuario nuevo lo leía como "esta app no tiene nada", no como
-  // "cargando". Un esqueleto breve evita ese vistazo equivocado.
-  const dataLoaded = worklog.loaded && comisiones.loaded && colleaguePayments.loaded && rates.loaded && commissionRates.loaded;
 
   // -----------------------------------------------------------------
   // Animación de fila al cambiar de estado — mismo lenguaje de movimiento
@@ -539,6 +707,26 @@ export default function MiTrabajoTab({
     }
   };
 
+  // Deshacer un borrado (Bloque baja lógica de movimientos, 2026-09-04) —
+  // mismo mecanismo de "Deshacer" que toggleStatus (acción en el toast de
+  // DeleteButton, ver RowMenu más abajo), pero al revés: restoreRow limpia
+  // deleted_at y recarga la tabla entera (ver useSupabaseTable.js), así
+  // que aquí no hace falta reconstruir la fila a mano — solo decidir si,
+  // con los filtros/pestaña EN VIVO (liveRef, mismo criterio que
+  // changeStatus), la fila recuperada debe entrar animada en la lista
+  // activa.
+  const undoDelete = async (entry) => {
+    const key = entryKey(entry);
+    try {
+      await tableFor(entry._source).restoreRow(entry.id);
+      const { filters: liveFilters, statusFilter: liveTab } = liveRef.current;
+      if (matchesEntryFilters(entry, liveFilters) && matchesActiveTab(entry.status, liveTab)) markEntering(key);
+      toast?.success(t("rowMenu.deleteUndoneToast"));
+    } catch {
+      toast?.error(t("rowMenu.deleteUndoError"));
+    }
+  };
+
   // "Cobrar" es el término correcto para el caso normal (Curso, Comisión,
   // Ajuste a tu favor), pero un Ajuste con importe negativo es una deuda
   // TUYA — ahí no "cobras", liquidas (mismo matiz que ya distingue
@@ -623,12 +811,129 @@ export default function MiTrabajoTab({
   const [sheetRequest, setSheetRequest] = useState(null);
   const fabVisible = useHideFabOnScroll();
 
+  // Escala de icono compartida por los 3 KPI a la vez — Fase 13
+  // (2026-09-07, pedido explícito: "el icono de la izquierda se va
+  // encogiendo según crece el número... en el momento en que vaya a
+  // salirse de la caja, el icono desaparece... si uno de los 3 va a
+  // ocultar su icono, el resto hará lo mismo a la vez"). Las rondas
+  // anteriores (Fase 6/7/9/11.1/11.2) eran todas binarias — un salto
+  // instantáneo o una animación de entrada/salida entre dos estados fijos
+  // (icono a tamaño completo u oculto).
+  //
+  // Bug real corregido de raíz (2026-09-08, reportado desde el iPhone
+  // real del usuario: "no sé qué pasa pero algo no está funcionando...
+  // se ve muy mal"): `rowMeasureRef` apuntaba al SPAN de la cifra, no a
+  // la fila entera — y ese span llevaba `w-full` (ver comentario en
+  // MoneyKpiTile), así que su `clientWidth` no era el ancho disponible
+  // real, era el resultado de que flexbox ya lo hubiera encogido para
+  // dejarle sitio al icono a SU escala actual. La fórmula de abajo
+  // restaba `ICON_FOOTPRINT` una segunda vez sobre un valor que ya lo
+  // tenía descontado — una referencia circular: la medida de cada
+  // fotograma dependía de la escala calculada en el fotograma anterior,
+  // nunca del ancho real y estable de la tarjeta. Fix: `rowMeasureRef`
+  // ahora apunta al `<div>` contenedor de la fila (ver MoneyKpiTile) —
+  // un hijo flex de la tarjeta en `flex-col` con `align-items: stretch`
+  // por defecto, así que su ancho es siempre el 100% del contenido de la
+  // tarjeta, estable pase lo que pase con el icono o la cifra dentro.
+  // Aquí `kpiIconScale` (0 a 1) sigue
+  // siendo el mismo principio de fondo que ya demostró funcionar en
+  // Safari real (11.2: medir el DOM de verdad, nunca contar caracteres),
+  // pero como un valor CONTINUO en vez de dos estados — el icono se
+  // encoge de forma gradual, nunca de golpe.
+  //
+  // Se mide la cifra FINAL (vía el span invisible de cada MoneyKpiTile,
+  // `finalTextMeasureRef`) en vez de la que se ve mientras el número
+  // cuenta hacia arriba — evita tener que remedir en cada fotograma del
+  // conteo (más simple y barato) y hace que el icono se encoja "a la
+  // vez" que el número crece porque ambos comparten la misma duración de
+  // transición (DURATION.md), no porque estén atados fotograma a
+  // fotograma.
+  const [kpiIconScale, setKpiIconScale] = useState(1);
+  const kpiRowRefs = useRef([null, null, null]);
+  const kpiFinalTextRefs = useRef([null, null, null]);
+  const longestKpiText = useMemo(() => {
+    return [monthGeneratedTotals, pendingTotals, monthCollectedTotals]
+      .map((totals) => moneyKpiText(totals, currencies.rows))
+      .reduce((max, text) => (text.length > max.length ? text : max), "");
+  }, [monthGeneratedTotals, pendingTotals, monthCollectedTotals, currencies.rows]);
+  // ICON_FOOTPRINT: 10px del icono (cuarta vuelta, ver comentario en
+  // MoneyKpiTile — antes 14px, 10px sin badge antes de eso, y 28px de
+  // badge circular antes de eso) + 4px del gap (gap-1) que deja de
+  // hacer falta cuando el icono llega a 0. TRANSITION_ZONE: cuántos
+  // píxeles de margen antes de tocar el borde se usan para pasar de
+  // escala 1 a 0 — ni un salto brusco (0px) ni una transición tan larga
+  // que el icono ya se vea pequeño con cifras que sobran de espacio de
+  // sobra (proporcional al propio tamaño del icono, igual criterio que
+  // antes).
+  const ICON_FOOTPRINT = 14;
+  const TRANSITION_ZONE = 14;
+  // Segunda red de seguridad (2026-09-08, pedido explícito: "los kpis
+  // tienen q cumplir q con cifras grandes de 6 dígitos o más no se sale
+  // del diseño de la box") — el icono ya puede llegar a 0 (arriba), pero
+  // un importe de 6+ dígitos con separador de miles y símbolo de moneda
+  // puede seguir sin caber ni así en una tarjeta de 3 columnas en móvil:
+  // el sistema de arriba solo protegía el ICONO, nunca el propio número.
+  // Misma filosofía que ya demostró funcionar en Safari real (Fase 11.2:
+  // medir el DOM de verdad, nunca adivinar por nº de caracteres) — si con
+  // el icono ya en su escala mínima compartida el número sigue sin caber,
+  // se reduce SOLO el tamaño de ESE número lo justo para que quepa (no
+  // los otros dos KPI, que no tienen el problema) — nunca por debajo de
+  // TEXT_SCALE_FLOOR, para que siga siendo legible.
+  const TEXT_SCALE_FLOOR = 0.75;
+  const [kpiTextScale, setKpiTextScale] = useState([1, 1, 1]);
+  useLayoutEffect(() => {
+    let minScale = 1;
+    const rows = [];
+    for (let i = 0; i < 3; i++) {
+      const rowEl = kpiRowRefs.current[i];
+      const textEl = kpiFinalTextRefs.current[i];
+      rows.push({ rowEl, textEl });
+      if (!rowEl || !textEl) continue;
+      const availableForNumber = rowEl.clientWidth - ICON_FOOTPRINT;
+      const slack = availableForNumber - textEl.scrollWidth;
+      const scale = Math.max(0, Math.min(1, slack / TRANSITION_ZONE));
+      if (scale < minScale) minScale = scale;
+    }
+    setKpiIconScale(minScale);
+
+    const iconAndGap = 10 * minScale + 4;
+    setKpiTextScale(
+      rows.map(({ rowEl, textEl }) => {
+        if (!rowEl || !textEl) return 1;
+        const availableAtMinIcon = rowEl.clientWidth - iconAndGap;
+        if (textEl.scrollWidth <= availableAtMinIcon) return 1;
+        return Math.max(TEXT_SCALE_FLOOR, availableAtMinIcon / textEl.scrollWidth);
+      })
+    );
+  }, [longestKpiText]);
+
   return (
     <div className="relative space-y-4 pb-24">
       <div className="grid grid-cols-3 gap-2">
-        <MoneyKpiTile icon={TrendingUp} color={TEAL} totals={monthGeneratedTotals} label={t("kpis.generatedThisMonth")} index={0} reduced={reducedMotion} currencyRows={currencies.rows} />
-        <MoneyKpiTile icon={Wallet} color={SUN} totals={pendingTotals} label={t("kpis.pendingToCollect")} index={1} reduced={reducedMotion} currencyRows={currencies.rows} />
-        <MoneyKpiTile icon={CheckCircle2} color={GREEN} totals={monthCollectedTotals} label={t("kpis.collectedThisMonth")} index={2} reduced={reducedMotion} currencyRows={currencies.rows} />
+        <MoneyKpiTile
+          icon={TrendingUp} color={TEAL} totals={monthGeneratedTotals} label={t("kpis.generatedThisMonth")} index={0} reduced={reducedMotion} currencyRows={currencies.rows}
+          iconScale={kpiIconScale} textScale={kpiTextScale[0]} rowMeasureRef={(el) => (kpiRowRefs.current[0] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[0] = el)}
+        />
+        {/* A diferencia de sus dos hermanos, "Pendiente de cobrar" NO
+            filtra por currentMonthKey (ver pendingTotals más arriba): es
+            deuda pendiente acumulada de siempre, no solo de este mes. Sin
+            aclararlo, la cifra parece "no cuadrar" con Generado/Cobrado
+            (que sí son del mes) en cuanto queda algo sin cobrar de un mes
+            anterior — de ahí el único tooltip de los 3 KPIs. Pero si no
+            hay NADA pendiente de antes de este mes, la cifra ya cuadra
+            sola y el tooltip no aclara nada — se oculta (`tooltip`
+            queda `null`, `MoneyKpiTile` ya no monta el botón "?").
+            Pedido explícito 2026-09-07. */}
+        <MoneyKpiTile
+          icon={Wallet} color={SUN} totals={pendingTotals} label={t("kpis.pendingToCollect")} index={1} reduced={reducedMotion} currencyRows={currencies.rows}
+          tooltip={hasPendingBeforeCurrentMonth ? t("kpis.pendingTooltip") : null}
+          tooltipShowLabel={t("kpis.pendingTooltipShow")} tooltipHideLabel={t("kpis.pendingTooltipHide")}
+          iconScale={kpiIconScale} textScale={kpiTextScale[1]} rowMeasureRef={(el) => (kpiRowRefs.current[1] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[1] = el)}
+        />
+        <MoneyKpiTile
+          icon={CheckCircle2} color={GREEN} totals={monthCollectedTotals} label={t("kpis.collectedThisMonth")} index={2} reduced={reducedMotion} currencyRows={currencies.rows}
+          iconScale={kpiIconScale} textScale={kpiTextScale[2]} rowMeasureRef={(el) => (kpiRowRefs.current[2] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[2] = el)}
+        />
       </div>
 
       <div className="flex items-center gap-5 border-b border-gray-200">
@@ -638,7 +943,7 @@ export default function MiTrabajoTab({
             onClick={() => setStatusFilter(key)}
             aria-pressed={statusFilter === key}
             className="min-h-11 border-b-2 pb-2 text-[15px] font-semibold transition-colors"
-            style={statusFilter === key ? { borderColor: TEAL, color: NAVY } : { borderColor: "transparent", color: "#9CA3AF" }}
+            style={statusFilter === key ? { borderColor: BRAND_NAVY, color: BRAND_NAVY } : { borderColor: "transparent", color: "#9CA3AF" }}
           >
             {label}
           </button>
@@ -650,17 +955,17 @@ export default function MiTrabajoTab({
           onClick={() => setFiltersOpen((o) => !o)}
           aria-expanded={filtersOpen}
           className={`flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors ${filtersOpen ? "border-transparent text-white" : "border-gray-200 bg-white text-gray-600"}`}
-          style={filtersOpen ? { backgroundColor: TEAL } : {}}
+          style={filtersOpen ? { backgroundColor: BRAND_NAVY } : {}}
         >
           <SlidersHorizontal size={15} aria-hidden="true" /> {t("filter.label")}{activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
         </button>
         {statusFilter === "pendientes" && pendingAll.length > 0 && (
-          <button onClick={() => setConfirmingCollectAll(true)} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
+          <button onClick={() => setConfirmingCollectAll(true)} className="min-h-9 text-xs font-semibold" style={{ color: BRAND_NAVY }}>
             {t("collectAll.button")}
           </button>
         )}
         {statusFilter === "cobrados" && paidAll.length > 0 && (
-          <button onClick={() => setConfirmingMarkAllPending(true)} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
+          <button onClick={() => setConfirmingMarkAllPending(true)} className="min-h-9 text-xs font-semibold" style={{ color: BRAND_NAVY }}>
             {t("markAllPending.button")}
           </button>
         )}
@@ -722,23 +1027,19 @@ export default function MiTrabajoTab({
         </div>
       )}
 
+      {/* Sin esqueleto de carga aquí a propósito (auditoría de estilo
+          2026-09-04): App.jsx ya bloquea el render de CUALQUIER pestaña
+          (incluida esta) hasta que worklog/comisiones/colleaguePayments/
+          rates/commissionRates estén los 5 cargados (ver `loaded` en
+          App.jsx) — un esqueleto propio aquí solo podría llegar a pintarse
+          si esas mismas tablas estuvieran cargadas por App.jsx pero NO por
+          esta pantalla, algo que no puede pasar (son las mismas instancias
+          de useSupabaseTable, pasadas por props). Había uno hasta esta
+          revisión — código muerto en la práctica, nunca alcanzable — se
+          retira en vez de replicarlo en Tarifas al llevar su lenguaje
+          visual al día. */}
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        {!dataLoaded ? (
-          <div aria-hidden="true">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="animate-pulse px-4 py-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="h-3.5 w-32 rounded bg-gray-200" />
-                  <div className="h-3.5 w-14 rounded bg-gray-200" />
-                </div>
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <div className="h-3 w-20 rounded bg-gray-100" />
-                  <div className="h-3 w-16 rounded bg-gray-100" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : visibleList.length === 0 ? (
+        {visibleList.length === 0 ? (
           // animate-help-fade-in (index.css): sin él, cuando la última fila
           // pendiente se anima fuera de la lista, este bloque aparece de
           // golpe al terminar la animación de la fila y "salta" al tomar su
@@ -748,7 +1049,7 @@ export default function MiTrabajoTab({
             {statusFilter === "pendientes" && !hasActiveFilters && <PartyPopper size={26} className="text-gray-300" aria-hidden="true" />}
             <p className="text-sm text-gray-400">{emptyMessage(statusFilter, hasActiveFilters, t)}</p>
             {hasActiveFilters && (
-              <button onClick={clearFilters} className="min-h-9 text-xs font-semibold" style={{ color: TEAL }}>
+              <button onClick={clearFilters} className="min-h-9 text-xs font-semibold" style={{ color: BRAND_NAVY }}>
                 {t("filter.clear")}
               </button>
             )}
@@ -765,11 +1066,12 @@ export default function MiTrabajoTab({
                     </div>
                   )}
                   <EntryRow
-                    entry={e} activityColor={activityColor} currencyRows={currencies.rows}
+                    entry={e} activityColor={activityColor} schoolColor={schoolColor} currencyRows={currencies.rows}
                     isPending={statusFilter === "pendientes"}
                     onToggle={() => toggleStatus(e)}
                     onEdit={() => setSheetRequest({ type: e._source, editingEntry: e })}
                     onDelete={() => tableFor(e._source).deleteRow(e.id)}
+                    onUndoDelete={() => undoDelete(e)}
                     animPhase={rowAnim[entryKey(e)]}
                   />
                 </React.Fragment>

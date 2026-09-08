@@ -1,0 +1,92 @@
+{
+  "loading": { "defaultLabel": "Chargement" },
+  "errorBoundary": {
+    "title": "Oups, un problème est survenu",
+    "body": "Cet écran a rencontré un problème inattendu. Ce n'est pas de votre faute — essayez de recharger, tout devrait revenir à la normale.",
+    "reload": "Recharger"
+  },
+  "movementTypes": {
+    "ganado": "Cours",
+    "comision": "Commission",
+    "companeros": "Ajustement"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "En attente d'encaissement",
+    "empty": "Rien en attente",
+    "count_one": "{{count}} paiement en attente",
+    "count_other": "{{count}} paiements en attente",
+    "addMovement": "Ajouter un mouvement"
+  },
+  "confirmDialog": { "cancel": "Annuler", "defaultConfirmLabel": "Supprimer" },
+  "editActions": { "defaultSaveLabel": "Enregistrer", "cancel": "Annuler" },
+  "deleteButton": {
+    "defaultLabel": "Supprimer",
+    "defaultItemLabel": "cet élément",
+    "deletedToast": "Supprimé",
+    "errorToast": "Impossible de supprimer. Réessayez.",
+    "confirmTitle": "Supprimer cet enregistrement ?",
+    "confirmMessage": "Vous allez supprimer {{item}}. Cette action est irréversible."
+  },
+  "field": { "hideHelp": "Masquer l'aide", "help": "Aide" },
+  "calendar": {
+    "months": ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
+    "weekdays": ["L", "M", "M", "J", "V", "S", "D"],
+    "prevMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "prevYear": "Année précédente",
+    "nextYear": "Année suivante",
+    "today": "Aujourd'hui"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "Date",
+    "defaultAriaLabel": "Choisir une date",
+    "pickerAriaLabel": "Sélecteur de date",
+    "dayAriaLabel": "{{day}} {{month}}",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "tomorrow": "Demain",
+    "dayBeforeYesterday": "Avant-hier"
+  },
+  "dateRangePicker": {
+    "from": "Du",
+    "to": "Au",
+    "fromAriaLabel": "Date de début",
+    "toAriaLabel": "Date de fin",
+    "pickerAriaLabel": "Sélecteur de plage de dates",
+    "chooseStart": "Choisissez la date de début",
+    "chooseEnd": "Choisissez la date de fin",
+    "chooseDate": "Choisissez une date",
+    "okFrom": "OK — à partir du {{date}} seulement",
+    "presets": { "today": "Aujourd'hui", "thisWeek": "Cette semaine", "thisMonth": "Ce mois-ci", "last30Days": "30 derniers jours" }
+  },
+  "monthCalendar": {
+    "addOnDay": "Ajouter un mouvement le {{day}} {{month}}",
+    "addOnDayToday": "Ajouter un mouvement le {{day}} {{month}} (aujourd'hui)",
+    "dayToday": "{{day}} {{month}} (aujourd'hui)",
+    "closeDayDetail": "Fermer le détail du jour",
+    "dayHeading": "Jour {{day}} {{month}}",
+    "generatedOnDay": "Généré ce jour-là",
+    "table": { "course": "Cours", "comment": "Commentaire", "people": "Pers.", "amount": "Montant" }
+  },
+  "select": { "placeholder": "Sélectionner..." },
+  "multiSelect": { "placeholder": "Tous", "clearSelection": "Effacer la sélection", "selectedCount": "{{count}} sélectionnés" },
+  "searchSelect": { "placeholder": "Rechercher...", "ariaLabel": "Rechercher", "noResults": "Aucun résultat" },
+  "currencySearchSelect": { "placeholder": "Rechercher une devise..." },
+  "listFilterBar": {
+    "from": "Du",
+    "to": "Au",
+    "school": "École",
+    "activity": "Activité",
+    "noLimit": "Sans limite",
+    "all": "Tous",
+    "clearFilters": "Effacer les filtres"
+  },
+  "rowMenu": { "moreActions": "Plus d'actions", "edit": "Modifier", "delete": "Supprimer" },
+  "statusSwitch": { "ariaLabel": "Statut : {{value}}. Appuyez pour passer à {{next}}", "title": "{{value}} — cliquez pour passer à \"{{next}}\"" },
+  "signature": {
+    "opcional": "optionnel",
+    "borrar": "Effacer",
+    "firmadoAria": "{{label}} : signé",
+    "sinFirmarAria": "{{label}} : non signé"
+  }
+}

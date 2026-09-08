@@ -1,0 +1,87 @@
+#!/bin/sh
+# Falla el push, de forma ruidosa, si va un commit feat/fix que toca
+# src/ o server/ sin que CHANGELOG.md se haya actualizado en el mismo
+# push — ver docs/ADR/0010-proceso-de-release.md ("Cada commit con
+# impacto de usuario... añade o actualiza una línea bajo ## Unreleased
+# en el momento de mergear a develop"). Esa regla ya existía por escrito
+# pero dependía solo de la disciplina manual — así fue como
+# ## Unreleased se quedó vacío durante ~160 commits reales de Release V1
+# (encontrado 2026-09-04, revisión previa al cierre de esa release).
+#
+# Sin CI en este proyecto (ADR-0010 lo descarta explícitamente para un
+# solo desarrollador) — un hook local de pre-push es el sitio correcto,
+# no una pieza de infraestructura nueva.
+#
+# Activación: package.json ejecuta `git config core.hooksPath
+# scripts/hooks` en su postinstall, así que `npm install` lo activa solo
+# en cualquier máquina — .git/hooks/ no está versionado por git, así que
+# un hook puesto solo ahí se perdería en un clon nuevo.
+#
+# Escape hatch: un commit feat/fix real sin impacto de usuario (p. ej.
+# infraestructura de test interna) puede incluir en su mensaje la línea
+# "Changelog-skip: <motivo>" para no contar en la comprobación.
+
+# stdin solo se puede leer una vez (git lo entuba como
+# "<local ref> <local sha> <remote ref> <remote sha>" por línea) — se
+# vuelca a un fichero temporal para poder recorrerlo más de una vez sin
+# pelearse con sub-shells de `| while read` perdiendo variables.
+refs_file=$(mktemp)
+trap 'rm -f "$refs_file"' EXIT
+cat > "$refs_file"
+
+changelog_touched=0
+pending=""
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -z "$local_sha" ] && continue
+  [ "$local_sha" = "0000000000000000000000000000000000000000" ] && continue
+
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    # Rama nueva en el remoto — sin punto de comparación real, se usa
+    # develop como base para no bloquear la primera vez que se crea una
+    # rama de trabajo (feature/*/fix/*), donde el changelog se actualiza
+    # al fusionar a develop, no en cada commit individual de la rama.
+    base=$(git merge-base "$local_sha" origin/develop 2>/dev/null || echo "$local_sha^")
+  else
+    base="$remote_sha"
+  fi
+
+  range="$base..$local_sha"
+
+  if git diff --name-only "$range" 2>/dev/null | grep -q '^CHANGELOG\.md$'; then
+    changelog_touched=1
+  fi
+
+  git log --format='%H %s' "$range" 2>/dev/null | while read -r hash subject; do
+    [ -z "$hash" ] && continue
+    case "$subject" in
+      feat:*|feat\(*|fix:*|fix\(*) : ;;
+      *) continue ;;
+    esac
+    git diff --name-only "$hash^" "$hash" 2>/dev/null | grep -qE '^(src|server)/' || continue
+    git log -1 --format='%B' "$hash" | grep -q 'Changelog-skip:' && continue
+    echo "$hash $subject" >> "$refs_file.pending"
+  done
+done < "$refs_file"
+
+if [ -f "$refs_file.pending" ]; then
+  pending=$(cat "$refs_file.pending")
+  rm -f "$refs_file.pending"
+fi
+
+if [ -n "$pending" ] && [ "$changelog_touched" -eq 0 ]; then
+  echo "" >&2
+  echo "🚫 Push bloqueado: hay commits feat/fix con impacto de usuario sin CHANGELOG.md actualizado." >&2
+  echo "" >&2
+  echo "$pending" | sed 's/^/   - /' >&2
+  echo "" >&2
+  echo "   Ver docs/ADR/0010-proceso-de-release.md — CHANGELOG.md se actualiza en el" >&2
+  echo "   mismo push que el cambio, no como tarea aparte para la release." >&2
+  echo "" >&2
+  echo "   Si de verdad no tiene impacto de usuario, añade al mensaje del commit:" >&2
+  echo "     Changelog-skip: <motivo breve>" >&2
+  echo "" >&2
+  exit 1
+fi
+
+exit 0

@@ -8,9 +8,19 @@ vi.mock("./provisionUser.js", () => ({
   friendlyError: (m) => m,
 }));
 
+// Vercel BotID (Fase 9, 2026-09-07) — mockeado como "humano" por defecto en
+// todos los tests existentes (beforeEach), para no depender del contexto
+// real de petición de Vercel (`@vercel/request-context`) que no existe en
+// este entorno de test. Los tests que sí quieren comprobar el bloqueo
+// cambian el mock explícitamente.
+vi.mock("botid/server", () => ({
+  checkBotId: vi.fn(),
+}));
+
 import { handleExternalRegister } from "./externalRegister.js";
 import { hasServerConfig, getServiceRoleClient } from "../supabaseAdmin.js";
 import { provisionUser } from "./provisionUser.js";
+import { checkBotId } from "botid/server";
 
 const VALID_BODY = { email: "diver@example.com", first_name: "Ada", last_name: "Lovelace", nickname: "ada" };
 
@@ -62,12 +72,34 @@ beforeEach(() => {
   getServiceRoleClient.mockReturnValue(makeClient());
   provisionUser.mockReset();
   provisionUser.mockResolvedValue({ user_id: "new-user-1", email_sent: true, email_error: null, action_link: undefined });
+  checkBotId.mockReset().mockResolvedValue({ isBot: false, isHuman: true, isVerifiedBot: false, bypassed: false });
 });
 
 it("rechaza métodos distintos de POST", async () => {
   const result = await handleExternalRegister(request({ method: "GET" }));
 
   expect(result).toEqual({ status: 405, payload: { error: "Method not allowed" } });
+});
+
+// Vercel BotID (Fase 9, 2026-09-07, pedido explícito del usuario tras la
+// revisión de seguridad — "alta masiva de usuarios"): antes de CUALQUIER
+// otra comprobación, incluida la del token de invitación, porque un alta
+// automatizada en bucle es el mismo problema exista o no invitación.
+it("rechaza el registro si BotID detecta un bot, antes de tocar Supabase", async () => {
+  checkBotId.mockResolvedValue({ isBot: true, isHuman: false, isVerifiedBot: false, bypassed: false });
+
+  const result = await handleExternalRegister(request());
+
+  expect(result).toEqual({ status: 403, payload: { error: "No se pudo completar el registro." } });
+  expect(hasServerConfig).not.toHaveBeenCalled();
+  expect(provisionUser).not.toHaveBeenCalled();
+});
+
+it("permite el registro si BotID confirma que es humano", async () => {
+  const result = await handleExternalRegister(request());
+
+  expect(result.status).toBe(200);
+  expect(provisionUser).toHaveBeenCalled();
 });
 
 it("devuelve 500 si falta configuración de servidor", async () => {
@@ -105,8 +137,21 @@ it("flujo correcto: registro externo activado, provisiona con el primer dataset 
     dataset_key: "ihasia",
     reason: "external_signup",
     language: undefined,
+    baseUrl: undefined,
+    birth_date: undefined,
+    country_of_residence: undefined,
   });
   expect(result).toEqual({ status: 200, payload: { email_sent: true } });
+});
+
+// Pedido explícito 2026-09-07: "añade al formulario de registro los
+// campos fecha de nacimiento y país de residencia" — el endpoint solo
+// hace de correo: los pasa tal cual a provisionUser(), que es quien de
+// verdad los persiste (best-effort, ver provisionUser.test.js).
+it("propaga birth_date/country_of_residence a provisionUser cuando llegan en el body", async () => {
+  await handleExternalRegister(request({ body: JSON.stringify({ ...VALID_BODY, birth_date: "1990-05-12", country_of_residence: "MX" }) }));
+
+  expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ birth_date: "1990-05-12", country_of_residence: "MX" }));
 });
 
 // Release V1, Fase 2 (multidioma): language solo se propaga si es uno de
@@ -148,6 +193,23 @@ it("usa el dataset activo marcado is_default cuando existe, sin caer al de respa
   await handleExternalRegister(request());
 
   expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ dataset_key: "otro-dataset" }));
+});
+
+// Fase 10, 2026-09-07 — "aplica a todos los enlaces generados en la
+// app": el email de bienvenida del autoregistro usaba siempre APP_URL,
+// ignorando el dominio real desde el que alguien se registró
+// (producción, TEST o un Preview de rama). baseUrl se calcula ahora del
+// header `host` real de la petición.
+it("pasa baseUrl a provisionUser, calculado del host real de la petición", async () => {
+  await handleExternalRegister(request({ headers: { host: "dive-tracker-git-mi-rama.vercel.app" } }));
+
+  expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ baseUrl: "https://dive-tracker-git-mi-rama.vercel.app" }));
+});
+
+it("sin header host, baseUrl es undefined (provisionUser cae a APP_URL, comportamiento de siempre)", async () => {
+  await handleExternalRegister(request());
+
+  expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ baseUrl: undefined }));
 });
 
 it("propaga el error de provisionUser traducido con friendlyError", async () => {

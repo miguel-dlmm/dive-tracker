@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConfigTab from "./ConfigTab";
 
@@ -69,17 +69,24 @@ describe("ConfigTab — menú agrupado", () => {
     expect(screen.getByText("Monedas")).toBeInTheDocument();
   });
 
-  it("entrar en una sección muestra 'Configuración' para volver, y volver restaura el menú", async () => {
+  it("entrar en una sección informa a onSectionChange (para la cabecera global), y volver restaura el menú", async () => {
+    // Rediseño de navegación 2026-09-06: ConfigTab ya no dibuja su propia
+    // miga de pan/título ("‹ Configuración" + h2) — informa a quien la usa
+    // vía onSectionChange, y es la cabecera global (App.jsx) la que
+    // muestra "‹ [Sección]". Aquí se prueba el contrato (la llamada y su
+    // onBack), no un texto que ya no existe en este componente.
     const user = userEvent.setup();
-    render(<ConfigTab {...baseProps()} />);
+    const onSectionChange = vi.fn();
+    render(<ConfigTab {...baseProps()} onSectionChange={onSectionChange} />);
 
     await user.click(screen.getByText("Escuelas"));
-    expect(screen.getByRole("heading", { name: "Escuelas" })).toBeInTheDocument();
     expect(screen.queryByText("Cursos")).not.toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: "Escuelas" }));
 
-    await user.click(screen.getByText("Configuración"));
+    act(() => { onSectionChange.mock.calls.at(-1)[0].onBack(); });
+
     expect(screen.getByText("Cursos")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Escuelas" })).not.toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(null);
   });
 });
 
@@ -92,14 +99,19 @@ describe("ConfigTab — menú agrupado", () => {
 describe("ConfigTab — la sub-sección abierta sobrevive a una recarga", () => {
   it("recargar dentro de Tarifas reabre directamente en Tarifas, no en el menú", async () => {
     const user = userEvent.setup();
-    const { unmount } = render(<ConfigTab {...baseProps()} />);
+    const onSectionChange = vi.fn();
+    const { unmount } = render(<ConfigTab {...baseProps()} onSectionChange={onSectionChange} />);
     await user.click(screen.getByText("Tarifas"));
-    expect(screen.getByRole("heading", { name: "Tarifas" })).toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: "Tarifas" }));
 
     unmount();
-    render(<ConfigTab {...baseProps()} />);
+    onSectionChange.mockClear();
+    render(<ConfigTab {...baseProps()} onSectionChange={onSectionChange} />);
 
-    expect(screen.getByRole("heading", { name: "Tarifas" })).toBeInTheDocument();
+    // El efecto de onSectionChange corre también al montar (no solo al
+    // cambiar `section`), para que reabrir ya dentro de una sección
+    // guardada muestre la cabecera correcta desde el primer render.
+    expect(onSectionChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: "Tarifas" }));
     expect(screen.queryByText("Escuelas")).not.toBeInTheDocument();
   });
 
@@ -111,15 +123,17 @@ describe("ConfigTab — la sub-sección abierta sobrevive a una recarga", () => 
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
 
     const adminProfile = { user_id: "u1", is_admin: true, is_superadmin: false };
-    const { unmount } = render(<ConfigTab {...baseProps({ profile: adminProfile })} />);
+    const onSectionChange = vi.fn();
+    const { unmount } = render(<ConfigTab {...baseProps({ profile: adminProfile })} onSectionChange={onSectionChange} />);
     await user.click(screen.getByText("Usuarios"));
-    expect(screen.getByRole("heading", { name: "Usuarios" })).toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: "Usuarios" }));
 
     unmount();
-    render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: false, is_superadmin: false } })} />);
+    onSectionChange.mockClear();
+    render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: false, is_superadmin: false } })} onSectionChange={onSectionChange} />);
 
     expect(screen.getByText("Escuelas")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Usuarios" })).not.toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(null);
   });
 });
 
@@ -154,13 +168,15 @@ describe("ConfigTab — gesto de deslizar hacia la derecha = atrás, recursivo",
   it("deslizar dentro de una sección vuelve al menú, sin llamar a onClose", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    const { container } = render(<ConfigTab {...baseProps()} onClose={onClose} />);
+    const onSectionChange = vi.fn();
+    const { container } = render(<ConfigTab {...baseProps()} onClose={onClose} onSectionChange={onSectionChange} />);
     await user.click(screen.getByText("Escuelas"));
-    expect(screen.getByRole("heading", { name: "Escuelas" })).toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(expect.objectContaining({ label: "Escuelas" }));
 
     swipeRight(container.firstChild);
 
     expect(screen.getByText("Cursos")).toBeInTheDocument();
+    expect(onSectionChange).toHaveBeenLastCalledWith(null);
     expect(onClose).not.toHaveBeenCalled();
   });
 });
@@ -314,13 +330,46 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await waitFor(() => expect(screen.getByText("ana")).toBeInTheDocument());
   }
 
+  // Mock de fetch por URL, consumido en orden por cada URL — no un único
+  // índice global (`.mockResolvedValueOnce()` encadenado). Necesario
+  // desde que abrir la hoja de detalle de un usuario dispara su propia
+  // llamada además de la llamada concreta que cada test quiere comprobar:
+  // un mock indexado por orden de llegada global se desincroniza en
+  // cuanto se añade cualquier llamada nueva que el test no conocía de
+  // antemano. Cualquier URL sin respuestas configuradas recibe un 200
+  // vacío genérico en vez de romper la cola de otra URL.
+  //
+  // /api/list-user-status se usa para 2 cosas distintas desde el MISMO
+  // endpoint (Fase 9, fusionado 2026-09-07 — un fichero propio para el
+  // resumen de actividad era la 13ª Serverless Function y tumbaba todos
+  // los deployments del plan Hobby de Vercel, límite de 12; ver
+  // activitySummaryFor() en listUserStatus.js): el listado masivo (bulk,
+  // sin user_id) y el resumen de actividad de un único usuario (con
+  // user_id, al abrir su hoja de detalle). Se distinguen por el cuerpo de
+  // la petición, no por la URL — sin esto, abrir cualquier hoja de
+  // detalle consumía una respuesta pensada para el refetch masivo (p.ej.
+  // tras desactivar una cuenta) y desincronizaba la cola. Clave
+  // "/api/list-user-status:user" aparte para quien quiera comprobar el
+  // resumen de actividad en concreto; el resto de tests ni la conocen y
+  // reciben el 200 vacío genérico de siempre.
+  function mockFetchByUrl(responsesByUrl) {
+    const queues = Object.fromEntries(Object.entries(responsesByUrl).map(([url, list]) => [url, [...list]]));
+    globalThis.fetch = vi.fn((url, init) => {
+      const isUserSummary = url === "/api/list-user-status" && typeof init?.body === "string" && init.body.includes("user_id");
+      const key = isUserSummary ? "/api/list-user-status:user" : url;
+      const queue = queues[key];
+      if (!queue || queue.length === 0) return Promise.resolve({ ok: true, json: async () => ({}) });
+      return Promise.resolve(queue.shift());
+    });
+  }
+
   it("muestra 'Activo' en la fila para una cuenta sin banned_until y ya activada (activated_at presente)", async () => {
     const user = userEvent.setup();
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null } }) });
 
     await openUsuarios(user);
 
-    await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
   });
 
   // Pedido explícito del usuario (job nocturno, Bloque 4): la fila mostraba
@@ -359,7 +408,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
     await openUsuarios(user);
 
-    await waitFor(() => expect(screen.getByText("Pendiente")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Pendiente" })).toBeInTheDocument());
   });
 
   it("cuenta desactivada con deactivated_at registrado: la fila muestra la fecha real de baja", async () => {
@@ -385,15 +434,45 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     expect(screen.getByText(/fecha no registrada/)).toBeInTheDocument();
   });
 
-  it("desactivar (desde el switch de la hoja de detalle) pide confirmación y llama a /api/set-user-active con active:false", async () => {
+  // Feedback explícito del usuario (2026-09-07): la fila de una cuenta
+  // desactivada se veía casi igual que una activa, solo el punto de
+  // estado y la línea "Baja:" cambiaban. `opacity-60` en la fila entera
+  // es la señal — sin este test, un cambio futuro en `UserListRow`
+  // podría perder la clase sin que ningún otro test lo note (nada más
+  // en este describe comprueba el className del botón de la fila).
+  it("la fila de una cuenta desactivada se muestra atenuada (opacity-60)", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", active: false }) }) // set-user-active
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: {} }) }); // list-user-status tras reload
+    mockProfilesFrom("2026-08-02T00:00:00Z", "2026-08-15T10:00:00Z");
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: { "target-1": null } }) });
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
+
+    const row = screen.getByText("ana").closest("button");
+    await waitFor(() => expect(row).toHaveClass("opacity-60"));
+  });
+
+  it("la fila de una cuenta activa no se muestra atenuada", async () => {
+    const user = userEvent.setup();
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null } }) });
+
+    await openUsuarios(user);
+
+    const row = screen.getByText("ana").closest("button");
+    expect(row).not.toHaveClass("opacity-60");
+  });
+
+  it("desactivar (desde el switch de la hoja de detalle) pide confirmación y llama a /api/set-user-active con active:false", async () => {
+    const user = userEvent.setup();
+    mockFetchByUrl({
+      "/api/list-user-status": [
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+        { ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: {} }) },
+      ],
+      "/api/set-user-active": [{ ok: true, json: async () => ({ user_id: "target-1", active: false }) }],
+    });
+
+    await openUsuarios(user);
+    await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("switch", { name: "Desactivar usuario" })).toBeInTheDocument());
@@ -411,13 +490,16 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("regenerar enlace (cuenta pendiente) pide confirmación, llama a /api/regenerate-activation-link y muestra el enlace devuelto si el email falla", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: false, action_link: "https://app.example/activate?token_hash=abc" }) }) // regenerate-activation-link
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
+    mockFetchByUrl({
+      "/api/list-user-status": [
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+      ],
+      "/api/regenerate-activation-link": [{ ok: true, json: async () => ({ user_id: "target-1", email_sent: false, action_link: "https://app.example/activate?token_hash=abc" }) }],
+    });
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Pendiente")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Pendiente" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar enlace" })).toBeInTheDocument());
@@ -433,9 +515,10 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("genera un enlace de invitación (superadmin) y lo muestra en el panel, sin el botón de simular envío", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ invitation_link: "https://app.example/?invite=abc-123", expires_at: "2026-09-03T00:00:00Z" }) });
+    mockFetchByUrl({
+      "/api/list-user-status": [{ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) }],
+      "/api/generate-invitation-link": [{ ok: true, json: async () => ({ invitation_link: "https://app.example/?invite=abc-123", expires_at: "2026-09-03T00:00:00Z" }) }],
+    });
 
     await openUsuarios(user);
     await user.click(screen.getByRole("button", { name: "Generar enlace de invitación" }));
@@ -451,13 +534,16 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   it("regenerar enlace no muestra el panel manual cuando el email se envía correctamente", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }) // regenerate-activation-link
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
+    mockFetchByUrl({
+      "/api/list-user-status": [
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+      ],
+      "/api/regenerate-activation-link": [{ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }],
+    });
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Pendiente")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Pendiente" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar enlace" })).toBeInTheDocument());
@@ -472,13 +558,16 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("regenerar contraseña pide confirmación, llama a /api/regenerate-password y muestra el enlace devuelto si el email falla", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: false, action_link: "https://app.example/activate?token_hash=xyz" }) }) // regenerate-password
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
+    mockFetchByUrl({
+      "/api/list-user-status": [
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+      ],
+      "/api/regenerate-password": [{ ok: true, json: async () => ({ user_id: "target-1", email_sent: false, action_link: "https://app.example/activate?token_hash=xyz" }) }],
+    });
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar contraseña" })).toBeInTheDocument());
@@ -493,13 +582,16 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("regenerar contraseña no muestra el panel manual cuando el email se envía correctamente", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }) // regenerate-password
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }); // list-user-status tras reload
+    mockFetchByUrl({
+      "/api/list-user-status": [
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+        { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+      ],
+      "/api/regenerate-password": [{ ok: true, json: async () => ({ user_id: "target-1", email_sent: true }) }],
+    });
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar contraseña" })).toBeInTheDocument());
@@ -514,12 +606,13 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("eliminar (desde la hoja de detalle) pide confirmación danger y llama a /api/delete-user", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) });
+    mockFetchByUrl({
+      "/api/list-user-status": [{ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }],
+      "/api/delete-user": [{ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }],
+    });
 
     await openUsuarios(user);
-    await waitFor(() => expect(screen.getByText("Activo")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("img", { name: "Activo" })).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: /ana/ })); // abre la hoja de detalle
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Eliminar usuario" })).toBeInTheDocument());
@@ -535,9 +628,10 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
   it("la hoja de detalle se cierra sola tras eliminar correctamente (la cuenta ya no existe)", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }) // list-user-status inicial
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }); // delete-user
+    mockFetchByUrl({
+      "/api/list-user-status": [{ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }],
+      "/api/delete-user": [{ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }],
+    });
 
     await openUsuarios(user);
     await user.click(screen.getByRole("button", { name: /ana/ }));
@@ -631,9 +725,10 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   // de listado solo debe haberse llamado una vez (la carga inicial).
   it("eliminar un usuario actualiza el listado en el sitio, sin volver a pedir admin_list_profiles()", async () => {
     const user = userEvent.setup();
-    globalThis.fetch = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) });
+    mockFetchByUrl({
+      "/api/list-user-status": [{ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }],
+      "/api/delete-user": [{ ok: true, json: async () => ({ user_id: "target-1", deleted: true }) }],
+    });
 
     await openUsuarios(user);
     const rpcCallsBefore = supabase.rpc.mock.calls.length;
@@ -702,11 +797,15 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       const user = userEvent.setup();
       await openUsuarios(user);
 
+      // El estado ya no es texto visible en la fila (Fase 8, 2026-09-07:
+      // solo el punto de color, el texto sigue existiendo como
+      // aria-label para lectores de pantalla) — el orden se comprueba
+      // por posición real en el DOM, no por índice en el texto plano de
+      // la fila.
       const row = screen.getByText("ana").closest("button");
-      const statusIndex = row.textContent.indexOf("Activo");
-      const nameIndex = row.textContent.indexOf("ana");
-      expect(statusIndex).toBeGreaterThanOrEqual(0);
-      expect(statusIndex).toBeLessThan(nameIndex);
+      const statusEl = within(row).getByRole("img", { name: "Activo" });
+      const nameEl = within(row).getByText("ana");
+      expect(statusEl.compareDocumentPosition(nameEl) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
     it("un usuario normal activo no lleva icono de rol", async () => {

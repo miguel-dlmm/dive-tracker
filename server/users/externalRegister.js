@@ -1,3 +1,4 @@
+import { checkBotId } from "botid/server";
 import { getServiceRoleClient, hasServerConfig } from "../supabaseAdmin.js";
 import { provisionUser, friendlyError } from "./provisionUser.js";
 
@@ -92,9 +93,30 @@ function parseBody(body) {
   }
 }
 
-export async function handleExternalRegister({ method, body }) {
+function getHeader(headers, name) {
+  if (!headers) return undefined;
+  const key = Object.keys(headers).find((k) => k.toLowerCase() === name.toLowerCase());
+  return key ? headers[key] : undefined;
+}
+
+export async function handleExternalRegister({ method, body, headers }) {
   if (method !== "POST") {
     return { status: 405, payload: { error: "Method not allowed" } };
+  }
+
+  // Vercel BotID (Fase 9, 2026-09-07, aprobado explícitamente por el
+  // usuario, ver seguridad — "alta masiva de usuarios") — antes que
+  // cualquier otra comprobación, incluida la del token de invitación:
+  // un alta automatizada en bucle es exactamente el mismo problema
+  // exista o no invitación de por medio. Nivel Basic (gratis), sin
+  // Deep Analysis todavía. isBot === true nunca se ve en local
+  // (checkBotId() detecta NODE_ENV !== "production" y siempre
+  // devuelve isBot: false ahí) ni en la petición real de un navegador
+  // con initBotId() activo (main.jsx) — solo bloquea peticiones sin el
+  // desafío del cliente, como scripts automatizados.
+  const botCheck = await checkBotId();
+  if (botCheck.isBot) {
+    return { status: 403, payload: { error: "No se pudo completar el registro." } };
   }
 
   if (!hasServerConfig()) {
@@ -107,7 +129,7 @@ export async function handleExternalRegister({ method, body }) {
     return { status: 400, payload: { error: "Cuerpo de la petición inválido." } };
   }
 
-  const { email, first_name, last_name, nickname, language, invite_token } = input;
+  const { email, first_name, last_name, nickname, language, invite_token, birth_date, country_of_residence } = input;
   if (!email || !nickname) {
     return { status: 400, payload: { error: "Email y nickname son obligatorios." } };
   }
@@ -150,6 +172,15 @@ export async function handleExternalRegister({ method, body }) {
     return { status: 500, payload: { error: "No se pudo completar el registro. Inténtalo más tarde." } };
   }
 
+  // baseUrl del host real de la petición — mismo bug que el email de
+  // recuperación de contraseña (ver activationLink.js), aplicado aquí:
+  // sin esto, el email de bienvenida del autoregistro llevaba siempre a
+  // la URL fija de APP_URL en vez del dominio real desde el que alguien
+  // se registró (producción, TEST o un Preview de rama).
+  const proto = getHeader(headers, "x-forwarded-proto") || "https";
+  const host = getHeader(headers, "host");
+  const baseUrl = host ? `${proto}://${host}` : undefined;
+
   const result = await provisionUser({
     email,
     first_name,
@@ -158,6 +189,9 @@ export async function handleExternalRegister({ method, body }) {
     dataset_key: datasetKey,
     reason: "external_signup",
     language: safeLanguage,
+    baseUrl,
+    birth_date,
+    country_of_residence,
   });
   if (result.error) {
     if (result.error.message?.includes(EMAIL_ALREADY_REGISTERED)) {

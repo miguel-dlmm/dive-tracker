@@ -76,13 +76,13 @@ describe("avatar", () => {
     await user.click(screen.getByRole("button", { name: "Cambiar avatar" }));
     await user.click(screen.getByRole("button", { name: "Icono Fish" }));
     await user.click(screen.getByRole("button", { name: "Icono Turtle" }));
-    await user.click(screen.getByRole("button", { name: "Color teal" }));
+    await user.click(screen.getByRole("button", { name: "Color rojo" }));
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(update).toHaveBeenCalledTimes(1);
-    expect(update).toHaveBeenCalledWith({ avatar_icon: "Turtle", avatar_color: "#0F766E" });
+    expect(update).toHaveBeenCalledWith({ avatar_icon: "Turtle", avatar_color: "#DC2626" });
     expect(eq).toHaveBeenCalledWith("user_id", "u1");
-    expect(onProfileUpdated).toHaveBeenCalledWith({ avatar_icon: "Turtle", avatar_color: "#0F766E" });
+    expect(onProfileUpdated).toHaveBeenCalledWith({ avatar_icon: "Turtle", avatar_color: "#DC2626" });
   });
 
   it("Cancelar descarta la selección probada y no guarda nada", async () => {
@@ -130,7 +130,7 @@ describe("datos personales", () => {
     await user.type(nickname, "adalovelace");
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null, instructor_initials: "AL" }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null, birth_date: null, country_of_residence: null, instructor_initials: "AL" }));
     expect(eq).toHaveBeenCalledWith("user_id", "u1");
     expect(onProfileUpdated).toHaveBeenCalled();
   });
@@ -146,7 +146,7 @@ describe("datos personales", () => {
     await user.type(nickname, "adalovelace");
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null, birth_date: null, country_of_residence: null }));
   });
 
   it("permite elegir el nivel profesional (Divemaster/Instructor) y lo guarda junto al resto de datos personales", async () => {
@@ -159,7 +159,75 @@ describe("datos personales", () => {
     await user.click(screen.getByRole("option", { name: "Divemaster" }));
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "ada", professional_level: "divemaster", instructor_initials: "AL" }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "ada", professional_level: "divemaster", birth_date: null, country_of_residence: null, instructor_initials: "AL" }));
+  });
+
+  it("muestra fecha de nacimiento y país de residencia en modo lectura, y '—' si no hay ninguno guardado", () => {
+    renderProfile({ profile: { ...PROFILE, birth_date: "1990-05-12", country_of_residence: "MX" } });
+
+    // Fecha esperada calculada con el mismo new Date(...).toLocaleDateString(...)
+    // que usa shortDate() en tiempo de ejecución (shared.jsx) — nunca un
+    // string fijo a mano, que dependería de la zona horaria de quien
+    // ejecute el test (mismo cuidado que ya toma PaymentsTab.test.jsx
+    // con fechas relativas al reloj real).
+    expect(screen.getByText(new Date("1990-05-12").toLocaleDateString("es-ES"))).toBeInTheDocument();
+    expect(screen.getByText("México")).toBeInTheDocument();
+  });
+
+  it("sin fecha de nacimiento ni país guardados, muestra '—' en ambos", () => {
+    renderProfile();
+
+    const section = personalDataSection();
+    expect(within(section).getAllByText("—").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("permite elegir país de residencia y fecha de nacimiento, y los guarda junto al resto", async () => {
+    const user = userEvent.setup();
+    const { update } = mockUpdate();
+    renderProfile();
+
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
+    await user.type(screen.getByRole("textbox", { name: "Elige un país" }), "México");
+    await user.click(screen.getByRole("option", { name: "México" }));
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({
+      first_name: "Ada", last_name: "Lovelace", nickname: "ada", professional_level: null,
+      birth_date: null, country_of_residence: "MX", instructor_initials: "AL",
+    }));
+  });
+
+  // Feedback explícito 2026-09-07: "la fecha de nacimiento no necesito
+  // los accesos rápidos de hoy mañana ayer" — DatePicker soporta
+  // `quickAccess={false}` desde ese mismo feedback; este test es lo que
+  // impide que un cambio futuro vuelva a activarlos aquí sin querer.
+  it("el selector de fecha de nacimiento no muestra los accesos rápidos hoy/ayer/mañana", async () => {
+    const user = userEvent.setup();
+    renderProfile();
+
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+
+    expect(screen.queryByRole("button", { name: "Hoy" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ayer" })).not.toBeInTheDocument();
+    // El salto de año sigue disponible — es lo que sí hace falta aquí.
+    expect(screen.getByRole("button", { name: "Año anterior" })).toBeInTheDocument();
+  });
+
+  // Feedback explícito 2026-09-07: "los países no están en orden
+  // alfabético" — countries.js los tiene curados por relevancia
+  // (España/Latinoamérica primero), útil para el archivo pero no para
+  // el propio selector; countryOptionsFor() los ordena antes de
+  // devolverlos.
+  it("las opciones de país de residencia aparecen en orden alfabético", async () => {
+    const user = userEvent.setup();
+    renderProfile();
+
+    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
+    await user.click(screen.getByRole("textbox", { name: "Elige un país" }));
+
+    const labels = screen.getAllByRole("option").map((o) => o.textContent);
+    expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b, "es")));
   });
 
   it("no deja guardar un nickname con \"@\"", async () => {

@@ -183,6 +183,44 @@ describe("PaymentsTab — liquidación agrupada por escuela", () => {
     expect(screen.queryByText("Aquatic Adventures")).not.toBeInTheDocument();
   });
 
+  it("DatePicker: los 4 accesos rápidos (antes de ayer/ayer/hoy/mañana) eligen la fecha correcta relativa al reloj congelado (15 de agosto de 2026)", async () => {
+    const user = userEvent.setup();
+    renderPayments(twoSchoolDataset());
+    const [desde] = screen.getAllByLabelText("Sin límite");
+
+    await user.click(desde);
+    await user.click(screen.getByRole("button", { name: "Antes de ayer" }));
+    expect(screen.getByText("13/08/2026")).toBeInTheDocument();
+
+    await user.click(screen.getByText("13/08/2026"));
+    await user.click(screen.getByRole("button", { name: "Ayer" }));
+    expect(screen.getByText("14/08/2026")).toBeInTheDocument();
+
+    await user.click(screen.getByText("14/08/2026"));
+    await user.click(screen.getByRole("button", { name: "Hoy" }));
+    expect(screen.getByText("15/08/2026")).toBeInTheDocument();
+
+    await user.click(screen.getByText("15/08/2026"));
+    await user.click(screen.getByRole("button", { name: "Mañana" }));
+    expect(screen.getByText("16/08/2026")).toBeInTheDocument();
+  });
+
+  // Feedback explícito 2026-09-07 (fecha de nacimiento en Mi perfil):
+  // "poder ir atrás varios años fácilmente" — el salto de año (« »)
+  // se añadió al DatePicker compartido, no solo a ese formulario, así
+  // que se comprueba aquí, en cualquier pantalla que ya lo use.
+  it("DatePicker: el salto de año (\"Año anterior\") retrocede un año manteniendo mes y día", async () => {
+    const user = userEvent.setup();
+    renderPayments(twoSchoolDataset());
+    const [desde] = screen.getAllByLabelText("Sin límite");
+
+    await user.click(desde);
+    await user.click(screen.getByRole("button", { name: "Año anterior" }));
+    await user.click(screen.getByRole("button", { name: "15 de Agosto" }));
+
+    expect(screen.getByText("15/08/2025")).toBeInTheDocument();
+  });
+
   it("sin nada pendiente, muestra el estado vacío", () => {
     renderPayments({});
     expect(screen.getByText("Estás al día — nada pendiente de cobrar.")).toBeInTheDocument();

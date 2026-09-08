@@ -6,7 +6,7 @@ describe("renderEmailShell", () => {
     expect(html).toContain('<html lang="es">');
   });
 
-  it("incluye el icono Waves inline (coherencia visual con el login) y el nombre de marca", () => {
+  it("incluye el logo real inline (coherencia visual con el resto de la app) y el nombre de marca", () => {
     const html = renderEmailShell({ preheader: "x", bodyRows: "<tr><td>hola</td></tr>" });
     expect(html).toContain("<svg");
     expect(html).toContain("Ocean Flow");

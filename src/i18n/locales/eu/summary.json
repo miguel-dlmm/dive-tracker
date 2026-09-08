@@ -1,0 +1,41 @@
+{
+  "months": {
+    "long": ["Urtarrila", "Otsaila", "Martxoa", "Apirila", "Maiatza", "Ekaina", "Uztaila", "Abuztua", "Iraila", "Urria", "Azaroa", "Abendua"],
+    "short": ["Urt", "Ots", "Mar", "Api", "Mai", "Eka", "Uzt", "Abu", "Ira", "Urr", "Aza", "Abe"]
+  },
+  "granularity": {
+    "mensual": "Hila",
+    "trimestral": "Hiruhilekoa",
+    "semestral": "Seihilekoa",
+    "anual": "Urtea",
+    "personalizado": "Tartea"
+  },
+  "granularityLabel": "Aldiaren xehetasun-maila",
+  "quarterAbbr": "H",
+  "halfYearAbbr": "S",
+  "trend": {
+    "heading": "Joera — sakatu aldi bat nabigatzeko",
+    "goTo": "Joan {{period}}-ra",
+    "currentSuffix": " (uneko aldia)"
+  },
+  "from": "Hemendik",
+  "to": "Hona arte",
+  "chooseRange": "Aukeratu tarte bat",
+  "total": "Guztira",
+  "totalCombined": "Guztizko konbinatua",
+  "totalOf": "{{source}} guztira",
+  "trendVsPreviousPeriod": "{{delta}} aurreko aldiarekin alderatuta",
+  "sections": {
+    "bySchool": "Eskolaka",
+    "byActivity": "Ikastaroka",
+    "commissions": "Komisioak",
+    "colleagueAdjustments": "Ikastaro doikuntzak",
+    "calendar": "Egutegia"
+  },
+  "empty": {
+    "noData": "Daturik ez.",
+    "noCoursesInPeriod": "Ikastarorik ez aldi honetan.",
+    "noMovementsInPeriod": "Mugimendurik ez aldi honetan.",
+    "noColleagueAdjustmentsInPeriod": "Ikastaro doikuntzarik ez aldi honetan."
+  }
+}

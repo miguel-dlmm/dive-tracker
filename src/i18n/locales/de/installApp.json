@@ -1,0 +1,18 @@
+{
+  "intro": "Füge Ocean Flow zum Startbildschirm deines Handys hinzu und öffne sie wie jede andere App, ohne jedes Mal über den Browser zu gehen.",
+  "ios": {
+    "title": "iPhone / iPad (Safari)",
+    "step1": "Öffne Ocean Flow in Safari — es muss Safari sein, es funktioniert nicht über andere Browser unter iOS.",
+    "step2": "Tippe auf das Teilen-Symbol in der unteren Leiste.",
+    "step3": "Scrolle nach unten und tippe auf \"Zum Home-Bildschirm\".",
+    "step4": "Tippe oben rechts auf \"Hinzufügen\" — fertig."
+  },
+  "android": {
+    "title": "Android (Chrome)",
+    "step1": "Öffne Ocean Flow in Chrome.",
+    "step2": "Tippe oben rechts auf das Menü (⋮).",
+    "step3": "Tippe auf \"App installieren\" oder \"Zum Startbildschirm hinzufügen\".",
+    "step4": "Bestätige mit \"Installieren\" — fertig."
+  },
+  "note": "Das Symbol erscheint zusammen mit deinen anderen Apps. Es nimmt nicht mehr Platz ein als jede andere."
+}

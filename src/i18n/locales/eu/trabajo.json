@@ -1,0 +1,144 @@
+{
+  "actionLabel": {
+    "markPending": "Markatu zain gisa",
+    "markSettled": "Markatu likidatuta",
+    "confirmCollection": "Berretsi kobrantza"
+  },
+  "dateGroup": {
+    "today": "Gaur",
+    "yesterday": "Atzo",
+    "weekdaysShort": ["Al", "As", "Az", "Og", "Or", "Lr", "Ig"],
+    "monthsShort": ["urt", "ots", "mar", "api", "mai", "eka", "uzt", "abu", "ira", "urr", "aza", "abe"]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "Ez dago zain dagoen elementurik iragazki hauekin.",
+    "pendingNoFilters": "Egunean zaude — ez dago ezer zain.",
+    "paidWithFilters": "Ez dago kobratutako elementurik iragazki hauekin.",
+    "paidNoFilters": "Oraindik ez duzu ezer kobratutzat markatu."
+  },
+  "rowMenu": {
+    "adjustmentWith": "{{name}}(r)ekin egindako doikuntza",
+    "courseAt": "{{activity}}, {{school}}",
+    "deleteConfirmMessage": "{{item}} ezabatzera zoaz. Segundo batzuk izango dituzu abisutik desegiteko.",
+    "undoAction": "Desegin",
+    "deleteUndoneToast": "Berreskuratuta",
+    "deleteUndoError": "Ezin izan da desegin. Saiatu berriro."
+  },
+  "tabs": {
+    "pending": "Zain",
+    "paid": "Kobratuta"
+  },
+  "filter": {
+    "label": "Iragazi",
+    "period": "Aldia",
+    "school": "Eskola",
+    "course": "Ikastaroa",
+    "type": "Mota",
+    "allFeminine": "Denak",
+    "allMasculine": "Denak",
+    "clear": "Garbitu iragazkiak"
+  },
+  "collectAll": {
+    "button": "Kobratu denak",
+    "confirmLabel": "Kobratu",
+    "title_one": "Zain dagoen mugimendu {{count}} kobratu?",
+    "title_other": "Zain dauden {{count}} mugimendu kobratu?",
+    "messageAjuste_one": "Mugimendu hau kobratuta edo likidatuta gisa markatuko duzu batera, bakoitzari dagokionaren arabera. Bakoitza bereizita desegin dezakezu ondoren, banan-banan berresterakoan bezala.",
+    "messageAjuste_other": "{{count}} mugimendu hauek kobratuta edo likidatuta gisa markatuko dituzu batera, bakoitzari dagokionaren arabera. Bakoitza bereizita desegin dezakezu ondoren, banan-banan berresterakoan bezala.",
+    "messageSimple_one": "Mugimendu hau kobratuta gisa markatuko duzu batera. Ondoren bereizita desegin dezakezu, banan-banan berresterakoan bezala.",
+    "messageSimple_other": "{{count}} mugimendu hauek kobratuta gisa markatuko dituzu batera. Bakoitza bereizita desegin dezakezu ondoren, banan-banan berresterakoan bezala.",
+    "toastSwitch_one": "Mugimendu {{count}} {{verb}} gisa markatuta — aldatu \"Kobratuta\"-ra ikusteko",
+    "toastSwitch_other": "{{count}} mugimendu {{verbPlural}} gisa markatuta — aldatu \"Kobratuta\"-ra ikusteko",
+    "toastNoSwitch_one": "Mugimendu {{count}} {{verb}} gisa markatuta",
+    "toastNoSwitch_other": "{{count}} mugimendu {{verbPlural}} gisa markatuta",
+    "verbCobrado": "kobratuta",
+    "verbCobradoPlural": "kobratuta",
+    "verbCobradoOLiquidado": "kobratuta edo likidatuta",
+    "verbCobradoOLiquidadoPlural": "kobratuta edo likidatuta"
+  },
+  "markAllPending": {
+    "button": "Markatu denak zain gisa",
+    "confirmLabel": "Markatu zain gisa",
+    "title_one": "Kobratutako mugimendu {{count}} zain gisa markatu?",
+    "title_other": "Kobratutako {{count}} mugimendu zain gisa markatu?",
+    "message_one": "Mugimendu hau zain egoerara itzuliko duzu batera. Ondoren bereizita desegin dezakezu, banan-banan eginez bezala.",
+    "message_other": "{{count}} mugimendu hauek zain egoerara itzuliko dituzu batera. Bakoitza bereizita desegin dezakezu ondoren, banan-banan eginez bezala.",
+    "toast_one": "Mugimendu {{count}} zain gisa markatuta",
+    "toast_other": "{{count}} mugimendu zain gisa markatuta"
+  },
+  "paidCapHint": "{{total}}-etik kobratutako {{limit}} berrienak erakusten ari da — erabili \"Iragazi\" aldi zehatz bat ikusteko.",
+  "fabAdd": "Gehitu",
+  "toggleStatus": {
+    "undoneToast": "Desegina",
+    "undoError": "Ezin izan da desegin. Saiatu berriro.",
+    "undoAction": "Desegin",
+    "markedPending": "Zain gisa markatuta",
+    "markedPaidSwitchTab": "Kobratuta gisa markatuta — aldatu \"Kobratuta\"-ra ikusteko",
+    "markedPaid": "Kobratuta gisa markatuta"
+  },
+  "genericUpdateError": "Ezin izan da eguneratu. Saiatu berriro.",
+  "sheet": {
+    "close": "Itxi",
+    "typeSelectorAria": "Mugimendu mota",
+    "createTypes": {
+      "ganado": "Emandako ikastaroa",
+      "comision": "Komisioa",
+      "companeros": "Ikastaro doikuntza"
+    },
+    "titleEdit": {
+      "ganado": "Editatu emandako ikastaroa",
+      "comision": "Editatu komisioa",
+      "companeros": "Editatu ikastaro doikuntza"
+    },
+    "titleNew": {
+      "ganado": "Emandako ikastaro berria",
+      "comision": "Komisio berria",
+      "companeros": "Ikastaro doikuntza berria"
+    },
+    "fields": {
+      "course": "Ikastaroa",
+      "school": "Eskola",
+      "date": "Data",
+      "relatedColleague": "Lotutako irakaslea",
+      "amount": "Zenbatekoa · {{currency}}",
+      "amountHint": "Positiboa berak zuri ordaintzen badizu; negatiboa zuk berari ordaintzen badiozu",
+      "colleaguePlaceholder": "Ane, Mikel...",
+      "amountPlaceholder": "90 edo -30",
+      "peopleCount": "Pertsona kop.",
+      "lessPeople": "Pertsona gutxiago",
+      "morePeople": "Pertsona gehiago",
+      "total": "Guztira",
+      "perPerson": "/ pertsona",
+      "addRate": "Gehitu tarifa",
+      "notes": "Oharrak",
+      "notesPlaceholder": "Aukerakoa",
+      "addNote": "Gehitu oharra"
+    },
+    "rate": {
+      "label": "Tarifa — {{school}} · {{activity}}",
+      "cancel": "Utzi",
+      "placeholder": "Tarifa",
+      "ariaLabel": "Tarifa · {{currency}}",
+      "saving": "Tarifa gordetzen",
+      "save": "Gorde tarifa"
+    },
+    "save": "Gorde",
+    "toasts": {
+      "changesSaved": "Aldaketak gordeta",
+      "adjustmentAdded": "Doikuntza gehituta",
+      "courseAdded": "Ikastaroa gehituta",
+      "commissionAdded": "Komisioa gehituta",
+      "saveError": "Ezin izan da gorde. Saiatu berriro.",
+      "rateAdded": "Tarifa gehituta",
+      "rateSaveError": "Ezin izan da tarifa gorde. Saiatu berriro."
+    }
+  },
+  "kpis": {
+    "generatedThisMonth": "Hilabete honetan sortua",
+    "pendingToCollect": "Kobratzeke",
+    "pendingTooltip": "Zenbateko honek aurreko hilabeteetako zain dauden ordainketak islatzen ditu.",
+    "pendingTooltipShow": "Info: Kobratzeke",
+    "pendingTooltipHide": "Ezkutatu info: Kobratzeke",
+    "collectedThisMonth": "Hilabete honetan kobratua"
+  }
+}

@@ -1,10 +1,11 @@
 {
   "calendarCaption": "Toca un día para ver el detalle, o uno vacío para añadir un movimiento",
-  "generatedThisMonth": "Generado este mes",
-  "peopleTrained_one": "{{count}} persona formada este mes",
-  "peopleTrained_other": "{{count}} personas formadas este mes",
-  "noCoursesThisMonth": "Sin cursos este mes",
-  "trendVsPreviousMonth": "{{delta}} vs mes anterior",
+  "activeSchoolThisMonth": "Escuela más activa",
+  "activeSchoolCount_one": "{{count}} movimiento este mes",
+  "activeSchoolCount_other": "{{count}} movimientos este mes",
+  "activeSchoolCountAndOthers_one": "{{count}} movimiento · {{schools}} escuelas este mes",
+  "activeSchoolCountAndOthers_other": "{{count}} movimientos · {{schools}} escuelas este mes",
+  "noActivityThisMonth": "Sin actividad este mes",
   "kpis": {
     "sectionTitle": "Tu impacto este mes",
     "studentsThisMonth": "Alumnos",
@@ -13,6 +14,8 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "subtitle": "Genera el registro de progreso SSI de cada alumno, firmado y listo para entregar"
-  }
+    "ctaFirstTime": "Genera tu primer Training Record",
+    "generatedLabel": "Generados"
+  },
+  "installApp": "Descargar app"
 }

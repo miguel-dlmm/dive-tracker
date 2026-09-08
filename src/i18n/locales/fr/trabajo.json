@@ -1,0 +1,144 @@
+{
+  "actionLabel": {
+    "markPending": "Marquer en attente",
+    "markSettled": "Marquer réglé",
+    "confirmCollection": "Confirmer l'encaissement"
+  },
+  "dateGroup": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "weekdaysShort": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
+    "monthsShort": ["jan", "fév", "mar", "avr", "mai", "juin", "juil", "août", "sep", "oct", "nov", "déc"]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "Aucun élément en attente avec ces filtres.",
+    "pendingNoFilters": "Tout est à jour — rien en attente.",
+    "paidWithFilters": "Aucun élément encaissé avec ces filtres.",
+    "paidNoFilters": "Vous n'avez encore rien marqué comme encaissé."
+  },
+  "rowMenu": {
+    "adjustmentWith": "l'ajustement avec {{name}}",
+    "courseAt": "{{activity}} à {{school}}",
+    "deleteConfirmMessage": "Vous allez supprimer {{item}}. Vous aurez quelques secondes pour annuler depuis la notification.",
+    "undoAction": "Annuler",
+    "deleteUndoneToast": "Récupéré",
+    "deleteUndoError": "Impossible d'annuler. Réessayez."
+  },
+  "tabs": {
+    "pending": "En attente",
+    "paid": "Encaissés"
+  },
+  "filter": {
+    "label": "Filtrer",
+    "period": "Période",
+    "school": "École",
+    "course": "Cours",
+    "type": "Type",
+    "allFeminine": "Toutes",
+    "allMasculine": "Tous",
+    "clear": "Effacer les filtres"
+  },
+  "collectAll": {
+    "button": "Tout encaisser",
+    "confirmLabel": "Encaisser",
+    "title_one": "Encaisser {{count}} mouvement en attente ?",
+    "title_other": "Encaisser {{count}} mouvements en attente ?",
+    "messageAjuste_one": "Vous allez marquer ce mouvement comme encaissé ou réglé d'un coup, selon le cas. Vous pouvez annuler chacun séparément ensuite, comme en confirmant un par un.",
+    "messageAjuste_other": "Vous allez marquer ces {{count}} mouvements comme encaissés ou réglés d'un coup, selon le cas. Vous pouvez annuler chacun séparément ensuite, comme en confirmant un par un.",
+    "messageSimple_one": "Vous allez marquer ce mouvement comme encaissé d'un coup. Vous pouvez annuler chacun séparément ensuite, comme en confirmant un par un.",
+    "messageSimple_other": "Vous allez marquer ces {{count}} mouvements comme encaissés d'un coup. Vous pouvez annuler chacun séparément ensuite, comme en confirmant un par un.",
+    "toastSwitch_one": "{{count}} mouvement marqué comme {{verb}} — passez à \"Encaissés\" pour le voir",
+    "toastSwitch_other": "{{count}} mouvements marqués comme {{verbPlural}} — passez à \"Encaissés\" pour les voir",
+    "toastNoSwitch_one": "{{count}} mouvement marqué comme {{verb}}",
+    "toastNoSwitch_other": "{{count}} mouvements marqués comme {{verbPlural}}",
+    "verbCobrado": "encaissé",
+    "verbCobradoPlural": "encaissés",
+    "verbCobradoOLiquidado": "encaissé ou réglé",
+    "verbCobradoOLiquidadoPlural": "encaissés ou réglés"
+  },
+  "markAllPending": {
+    "button": "Tout remettre en attente",
+    "confirmLabel": "Remettre en attente",
+    "title_one": "Remettre {{count}} mouvement encaissé en attente ?",
+    "title_other": "Remettre {{count}} mouvements encaissés en attente ?",
+    "message_one": "Vous allez remettre ce mouvement en attente d'un coup. Vous pouvez annuler chacun séparément ensuite, comme en le faisant un par un.",
+    "message_other": "Vous allez remettre ces {{count}} mouvements en attente d'un coup. Vous pouvez annuler chacun séparément ensuite, comme en le faisant un par un.",
+    "toast_one": "{{count}} mouvement remis en attente",
+    "toast_other": "{{count}} mouvements remis en attente"
+  },
+  "paidCapHint": "Affichage des {{limit}} encaissements les plus récents sur {{total}} — utilisez \"Filtrer\" pour voir une période précise.",
+  "fabAdd": "Ajouter",
+  "toggleStatus": {
+    "undoneToast": "Annulé",
+    "undoError": "Impossible d'annuler. Réessayez.",
+    "undoAction": "Annuler",
+    "markedPending": "Marqué en attente",
+    "markedPaidSwitchTab": "Marqué comme encaissé — passez à \"Encaissés\" pour le voir",
+    "markedPaid": "Marqué comme encaissé"
+  },
+  "genericUpdateError": "Impossible de mettre à jour. Réessayez.",
+  "sheet": {
+    "close": "Fermer",
+    "typeSelectorAria": "Type de mouvement",
+    "createTypes": {
+      "ganado": "Cours dispensé",
+      "comision": "Commission",
+      "companeros": "Ajustement de cours"
+    },
+    "titleEdit": {
+      "ganado": "Modifier le cours dispensé",
+      "comision": "Modifier la commission",
+      "companeros": "Modifier l'ajustement de cours"
+    },
+    "titleNew": {
+      "ganado": "Nouveau cours dispensé",
+      "comision": "Nouvelle commission",
+      "companeros": "Nouvel ajustement de cours"
+    },
+    "fields": {
+      "course": "Cours",
+      "school": "École",
+      "date": "Date",
+      "relatedColleague": "Collègue concerné",
+      "amount": "Montant · {{currency}}",
+      "amountHint": "Positif s'il vous doit de l'argent ; négatif si vous lui devez de l'argent",
+      "colleaguePlaceholder": "Léa, Marc...",
+      "amountPlaceholder": "90 ou -30",
+      "peopleCount": "Nb de personnes",
+      "lessPeople": "Moins de personnes",
+      "morePeople": "Plus de personnes",
+      "total": "Total",
+      "perPerson": "/ personne",
+      "addRate": "Ajouter un tarif",
+      "notes": "Notes",
+      "notesPlaceholder": "Facultatif",
+      "addNote": "Ajouter une note"
+    },
+    "rate": {
+      "label": "Tarif — {{school}} · {{activity}}",
+      "cancel": "Annuler",
+      "placeholder": "Tarif",
+      "ariaLabel": "Tarif · {{currency}}",
+      "saving": "Enregistrement du tarif",
+      "save": "Enregistrer le tarif"
+    },
+    "save": "Enregistrer",
+    "toasts": {
+      "changesSaved": "Modifications enregistrées",
+      "adjustmentAdded": "Ajustement ajouté",
+      "courseAdded": "Cours ajouté",
+      "commissionAdded": "Commission ajoutée",
+      "saveError": "Impossible d'enregistrer. Réessayez.",
+      "rateAdded": "Tarif ajouté",
+      "rateSaveError": "Impossible d'enregistrer le tarif. Réessayez."
+    }
+  },
+  "kpis": {
+    "generatedThisMonth": "Généré ce mois-ci",
+    "pendingToCollect": "En attente d'encaissement",
+    "pendingTooltip": "Ce montant reflète des paiements en attente de mois précédents.",
+    "pendingTooltipShow": "Info : En attente d'encaissement",
+    "pendingTooltipHide": "Masquer l'info : En attente d'encaissement",
+    "collectedThisMonth": "Encaissé ce mois-ci"
+  }
+}

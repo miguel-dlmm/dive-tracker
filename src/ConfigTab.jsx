@@ -3,11 +3,12 @@ import { useTranslation } from "react-i18next";
 import { motion, useAnimationControls } from "motion/react";
 import {
   Plus, Check, Star, Search, Lock, UserPlus, X, Trash2, Pencil, Copy, KeyRound,
-  ChevronRight, ChevronLeft, Building2, GraduationCap, Coins,
-  Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2,
+  ChevronRight, Building2, GraduationCap, Coins,
+  Flag, DollarSign, Palette, SlidersHorizontal, Users, Shield, ShieldCheck, Database, Link2, Loader2, HelpCircle,
 } from "lucide-react";
-import { NAVY, TEAL, GREEN, SUN, CORAL } from "./App";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle } from "./shared";
+import { GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
+import { ENTITY_COLOR_PALETTE } from "./colors";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle, ColorSwatchPicker, useFloatingDropdown, FloatingPanel } from "./shared";
 import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
 import i18n from "./i18n";
@@ -47,6 +48,34 @@ function actionErrorMessage(res, payload, { forbidden, fallback }) {
   return payload.error || fallback;
 }
 
+// Botón de color inline de cada fila (Escuelas/Cursos) — antes era un
+// `<input type="color">` nativo (rueda de color sin restricción), ahora
+// abre un panel flotante con la paleta curada (ColorSwatchPicker,
+// shared.jsx) — mismo cambio, mismo motivo, que el selector de color del
+// alta/edición más abajo. align="right": el botón vive al final de la
+// fila, pegado al lado derecho — igual criterio que el DatePicker de una
+// fila de progreso en Training Records (ver shared.jsx, useFloatingPosition).
+function ColorFieldButton({ value, onChange, ariaLabel }) {
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown("right");
+  return (
+    <>
+      <button
+        ref={anchorRef}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        className="h-9 w-9 shrink-0 rounded-full"
+        style={{ backgroundColor: value, border: value?.toLowerCase() === "#ffffff" ? "1.5px solid #D1D5DB" : "none" }}
+      />
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align="right" role="dialog" aria-label={ariaLabel} className="w-64 rounded-xl p-3">
+        <ColorSwatchPicker value={value} onChange={(hex) => { onChange(hex); setOpen(false); }} />
+      </FloatingPanel>
+    </>
+  );
+}
+
 /**
  * Tabla CRUD genérica reutilizada por las secciones de Configuración
  * (Escuelas, Cursos, Estados de pago, Monedas). Crear y
@@ -62,7 +91,7 @@ function actionErrorMessage(res, payload, { forbidden, fallback }) {
  */
 function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false, description, defaultLabel }) {
   const { t } = useTranslation("config");
-  const emptyForm = Object.fromEntries(fields.map((f) => [f.key, f.type === "color" ? "#0E7C7B" : ""]));
+  const emptyForm = Object.fromEntries(fields.map((f) => [f.key, f.type === "color" ? ENTITY_COLOR_PALETTE[7] : ""]));
   const [form, setForm] = useState(emptyForm);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingRow, setEditingRow] = useState(null); // null = alta
@@ -119,13 +148,11 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
   };
 
   const renderColorField = (row, f) => (
-    <input
+    <ColorFieldButton
       key={f.key}
-      type="color"
       value={row[f.key]}
-      onChange={(e) => updateLive(row[pkField], { [f.key]: e.target.value })}
-      title={t("crudTable.cambiarColor")}
-      className="h-9 w-11 shrink-0 cursor-pointer rounded border border-gray-200"
+      onChange={(hex) => updateLive(row[pkField], { [f.key]: hex })}
+      ariaLabel={t("crudTable.cambiarColor")}
     />
   );
 
@@ -194,7 +221,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
         {filteredRows.length === 0 && <li className="px-4 py-6 text-center text-sm text-gray-400">{t("crudTable.sinResultados")}</li>}
       </ul>
 
-      <Fab onClick={openCreateSheet} label={createLabel} color={TEAL} />
+      <Fab onClick={openCreateSheet} label={createLabel} color={BRAND_NAVY} />
 
       <Sheet open={sheetOpen} onClose={closeSheet}>
         <div className="mb-1 flex items-center justify-between">
@@ -202,25 +229,28 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
           <button onClick={closeSheet} aria-label={t("crudTable.cerrar")} className="text-gray-400"><X size={19} /></button>
         </div>
         <div className="mt-2 flex flex-wrap items-end gap-2.5">
-          {fields.map((f) => (
-            f.type === "color" ? (
-              <Field key={f.key} label={f.label}>
-                <input type="color" value={form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                  className="h-11 w-12 cursor-pointer rounded-md border border-gray-200" />
-              </Field>
-            ) : (
-              <Field key={f.key} label={f.label}>
-                <input value={form[f.key]} placeholder={f.placeholder}
-                  onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                  className={`${inputCls} w-full min-w-[8rem]`} onKeyDown={(e) => e.key === "Enter" && submitSheet()} />
-              </Field>
-            )
+          {fields.filter((f) => f.type !== "color").map((f) => (
+            <Field key={f.key} label={f.label}>
+              <input value={form[f.key]} placeholder={f.placeholder}
+                onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                className={`${inputCls} w-full min-w-[8rem]`} onKeyDown={(e) => e.key === "Enter" && submitSheet()} />
+            </Field>
           ))}
         </div>
+        {/* Paleta curada a todo el ancho, debajo del nombre — no cabía a
+            su lado sin apretarlo (rejilla de 12 swatches vs. un solo
+            input de color de 48px), y separarla en su propia fila además
+            le da más peso: sigue siendo una decisión real, no un detalle
+            menor del formulario. */}
+        {fields.filter((f) => f.type === "color").map((f) => (
+          <div key={f.key} className="mt-3">
+            <ColorSwatchPicker value={form[f.key]} onChange={(hex) => setForm({ ...form, [f.key]: hex })} label={f.label} />
+          </div>
+        ))}
         <button
           onClick={submitSheet}
           className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white"
-          style={{ backgroundColor: TEAL }}
+          style={{ backgroundColor: BRAND_NAVY }}
         >
           {editingRow ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />} {t("crudTable.guardar")}
         </button>
@@ -234,7 +264,7 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
 // llamaba "Secciones"/"Colores de sección": desde que Movimientos tiene su
 // propia identidad visual por tipo (barra lateral de cada tarjeta, colores
 // fijos de marca — ver rowAccent en MiTrabajoTab.jsx, deliberadamente NO
-// configurable, mismo criterio que NAVY/TEAL/CORAL/GREEN), "sección" se
+// configurable, mismo criterio que BRAND_NAVY/CORAL/GREEN), "sección" se
 // había vuelto ambiguo: esto no es eso, es el color de cada área de la
 // navegación (pestaña + botón de "+ Nuevo"), no el de los tipos de
 // movimiento dentro de Mi trabajo.
@@ -260,9 +290,12 @@ function SectionColors({ navSections }) {
   );
 }
 
-// Ajustes generales — hoy solo el icono del loading (configurable para
-// poder cambiarlo por el logo oficial cuando esté listo, sin tocar código).
-const ICON_OPTIONS = ["Waves", "Anchor", "Sailboat", "LifeBuoy", "Fish", "Compass"];
+// Ajustes generales — hoy solo el icono del loading. "Logo" (rediseño
+// 2026-09-06) es ya el logo real de Ocean Flow, no un icono de
+// lucide-react — el resto de opciones siguen disponibles como
+// alternativa deliberada (mismo criterio de siempre: configurable sin
+// tocar código, ver AppLoading en shared.jsx).
+const ICON_OPTIONS = ["Logo", "Waves", "Anchor", "Sailboat", "LifeBuoy", "Fish", "Compass"];
 
 function GeneralSettings({ appConfig }) {
   const { t } = useTranslation("config");
@@ -289,14 +322,14 @@ function GeneralSettings({ appConfig }) {
             key={name}
             onClick={() => setIcon(name)}
             className="flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium"
-            style={row.logo_icon === name ? { borderColor: TEAL, backgroundColor: "#F0FDFA", color: TEAL } : { borderColor: "#E5E7EB", color: "#4B5563" }}
+            style={row.logo_icon === name ? { borderColor: BRAND_NAVY, backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY } : { borderColor: "#E5E7EB", color: "#4B5563" }}
           >
             {name}
           </button>
         ))}
       </div>
       <div className="flex items-center gap-3 rounded-md bg-gray-50 p-4">
-        <AppLoading iconName={row.logo_icon} color={TEAL} size={32} />
+        <AppLoading iconName={row.logo_icon} color={BRAND_NAVY} size={32} />
         <span className="text-xs text-gray-400">{t("generalSettings.vistaPrevia")}</span>
       </div>
 
@@ -404,7 +437,12 @@ const STATUS_META = {
   // gray-100 da ~4.4:1 de contraste, justo por debajo del 4.5:1 mínimo
   // AA para texto normal (12px, no es "texto grande") — comprobado con la
   // fórmula de contraste relativo de WCAG. gray-600 sube a ~6.9:1.
-  desactivado: { cls: "bg-gray-100 text-gray-600", dot: "#9CA3AF" },
+  // dot: gray-500 (#6B7280), no gray-400 (#9CA3AF) — feedback explícito
+  // (2026-09-07: "el gris muy claro, se diferencia poco"). Se combina
+  // además con la fila entera atenuada (ver UserListRow más abajo), así
+  // que el punto necesita partir de un gris ya visible por sí solo antes
+  // de esa atenuación.
+  desactivado: { cls: "bg-gray-100 text-gray-600", dot: "#6B7280" },
 };
 
 // Badge de solo lectura — cualquier admin puede VERLO, cambiarlo es cosa
@@ -412,18 +450,62 @@ const STATUS_META = {
 // "mostrar estado" de "cambiar estado" es justo lo que permite que la
 // lista (donde nunca hay acción) y el detalle (donde sí la hay, junto al
 // switch) reutilicen la misma pieza sin condicionales de por medio.
-// Punto de color delante del texto (feedback explícito 2026-08-30: "quiero
-// que se entienda de un vistazo, sin obligar a leer demasiado") — el texto
-// se mantiene (nunca solo color, que no llega a quien no distingue bien
-// los colores ni a un lector de pantalla), el punto es el atajo visual.
+//
+// Solo el punto de color, sin la palabra visible (Fase 8, 2026-09-07,
+// pedido explícito: "quita la palabra del estado y deja solo el código
+// de color"). Esto revierte a propósito la mitad de una decisión previa
+// (2026-08-30: "el texto se mantiene, nunca solo color, que no llega a
+// quien no distingue bien los colores ni a un lector de pantalla, el
+// punto es el atajo visual") — el texto sigue existiendo para lectores
+// de pantalla (`sr-only`, nunca se quita del DOM/accesible), pero deja
+// de ocupar espacio visual en la fila. Para una persona que ve bien el
+// color pero no distingue verde/ámbar/gris entre sí, la leyenda con
+// StatusLegendButton (más abajo, en la cabecera del listado) es la
+// mitigación explícita que pidió el propio usuario ("puedes añadir un
+// tooltip para explicar la leyenda") — no es tan inmediato como el texto
+// en cada fila, es la decisión consciente de este cambio.
 function StatusBadge({ status }) {
   const { t } = useTranslation("config");
   const meta = STATUS_META[status] || STATUS_META.desactivado;
   return (
-    <span className={`inline-flex min-h-6 items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.cls}`}>
-      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: meta.dot }} aria-hidden="true" />
-      {t(`userStatus.${status in STATUS_META ? status : "desactivado"}`)}
+    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center" role="img" aria-label={t(`userStatus.${status in STATUS_META ? status : "desactivado"}`)}>
+      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: meta.dot }} aria-hidden="true" />
     </span>
+  );
+}
+
+// Leyenda de colores del estado — botón "?" que abre un panel flotante
+// con los 3 colores + su significado (mismo patrón que el tooltip de
+// "Pendiente de cobrar" en MiTrabajoTab.jsx: useFloatingDropdown +
+// FloatingPanel, no un <title> nativo, que no funciona al tacto en
+// móvil). Vive en la cabecera del listado de usuarios, no en cada fila
+// — se consulta una vez, no en cada fila del listado.
+function StatusLegendButton() {
+  const { t } = useTranslation("config");
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown("right");
+  return (
+    <div className="relative">
+      <button
+        ref={anchorRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-label={t("usersDirectory.leyendaEstadoAria")}
+        className="-m-2 flex h-11 w-11 shrink-0 items-center justify-center p-2 text-gray-400 hover:text-gray-600"
+      >
+        <HelpCircle size={18} aria-hidden="true" />
+      </button>
+      <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align="right" role="dialog" aria-label={t("usersDirectory.leyendaEstadoAria")} className="w-56 p-3">
+        <ul className="space-y-2">
+          {Object.entries(STATUS_META).map(([key, meta]) => (
+            <li key={key} className="flex items-center gap-2 text-xs text-gray-600">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: meta.dot }} aria-hidden="true" />
+              {t(`userStatus.${key}`)}
+            </li>
+          ))}
+        </ul>
+      </FloatingPanel>
+    </div>
   );
 }
 
@@ -437,7 +519,7 @@ function StatusBadge({ status }) {
 function RoleIcon({ isAdmin, isSuperadmin }) {
   const { t } = useTranslation("config");
   if (isSuperadmin) return <ShieldCheck size={14} className="shrink-0" style={{ color: SUN }} role="img" aria-label={t("roleIcon.superadmin")} />;
-  if (isAdmin) return <Shield size={14} className="shrink-0" style={{ color: NAVY }} role="img" aria-label={t("roleIcon.admin")} />;
+  if (isAdmin) return <Shield size={14} className="shrink-0" style={{ color: BRAND_NAVY }} role="img" aria-label={t("roleIcon.admin")} />;
   return null;
 }
 
@@ -540,10 +622,19 @@ function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
 
 function UserListRow({ user, status, lastSignInAt, deactivatedAt, onOpen }) {
   const { t } = useTranslation("config");
+  // Fila "apagada" para una cuenta desactivada (feedback explícito
+  // 2026-09-07: "querría q todos los colores q muestra sean mas
+  // apagados que los del resto de fila, que de la sensación de
+  // 'apagado'") — antes una cuenta desactivada se veía exactamente
+  // igual que una activa salvo por el punto de estado y la línea
+  // "Baja:". `opacity-60` en vez de recolorear cada elemento a mano:
+  // atenúa nickname, nombre, icono de rol, fecha y flecha a la vez con
+  // un único ajuste, y sigue por encima del umbral razonable de
+  // legibilidad (no tan bajo como para que el texto deje de leerse).
   return (
     <button
       onClick={() => onOpen(user.user_id)}
-      className="flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left"
+      className={`flex min-h-[60px] w-full items-center gap-3 px-4 py-3 text-left ${status === "desactivado" ? "opacity-60" : ""}`}
     >
       <div className="min-w-0 flex-1">
         {/* Estado antes que el nickname (feedback explícito 2026-08-30,
@@ -563,8 +654,12 @@ function UserListRow({ user, status, lastSignInAt, deactivatedAt, onOpen }) {
       <div className="shrink-0 text-right text-xs text-gray-400">
         {/* Último acceso en vez de fecha de alta (pedido explícito del
             usuario) — "cuándo se dio de alta" dice poco de si la cuenta
-            sigue viva; "cuándo entró por última vez" sí. */}
-        <div>{t("userListRow.ultimoAcceso", { date: shortDateTime(lastSignInAt, t("userStatus.nunca")) })}</div>
+            sigue viva; "cuándo entró por última vez" sí. Solo fecha, sin
+            hora (2026-09-04, pedido explícito): la hora exacta no aporta
+            nada para reconocer de un vistazo si una cuenta sigue viva,
+            solo añade ruido. Reutiliza shortDate de shared.jsx en vez de
+            shortDateTime, que sigue usándose para "Fecha de baja". */}
+        <div>{t("userListRow.ultimoAcceso", { date: lastSignInAt ? shortDate(lastSignInAt) : t("userStatus.nunca") })}</div>
         {status === "desactivado" && (
           <div className="mt-0.5 italic">{t("userListRow.baja", { date: deactivatedAt ? shortDate(deactivatedAt) : t("userListRow.fechaNoRegistrada") })}</div>
         )}
@@ -592,6 +687,7 @@ function UserListRow({ user, status, lastSignInAt, deactivatedAt, onOpen }) {
 // estructura de pantalla que no pinta nada en este caso.
 function UserDetailSheet({
   open, user: userProp, status: statusProp, lastSignInAt: lastSignInAtProp, deactivatedAt: deactivatedAtProp,
+  activitySummary,
   currentUserId, viewerIsSuperadmin, actionBusy,
   onClose, onRequestToggleAdmin, onRequestToggleActive, onRequestRegenerateLink,
   onRequestRegeneratePassword, onRequestDelete, onSaveProfile,
@@ -672,18 +768,44 @@ function UserDetailSheet({
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.ultimoAcceso")}</span>
-              <span className="text-gray-700">{shortDateTime(lastSignInAt, t("userStatus.nunca"))}</span>
+              {/* Solo fecha, sin hora (2026-09-04, pedido explícito) — ver
+                  mismo cambio y motivo en UserListRow arriba. */}
+              <span className="text-gray-700">{lastSignInAt ? shortDate(lastSignInAt) : t("userStatus.nunca")}</span>
             </div>
-            {status === "desactivado" && (
+            {/* Movimientos dados de alta + última actividad (Fase 9,
+                2026-09-07, pedido explícito) — carga aparte bajo demanda
+                (ver el efecto en UsersDirectory que llama a
+                /api/list-user-status con user_id al abrir esta hoja),
+                nunca bloquea el resto del detalle: mientras no ha llegado
+                (activitySummary null) se muestra "…" en vez de dejar el
+                valor en blanco, para que quede claro que está cargando y
+                no que la cuenta no tiene movimientos. */}
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.movimientos")}</span>
+              <span className="text-gray-700">{activitySummary ? activitySummary.count : "…"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.ultimaActividad")}</span>
+              <span className="text-gray-700">
+                {!activitySummary ? "…" : activitySummary.lastActivityAt ? shortDate(activitySummary.lastActivityAt) : t("userStatus.nunca")}
+              </span>
+            </div>
+            {/* Solo se muestra con una fecha real (2026-09-04, pedido
+                explícito) — antes se gateaba en status === "desactivado" y,
+                sin deactivated_at registrado (baja anterior a la migración
+                que añadió esa columna), caía a un aviso placeholder
+                ("fecha no registrada") en vez de ocultar el campo. Gatear
+                directo en deactivatedAt es más simple y evita ese estado
+                intermedio confuso — quien lo necesite ya lo ve en la fila
+                del listado (UserListRow, que sí conserva el aviso). */}
+            {deactivatedAt && (
               <div className="flex items-center justify-between gap-3">
                 <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.baja")}</span>
-                <span className={deactivatedAt ? "text-gray-700" : "italic text-gray-400"}>
-                  {deactivatedAt ? shortDateTime(deactivatedAt, t("userStatus.nunca")) : t("userDetailSheet.fechaNoRegistrada")}
-                </span>
+                <span className="text-gray-700">{shortDateTime(deactivatedAt, t("userStatus.nunca"))}</span>
               </div>
             )}
             {editable && (
-              <button onClick={startEditProfile} className="flex min-h-9 items-center gap-1 text-xs font-semibold" style={{ color: TEAL }}>
+              <button onClick={startEditProfile} className="flex min-h-9 items-center gap-1 text-xs font-semibold" style={{ color: BRAND_NAVY }}>
                 <Pencil size={13} aria-hidden="true" /> {t("userDetailSheet.editarDatos")}
               </button>
             )}
@@ -706,7 +828,7 @@ function UserDetailSheet({
           {status === "pendiente" && editable && (
             <p className="text-xs text-gray-400">
               {t("userDetailSheet.pendienteTexto")}{" "}
-              <button onClick={() => onRequestRegenerateLink(user)} disabled={actionBusy} className="font-semibold underline disabled:opacity-40" style={{ color: TEAL }}>
+              <button onClick={() => onRequestRegenerateLink(user)} disabled={actionBusy} className="font-semibold underline disabled:opacity-40" style={{ color: BRAND_NAVY }}>
                 {t("userDetailSheet.regenerarEnlace")}
               </button>
             </p>
@@ -787,7 +909,7 @@ function ActivationLinkPanel({ open, title: titleProp, description: descriptionP
         <button
           onClick={copyLink}
           className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white"
-          style={{ backgroundColor: TEAL }}
+          style={{ backgroundColor: BRAND_NAVY }}
         >
           <Copy size={15} aria-hidden="true" /> {t("activationLinkPanel.copiarEnlace")}
         </button>
@@ -832,6 +954,11 @@ const emptyUserForm = { email: "", first_name: "", last_name: "", nickname: "" }
 const LANGUAGE_OPTIONS = [
   { code: "es", label: "Español" },
   { code: "en", label: "English" },
+  { code: "fr", label: "Français" },
+  { code: "it", label: "Italiano" },
+  { code: "de", label: "Deutsch" },
+  { code: "ca", label: "Català" },
+  { code: "eu", label: "Euskara" },
 ];
 
 // Hoja de creación de usuario — solo visible/usable para superadmin (ver
@@ -953,7 +1080,7 @@ function CreateUserSheet({ open, onClose, onCreated }) {
           <button
             onClick={copyLink}
             className="flex min-h-11 flex-1 items-center justify-center rounded-md text-sm font-medium text-white"
-            style={{ backgroundColor: TEAL }}
+            style={{ backgroundColor: BRAND_NAVY }}
           >
             {t("createUserSheet.copiarEnlace")}
           </button>
@@ -1033,7 +1160,7 @@ function CreateUserSheet({ open, onClose, onCreated }) {
         onClick={submit}
         disabled={submitting}
         className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-        style={{ backgroundColor: TEAL }}
+        style={{ backgroundColor: BRAND_NAVY }}
       >
         <UserPlus size={16} /> {submitting ? t("createUserSheet.creando") : t("createUserSheet.crearUsuario")}
       </button>
@@ -1057,6 +1184,38 @@ function UsersDirectory({ profile }) {
   // reload() (cambiar de rol, activar/desactivar) sin tener que sincronizar
   // manualmente un segundo estado.
   const [openUserId, setOpenUserId] = useState(null);
+  // Resumen de actividad (recuento de movimientos + fecha de la última
+  // actividad) — bajo demanda al abrir la hoja de detalle de un usuario
+  // concreto — fusionado en /api/list-user-status (ver activitySummaryFor()
+  // en listUserStatus.js, 2026-09-07): un endpoint propio era la 13ª
+  // Serverless Function y tumbaba todos los deployments del plan Hobby de
+  // Vercel (límite de 12). Objeto { count, lastActivityAt } o null
+  // mientras carga/antes de abrir ninguna hoja; se limpia al cerrar para
+  // no mostrar el dato del usuario anterior un instante al abrir el
+  // siguiente.
+  const [activitySummary, setActivitySummary] = useState(null);
+  useEffect(() => {
+    if (!openUserId) { setActivitySummary(null); return; }
+    let cancelled = false;
+    setActivitySummary(null);
+    (async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        const res = await fetch("/api/list-user-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ user_id: openUserId }),
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok) setActivitySummary(payload);
+      } catch {
+        // silencioso a propósito, mismo criterio que loadActiveStatus — un
+        // fallo aquí no debe impedir ver el resto de la hoja de detalle
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [openUserId]);
   const [pendingToggle, setPendingToggle] = useState(null);
   const [pendingToggleActive, setPendingToggleActive] = useState(null);
   const [pendingRegenerateLink, setPendingRegenerateLink] = useState(null);
@@ -1433,12 +1592,13 @@ function UsersDirectory({ profile }) {
             className={`${inputCls} w-full min-w-[9rem] pl-8`}
           />
         </div>
+        <StatusLegendButton />
         {/* Solo superadmin: los admins normales solo tienen acceso de lectura al directorio. */}
         {profile?.is_superadmin && (
           <button
             onClick={() => setSheetOpen(true)}
             className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-sm font-medium text-white"
-            style={{ backgroundColor: TEAL }}
+            style={{ backgroundColor: BRAND_NAVY }}
           >
             <UserPlus size={15} aria-hidden="true" /> {t("usersDirectory.crearUsuario")}
           </button>
@@ -1510,6 +1670,7 @@ function UsersDirectory({ profile }) {
         status={openUser ? userStatus(activeByUser[openUser.user_id] ?? true, activatedAtByUser[openUser.user_id]) : null}
         lastSignInAt={openUser ? (lastSignInByUser[openUser.user_id] ?? null) : null}
         deactivatedAt={openUser ? deactivatedAtByUser[openUser.user_id] : null}
+        activitySummary={activitySummary}
         currentUserId={profile?.user_id}
         viewerIsSuperadmin={!!profile?.is_superadmin}
         actionBusy={submitting}
@@ -1662,12 +1823,14 @@ const BUSINESS_SECTIONS = [
 // "Per Person" — ver RatesTab.jsx/MovementSheet.jsx); su DROP real es el
 // paso 3-5 de esa misma ADR, deliberadamente no hecho en este cambio
 // (solo frontend, sin migraciones).
-// Training Records fuera de Release V1 (decisión del usuario,
-// 2026-09-04, docs/RELEASE-V1-PROGRESS.md Fase 9): la tarjeta de acceso
-// desde Home y esta sección se retiran de la UI para este release —
-// TrainingRecordsTab.jsx, sus migraciones y sus tablas quedan intactos.
-// Reversible restaurando el HIDDEN_SECTIONS/allowedSectionKeys/
-// currentSectionI18nKey/render de antes de este commit.
+// "Training Records" vivió aquí como una "sección oculta" de Configuración
+// (Bloque 10, job nocturno 2026-09-03) desde que se movió su enlace a
+// Home — real por dentro pero fuera del menú visible. Se retira del todo
+// el 2026-09-07 (feedback explícito: "sigue navegando bajo configuración,
+// debería ser una feature independiente"): ahora es su propia pestaña
+// secundaria en App.jsx, al mismo nivel que esta pantalla, no una sección
+// más de ella — ver App.jsx (SECONDARY_TABS, closeSecondary) y
+// HomeTab.jsx para el detalle completo del cambio.
 const ADMIN_SECTIONS = [
   { key: "estados-pago", i18nKey: "estadosPago", icon: Flag },
   { key: "monedas", i18nKey: "monedas", icon: DollarSign },
@@ -1700,15 +1863,6 @@ function readStoredSection() {
 export function clearStoredSection() {
   try { sessionStorage.removeItem(CONFIG_SECTION_KEY); } catch { /* no-op */ }
 }
-// Exportado para Home (Bloque 10): entrar directo a una sección de
-// Configuración desde fuera de este archivo sin duplicar la clave de
-// sessionStorage — se llama justo antes de navegar a la pestaña
-// "config" (ver App.jsx, onOpenTrainingRecords), para que el
-// `useState(() => readStoredSection())` de ConfigTab la recoja ya en su
-// primer render.
-export function setStoredSection(key) {
-  try { sessionStorage.setItem(CONFIG_SECTION_KEY, key); } catch { /* no-op */ }
-}
 
 function ConfigMenuGroup({ title, items, onSelect }) {
   const { t } = useTranslation("config");
@@ -1722,7 +1876,7 @@ function ConfigMenuGroup({ title, items, onSelect }) {
             onClick={() => onSelect(key)}
             className="flex min-h-[56px] w-full items-center gap-3 px-4 py-3 text-left"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: "#F0FDFA", color: TEAL }}>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md" style={{ backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY }}>
               <Icon size={18} aria-hidden="true" />
             </span>
             <span className="min-w-0 flex-1">
@@ -1743,7 +1897,7 @@ function ConfigMenuGroup({ title, items, onSelect }) {
 // onClose (opcional): cierra Configuración entera (mismo handler que la "X"
 // de la cabecera, ver App.jsx) — lo dispara el gesto de "atrás" cuando ya
 // estamos en el menú principal, sin ninguna sección abierta (ver backProps).
-export default function ConfigTab({ schools, activities, currencies, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose }) {
+export default function ConfigTab({ schools, activities, currencies, paymentStatuses, rates, commissionRates, worklog, comisiones, navSections, appConfig, profile, onClose, onSectionChange }) {
   const { t } = useTranslation("config");
   const isAdmin = !!(profile?.is_admin || profile?.is_superadmin);
   const isSuperadmin = !!profile?.is_superadmin;
@@ -1757,13 +1911,35 @@ export default function ConfigTab({ schools, activities, currencies, paymentStat
     if (next) { try { sessionStorage.setItem(CONFIG_SECTION_KEY, next); } catch { /* no-op */ } }
     else clearStoredSection();
   };
-  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
+  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || BRAND_NAVY;
   const currentSectionI18nKey = [...BUSINESS_SECTIONS, ...ADMIN_SECTIONS, ...SUPERADMIN_SECTIONS].find((s) => s.key === section)?.i18nKey;
   // Deslizar hacia la derecha = "atrás", recursivo (feedback explícito
   // 2026-08-30: "no como una excepción, no como un truco, no como una
   // interacción aislada"): dentro de una sección, vuelve al menú; ya en el
   // menú, cierra Configuración entera — el mismo gesto en cualquier nivel.
   const backProps = useSwipeBack(section == null ? onClose : () => setSection(null));
+  // Rediseño de navegación 2026-09-06 (feedback explícito del usuario: "al
+  // entrar en una sección aparece dos veces Configuración, una para cerrar
+  // la sección y otra para navegar atrás... no me convence"). Antes había
+  // TRES filas de cabecera a la vez: la cabecera global ("✕ Configuración",
+  // App.jsx), la miga de pan propia de aquí ("‹ Configuración") y el título
+  // h2 de la sección — con "Configuración" escrito dos veces. Se colapsan
+  // en una sola: este efecto informa a App.jsx de qué mostrar en SU cabecera
+  // (nada especial en el menú; "‹ [Sección]" dentro de una), y esta pantalla
+  // deja de dibujar su propia miga de pan y su propio h2 — la cabecera
+  // global pasa a ser la única fuente de "dónde estoy y cómo vuelvo",
+  // patrón estándar de navegación jerárquica (una sola barra, nunca dos a
+  // la vez). Corre también al montar (no solo al cambiar `section`) para
+  // que reabrir directamente en una sección ya guardada en sessionStorage
+  // muestre la cabecera correcta desde el primer render.
+  useEffect(() => {
+    if (!onSectionChange) return;
+    if (section == null) { onSectionChange(null); return; }
+    onSectionChange({
+      label: currentSectionI18nKey ? t(`sections.${currentSectionI18nKey}.label`) : "",
+      onBack: () => setSection(null),
+    });
+  }, [section, currentSectionI18nKey]);
 
   if (section == null) {
     return (
@@ -1775,17 +1951,11 @@ export default function ConfigTab({ schools, activities, currencies, paymentStat
     );
   }
 
+  // Sin miga de pan ni título propios aquí — la cabecera global (App.jsx)
+  // ya los muestra ("‹ [Sección]"), ver el efecto de onSectionChange más
+  // arriba. Una sola barra de navegación, no dos a la vez.
   return (
     <div className="space-y-3" {...backProps}>
-      <button
-        onClick={() => setSection(null)}
-        className="-ml-2 flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium"
-        style={{ color: TEAL }}
-      >
-        <ChevronLeft size={18} aria-hidden="true" /> {t("menu.configuracion")}
-      </button>
-      <h2 className="-mt-1 text-base font-semibold" style={{ color: NAVY }}>{currentSectionI18nKey && t(`sections.${currentSectionI18nKey}.label`)}</h2>
-
       {section === "escuelas" && (
         // colorizeText: mismo tratamiento que Cursos (lavado de cara
         // 2026-09-03, pedido explícito del usuario: "el estilado no acaba

@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, Waves } from "lucide-react";
-import * as Icons from "lucide-react";
-import { NAVY, TEAL, AQUA, CORAL } from "./colors";
-import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
-import { AVATAR_ICONS, AVATAR_COLORS, resolveAvatar } from "./avatarCatalog";
+import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { CORAL, BRAND_NAVY, BRAND_SKY } from "./colors";
+import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, SearchSelect, DatePicker, shortDate, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
+import { AVATAR_ICONS, AVATAR_COLORS, AVATAR_ICON_MAP, resolveAvatar } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
 import i18n, { setStoredLanguage } from "./i18n";
 import { computeInitials } from "./computeInitials";
+import { COUNTRIES } from "./countries";
 import SignatureCapture from "./SignatureCapture";
 
 // Pantalla "Mi perfil" (Bloque 5, 2026-09-01) — pantalla secundaria como
@@ -37,8 +37,68 @@ function friendlyProfileError(err, t) {
 function SectionCard({ title, children, id }) {
   return (
     <div id={id} className="rounded-lg border border-gray-200 bg-white p-4 scroll-mt-20">
-      <h3 className="mb-3 text-sm font-semibold" style={{ color: NAVY }}>{title}</h3>
+      <h3 className="mb-3 text-sm font-semibold" style={{ color: BRAND_NAVY }}>{title}</h3>
       {children}
+    </div>
+  );
+}
+
+// Selector de icono en carrusel horizontal (rediseño 2026-09-06,
+// docs/DESIGN-SYSTEM.md §6) — sustituye al `grid grid-cols-3` estático de
+// antes. Con 6 iconos, un grid de 3 columnas ya ocupaba 2 filas dentro del
+// panel inline de Mi perfil; al ampliar el catálogo de avatares a 14
+// (ver avatarCatalog.js) un grid habría crecido a 5 filas, alargando la
+// pantalla mucho más de lo que pide el contexto de uso real (manos
+// mojadas, poco tiempo entre inmersiones — CLAUDE.md regla 3). Un
+// carrusel de una sola fila con scroll-snap mantiene siempre la misma
+// altura, tenga el catálogo 6 iconos o 60. Solo hay un uso hoy (avatares);
+// si aparece un segundo caso real, esto se extrae a shared.jsx (convención
+// de "extraer solo cuando exista necesidad real", CLAUDE.md sección 3).
+function IconCarousel({ icons, value, onChange, color, disabled, labelFor, prevLabel, nextLabel }) {
+  const scrollerRef = useRef(null);
+  const scrollBy = (dir) => {
+    scrollerRef.current?.scrollBy({ left: dir * 96, behavior: "smooth" });
+  };
+  return (
+    <div className="relative flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => scrollBy(-1)}
+        aria-label={prevLabel}
+        disabled={disabled}
+        className="flex h-11 w-6 shrink-0 items-center justify-center text-gray-400 disabled:opacity-50"
+      >
+        <ChevronLeft size={16} aria-hidden="true" />
+      </button>
+      <div
+        ref={scrollerRef}
+        className="flex flex-1 snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth py-0.5"
+        style={{ scrollbarWidth: "none" }}
+      >
+        {icons.map(({ name, Icon }) => (
+          <button
+            key={name}
+            type="button"
+            onClick={() => onChange(name)}
+            aria-label={labelFor(name)}
+            aria-pressed={value === name}
+            disabled={disabled}
+            className="flex h-14 w-14 shrink-0 snap-center items-center justify-center rounded-md border disabled:opacity-50"
+            style={{ borderColor: value === name ? color : "#E5E7EB", backgroundColor: value === name ? `${color}1A` : "white" }}
+          >
+            <Icon size={20} style={{ color: value === name ? color : "#9CA3AF" }} aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => scrollBy(1)}
+        aria-label={nextLabel}
+        disabled={disabled}
+        className="flex h-11 w-6 shrink-0 items-center justify-center text-gray-400 disabled:opacity-50"
+      >
+        <ChevronRight size={16} aria-hidden="true" />
+      </button>
     </div>
   );
 }
@@ -99,7 +159,7 @@ function AvatarPicker({ profile, onProfileUpdated }) {
         <Avatar icon={preview.icon} color={preview.color} size={72} />
         <span
           className="absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-white"
-          style={{ backgroundColor: TEAL }}
+          style={{ backgroundColor: BRAND_NAVY }}
         >
           <Pencil size={12} aria-hidden="true" />
         </span>
@@ -108,39 +168,42 @@ function AvatarPicker({ profile, onProfileUpdated }) {
       {open && (
         <div className="w-full space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
           <div className="flex flex-wrap justify-center gap-2">
-            {AVATAR_COLORS.map((c) => (
-              <button
-                key={c.name}
-                onClick={() => setDraftColor(c.value)}
-                aria-label={t("avatar.colorLabel", { name: c.name })}
-                aria-pressed={draftColor === c.value}
-                disabled={saving}
-                className="flex min-h-11 min-w-11 items-center justify-center rounded-full disabled:opacity-50"
-              >
-                <span
-                  className="flex h-8 w-8 items-center justify-center rounded-full"
-                  style={{ backgroundColor: c.value, outline: draftColor === c.value ? `2px solid ${NAVY}` : "none", outlineOffset: 2 }}
+            {/* Blanco necesita su propio tratamiento (borde siempre
+                visible + check en navy, no blanco-sobre-blanco) — mismo
+                criterio que ColorSwatchPicker (shared.jsx), misma paleta
+                de origen (ENTITY_COLOR_PALETTE). */}
+            {AVATAR_COLORS.map((c) => {
+              const isWhite = c.value.toLowerCase() === "#ffffff";
+              const needsNavyCheck = ["#ffffff", "#d97706"].includes(c.value.toLowerCase());
+              return (
+                <button
+                  key={c.name}
+                  onClick={() => setDraftColor(c.value)}
+                  aria-label={t("avatar.colorLabel", { name: c.name })}
+                  aria-pressed={draftColor === c.value}
+                  disabled={saving}
+                  className="flex min-h-11 min-w-11 items-center justify-center rounded-full disabled:opacity-50"
                 >
-                  {draftColor === c.value && <Check size={14} className="text-white" aria-hidden="true" />}
-                </span>
-              </button>
-            ))}
+                  <span
+                    className="flex h-8 w-8 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor: c.value,
+                      border: isWhite ? "1.5px solid #D1D5DB" : "none",
+                      outline: draftColor === c.value ? `2px solid ${BRAND_NAVY}` : "none",
+                      outlineOffset: 2,
+                    }}
+                  >
+                    {draftColor === c.value && <Check size={14} style={{ color: needsNavyCheck ? BRAND_NAVY : "white" }} aria-hidden="true" />}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {AVATAR_ICONS.map(({ name, Icon }) => (
-              <button
-                key={name}
-                onClick={() => setDraftIcon(name)}
-                aria-label={t("avatar.iconLabel", { name })}
-                aria-pressed={draftIcon === name}
-                disabled={saving}
-                className="flex min-h-11 items-center justify-center rounded-md border disabled:opacity-50"
-                style={{ borderColor: draftIcon === name ? draftColor : "#E5E7EB", backgroundColor: draftIcon === name ? `${draftColor}1A` : "white" }}
-              >
-                <Icon size={18} style={{ color: draftIcon === name ? draftColor : "#9CA3AF" }} aria-hidden="true" />
-              </button>
-            ))}
-          </div>
+          <IconCarousel
+            icons={AVATAR_ICONS} value={draftIcon} onChange={setDraftIcon} color={draftColor} disabled={saving}
+            labelFor={(name) => t("avatar.iconLabel", { name })}
+            prevLabel={t("avatar.previousIcon")} nextLabel={t("avatar.nextIcon")}
+          />
           <EditActions onSave={save} onCancel={cancel} saveLabel={saving ? t("avatar.saving") : t("avatar.save")} />
         </div>
       )}
@@ -160,8 +223,26 @@ const PROFESSIONAL_LEVEL_OPTIONS = [
   { code: "instructor", label: "Instructor" },
 ];
 
+// Opciones del selector de país, con la etiqueta en el idioma activo —
+// se recalcula solo cuando cambia el idioma, no en cada tecla del buscador.
+// Orden alfabético por la propia etiqueta (feedback explícito 2026-09-07:
+// "los países no están en orden alfabético") — COUNTRIES vive en
+// countries.js curado por relevancia (España/Latinoamérica primero), útil
+// para leer el archivo, pero no para elegir en el propio selector.
+// Intl.Collator (no localeCompare suelto) para que "México" ordene junto
+// a "Marruecos" en vez de después de "Z" por el acento, y para que el
+// criterio de acentos/mayúsculas sea coherente entre es/en.
+// export (2026-09-07): RegisterScreen.jsx reutiliza esta misma función
+// para su propio selector de país de residencia (mismo campo, mismo
+// criterio) — una sola fuente de verdad, convención MVP/reutilización.
+export function countryOptionsFor(language) {
+  const key = language === "en" ? "en" : "es";
+  const collator = new Intl.Collator(key);
+  return COUNTRIES.map((c) => ({ value: c.code, label: c[key] })).sort((a, b) => collator.compare(a.label, b.label));
+}
+
 function PersonalDataSection({ profile, onProfileUpdated }) {
-  const { t } = useTranslation("profile");
+  const { t, i18n } = useTranslation("profile");
   const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -169,12 +250,18 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
   const [lastName, setLastName] = useState(profile.last_name || "");
   const [nickname, setNickname] = useState(profile.nickname || "");
   const [professionalLevel, setProfessionalLevel] = useState(profile.professional_level || "");
+  const [birthDate, setBirthDate] = useState(profile.birth_date || "");
+  const [countryOfResidence, setCountryOfResidence] = useState(profile.country_of_residence || "");
+  const countryOptions = countryOptionsFor(i18n.language);
+  const countryLabel = (code) => countryOptions.find((o) => o.value === code)?.label || "—";
 
   const startEdit = () => {
     setFirstName(profile.first_name || "");
     setLastName(profile.last_name || "");
     setNickname(profile.nickname || "");
     setProfessionalLevel(profile.professional_level || "");
+    setBirthDate(profile.birth_date || "");
+    setCountryOfResidence(profile.country_of_residence || "");
     setEditing(true);
   };
 
@@ -182,7 +269,10 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
     if (!nickname.trim() || nickname.includes("@")) return;
     setSaving(true);
     try {
-      const patch = { first_name: firstName.trim() || null, last_name: lastName.trim() || null, nickname: nickname.trim(), professional_level: professionalLevel || null };
+      const patch = {
+        first_name: firstName.trim() || null, last_name: lastName.trim() || null, nickname: nickname.trim(), professional_level: professionalLevel || null,
+        birth_date: birthDate || null, country_of_residence: countryOfResidence || null,
+      };
       // Iniciales de instructor autogeneradas desde nombre/apellidos al
       // guardar — pedido explícito del usuario, 2026-09-02 — pero solo si
       // todavía no hay ninguna guardada: que ya tengan un valor es la
@@ -209,9 +299,11 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
         <div className="space-y-2 text-sm">
           <p><span className="text-gray-400">{t("personalData.nameLine")}</span> {profile.first_name || "—"} {profile.last_name || ""}</p>
           <p><span className="text-gray-400">{t("personalData.nicknameLine")}</span> {profile.nickname}</p>
+          <p><span className="text-gray-400">{t("personalData.birthDateLine")}</span> {profile.birth_date ? shortDate(profile.birth_date) : "—"}</p>
+          <p><span className="text-gray-400">{t("personalData.countryLine")}</span> {profile.country_of_residence ? countryLabel(profile.country_of_residence) : "—"}</p>
           <p><span className="text-gray-400">{t("personalData.professionalLine")}</span> {PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === profile.professional_level)?.label || "—"}</p>
         </div>
-        <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: TEAL }}>
+        <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: BRAND_NAVY }}>
           <Pencil size={14} aria-hidden="true" /> {t("personalData.edit")}
         </button>
       </SectionCard>
@@ -220,22 +312,53 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
 
   return (
     <SectionCard title={t("sections.personalData")}>
-      <div className="grid grid-cols-2 gap-2">
-        <Field label={t("personalData.nameLabel")}><input value={firstName} onChange={(e) => setFirstName(e.target.value)} className={`${inputCls} w-full`} /></Field>
-        <Field label={t("personalData.lastNameLabel")}><input value={lastName} onChange={(e) => setLastName(e.target.value)} className={`${inputCls} w-full`} /></Field>
+      {/* space-y-3 (feedback explícito 2026-09-07: "está todo muy pegado,
+          input, input, control...") — antes las filas (nombre/apellidos,
+          nickname, fecha/país, profesional) no tenían ningún espaciado
+          vertical entre sí, solo el gap interno de cada Field/grid.
+          Mismo valor que ya usa el panel de avatar más arriba en este
+          mismo archivo, para no introducir un tercer criterio de
+          espaciado dentro de Mi perfil. */}
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
+          <Field label={t("personalData.nameLabel")}><input value={firstName} onChange={(e) => setFirstName(e.target.value)} className={`${inputCls} w-full`} /></Field>
+          <Field label={t("personalData.lastNameLabel")}><input value={lastName} onChange={(e) => setLastName(e.target.value)} className={`${inputCls} w-full`} /></Field>
+        </div>
+        <Field label={t("personalData.nicknameLabel")}>
+          <input value={nickname} onChange={(e) => setNickname(e.target.value)} className={`${inputCls} w-full`} />
+        </Field>
+        {nickname.includes("@") && <p role="alert" className="-mt-2 text-xs text-red-600">{t("personalData.nicknameAtError")}</p>}
+        {/* Fecha de nacimiento + país de residencia (Fase 9, 2026-09-07) —
+            solo para mostrar en el perfil, ambos opcionales (confirmado
+            con el usuario), sin validación ni uso en ningún otro flujo.
+            Misma línea que nombre/apellidos (pedido explícito del usuario,
+            2026-09-07) y antes de Profesional, que pasa al final. */}
+        <div className="grid grid-cols-2 gap-2">
+          <Field label={t("personalData.birthDateLabel")}>
+            {/* quickAccess desactivado (feedback 2026-09-07): "hoy/ayer/
+                mañana" no tiene ningún sentido para una fecha de
+                nacimiento — el salto de año (siempre visible en
+                DatePicker) es lo que de verdad hace falta aquí. */}
+            <DatePicker value={birthDate} onChange={setBirthDate} quickAccess={false} />
+          </Field>
+          <Field label={t("personalData.countryLabel")}>
+            <SearchSelect
+              value={countryOfResidence}
+              onChange={setCountryOfResidence}
+              options={countryOptions}
+              placeholder={t("personalData.countryPlaceholder")}
+            />
+          </Field>
+        </div>
+        <Field label={t("personalData.professionalLabel")}>
+          <Select
+            value={PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === professionalLevel)?.label || ""}
+            onChange={(label) => setProfessionalLevel(PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.label === label)?.code || "")}
+            options={PROFESSIONAL_LEVEL_OPTIONS.map((o) => o.label)}
+            placeholder={t("personalData.professionalPlaceholder")}
+          />
+        </Field>
       </div>
-      <Field label={t("personalData.nicknameLabel")}>
-        <input value={nickname} onChange={(e) => setNickname(e.target.value)} className={`${inputCls} w-full`} />
-      </Field>
-      {nickname.includes("@") && <p role="alert" className="-mt-2 text-xs text-red-600">{t("personalData.nicknameAtError")}</p>}
-      <Field label={t("personalData.professionalLabel")}>
-        <Select
-          value={PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === professionalLevel)?.label || ""}
-          onChange={(label) => setProfessionalLevel(PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.label === label)?.code || "")}
-          options={PROFESSIONAL_LEVEL_OPTIONS.map((o) => o.label)}
-          placeholder={t("personalData.professionalPlaceholder")}
-        />
-      </Field>
       <div className="mt-3">
         <EditActions onSave={save} onCancel={() => setEditing(false)} saveLabel={saving ? t("personalData.saving") : t("personalData.save")} />
       </div>
@@ -324,7 +447,7 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
   const { t } = useTranslation("profile");
   const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || profile.nickname;
   const avatar = resolveAvatar(profile);
-  const AvatarIcon = Icons[avatar.icon] || Icons.Waves;
+  const AvatarIcon = AVATAR_ICON_MAP[avatar.icon] || AVATAR_ICON_MAP.Fish;
   const trimmedSignature = useTrimmedSignature(signature);
   // Nivel profesional real (Divemaster/Instructor, ver "Datos
   // personales") en vez del texto fijo "Instructor SSI" de antes —
@@ -338,7 +461,7 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
     <div className="overflow-hidden rounded-2xl shadow-md">
       <div
         className="relative p-4"
-        style={{ background: `linear-gradient(135deg, ${NAVY} 0%, ${TEAL} 65%, ${AQUA} 100%)` }}
+        style={{ background: `linear-gradient(135deg, ${BRAND_NAVY} 0%, ${BRAND_SKY} 120%)` }}
       >
         {/* Barrido diagonal sutil — la única concesión "decorativa" a
             parecer un carnet físico (efecto laminado/holograma), sin
@@ -379,15 +502,19 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
               <p className="text-sm font-bold tabular-nums text-white">{ssiProNumber || "—"}</p>
             </div>
           </div>
-          <span className="flex items-center gap-1 text-white/40" aria-hidden="true">
-            <Waves size={16} />
+          {/* Marca de agua del carnet — subida de 16px/40% opacidad a
+              24px/55% (feedback explícito: "apenas se ve") sin llegar a
+              competir con iniciales/nº SSI, que siguen siendo el foco
+              real de esta fila. */}
+          <span className="flex items-center gap-1 opacity-55" aria-hidden="true">
+            <img src="/brand/logo-mark-white.svg" alt="" width={24} height={24} />
           </span>
         </div>
       </div>
       <button
         onClick={onEdit}
         className="flex min-h-11 w-full items-center justify-center gap-1.5 bg-white text-sm font-semibold transition-colors active:bg-gray-50"
-        style={{ color: TEAL }}
+        style={{ color: BRAND_NAVY }}
       >
         <Pencil size={14} aria-hidden="true" /> {t("instructor.edit")}
       </button>
@@ -402,7 +529,17 @@ function InstructorCard({ profile, initials, ssiProNumber, signature, onEdit }) 
 // PersonalDataSection. El nombre impreso no se pide aquí — se deriva de
 // first_name/last_name, que ya tiene su propia sección arriba, evita
 // pedir el mismo dato dos veces.
-function InstructorSection({ profile, onProfileUpdated }) {
+//
+// Extraído como InstructorCardEditable (2026-09-04, pedido explícito):
+// "los datos del instructor en TR deben ser el mismo carnet que en Mi
+// Perfil, editable desde ahí también, y cualquier edición actualiza Mi
+// Perfil — una única fuente de verdad, no dos copias". Toda la lógica de
+// ver/editar/guardar vive aquí, una sola vez — TrainingRecordsTab.jsx la
+// importa y la usa directamente, sin duplicar ni el carnet ni el
+// formulario de edición. SectionCard (el chrome propio de "Mi perfil") se
+// queda fuera a propósito, para que un consumidor sin esa cabecera
+// (Training Records) no herede un título/borde que no le corresponde.
+export function InstructorCardEditable({ profile, onProfileUpdated }) {
   const { t } = useTranslation("profile");
   const toast = useToast();
   const [editing, setEditing] = useState(false);
@@ -436,21 +573,18 @@ function InstructorSection({ profile, onProfileUpdated }) {
 
   if (!editing) {
     return (
-      <SectionCard id="instructor-section" title={t("sections.instructor")}>
-        <p className="mb-3 text-xs text-gray-400">{t("instructor.hint")}</p>
-        <InstructorCard
-          profile={profile}
-          initials={profile.instructor_initials}
-          ssiProNumber={profile.ssi_pro_number}
-          signature={profile.instructor_signature}
-          onEdit={startEdit}
-        />
-      </SectionCard>
+      <InstructorCard
+        profile={profile}
+        initials={profile.instructor_initials}
+        ssiProNumber={profile.ssi_pro_number}
+        signature={profile.instructor_signature}
+        onEdit={startEdit}
+      />
     );
   }
 
   return (
-    <SectionCard id="instructor-section" title={t("sections.instructor")}>
+    <div className="rounded-2xl border border-gray-200 bg-white p-4">
       <div className="grid grid-cols-2 gap-2">
         <Field label={t("instructor.initialsLabel")}>
           <input value={initials} onChange={(e) => setInitials(e.target.value.toUpperCase())} className={`${inputCls} w-full`} />
@@ -470,6 +604,16 @@ function InstructorSection({ profile, onProfileUpdated }) {
       <div className="mt-3">
         <EditActions onSave={save} onCancel={() => setEditing(false)} saveLabel={saving ? t("instructor.saving") : t("instructor.save")} />
       </div>
+    </div>
+  );
+}
+
+function InstructorSection({ profile, onProfileUpdated }) {
+  const { t } = useTranslation("profile");
+  return (
+    <SectionCard id="instructor-section" title={t("sections.instructor")}>
+      <p className="mb-3 text-xs text-gray-400">{t("instructor.hint")}</p>
+      <InstructorCardEditable profile={profile} onProfileUpdated={onProfileUpdated} />
     </SectionCard>
   );
 }
@@ -534,6 +678,11 @@ function CurrencySection({ profile, currencies }) {
 const LANGUAGE_OPTIONS = [
   { code: "es", label: "Español" },
   { code: "en", label: "English" },
+  { code: "fr", label: "Français" },
+  { code: "it", label: "Italiano" },
+  { code: "de", label: "Deutsch" },
+  { code: "ca", label: "Català" },
+  { code: "eu", label: "Euskara" },
 ];
 
 function LanguageSection({ profile, onProfileUpdated }) {
@@ -654,10 +803,10 @@ function PasswordSection() {
         </div>
       </Field>
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
-        <span className="flex items-center gap-1" style={{ color: lengthOk ? TEAL : "#9CA3AF" }}>
+        <span className="flex items-center gap-1" style={{ color: lengthOk ? BRAND_NAVY : "#9CA3AF" }}>
           {lengthOk && <Check size={12} aria-hidden="true" />} {t("password.minLength")}
         </span>
-        <span className="flex items-center gap-1" style={{ color: matchOk ? TEAL : "#9CA3AF" }}>
+        <span className="flex items-center gap-1" style={{ color: matchOk ? BRAND_NAVY : "#9CA3AF" }}>
           {matchOk && <Check size={12} aria-hidden="true" />} {t("password.matches")}
         </span>
       </div>
@@ -668,7 +817,7 @@ function PasswordSection() {
       <button
         onClick={save} disabled={!canSave}
         className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md text-sm font-medium text-white disabled:opacity-50"
-        style={{ backgroundColor: TEAL }}
+        style={{ backgroundColor: BRAND_NAVY }}
       >
         {saving && <Loader2 size={15} className="animate-spin" aria-hidden="true" />} {t("password.submit")}
       </button>

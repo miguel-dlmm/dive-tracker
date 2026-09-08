@@ -8,16 +8,24 @@
     "start": "Empezar",
     "slides": [
       {
+        "title": "Rediseño completo, cara nueva",
+        "body": "Logo, colores e imagen renovados de arriba abajo — la misma Ocean Flow, con un aspecto propio."
+      },
+      {
+        "title": "Tu carnet de instructor",
+        "body": "Mi perfil ahora tiene tu propio carnet: nivel profesional, datos personales y moneda favorita, todo en un sitio."
+      },
+      {
+        "title": "Training Records, desde la app",
+        "body": "Genera el registro de progreso SSI de cada alumno, firmado y listo para entregar — sin salir de Ocean Flow."
+      },
+      {
         "title": "La app ya habla tu idioma",
-        "body": "Cambia entre español e inglés cuando quieras, desde tu perfil."
+        "body": "Español, inglés, francés, italiano, alemán, catalán o euskera — cambia cuando quieras desde tu perfil."
       },
       {
-        "title": "Home, más a mano",
-        "body": "Tus KPIs del mes (alumnos, cursos, captados) son ahora lo primero que ves al abrir Home."
-      },
-      {
-        "title": "Cabecera más simple",
-        "body": "\"Cerrar sesión\" vive ahora en Mi perfil — menos iconos arriba, más espacio para lo que usas cada día."
+        "title": "Home y Mi trabajo, más claros",
+        "body": "Todo mejor organizado, para encontrar lo que buscas de un vistazo: tus KPIs, tus movimientos, tu día a día."
       },
       {
         "title": "Repásalo cuando quieras",

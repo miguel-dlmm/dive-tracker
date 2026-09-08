@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitForElementToBeRemoved } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RatesTab from "./RatesTab";
-import { TEAL, SUN } from "./colors";
+import { TEAL, BRAND_GOLD } from "./colors";
+import { ToastProvider } from "./shared";
 
 // ADR-0003, pasos 1-2: payment_type ya no es un concepto del frontend —
 // nunca se elige en ningún formulario, se escribe siempre como el literal
@@ -16,15 +17,20 @@ const emptyHook = rowsHook([]);
 
 function renderRatesTab({ rates = rowsHook([]), commissionRates = emptyHook, activities, schools } = {}) {
   render(
-    <RatesTab
-      schools={schools || rowsHook([{ name: "PADI Cozumel" }])}
-      activities={activities || rowsHook([{ name: "Open Water" }])}
-      currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])}
-      rates={rates}
-      commissionRates={commissionRates}
-      worklog={emptyHook}
-      comisiones={emptyHook}
-    />
+    // ToastProvider real (no un mock) — algunos tests comprueban el texto
+    // amistoso del toast de error (duplicado/reactivar bloqueado), no solo
+    // que insertRow/updateRow no se llamara.
+    <ToastProvider>
+      <RatesTab
+        schools={schools || rowsHook([{ name: "PADI Cozumel" }])}
+        activities={activities || rowsHook([{ name: "Open Water" }])}
+        currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])}
+        rates={rates}
+        commissionRates={commissionRates}
+        worklog={emptyHook}
+        comisiones={emptyHook}
+      />
+    </ToastProvider>
   );
   return { rates, commissionRates };
 }
@@ -79,10 +85,13 @@ describe("RatesTab — editar abre la hoja de creación, precargada", () => {
 
 // Rediseño 2026-08-30: rates y commission_rates (dos tablas reales, sin
 // cambios de modelo) se combinan en UNA sola lista de presentación, con el
-// mismo lenguaje visual que Mi trabajo (acento de color por tipo a la
-// izquierda) en vez de dos pestañas de página separadas.
+// mismo lenguaje visual que Mi trabajo en vez de dos pestañas de página
+// separadas. Reconocimiento de tipo por icono, no por borde (Fase 7,
+// 2026-09-07, RateTypeIconChip) — mismo cambio que Mi trabajo ya había
+// hecho en la ronda anterior (5.9, TypeIconChip), aplicado aquí para dar
+// consistencia visual entre las dos pantallas.
 describe("RatesTab — lista combinada de Curso y Comisión", () => {
-  it("muestra tarifas de ambos tipos a la vez, con acento de color distinto por tipo", () => {
+  it("muestra tarifas de ambos tipos a la vez, con un icono de tipo distinto por fila", () => {
     renderRatesTab({
       activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
       rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20 }]),
@@ -92,10 +101,14 @@ describe("RatesTab — lista combinada de Curso y Comisión", () => {
     expect(screen.getByText("Open Water")).toBeInTheDocument();
     expect(screen.getByText("Advanced")).toBeInTheDocument();
 
-    const cursoRow = screen.getByText("Open Water").closest("div.border-l-4");
-    const comisionRow = screen.getByText("Advanced").closest("div.border-l-4");
-    expect(cursoRow).toHaveStyle({ borderColor: TEAL });
-    expect(comisionRow).toHaveStyle({ borderColor: SUN });
+    // RateTypeIconChip es el primer hijo de la fila (span circular con
+    // el icono del tipo) — el color de fondo de esa chip es lo que
+    // distingue Curso de Comisión de un vistazo, ahora que el borde
+    // izquierdo de color ya no existe.
+    const cursoChip = screen.getByText("Open Water").closest("div.flex.items-start.gap-2\\.5").firstElementChild;
+    const comisionChip = screen.getByText("Advanced").closest("div.flex.items-start.gap-2\\.5").firstElementChild;
+    expect(cursoChip).toHaveStyle({ backgroundColor: `${TEAL}1A` });
+    expect(comisionChip).toHaveStyle({ backgroundColor: `${BRAND_GOLD}1A` });
   });
 
   it("el filtro 'Tipo' (dentro de Filtrar) acota la lista combinada a un solo tipo", async () => {
@@ -110,7 +123,11 @@ describe("RatesTab — lista combinada de Curso y Comisión", () => {
     await user.click(screen.getByRole("button", { name: "Tipo" }));
     await user.click(screen.getByRole("option", { name: "Comisión" }));
 
-    expect(screen.queryByText("Open Water")).not.toBeInTheDocument();
+    // La fila filtrada fuera ya no desaparece de golpe (auditoría de estilo
+    // 2026-09-04, listItemVariants/AnimatePresence, mismo vocabulario que
+    // Mi trabajo) — sigue en el DOM durante su animación de salida antes de
+    // desmontarse de verdad.
+    await waitForElementToBeRemoved(() => screen.queryByText("Open Water"));
     expect(screen.getByText("Advanced")).toBeInTheDocument();
   });
 
@@ -233,5 +250,173 @@ describe("RatesTab — moneda visible-no-editable en el formulario", () => {
     await user.click(screen.getByRole("button", { name: "Escuela" }));
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
     expect(screen.getByRole("textbox", { name: "Tarifa · THB" })).toBeInTheDocument();
+  });
+});
+
+// Vigencia de tarifas (2026-09-04, ver scripts/migrations/0015-tarifas-vigencia.sql):
+// no dos tarifas activas para la misma escuela+curso, baja lógica en vez de
+// borrado como alternativa a "ya no cobro esto así", y las desactivadas
+// ocultas de la lista por defecto.
+describe("RatesTab — no permite dos tarifas activas para la misma escuela+curso", () => {
+  it("al crear, si ya hay una tarifa ACTIVA para esa escuela+curso, avisa y no llama a insertRow", async () => {
+    const user = userEvent.setup();
+    const { rates } = renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: true }]),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getByRole("button", { name: "Escuela" }));
+    await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
+    await user.click(screen.getByRole("button", { name: "Curso" }));
+    await user.click(screen.getByRole("option", { name: "Open Water" }));
+    await user.type(screen.getByRole("textbox", { name: "Tarifa · EUR" }), "30");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+
+    expect(rates.insertRow).not.toHaveBeenCalled();
+    expect(await screen.findByText(/Ya tienes una tarifa activa/)).toBeInTheDocument();
+  });
+
+  it("con la tarifa existente DESACTIVADA para esa escuela+curso, sí deja crear una nueva activa", async () => {
+    const user = userEvent.setup();
+    const { rates } = renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: false }]),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getByRole("button", { name: "Escuela" }));
+    await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
+    await user.click(screen.getByRole("button", { name: "Curso" }));
+    await user.click(screen.getByRole("option", { name: "Open Water" }));
+    await user.type(screen.getByRole("textbox", { name: "Tarifa · EUR" }), "30");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+
+    expect(rates.insertRow).toHaveBeenCalledWith(expect.objectContaining({ school: "PADI Cozumel", activity: "Open Water", rate: 30 }));
+  });
+
+  it("editar una tarifa sin cambiar su escuela+curso no choca consigo misma (no se compara con la propia fila)", async () => {
+    const user = userEvent.setup();
+    const { rates } = renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: true }]),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(screen.getByRole("menuitem", { name: "Editar" }));
+    const rateInput = screen.getByRole("textbox", { name: "Tarifa · EUR" });
+    await user.clear(rateInput);
+    await user.type(rateInput, "35");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+
+    expect(rates.updateRow).toHaveBeenCalledWith("r1", expect.objectContaining({ rate: 35 }));
+  });
+
+  it("un 23505 de la base de datos (carrera entre dos pestañas) también se muestra como el mismo aviso amistoso", async () => {
+    const user = userEvent.setup();
+    const rates = rowsHook([]);
+    rates.insertRow = vi.fn().mockRejectedValue({ code: "23505", message: "duplicate key value violates unique constraint \"rates_active_school_activity_unique\"" });
+    renderRatesTab({ rates });
+
+    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getByRole("button", { name: "Escuela" }));
+    await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
+    await user.click(screen.getByRole("button", { name: "Curso" }));
+    await user.click(screen.getByRole("option", { name: "Open Water" }));
+    await user.type(screen.getByRole("textbox", { name: "Tarifa · EUR" }), "30");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+
+    expect(await screen.findByText(/Ya tienes una tarifa activa/)).toBeInTheDocument();
+  });
+});
+
+describe("RatesTab — baja lógica: desactivar/reactivar en vez de (o además de) eliminar", () => {
+  it("una tarifa desactivada NO aparece en la lista por defecto", () => {
+    renderRatesTab({
+      rates: rowsHook([
+        { id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: true },
+        { id: "r2", school: "PADI Cozumel", activity: "Advanced", payment_type: "Per Person", currency: "EUR", rate: 30, is_active: false },
+      ]),
+      activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
+    });
+
+    expect(screen.getByText("Open Water")).toBeInTheDocument();
+    expect(screen.queryByText("Advanced")).not.toBeInTheDocument();
+  });
+
+  it("marcando 'Mostrar desactivadas' aparece también, con el menú ofreciendo 'Reactivar'", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: false }]),
+    });
+
+    // El interruptor vive siempre visible junto al contador de la lista
+    // (Fase 8, 2026-09-07) — ya no hace falta abrir "Filtrar" antes.
+    await user.click(screen.getByRole("switch", { name: "Mostrar desactivadas" }));
+
+    expect(screen.getByText("Open Water")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    expect(screen.getByRole("menuitem", { name: "Reactivar" })).toBeInTheDocument();
+  });
+
+  // Alineado con ConfigTab (Fase 10, 2026-09-07 — "añade lo de la fila
+  // desactivada para las tarifas también"): la opacidad baja de 70% a
+  // 60%, el mismo criterio que ya se aplicó a la fila de usuario
+  // desactivado tras confirmar que 70% distinguía muy poco una fila
+  // desactivada de una activa.
+  it("una tarifa desactivada se muestra atenuada (opacity-60) cuando 'Mostrar desactivadas' está activo", async () => {
+    const user = userEvent.setup();
+    renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: false }]),
+    });
+
+    await user.click(screen.getByRole("switch", { name: "Mostrar desactivadas" }));
+
+    const row = screen.getByText("Open Water").closest(".px-4.py-3\\.5");
+    expect(row).toHaveClass("opacity-60");
+  });
+
+  it("'Desactivar' en el menú de una tarifa activa llama a updateRow con is_active: false", async () => {
+    const user = userEvent.setup();
+    const { rates } = renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: true }]),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(screen.getByRole("menuitem", { name: "Desactivar" }));
+
+    expect(rates.updateRow).toHaveBeenCalledWith("r1", { is_active: false });
+  });
+
+  it("'Reactivar' está bloqueado con un aviso si ya existe otra tarifa activa para la misma escuela+curso", async () => {
+    const user = userEvent.setup();
+    const { rates } = renderRatesTab({
+      rates: rowsHook([
+        { id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: false },
+        { id: "r2", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 25, is_active: true },
+      ]),
+    });
+
+    await user.click(screen.getByRole("switch", { name: "Mostrar desactivadas" }));
+    // r1 (desactivada) y r2 (activa) empatan en todos los criterios de
+    // orden de allRows (mismo school/tipo/activity, sin created_at) — sort
+    // estable conserva el orden de inserción, así que r1 es la PRIMERA
+    // fila, no la última.
+    const rows = screen.getAllByRole("button", { name: "Más acciones" });
+    await user.click(rows[0]);
+    await user.click(screen.getByRole("menuitem", { name: "Reactivar" }));
+
+    expect(rates.updateRow).not.toHaveBeenCalled();
+    expect(await screen.findByText(/No se puede reactivar/)).toBeInTheDocument();
+  });
+
+  it("eliminar (borrado físico) sigue disponible además de desactivar, para una tarifa nunca usada", async () => {
+    const user = userEvent.setup();
+    const { rates } = renderRatesTab({
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: true }]),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
+    await user.click(screen.getByRole("button", { name: "Eliminar" }));
+
+    expect(rates.deleteRow).toHaveBeenCalledWith("r1");
   });
 });

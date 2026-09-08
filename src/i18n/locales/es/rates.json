@@ -7,7 +7,8 @@
     "schoolAll": "Todas",
     "course": "Curso",
     "courseAll": "Todos",
-    "clear": "Limpiar filtros"
+    "clear": "Limpiar filtros",
+    "showInactive": "Mostrar desactivadas"
   },
   "search": {
     "placeholder": "Buscar",
@@ -16,7 +17,8 @@
   "list": {
     "count": "{{count}} tarifas",
     "empty": "Sin resultados.",
-    "createdOn": "Alta: {{date}} · {{type}}"
+    "createdOn": "Alta: {{date}} · {{type}}",
+    "inactive": "Desactivada"
   },
   "fab": "Nueva tarifa",
   "sheet": {
@@ -34,11 +36,17 @@
   "toasts": {
     "saved": "Cambios guardados",
     "added": "Tarifa añadida",
-    "saveError": "No se pudo guardar. Inténtalo de nuevo."
+    "saveError": "No se pudo guardar. Inténtalo de nuevo.",
+    "duplicate": "Ya tienes una tarifa activa para esta escuela y este curso. Desactívala antes de crear otra.",
+    "reactivateBlocked": "No se puede reactivar: ya hay otra tarifa activa para esta escuela y este curso.",
+    "deactivated": "Tarifa desactivada",
+    "reactivated": "Tarifa reactivada"
   },
   "deleteInUse_one": "No se puede eliminar: hay {{count}} registro que usa esta tarifa.",
   "deleteInUse_other": "No se puede eliminar: hay {{count}} registros que usan esta tarifa.",
   "rowMenu": {
-    "itemLabel": "la tarifa de {{school}} - {{activity}}"
+    "itemLabel": "la tarifa de {{school}} - {{activity}}",
+    "deactivate": "Desactivar",
+    "reactivate": "Reactivar"
   }
 }

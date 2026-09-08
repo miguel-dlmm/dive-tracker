@@ -141,3 +141,73 @@ describe("HelpTab — 'Ver qué hay de nuevo'", () => {
     expect(onShowWhatsNew).toHaveBeenCalledTimes(1);
   });
 });
+
+// "Instalar la app" (2026-09-08, pedido explícito) — reemplaza al banner
+// descartable de HomeTab.jsx por un enlace fijo en Ayuda, mismo patrón
+// que "Ver qué hay de nuevo" justo arriba: siempre visible si se pasa el
+// handler, sin estado propio de "descartado".
+describe("HelpTab — 'Instalar la app'", () => {
+  it("sin onOpenInstallApp, no muestra el enlace", () => {
+    render(<HelpTab navSections={navSections} />);
+    expect(screen.queryByText("Instalar la app en tu móvil")).not.toBeInTheDocument();
+  });
+
+  it("con onOpenInstallApp, pulsar el enlace lo llama", async () => {
+    const user = userEvent.setup();
+    const onOpenInstallApp = vi.fn();
+    render(<HelpTab navSections={navSections} onOpenInstallApp={onOpenInstallApp} />);
+
+    await user.click(screen.getByText("Instalar la app en tu móvil"));
+
+    expect(onOpenInstallApp).toHaveBeenCalledTimes(1);
+  });
+});
+
+// GIFs animados (2026-09-08, ver content.js) — reintroducidos, revierte
+// la decisión "sin capturas" del rediseño 2026-09-04 (histórico: dataset
+// de prueba "ihasia"/cuenta dev-bypass no presentables en ese momento;
+// ver comentario en content.js). Solo los 3 "Quiero..." con flujo más
+// básico llevan `gif` — el resto de artículos sigue sin ninguna imagen.
+describe("HelpTab — GIFs animados solo en los 3 artículos básicos", () => {
+  it("los 3 artículos con `gif` en content.js renderizan su <img>, el resto no", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<HelpTab navSections={navSections} />);
+
+    const withGif = {
+      "Configurar tu aplicación": "configurar-app.gif",
+      "Registrar un movimiento": "crear-movimiento.gif",
+      "Cobrar movimientos pendientes": "cobrar-movimientos.gif",
+    };
+    for (const [name, filename] of Object.entries(withGif)) {
+      await user.click(screen.getByRole("button", { name: new RegExp(name) }));
+      expect(container.querySelector(`img[src="/help/${filename}"]`)).toBeInTheDocument();
+    }
+
+    const withoutGif = [/Primeros pasos/, /Consultar cuánto has generado/];
+    for (const name of withoutGif) {
+      await user.click(screen.getByRole("button", { name }));
+      // El acordeón (ExpandableCard) anima la salida de la categoría
+      // anterior — su <img> sigue en el DOM hasta que esa animación
+      // termina, no es un fallo real (mismo patrón ya usado más arriba
+      // en este archivo, "tocar de nuevo la misma categoría...").
+      await waitFor(() => expect(container.querySelector("img")).not.toBeInTheDocument());
+    }
+  });
+});
+
+// Los pasos y el bloque "Qué puedes hacer" heredan el color de la
+// sección (nav_sections), igual que ya hacía el icono de cabecera de la
+// categoría — parte del rediseño 2026-09-04 para que cada categoría se
+// lea como un bloque de color coherente, no solo un acento suelto.
+describe("HelpTab — los pasos heredan el color de la sección", () => {
+  it("el numerito del primer paso usa el color de nav_sections para esa categoría", async () => {
+    const user = userEvent.setup();
+    const coloredSections = { rows: [{ key: "trabajo", color: "#123456" }] };
+    render(<HelpTab navSections={coloredSections} />);
+
+    await user.click(screen.getByRole("button", { name: /^Mi trabajo/ }));
+
+    const stepOne = screen.getAllByText("1").find((el) => el.tagName === "SPAN");
+    expect(stepOne).toHaveStyle({ color: "#123456" });
+  });
+});

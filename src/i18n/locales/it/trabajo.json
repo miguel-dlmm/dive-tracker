@@ -1,0 +1,144 @@
+{
+  "actionLabel": {
+    "markPending": "Segna in sospeso",
+    "markSettled": "Segna saldato",
+    "confirmCollection": "Conferma incasso"
+  },
+  "dateGroup": {
+    "today": "Oggi",
+    "yesterday": "Ieri",
+    "weekdaysShort": ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
+    "monthsShort": ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "Nessun elemento in sospeso con questi filtri.",
+    "pendingNoFilters": "Sei in pari — niente in sospeso.",
+    "paidWithFilters": "Nessun elemento incassato con questi filtri.",
+    "paidNoFilters": "Non hai ancora segnato nulla come incassato."
+  },
+  "rowMenu": {
+    "adjustmentWith": "la rettifica con {{name}}",
+    "courseAt": "{{activity}} presso {{school}}",
+    "deleteConfirmMessage": "Stai per eliminare {{item}}. Avrai qualche secondo per annullare dall'avviso.",
+    "undoAction": "Annulla",
+    "deleteUndoneToast": "Ripristinato",
+    "deleteUndoError": "Impossibile annullare. Riprova."
+  },
+  "tabs": {
+    "pending": "In sospeso",
+    "paid": "Incassati"
+  },
+  "filter": {
+    "label": "Filtra",
+    "period": "Periodo",
+    "school": "Scuola",
+    "course": "Corso",
+    "type": "Tipo",
+    "allFeminine": "Tutte",
+    "allMasculine": "Tutti",
+    "clear": "Cancella filtri"
+  },
+  "collectAll": {
+    "button": "Incassa tutti",
+    "confirmLabel": "Incassa",
+    "title_one": "Incassare {{count}} movimento in sospeso?",
+    "title_other": "Incassare {{count}} movimenti in sospeso?",
+    "messageAjuste_one": "Stai per segnare questo movimento come incassato o saldato in blocco, a seconda del caso. Puoi annullare ognuno separatamente in seguito, come confermandolo uno alla volta.",
+    "messageAjuste_other": "Stai per segnare questi {{count}} movimenti come incassati o saldati in blocco, a seconda del caso. Puoi annullare ognuno separatamente in seguito, come confermandolo uno alla volta.",
+    "messageSimple_one": "Stai per segnare questo movimento come incassato in blocco. Puoi annullarlo separatamente in seguito, come confermandolo uno alla volta.",
+    "messageSimple_other": "Stai per segnare questi {{count}} movimenti come incassati in blocco. Puoi annullare ognuno separatamente in seguito, come confermandolo uno alla volta.",
+    "toastSwitch_one": "{{count}} movimento segnato come {{verb}} — passa a \"Incassati\" per vederlo",
+    "toastSwitch_other": "{{count}} movimenti segnati come {{verbPlural}} — passa a \"Incassati\" per vederli",
+    "toastNoSwitch_one": "{{count}} movimento segnato come {{verb}}",
+    "toastNoSwitch_other": "{{count}} movimenti segnati come {{verbPlural}}",
+    "verbCobrado": "incassato",
+    "verbCobradoPlural": "incassati",
+    "verbCobradoOLiquidado": "incassato o saldato",
+    "verbCobradoOLiquidadoPlural": "incassati o saldati"
+  },
+  "markAllPending": {
+    "button": "Segna tutti come in sospeso",
+    "confirmLabel": "Segna in sospeso",
+    "title_one": "Segnare {{count}} movimento incassato come in sospeso?",
+    "title_other": "Segnare {{count}} movimenti incassati come in sospeso?",
+    "message_one": "Stai per riportare questo movimento a in sospeso in blocco. Puoi annullarlo separatamente in seguito, come facendolo uno alla volta.",
+    "message_other": "Stai per riportare questi {{count}} movimenti a in sospeso in blocco. Puoi annullare ognuno separatamente in seguito, come facendolo uno alla volta.",
+    "toast_one": "{{count}} movimento segnato come in sospeso",
+    "toast_other": "{{count}} movimenti segnati come in sospeso"
+  },
+  "paidCapHint": "Mostrando gli ultimi {{limit}} incassati su {{total}} — usa \"Filtra\" per vedere un periodo specifico.",
+  "fabAdd": "Aggiungi",
+  "toggleStatus": {
+    "undoneToast": "Annullato",
+    "undoError": "Impossibile annullare. Riprova.",
+    "undoAction": "Annulla",
+    "markedPending": "Segnato come in sospeso",
+    "markedPaidSwitchTab": "Segnato come incassato — passa a \"Incassati\" per vederlo",
+    "markedPaid": "Segnato come incassato"
+  },
+  "genericUpdateError": "Impossibile aggiornare. Riprova.",
+  "sheet": {
+    "close": "Chiudi",
+    "typeSelectorAria": "Tipo di movimento",
+    "createTypes": {
+      "ganado": "Corso tenuto",
+      "comision": "Commissione",
+      "companeros": "Rettifica di corso"
+    },
+    "titleEdit": {
+      "ganado": "Modifica corso tenuto",
+      "comision": "Modifica commissione",
+      "companeros": "Modifica rettifica di corso"
+    },
+    "titleNew": {
+      "ganado": "Nuovo corso tenuto",
+      "comision": "Nuova commissione",
+      "companeros": "Nuova rettifica di corso"
+    },
+    "fields": {
+      "course": "Corso",
+      "school": "Scuola",
+      "date": "Data",
+      "relatedColleague": "Istruttore collegato",
+      "amount": "Importo · {{currency}}",
+      "amountHint": "Positivo se paga a te; negativo se paghi tu a lui/lei",
+      "colleaguePlaceholder": "Anna, Marco...",
+      "amountPlaceholder": "90 o -30",
+      "peopleCount": "N° persone",
+      "lessPeople": "Meno persone",
+      "morePeople": "Più persone",
+      "total": "Totale",
+      "perPerson": "/ persona",
+      "addRate": "Aggiungi tariffa",
+      "notes": "Note",
+      "notesPlaceholder": "Facoltativo",
+      "addNote": "Aggiungi nota"
+    },
+    "rate": {
+      "label": "Tariffa — {{school}} · {{activity}}",
+      "cancel": "Annulla",
+      "placeholder": "Tariffa",
+      "ariaLabel": "Tariffa · {{currency}}",
+      "saving": "Salvataggio tariffa",
+      "save": "Salva tariffa"
+    },
+    "save": "Salva",
+    "toasts": {
+      "changesSaved": "Modifiche salvate",
+      "adjustmentAdded": "Rettifica aggiunta",
+      "courseAdded": "Corso aggiunto",
+      "commissionAdded": "Commissione aggiunta",
+      "saveError": "Impossibile salvare. Riprova.",
+      "rateAdded": "Tariffa aggiunta",
+      "rateSaveError": "Impossibile salvare la tariffa. Riprova."
+    }
+  },
+  "kpis": {
+    "generatedThisMonth": "Generato questo mese",
+    "pendingToCollect": "Da incassare",
+    "pendingTooltip": "Questo importo riflette pagamenti in sospeso dei mesi precedenti.",
+    "pendingTooltipShow": "Info: Da incassare",
+    "pendingTooltipHide": "Nascondi info: Da incassare",
+    "collectedThisMonth": "Incassato questo mese"
+  }
+}

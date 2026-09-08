@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { Waves, Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle } from "lucide-react";
+import { Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle, ChevronLeft } from "lucide-react";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { useSession } from "./useSession";
 import { supabase } from "./supabaseClient";
-import { ToastProvider, AppLoading, useScrolled, Avatar } from "./shared";
+import { ToastProvider, AppLoading, useScrolled, Avatar, ErrorBoundary } from "./shared";
 import { resolveAvatar } from "./avatarCatalog";
 import EnvironmentIndicator from "./EnvironmentIndicator";
 import { DURATION, EASE, usePrefersReducedMotion } from "./motion";
-import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG } from "./colors";
+import { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG, BRAND_NAVY, BRAND_SKY, BRAND_INK, BRAND_OCEAN, BRAND_FOAM, BRAND_GOLD, BRAND_SLATE, BRAND_SLATE_FILL } from "./colors";
 import LoginScreen from "./LoginScreen";
 import ForgotPasswordScreen from "./ForgotPasswordScreen";
 import ResetPasswordScreen from "./ResetPasswordScreen";
@@ -21,6 +21,7 @@ import HomeTab from "./HomeTab";
 import WorkLogTab from "./WorkLogTab";
 import ComisionesTab from "./ComisionesTab";
 import ConfigTab, { clearStoredSection } from "./ConfigTab";
+import TrainingRecordsTab from "./trainingRecords/TrainingRecordsTab";
 import CompanerosTab from "./CompanerosTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
@@ -29,6 +30,7 @@ import DeploymentNotice from "./DeploymentNotice";
 import { APP_VERSION } from "./version";
 import SummaryTab from "./SummaryTab";
 import HelpTab, { clearStoredHelpOpen } from "./HelpTab";
+import InstallAppTab from "./InstallAppTab";
 import PaymentsTab from "./PaymentsTab";
 import ProfileTab from "./ProfileTab";
 import i18n, { setStoredLanguage } from "./i18n";
@@ -44,7 +46,7 @@ import i18n, { setStoredLanguage } from "./i18n";
 // arriba junto al resto). Se re-exportan aquí para que el resto de la app
 // siga importando "./App" como siempre, sin tocar ningún import existente.
 // ---------------------------------------------------------------
-export { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG };
+export { NAVY, TEAL, AQUA, CORAL, GREEN, SUN, BG, BRAND_NAVY, BRAND_SKY, BRAND_INK, BRAND_OCEAN, BRAND_FOAM, BRAND_GOLD, BRAND_SLATE, BRAND_SLATE_FILL };
 
 export const DISPLAY_FONT = "'Inter', sans-serif";
 export const BODY_FONT = "'Inter', sans-serif";
@@ -72,7 +74,29 @@ const PRIMARY_TABS = [
 // punto de entrada en la UI — ver docs/ADR/0005 (Mi trabajo cubre su
 // función con "Cobrar todos" + filtro por escuela).
 // Título resuelto en render vía t(`secondaryTitles.${tab}`) (namespace "app").
-const SECONDARY_TABS = ["config", "help", "pagos", "perfil"];
+// "training-records" se sumó aquí el 2026-09-07 (feedback explícito: "el
+// generador Training Records sigue navegando bajo configuración, debería
+// ser una feature independiente") — antes se abría "dentro" de la pestaña
+// "config" (setStoredSection("training-records") + changeTab("config")),
+// así que su "‹ atrás" real era el MENÚ de Configuración, una pantalla que
+// ni siquiera lo lista (ver HomeTab.jsx para el detalle del cambio). Ahora
+// es una pestaña secundaria más, al mismo nivel que Ayuda/Configuración/Mi
+// perfil — ver closeSecondary más abajo para el único comportamiento
+// propio que conserva (cerrar siempre vuelve a Home, nunca a `returnTab`).
+// "install-app" (2026-09-07, pedido explícito: "un enlace para añadir
+// la app a tu escritorio como acceso directo, en iOS y en android...
+// una página que se abre sobre toda la pantalla como la ayuda") — mismo
+// patrón que "training-records": pestaña secundaria independiente,
+// cerrar siempre vuelve a Home (ver closeSecondary más abajo). El banner
+// descartable de Home (2026-09-07) se retiró el 2026-09-08 ("no me
+// convence, búscale otro sitio, integrado, que siempre esté disponible
+// y que no moleste"): ahora hay dos puntos de entrada permanentes y sin
+// estado de "descartado" — un enlace de texto fijo en Ayuda
+// (HelpTab.jsx) y un icono solo, sin tarjeta ni banner, junto al título
+// de los KPIs en Home (HomeTab.jsx, pedido explícito de después: "quiero
+// q haya un algo en la home"). La pestaña "install-app" en sí no
+// cambia, solo desde dónde se llega a ella.
+const SECONDARY_TABS = ["config", "help", "pagos", "perfil", "training-records", "install-app"];
 
 // Recuerda la pestaña activa y a cuál "volver" desde una pantalla
 // secundaria — corrige de raíz dos problemas reales, no dos parches
@@ -116,7 +140,7 @@ function markWhatsNewSeen(userId) {
   try { localStorage.setItem(whatsNewSeenKey(userId), APP_VERSION); } catch { /* no-op */ }
 }
 
-function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" }) {
+function AppShell({ onSignOut, profile, onProfileUpdated }) {
   const { t } = useTranslation("app");
   // profiles.language es la fuente de verdad una vez hay sesión (Release V1,
   // Fase 2) — sincroniza la interfaz al idioma guardado del usuario y
@@ -158,16 +182,33 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   const currencies = useSupabaseTable("currencies", "name", "code");
   const rates = useSupabaseTable("rates", "school");
   const commissionRates = useSupabaseTable("commission_rates", "school");
-  const worklog = useSupabaseTable("worklog", "date");
-  const comisiones = useSupabaseTable("comisiones", "date");
-  const colleaguePayments = useSupabaseTable("colleague_payments", "date");
+  // softDelete: true (migración 0015, Baja lógica de movimientos,
+  // 2026-09-04) — "eliminar" en Mi trabajo deja de ser un DELETE real
+  // (dinero real del instructor); ver la nota junto a la opción en
+  // useSupabaseTable.js. Única fuente de verdad de estas 3 tablas en toda
+  // la app (HomeTab, SummaryTab, MiTrabajoTab, rateCalc.js... todos
+  // reciben estas mismas instancias como props) — con el filtro
+  // `deleted_at is null` viviendo aquí, en la carga, ningún consumidor
+  // necesita acordarse de excluir las filas dadas de baja por su cuenta.
+  const worklog = useSupabaseTable("worklog", "date", "id", { softDelete: true });
+  const comisiones = useSupabaseTable("comisiones", "date", "id", { softDelete: true });
+  const colleaguePayments = useSupabaseTable("colleague_payments", "date", "id", { softDelete: true });
   const navSections = useSupabaseTable("nav_sections", "key", "key");
   const appConfig = useSupabaseTable("app_config", "id", "id");
 
-  // initialTab !== "home" es el caso "justActivated" (ver AuthGate) — una
-  // activación recién completada siempre debe abrir en Ayuda, prioridad
-  // sobre cualquier posición guardada de una sesión anterior.
-  const [tab, setTab] = useState(() => (initialTab !== "home" ? initialTab : (readStoredNav()?.tab || initialTab)));
+  // Siempre "home" tras cualquier activación (alta nueva, autoregistro,
+  // reactivación) — hasta 2026-09-07 abría directamente en Ayuda
+  // (initialTab, ya retirado) para orientar a alguien en su primer
+  // acceso; pedido explícito del usuario: en su lugar debe caer en Home
+  // con WhatsNew abierto. Ese "abierto" no necesita ninguna bandera
+  // aparte — se resuelve solo con el mecanismo general de WhatsNew de
+  // más abajo (whatsNewOpen/hasSeenWhatsNew): una cuenta que se acaba
+  // de activar nunca tiene marcada como vista la versión actual en este
+  // navegador, así que WhatsNew ya se abre automáticamente al llegar
+  // aquí, igual que le pasaría a cualquier usuario existente que entre
+  // por primera vez tras una versión nueva — mismo mecanismo, sin un
+  // caso especial para "recién activado".
+  const [tab, setTab] = useState(() => readStoredNav()?.tab || "home");
   // Único punto de cambio de pestaña disparado por un toque del usuario
   // (todo el resto de este archivo llama a changeTab, nunca a setTab
   // directamente, salvo el propio useState de arriba). Corrige un bug real
@@ -196,7 +237,24 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   // ninguna animación llega a correr con la página desplazada. El efecto
   // de abajo se mantiene como red de seguridad (por si algo más desplaza
   // el scroll ya con la pestaña nueva montada), no se retira.
+  // Salir de Configuración limpia la subsección guardada (sessionStorage,
+  // ver clearStoredSection/ConfigTab.jsx) sin importar POR QUÉ camino se
+  // sale — bug real reportado (2026-09-07): `closeSecondary` (la "✕"/"‹")
+  // ya limpiaba esto desde el 2026-08-30 ("si cierro con la X y reabro,
+  // quiero el inicio; si recargo dentro, quiero seguir donde estaba"),
+  // pero tocar una pestaña de la barra inferior (Home/Mi trabajo/Resumen)
+  // estando dentro de una subsección de Configuración llama a `changeTab`
+  // directamente, sin pasar por `closeSecondary` — la sección quedaba
+  // guardada, y volver a abrir Configuración con el icono del engranaje
+  // restauraba esa subsección en vez de mostrar el menú. Puesto aquí, en
+  // el único sitio por el que pasa CUALQUIER cambio de pestaña (presente y
+  // futuro), en vez de repetirlo en cada botón que pueda alejarse de
+  // Configuración — la comprobación es `tab === "config" && next !==
+  // "config"` (aún dentro, no lo que hay guardado) para no limpiar en el
+  // propio remontaje de ConfigTab al recargar la página, que sigue
+  // debiendo restaurar la subsección como hasta ahora.
   const changeTab = (next) => {
+    if (tab === "config" && next !== "config") clearStoredSection();
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     window.scrollTo(0, 0);
     setTab(next);
@@ -241,7 +299,11 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   // "Qué hay de nuevo" — se decide en el primer render tras conocer al
   // usuario (profile.user_id), no en un efecto con dependencia vacía: con
   // el bypass de desarrollo, AppShell puede remontarse con un profile
-  // distinto sin recargar la página completa.
+  // distinto sin recargar la página completa. Este mismo mecanismo es
+  // también lo que hace que se abra solo justo tras activar una cuenta
+  // (ver el comentario junto al useState de `tab`, más arriba): una
+  // cuenta recién activada nunca tiene la versión actual marcada como
+  // vista, sin necesitar ningún caso especial aparte.
   const [whatsNewOpen, setWhatsNewOpen] = useState(() => !hasSeenWhatsNew(profile?.user_id));
   const closeWhatsNew = () => {
     markWhatsNewSeen(profile?.user_id);
@@ -260,22 +322,42 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
     && currencies.loaded && rates.loaded && commissionRates.loaded && worklog.loaded
     && comisiones.loaded && colleaguePayments.loaded && navSections.loaded && appConfig.loaded;
 
-  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || TEAL;
+  const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || BRAND_NAVY;
   const avatar = resolveAvatar(profile);
   const bottomTabActive = PRIMARY_TABS.some((tabItem) => tabItem.id === tab) ? tab : null;
   const isSecondary = SECONDARY_TABS.includes(tab);
+  // Rediseño de navegación 2026-09-06 — antes Configuración dibujaba su
+  // propia miga de pan interna ("‹ Configuración") ADEMÁS de esta cabecera
+  // global ("✕ Configuración"), con el mismo nombre repetido dos veces.
+  // ConfigTab.jsx informa aquí, vía onSectionChange, cuándo está dentro de
+  // una sección — la cabecera global pasa a ser la única barra de
+  // navegación ("‹ [Sección]" en vez de "✕ Configuración"), patrón
+  // estándar de una sola barra jerárquica. Se resetea a null en cuanto se
+  // sale de "config" para que otra pestaña nunca herede un override ajeno.
+  const [configSectionHeader, setConfigSectionHeader] = useState(null);
+  useEffect(() => {
+    if (tab !== "config") setConfigSectionHeader(null);
+  }, [tab]);
   // Cerrar Configuración/Ayuda (la "X" de la cabecera, y el gesto de
   // "atrás" de cada una en su nivel más externo — ver ConfigTab.jsx/
   // HelpTab.jsx) siempre vuelve al INICIO de esa pantalla la próxima vez
   // que se abra, nunca a la última subsección/categoría vista — distinto
   // de recargar la página, que sí la conserva (feedback explícito
   // 2026-08-30: "si cierro con la X y reabro, quiero el inicio; si
-  // recargo dentro, quiero seguir donde estaba"). Limpiar aquí, no dentro
-  // de cada pantalla, porque es la MISMA acción ("salir de esta pantalla
-  // por completo") sin importar en qué subnivel se estuviera al cerrar.
+  // recargo dentro, quiero seguir donde estaba"). El caso de Configuración
+  // ya no se limpia aquí explícitamente — `changeTab` lo cubre para
+  // cualquier camino de salida, este incluido, ver su comentario largo.
+  // Ayuda no comparte ese camino alternativo (no hay una pestaña de la
+  // barra inferior que lleve directamente a "help"), así que sigue
+  // limpiándose aquí, el único sitio por el que se sale de Ayuda.
   const closeSecondary = () => {
-    if (tab === "config") clearStoredSection();
     if (tab === "help") clearStoredHelpOpen();
+    // Training Records es una herramienta puntual abierta siempre desde
+    // Home (pedido explícito: "volver atrás será volver a la home
+    // siempre") — a diferencia de Ayuda/Configuración/Mi perfil, que
+    // vuelven a la pestaña primaria desde la que se entró, esta ignora
+    // `returnTab` a propósito.
+    if (tab === "training-records" || tab === "install-app") { changeTab("home"); return; }
     changeTab(returnTab);
   };
   // Cerrar sesión — Fase 4, Release V1 (rediseño de cabecera): antes vivía
@@ -292,7 +374,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
     if (DEV_AUTH_BYPASS) disableDevBypass();
     onSignOut();
   };
-  const logoIcon = appConfig.rows[0]?.logo_icon || "Waves";
+  const logoIcon = appConfig.rows[0]?.logo_icon || "Logo";
   // La cabecera acompaña siempre al usuario (ver rediseño de navegación
   // global) — antes se quedaba en flujo normal y desaparecía al hacer
   // scroll en cualquier lista larga, dejando Ayuda/Configuración/Cerrar
@@ -306,7 +388,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
   if (!loaded) {
     return (
       <div className="flex h-dvh items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
-        <AppLoading iconName={logoIcon} color={TEAL} />
+        <AppLoading iconName={logoIcon} color={BRAND_NAVY} size={64} />
       </div>
     );
   }
@@ -348,9 +430,19 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             // HelpTab.jsx, "de índice a guía viva" — pero el razonamiento
             // de fondo, "capa encima" vs. "un paso más adentro", se
             // mantiene igual para las dos.)
-            <button onClick={closeSecondary} className="-m-2 flex min-h-11 items-center gap-2 p-2" aria-label={t("aria.close")}>
-              <X size={20} style={{ color: NAVY }} aria-hidden="true" />
-              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: sectionColor(tab) }}>{t(`secondaryTitles.${tab}`)}</h1>
+            <button
+              onClick={configSectionHeader ? configSectionHeader.onBack : closeSecondary}
+              className="-m-2 flex min-h-11 items-center gap-2 p-2"
+              aria-label={configSectionHeader ? t("aria.back") : t("aria.close")}
+            >
+              {configSectionHeader ? (
+                <ChevronLeft size={20} style={{ color: BRAND_NAVY }} aria-hidden="true" />
+              ) : (
+                <X size={20} style={{ color: BRAND_NAVY }} aria-hidden="true" />
+              )}
+              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: BRAND_NAVY }}>
+                {configSectionHeader ? configSectionHeader.label : t(`secondaryTitles.${tab}`)}
+              </h1>
             </button>
           ) : (
             // 2026-08-30: la marca se unifica en "Ocean Flow" — antes
@@ -361,19 +453,23 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             // "Ocean Flow" es el nombre de marca — no se traduce en
             // ningún idioma, igual que cualquier nombre propio de producto.
             <button onClick={() => changeTab("home")} className="-m-2 flex min-h-11 items-center gap-2.5 p-2" aria-label={t("aria.goHome")}>
-              <Waves size={20} style={{ color: TEAL }} strokeWidth={2.2} aria-hidden="true" />
-              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: NAVY }}>Ocean Flow</h1>
+              {/* Logo real del rediseño (2026-09-06) — PNG, no SVG: el logo
+                  solo se entregó como foto/JPEG, sin fuente vectorial
+                  disponible (ver docs/DESIGN-SYSTEM.md §1.1). Sustituir por
+                  un <svg> real en cuanto exista un vectorial oficial. */}
+              <img src="/brand/logo-mark-navy.svg" alt="" width={22} height={22} aria-hidden="true" />
+              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: BRAND_NAVY }}>Ocean Flow</h1>
             </button>
           )}
           <div className="flex items-center gap-1">
             {tab !== "help" && (
               <button onClick={() => changeTab("help")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label={t("aria.help")}>
-                <HelpCircle size={20} style={{ color: NAVY }} aria-hidden="true" />
+                <HelpCircle size={20} style={{ color: BRAND_NAVY }} aria-hidden="true" />
               </button>
             )}
             {tab !== "config" && (
               <button onClick={() => changeTab("config")} className="-m-2 flex min-h-11 min-w-11 items-center justify-center p-2" aria-label={t("aria.config")}>
-                <Settings size={20} style={{ color: NAVY }} aria-hidden="true" />
+                <Settings size={20} style={{ color: BRAND_NAVY }} aria-hidden="true" />
               </button>
             )}
             {profile?.nickname && tab !== "perfil" && (
@@ -392,7 +488,20 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 pb-24 pt-5 sm:px-5">
+      {/* pb-24 base + env(safe-area-inset-bottom) (2026-09-08, bug real
+          reportado — "instalada como acceso directo en iOS... el pie
+          corta el + flotante para crear movimientos y tarifas o el
+          bloque de escuela favorita"): la barra inferior fija (más
+          abajo) ya suma ese mismo inset a SU alto para el indicador de
+          inicio del iPhone, pero ese inset vale 0 en una pestaña normal
+          de Safari (la propia barra de Safari ya ocupa ese hueco) y
+          crece de verdad solo cuando la app corre instalada, sin
+          ninguna barra de navegador que lo absorba — la barra inferior
+          real se vuelve más alta ahí. Un `pb-24` fijo (96px, igual en
+          los dos casos) ya no daba margen suficiente para que el
+          contenido del final de cualquier pantalla no quedara tapado
+          por la barra, ahora más alta, en ese caso concreto. */}
+      <main className="mx-auto max-w-3xl px-4 pt-5 sm:px-5" style={{ paddingBottom: "calc(6rem + env(safe-area-inset-bottom))" }}>
       <AnimatePresence mode="wait">
       <motion.div
         key={tab}
@@ -400,6 +509,11 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
         animate={{ opacity: 1, y: 0, transition: { duration: reducedMotion ? 0.01 : DURATION.sm, ease: EASE.enter } }}
         exit={{ opacity: 0, y: -4, transition: { duration: reducedMotion ? 0.01 : DURATION.xs, ease: EASE.exit } }}
       >
+      {/* ErrorBoundary dentro del motion.div con key={tab} (no fuera): un
+          error real en una pantalla deja el resto de la app (cabecera,
+          navegación) intacto, y cambiar de pestaña remonta la key y
+          limpia el error solo, sin lógica de reset propia que mantener. */}
+      <ErrorBoundary>
         {tab === "home" && (
           <HomeTab
             worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
@@ -407,6 +521,9 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             onQuickCreate={startHomeCreate}
             onOpenPending={() => changeTab("trabajo")}
             onOpenSummary={() => changeTab("summary")}
+            onOpenTrainingRecords={() => changeTab("training-records")}
+            onOpenInstallApp={() => changeTab("install-app")}
+            userId={profile?.user_id}
           />
         )}
         {tab === "log" && (
@@ -439,9 +556,17 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
             schools={schools} activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
             rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones}
             navSections={navSections} appConfig={appConfig} profile={profile} onClose={closeSecondary}
+            onSectionChange={setConfigSectionHeader}
           />
         )}
-        {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} />}
+        {tab === "training-records" && (
+          <TrainingRecordsTab
+            profile={profile} accentColor={sectionColor("trabajo")}
+            onOpenProfile={() => changeTab("perfil")} onProfileUpdated={onProfileUpdated}
+          />
+        )}
+        {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} onOpenInstallApp={() => changeTab("install-app")} />}
+        {tab === "install-app" && <InstallAppTab />}
         {tab === "perfil" && (
           <ProfileTab
             profile={profile} currencies={currencies}
@@ -456,6 +581,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
           />
         )}
         {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
+      </ErrorBoundary>
       </motion.div>
       </AnimatePresence>
       </main>
@@ -483,8 +609,19 @@ function AppShell({ onSignOut, profile, onProfileUpdated, initialTab = "home" })
                 className="flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-2 transition-colors"
                 style={{ color: active ? c : "#9CA3AF" }}
               >
-                <Icon size={19} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-                <span className="text-[10.5px] font-medium">{t(`tabs.${tabItem.id}`)}</span>
+                {/* Indicador de pestaña activa (rediseño 2026-09-06,
+                    docs/DESIGN-SYSTEM.md §7.1) — píldora de fondo tras el
+                    icono+etiqueta activos, patrón del Navigation Bar de
+                    Material 3. Fondo siempre sky-tintado (BRAND_SKY),
+                    independiente del color de sección: es un "estás aquí"
+                    genérico, no una repintada del acento de la sección. */}
+                <span
+                  className="flex flex-col items-center gap-0.5 rounded-full px-3 py-1 transition-colors"
+                  style={{ backgroundColor: active ? `${BRAND_SKY}26` : "transparent" }}
+                >
+                  <Icon size={19} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
+                  <span className="text-[10.5px] font-medium">{t(`tabs.${tabItem.id}`)}</span>
+                </span>
               </button>
             );
           })}
@@ -630,10 +767,6 @@ function AuthGate() {
       })
       .finally(() => setBypassPending(false));
   }, [loading, session, bypassAttempted, signIn]);
-  // Justo tras completar la activación, AppShell debe abrir directamente en
-  // Ayuda en vez de Home — se limpia solo (no persiste entre sesiones), ver
-  // App.jsx → AppShell → initialTab.
-  const [justActivated, setJustActivated] = useState(false);
   // activateAccount encadena completePasswordChange + markAccountActivated +
   // acceptLegalConsents — sin este flag, AuthGate re-renderizaría en el
   // hueco entre pasos (p. ej. activated_at ya fijado pero consentimientos
@@ -710,16 +843,11 @@ function AuthGate() {
     setActivating(true);
     try {
       await activateAccount({ tokenHash, type, expectedEmail: session?.user?.email, password });
-      setJustActivated(true);
     } finally {
       setActivating(false);
     }
   };
 
-  // Deliberadamente NO pone justActivated: esa bandera abre AppShell en
-  // Ayuda en vez de Home, pensado para alguien completando su primer
-  // acceso — quien recupera una contraseña ya conoce la app, no es una
-  // persona nueva a la que orientar.
   const handleResetPassword = async (password) => {
     setActivating(true);
     try {
@@ -732,7 +860,7 @@ function AuthGate() {
   if (loading || (DEV_AUTH_BYPASS && bypassPending && !session)) {
     return (
       <div className="flex h-dvh items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
-        <AppLoading color={TEAL} />
+        <AppLoading color={BRAND_NAVY} size={64} />
       </div>
     );
   }
@@ -784,7 +912,7 @@ function AuthGate() {
     return <AcceptLegalScreen onSubmit={acceptLegalConsents} />;
   }
 
-  return <AppShell onSignOut={signOut} profile={profile} onProfileUpdated={updateProfile} initialTab={justActivated ? "help" : "home"} />;
+  return <AppShell onSignOut={signOut} profile={profile} onProfileUpdated={updateProfile} />;
 }
 
 export default function App() {

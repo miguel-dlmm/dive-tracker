@@ -40,6 +40,21 @@ import { PDFDocument, PDFName, StandardFonts, rgb } from "pdf-lib";
 // que se puede comprobar exhaustivamente con tests unitarios rápidos. La
 // aplicación sobre el PDF de verdad (con pdf-lib) se prueba aparte con un
 // PDF de prueba mínimo, sin repetir ahí toda la casuística de qué se rellena.
+//
+// Dos modos de direccionamiento de campo (Release V1, Fase 5 —
+// "plantillas restantes", 2026-09-04): OWD/AOWD/SC-DD/SC-EAN son PDF con
+// AcroForm real, así que un "field" ahí es el string del nombre del campo
+// (ver P() en templateFieldMaps.js). BD/SC-LV/SC-NV/SC-PB/SC-RR/SC-SR no
+// tienen NINGÚN campo de formulario — solo recuadros grises impresos como
+// arte estático — así que un "field" ahí es un objeto
+// { rect: {x,y,width,height} } con las coordenadas reales del recuadro,
+// extraídas de verdad del content stream del PDF (nunca a ojo, ver
+// scripts/extract-flat-template-rects.mjs) y verificadas visualmente una a
+// una contra el PDF real antes de incorporarlas (ver
+// scripts/render-flat-template-rects-overlay.mjs). isRectField()/
+// resolveRect() son el único punto donde pdfFill.js distingue entre los dos
+// modos — todo lo demás (drawFieldText, computeSignaturePlacement) opera
+// solo sobre un rect ya resuelto, sin saber de dónde salió.
 
 const BRAND_COLOR = rgb(0.0588, 0.4627, 0.4314); // TEAL de Ocean Flow (src/colors.js) — nunca el negro de la plantilla.
 
@@ -104,9 +119,15 @@ export function buildFillOperations(templateMap, data) {
   pushIfValue(texts, sig.instructorNumber, data.instructor?.number);
   // Fecha de firma: SIEMPRE la fecha de generación del PDF (pedido
   // explícito del usuario, 2026-09-02), igual para las 3 firmas y para
-  // cualquier plantilla — nunca una fecha distinta por firma.
+  // cualquier plantilla — nunca una fecha distinta por firma. Excepción
+  // encontrada 2026-09-07 ("si el alumno no marcó el check de menor, esa
+  // fecha quedará vacía"): la fecha de la fila de padre/madre/tutor solo
+  // se rellena si de verdad hay firma de padre/madre/tutor — antes se
+  // rellenaba siempre, aunque el alumno no fuera menor y esa fila entera
+  // (nombre y firma) quedara en blanco, dejando una fecha huérfana sin
+  // firma que la acompañara.
   pushIfValue(texts, sig.studentDate, data.generatedAtLabel);
-  pushIfValue(texts, sig.parentDate, data.generatedAtLabel);
+  if (data.signatures?.parentPng) pushIfValue(texts, sig.parentDate, data.generatedAtLabel);
   pushIfValue(texts, sig.instructorDate, data.generatedAtLabel);
 
   if (sig.student && data.signatures?.studentPng) signatures.push({ field: sig.student, dataUrl: data.signatures.studentPng });
@@ -152,6 +173,28 @@ function getFieldRect(form, fieldName) {
   return field.acroField.getWidgets()[0].getRectangle();
 }
 
+// Segundo modo de direccionamiento de campo (Release V1, Fase 5 —
+// plantillas SIN AcroForm: BD, SC-LV, SC-NV, SC-PB, SC-RR, SC-SR). Un
+// "field" en templateFieldMaps.js es normalmente un string (nombre real de
+// un campo AcroForm de las 4 plantillas OWD/AOWD/SC-DD/SC-EAN). Para las 6
+// plantillas sin ningún campo interactivo, un "field" es en cambio un
+// objeto { rect: {x,y,width,height} } con las coordenadas REALES del
+// recuadro impreso en la página — extraídas con
+// scripts/extract-flat-template-rects.mjs (parseo del content stream real
+// del PDF, no medición a ojo) y verificadas visualmente una a una con
+// scripts/render-flat-template-rects-overlay.mjs antes de incorporarlas
+// aquí (ver docs/RELEASE-V1-PROGRESS.md, Fase 5). Mismo sistema de
+// coordenadas que getFieldRect (puntos PDF, origen abajo-izquierda), así
+// que drawFieldText/computeSignaturePlacement no necesitan saber cuál de
+// los dos modos produjo el rect.
+function isRectField(field) {
+  return Boolean(field) && typeof field === "object" && Boolean(field.rect);
+}
+
+function resolveRect(form, field) {
+  return isRectField(field) ? field.rect : getFieldRect(form, field);
+}
+
 // Tamaño de fuente que quepa en el alto real del campo, con un límite
 // razonable — los campos de firma/nombre son más altos que una fila de
 // progreso normal, no tiene sentido un mismo tamaño fijo para todos.
@@ -177,24 +220,61 @@ function drawFieldText(page, font, rect, text) {
 // scale sin tope de 1x (a diferencia de antes) — pedido explícito del
 // usuario: las firmas se veían demasiado pequeñas, y "si parte de la firma
 // cae sobre la línea, no pasa nada" — SIGNATURE_BOOST permite que ocupen
-// más que su rectángulo original, siempre centradas sobre el mismo punto.
-const SIGNATURE_BOOST = 1.7;
+// más que su rectángulo original. Subido de 1.7 a 2.2 (2026-09-04, pedido
+// explícito: "firmas más grandes") — con el anclaje arriba de
+// computeSignaturePlacement (ver debajo) todo ese margen extra crece hacia
+// ABAJO, nunca hacia arriba, así que un boost mayor ya no arriesga tapar
+// la fila anterior.
+const SIGNATURE_BOOST = 2.2;
 
-async function drawSignature(pdfDoc, page, form, fieldName, signaturePngDataUrl) {
-  const rect = getFieldRect(form, fieldName);
-  const pngImage = await pdfDoc.embedPng(dataUrlToBytes(signaturePngDataUrl));
+// Lógica de posicionamiento/tamaño de una firma — separada de pdf-lib a
+// propósito (mismo criterio que buildFillOperations de arriba y
+// computeConcatenatedLayout en pdfToJpg.js) para poder comprobarla con
+// tests unitarios rápidos, sin construir un PDFDocument real.
+//
+// Ancla SIEMPRE el borde SUPERIOR de la firma al borde superior del propio
+// rectángulo del campo (2026-09-04, pedido explícito: "firmas superpuestas
+// arriba, nunca cortadas... como firmar con un boli real"). Antes se
+// centraba en el eje vertical — con SIGNATURE_BOOST > 1 eso repartía el
+// desbordamiento mitad arriba/mitad abajo, así que la parte de ARRIBA de
+// la firma podía quedar oculta bajo el texto/la fila anterior. Con el
+// anclaje arriba, todo el margen extra crece hacia abajo — "si parte de la
+// firma cae sobre la línea impresa, no pasa nada" sigue siendo la
+// instrucción vigente para el margen inferior.
+export function computeSignaturePlacement(rect, imgWidth, imgHeight) {
   const padding = 2;
   const maxWidth = Math.max(rect.width - padding * 2, 1) * SIGNATURE_BOOST;
   const maxHeight = Math.max(rect.height - padding * 2, 1) * SIGNATURE_BOOST;
-  const scale = Math.min(maxWidth / pngImage.width, maxHeight / pngImage.height);
-  const width = pngImage.width * scale;
-  const height = pngImage.height * scale;
-  page.drawImage(pngImage, {
+  const scale = Math.min(maxWidth / imgWidth, maxHeight / imgHeight);
+  const width = imgWidth * scale;
+  const height = imgHeight * scale;
+  return {
     x: rect.x + (rect.width - width) / 2,
-    y: rect.y + (rect.height - height) / 2,
+    y: rect.y + rect.height - height,
     width,
     height,
-  });
+  };
+}
+
+async function drawSignature(pdfDoc, page, form, fieldName, signaturePngDataUrl) {
+  const rect = resolveRect(form, fieldName);
+  const pngImage = await pdfDoc.embedPng(dataUrlToBytes(signaturePngDataUrl));
+  const { x, y, width, height } = computeSignaturePlacement(rect, pngImage.width, pngImage.height);
+  page.drawImage(pngImage, { x, y, width, height });
+}
+
+// Casillas de las 6 plantillas sin AcroForm: el cuadrado en sí (contorno,
+// sin relleno) ya está impreso en el arte estático de la página — aquí solo
+// se dibuja la marca cuando está seleccionada, nunca el propio cuadrado
+// (que dibujarlo de más pisaría el contorno real). "Sin marcar" no dibuja
+// nada, igual que checkbox.uncheck() deja la casilla AcroForm en blanco.
+function drawCheckboxMark(page, font, rect) {
+  const size = Math.max(Math.min(rect.height, rect.width) * 0.85, 6);
+  const mark = "X";
+  const width = font.widthOfTextAtSize(mark, size);
+  const x = rect.x + (rect.width - width) / 2;
+  const y = rect.y + (rect.height - size) / 2 + size * 0.12;
+  page.drawText(mark, { x, y, size, font, color: BRAND_COLOR });
 }
 
 /**
@@ -223,9 +303,13 @@ export async function fillTrainingRecordPdf(pdfBytes, templateMap, data) {
   // similar a la de la plantilla").
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-  texts.forEach(({ field, value }) => drawFieldText(page, font, getFieldRect(form, field), value));
+  texts.forEach(({ field, value }) => drawFieldText(page, font, resolveRect(form, field), value));
   checkboxes.forEach(({ field, checked }) => {
     if (!field) return;
+    if (isRectField(field)) {
+      if (checked) drawCheckboxMark(page, font, field.rect);
+      return;
+    }
     const checkbox = form.getCheckBox(field);
     if (checked) checkbox.check();
     else checkbox.uncheck();

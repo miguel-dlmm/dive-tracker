@@ -1,0 +1,56 @@
+{
+  "whatsNew": {
+    "close": "Fermer",
+    "eyebrow": "Nouveautés de cette version",
+    "slideTablist": "Diapositive",
+    "back": "Précédent",
+    "next": "Suivant",
+    "start": "Commencer",
+    "slides": [
+      {
+        "title": "Une refonte complète, un nouveau visage",
+        "body": "Nouveau logo, nouvelles couleurs, une image renouvelée de fond en comble — la même Ocean Flow, avec une identité qui lui est propre."
+      },
+      {
+        "title": "Votre carte d'instructeur",
+        "body": "Mon profil a maintenant sa propre carte : niveau professionnel, données personnelles et devise favorite, tout au même endroit."
+      },
+      {
+        "title": "Training Records, depuis l'application",
+        "body": "Générez le registre de progression SSI de chaque élève, signé et prêt à remettre — sans quitter Ocean Flow."
+      },
+      {
+        "title": "L'application parle déjà votre langue",
+        "body": "Espagnol, anglais, français, italien, allemand, catalan ou basque — changez quand vous voulez, depuis votre profil."
+      },
+      {
+        "title": "Accueil et Mon activité, plus clairs",
+        "body": "Tout est mieux organisé, pour trouver ce que vous cherchez d'un coup d'œil : vos indicateurs, vos mouvements, votre quotidien."
+      },
+      {
+        "title": "Revoyez-les quand vous voulez",
+        "body": "Retrouvez ces nouveautés depuis Aide → \"Voir les nouveautés\", quand vous le souhaitez."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Fermer",
+    "eyebrow": "Nouveau déploiement",
+    "branchLabel": "Branche",
+    "commitLabel": "commit",
+    "technicalChanges": "Changements techniques",
+    "functionalChanges": "Changements fonctionnels",
+    "uiChangesLabel": "Changements d'interface :",
+    "uiChangesYes": "Oui",
+    "uiChangesNo": "Non",
+    "stepsHeading": "Quoi tester / quoi faire",
+    "testsLabel": "Tests :",
+    "buildLabel": "Build :",
+    "notReported": "non rapporté",
+    "previewCommit": "Aperçu du commit",
+    "previewCommitEmpty": "Aperçu du commit : pas encore d'aperçu",
+    "previewIntegrated": "Aperçu intégré (Release-V1)",
+    "previewIntegratedEmpty": "Aperçu intégré : pas encore d'aperçu",
+    "understood": "Compris"
+  }
+}

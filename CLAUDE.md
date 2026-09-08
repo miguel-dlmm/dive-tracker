@@ -45,8 +45,25 @@ compañeros, Tarifas, Resumen).
 ## Ramas y entornos
 
 Modelo completo en `docs/ADR/0006-estrategia-de-ramas-y-entornos.md`. Hoy:
-`main` es la producción real (proyecto Vercel `dive-tracker-exgg`,
-`dive-tracker-exgg.vercel.app`) y `develop` es la rama de
+`main` es la producción real (proyecto Vercel `dive-tracker-exgg` —
+renombrado a "oceanflow" en el dashboard de Vercel en algún momento
+tras el rebrand, confirmado con `vercel project ls` el 2026-09-06; el
+dominio sigue siendo `dive-tracker-exgg.vercel.app`, sin cambios).
+2026-09-07: añadido `oceanflow-web.vercel.app` como alias adicional del
+mismo proyecto (`oceanflow.vercel.app`/`ocean-flow.vercel.app` ya
+estaban cogidos por terceros; `oceanflow-app.vercel.app` se probó y se
+descartó por decisión del usuario — "app" quedaba repetido demasiado
+cerca del propio `.vercel.app`) — el dominio original NUNCA se toca,
+así que nunca hay enlaces rotos; no es una redirección, ambos sirven
+la misma producción a la vez. **Pendiente de un paso manual en el
+dashboard de Vercel** (no expuesto por la CLI): el alias nuevo hereda
+la protección SSO de equipo por defecto de Vercel y hoy pide login de
+Vercel antes de servir la app — hay que excluirlo en Project Settings →
+Deployment Protection, igual que ya debe estar excluido
+`dive-tracker-exgg.vercel.app`, antes de darlo como URL pública. Hasta
+entonces, seguir usando `dive-tracker-exgg.vercel.app` como el enlace
+real a compartir.
+`develop` es la rama de
 integración/preparación, que además hace de entorno TEST de facto para el
 proyecto Vercel `dive-tracker` (`dive-tracker-three.vercel.app`), con su
 propio Supabase separado del de producción — ver "Indicador visual de
@@ -58,6 +75,34 @@ Vercel con las mismas variables TEST, útil para validar sin tocar
 `develop`. No existe todavía una rama `test` dedicada; se crea solo
 cuando se cumpla alguno de los disparadores objetivos que describe el
 ADR, no por adelantado.
+
+## Límite de Serverless Functions (plan Hobby de Vercel)
+
+Los proyectos `dive-tracker` y `oceanflow` están en el plan Hobby de
+Vercel, que limita a **12 Serverless Functions por deployment** — cada
+fichero en `api/*.js` cuenta como una. Se superó ese límite el
+2026-09-07 (incidente real, ver `docs/RELEASE-V1-PROGRESS.md`/
+`docs/REDISENO-V2-PROGRESS.md`, sección "Incidente en producción"): un
+endpoint nuevo (`api/get-user-activity-summary.js`) fue la 13ª
+función y tumbó todos los deployments de la rama en curso, sin que
+`npm run build`, `npm run test` ni `npm run lint` lo detectaran — solo
+lo señala el propio empaquetado de Functions de Vercel, un paso
+posterior al build que solo corre en el servidor de Vercel (o en local
+con el proyecto vinculado vía `vercel link` + `vercel build --yes`).
+
+**Antes de añadir un fichero nuevo en `api/*.js`**, plantear primero si
+puede vivir como una rama más de un endpoint hermano ya existente con
+la misma autenticación/rol (ver `activitySummaryFor()` dentro de
+`handleListUserStatus`, `server/users/listUserStatus.js`, como
+ejemplo del patrón: una rama activada por un campo del cuerpo de la
+petición, en vez de un fichero `api/*.js` aparte) — salvo que la
+semántica sea claramente distinta (método HTTP, endpoint público vs
+admin, etc.), en cuyo caso sí toca crear uno nuevo y, si eso hiciera
+falta superar las 12 funciones, avisar antes de que el límite es un
+coste real (pasar a plan Pro) y esperar aprobación, no crearlo sin más.
+Verificar el recuento de funciones tras cualquier cambio en `api/`:
+`vercel build --yes && find .vercel/output/functions -name "*.func" |
+wc -l` (requiere el proyecto vinculado una vez con `vercel link`).
 
 ## Bypass de login en desarrollo
 
@@ -140,10 +185,16 @@ exacta de producción (posiciones, tamaños, layout).
   cualquier Preview Deployment de rama) tienen `VITE_ENVIRONMENT=test`. El
   proyecto de producción real (`dive-tracker-exgg`, rama `main`) no la
   tiene — nunca debe configurarse ahí.
-- **Favicon:** `public/icon.svg` (referenciado por `index.html`) usa el
-  mismo icono `Waves` de `lucide-react` y el mismo color `TEAL` que ya usa
-  la app en cabecera/login/spinner — antes ese archivo no existía
-  (`<link>` roto, sin favicon real).
+- **Favicon:** `public/icon.svg` (referenciado por `index.html`) es el
+  logo real de Ocean Flow, vectorial (mismos paths que
+  `public/brand/logo-mark-navy.svg`, el mismo vectorial que usa el logo
+  de carga en `AppLoading`), en `BRAND_NAVY`, sin fondo — antes envolvía
+  un PNG en base64 con un fondo cuadrado navy "horneado" en la imagen
+  (bug real reportado 2026-09-07: se veía un recuadro azul, no solo el
+  logo). Incluye `@media (prefers-color-scheme: dark)` para invertir a
+  blanco cuando el navegador/sistema está en modo oscuro — el "negativo"
+  pedido, sin relación con el tema oscuro de la app (todavía pendiente,
+  ver "Cosas que NO existen todavía" más abajo).
 
 ## Convenciones — seguirlas es más importante que "queda bien"
 
@@ -246,13 +297,13 @@ obligatorias" más abajo para el mecanismo general de trabajo por lotes.
   pantalla). El calendario de Home sí admite crear un movimiento al tocar
   un día vacío o desde el propio desglose de un día con actividad — ver
   `onCreateForDay` en `MonthCalendar`, `shared.jsx`.
-- Los iconos/imágenes que referencia `index.html` (`/icon-192.png`,
-  `/icon-512.png`, `/og-image.png`) son placeholders — hay que generarlos.
-  `/icon.svg` (favicon) ya no lo es — ver "Indicador visual de entorno
-  TEST" arriba
-- El icono del logo real de Ocean Flow — de momento el loading usa iconos de
-  lucide-react (configurable en Configuración → Ajustes) a la espera del
-  logo oficial
+- ~~Los iconos/imágenes que referencia `index.html` son placeholders~~ —
+  ya no: `/icon.svg`, `/icon-192.png`, `/icon-512.png` y `/og-image.png`
+  son el logo real de Ocean Flow (generados 2026-09-06/07). El icono de
+  carga (`AppLoading`, `shared.jsx`) también usa ese vectorial real por
+  defecto (`iconName="Logo"`) — Configuración → Ajustes sigue ofreciendo
+  iconos de lucide-react como alternativa seleccionable, ya no como único
+  recurso a la espera del logo oficial.
 - **Un Design System unificado de Ocean Flow.** El rediseño de Movimientos
   (paneles flotantes, tarjetas, animaciones, identidad visual por tipo de
   movimiento) es una referencia de calidad, no el sistema de diseño
@@ -463,6 +514,25 @@ tacto físico real (presión, gestos multitáctiles). Para todo lo demás
 flujos de interacción, errores de consola) sí sustituye la ausencia total
 de verificación móvil automática que había antes — se comprueba solo, en
 cada sesión, antes de pedirle nada al usuario.
+
+**Inestabilidad conocida de la automatización de Chrome interactiva**
+(la herramienta `mcp__claude-in-chrome__*` que controla un navegador
+real durante la sesión — distinta de `mobile-check`, que usa Playwright
+aparte): una pestaña puede quedar "aparcada" a mitad de una secuencia
+de acciones (URL `chrome-extension://.../park.html`), o un tool call
+puede fallar con un error genérico sin relación con la página
+("Failed to deserialize params...", "Script injection timed out...",
+"Can't interact with browser-internal or unparseable URLs"). Reproducido
+varias veces en distintas sesiones (2026-09-07, verificación del scroll
+del calendario y piloto de GIFs de Ayuda). Mecanismo de recuperación que
+funciona de forma fiable: ante cualquier fallo de este tipo (no un error
+semántico como "elemento no encontrado"), llamar a `tabs_context_mcp`
+con `createIfEmpty: true` para ver el estado real de las pestañas,
+cerrar la que esté aparcada/rota (`tabs_close_mcp`) y crear una pestaña
+nueva (`tabs_create_mcp`) — nunca reintentar la misma llamada varias
+veces seguidas contra una pestaña ya rota, no se arregla sola. Cualquier
+grabación/estado en curso en la pestaña rota se pierde y hay que
+rehacerlo desde cero en la pestaña nueva.
 
 ### 9. Trabajo por fases en iniciativas largas
 

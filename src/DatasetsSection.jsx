@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Star, Copy, Loader2 } from "lucide-react";
-import { TEAL } from "./colors";
+import { BRAND_NAVY } from "./colors";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { supabase } from "./supabaseClient";
 import { useToast, Field, Sheet, Fab, DeleteButton, BooleanToggle, inputCls } from "./shared";
@@ -150,7 +150,7 @@ export default function DatasetsSection() {
         )}
       </ul>
 
-      <Fab onClick={() => setSheetOpen(true)} label={t("datasets.fab")} color={TEAL} />
+      <Fab onClick={() => setSheetOpen(true)} label={t("datasets.fab")} color={BRAND_NAVY} />
 
       <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
         <h3 className="mb-1 text-sm font-semibold text-gray-800">{t("datasets.sheetTitle")}</h3>
@@ -168,7 +168,7 @@ export default function DatasetsSection() {
           onClick={create}
           disabled={saving || !label.trim()}
           className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md py-2.5 text-sm font-medium text-white disabled:opacity-50"
-          style={{ backgroundColor: TEAL }}
+          style={{ backgroundColor: BRAND_NAVY }}
         >
           {saving && <Loader2 size={15} className="animate-spin" aria-hidden="true" />} {t("datasets.create")}
         </button>

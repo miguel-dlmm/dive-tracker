@@ -1,5 +1,5 @@
 import { PDFDocument, PDFName } from "pdf-lib";
-import { buildFillOperations, fillTrainingRecordPdf } from "./pdfFill";
+import { buildFillOperations, fillTrainingRecordPdf, computeSignaturePlacement } from "./pdfFill";
 
 // 2x2 PNG rojo válido — solo para comprobar que embedPng/drawImage no
 // revientan, el contenido visual no importa aquí (eso ya se comprobó a
@@ -52,16 +52,34 @@ describe("buildFillOperations", () => {
   // progreso SÍ se rellena ahora (llega ya calculada desde fuera, ver
   // TrainingRecordsTab.jsx) — buildFillOperations solo la traslada, no
   // decide de dónde sale.
-  it("rellena la fecha de las 3 firmas con generatedAtLabel, igual para las 3", () => {
+  it("rellena la fecha de las 3 firmas con generatedAtLabel cuando hay firma de padre/madre/tutor", () => {
     const { texts } = buildFillOperations(TEMPLATE, {
       firstName: "Ana", lastName: "Garcia",
       generatedAtLabel: "02/09/26",
+      signatures: { parentPng: TINY_PNG },
     });
     expect(texts).toEqual(expect.arrayContaining([
       { field: "sig.studentDate", value: "02/09/26" },
       { field: "sig.parentDate", value: "02/09/26" },
       { field: "sig.instructorDate", value: "02/09/26" },
     ]));
+  });
+
+  // Bug real confirmado (feedback 2026-09-07: "si el alumno no marcó el
+  // check de menor, esa fecha quedará vacía") — antes se rellenaba
+  // siempre, dejando una fecha huérfana en la fila de padre/madre/tutor
+  // aunque esa fila entera (nombre y firma) quedara en blanco por no ser
+  // menor de edad.
+  it("NO rellena la fecha de padre/madre/tutor si no hay firma de padre/madre/tutor (alumno no es menor)", () => {
+    const { texts } = buildFillOperations(TEMPLATE, {
+      firstName: "Ana", lastName: "Garcia",
+      generatedAtLabel: "02/09/26",
+    });
+    expect(texts).toEqual(expect.arrayContaining([
+      { field: "sig.studentDate", value: "02/09/26" },
+      { field: "sig.instructorDate", value: "02/09/26" },
+    ]));
+    expect(texts.some((t) => t.field === "sig.parentDate")).toBe(false);
   });
 
   it("omite una fila de sesión opcional sin datos, sin fallar", () => {
@@ -112,6 +130,38 @@ describe("buildFillOperations", () => {
   it("nunca incluye una operación con campo vacío o valor vacío", () => {
     const { texts } = buildFillOperations(TEMPLATE, { firstName: "", lastName: "" });
     expect(texts).toEqual([]);
+  });
+});
+
+// 2026-09-04, pedido explícito del usuario: "firmas superpuestas arriba,
+// nunca cortadas" + "firmas más grandes". Estos tests cubren la lógica
+// pura de posicionamiento/tamaño, sin necesitar un PDFDocument real.
+describe("computeSignaturePlacement", () => {
+  it("ancla el borde SUPERIOR de la firma al borde superior del campo, nunca centrada", () => {
+    const rect = { x: 100, y: 50, width: 80, height: 20 };
+    const { y, height } = computeSignaturePlacement(rect, 300, 150); // ratio 2:1
+    expect(y + height).toBeCloseTo(rect.y + rect.height, 5);
+  });
+
+  it("crece más allá del propio rectángulo (boost > 1x) — todo el margen extra queda por debajo, nunca por encima", () => {
+    const rect = { x: 0, y: 100, width: 40, height: 10 };
+    const { y, height } = computeSignaturePlacement(rect, 400, 100); // 4:1, el ancho manda la escala
+    expect(height).toBeGreaterThan(rect.height);
+    // El borde superior sigue siendo el del rect — el desbordamiento no se
+    // reparte hacia arriba.
+    expect(y + height).toBeCloseTo(rect.y + rect.height, 5);
+  });
+
+  it("centra horizontalmente dentro del rectángulo", () => {
+    const rect = { x: 10, y: 0, width: 100, height: 100 };
+    const { x, width } = computeSignaturePlacement(rect, 50, 50);
+    expect(x + width / 2).toBeCloseTo(rect.x + rect.width / 2, 5);
+  });
+
+  it("conserva la proporción de la imagen original", () => {
+    const rect = { x: 0, y: 0, width: 80, height: 20 };
+    const { width, height } = computeSignaturePlacement(rect, 300, 150); // 2:1
+    expect(width / height).toBeCloseTo(2, 5);
   });
 });
 
@@ -231,5 +281,85 @@ describe("fillTrainingRecordPdf", () => {
         signatures: { studentPng: TINY_PNG },
       })
     ).resolves.toBeInstanceOf(Uint8Array);
+  });
+});
+
+// Segundo modo de direccionamiento de campo (Release V1, Fase 5 —
+// "plantillas restantes", 2026-09-04): BD/SC-LV/SC-NV/SC-PB/SC-RR/SC-SR no
+// tienen NINGÚN campo de formulario — un "field" ahí es
+// { rect: {x,y,width,height} } en vez de un nombre de campo AcroForm (ver
+// isRectField/resolveRect en pdfFill.js). Estos tests cubren ese modo
+// contra un PDF completamente en blanco (sin AcroForm), sin repetir la
+// casuística de buildFillOperations (ya cubierta arriba, es agnóstica al
+// modo — solo pasa el "field" que le da templateFieldMaps.js).
+describe("fillTrainingRecordPdf — plantillas sin AcroForm (campos por coordenadas)", () => {
+  const RECT_TEMPLATE = {
+    sourcePdfPage: 1,
+    fields: {
+      firstName: { rect: { x: 10, y: 260, width: 100, height: 14 } },
+      lastName: { rect: { x: 10, y: 240, width: 100, height: 14 } },
+    },
+    sessionRows: [
+      {
+        studentInitials: { rect: { x: 10, y: 200, width: 30, height: 14 } },
+        date: { rect: { x: 45, y: 200, width: 30, height: 14 } },
+        instructorInitials: { rect: { x: 80, y: 200, width: 30, height: 14 } },
+        instructorNumber: { rect: { x: 115, y: 200, width: 30, height: 14 } },
+      },
+    ],
+    examVersion: {
+      printed: { rect: { x: 10, y: 170, width: 6, height: 6 } },
+      online: { rect: { x: 30, y: 170, width: 6, height: 6 } },
+    },
+    signatures: {
+      student: { rect: { x: 10, y: 40, width: 80, height: 30 } },
+      studentDate: { rect: { x: 100, y: 40, width: 60, height: 14 } },
+    },
+  };
+
+  async function buildBlankPdf() {
+    const pdfDoc = await PDFDocument.create();
+    pdfDoc.addPage([300, 300]);
+    return pdfDoc.save();
+  }
+
+  it("rellena texto y dibuja la firma sobre un PDF sin ningún AcroForm, sin crear uno nuevo", async () => {
+    const blankBytes = await buildBlankPdf();
+    const filledBytes = await fillTrainingRecordPdf(blankBytes, RECT_TEMPLATE, {
+      firstName: "Ana", lastName: "Garcia",
+      sessionRows: [{ studentInitials: "AG", date: "01/09/26", instructorInitials: "JD", instructorNumber: "12345" }],
+      examVersion: "online",
+      generatedAtLabel: "02/09/26",
+      signatures: { studentPng: TINY_PNG },
+    });
+
+    const resultDoc = await PDFDocument.load(filledBytes);
+    expect(resultDoc.getForm().getFields()).toHaveLength(0);
+    expect(resultDoc.getPageCount()).toBe(1);
+  });
+
+  it("no falla si faltan bloques opcionales (sin firma, sin versión de examen)", async () => {
+    const blankBytes = await buildBlankPdf();
+    await expect(
+      fillTrainingRecordPdf(blankBytes, RECT_TEMPLATE, { firstName: "Ana", lastName: "Garcia" })
+    ).resolves.toBeInstanceOf(Uint8Array);
+  });
+
+  // La casilla por coordenadas no existe como objeto interactivo — marcarla
+  // significa dibujar una "X" encima del recuadro impreso; no marcarla no
+  // dibuja nada (el recuadro vacío ya es parte del arte estático). Sin
+  // inspección de píxeles disponible en este entorno de test, se usa el
+  // tamaño del PDF resultante como proxy razonable de "se dibujó algo de
+  // más" — mismo criterio de honestidad que el resto de este archivo: no
+  // afirma más de lo que comprueba.
+  it("marcar una casilla por coordenadas dibuja algo de más que dejarla sin marcar", async () => {
+    const blankBytes = await buildBlankPdf();
+    const checkedBytes = await fillTrainingRecordPdf(blankBytes, RECT_TEMPLATE, {
+      firstName: "A", lastName: "B", examVersion: "online",
+    });
+    const uncheckedBytes = await fillTrainingRecordPdf(blankBytes, RECT_TEMPLATE, {
+      firstName: "A", lastName: "B",
+    });
+    expect(checkedBytes.length).toBeGreaterThan(uncheckedBytes.length);
   });
 });

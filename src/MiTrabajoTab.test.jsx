@@ -3,11 +3,236 @@ import userEvent from "@testing-library/user-event";
 import MiTrabajoTab from "./MiTrabajoTab";
 import { ToastProvider } from "./shared";
 
+// Historial de esta cifra (KPIs de cabecera de Mi trabajo, "Generado
+// este mes"/"Pendiente de cobrar"/"Cobrado este mes"): Fase 6/7
+// adivinaron un tamaño de letra según la longitud del texto ya
+// formateado, Fase 9 adivinó un umbral de caracteres para el tamaño del
+// icono, Fase 10 permitió partir la cifra en dos líneas (`break-words`)
+// como red de seguridad. Las cuatro fallaron en algún punto en
+// Safari/iOS real (iPhone 14 Pro Max, mismo viewport que ya emula
+// `mobile-check`) porque WebKit renderiza los dígitos más anchos que
+// Chromium con la misma fuente/tamaño — algo que no se puede medir
+// desde este entorno (CLAUDE.md §8). Feedback en vivo 2026-09-07 tras el
+// último cambio: "en chrome lo ves bien pero en safari ios se salta en
+// dos líneas" en vez de ocultar el icono — la cifra NUNCA debe partirse
+// en dos líneas; en su lugar, ocultar el icono en las 3 tarjetas es lo
+// que debe liberar el ancho que falte.
+describe("KPIs de Mi trabajo — la cifra nunca se parte en dos líneas (ni truncate ni break-words)", () => {
+  it("el importe no lleva `truncate` ni `break-words`, sea cual sea la longitud de la cifra", () => {
+    // 500 personas × 20€/persona (tarifa de Open Water en PADI Cozumel,
+    // ver RATES_ROWS) = 10.000,00 € — una cifra larga sin tener que
+    // fabricar un número gigante a mano.
+    renderMiTrabajo({
+      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" }],
+    });
+    const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
+    // Excluye el span invisible de medición (Fase 13: mismas clases de
+    // texto, pero sin `leading-tight` — ver finalTextMeasureRef en MiTrabajoTab.jsx).
+    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("leading-tight"));
+    expect(amount.className).not.toMatch(/truncate/);
+    expect(amount.className).not.toMatch(/break-words/);
+  });
+});
+
+// Pedido explícito (2026-09-07): "y si añadimos el icono del kpi al
+// lado del texto?" — introdujo un icono FIJO junto a la etiqueta
+// ("Generado"/"Pendiente"/"Cobrado"), aparte del que ya iba junto a la
+// cifra. Retirado el 2026-09-08 (pedido explícito, con capturas reales
+// delante: "quiero quitar el icono del texto") — con el icono de la
+// cifra ahora también oculto cuando de verdad no hay datos (ver el
+// describe de abajo), dos icono por KPI dejó de aportar nada; queda
+// uno solo, junto a la cifra.
+describe("KPIs de Mi trabajo — la etiqueta ya no lleva su propio icono", () => {
+  it("la fila de la etiqueta no tiene ningún icono, solo el texto", () => {
+    renderMiTrabajo({
+      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" }],
+    });
+    // "Generado este mes", no "Pendiente de cobrar": esa segunda etiqueta
+    // sí lleva un icono, pero es el "?" del tooltip informativo — un
+    // elemento aparte que nunca tuvo relación con el icono de KPI aquí
+    // retirado, y sigue existiendo tras este cambio.
+    const label = screen.getByText("Generado este mes");
+    const labelRow = label.closest("span");
+    expect(labelRow.querySelector("svg")).toBeNull();
+  });
+});
+
+// Bug real reportado 2026-09-08, con captura real del móvil: "cuando no
+// hay movimientos sale el icono, qno debería" — sin datos, el KPI
+// muestra "—" y no tiene sentido ilustrarlo con un icono (antes se
+// mostraba a escala completa, porque "—" es tan corto que nunca fuerza
+// el encogimiento compartido).
+describe("KPIs de Mi trabajo — sin datos, sin icono junto a la cifra", () => {
+  it("un KPI en \"—\" (sin movimientos de ese tipo) no muestra ningún icono junto a la cifra", () => {
+    renderMiTrabajo({ worklog: [] });
+    const tile = screen.getByText("Cobrado este mes").closest("div[class*='rounded-xl']");
+    // Hay dos nodos con "—": el visible y su gemelo invisible de medición
+    // (`finalTextMeasureRef`, `aria-hidden="true"`) — se descarta ese.
+    const amountRow = within(tile)
+      .getByText((_content, node) => node?.textContent === "—" && node?.getAttribute("aria-hidden") !== "true")
+      .closest("div");
+    expect(amountRow.querySelector("svg")).toBeNull();
+  });
+
+  it("un KPI con datos reales sí muestra su icono junto a la cifra (con espacio de sobra)", () => {
+    renderMiTrabajo({
+      worklog: [{ id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }],
+    });
+    const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
+    const amountRow = within(tile).getByText((_c, node) => node?.classList?.contains("tabular-nums") && node?.classList?.contains("leading-tight")).closest("div");
+    expect(amountRow.querySelector("svg")).toBeTruthy();
+  });
+});
+
+// Sustituye el umbral de caracteres de kpiIconTierFor (retirado) por una
+// MEDICIÓN real: si la cifra ya renderizada se sale de su propio ancho
+// (scrollWidth > clientWidth), se oculta el icono en las 3 tarjetas a la
+// vez — funciona igual en cualquier motor de render porque no depende de
+// contar caracteres. jsdom no calcula layout real, así que aquí se
+// simulan esas medidas directamente sobre HTMLElement.prototype (mismo
+// criterio que ya usó la Fase 10 para reproducir el bug de overflow con
+// medidas reales del DOM en vez de una suposición).
+// Fase 13, 2026-09-07 — pedido explícito: "el icono... se va encogiendo
+// según crece el número... en el momento en que vaya a salirse de la
+// caja, el icono desaparece". Sustituye el tier binario normal/hidden
+// (Fase 11.1/11.2) por una escala continua (0 a 1) — sigue MIDIENDO el
+// DOM real (nunca contando caracteres, mismo motivo que 11.2: WebKit
+// renderiza más ancho que Chromium), pero ahora contra la cifra FINAL
+// (el span invisible de medición, `aria-hidden="true"`) para no tener
+// que remedir en cada fotograma del conteo. El icono nunca se desmonta
+// — su tamaño real se comprueba por estilo (width/opacity), no por
+// presencia/ausencia del <svg>.
+describe("KPIs de Mi trabajo — el icono se encoge de forma continua según lo que MIDE el DOM", () => {
+  // Fecha SIEMPRE dentro del mes en curso (no una fecha fija tipo
+  // "2026-08-10"): "Generado este mes"/"Cobrado este mes" se filtran por
+  // currentMonthKey (ver MiTrabajoTab.jsx) — con una fecha fija, esta
+  // suite se rompía sola en cuanto pasaba el mes en el calendario real,
+  // sin que el código bajo prueba tuviera ningún fallo (bug real
+  // reproducido 2026-09-08, al pasar de agosto a septiembre a mitad de
+  // sesión).
+  const thisMonthDay = (day) => `${new Date().toISOString().slice(0, 7)}-${day}`;
+  const worklogEntry = { id: "w1", date: thisMonthDay("10"), school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" };
+  // El KPI "Cobrado este mes" exige además status "Paid" — sin esta
+  // segunda entrada, ese tercer KPI se queda en "—" (sin datos), lo que
+  // desde el cuarto rediseño del icono (2026-09-08: se oculta cuando no
+  // hay datos) le quita también el icono, y el test de la escala 0 de
+  // abajo necesita comprobarlo en los 3 KPIs a la vez.
+  const paidThisMonthEntry = { id: "w2", date: thisMonthDay("11"), school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Paid" };
+  // El tooltip "Info: Pendiente de cobrar" solo aparece con deuda de
+  // MESES ANTERIORES ("hasCarryOver", MiTrabajoTab.jsx) — necesaria
+  // aparte de worklogEntry (que ahora, al ser de este mes, ya no la
+  // dispara ella sola) para que el test de abajo siga comprobando que
+  // ese icono de tooltip nunca depende de la escala del icono del KPI.
+  const pastPendingEntry = { id: "w3", date: "2020-01-15", school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" };
+
+  afterEach(() => {
+    delete Element.prototype.scrollWidth;
+    delete Element.prototype.clientWidth;
+  });
+
+  // Recuerda: el mock de Element.prototype es GLOBAL (mismo valor para
+  // cualquier elemento), así que tanto la fila (clientWidth) como el
+  // span de medición (scrollWidth) devuelven las mismas cifras. La
+  // fórmula real (MiTrabajoTab.jsx) es
+  // scale = clamp((rowClientWidth - 14 - textScrollWidth) / 14, 0, 1)
+  // (cuarta vuelta, 2026-09-08, con capturas reales del móvil delante:
+  // icono de 10px sin badge, antes 14px sin badge, 10px en una vuelta
+  // anterior, y 28px de badge circular antes de eso — de ahí que el
+  // footprint/zona de transición hayan pasado por 34/36, 14/14, 20/20 y
+  // ahora vuelvan a 14/14). El icono no lleva `rounded-full` (sin badge
+  // de fondo): se localiza por `.h-4`, único en la tarjeta.
+  function mockWidths(scrollWidth, clientWidth) {
+    Object.defineProperty(Element.prototype, "scrollWidth", { configurable: true, get() { return scrollWidth; } });
+    Object.defineProperty(Element.prototype, "clientWidth", { configurable: true, get() { return clientWidth; } });
+  }
+  it("con espacio de sobra, el icono queda a tamaño completo (escala 1) en las 3 tarjetas", async () => {
+    mockWidths(80, 150); // slack = (150-14) - 80 = 56 -> scale 1
+    renderMiTrabajo({ worklog: [worklogEntry] });
+    const tile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
+    const icon = tile.querySelector(".h-4");
+    // Motion no fija el estilo de golpe en el primer render — necesita
+    // al menos un fotograma de su propio ciclo de animación, incluso
+    // con reduced motion (duración ~0), para reflejarlo como estilo
+    // inline (mismo comportamiento ya visto en WhatsNew.test.jsx).
+    await waitFor(() => expect(icon.style.width).toBe("10px"));
+    expect(icon.style.opacity).toBe("1");
+  });
+
+  it("justo en el límite, el icono se oculta del todo (escala 0) en las 3 tarjetas a la vez", async () => {
+    mockWidths(140, 100); // slack = (100-14) - 140 = -54 -> scale 0
+    const user = userEvent.setup();
+    renderMiTrabajo({ worklog: [worklogEntry, paidThisMonthEntry, pastPendingEntry] });
+    const generatedTile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
+    const pendingTile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
+    const collectedTile = screen.getByText("Cobrado este mes").closest("div[class*='rounded-xl']");
+    await waitFor(() => expect(generatedTile.querySelector(".h-4").style.width).toBe("0px"));
+    expect(pendingTile.querySelector(".h-4").style.width).toBe("0px");
+    expect(collectedTile.querySelector(".h-4").style.width).toBe("0px");
+    // "Pendiente de cobrar" tiene además el icono del tooltip ("?") —
+    // ese SÍ debe seguir ahí, es un elemento distinto del icono del KPI,
+    // y nunca depende de esta escala.
+    await user.click(within(pendingTile).getByLabelText(/Info:/));
+    expect(within(pendingTile).getByLabelText(/Ocultar info:/)).toBeInTheDocument();
+  });
+
+  it("en el punto intermedio, el icono queda a una escala estrictamente entre 0 y 1 (encogimiento gradual, no un salto)", async () => {
+    mockWidths(90, 116); // slack = (116-14) - 90 = 12 -> scale 12/14 ≈ 0.857
+    renderMiTrabajo({ worklog: [worklogEntry] });
+    const tile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
+    await waitFor(() => {
+      const width = parseFloat(tile.querySelector(".h-4").style.width);
+      expect(width).toBeGreaterThan(0);
+      expect(width).toBeLessThan(10);
+    });
+  });
+});
+
+// Segunda red de seguridad (2026-09-08, pedido explícito: "los kpis
+// tienen q cumplir q con cifras grandes de 6 dígitos o más no se sale del
+// diseño de la box") — hasta ahora el sistema de arriba solo protegía el
+// ICONO (puede llegar a escala 0), nunca el propio número: un importe de
+// 6+ dígitos podía seguir sin caber ni con el icono ya oculto. Mismo
+// criterio de medir el DOM real (nunca contar caracteres).
+describe("KPIs de Mi trabajo — el propio número se encoge si ni ocultar el icono basta", () => {
+  const worklogEntry = { id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" };
+
+  afterEach(() => {
+    delete Element.prototype.scrollWidth;
+    delete Element.prototype.clientWidth;
+  });
+
+  function mockWidths(scrollWidth, clientWidth) {
+    Object.defineProperty(Element.prototype, "scrollWidth", { configurable: true, get() { return scrollWidth; } });
+    Object.defineProperty(Element.prototype, "clientWidth", { configurable: true, get() { return clientWidth; } });
+  }
+
+  it("con un número que no cabe ni con el icono a escala 0, el número reduce su propio tamaño de letra", async () => {
+    // icono ya a 0 (igual que el test de arriba) y, además, con el icono
+    // ya oculto (availableAtMinIcon = 100 - 6 = 94) el número (300) sigue
+    // sin caber -> textScale = max(0.75, 94/300) = 0.75 (suelo, no llega
+    // ni de lejos a 0.32 real — se queda en el suelo de legibilidad).
+    mockWidths(300, 100);
+    renderMiTrabajo({ worklog: [worklogEntry] });
+    const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
+    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("leading-tight"));
+    await waitFor(() => expect(amount.style.fontSize).toBe("10.5px")); // 14px (text-sm) * 0.75
+  });
+
+  it("con espacio de sobra, el número conserva su tamaño de letra normal (sin estilo inline)", async () => {
+    mockWidths(80, 150); // mismo escenario que "escala 1" arriba
+    renderMiTrabajo({ worklog: [worklogEntry] });
+    const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
+    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("leading-tight"));
+    expect(amount.style.fontSize).toBe("");
+  });
+});
+
 const rowsHook = (rows) => ({
   rows, loaded: true,
   insertRow: vi.fn().mockResolvedValue(rows[0]),
   updateRow: vi.fn().mockResolvedValue(rows[0]),
   deleteRow: vi.fn().mockResolvedValue(),
+  restoreRow: vi.fn().mockResolvedValue(),
   bulkUpdateWhere: vi.fn().mockImplementation(async (predicate) => rows.filter(predicate).length),
   setDefault: vi.fn(),
 });
@@ -24,22 +249,28 @@ const COMMISSION_RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water",
 
 // <Money> separa cifra y símbolo en nodos distintos; este matcher compara
 // el texto combinado del nodo sin espacios (ver PaymentsTab.test.jsx).
+// aria-hidden !== "true" (Fase 13, 2026-09-07): cada MoneyKpiTile tiene
+// además un span invisible con la MISMA cifra ya formateada, solo para
+// medir su ancho real sin depender de la animación de conteo (ver
+// finalTextMeasureRef en MiTrabajoTab.jsx) — sin este filtro, ese span
+// coincide igual de bien que el visible y el matcher encuentra dos.
 function money(expected) {
   const target = expected.replace(/\s+/g, "");
   return (_content, node) => {
     if (!node) return false;
+    if (node.getAttribute("aria-hidden") === "true") return false;
     const text = (el) => el.textContent.replace(/\s+/g, "");
     return text(node) === target && Array.from(node.children).every((child) => text(child) !== target);
   };
 }
 
-function renderMiTrabajo({ worklog = [], comisiones = [], colleaguePayments = [], schools = SCHOOLS } = {}) {
+function renderMiTrabajo({ worklog = [], comisiones = [], colleaguePayments = [], schools = SCHOOLS, rates, commissionRates } = {}) {
   const hooks = {
     worklog: rowsHook(worklog),
     comisiones: rowsHook(comisiones),
     colleaguePayments: rowsHook(colleaguePayments),
-    rates: rowsHook(RATES_ROWS),
-    commissionRates: rowsHook(COMMISSION_RATES_ROWS),
+    rates: rates || rowsHook(RATES_ROWS),
+    commissionRates: commissionRates || rowsHook(COMMISSION_RATES_ROWS),
   };
   render(
     <ToastProvider>
@@ -109,6 +340,42 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     } finally {
       window.matchMedia = original;
     }
+  });
+
+  // pendingTotals (MiTrabajoTab.jsx) no filtra por mes — a diferencia de
+  // Generado/Cobrado, "Pendiente de cobrar" es deuda acumulada de
+  // siempre. Este tooltip es el único de los 3 KPIs: aclara justo esa
+  // diferencia, para que la cifra no parezca "no cuadrar" en cuanto hay
+  // algo sin cobrar de un mes anterior.
+  it("'Pendiente de cobrar' tiene un tooltip que avisa de que incluye pendientes de meses anteriores; los otros dos KPIs no lo tienen", async () => {
+    const user = userEvent.setup();
+    renderMiTrabajo(mixedDataset());
+
+    const tooltipText = "Esta cantidad refleja pagos pendientes de meses anteriores.";
+    expect(screen.queryByText(tooltipText)).not.toBeInTheDocument();
+
+    // Solo el KPI "Pendiente de cobrar" lleva el icono de info — Generado
+    // y Cobrado se quedan igual que antes.
+    expect(screen.getAllByRole("button", { name: /^Info:/ })).toHaveLength(1);
+
+    await user.click(screen.getByRole("button", { name: "Info: Pendiente de cobrar" }));
+    expect(screen.getByText(tooltipText)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Ocultar info: Pendiente de cobrar" }));
+    expect(screen.queryByText(tooltipText)).not.toBeInTheDocument();
+  });
+
+  // Pedido explícito 2026-09-07: si no hay NADA pendiente de un mes
+  // anterior, la cifra de "Pendiente de cobrar" ya cuadra sola con
+  // Generado/Cobrado (ambos del mes en curso) — el tooltip no aclara
+  // nada en ese caso, así que no debe aparecer.
+  it("sin pendientes de meses anteriores (todo lo pendiente es de este mes), el tooltip no aparece", () => {
+    const now = new Date();
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    renderMiTrabajo({
+      worklog: [{ id: "w1", date: `${thisMonth}-01`, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }],
+    });
+    expect(screen.queryByRole("button", { name: /^Info:/ })).not.toBeInTheDocument();
   });
 
   it("un ajuste negativo pendiente ofrece 'Marcar liquidado' en vez de 'Confirmar cobro'", () => {
@@ -257,6 +524,26 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     await waitFor(() => expect(colleaguePayments.deleteRow).toHaveBeenCalledWith("p1"));
   });
 
+  // Bloque baja lógica de movimientos, 2026-09-04: eliminar deja de ser
+  // destructivo — el toast de confirmación ofrece "Deshacer", que debe
+  // llamar a restoreRow() de la tabla correspondiente (no a insertRow, ni
+  // a un segundo deleteRow) para el registro correcto.
+  it("el toast de eliminar ofrece Deshacer, que restaura el movimiento borrado", async () => {
+    const user = userEvent.setup();
+    const { colleaguePayments } = renderMiTrabajo(mixedDataset());
+
+    await user.click(screen.getAllByLabelText("Más acciones")[0]);
+    await user.click(screen.getByRole("menuitem", { name: /Eliminar/ }));
+    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Eliminar" }));
+
+    await waitFor(() => expect(colleaguePayments.deleteRow).toHaveBeenCalledWith("p1"));
+
+    const undoBtn = await screen.findByRole("button", { name: "Deshacer" });
+    await user.click(undoBtn);
+
+    await waitFor(() => expect(colleaguePayments.restoreRow).toHaveBeenCalledWith("p1"));
+  });
+
   it("editar desde el menú '⋯' abre la misma hoja que crear, precargada, y guarda los cambios en la tabla del curso", async () => {
     const user = userEvent.setup();
     const { worklog } = renderMiTrabajo(mixedDataset());
@@ -385,6 +672,28 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     expect(rates.insertRow).toHaveBeenCalledWith(expect.objectContaining({
       school: "PADI Cozumel", activity: "Advanced", currency: "EUR", rate: 30,
     }));
+  });
+
+  // Bug real reportado y confirmado (Fase 9, 2026-09-07): rateFor
+  // (MovementSheet.jsx) buscaba la tarifa de una escuela+curso sin
+  // filtrar por is_active — una tarifa desactivada podía usarse
+  // igualmente para calcular el importe de un movimiento nuevo, en vez
+  // de ofrecer "Añadir tarifa" como si no existiera ninguna vigente.
+  it("una tarifa desactivada no se usa para calcular el importe — se ofrece 'Añadir tarifa' igual que si no existiera ninguna", async () => {
+    const user = userEvent.setup();
+    // Sustituye RATES_ROWS (activa, Open Water) por una desactivada
+    // para el mismo curso.
+    renderMiTrabajo({ rates: rowsHook([{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 20, currency: "EUR", is_active: false }]) });
+
+    await user.click(screen.getByRole("button", { name: "Añadir" })); // abre directo en Curso impartido
+    await user.click(screen.getByLabelText("Curso"));
+    await user.click(screen.getByRole("option", { name: "Open Water" }));
+
+    // No debe aparecer ningún importe calculado (20,00 €, la tarifa
+    // desactivada) — en su lugar, el mismo aviso de "Añadir tarifa" que
+    // se ve cuando no hay tarifa en absoluto.
+    expect(screen.queryByText("20,00 €")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Añadir tarifa" })).toBeInTheDocument();
   });
 
   it("Curso se precarga con la última actividad usada en esa escuela, no con el valor global por defecto", async () => {

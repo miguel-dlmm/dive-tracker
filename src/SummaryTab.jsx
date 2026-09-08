@@ -5,7 +5,7 @@ import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, Tren
 import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr, ExpandableCard } from "./shared";
 import { listItemVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
 import { buildEntriesBySource, comparePeriods } from "./rateCalc";
-import { NAVY, CORAL, GREEN } from "./App";
+import { BRAND_NAVY, CORAL, GREEN, BRAND_SLATE_FILL } from "./App";
 
 // Rediseño 2026-08-29 (ver docs/ADR/0009-rediseno-resumen.md): Resumen deja
 // de mostrar todo a la vez (antes: calendario global + total + 2 desgloses,
@@ -19,15 +19,22 @@ import { NAVY, CORAL, GREEN } from "./App";
 // curso en el sitio, en vez de una segunda sección de página completa
 // dedicada a una sola escuela elegida en un desplegable aparte.
 const NEUTRAL_GRAY = "#94A3B8";
-// MOVEMENT_TYPE_META.companeros.color es un neutro claro pensado para texto
-// (cabeceras de categoría del calendario, sobre fondo blanco) — aquí hace
-// falta relleno sólido con texto blanco encima (botón activo del
-// segmentado, tarjeta de total), donde ese mismo tono no da contraste
-// suficiente. AJUSTE_FILL es un escalón más oscuro de la misma familia
-// neutra (slate), no un color inventado aparte.
-const AJUSTE_FILL = "#64748B";
+// MOVEMENT_TYPE_META.companeros.color (BRAND_SLATE) es un tono pensado
+// para texto/icono pequeño sobre blanco — aquí hace falta relleno sólido
+// con texto blanco encima (botón activo del segmentado, tarjeta de
+// total), donde ese mismo tono no da contraste suficiente.
+// BRAND_SLATE_FILL (colors.js) es el escalón más oscuro de esa misma
+// familia, pensado exactamente para esto.
+const AJUSTE_FILL = BRAND_SLATE_FILL;
 
-const fmtInt = (n) => (n || 0).toLocaleString("es-ES");
+// useGrouping: "always" — sin esto, Intl con locale "es-ES" en modo
+// "auto" (el valor por defecto) no agrupa los miles cuando el primer
+// grupo tendría un solo dígito (bug real reportado: 4.400 se veía bien,
+// pero 1000-9999 salía sin punto de millar, p. ej. "4400" en vez de
+// "4.400" — comprobado en Node: `(4400).toLocaleString("es-ES")` da
+// "4400", `(44000)...` da "44.000". Mismo motivo en formatMoney/Money/
+// MoneyInput de shared.jsx, unificado ahí también).
+const fmtInt = (n) => (n || 0).toLocaleString("es-ES", { useGrouping: "always" });
 
 // MONTHS/MONTHS_SHORT/shortPeriodLabel/periodLabel dependían de arrays
 // fijos en español — ahora dependen de t() (namespace "summary"), así que
@@ -180,7 +187,7 @@ function RankedList({ rows, currencyRows, textColor, emptyLabel, expandedKey, on
             </span>
             <span className="flex shrink-0 items-center gap-2 tabular-nums">
               {!r.allColleague && <span className="text-xs text-gray-400">{fmtInt(r.people)}p</span>}
-              <span className="font-semibold" style={{ color: NAVY }}><MoneyLine totals={r.totals} currencyRows={currencyRows} /></span>
+              <span className="font-semibold" style={{ color: BRAND_NAVY }}><MoneyLine totals={r.totals} currencyRows={currencyRows} /></span>
             </span>
           </button>
           {onToggle && (
@@ -210,7 +217,14 @@ function HeroTotal({ label, period, color, total, previousTotal, canCompare, cur
   const cmp = canCompare ? comparePeriods(total, previousTotal) : null;
 
   return (
-    <div className="rounded-lg p-4 text-white shadow-sm" style={{ backgroundColor: color }}>
+    // rounded-xl, sin sombra (auditoría de estilo 2026-09-04) — misma
+    // familia de "tarjeta con la cifra protagonista, fondo de color sólido"
+    // que PendingCollectionCard (Home/Mi trabajo) y los KpiTile de
+    // Home/Mi trabajo: esta tarjeta era la única con rounded-lg+shadow-sm,
+    // un desvío accidental de ese lenguaje visual (radio distinto, y la
+    // única sombra de un elemento no elevado — el resto de "shadow-*" de la
+    // app son overlays reales: hojas, diálogos, toasts, menús flotantes).
+    <div className="rounded-xl p-4 text-white" style={{ backgroundColor: color }}>
       <div className="text-xs font-medium opacity-80">{label} — {period}</div>
       <div className="mt-1 text-3xl font-bold tabular-nums"><MoneyLine totals={total} currencyRows={currencyRows} /></div>
       {cmp && (
@@ -418,7 +432,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   // exista una segunda escuela, en vez de mostrar una comparación de un
   // único elemento consigo mismo.
   const hasMultipleSchools = schools.rows.length > 1;
-  const sourceColor = source === "total" ? NAVY : SOURCE_META[source].color;
+  const sourceColor = source === "total" ? BRAND_NAVY : SOURCE_META[source].color;
   const sourceLabel = source === "total" ? t("totalCombined") : t("totalOf", { source: SOURCE_META[source].label });
 
   // buildEntriesBySource (rateCalc.js): antes duplicado byte a byte aquí y
@@ -575,7 +589,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   // solo daba el total combinado, sin decir de dónde venía.
   const renderActivityTypes = (activityName) => {
     const rows = groupSum(periodEntries.filter((e) => e.activity === activityName), (e) => SOURCE_META[e._source]?.label || e._source, { withPeople: true });
-    return <RankedList rows={rows} currencyRows={currencies.rows} textColor={(label) => SOURCE_TYPE_COLOR[label] || NAVY} emptyLabel={t("empty.noMovementsInPeriod")} />;
+    return <RankedList rows={rows} currencyRows={currencies.rows} textColor={(label) => SOURCE_TYPE_COLOR[label] || BRAND_NAVY} emptyLabel={t("empty.noMovementsInPeriod")} />;
   };
 
   return (
@@ -615,7 +629,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
                 animate={{ opacity: 1, y: 0, transition: { duration: reducedMotion ? 0.01 : DURATION.xs, ease: EASE.enter } }}
                 exit={{ opacity: 0, y: reducedMotion ? 0 : -6, transition: { duration: reducedMotion ? 0.01 : DURATION.xs, ease: EASE.exit } }}
                 className="block truncate text-center text-sm font-semibold tabular-nums"
-                style={{ color: NAVY }}
+                style={{ color: BRAND_NAVY }}
               >
                 {label}
               </motion.span>
@@ -654,7 +668,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
             key={key}
             onClick={() => setSource(key)}
             className="min-h-9 rounded-md px-3.5 text-sm font-medium transition-colors"
-            style={source === key ? { backgroundColor: key === "total" ? NAVY : SOURCE_META[key].color, color: "white" } : { color: "#6B7280" }}
+            style={source === key ? { backgroundColor: key === "total" ? BRAND_NAVY : SOURCE_META[key].color, color: "white" } : { color: "#6B7280" }}
           >
             {l}
           </button>
@@ -682,7 +696,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
           hereda el defaultOpen cuando "Por escuela" no está, para que
           la pantalla no se quede con todo colapsado de entrada. */}
       {hasMultipleSchools && (
-        <ExpandableCard title={t("sections.bySchool")} icon={Building2} iconColor={NAVY} defaultOpen>
+        <ExpandableCard title={t("sections.bySchool")} icon={Building2} iconColor={BRAND_NAVY} defaultOpen>
           <RankedList
             rows={globalBySchool}
             currencyRows={currencies.rows}
@@ -758,7 +772,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
       )}
 
       {granularity === "mensual" && (
-        <ExpandableCard title={t("sections.calendar")} icon={Calendar} iconColor={NAVY}>
+        <ExpandableCard title={t("sections.calendar")} icon={Calendar} iconColor={BRAND_NAVY}>
           <MonthCalendar
             year={year}
             month={unitIndex}
