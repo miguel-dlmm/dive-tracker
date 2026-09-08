@@ -27,8 +27,8 @@ describe("KPIs de Mi trabajo — la cifra nunca se parte en dos líneas (ni trun
     });
     const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
     // Excluye el span invisible de medición (Fase 13: mismas clases de
-    // texto, pero sin `w-full` — ver finalTextMeasureRef en MiTrabajoTab.jsx).
-    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("w-full"));
+    // texto, pero sin `leading-tight` — ver finalTextMeasureRef en MiTrabajoTab.jsx).
+    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("leading-tight"));
     expect(amount.className).not.toMatch(/truncate/);
     expect(amount.className).not.toMatch(/break-words/);
   });
@@ -158,7 +158,7 @@ describe("KPIs de Mi trabajo — el propio número se encoge si ni ocultar el ic
     mockWidths(300, 100);
     renderMiTrabajo({ worklog: [worklogEntry] });
     const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
-    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("w-full"));
+    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("leading-tight"));
     await waitFor(() => expect(amount.style.fontSize).toBe("10.5px")); // 14px (text-sm) * 0.75
   });
 
@@ -166,7 +166,7 @@ describe("KPIs de Mi trabajo — el propio número se encoge si ni ocultar el ic
     mockWidths(80, 150); // mismo escenario que "escala 1" arriba
     renderMiTrabajo({ worklog: [worklogEntry] });
     const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
-    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("w-full"));
+    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("leading-tight"));
     expect(amount.style.fontSize).toBe("");
   });
 });

@@ -217,6 +217,14 @@ Registro de cambios relevantes de Ocean Flow.
   "pendiente de configurar" que ya está configurado).
 
 ### Fixed
+- **KPIs de Mi trabajo: el cálculo de espacio disponible para el icono
+  y la cifra tenía una referencia circular** — medía un elemento que ya
+  había sido encogido por el propio icono, así que podía encoger u
+  ocultar el icono de forma incorrecta e inconsistente según el
+  dispositivo. Corregido de raíz (mide ahora un contenedor de ancho
+  estable, no afectado por el propio icono/cifra); de paso, la cifra
+  queda centrada de verdad junto al icono, no solo dentro de una caja
+  más ancha que su propio texto.
 - **Ayuda → "Mi perfil" y "Consultar cuánto has generado" tenían
   contenido desactualizado** — "Mi perfil" no mencionaba el carnet de
   instructor (una de las novedades del rediseño), y "Consultar cuánto

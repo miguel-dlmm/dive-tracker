@@ -376,13 +376,16 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
   // así que aquí sí hace falta el px exacto de partida (14/text-sm,
   // 12/text-xs) para calcular el destino.
   const amountBasePx = single ? 14 : 12;
-  // px-3 (antes px-2.5) y w-full en el span de la cifra (Fase 9,
-  // 2026-09-07, feedback real: "cuando hay una cifra grande... queda
-  // demasiado pegada al margen derecho de la box") — sin `w-full`, un
-  // span de solo texto se dimensiona a su propio contenido (no al
-  // ancho real disponible en la fila), así que una cifra partida en dos
-  // líneas podía terminar la línea más larga justo en el borde interior
-  // de la tarjeta, sin ningún margen de seguridad visual.
+  // px-3 (Fase 9, 2026-09-07). El `w-full` que este comentario documentaba
+  // hasta el rediseño de 2026-09-08 (icono+cifra centrados como grupo, en
+  // vez de una fila de ancho completo) se ha retirado — con `w-full` el
+  // span de la cifra reservaba el 100% del ancho de la fila como su
+  // "flex-basis", así que flexbox lo encogía hasta encajar junto al icono
+  // en vez de dimensionarlo a su propio contenido; el resultado era una
+  // caja más ancha que el texto real, con el número pegado a su borde
+  // izquierdo en vez de centrado de verdad junto al icono. Sin `w-full`
+  // (solo `min-w-0 max-w-full`), el span se dimensiona a su contenido, y
+  // es `justify-content:center` en la fila quien centra el grupo entero.
   const finalText = moneyKpiText(totals, currencyRows);
   return (
     <motion.div
@@ -411,9 +414,9 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
           solo una distinta. Nunca se desmonta (sin AnimatePresence): el
           propio ancho/opacidad anima de forma continua con Motion hacia
           el `iconScale` que le llegue. */}
-      <div className="relative flex items-center justify-center gap-1">
+      <div ref={rowMeasureRef} className="relative flex items-center justify-center gap-1">
         <motion.span
-          initial={{ width: 10, opacity: 1 }}
+          initial={false}
           animate={{ width: 10 * iconScale, opacity: iconScale, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.standard } }}
           className="flex h-4 shrink-0 items-center justify-center overflow-hidden"
         >
@@ -425,8 +428,7 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
             formateado, sin animar) y encoge el icono en las 3 tarjetas
             a la vez, liberando ancho para que quepa en una sola línea. */}
         <span
-          ref={rowMeasureRef}
-          className={`w-full min-w-0 ${amountSizeCls} font-bold leading-tight tabular-nums`}
+          className={`min-w-0 max-w-full ${amountSizeCls} font-bold leading-tight tabular-nums`}
           style={{ color: BRAND_NAVY, fontSize: textScale < 1 ? `${amountBasePx * textScale}px` : undefined }}
         >
           {entries.length === 0 ? "—" : single ? (
@@ -816,7 +818,24 @@ export default function MiTrabajoTab({
   // ocultar su icono, el resto hará lo mismo a la vez"). Las rondas
   // anteriores (Fase 6/7/9/11.1/11.2) eran todas binarias — un salto
   // instantáneo o una animación de entrada/salida entre dos estados fijos
-  // (icono a tamaño completo u oculto). Aquí `kpiIconScale` (0 a 1) sigue
+  // (icono a tamaño completo u oculto).
+  //
+  // Bug real corregido de raíz (2026-09-08, reportado desde el iPhone
+  // real del usuario: "no sé qué pasa pero algo no está funcionando...
+  // se ve muy mal"): `rowMeasureRef` apuntaba al SPAN de la cifra, no a
+  // la fila entera — y ese span llevaba `w-full` (ver comentario en
+  // MoneyKpiTile), así que su `clientWidth` no era el ancho disponible
+  // real, era el resultado de que flexbox ya lo hubiera encogido para
+  // dejarle sitio al icono a SU escala actual. La fórmula de abajo
+  // restaba `ICON_FOOTPRINT` una segunda vez sobre un valor que ya lo
+  // tenía descontado — una referencia circular: la medida de cada
+  // fotograma dependía de la escala calculada en el fotograma anterior,
+  // nunca del ancho real y estable de la tarjeta. Fix: `rowMeasureRef`
+  // ahora apunta al `<div>` contenedor de la fila (ver MoneyKpiTile) —
+  // un hijo flex de la tarjeta en `flex-col` con `align-items: stretch`
+  // por defecto, así que su ancho es siempre el 100% del contenido de la
+  // tarjeta, estable pase lo que pase con el icono o la cifra dentro.
+  // Aquí `kpiIconScale` (0 a 1) sigue
   // siendo el mismo principio de fondo que ya demostró funcionar en
   // Safari real (11.2: medir el DOM de verdad, nunca contar caracteres),
   // pero como un valor CONTINUO en vez de dos estados — el icono se

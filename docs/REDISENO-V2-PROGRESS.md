@@ -5043,3 +5043,55 @@ Chrome real: la categoría nueva se expande con el icono correcto
 (ribbon/medalla, no "?"), el contenido coincide con las etiquetas
 reales de la pantalla, "Mi perfil" ya menciona "carnet de instructor,
 idioma y moneda favorita" en su descripción. Sin errores de consola.
+
+### 12.33 — KPIs de Mi trabajo: causa real del comportamiento roto, corregida de raíz
+
+Pedido explícito, con una captura real del iPhone del usuario delante:
+"no sé qué pasa pero algo no está funcionando... mira como sale ahora
+en mi iphone, se ve muy mal los kpi" — más una especificación completa
+del comportamiento esperado (icono que se encoge de forma continua
+según crece la cifra hasta desaparecer, escala compartida entre los 3
+KPI, nada se sale de la caja con importes de 6-7 dígitos, cifras
+centradas) y un pedido de proceso explícito: guardar la versión del
+código actual para poder revertir si la nueva no cumple, y "rediseñar
+desde cero" en vez de otro parche más sobre 12.30/12.31.
+
+**Causa real, no un ajuste más de constantes**: `rowMeasureRef` (la
+referencia que mide "cuánto espacio hay disponible") apuntaba al
+`<span>` de la propia cifra — un elemento con `w-full` dentro de una
+fila flex junto al icono. Ese `clientWidth` NO era el ancho disponible
+real: era el resultado de que flexbox ya lo había encogido para
+dejarle sitio al icono, a la escala del fotograma ANTERIOR. La fórmula
+restaba `ICON_FOOTPRINT` una segunda vez sobre un valor que ya lo
+llevaba descontado — una referencia circular, no un bug de una
+constante mal calibrada. Con datos reales esto podía subestimar el
+espacio disponible y encoger/ocultar el icono de forma incorrecta e
+inconsistente entre renders, exactamente el "no sé qué pasa" reportado.
+
+**Fix de raíz**: `rowMeasureRef` pasa a apuntar al `<div>` contenedor
+de la fila (icono+cifra), no al span de la cifra. Ese div es un hijo
+flex de la tarjeta en `flex-col` con `align-items: stretch` (valor por
+defecto), así que su ancho es siempre el 100% del contenido de la
+tarjeta — estable, nunca afectado por la escala del icono o el tamaño
+de la cifra dentro. Se retira además el `w-full` del span de la cifra
+(ya no hace falta para medir nada, y forzaba una caja más ancha que el
+texto real, dejando la cifra pegada a su borde izquierdo en vez de
+centrada de verdad junto al icono — un segundo síntoma visual del
+mismo diseño equivocado). El icono pasa a `initial={false}` en Motion
+para que la escala correcta esté ya aplicada en el primer pintado, sin
+ninguna animación de encogimiento visible nada más cargar — pedido
+explícito ("en primera carga aparecerán todos los elementos").
+
+**Verificado**: 867/867 tests (3 tests existentes actualizados — el
+span visible de la cifra se localiza ahora por `leading-tight`, no por
+`w-full`, que ya no lleva), lint 0 errores, build correcto. Confirmado
+en mobile real (Playwright, iPhone 14 Pro Max) contra datos reales de
+TEST: el ancho de la fila medido (`rowWidth`) sale idéntico en las 3
+tarjetas (101px), confirmando que ya es una medida estable e
+independiente del contenido de cada una — antes de este fix no había
+ninguna garantía de eso. Ninguna cifra real (5-6 dígitos) se sale del
+recuadro de su tarjeta (`overflowsCard: false` verificado por código,
+no solo a ojo), sin errores de consola. La versión anterior del
+archivo se guardó fuera del repositorio durante el rediseño y se
+eliminó tras confirmar que la nueva cumple con la especificación
+completa, tal como se pidió.
