@@ -5095,3 +5095,42 @@ no solo a ojo), sin errores de consola. La versión anterior del
 archivo se guardó fuera del repositorio durante el rediseño y se
 eliminó tras confirmar que la nueva cumple con la especificación
 completa, tal como se pidió.
+
+### 12.34 — Icono de KPI a 14px (tercera vuelta) + Training Records de OW sin el campo Certificación
+
+Dos correcciones puntuales encargadas en el mismo lote, sin relación
+entre sí.
+
+**KPIs de Mi trabajo — tamaño del icono**: pedido explícito tras
+confirmar 12.33 ("coloca el icono estéticamente al tamaño q creas al
+lado de la cifra, ambos centrados en la caja"). El icono sube de 10px
+(sin badge, igual que el icono fijo de la etiqueta) a **14px** — el
+mismo tamaño de fuente que la propia cifra en su variante más común
+(`text-sm`), para que lea como "de la misma familia visual" que el
+número en vez de verse desproporcionado. `ICON_FOOTPRINT`/
+`TRANSITION_ZONE` suben de 14/14 a 20/20 (14px de icono + 6px de gap,
+antes 10+4) para seguir siendo proporcionales.
+
+**Training Records de Open Water — quitar "Certificación"**: pedido
+explícito, con una segunda vuelta que confirmó la interpretación
+correcta ("quita directamente ese campo del formulario", no solo la
+opción "Scuba Diver" dentro de él). Con solo una opción real quedando
+("Open Water Diver"), el `RadioChoice` completo (sección
+"Certificación") no ofrecía ninguna elección de verdad — se retira
+entero de `TrainingRecordsTab.jsx`. `recordConfig.js` ya fijaba
+`upgrade: "openWaterDiver"` por defecto cuando la plantilla tiene
+`upgradeCheckboxes`, así que el PDF sigue marcando exactamente la
+misma casilla que antes ("Open Water Diver"), nunca "Scuba Diver" —
+sin ningún cambio de comportamiento en el documento generado, solo se
+retira una elección que ya no existía de verdad. Las 3 claves de
+traducción que quedaban huérfanas (`certificacion`, `openWaterDiver`,
+`scubaDiver` bajo `studentSheet`) se eliminan en los 7 idiomas.
+
+**Verificado**: 867/867 tests (selectores/valores actualizados en
+`MiTrabajoTab.test.jsx` para el nuevo tamaño de icono — `.h-5`/14px en
+vez de `.h-4`/10px; 142/142 tests de Training Records sin cambios,
+ninguno dependía del campo retirado), lint 0 errores, build correcto.
+Confirmado en mobile real (Playwright, iPhone 14 Pro Max) contra datos
+reales de TEST: el ancho de fila sigue midiendo idéntico en las 3
+tarjetas (101px) con el nuevo tamaño de icono, ninguna cifra real se
+sale del recuadro, sin errores de consola.

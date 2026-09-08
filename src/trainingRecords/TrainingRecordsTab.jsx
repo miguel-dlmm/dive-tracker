@@ -781,22 +781,6 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
             </section>
           )}
 
-          {templateMap.upgradeCheckboxes && (
-            <section>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.certificacion")}</h3>
-              <RadioChoice
-                value={config.upgrade}
-                onChange={(v) => updateConfig({ upgrade: v })}
-                options={[
-                  { value: "openWaterDiver", label: t("studentSheet.openWaterDiver") },
-                  { value: "scubaDiver", label: t("studentSheet.scubaDiver") },
-                ]}
-                accentColor={accentColor}
-              />
-              <FieldError message={configErrors.upgrade} />
-            </section>
-          )}
-
           {templateMap.courseVariant && (
             <section>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentSheet.varianteCurso")}</h3>

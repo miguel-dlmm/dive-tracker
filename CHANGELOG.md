@@ -54,6 +54,14 @@ Registro de cambios relevantes de Ocean Flow.
   altas masivas automatizadas (Vercel BotID).
 
 ### Changed
+- **KPIs de Mi trabajo**: el icono junto a cada cifra pasa de 10 a 14px
+  — el mismo tamaño de fuente que el propio número, para que se vea
+  como parte del mismo elemento en vez de desproporcionadamente
+  pequeño.
+- **Training Records de Open Water**: se retira el paso "Certificación"
+  (elegir entre Open Water Diver / Scuba Diver) — con Scuba Diver ya
+  descartado, solo quedaba una opción real, así que no había nada que
+  elegir. El documento sigue marcando "Open Water Diver", como siempre.
 - **Training Records en Home**: la tarjeta con borde y degradado pasa a
   ser una fila fina, sin tarjeta propia — igual de accesible, mucho
   menos pesada visualmente. Sin ningún documento generado todavía es una

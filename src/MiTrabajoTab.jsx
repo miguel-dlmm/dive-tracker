@@ -393,34 +393,35 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
       className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
     >
-      {/* Segunda vuelta (2026-09-08, experimento explícito — "puede ser
-          que esta última prueba no me guste y te pida revertirla"):
-          antes, insignia circular de 28px con icono a 18px. Ahora, icono
-          pequeño SIN badge (mismo tamaño que el icono fijo de la
-          etiqueta, más abajo — 10px, no un tercer tamaño nuevo),
-          pegado a la cifra y todo el bloque centrado en la tarjeta
-          (`justify-center`, no ocupa el ancho completo) — pedido
-          explícito: "poner el icono en pequeño como está pero al lado
-          de la cifra, y que todo quede centrado". relative: contiene el
-          span invisible de medición (position:absolute, ver más abajo)
-          sin que afecte a la posición de nada visible.
+      {/* Tercera vuelta (2026-09-08, pedido explícito tras confirmar la
+          segunda: "coloca el icono estéticamente al tamaño q creas al
+          lado de la cifra, ambos centrados en la caja"): 14px — el
+          mismo tamaño de fuente que la propia cifra en su variante más
+          común (`text-sm` de una sola moneda), para que el icono lea
+          como "de la misma familia visual" que el número en vez de
+          verse desproporcionadamente pequeño (10px, el tamaño del icono
+          fijo de la etiqueta) o exagerado (18px, la vuelta anterior con
+          insignia circular). Sin badge de fondo — sigue siendo un icono
+          suelto, pegado a la cifra, con el bloque entero centrado en la
+          tarjeta (`justify-center`, no ocupa el ancho completo).
+          relative: contiene el span invisible de medición (position:
+          absolute, ver más abajo) sin que afecte a la posición de nada
+          visible.
           iconScale (0 a 1, ver kpiIconScale en MiTrabajoTab): mismo
-          mecanismo de antes, solo que ahora sobre un icono de 10px (no
-          28) — con tan poco que encoger, en la práctica solo entra en
-          juego con importes ya bastante largos. Calculado sobre las 3
-          cifras a la vez, no cada tarjeta por su cuenta — si una cifra
-          crece tanto que hace falta ocultar el icono, las 3 tarjetas
-          cambian juntas, para no romper la alineación entre ellas con
-          solo una distinta. Nunca se desmonta (sin AnimatePresence): el
-          propio ancho/opacidad anima de forma continua con Motion hacia
-          el `iconScale` que le llegue. */}
-      <div ref={rowMeasureRef} className="relative flex items-center justify-center gap-1">
+          mecanismo de siempre, sobre el nuevo tamaño de 14px. Calculado
+          sobre las 3 cifras a la vez, no cada tarjeta por su cuenta — si
+          una cifra crece tanto que hace falta ocultar el icono, las 3
+          tarjetas cambian juntas, para no romper la alineación entre
+          ellas con solo una distinta. Nunca se desmonta (sin
+          AnimatePresence): el propio ancho/opacidad anima de forma
+          continua con Motion hacia el `iconScale` que le llegue. */}
+      <div ref={rowMeasureRef} className="relative flex items-center justify-center gap-1.5">
         <motion.span
           initial={false}
-          animate={{ width: 10 * iconScale, opacity: iconScale, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.standard } }}
-          className="flex h-4 shrink-0 items-center justify-center overflow-hidden"
+          animate={{ width: 14 * iconScale, opacity: iconScale, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.standard } }}
+          className="flex h-5 shrink-0 items-center justify-center overflow-hidden"
         >
-          <Icon size={10} style={{ color }} aria-hidden="true" />
+          <Icon size={14} style={{ color }} aria-hidden="true" />
         </motion.span>
         {/* Sin `break-words` (Fase 11.2): la cifra ya no se parte nunca
             en dos líneas — si no cabe con el icono puesto, el padre lo
@@ -856,16 +857,16 @@ export default function MiTrabajoTab({
       .map((totals) => moneyKpiText(totals, currencies.rows))
       .reduce((max, text) => (text.length > max.length ? text : max), "");
   }, [monthGeneratedTotals, pendingTotals, monthCollectedTotals, currencies.rows]);
-  // ICON_FOOTPRINT: 10px del icono (segunda vuelta, ver comentario en
-  // MoneyKpiTile — antes 28px de badge) + 4px del gap (gap-1) que deja
-  // de hacer falta cuando el icono llega a 0. TRANSITION_ZONE: cuántos
-  // píxeles de margen antes de tocar el borde se usan para pasar de
-  // escala 1 a 0 — ni un salto brusco (0px) ni una transición tan larga
-  // que el icono ya se vea pequeño con cifras que sobran de espacio de
-  // sobra (proporcional al propio tamaño del icono, igual criterio que
-  // antes).
-  const ICON_FOOTPRINT = 14;
-  const TRANSITION_ZONE = 14;
+  // ICON_FOOTPRINT: 14px del icono (tercera vuelta, ver comentario en
+  // MoneyKpiTile — antes 10px sin badge, y 28px de badge circular antes
+  // de eso) + 6px del gap (gap-1.5) que deja de hacer falta cuando el
+  // icono llega a 0. TRANSITION_ZONE: cuántos píxeles de margen antes de
+  // tocar el borde se usan para pasar de escala 1 a 0 — ni un salto
+  // brusco (0px) ni una transición tan larga que el icono ya se vea
+  // pequeño con cifras que sobran de espacio de sobra (proporcional al
+  // propio tamaño del icono, igual criterio que antes).
+  const ICON_FOOTPRINT = 20;
+  const TRANSITION_ZONE = 20;
   // Segunda red de seguridad (2026-09-08, pedido explícito: "los kpis
   // tienen q cumplir q con cifras grandes de 6 dígitos o más no se sale
   // del diseño de la box") — el icono ya puede llegar a 0 (arriba), pero
@@ -895,7 +896,7 @@ export default function MiTrabajoTab({
     }
     setKpiIconScale(minScale);
 
-    const iconAndGap = 10 * minScale + 4;
+    const iconAndGap = 14 * minScale + 6;
     setKpiTextScale(
       rows.map(({ rowEl, textEl }) => {
         if (!rowEl || !textEl) return 1;

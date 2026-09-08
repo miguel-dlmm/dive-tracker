@@ -80,38 +80,39 @@ describe("KPIs de Mi trabajo — el icono se encoge de forma continua según lo 
   // cualquier elemento), así que tanto la fila (clientWidth) como el
   // span de medición (scrollWidth) devuelven las mismas cifras. La
   // fórmula real (MiTrabajoTab.jsx) es
-  // scale = clamp((rowClientWidth - 14 - textScrollWidth) / 14, 0, 1)
-  // (segunda vuelta, 2026-09-08: icono de 10px sin badge, antes 28px con
-  // badge circular — de ahí que el footprint/zona de transición también
-  // bajaran de 34/36 a 14/14). El icono ya no lleva `rounded-full` (sin
-  // badge de fondo): se localiza por `.h-4`, único en la tarjeta.
+  // scale = clamp((rowClientWidth - 20 - textScrollWidth) / 20, 0, 1)
+  // (tercera vuelta, 2026-09-08: icono de 14px sin badge, antes 10px sin
+  // badge, y 28px de badge circular antes de eso — de ahí que el
+  // footprint/zona de transición bajaran de 34/36 a 14/14 y ahora suban
+  // a 20/20). El icono no lleva `rounded-full` (sin badge de fondo): se
+  // localiza por `.h-5`, único en la tarjeta.
   function mockWidths(scrollWidth, clientWidth) {
     Object.defineProperty(Element.prototype, "scrollWidth", { configurable: true, get() { return scrollWidth; } });
     Object.defineProperty(Element.prototype, "clientWidth", { configurable: true, get() { return clientWidth; } });
   }
   it("con espacio de sobra, el icono queda a tamaño completo (escala 1) en las 3 tarjetas", async () => {
-    mockWidths(80, 150); // slack = (150-14) - 80 = 56 -> scale 1
+    mockWidths(80, 150); // slack = (150-20) - 80 = 50 -> scale 1
     renderMiTrabajo({ worklog: [worklogEntry] });
     const tile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
-    const icon = tile.querySelector(".h-4");
+    const icon = tile.querySelector(".h-5");
     // Motion no fija el estilo de golpe en el primer render — necesita
     // al menos un fotograma de su propio ciclo de animación, incluso
     // con reduced motion (duración ~0), para reflejarlo como estilo
     // inline (mismo comportamiento ya visto en WhatsNew.test.jsx).
-    await waitFor(() => expect(icon.style.width).toBe("10px"));
+    await waitFor(() => expect(icon.style.width).toBe("14px"));
     expect(icon.style.opacity).toBe("1");
   });
 
   it("justo en el límite, el icono se oculta del todo (escala 0) en las 3 tarjetas a la vez", async () => {
-    mockWidths(140, 100); // slack = (100-14) - 140 = -54 -> scale 0
+    mockWidths(140, 100); // slack = (100-20) - 140 = -60 -> scale 0
     const user = userEvent.setup();
     renderMiTrabajo({ worklog: [worklogEntry] });
     const generatedTile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
     const pendingTile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
     const collectedTile = screen.getByText("Cobrado este mes").closest("div[class*='rounded-xl']");
-    await waitFor(() => expect(generatedTile.querySelector(".h-4").style.width).toBe("0px"));
-    expect(pendingTile.querySelector(".h-4").style.width).toBe("0px");
-    expect(collectedTile.querySelector(".h-4").style.width).toBe("0px");
+    await waitFor(() => expect(generatedTile.querySelector(".h-5").style.width).toBe("0px"));
+    expect(pendingTile.querySelector(".h-5").style.width).toBe("0px");
+    expect(collectedTile.querySelector(".h-5").style.width).toBe("0px");
     // "Pendiente de cobrar" tiene además el icono del tooltip ("?") —
     // ese SÍ debe seguir ahí, es un elemento distinto del icono del KPI,
     // y nunca depende de esta escala.
@@ -120,13 +121,13 @@ describe("KPIs de Mi trabajo — el icono se encoge de forma continua según lo 
   });
 
   it("en el punto intermedio, el icono queda a una escala estrictamente entre 0 y 1 (encogimiento gradual, no un salto)", async () => {
-    mockWidths(90, 110); // slack = (110-14) - 90 = 6 -> scale 6/14 ≈ 0.429
+    mockWidths(90, 116); // slack = (116-20) - 90 = 6 -> scale 6/20 = 0.3
     renderMiTrabajo({ worklog: [worklogEntry] });
     const tile = screen.getByText("Generado este mes").closest("div[class*='rounded-xl']");
     await waitFor(() => {
-      const width = parseFloat(tile.querySelector(".h-4").style.width);
+      const width = parseFloat(tile.querySelector(".h-5").style.width);
       expect(width).toBeGreaterThan(0);
-      expect(width).toBeLessThan(10);
+      expect(width).toBeLessThan(14);
     });
   });
 });
@@ -152,8 +153,8 @@ describe("KPIs de Mi trabajo — el propio número se encoge si ni ocultar el ic
 
   it("con un número que no cabe ni con el icono a escala 0, el número reduce su propio tamaño de letra", async () => {
     // icono ya a 0 (igual que el test de arriba) y, además, con el icono
-    // ya oculto (availableAtMinIcon = 100 - 4 = 96) el número (300) sigue
-    // sin caber -> textScale = max(0.75, 96/300) = 0.75 (suelo, no llega
+    // ya oculto (availableAtMinIcon = 100 - 6 = 94) el número (300) sigue
+    // sin caber -> textScale = max(0.75, 94/300) = 0.75 (suelo, no llega
     // ni de lejos a 0.32 real — se queda en el suelo de legibilidad).
     mockWidths(300, 100);
     renderMiTrabajo({ worklog: [worklogEntry] });
