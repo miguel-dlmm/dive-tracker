@@ -356,20 +356,54 @@ it("regenerar UN alumno (sin pasar por 'Generar para todos') también suma al co
   expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount:u1")).toBe("1");
 }, 15000);
 
-it("el listado y los documentos ya generados sobreviven a un remontaje (recarga de página)", async () => {
+// Bug real reportado 2026-09-08: "al cerrar el training records resetea
+// completamente el formulario a añadir plantilla y borra los alumnos
+// también". Causa real: persistSession guardaba pdfBytes de cada alumno
+// ya generado (varios cientos de KB en base64 cada uno) — con un roster
+// de unos pocos alumnos generados, el conjunto superaba fácilmente la
+// cuota de sessionStorage (5-10MB según navegador); sessionStorage.setItem
+// lanza QuotaExceededError al superarla, capturado en silencio, así que
+// ESE guardado entero se descartaba — la próxima vez que se abría esta
+// pantalla, loadStoredSession() encontraba el último valor que sí había
+// cabido (a veces ninguno: plantilla y roster vacíos). Arreglado dejando
+// de persistir pdfBytes/generatedAt (mismo criterio que ya usaban
+// selectTemplate/requestTemplateChange al cambiar de plantilla: un PDF
+// ya generado es barato de rehacer, perder el roster entero no) — el
+// trade-off real es que un documento ya generado SÍ deja de estar listo
+// para descargar tras un remontaje (hay que pulsar "Regenerar TR" de
+// nuevo), a cambio de que el roster y la plantilla elegida nunca se
+// pierdan por superar la cuota.
+it("el listado y la plantilla elegida sobreviven a un remontaje (recarga de página) — un PDF ya generado no, hay que regenerarlo", async () => {
   const user = userEvent.setup();
   const { unmount } = renderTab();
   await selectTemplateAndFillSharedConfig(user);
   await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
   await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
   await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+  expect(screen.getByRole("button", { name: "Descargar PDF" })).toBeInTheDocument();
   unmount();
 
   renderTab();
   expect(await screen.findByText("Ana Garcia")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Descargar PDF" })).toBeInTheDocument();
   // La plantilla ya elegida se muestra como texto fijo, no vuelve a la lista de elección.
   expect(screen.getByText("Open Water Diver", { selector: "p" })).toBeInTheDocument();
+  // El PDF ya generado no sobrevive (a propósito, ver nota de arriba) —
+  // "Descargar PDF" no aparece hasta regenerarlo.
+  expect(screen.queryByRole("button", { name: "Descargar PDF" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Regenerar TR" })).toBeInTheDocument();
+}, 15000);
+
+it("nunca persiste pdfBytes en sessionStorage (evita superar su cuota con varios PDF generados)", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+
+  const stored = JSON.parse(sessionStorage.getItem("oceanpulse:trainingRecordsSession"));
+  expect(stored.students).toHaveLength(1);
+  expect(stored.students[0].pdfBytes).toBeNull();
 }, 15000);
 
 it("pide confirmación antes de cambiar de plantilla solo si ya hay progreso rellenado que se perdería", async () => {

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo, useCallback, createContext, useCo
 import { useTranslation, withTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, Waves, Anchor, Sailboat, Compass, Fish, GraduationCap, Handshake, Users } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, Waves, Anchor, Sailboat, Compass, Fish, GraduationCap, Handshake, Users } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
@@ -464,7 +464,13 @@ export function Money({ amount, code, currencyRows, className = "", muted = fals
 // mismo <label> que el campo (para que el campo siga teniendo nombre
 // accesible por asociación); sin esto, el clic en el icono también
 // activaría/enfocaría el campo por delegación del <label>.
-export function Field({ label, hint, children }) {
+// required (2026-09-08, pedido explícito en Registro): asterisco visual
+// junto a la etiqueta, sin afectar a la semántica real de "obligatorio"
+// — esa la sigue dando el propio `required` del `<input>`, que ya
+// anuncian los lectores de pantalla al enfocar el campo. aria-hidden en
+// el asterisco (convención #7, CLAUDE.md): es un refuerzo visual para
+// quien ve la pantalla, no información nueva para quien no la ve.
+export function Field({ label, hint, required = false, children }) {
   const { t } = useTranslation("common");
   // useFloatingDropdown, no un position:absolute casero — el hint anclado
   // con left:0 y ancho fijo (w-56) se salía de la pantalla en cualquier
@@ -479,6 +485,7 @@ export function Field({ label, hint, children }) {
     <label className="flex flex-col gap-1 text-sm">
       <span className="flex items-center gap-0.5 text-xs font-medium text-gray-500">
         {label}
+        {required && <span aria-hidden="true" className="text-red-400">*</span>}
         {hint && (
           // El objetivo táctil de 44×44 (convención #7, CLAUDE.md) se logra
           // con un botón ABSOLUTO superpuesto a un icono de 14×14 en vez de
@@ -641,6 +648,25 @@ function parseDateStr(s) {
 // Records) — ver la nota junto a useFloatingPosition. El resto de usos
 // (el campo Fecha normal de un formulario, con espacio de sobra a su
 // derecha) siguen con el "left" por defecto, sin cambio de comportamiento.
+// Tres niveles de navegación — década → año → mes → día (pedido
+// explícito 2026-09-08, fecha de nacimiento: "poder navegar en bloques
+// de 10 años, luego elegir el mes, y luego el día, para no generar
+// tantos clics como hace falta ahora"). Sustituye al salto de año
+// (`«`/`»`) que ya existía junto al mes en el nivel de día: aquella
+// solución seguía obligando a un clic POR AÑO para llegar lejos (una
+// fecha de nacimiento típica está a 20-40 años de hoy). Con esto, llegar
+// a cualquier año está a como mucho unos pocos saltos de década, sin
+// perder la vía rápida a un día reciente que ya cubren los accesos
+// directos de arriba.
+// Mismo lenguaje visual en los 3 niveles (nunca uno nuevo por nivel):
+// cabecera con flecha-etiqueta-flecha, cuadrícula de celdas de 44px con
+// el mismo criterio de "seleccionado" (círculo/píldora BRAND_NAVY
+// relleno) y "actual" (borde BRAND_NAVY) que ya usa la cuadrícula de
+// días — MonthCalendar/RowMenu ya establecen ese mismo vocabulario en
+// otras partes de la app (convención de shared.jsx, no un componente
+// nuevo por caso).
+const DATE_LEVELS = { DAY: "day", MONTH: "month", YEAR: "year" };
+
 export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "left", quickAccess = true }) {
   const { t, months, weekdays } = useCalendarLabels();
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown(align);
@@ -648,20 +674,22 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "l
   const today = new Date();
   const [viewY, setViewY] = useState(parsed?.y ?? today.getFullYear());
   const [viewM, setViewM] = useState(parsed?.m ?? today.getMonth());
+  const [level, setLevel] = useState(DATE_LEVELS.DAY);
 
   useEffect(() => {
     if (!open) return;
     const p = parseDateStr(value);
     setViewY(p?.y ?? today.getFullYear());
     setViewM(p?.m ?? today.getMonth());
+    setLevel(DATE_LEVELS.DAY);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const daysInMonth = new Date(viewY, viewM + 1, 0).getDate();
   const firstWeekday = (new Date(viewY, viewM, 1).getDay() + 6) % 7;
-  const cells = [];
-  for (let i = 0; i < firstWeekday; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  const dayCells = [];
+  for (let i = 0; i < firstWeekday; i++) dayCells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) dayCells.push(d);
 
   const display = parsed ? `${pad2(parsed.d)}/${pad2(parsed.m + 1)}/${parsed.y}` : (placeholder || t("datePicker.defaultPlaceholder"));
 
@@ -669,6 +697,8 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "l
     onChange(`${viewY}-${pad2(viewM + 1)}-${pad2(d)}`);
     setOpen(false);
   };
+  const selectMonth = (m) => { setViewM(m); setLevel(DATE_LEVELS.DAY); };
+  const selectYear = (y) => { setViewY(y); setLevel(DATE_LEVELS.MONTH); };
   // Accesos rápidos (feedback 2026-09-07: "añade... los días hoy, ayer,
   // mañana y antes de ayer... ahora solo sale hoy") — un único offset en
   // días respecto a hoy, usando `addDays`/`todayStr` (ya existían para
@@ -680,15 +710,46 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "l
     onChange(addDays(todayStr(), offsetDays));
     setOpen(false);
   };
-  const goPrev = () => { if (viewM === 0) { setViewM(11); setViewY(viewY - 1); } else setViewM(viewM - 1); };
-  const goNext = () => { if (viewM === 11) { setViewM(0); setViewY(viewY + 1); } else setViewM(viewM + 1); };
-  // Salto de año (feedback 2026-09-07, fecha de nacimiento: "poder ir
-  // atrás varios años fácilmente" en vez de navegar mes a mes) — un
-  // segundo par de flechas junto al de mes, útil en cualquier fecha
-  // lejana, no solo nacimiento (a diferencia de quickAccess, que sí es
-  // específico de ese caso).
+  const goPrevMonth = () => { if (viewM === 0) { setViewM(11); setViewY(viewY - 1); } else setViewM(viewM - 1); };
+  const goNextMonth = () => { if (viewM === 11) { setViewM(0); setViewY(viewY + 1); } else setViewM(viewM + 1); };
   const goPrevYear = () => setViewY(viewY - 1);
   const goNextYear = () => setViewY(viewY + 1);
+  const decadeStart = Math.floor(viewY / 10) * 10;
+  const goPrevDecade = () => setViewY(viewY - 10);
+  const goNextDecade = () => setViewY(viewY + 10);
+  // 12 celdas: los 10 años de la década + uno de cada lado (atenuados,
+  // pero igual de pulsables — saltan a la década vecina) para que la
+  // rejilla nunca quede con un hueco raro al principio o al final,
+  // mismo criterio que las celdas vacías del mes en el nivel de día.
+  const yearCells = [];
+  for (let i = -1; i <= 10; i++) yearCells.push(decadeStart + i);
+  // Cabecera de los 3 niveles: SIEMPRE flecha-etiqueta-flecha, para que
+  // decada uno se sienta "el mismo selector", solo cambia qué unidad
+  // avanzan las flechas y si la etiqueta central abre un nivel más
+  // amplio (día→mes→año) o ya es el más amplio (año, sin más adónde ir).
+  const header = {
+    [DATE_LEVELS.DAY]: {
+      onPrev: goPrevMonth, onNext: goNextMonth,
+      prevLabel: t("calendar.prevMonth"), nextLabel: t("calendar.nextMonth"),
+      label: `${months[viewM]} ${viewY}`,
+      onLabelClick: () => setLevel(DATE_LEVELS.MONTH),
+      labelAriaLabel: t("datePicker.chooseMonthAriaLabel"),
+    },
+    [DATE_LEVELS.MONTH]: {
+      onPrev: goPrevYear, onNext: goNextYear,
+      prevLabel: t("calendar.prevYear"), nextLabel: t("calendar.nextYear"),
+      label: String(viewY),
+      onLabelClick: () => setLevel(DATE_LEVELS.YEAR),
+      labelAriaLabel: t("datePicker.chooseYearAriaLabel"),
+    },
+    [DATE_LEVELS.YEAR]: {
+      onPrev: goPrevDecade, onNext: goNextDecade,
+      prevLabel: t("calendar.prevDecade"), nextLabel: t("calendar.nextDecade"),
+      label: `${decadeStart}–${decadeStart + 9}`,
+      onLabelClick: null,
+      labelAriaLabel: null,
+    },
+  }[level];
 
   return (
     <>
@@ -732,7 +793,7 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "l
             puede envolver a 2 líneas DENTRO del mismo botón de 44px de
             alto (`leading-tight`, sin `whitespace-nowrap`) — la fila
             entera sigue midiendo una sola altura de fila, no dos. */}
-        {quickAccess && (
+        {quickAccess && level === DATE_LEVELS.DAY && (
           <div className="mb-2 flex gap-1.5">
             {[
               { offset: -2, key: "dayBeforeYesterday" },
@@ -752,58 +813,124 @@ export function DatePicker({ value, onChange, placeholder, ariaLabel, align = "l
             ))}
           </div>
         )}
-        {/* Salto de año (`«`/`»`) junto al de mes (`‹`/`›`) — pedido
-            explícito para fecha de nacimiento ("poder ir atrás varios
-            años fácilmente"), pero útil en cualquier fecha lejana, así
-            que no es condicional a `quickAccess`: siempre visible. */}
+        {/* Cabecera común a los 3 niveles — flecha/etiqueta/flecha. La
+            etiqueta central abre el nivel más amplio (día→mes→año) salvo
+            en año, que ya es el tope; las flechas siempre avanzan la
+            unidad natural de CADA nivel (mes en día, año en mes, década
+            en año) — nunca un salto de tamaño distinto según el nivel,
+            para que se sienta un único mecanismo, no tres. */}
         <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center">
-            <button type="button" onClick={goPrevYear} aria-label={t("calendar.prevYear")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronsLeft size={16} /></button>
-            <button type="button" onClick={goPrev} aria-label={t("calendar.prevMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
-          </div>
-          <span className="text-sm font-semibold" style={{ color: BRAND_NAVY }}>{months[viewM]} {viewY}</span>
-          <div className="flex items-center">
-            <button type="button" onClick={goNext} aria-label={t("calendar.nextMonth")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
-            <button type="button" onClick={goNextYear} aria-label={t("calendar.nextYear")} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronsRight size={16} /></button>
-          </div>
+          <button type="button" onClick={header.onPrev} aria-label={header.prevLabel} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronLeft size={16} /></button>
+          {header.onLabelClick ? (
+            <button type="button" onClick={header.onLabelClick} aria-label={header.labelAriaLabel} className="rounded-full px-2 py-1 text-sm font-semibold hover:bg-gray-50" style={{ color: BRAND_NAVY }}>
+              {header.label}
+            </button>
+          ) : (
+            <span className="px-2 py-1 text-sm font-semibold" style={{ color: BRAND_NAVY }}>{header.label}</span>
+          )}
+          <button type="button" onClick={header.onNext} aria-label={header.nextLabel} className="-m-1.5 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600"><ChevronRight size={16} /></button>
         </div>
-        <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
-          {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}
-        </div>
-        {/* Celdas de día: círculo dentro de un objetivo táctil de 44px
-            (h-11), no un rectángulo `rounded-md` plano — mismo patrón que
-            la cuadrícula de MonthCalendar (más abajo en este archivo), en
-            vez de un segundo vocabulario visual propio del selector. */}
-        <div className="grid grid-cols-7 gap-0.5">
-          {cells.map((d, i) => {
-            const isSelected = d && parsed && parsed.y === viewY && parsed.m === viewM && parsed.d === d;
-            const isToday = d && viewY === today.getFullYear() && viewM === today.getMonth() && d === today.getDate();
-            return (
-              <button
-                type="button"
-                key={i}
-                disabled={!d}
-                aria-label={d ? t("datePicker.dayAriaLabel", { day: d, month: months[viewM] }) : undefined}
-                aria-selected={isSelected || undefined}
-                onClick={() => d && selectDay(d)}
-                className="flex h-11 items-center justify-center transition-transform active:scale-90"
-              >
-                {d && (
-                  <span
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-xs"
-                    style={isSelected
-                      ? { backgroundColor: BRAND_NAVY, color: "white", fontWeight: 600 }
-                      : isToday
-                      ? { border: `1.5px solid ${BRAND_NAVY}`, color: BRAND_NAVY, fontWeight: 600 }
-                      : { color: "#374151" }}
+        {level === DATE_LEVELS.DAY && (
+          <>
+            <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-gray-400">
+              {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}
+            </div>
+            {/* Celdas de día: círculo dentro de un objetivo táctil de 44px
+                (h-11), no un rectángulo `rounded-md` plano — mismo patrón
+                que la cuadrícula de MonthCalendar (más abajo en este
+                archivo), en vez de un segundo vocabulario visual propio
+                del selector. */}
+            <div className="grid grid-cols-7 gap-0.5">
+              {dayCells.map((d, i) => {
+                const isSelected = d && parsed && parsed.y === viewY && parsed.m === viewM && parsed.d === d;
+                const isToday = d && viewY === today.getFullYear() && viewM === today.getMonth() && d === today.getDate();
+                return (
+                  <button
+                    type="button"
+                    key={i}
+                    disabled={!d}
+                    aria-label={d ? t("datePicker.dayAriaLabel", { day: d, month: months[viewM] }) : undefined}
+                    aria-selected={isSelected || undefined}
+                    onClick={() => d && selectDay(d)}
+                    className="flex h-11 items-center justify-center transition-transform active:scale-90"
                   >
-                    {d}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+                    {d && (
+                      <span
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-xs"
+                        style={isSelected
+                          ? { backgroundColor: BRAND_NAVY, color: "white", fontWeight: 600 }
+                          : isToday
+                          ? { border: `1.5px solid ${BRAND_NAVY}`, color: BRAND_NAVY, fontWeight: 600 }
+                          : { color: "#374151" }}
+                      >
+                        {d}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+        {/* Meses: 2 columnas x 6 filas — el nombre completo (Enero,
+            Septiembre...) cabe cómodo sin abreviaturas nuevas que
+            traducir a los 7 idiomas de la app solo por este panel; 4
+            columnas los habría dejado demasiado apretados. */}
+        {level === DATE_LEVELS.MONTH && (
+          <div className="grid grid-cols-2 gap-1">
+            {months.map((name, m) => {
+              const isSelected = parsed && parsed.y === viewY && parsed.m === m;
+              const isCurrent = viewY === today.getFullYear() && m === today.getMonth();
+              return (
+                <button
+                  type="button"
+                  key={m}
+                  onClick={() => selectMonth(m)}
+                  aria-selected={isSelected || undefined}
+                  className="flex h-11 items-center justify-center rounded-full text-sm transition-transform active:scale-95"
+                  style={isSelected
+                    ? { backgroundColor: BRAND_NAVY, color: "white", fontWeight: 600 }
+                    : isCurrent
+                    ? { border: `1.5px solid ${BRAND_NAVY}`, color: BRAND_NAVY, fontWeight: 600 }
+                    : { color: "#374151" }}
+                >
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {/* Años: 4 columnas x 3 filas (12 celdas = la década completa +
+            uno de cada lado, ver yearCells más arriba) — mismo criterio
+            de "seleccionado"/"actual" que meses y días, los dos años de
+            fuera de la década se atenúan (gray-300) pero siguen siendo
+            un objetivo táctil normal de 44px, saltan a la década vecina
+            igual que pulsar la flecha. */}
+        {level === DATE_LEVELS.YEAR && (
+          <div className="grid grid-cols-4 gap-1">
+            {yearCells.map((y) => {
+              const isSelected = parsed && parsed.y === y;
+              const isCurrent = y === today.getFullYear();
+              const isOutsideDecade = y < decadeStart || y > decadeStart + 9;
+              return (
+                <button
+                  type="button"
+                  key={y}
+                  onClick={() => selectYear(y)}
+                  aria-selected={isSelected || undefined}
+                  className="flex h-11 items-center justify-center rounded-full text-sm transition-transform active:scale-95"
+                  style={isSelected
+                    ? { backgroundColor: BRAND_NAVY, color: "white", fontWeight: 600 }
+                    : isCurrent
+                    ? { border: `1.5px solid ${BRAND_NAVY}`, color: BRAND_NAVY, fontWeight: 600 }
+                    : { color: isOutsideDecade ? "#D1D5DB" : "#374151" }}
+                >
+                  {y}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </FloatingPanel>
     </>
   );
@@ -1821,32 +1948,6 @@ function useFloatingPosition(open, anchorRef, align = "left") {
     if (!open) return;
     decideOpenUp();
   }, [open, decideOpenUp]);
-  // Segunda decisión, solo la primera vez que cambia visualViewport tras
-  // abrir (2026-09-08, bug real reportado — "la lista aparece encima del
-  // propio campo y se hace difícil hacer select sobre él"): en un campo
-  // de texto (SearchSelect, país de residencia p.ej.), tocarlo ABRE EL
-  // TECLADO a la vez que el panel — la decisión de arriba/abajo de justo
-  // encima se toma con el viewport TODAVÍA SIN encoger (la animación del
-  // teclado en iOS tarda ~250-300ms), así que puede quedar mal elegida
-  // desde el principio y quedarse así el resto de la apertura (a
-  // propósito no se re-decide en cada recálculo, ver el comentario de
-  // arriba). Escuchar un único evento `resize` de visualViewport después
-  // de abrir permite corregir la decisión una vez, ya con el teclado
-  // asentado, sin reintroducir el salto continuo mientras se escribe que
-  // motivó congelarla en primer lugar.
-  useEffect(() => {
-    if (!open) return;
-    const vv = window.visualViewport;
-    if (!vv) return;
-    let handled = false;
-    function onSettle() {
-      if (handled) return;
-      handled = true;
-      decideOpenUp();
-    }
-    vv.addEventListener("resize", onSettle);
-    return () => vv.removeEventListener("resize", onSettle);
-  }, [open, decideOpenUp]);
   const recalc = useCallback(() => {
     const el = anchorRef.current;
     if (!open || !el) return;
@@ -1894,6 +1995,44 @@ function useFloatingPosition(open, anchorRef, align = "left") {
       vv?.removeEventListener("scroll", recalc);
     };
   }, [open, recalc]);
+
+  // Segunda decisión de dirección, con DEBOUNCE, tras abrir (segunda
+  // vuelta de un bug real, 2026-09-08 — "el país de residencia sigue
+  // tapado al escribir, y al filtrar el panel queda flotando muy
+  // separado del campo, a la altura de otro campo distinto", reportado
+  // en Registro Y en Mi perfil, dos pantallas con layouts distintos: la
+  // causa no podía ser específica de una — confirma que el hook
+  // compartido es el sitio real a corregir). El primer intento
+  // corregía la dirección UNA ÚNICA VEZ, en el primer `resize` de
+  // visualViewport tras abrir — pero en iOS, abrirse el teclado (resize)
+  // y el scroll nativo que hace Safari para revelar el campo por encima
+  // del teclado pueden llegar como DOS eventos separados y en cualquier
+  // orden; si la única corrección se consume con el primero, se queda
+  // fijada con la posición todavía de tránsito, antes de que el campo
+  // termine de moverse. Debounce en vez de "una vez": cada resize/scroll
+  // de visualViewport reprograma la re-decisión 120ms más tarde,
+  // así que por muchos eventos intermedios que lleguen durante la
+  // animación del teclado, solo se corrige cuando el viewport deja de
+  // moverse — nunca mientras el usuario escribe (teclear no dispara
+  // resize/scroll de visualViewport, así que no reintroduce el salto
+  // continuo que motivó congelar la dirección en primer lugar).
+  useEffect(() => {
+    if (!open) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let timer = null;
+    function onSettle() {
+      clearTimeout(timer);
+      timer = setTimeout(() => { decideOpenUp(); recalc(); }, 120);
+    }
+    vv.addEventListener("resize", onSettle);
+    vv.addEventListener("scroll", onSettle);
+    return () => {
+      clearTimeout(timer);
+      vv.removeEventListener("resize", onSettle);
+      vv.removeEventListener("scroll", onSettle);
+    };
+  }, [open, decideOpenUp, recalc]);
 
   return pos;
 }
@@ -2049,8 +2188,8 @@ export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = BRAND_
 // absorba — la barra inferior real se vuelve más alta ahí, y un
 // `bottom-24` fijo (96px, igual en los dos casos) deja de guardar
 // distancia suficiente con ella. Mismo `calc()` que ya usan
-// paddingBottom en ComisionesTab/WorkLogTab/MovementSheet/CompanerosTab
-// para el mismo inset, aplicado aquí a `bottom` en vez de a un padding.
+// paddingBottom en MovementSheet para el mismo inset, aplicado aquí a
+// `bottom` en vez de a un padding.
 export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }) {
   return (
     <button

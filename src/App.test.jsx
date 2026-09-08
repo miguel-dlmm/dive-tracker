@@ -99,7 +99,7 @@ describe("AuthGate", () => {
     render(<App />);
     await user.click(screen.getByText("¿Olvidaste tu contraseña?"));
 
-    expect(screen.getByLabelText("Email")).toBeInTheDocument();
+    expect(screen.getByLabelText("Email", { exact: false })).toBeInTheDocument();
     expect(screen.queryByLabelText("Email o nickname")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Volver a entrar/ }));
@@ -134,7 +134,7 @@ describe("AuthGate", () => {
     await screen.findByText("Regístrate");
 
     await user.click(screen.getByText("Regístrate"));
-    expect(screen.getByLabelText("Nickname")).toBeInTheDocument();
+    expect(screen.getByLabelText("Nickname", { exact: false })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Volver a entrar/ }));
     expect(screen.getByLabelText("Email o nickname")).toBeInTheDocument();
@@ -152,7 +152,7 @@ describe("AuthGate", () => {
 
       render(<App />);
 
-      expect(await screen.findByLabelText("Nickname")).toBeInTheDocument();
+      expect(await screen.findByLabelText("Nickname", { exact: false })).toBeInTheDocument();
       expect(screen.queryByText("Regístrate")).not.toBeInTheDocument();
     });
 
@@ -162,7 +162,7 @@ describe("AuthGate", () => {
       const user = userEvent.setup();
 
       render(<App />);
-      await screen.findByLabelText("Nickname");
+      await screen.findByLabelText("Nickname", { exact: false });
 
       await user.click(screen.getByRole("button", { name: /Volver a entrar/ }));
 

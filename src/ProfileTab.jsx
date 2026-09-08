@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { CORAL, BRAND_NAVY, BRAND_SKY } from "./colors";
-import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, SearchSelect, DatePicker, shortDate, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
+import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, DatePicker, shortDate, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
 import { AVATAR_ICONS, AVATAR_COLORS, AVATAR_ICON_MAP, resolveAvatar } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
 import i18n, { setStoredLanguage } from "./i18n";
 import { computeInitials } from "./computeInitials";
-import { COUNTRIES } from "./countries";
+import { COUNTRY_CODES } from "./countries";
 import SignatureCapture from "./SignatureCapture";
 
 // Pantalla "Mi perfil" (Bloque 5, 2026-09-01) — pantalla secundaria como
@@ -224,21 +224,22 @@ const PROFESSIONAL_LEVEL_OPTIONS = [
 ];
 
 // Opciones del selector de país, con la etiqueta en el idioma activo —
-// se recalcula solo cuando cambia el idioma, no en cada tecla del buscador.
+// se recalcula solo cuando cambia el idioma. Nombre real resuelto con
+// Intl.DisplayNames (reemplaza 2026-09-08 una tabla de nombres a mano
+// que solo cubría es/en — ver countries.js para el porqué completo), así
+// que sirve igual para los 7 idiomas de la app sin traducir nada aquí.
 // Orden alfabético por la propia etiqueta (feedback explícito 2026-09-07:
-// "los países no están en orden alfabético") — COUNTRIES vive en
-// countries.js curado por relevancia (España/Latinoamérica primero), útil
-// para leer el archivo, pero no para elegir en el propio selector.
-// Intl.Collator (no localeCompare suelto) para que "México" ordene junto
-// a "Marruecos" en vez de después de "Z" por el acento, y para que el
-// criterio de acentos/mayúsculas sea coherente entre es/en.
+// "los países no están en orden alfabético") con Intl.Collator (no
+// localeCompare suelto) para que "México" ordene junto a "Marruecos" en
+// vez de después de "Z" por el acento, y para que el criterio de
+// acentos/mayúsculas sea coherente entre idiomas.
 // export (2026-09-07): RegisterScreen.jsx reutiliza esta misma función
 // para su propio selector de país de residencia (mismo campo, mismo
 // criterio) — una sola fuente de verdad, convención MVP/reutilización.
 export function countryOptionsFor(language) {
-  const key = language === "en" ? "en" : "es";
-  const collator = new Intl.Collator(key);
-  return COUNTRIES.map((c) => ({ value: c.code, label: c[key] })).sort((a, b) => collator.compare(a.label, b.label));
+  const names = new Intl.DisplayNames([language], { type: "region", fallback: "code" });
+  const collator = new Intl.Collator(language);
+  return COUNTRY_CODES.map((code) => ({ value: code, label: names.of(code) })).sort((a, b) => collator.compare(a.label, b.label));
 }
 
 function PersonalDataSection({ profile, onProfileUpdated }) {
@@ -342,10 +343,19 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
             <DatePicker value={birthDate} onChange={setBirthDate} quickAccess={false} />
           </Field>
           <Field label={t("personalData.countryLabel")}>
-            <SearchSelect
-              value={countryOfResidence}
-              onChange={setCountryOfResidence}
-              options={countryOptions}
+            {/* Select normal, no SearchSelect (2026-09-08, decisión
+                explícita tras un bug real de posicionamiento en iOS
+                Safari con el buscador — ver useFloatingPosition,
+                shared.jsx): con Intl.DisplayNames dando ~195 países en
+                vez de los ~65 curados a mano de antes, una lista con
+                scroll simple ya no necesita buscador para encontrar el
+                país propio. Select maneja strings planos, no {value,
+                label} — mismo patrón que el selector de idioma de
+                RegisterScreen.jsx (resolver código↔nombre a mano). */}
+            <Select
+              value={countryOptions.find((o) => o.value === countryOfResidence)?.label || ""}
+              onChange={(label) => setCountryOfResidence(countryOptions.find((o) => o.label === label)?.value || "")}
+              options={countryOptions.map((o) => o.label)}
               placeholder={t("personalData.countryPlaceholder")}
             />
           </Field>

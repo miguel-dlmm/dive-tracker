@@ -1,6 +1,7 @@
 // rateCalc.js — única fuente de verdad para el importe de un registro
 // (Work Log / Comisiones) a partir de su tarifa y el nº de personas.
-// Antes duplicado en WorkLogTab, ComisionesTab, PaymentsTab, SummaryTab y HomeTab.
+// Antes duplicado en varias pantallas, incluidas algunas ya eliminadas
+// del todo (WorkLogTab, ComisionesTab, PaymentsTab — 2026-09-08).
 //
 // Sin distinción por payment_type desde 2026-09-02 (ADR-0003, pasos 1-2 del
 // plan de migración — la columna payment_type sigue existiendo en BD por
@@ -65,8 +66,7 @@ export function buildActivityEntries(args) {
 // Única fuente de verdad de qué cuenta como "dinero que generas o te
 // deben" — un filtro sobre buildActivityEntries que descarta los ajustes
 // de compañero negativos (lo que tú debes, un concepto distinto que no
-// cuenta aquí). HomeTab y PaymentsTab parten de esta función para que sus
-// cifras nunca puedan divergir entre sí — ver
+// cuenta aquí). HomeTab parte de esta función — ver
 // docs/ADR/0004-home-dashboard-operativo-instructor.md.
 export function buildIncomeEntries(args) {
   return buildActivityEntries(args).filter((e) => e._source !== "companeros" || e.total > 0);

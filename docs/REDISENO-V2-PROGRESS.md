@@ -5555,12 +5555,10 @@ sin bloquear).
   Work Log para Advanced/Open Water de Ihasia).
 - Sin ramas colgadas.
 
-**Pendiente, no bloqueante, para una futura sesión (no se ha tocado
-nada de esto)**:
-- Decidir si "fusionar `main` de vuelta a `develop` tras cada release"
-  se añade como paso permanente a `docs/ADR/0010-proceso-de-release.md`
-  (hallazgo 6 de arriba).
-- Las filas de 900 THB en `rates` para Advanced/Open Water (Ihasia,
-  cuenta real) siguen en la tabla, desactivadas — decisión pendiente
-  del usuario si tienen algún valor histórico que conservar o si se
+**Resuelto 2026-09-08 (sesión siguiente):**
+- **Paso 9 añadido a `docs/ADR/0010-proceso-de-release.md`**: fusionar
+  `main` de vuelta a `develop` tras cada release, para que no vuelva a
+  ocurrir lo del hallazgo 6 de arriba.
+- **Filas de 900 THB en `rates` (Advanced/Open Water, Ihasia, cuenta
+  real): se conservan como histórico**, desactivadas — no se borran.
   pueden borrar sin más.

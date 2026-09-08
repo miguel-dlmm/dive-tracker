@@ -45,6 +45,7 @@
     "inicialesHint": "Calculated automatically — you can correct them if needed.",
     "plantilla": "Course to certify",
     "cambiarPlantilla": "Change template",
+    "verAyuda": "View help",
     "confirmarCambioPlantilla": {
       "titulo": "Change template?",
       "mensaje": "You'll lose the progress, dates and signatures you've already filled in for this student.",

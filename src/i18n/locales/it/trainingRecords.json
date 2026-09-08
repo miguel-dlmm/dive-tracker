@@ -45,6 +45,7 @@
     "inicialesHint": "Calcolate automaticamente — puoi correggerle se necessario.",
     "plantilla": "Corso da certificare",
     "cambiarPlantilla": "Cambia modello",
+    "verAyuda": "Vedi la guida",
     "confirmarCambioPlantilla": {
       "titulo": "Cambiare modello?",
       "mensaje": "Perderai la progressione, le date e le firme già compilate per questo allievo.",

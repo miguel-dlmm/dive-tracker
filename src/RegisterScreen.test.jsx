@@ -35,10 +35,10 @@ it("enviar el formulario llama a /api/external-register con los datos y muestra 
   const user = userEvent.setup();
   renderWithToast(<RegisterScreen onBack={vi.fn()} />);
 
-  await user.type(screen.getByLabelText("Email"), "diver@example.com");
+  await user.type(screen.getByLabelText("Email", { exact: false }), "diver@example.com");
   await user.type(screen.getByLabelText("Nombre"), "Ada");
   await user.type(screen.getByLabelText("Apellidos"), "Lovelace");
-  await user.type(screen.getByLabelText("Nickname"), "ada");
+  await user.type(screen.getByLabelText("Nickname", { exact: false }), "ada");
   await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
@@ -55,14 +55,17 @@ it("enviar el formulario llama a /api/external-register con los datos y muestra 
 // nacimiento"), aquí solo se cubre país (el DatePicker de fecha de
 // nacimiento ya está probado a fondo en ese archivo con el mismo
 // componente compartido — no hace falta repetir esa cobertura, solo
-// confirmar que el valor llega al body de la petición).
-it("país de residencia (opcional) se manda en el body si se rellena", async () => {
+// confirmar que el valor llega al body de la petición). País pasó de
+// SearchSelect a Select normal (2026-09-08, bug real de posicionamiento
+// con teclado en iOS + catálogo ampliado con Intl.DisplayNames, ver
+// ProfileTab.jsx) — se abre con un botón, no un campo de texto.
+it("país de residencia se manda en el body si se rellena", async () => {
   const user = userEvent.setup();
   renderWithToast(<RegisterScreen onBack={vi.fn()} />);
 
-  await user.type(screen.getByLabelText("Email"), "diver@example.com");
-  await user.type(screen.getByLabelText("Nickname"), "ada");
-  await user.type(screen.getByRole("textbox", { name: "Elige un país" }), "México");
+  await user.type(screen.getByLabelText("Email", { exact: false }), "diver@example.com");
+  await user.type(screen.getByLabelText("Nickname", { exact: false }), "ada");
+  await user.click(screen.getByRole("button", { name: "Elige un país" }));
   await user.click(screen.getByRole("option", { name: "México" }));
   await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
@@ -79,8 +82,8 @@ it("con inviteToken, lo incluye en el body como invite_token", async () => {
   const user = userEvent.setup();
   renderWithToast(<RegisterScreen onBack={vi.fn()} inviteToken="abc-123" />);
 
-  await user.type(screen.getByLabelText("Email"), "diver@example.com");
-  await user.type(screen.getByLabelText("Nickname"), "ada");
+  await user.type(screen.getByLabelText("Email", { exact: false }), "diver@example.com");
+  await user.type(screen.getByLabelText("Nickname", { exact: false }), "ada");
   await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
@@ -92,8 +95,8 @@ it("sin inviteToken, no incluye invite_token en el body (comportamiento normal)"
   const user = userEvent.setup();
   renderWithToast(<RegisterScreen onBack={vi.fn()} />);
 
-  await user.type(screen.getByLabelText("Email"), "diver@example.com");
-  await user.type(screen.getByLabelText("Nickname"), "ada");
+  await user.type(screen.getByLabelText("Email", { exact: false }), "diver@example.com");
+  await user.type(screen.getByLabelText("Nickname", { exact: false }), "ada");
   await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
@@ -110,8 +113,8 @@ it("cambiar el idioma en el selector se envía en el registro", async () => {
   await user.click(screen.getByRole("button", { name: "Idioma" }));
   await user.click(screen.getByRole("option", { name: "English" }));
 
-  await user.type(screen.getByLabelText("Email"), "diver@example.com");
-  await user.type(screen.getByLabelText("Nickname"), "ada");
+  await user.type(screen.getByLabelText("Email", { exact: false }), "diver@example.com");
+  await user.type(screen.getByLabelText("Nickname", { exact: false }), "ada");
   await user.click(screen.getByRole("button", { name: "Create my account" }));
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/external-register", expect.objectContaining({
@@ -124,8 +127,8 @@ it("si el servidor responde con error (p. ej. registro externo desactivado), lo 
   const user = userEvent.setup();
   renderWithToast(<RegisterScreen onBack={vi.fn()} />);
 
-  await user.type(screen.getByLabelText("Email"), "diver@example.com");
-  await user.type(screen.getByLabelText("Nickname"), "ada");
+  await user.type(screen.getByLabelText("Email", { exact: false }), "diver@example.com");
+  await user.type(screen.getByLabelText("Nickname", { exact: false }), "ada");
   await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
   expect(await screen.findByText("El registro externo no está habilitado.")).toBeInTheDocument();
@@ -136,8 +139,8 @@ it("un nickname con '@' muestra el aviso, deshabilita el envío y no llama a fet
   const user = userEvent.setup();
   renderWithToast(<RegisterScreen onBack={vi.fn()} />);
 
-  await user.type(screen.getByLabelText("Email"), "diver@example.com");
-  await user.type(screen.getByLabelText("Nickname"), "diver@example.com");
+  await user.type(screen.getByLabelText("Email", { exact: false }), "diver@example.com");
+  await user.type(screen.getByLabelText("Nickname", { exact: false }), "diver@example.com");
 
   expect(screen.getByText('El nickname no puede contener "@".')).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Crear mi cuenta" })).toBeDisabled();
@@ -150,8 +153,8 @@ it("si el email no se pudo enviar (email_sent:false), avisa por toast y no pasa 
   const user = userEvent.setup();
   renderWithToast(<RegisterScreen onBack={vi.fn()} />);
 
-  await user.type(screen.getByLabelText("Email"), "diver@example.com");
-  await user.type(screen.getByLabelText("Nickname"), "ada");
+  await user.type(screen.getByLabelText("Email", { exact: false }), "diver@example.com");
+  await user.type(screen.getByLabelText("Nickname", { exact: false }), "ada");
   await user.click(screen.getByRole("button", { name: "Crear mi cuenta" }));
 
   await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
