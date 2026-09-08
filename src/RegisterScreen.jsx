@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, ArrowLeft, MailCheck } from "lucide-react";
 import { BG, BODY_FONT, BRAND_NAVY } from "./App";
-import { inputCls, Field, Select, DatePicker, SearchSelect } from "./shared";
+import { inputCls, Field, Select, DatePicker } from "./shared";
 import { useToast } from "./shared";
 import i18n, { setStoredLanguage, SUPPORTED_LANGUAGES } from "./i18n";
 // countryOptionsFor: misma función que ya usa Mi perfil para su propio
@@ -49,7 +49,7 @@ export default function RegisterScreen({ onBack, inviteToken }) {
   const [language, setLanguage] = useState(() => (SUPPORTED_LANGUAGES.includes(i18n.language) ? i18n.language : "es"));
   // Fecha de nacimiento / país de residencia (2026-09-07, pedido
   // explícito) — ambos opcionales, mismo criterio y mismos componentes
-  // que Mi perfil (DatePicker sin accesos rápidos, SearchSelect con las
+  // que Mi perfil (DatePicker sin accesos rápidos, Select con las
   // opciones de countryOptionsFor): no tienen sentido dentro de `form`
   // (los demás campos usan el helper genérico `set()` sobre eventos de
   // input; estos dos componentes entregan el valor directamente, no un
@@ -113,22 +113,17 @@ export default function RegisterScreen({ onBack, inviteToken }) {
     }
   };
 
-  // items-start, no items-center (bug real reportado 2026-09-08 en
-  // producción, iPhone 14 Pro Max/Safari: "el país de residencia es
-  // inusable, una capa carga encima del campo"): con items-center,
-  // min-h-dvh encoge de golpe al abrirse el teclado (dvh sigue al
-  // viewport visual en iOS) y el flex recentra la tarjeta ENTERA en pleno
-  // gesto — justo mientras SearchSelect (país) ya decidió y "congeló" la
-  // dirección arriba/abajo de su panel flotante (useFloatingPosition,
-  // shared.jsx) para no saltar mientras se escribe. El campo se mueve por
-  // debajo del panel ya posicionado, no al revés. items-start evita el
-  // recentrado: mismo criterio que ya usa CreatePasswordScreen.jsx para
-  // el mismo min-h-dvh, la tarjeta arranca fija bajo el padding superior
-  // y no se recoloca con el teclado. Nunca reproducido antes porque
-  // ningún otro campo de Registro abre un panel flotante sobre un input
-  // de texto — el propio SearchSelect ya funciona bien en Mi perfil, que
-  // vive en una pantalla con scroll normal, no en un contenedor que se
-  // recentra.
+  // items-start, no items-center: con items-center, min-h-dvh encoge de
+  // golpe al abrirse el teclado (dvh sigue al viewport visual en iOS) y
+  // el flex recentra la tarjeta ENTERA en pleno gesto de escribir en
+  // cualquier campo — mismo criterio que ya usa CreatePasswordScreen.jsx
+  // para el mismo min-h-dvh, la tarjeta arranca fija bajo el padding
+  // superior y no se recoloca con el teclado. Detectado 2026-09-08 al
+  // investigar un bug real del país de residencia (entonces un
+  // SearchSelect con teclado; la causa raíz real resultó vivir en
+  // useFloatingPosition, shared.jsx, no aquí — ver ese hook — pero este
+  // cambio se mantiene, evita el mismo recentrado para cualquier campo
+  // de texto futuro).
   return (
     <div className="flex min-h-dvh items-start justify-center px-5 py-10" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
       <div className="w-full max-w-sm">
@@ -173,7 +168,7 @@ export default function RegisterScreen({ onBack, inviteToken }) {
                 label={t("register.languageLabel")}
               />
             </Field>
-            <Field label={t("register.emailLabel")}>
+            <Field label={t("register.emailLabel")} required>
               <input type="email" value={form.email} onChange={set("email")} autoComplete="email" autoFocus required className={`${inputCls} w-full`} />
             </Field>
             <div className="grid grid-cols-2 gap-2">
@@ -184,24 +179,25 @@ export default function RegisterScreen({ onBack, inviteToken }) {
                 <input type="text" value={form.last_name} onChange={set("last_name")} autoComplete="family-name" className={`${inputCls} w-full`} />
               </Field>
             </div>
-            <Field label={t("register.nicknameLabel")}>
+            <Field label={t("register.nicknameLabel")} required>
               <input type="text" value={form.nickname} onChange={set("nickname")} autoComplete="username" required className={`${inputCls} w-full`} />
             </Field>
             {nicknameHasAt && <p role="alert" className="text-sm text-red-600">{t("register.nicknameAtError")}</p>}
             {/* Opcionales (2026-09-07, pedido explícito) — mismos
                 componentes/criterio que Mi perfil: DatePicker sin accesos
                 rápidos (hoy/ayer/mañana no tienen sentido para una fecha
-                de nacimiento) y SearchSelect con las opciones ya en
-                orden alfabético de countryOptionsFor. */}
+                de nacimiento). País con Select normal, no SearchSelect
+                (2026-09-08, mismo motivo que Mi perfil — ver el
+                comentario junto al Select de país en ProfileTab.jsx). */}
             <div className="grid grid-cols-2 gap-2">
               <Field label={t("register.birthDateLabel")}>
                 <DatePicker value={birthDate} onChange={setBirthDate} quickAccess={false} />
               </Field>
               <Field label={t("register.countryLabel")}>
-                <SearchSelect
-                  value={countryOfResidence}
-                  onChange={setCountryOfResidence}
-                  options={countryOptions}
+                <Select
+                  value={countryOptions.find((o) => o.value === countryOfResidence)?.label || ""}
+                  onChange={(label) => setCountryOfResidence(countryOptions.find((o) => o.label === label)?.value || "")}
+                  options={countryOptions.map((o) => o.label)}
                   placeholder={t("register.countryPlaceholder")}
                 />
               </Field>

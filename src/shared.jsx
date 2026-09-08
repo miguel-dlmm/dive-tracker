@@ -464,7 +464,13 @@ export function Money({ amount, code, currencyRows, className = "", muted = fals
 // mismo <label> que el campo (para que el campo siga teniendo nombre
 // accesible por asociación); sin esto, el clic en el icono también
 // activaría/enfocaría el campo por delegación del <label>.
-export function Field({ label, hint, children }) {
+// required (2026-09-08, pedido explícito en Registro): asterisco visual
+// junto a la etiqueta, sin afectar a la semántica real de "obligatorio"
+// — esa la sigue dando el propio `required` del `<input>`, que ya
+// anuncian los lectores de pantalla al enfocar el campo. aria-hidden en
+// el asterisco (convención #7, CLAUDE.md): es un refuerzo visual para
+// quien ve la pantalla, no información nueva para quien no la ve.
+export function Field({ label, hint, required = false, children }) {
   const { t } = useTranslation("common");
   // useFloatingDropdown, no un position:absolute casero — el hint anclado
   // con left:0 y ancho fijo (w-56) se salía de la pantalla en cualquier
@@ -479,6 +485,7 @@ export function Field({ label, hint, children }) {
     <label className="flex flex-col gap-1 text-sm">
       <span className="flex items-center gap-0.5 text-xs font-medium text-gray-500">
         {label}
+        {required && <span aria-hidden="true" className="text-red-400">*</span>}
         {hint && (
           // El objetivo táctil de 44×44 (convención #7, CLAUDE.md) se logra
           // con un botón ABSOLUTO superpuesto a un icono de 14×14 en vez de

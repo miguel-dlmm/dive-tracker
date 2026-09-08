@@ -186,7 +186,7 @@ describe("datos personales", () => {
     renderProfile();
 
     await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
-    await user.type(screen.getByRole("textbox", { name: "Elige un país" }), "México");
+    await user.click(screen.getByRole("button", { name: "Elige un país" }));
     await user.click(screen.getByRole("option", { name: "México" }));
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
@@ -214,18 +214,22 @@ describe("datos personales", () => {
   });
 
   // Feedback explícito 2026-09-07: "los países no están en orden
-  // alfabético" — countries.js los tiene curados por relevancia
-  // (España/Latinoamérica primero), útil para el archivo pero no para
-  // el propio selector; countryOptionsFor() los ordena antes de
-  // devolverlos.
+  // alfabético" — countryOptionsFor() los ordena con Intl.Collator antes
+  // de devolverlos. País pasó de SearchSelect a Select normal
+  // (2026-09-08, bug real de posicionamiento con teclado en iOS +
+  // catálogo ampliado con Intl.DisplayNames) — se abre con un botón.
   it("las opciones de país de residencia aparecen en orden alfabético", async () => {
     const user = userEvent.setup();
     renderProfile();
 
     await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
-    await user.click(screen.getByRole("textbox", { name: "Elige un país" }));
+    await user.click(screen.getByRole("button", { name: "Elige un país" }));
 
-    const labels = screen.getAllByRole("option").map((o) => o.textContent);
+    // Select añade una opción "limpiar" con el propio placeholder al
+    // principio del listbox (siempre, en cualquier Select con
+    // placeholder) — no es un país, se descarta antes de comprobar el
+    // orden alfabético de los países reales.
+    const labels = screen.getAllByRole("option").map((o) => o.textContent).filter((label) => label !== "Elige un país");
     expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b, "es")));
   });
 

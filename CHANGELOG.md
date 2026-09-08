@@ -9,6 +9,23 @@ Registro de cambios relevantes de Ocean Flow.
   "deja el cuaderno y las notas sueltas" a "deja los Excel complicados
   y las notas desordenadas del móvil" — más cercano al método real que
   usa hoy la mayoría de instructores.
+- **Selector de "País de residencia"** (Registro y Mi perfil): de un
+  buscador (`SearchSelect`) a un desplegable normal (`Select`) con
+  scroll, y de un catálogo curado de ~65 países en solo es/en a los
+  ~195 países reales del mundo con el nombre resuelto en caliente por
+  idioma (`Intl.DisplayNames`) — cubre ya los 7 idiomas de la app, no
+  solo español/inglés.
+- **Registro: quitado "(opcional)" de "Fecha de nacimiento"/"País de
+  residencia"** (provocaba que el campo de fecha saltara a su propia
+  línea en móvil) — en su lugar, un asterisco junto a las etiquetas de
+  los campos que sí son obligatorios (Email, Nickname). `Field`
+  (`shared.jsx`) admite ahora un prop `required` para esto, reutilizable
+  en cualquier formulario.
+- **Training Records**: "Cambiar plantilla" se movió de la cabecera de
+  sección a dentro de la propia pastilla con el nombre de la plantilla
+  elegida; el hueco que deja pasa a un enlace fijo a la Ayuda (siempre
+  visible), que abre directamente la categoría "Generar un Training
+  Record" alineada bajo la cabecera.
 
 ### Fixed
 - **Descargar JPG de un Training Record fallaba en Safari real** (Mac e
@@ -36,6 +53,14 @@ Registro de cambios relevantes de Ocean Flow.
   producción; añadido `scripts/verify-production-seed-data.mjs` como
   paso del checklist de release (ADR-0010) para no repetir el mismo
   vacío silencioso en una fase futura.
+- **Training Records: cerrar la pantalla borraba la plantilla elegida y
+  el roster de alumnos**: `persistSession` guardaba también el PDF ya
+  generado de cada alumno (varios cientos de KB en base64) — con unos
+  pocos alumnos generados, el conjunto superaba la cuota de
+  sessionStorage y ese guardado se descartaba en silencio, dejando la
+  próxima apertura sin plantilla ni roster. Ya no se persiste el PDF
+  generado (se regenera al momento si hace falta, es rápido); el
+  roster y la plantilla elegida ya no dependen de esa cuota.
 - **Registro externo, campo "País de residencia" en móvil**: en iOS
   Safari, al abrirse el teclado la tarjeta entera se recentraba de
   golpe (`min-h-dvh` + `items-center`) justo cuando el desplegable de
