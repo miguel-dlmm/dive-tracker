@@ -5291,3 +5291,57 @@ sí estaban centrados — inconsistente dentro de la misma tarjeta. Fix:
 añadir `justify-center text-center` a ese `<span>`. Verificado con la
 misma captura de Playwright — las tres etiquetas quedan centradas,
 también en su segunda línea.
+
+### 12.38 — Ayuda: cada categoría se abre alineada bajo la cabecera, no donde caiga
+
+Pedido explícito: "en la ayuda cuando abro el primer item bien, pero a
+partir de ahí si abro el siguiente al acabar de leer el desplegado, me
+cierra el desplegado y me abre el seleccionado arriba del todo. Cada
+vez que abra un item de la ayuda este quedará abierto y alineado justo
+debajo de la cabecera con una animación".
+
+**Causa real**: Ayuda es un acordeón (como mucho una categoría
+desplegada a la vez, `openId`, ver 12.31/HelpTab.jsx) sin ningún
+desplazamiento propio. Al pulsar la siguiente categoría, la anterior se
+colapsa — si el usuario ya había bajado la página para terminar de
+leerla y esa categoría anterior está POR ENCIMA de la que acaba de
+pulsar, colapsarla desplaza de golpe todo el contenido de debajo hacia
+arriba (incluida la categoría recién abierta) sin que el scroll se
+corrija, dejando la categoría nueva en cualquier posición — a veces por
+encima de la propia cabecera.
+
+**Fix**: mismo criterio ya resuelto para el calendario de Home/Resumen
+(`MonthCalendar`, "cuarto ajuste" de 12.x anterior — medir en el propio
+clic, nunca esperar a que la animación termine). `HelpTab.jsx` mide,
+en el manejador de `onToggle` y ANTES de cambiar `openId`:
+1. La posición actual (`getBoundingClientRect()`) de la tarjeta que se
+   acaba de pulsar.
+2. Si había una categoría abierta y su tarjeta está POR ENCIMA de la
+   que se pulsa, cuánto va a encoger al colapsarse (su altura actual
+   menos la altura de solo su cabecera, midiendo el `<button>` — esa
+   altura es la misma abierta o cerrada) — y resta esa diferencia de la
+   posición predicha, sin esperar a que la animación de colapso llegue
+   a ese estado.
+3. Anima el scroll (`animateScrollBy`, `motion.js`, ya usado por el
+   calendario) hasta que esa posición final predicha quede justo debajo
+   de `<header>` con 12px de margen — mismo `animateScrollBy`,
+   `duration`/`ease` por defecto (`DURATION.md`/`EASE.standard`).
+
+Solo al ABRIR (nunca al cerrar), igual criterio que el calendario. Cada
+`ExpandableCard` de categoría se envuelve ahora en un `<div ref={...}>`
+propio (`cardRefs`, keyed por `category.id`) — `ExpandableCard` no
+expone ref propia y hace falta medir cualquiera de las tarjetas
+(abierta o colapsada) en cualquier momento, no solo la que se acaba de
+tocar.
+
+**Verificado**: 870/870 tests (el acordeón en sí no cambia de
+comportamiento, mismos 13 tests de `HelpTab.test.jsx` en verde — sin
+test dedicado a la geometría del scroll, mismo criterio que 12.36/el
+commit `d61ae7f` del calendario: la posición exacta en píxeles no se
+presta a un test unitario fiable, se verifica con Playwright). Lint 0
+errores, build correcto. Verificado con Playwright + emulación de
+iPhone 14 Pro Max: se abre "Mi trabajo", se baja la página 400px
+(simulando "seguir leyendo, ya bajado"), se abre "Resumen" (por debajo
+de "Mi trabajo" en la lista) — tras la animación, el botón de "Resumen"
+queda a 15px del borde inferior de la cabecera (objetivo 12px, dentro
+de tolerancia visual), sin errores de consola.

@@ -225,6 +225,12 @@ Registro de cambios relevantes de Ocean Flow.
   "pendiente de configurar" que ya está configurado).
 
 ### Fixed
+- **Ayuda: al abrir una categoría distinta, la que quedaba abierta se
+  cerraba de golpe y la nueva podía acabar en cualquier posición de la
+  pantalla** (a veces por encima de la propia cabecera), sobre todo si
+  ya se había bajado la página para terminar de leer la anterior. Ahora
+  cada categoría que se abre queda alineada justo debajo de la
+  cabecera, con una animación de scroll.
 - **Instalada como acceso directo en iOS: el botón "+" flotante y el
   final de cualquier pantalla podían quedar tapados por la barra
   inferior** — la barra crece de verdad al no tener el navegador (para
