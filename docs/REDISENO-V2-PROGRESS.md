@@ -5134,3 +5134,44 @@ Confirmado en mobile real (Playwright, iPhone 14 Pro Max) contra datos
 reales de TEST: el ancho de fila sigue midiendo idéntico en las 3
 tarjetas (101px) con el nuevo tamaño de icono, ninguna cifra real se
 sale del recuadro, sin errores de consola.
+
+### 12.35 — País de residencia: segunda vuelta del bug del teclado en móvil
+
+Pedido explícito: "el combo país de residencia no funciona bien en
+registrarse y en editar perfil". Investigación previa a tocar nada:
+el propio `SearchSelect` (buscador + lista con scroll, ya usado en
+Registro y Mi perfil) ya hace exactamente lo que se pedía como
+solución ("un buscador para teclear... y sino scrollear"), y un bug
+casi idéntico en el mismo campo ya se había corregido antes (Fase 7,
+2026-09-07: el panel saltaba de posición mientras el usuario escribía,
+al abrirse el teclado). Probado a mano (buscar "fran" → filtra a
+Francia; scroll sin escribir → funciona) sin reproducir nada raro en
+Chrome. Pedida una descripción más concreta al usuario en vez de tocar
+a ciegas código ya cuidadosamente depurado — respuesta: "la lista
+aparece encima del propio campo y se hace difícil hacer select sobre
+él".
+
+**Causa real, una variante nueva del mismo bug de fondo**: el fix de
+Fase 7 congela la decisión arriba/abajo EN EL INSTANTE de abrir el
+panel, precisamente para evitar que salte mientras el usuario escribe.
+Pero en un campo de texto, TOCARLO abre el teclado A LA VEZ que el
+panel — la animación del teclado en iOS tarda ~250-300ms, así que la
+decisión se congela con el viewport TODAVÍA sin encoger. Si en ese
+instante había sitio de sobra debajo (antes de que el teclado se lo
+coma), el panel elige abrir hacia abajo — y se queda así el resto de
+la apertura, aunque el teclado reduzca el espacio real justo después,
+dejando el panel comprimido contra el propio campo.
+
+**Fix** (`useFloatingPosition`, `shared.jsx`): además de la decisión
+inicial (congelada, sin tocar), se escucha un ÚNICO evento `resize` de
+`visualViewport` tras abrir para corregir la dirección una vez más, ya
+con el teclado asentado — nunca una segunda vez (eso reintroduciría el
+salto continuo que motivó congelarla en primer lugar). `maxHeight`/
+`top`/`bottom` seguían recalculándose siempre, como ya hacían.
+
+**Verificado**: 868/868 tests (1 test nuevo en `shared.test.jsx` que
+reproduce el caso exacto: el panel abre hacia abajo con espacio de
+sobra, luego `visualViewport` se encoge de golpe simulando el teclado
+— la dirección se corrige una vez, y un segundo `resize` ya no la
+vuelve a mover; el test existente de Fase 7 sigue en verde sin
+cambios), lint 0 errores, build correcto.

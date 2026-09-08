@@ -225,6 +225,12 @@ Registro de cambios relevantes de Ocean Flow.
   "pendiente de configurar" que ya está configurado).
 
 ### Fixed
+- **País de residencia (Registro y Mi perfil): la lista de países podía
+  quedar comprimida contra el propio campo, difícil de usar** — al
+  tocar el campo, el teclado del móvil se abre a la vez que la lista;
+  si la lista decidía su posición justo antes de que el teclado
+  terminara de abrirse, se quedaba mal colocada el resto de la
+  apertura. Ahora se corrige una vez, en cuanto el teclado se asienta.
 - **KPIs de Mi trabajo: el cálculo de espacio disponible para el icono
   y la cifra tenía una referencia circular** — medía un elemento que ya
   había sido encogido por el propio icono, así que podía encoger u

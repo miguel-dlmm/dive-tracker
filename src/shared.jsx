@@ -1810,14 +1810,43 @@ function useFloatingPosition(open, anchorRef, align = "left") {
   // ver el comentario de `maxHeight` más abajo) — solo la elección
   // arriba/abajo queda fija mientras el panel siga abierto.
   const openUpRef = useRef(false);
-  useEffect(() => {
-    if (!open) return;
+  const decideOpenUp = useCallback(() => {
     const el = anchorRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
     const vh = window.visualViewport?.height || window.innerHeight;
     openUpRef.current = (vh - rect.bottom) < 280 && rect.top > 280;
-  }, [open, anchorRef]);
+  }, [anchorRef]);
+  useEffect(() => {
+    if (!open) return;
+    decideOpenUp();
+  }, [open, decideOpenUp]);
+  // Segunda decisión, solo la primera vez que cambia visualViewport tras
+  // abrir (2026-09-08, bug real reportado — "la lista aparece encima del
+  // propio campo y se hace difícil hacer select sobre él"): en un campo
+  // de texto (SearchSelect, país de residencia p.ej.), tocarlo ABRE EL
+  // TECLADO a la vez que el panel — la decisión de arriba/abajo de justo
+  // encima se toma con el viewport TODAVÍA SIN encoger (la animación del
+  // teclado en iOS tarda ~250-300ms), así que puede quedar mal elegida
+  // desde el principio y quedarse así el resto de la apertura (a
+  // propósito no se re-decide en cada recálculo, ver el comentario de
+  // arriba). Escuchar un único evento `resize` de visualViewport después
+  // de abrir permite corregir la decisión una vez, ya con el teclado
+  // asentado, sin reintroducir el salto continuo mientras se escribe que
+  // motivó congelarla en primer lugar.
+  useEffect(() => {
+    if (!open) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let handled = false;
+    function onSettle() {
+      if (handled) return;
+      handled = true;
+      decideOpenUp();
+    }
+    vv.addEventListener("resize", onSettle);
+    return () => vv.removeEventListener("resize", onSettle);
+  }, [open, decideOpenUp]);
   const recalc = useCallback(() => {
     const el = anchorRef.current;
     if (!open || !el) return;
