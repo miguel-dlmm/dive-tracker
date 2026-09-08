@@ -18,11 +18,8 @@ import CreatePasswordScreen from "./CreatePasswordScreen";
 import ForcedPasswordUpdateScreen from "./ForcedPasswordUpdateScreen";
 import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
-import WorkLogTab from "./WorkLogTab";
-import ComisionesTab from "./ComisionesTab";
 import ConfigTab, { clearStoredSection } from "./ConfigTab";
 import TrainingRecordsTab from "./trainingRecords/TrainingRecordsTab";
-import CompanerosTab from "./CompanerosTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
 import WhatsNew from "./WhatsNew";
@@ -31,7 +28,6 @@ import { APP_VERSION } from "./version";
 import SummaryTab from "./SummaryTab";
 import HelpTab, { clearStoredHelpOpen } from "./HelpTab";
 import InstallAppTab from "./InstallAppTab";
-import PaymentsTab from "./PaymentsTab";
 import ProfileTab from "./ProfileTab";
 import i18n, { setStoredLanguage } from "./i18n";
 
@@ -54,9 +50,9 @@ export const BODY_FONT = "'Inter', sans-serif";
 // Barra inferior: los destinos que se usan a diario. "Mi trabajo" sustituye
 // visualmente a Registro/Comisiones/Compañeros — ver
 // docs/ADR/0005-mi-trabajo-unificacion-economica.md (Fase 1). Esas 3
-// pantallas siguen existiendo en el código (rutas "log"/"comisiones"/
-// "colegas" más abajo) por si hiciera falta revertir, aunque ya no tienen
-// ningún punto de entrada en la UI.
+// pantallas (`WorkLogTab`, `ComisionesTab`, `CompanerosTab`) se eliminaron
+// del todo el 2026-09-08 (`docs/BACKLOG.md`) — confirmado que no tenían
+// ningún punto de entrada en la UI desde la unificación.
 // label se resuelve en render vía t(`tabs.${id}`) (namespace "app") — estos
 // ids son también las claves de traducción, no solo rutas internas.
 const PRIMARY_TABS = [
@@ -70,9 +66,10 @@ const PRIMARY_TABS = [
 // cabecera muestra "‹ Volver" + el nombre de la pantalla, el patrón
 // nativo de iOS/Android para "dónde estoy y cómo vuelvo", más propio de
 // app que una miga de pan (que es un patrón más de web de escritorio).
-// "pagos" sigue en este mapa por si se reactiva, pero ya no tiene ningún
-// punto de entrada en la UI — ver docs/ADR/0005 (Mi trabajo cubre su
-// función con "Cobrar todos" + filtro por escuela).
+// "pagos" (`PaymentsTab`) se eliminó del todo el 2026-09-08
+// (`docs/BACKLOG.md`) — Mi trabajo ya cubría su función con "Cobrar
+// todos" + filtro por escuela desde ADR-0005, sin punto de entrada
+// propio desde entonces.
 // Título resuelto en render vía t(`secondaryTitles.${tab}`) (namespace "app").
 // "training-records" se sumó aquí el 2026-09-07 (feedback explícito: "el
 // generador Training Records sigue navegando bajo configuración, debería
@@ -96,7 +93,7 @@ const PRIMARY_TABS = [
 // de los KPIs en Home (HomeTab.jsx, pedido explícito de después: "quiero
 // q haya un algo en la home"). La pestaña "install-app" en sí no
 // cambia, solo desde dónde se llega a ella.
-const SECONDARY_TABS = ["config", "help", "pagos", "perfil", "training-records", "install-app"];
+const SECONDARY_TABS = ["config", "help", "perfil", "training-records", "install-app"];
 
 // Recuerda la pestaña activa y a cuál "volver" desde una pantalla
 // secundaria — corrige de raíz dos problemas reales, no dos parches
@@ -526,24 +523,6 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             userId={profile?.user_id}
           />
         )}
-        {tab === "log" && (
-          <WorkLogTab
-            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} worklog={worklog} appConfig={appConfig}
-            accentColor={sectionColor("log")}
-          />
-        )}
-        {tab === "comisiones" && (
-          <ComisionesTab
-            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} commissionRates={commissionRates} comisiones={comisiones} appConfig={appConfig}
-            accentColor={sectionColor("comisiones")}
-          />
-        )}
-        {tab === "colegas" && (
-          <CompanerosTab
-            schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies} rates={rates} colleaguePayments={colleaguePayments}
-            accentColor={sectionColor("colegas")}
-          />
-        )}
         {tab === "trabajo" && (
           <MiTrabajoTab
             schools={schools} activities={activities} paymentStatuses={paymentStatuses} currencies={currencies}
@@ -572,12 +551,6 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             profile={profile} currencies={currencies}
             onClose={closeSecondary} onProfileUpdated={onProfileUpdated} onAccountDeleted={onSignOut}
             onSignOut={handleSignOut}
-          />
-        )}
-        {tab === "pagos" && (
-          <PaymentsTab
-            activities={activities} schools={schools} paymentStatuses={paymentStatuses} currencies={currencies}
-            rates={rates} commissionRates={commissionRates} worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
           />
         )}
         {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}

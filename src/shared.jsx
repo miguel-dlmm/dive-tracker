@@ -2049,8 +2049,8 @@ export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = BRAND_
 // absorba — la barra inferior real se vuelve más alta ahí, y un
 // `bottom-24` fijo (96px, igual en los dos casos) deja de guardar
 // distancia suficiente con ella. Mismo `calc()` que ya usan
-// paddingBottom en ComisionesTab/WorkLogTab/MovementSheet/CompanerosTab
-// para el mismo inset, aplicado aquí a `bottom` en vez de a un padding.
+// paddingBottom en MovementSheet para el mismo inset, aplicado aquí a
+// `bottom` en vez de a un padding.
 export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }) {
   return (
     <button

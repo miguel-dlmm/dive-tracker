@@ -168,8 +168,7 @@ describe("datos personales", () => {
     // Fecha esperada calculada con el mismo new Date(...).toLocaleDateString(...)
     // que usa shortDate() en tiempo de ejecución (shared.jsx) — nunca un
     // string fijo a mano, que dependería de la zona horaria de quien
-    // ejecute el test (mismo cuidado que ya toma PaymentsTab.test.jsx
-    // con fechas relativas al reloj real).
+    // ejecute el test.
     expect(screen.getByText(new Date("1990-05-12").toLocaleDateString("es-ES"))).toBeInTheDocument();
     expect(screen.getByText("México")).toBeInTheDocument();
   });

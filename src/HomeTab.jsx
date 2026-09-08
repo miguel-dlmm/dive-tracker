@@ -184,8 +184,8 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
 
   // Base común de las dos métricas financieras del dashboard — ver
   // buildIncomeEntries en rateCalc.js y docs/ADR/0004-home-dashboard-operativo-instructor.md.
-  // "Generado este mes" y "Pendiente de cobrar" parten de este mismo array
-  // (también lo usa PaymentsTab), solo cambia el filtro que le aplican.
+  // "Generado este mes" y "Pendiente de cobrar" parten de este mismo array,
+  // solo cambia el filtro que le aplican.
   const incomeEntries = useMemo(
     () => buildIncomeEntries({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]

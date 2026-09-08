@@ -4,6 +4,12 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Removed
+- Pantallas huérfanas de antes de la unificación de "Mi trabajo"
+  (Registro, Comisiones, Compañeros, Pagos) — sin ningún punto de
+  entrada en la navegación desde ADR-0005, confirmado y eliminadas del
+  todo.
+
 ## [1.1.0] - 2026-09-07
 
 ### Added
