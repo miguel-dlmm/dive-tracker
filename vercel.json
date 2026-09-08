@@ -3,8 +3,7 @@
     "deploymentEnabled": {
       "develop": true,
       "main": true,
-      "feature/rediseno-v2": true,
-      "hotfix/lote-post-v1.1.0": true
+      "feature/rediseno-v2": true
     }
   },
   "rewrites": [
