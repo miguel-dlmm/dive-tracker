@@ -35,12 +35,16 @@
     "nextMonth": "Mes siguiente",
     "prevYear": "Año anterior",
     "nextYear": "Año siguiente",
+    "prevDecade": "Década anterior",
+    "nextDecade": "Década siguiente",
     "today": "Hoy"
   },
   "datePicker": {
     "defaultPlaceholder": "Fecha",
     "defaultAriaLabel": "Elegir fecha",
     "pickerAriaLabel": "Selector de fecha",
+    "chooseMonthAriaLabel": "Elegir mes",
+    "chooseYearAriaLabel": "Elegir año",
     "dayAriaLabel": "{{day}} de {{month}}",
     "today": "Hoy",
     "yesterday": "Ayer",

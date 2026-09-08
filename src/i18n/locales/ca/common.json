@@ -35,12 +35,16 @@
     "nextMonth": "Mes següent",
     "prevYear": "Any anterior",
     "nextYear": "Any següent",
+    "prevDecade": "Dècada anterior",
+    "nextDecade": "Dècada següent",
     "today": "Avui"
   },
   "datePicker": {
     "defaultPlaceholder": "Data",
     "defaultAriaLabel": "Tria una data",
     "pickerAriaLabel": "Selector de data",
+    "chooseMonthAriaLabel": "Tria el mes",
+    "chooseYearAriaLabel": "Tria l'any",
     "dayAriaLabel": "{{day}} {{month}}",
     "today": "Avui",
     "yesterday": "Ahir",

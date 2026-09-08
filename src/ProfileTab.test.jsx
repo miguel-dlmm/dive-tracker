@@ -200,7 +200,12 @@ describe("datos personales", () => {
   // los accesos rápidos de hoy mañana ayer" — DatePicker soporta
   // `quickAccess={false}` desde ese mismo feedback; este test es lo que
   // impide que un cambio futuro vuelva a activarlos aquí sin querer.
-  it("el selector de fecha de nacimiento no muestra los accesos rápidos hoy/ayer/mañana", async () => {
+  // Navegación por década/año/mes/día añadida 2026-09-08 (mismo feedback
+  // de fondo, ampliado: "poder ir atrás varios años fácilmente" sin
+  // generar tantos clics) — tocar la cabecera "{mes} {año}" abre el
+  // nivel de mes (con salto de año), y desde ahí el de año (con salto de
+  // década); ver DatePicker en shared.jsx.
+  it("el selector de fecha de nacimiento no muestra los accesos rápidos hoy/ayer/mañana, y permite llegar a un año lejano por década", async () => {
     const user = userEvent.setup();
     renderProfile();
 
@@ -209,8 +214,12 @@ describe("datos personales", () => {
 
     expect(screen.queryByRole("button", { name: "Hoy" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Ayer" })).not.toBeInTheDocument();
-    // El salto de año sigue disponible — es lo que sí hace falta aquí.
+
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
     expect(screen.getByRole("button", { name: "Año anterior" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Elegir año" }));
+    expect(screen.getByRole("button", { name: "Década anterior" })).toBeInTheDocument();
   });
 
   // Feedback explícito 2026-09-07: "los países no están en orden

@@ -21,6 +21,14 @@ Registro de cambios relevantes de Ocean Flow.
   los campos que sí son obligatorios (Email, Nickname). `Field`
   (`shared.jsx`) admite ahora un prop `required` para esto, reutilizable
   en cualquier formulario.
+- **`DatePicker` (fecha de nacimiento y cualquier otro selector de fecha
+  de la app): navegación por década → año → mes → día.** Antes, llegar a
+  un año lejano (una fecha de nacimiento típica) exigía un clic por año.
+  Ahora, tocar la cabecera "{mes} {año}" abre un nivel de mes (12 meses +
+  salto de año) y, desde ahí, tocar el año abre un nivel de año (la
+  década completa + salto de década) — mismo lenguaje visual en los 3
+  niveles (círculo/píldora de marca para "elegido", borde de marca para
+  "actual"), ningún vocabulario nuevo por nivel.
 - **Training Records**: "Cambiar plantilla" se movió de la cabecera de
   sección a dentro de la propia pastilla con el nombre de la plantilla
   elegida; el hueco que deja pasa a un enlace fijo a la Ayuda (siempre

@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { colorFor, applyListFilters, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect } from "./shared";
+import { colorFor, applyListFilters, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect, DatePicker } from "./shared";
 
 // Estos tests documentan el comportamiento ACTUAL de las funciones puras de
 // shared.jsx, como red de seguridad antes de dividir/refactorizar el
@@ -347,5 +347,93 @@ describe("useFloatingPosition (vía SearchSelect) — la dirección arriba/abajo
     expect(panel.style.top).not.toBe("");
 
     Object.defineProperty(window, "visualViewport", { value: originalVv, configurable: true, writable: true });
+  });
+});
+
+// Navegación por década/año/mes/día añadida 2026-09-08 (pedido explícito,
+// fecha de nacimiento: "poder navegar en bloques de 10 años, luego elegir
+// el mes, y luego el día, para no generar tantos clics como hace falta
+// ahora"). Sustituye al salto de año de un clic por año que ya existía en
+// el nivel de día.
+describe("DatePicker — navegación por década/año/mes/día", () => {
+  it("abre en el nivel de día, con la cabecera 'mes año' como botón que abre el nivel de mes", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+
+    expect(screen.getByRole("button", { name: "15 de Marzo" })).toBeInTheDocument(); // celda del día 15, no ambigua con la cabecera
+    const monthHeader = screen.getByRole("button", { name: "Elegir mes" });
+    expect(monthHeader).toHaveTextContent("Marzo 2024");
+  });
+
+  it("tocar la cabecera de día abre el nivel de mes con los 12 meses y salto de año", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+
+    expect(screen.getByRole("button", { name: "Julio" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Año anterior" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Elegir año" })).toHaveTextContent("2024");
+  });
+
+  it("elegir un mes vuelve al nivel de día con ese mes ya mostrado", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+    await user.click(screen.getByRole("button", { name: "Julio" }));
+
+    expect(screen.getByRole("button", { name: "Elegir mes" })).toHaveTextContent("Julio 2024");
+  });
+
+  it("desde el nivel de mes, tocar el año abre el nivel de año con la década (+1 a cada lado) y salto de década", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+    await user.click(screen.getByRole("button", { name: "Elegir año" }));
+
+    expect(screen.getByText("2020–2029")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Década anterior" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2024" })).toBeInTheDocument();
+    // Los años de fuera de la década (uno de cada lado) también aparecen, atenuados — ver yearCells en shared.jsx.
+    expect(screen.getByRole("button", { name: "2019" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2030" })).toBeInTheDocument();
+  });
+
+  it("elegir un año vuelve al nivel de mes con ese año ya mostrado", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+    await user.click(screen.getByRole("button", { name: "Elegir año" }));
+    await user.click(screen.getByRole("button", { name: "2019" }));
+
+    expect(screen.getByRole("button", { name: "Elegir año" })).toHaveTextContent("2019");
+  });
+
+  it("saltar de década mueve la rejilla en bloques de 10 años", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+    await user.click(screen.getByRole("button", { name: "Elegir año" }));
+
+    await user.click(screen.getByRole("button", { name: "Década anterior" }));
+    expect(screen.getByText("2010–2019")).toBeInTheDocument();
+  });
+
+  it("cerrar y volver a abrir reinicia siempre al nivel de día", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+    await user.click(screen.getByRole("button", { name: "Elegir año" }));
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    expect(screen.getByRole("button", { name: "Elegir mes" })).toBeInTheDocument();
+    expect(screen.queryByText("2020–2029")).not.toBeInTheDocument();
   });
 });
