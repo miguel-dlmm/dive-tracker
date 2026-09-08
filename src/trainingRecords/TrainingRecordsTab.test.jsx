@@ -235,6 +235,25 @@ it("configura una vez para todo el listado, añade 2 alumnos y genera los 2 docu
   expect(screen.getByRole("button", { name: "Descargar todo en PDF" })).toBeInTheDocument();
 }, 15000);
 
+// Apagado temporal 2026-09-09 (bug real en producción, Safari real: el
+// polyfill de toHex/toBase64, v1.2.0, no lo resolvió del todo) —
+// JPG_EXPORT_ENABLED en TrainingRecordsTab.jsx. Este test es la red de
+// seguridad que impide que un cambio futuro reactive el icono sin
+// querer mientras siga apagado a propósito.
+it("con la exportación a JPG apagada (bug real en Safari), no ofrece descargar/compartir en JPG, solo PDF", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+
+  expect(screen.queryByRole("button", { name: "Descargar imagen (JPG)" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Descargar todo en JPG" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Descargar PDF" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Descargar todo en PDF" })).toBeInTheDocument();
+}, 15000);
+
 // Pedido explícito del usuario (2026-09-07): "debería de descargar un
 // fichero comprimido con todos los archivos" — antes eran 2 descargas
 // sueltas (una por alumno). Ahora debe ser UNA sola descarga, de un

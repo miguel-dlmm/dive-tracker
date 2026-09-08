@@ -4,6 +4,15 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Fixed
+- **Descargar/exportar a JPG en Training Records, apagado temporalmente**:
+  el polyfill de `Uint8Array.toHex/toBase64` (v1.2.0) no resolvió el
+  error real en Safari — sin un mensaje de consola nuevo que
+  diagnosticar y sin forma de reproducir Safari real en este entorno,
+  se oculta el icono (por alumno y "Descargar todo en JPG") hasta
+  confirmar la causa real con datos de un dispositivo real. PDF y
+  compartir siguen intactos, no dependen de `pdfjs-dist`.
+
 ## [1.2.0] - 2026-09-08
 
 ### Changed
