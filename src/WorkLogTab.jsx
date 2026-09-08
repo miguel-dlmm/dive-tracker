@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Plus, Pencil, X } from "lucide-react";
 import { NAVY, TEAL } from "./App";
 import { inputCls, formatMoney, Money, Field, Select, CurrencySearchSelect, MoneyInput, ListFilterBar, applyListFilters, colorFor, StatusPill, DeleteButton, DatePicker, EditActions, AppLoading, EntryTitle, useToast } from "./shared";
-import { computeRateTotal } from "./rateCalc";
+import { computeRateTotal, isRateActive } from "./rateCalc";
 
 // schools / activities / paymentStatuses / currencies: { rows: [...] } — de useSupabaseTable
 // rates / worklog: { rows: [...], insertRow, updateRow, deleteRow }
@@ -45,7 +45,7 @@ export default function WorkLogTab({ schools, activities, paymentStatuses, curre
   const activityNames = activities.rows.map((a) => a.name);
 
   const rateFor = (school, activity) =>
-    rates.rows.find((r) => r.school === school && r.activity === activity);
+    rates.rows.find((r) => r.school === school && r.activity === activity && isRateActive(r));
 
   const activityColor = (name) => colorFor(activities.rows, name, "#6B7280");
   const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
