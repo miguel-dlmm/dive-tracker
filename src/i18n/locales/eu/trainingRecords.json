@@ -45,6 +45,7 @@
     "inicialesHint": "Automatikoki kalkulatuak — behar izanez gero zuzendu ditzakezu.",
     "plantilla": "Ziurtatu beharreko ikastaroa",
     "cambiarPlantilla": "Aldatu txantiloia",
+    "verAyuda": "Ikusi laguntza",
     "confirmarCambioPlantilla": {
       "titulo": "Txantiloia aldatu?",
       "mensaje": "Ikasle honentzat jada betetako aurrerapena, datak eta sinadurak galduko dituzu.",

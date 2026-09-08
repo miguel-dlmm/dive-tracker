@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Smartphone, Award } from "lucide-react";
 import { BRAND_NAVY, BRAND_OCEAN } from "./App";
@@ -89,6 +89,25 @@ export function clearStoredHelpOpen() {
   try { sessionStorage.removeItem(HELP_OPEN_KEY); } catch { /* no-op */ }
 }
 
+// openHelpCategory (2026-09-08, pedido explícito: "añade en Training
+// Records un enlace a la ayuda con el acordeón del training record
+// abierto justo debajo de la cabecera") — para llamar ANTES de navegar a
+// Ayuda desde otra pantalla (ver App.jsx, onOpenHelp de
+// TrainingRecordsTab). Dos claves, no una: HELP_OPEN_KEY ya persiste la
+// categoría abierta entre recargas (sin scroll asociado — recargar
+// mantiene la posición tal cual, pedido explícito de 2026-08-30);
+// HELP_FOCUS_KEY es un aviso de un solo uso ("acabas de llegar aquí
+// desde fuera, alinea esta categoría bajo la cabecera") que el propio
+// efecto de más abajo borra en cuanto lo consume — así una recarga
+// posterior con la misma categoría ya abierta no repite el scroll.
+const HELP_FOCUS_KEY = "oceanpulse:helpFocusOnOpen";
+export function openHelpCategory(categoryId) {
+  try {
+    sessionStorage.setItem(HELP_OPEN_KEY, categoryId);
+    sessionStorage.setItem(HELP_FOCUS_KEY, categoryId);
+  } catch { /* no-op */ }
+}
+
 export default function HelpTab({ navSections, onClose, onShowWhatsNew, onOpenInstallApp }) {
   const { t } = useTranslation("help");
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || BRAND_NAVY;
@@ -145,6 +164,28 @@ export default function HelpTab({ navSections, onClose, onShowWhatsNew, onOpenIn
     }
     setOpenId(next ? categoryId : null);
   };
+  // Alinea bajo la cabecera al LLEGAR desde fuera con una categoría ya
+  // marcada para abrir (openHelpCategory, más arriba) — mismo destino
+  // visual que ya logra handleToggle al pulsar una categoría a mano, sin
+  // reutilizar ese cálculo tal cual: aquí no hay "categoría anterior" que
+  // colapsar (se entra con como mucho una ya abierta), así que basta la
+  // posición real de la tarjeta en el primer render. Un solo uso: en
+  // cuanto se consume, se borra la marca — una recarga posterior con la
+  // misma categoría ya abierta no repite el scroll (comportamiento ya
+  // acordado el 2026-08-30, "recargar mantiene la pantalla actual").
+  useEffect(() => {
+    if (!openId) return;
+    let focusId = null;
+    try { focusId = sessionStorage.getItem(HELP_FOCUS_KEY); } catch { /* no-op */ }
+    if (focusId !== openId) return;
+    try { sessionStorage.removeItem(HELP_FOCUS_KEY); } catch { /* no-op */ }
+    const el = cardRefs.current[openId];
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+    animateScrollBy(rect.top - headerBottom - HEADER_GAP, { reduced: reducedMotionForScroll });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openId]);
   // Deslizar hacia la derecha = "atrás", recursivo (feedback explícito
   // 2026-08-30, mismo criterio que ConfigTab): con una categoría abierta,
   // la colapsa (un nivel atrás); sin ninguna abierta, cierra Ayuda entera

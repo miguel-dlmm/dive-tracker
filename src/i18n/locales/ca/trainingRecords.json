@@ -45,6 +45,7 @@
     "inicialesHint": "Calculades automàticament — pots corregir-les si cal.",
     "plantilla": "Curs a certificar",
     "cambiarPlantilla": "Canvia de plantilla",
+    "verAyuda": "Veure l'ajuda",
     "confirmarCambioPlantilla": {
       "titulo": "Vols canviar de plantilla?",
       "mensaje": "Perdràs el progrés, les dates i les signatures ja emplenades per a aquest alumne.",

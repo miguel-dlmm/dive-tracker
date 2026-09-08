@@ -81,7 +81,7 @@ describe("buildActivityEntries", () => {
 // buildEntriesBySource — extraída de HomeTab.jsx/SummaryTab.jsx
 // (docs/BACKLOG.md, "Reutilizar componente entre Home y Resumen") al
 // duplicar ambas pantallas byte a byte el mismo cálculo. buildActivityEntries
-// ya se probaba solo indirectamente (a través de HomeTab/PaymentsTab); estos
+// ya se probaba solo indirectamente (a través de HomeTab); estos
 // tests cubren las dos funciones directamente.
 describe("buildEntriesBySource / buildActivityEntries", () => {
   const RATES = [{ school: "PADI Cozumel", activity: "Open Water", rate: 20, currency: "USD" }];

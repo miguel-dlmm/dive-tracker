@@ -248,7 +248,7 @@ const RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water", payment_ty
 const COMMISSION_RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 5, currency: "EUR" }];
 
 // <Money> separa cifra y símbolo en nodos distintos; este matcher compara
-// el texto combinado del nodo sin espacios (ver PaymentsTab.test.jsx).
+// el texto combinado del nodo sin espacios.
 // aria-hidden !== "true" (Fase 13, 2026-09-07): cada MoneyKpiTile tiene
 // además un span invisible con la MISMA cifra ya formateada, solo para
 // medir su ancho real sin depender de la animación de conteo (ver

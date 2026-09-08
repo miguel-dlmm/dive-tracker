@@ -145,7 +145,21 @@ Secuencia corregida:
    npm run build` sobre `main` ya fusionada, `git push origin main` →
    despliegue automático.
 5. Verificar el despliegue real (navegador headless contra la URL de
-   producción, sin errores de consola).
+   producción, sin errores de consola). **Si el release toca alguna
+   tabla de configuración de la que la app dependa para no mostrarse
+   "vacía"** (catálogos, plantillas, datasets semilla — no solo el
+   esquema), correr también `node --env-file=.env.local
+   scripts/verify-production-seed-data.mjs`. Añadido 2026-09-08 tras un
+   incidente real: la migración de esquema de Training Records (Fase 5)
+   sí se aplicó en producción, pero las 10 filas + los PDF reales de sus
+   plantillas se sembraron a mano solo contra TEST durante el
+   desarrollo — producción se quedó con la tabla vacía, sin ninguna
+   plantilla ofrecida al instructor y sin que nada lo señalara como
+   pendiente hasta que un usuario real lo reportó. El script no
+   sustituye este checklist, solo comprueba que un puñado de tablas
+   conocidas tengan datos reales — ampliarlo (no crear uno nuevo) cuando
+   una fase futura añada otra tabla de la que dependa la experiencia
+   real de la app.
 6. **Solo si el paso 5 sale limpio**: `git tag -a vX.Y.Z -m "vX.Y.Z"`
    sobre el commit de `main` recién desplegado, `git push origin main
    --tags`.
@@ -153,6 +167,17 @@ Secuencia corregida:
    espejo en GitHub del mismo texto, no notas autogeneradas.
 8. Borrar `release/vX.Y.Z` (local y remoto) una vez fusionada — rama
    efímera, no queda colgada (`ADR-0006`).
+9. **Fusionar `main` de vuelta a `develop`.** Paso añadido tras la
+   release `v1.1.0` (2026-09-08): al fusionar solo `release/vX.Y.Z` →
+   `main` (paso 4), `develop` se queda sin el commit de "preparar
+   release" (bump de versión, `## Unreleased` movido a `## [X.Y.Z]` en
+   `CHANGELOG.md`) — en `v1.1.0` esto hizo que `develop` acumulara todo
+   el `## Unreleased` del ciclo entero sin marcarlo como publicado,
+   detectado solo porque el hook `pre-push` bloqueó un commit posterior
+   por CHANGELOG desactualizado. Fusionar `main` → `develop` justo
+   después del paso 8 mantiene ambas ramas sincronizadas en el mismo
+   punto tras cada release, sin esperar a que un síntoma lateral lo
+   revele.
 
 ### Validaciones mínimas obligatorias antes de etiquetar
 

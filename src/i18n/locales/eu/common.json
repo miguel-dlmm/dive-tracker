@@ -35,12 +35,16 @@
     "nextMonth": "Hurrengo hilabetea",
     "prevYear": "Aurreko urtea",
     "nextYear": "Hurrengo urtea",
+    "prevDecade": "Aurreko hamarkada",
+    "nextDecade": "Hurrengo hamarkada",
     "today": "Gaur"
   },
   "datePicker": {
     "defaultPlaceholder": "Data",
     "defaultAriaLabel": "Aukeratu data bat",
     "pickerAriaLabel": "Data hautatzailea",
+    "chooseMonthAriaLabel": "Aukeratu hilabetea",
+    "chooseYearAriaLabel": "Aukeratu urtea",
     "dayAriaLabel": "{{day}} {{month}}",
     "today": "Gaur",
     "yesterday": "Atzo",

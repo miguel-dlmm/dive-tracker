@@ -168,8 +168,7 @@ describe("datos personales", () => {
     // Fecha esperada calculada con el mismo new Date(...).toLocaleDateString(...)
     // que usa shortDate() en tiempo de ejecución (shared.jsx) — nunca un
     // string fijo a mano, que dependería de la zona horaria de quien
-    // ejecute el test (mismo cuidado que ya toma PaymentsTab.test.jsx
-    // con fechas relativas al reloj real).
+    // ejecute el test.
     expect(screen.getByText(new Date("1990-05-12").toLocaleDateString("es-ES"))).toBeInTheDocument();
     expect(screen.getByText("México")).toBeInTheDocument();
   });
@@ -187,7 +186,7 @@ describe("datos personales", () => {
     renderProfile();
 
     await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
-    await user.type(screen.getByRole("textbox", { name: "Elige un país" }), "México");
+    await user.click(screen.getByRole("button", { name: "Elige un país" }));
     await user.click(screen.getByRole("option", { name: "México" }));
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
@@ -201,7 +200,12 @@ describe("datos personales", () => {
   // los accesos rápidos de hoy mañana ayer" — DatePicker soporta
   // `quickAccess={false}` desde ese mismo feedback; este test es lo que
   // impide que un cambio futuro vuelva a activarlos aquí sin querer.
-  it("el selector de fecha de nacimiento no muestra los accesos rápidos hoy/ayer/mañana", async () => {
+  // Navegación por década/año/mes/día añadida 2026-09-08 (mismo feedback
+  // de fondo, ampliado: "poder ir atrás varios años fácilmente" sin
+  // generar tantos clics) — tocar la cabecera "{mes} {año}" abre el
+  // nivel de mes (con salto de año), y desde ahí el de año (con salto de
+  // década); ver DatePicker en shared.jsx.
+  it("el selector de fecha de nacimiento no muestra los accesos rápidos hoy/ayer/mañana, y permite llegar a un año lejano por década", async () => {
     const user = userEvent.setup();
     renderProfile();
 
@@ -210,23 +214,31 @@ describe("datos personales", () => {
 
     expect(screen.queryByRole("button", { name: "Hoy" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Ayer" })).not.toBeInTheDocument();
-    // El salto de año sigue disponible — es lo que sí hace falta aquí.
+
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
     expect(screen.getByRole("button", { name: "Año anterior" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Elegir año" }));
+    expect(screen.getByRole("button", { name: "Década anterior" })).toBeInTheDocument();
   });
 
   // Feedback explícito 2026-09-07: "los países no están en orden
-  // alfabético" — countries.js los tiene curados por relevancia
-  // (España/Latinoamérica primero), útil para el archivo pero no para
-  // el propio selector; countryOptionsFor() los ordena antes de
-  // devolverlos.
+  // alfabético" — countryOptionsFor() los ordena con Intl.Collator antes
+  // de devolverlos. País pasó de SearchSelect a Select normal
+  // (2026-09-08, bug real de posicionamiento con teclado en iOS +
+  // catálogo ampliado con Intl.DisplayNames) — se abre con un botón.
   it("las opciones de país de residencia aparecen en orden alfabético", async () => {
     const user = userEvent.setup();
     renderProfile();
 
     await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
-    await user.click(screen.getByRole("textbox", { name: "Elige un país" }));
+    await user.click(screen.getByRole("button", { name: "Elige un país" }));
 
-    const labels = screen.getAllByRole("option").map((o) => o.textContent);
+    // Select añade una opción "limpiar" con el propio placeholder al
+    // principio del listbox (siempre, en cualquier Select con
+    // placeholder) — no es un país, se descarta antes de comprobar el
+    // orden alfabético de los países reales.
+    const labels = screen.getAllByRole("option").map((o) => o.textContent).filter((label) => label !== "Elige un país");
     expect(labels).toEqual([...labels].sort((a, b) => a.localeCompare(b, "es")));
   });
 

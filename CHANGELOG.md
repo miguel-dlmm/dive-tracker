@@ -4,6 +4,84 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Changed
+- Texto de bienvenida de la pantalla de Registro, en los 7 idiomas: de
+  "deja el cuaderno y las notas sueltas" a "deja los Excel complicados
+  y las notas desordenadas del móvil" — más cercano al método real que
+  usa hoy la mayoría de instructores.
+- **Selector de "País de residencia"** (Registro y Mi perfil): de un
+  buscador (`SearchSelect`) a un desplegable normal (`Select`) con
+  scroll, y de un catálogo curado de ~65 países en solo es/en a los
+  ~195 países reales del mundo con el nombre resuelto en caliente por
+  idioma (`Intl.DisplayNames`) — cubre ya los 7 idiomas de la app, no
+  solo español/inglés.
+- **Registro: quitado "(opcional)" de "Fecha de nacimiento"/"País de
+  residencia"** (provocaba que el campo de fecha saltara a su propia
+  línea en móvil) — en su lugar, un asterisco junto a las etiquetas de
+  los campos que sí son obligatorios (Email, Nickname). `Field`
+  (`shared.jsx`) admite ahora un prop `required` para esto, reutilizable
+  en cualquier formulario.
+- **`DatePicker` (fecha de nacimiento y cualquier otro selector de fecha
+  de la app): navegación por década → año → mes → día.** Antes, llegar a
+  un año lejano (una fecha de nacimiento típica) exigía un clic por año.
+  Ahora, tocar la cabecera "{mes} {año}" abre un nivel de mes (12 meses +
+  salto de año) y, desde ahí, tocar el año abre un nivel de año (la
+  década completa + salto de década) — mismo lenguaje visual en los 3
+  niveles (círculo/píldora de marca para "elegido", borde de marca para
+  "actual"), ningún vocabulario nuevo por nivel.
+- **Training Records**: "Cambiar plantilla" se movió de la cabecera de
+  sección a dentro de la propia pastilla con el nombre de la plantilla
+  elegida; el hueco que deja pasa a un enlace fijo a la Ayuda (siempre
+  visible), que abre directamente la categoría "Generar un Training
+  Record" alineada bajo la cabecera.
+
+### Fixed
+- **Descargar JPG de un Training Record fallaba en Safari real** (Mac e
+  iPhone): `pdfjs-dist` calcula la huella de cada PDF con
+  `Uint8Array.prototype.toHex()`, una API sin soporte confirmado en
+  Safari — "UnknownErrorException: i.toHex is not a function" y un
+  DataCloneError secundario al propagar esa excepción por su canal
+  interno de mensajes. Añadido a `pdfjsPolyfills.js` junto al resto de
+  parches ya existentes para esta misma dependencia.
+- **Desplegables con teclado en móvil (país de residencia y cualquier
+  otro `SearchSelect`/`Select`/`DatePicker`)**: la corrección de
+  dirección arriba/abajo tras abrirse el teclado solo escuchaba un
+  `resize` de `visualViewport` una única vez — en iOS, el scroll nativo
+  que revela el campo por encima del teclado es una señal aparte
+  (`scroll`, no `resize`) que se ignoraba por completo, dejando el
+  panel flotando en una posición ya obsoleta. Ahora escucha ambas, con
+  debounce, hasta que el viewport deja de moverse (`useFloatingPosition`,
+  `shared.jsx`) — corrige Registro, Mi perfil y cualquier otro
+  desplegable con el mismo patrón de una sola vez.
+- **Training Records en producción no ofrecía ninguna plantilla**: la
+  migración de esquema de la Fase 5 sí se había aplicado, pero las 10
+  filas + los PDF reales se sembraron a mano solo contra TEST durante
+  el desarrollo, sin ningún script que lo replicara — producción se
+  quedó con la tabla vacía, sin ningún aviso. Sembrado ya en
+  producción; añadido `scripts/verify-production-seed-data.mjs` como
+  paso del checklist de release (ADR-0010) para no repetir el mismo
+  vacío silencioso en una fase futura.
+- **Training Records: cerrar la pantalla borraba la plantilla elegida y
+  el roster de alumnos**: `persistSession` guardaba también el PDF ya
+  generado de cada alumno (varios cientos de KB en base64) — con unos
+  pocos alumnos generados, el conjunto superaba la cuota de
+  sessionStorage y ese guardado se descartaba en silencio, dejando la
+  próxima apertura sin plantilla ni roster. Ya no se persiste el PDF
+  generado (se regenera al momento si hace falta, es rápido); el
+  roster y la plantilla elegida ya no dependen de esa cuota.
+- **Registro externo, campo "País de residencia" en móvil**: en iOS
+  Safari, al abrirse el teclado la tarjeta entera se recentraba de
+  golpe (`min-h-dvh` + `items-center`) justo cuando el desplegable de
+  país ya había fijado su posición, dejándolo superpuesto sobre el
+  propio campo — inusable para escribir. Bug real reportado en
+  producción, 2026-09-08.
+
+### Removed
+- Pantallas huérfanas de antes de la unificación de "Mi trabajo"
+  (Registro, Comisiones, Compañeros, Pagos) — sin ningún punto de
+  entrada en la navegación desde ADR-0005, confirmado y eliminadas del
+  todo.
+
 ## [1.1.0] - 2026-09-07
 
 ### Added

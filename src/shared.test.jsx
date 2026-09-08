@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { colorFor, applyListFilters, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect } from "./shared";
+import { colorFor, applyListFilters, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect, DatePicker } from "./shared";
 
 // Estos tests documentan el comportamiento ACTUAL de las funciones puras de
 // shared.jsx, como red de seguridad antes de dividir/refactorizar el
@@ -261,26 +261,62 @@ describe("useFloatingPosition (vía SearchSelect) — la dirección arriba/abajo
     expect(panel.style.bottom).not.toBe("");
   });
 
-  // Bug real reportado 2026-09-08 (misma pantalla, otra vez): "la lista
-  // aparece encima del propio campo y se hace difícil hacer select sobre
-  // él". Causa: al tocar un SearchSelect, el teclado virtual de iOS abre
-  // A LA VEZ que el panel — la decisión arriba/abajo de arriba se toma
-  // con `visualViewport` TODAVÍA sin encoger (la animación del teclado
-  // tarda ~250-300ms), así que puede quedar mal elegida desde el
-  // principio y quedarse así el resto de la apertura. Fix: escuchar un
-  // único evento `resize` de `visualViewport` tras abrir para
-  // corregir la decisión una vez, ya con el teclado asentado — sin
-  // volver a decidir en los siguientes (eso reintroduciría el bug
-  // anterior, el salto continuo mientras se escribe).
-  it("si el teclado abre justo después (visualViewport encoge), la dirección se corrige una vez — y no vuelve a moverse después", async () => {
+  // Bug real reportado 2026-09-08, segunda vuelta (misma pantalla, y
+  // también en Registro — dos layouts distintos, confirma que la causa
+  // vivía en el hook compartido): "sigue tapado al escribir, y al
+  // filtrar el panel queda flotando muy separado del campo, a la altura
+  // de otro campo distinto". Causa real: el primer intento (más abajo)
+  // corregía la dirección UNA ÚNICA VEZ, solo al primer `resize` de
+  // `visualViewport` — pero en iOS, el `resize` del teclado y el SCROLL
+  // nativo que hace Safari para revelar el campo por encima del teclado
+  // son dos señales distintas, y el hook nunca escuchaba `scroll` de
+  // `visualViewport` para la decisión de dirección (sí para el resto de
+  // `top`/`bottom`/`maxHeight`, pero no para arriba/abajo) — si el que
+  // de verdad "asienta" la posición final es el scroll, la corrección
+  // nunca llegaba a dispararse. Fix: escuchar también `scroll`, con
+  // DEBOUNCE en vez de "una vez" — así da igual cuántos eventos
+  // intermedios lleguen ni en qué orden, la dirección se recalcula
+  // cuando el viewport deja de moverse, usando siempre la medida más
+  // reciente del campo.
+  it("corrige la dirección cuando el asentamiento llega como scroll de visualViewport, no solo como resize", async () => {
     const user = userEvent.setup();
-    // Al abrir: 400px libres debajo (por encima del umbral de 280) -> abre
-    // hacia abajo. jsdom no tiene visualViewport por defecto — se simula
-    // uno mínimo (EventTarget real, para que addEventListener/
-    // removeEventListener y dispatchEvent funcionen de verdad).
-    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
-      { top: 300, bottom: 330, left: 0, right: 300, width: 300, height: 30 }
-    );
+    // jsdom no tiene visualViewport por defecto — se simula uno mínimo
+    // (EventTarget real, para que addEventListener/removeEventListener y
+    // dispatchEvent funcionen de verdad). getBoundingClientRect usa una
+    // variable mutable (no un valor fijo) para poder simular que el
+    // campo cambia de posición ENTRE la apertura y el scroll nativo.
+    let rect = { top: 500, bottom: 530, left: 0, right: 300, width: 300, height: 30 };
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(() => rect);
+    const vv = Object.assign(new EventTarget(), { height: 400, width: 400 });
+    const originalVv = window.visualViewport;
+    Object.defineProperty(window, "visualViewport", { value: vv, configurable: true, writable: true });
+
+    render(<SearchSelect value="" onChange={() => {}} options={[{ value: "a", label: "Alpha" }]} placeholder="Elige" />);
+    await user.click(screen.getByRole("textbox", { name: "Elige" }));
+    const panel = screen.getByRole("listbox");
+    // Al abrir: campo casi al fondo del viewport (top 500 de 400 de
+    // alto) -> poco sitio debajo, abre hacia arriba.
+    expect(panel.style.top).toBe("");
+    expect(panel.style.bottom).not.toBe("");
+
+    // El teclado ya está abierto (visualViewport no vuelve a encoger),
+    // pero Safari desplaza la página para revelar el campo por encima
+    // del teclado — el campo pasa a estar cerca de la parte de arriba
+    // (top 100), con sitio de sobra debajo. Esto llega como un SCROLL de
+    // visualViewport, nunca como un resize.
+    rect = { top: 100, bottom: 130, left: 0, right: 300, width: 300, height: 30 };
+    vv.dispatchEvent(new Event("scroll"));
+
+    await waitFor(() => expect(panel.style.bottom).toBe(""));
+    expect(panel.style.top).not.toBe("");
+
+    Object.defineProperty(window, "visualViewport", { value: originalVv, configurable: true, writable: true });
+  });
+
+  it("varios resize/scroll de visualViewport seguidos (el teclado animándose) no dejan la dirección fijada con una medida de tránsito", async () => {
+    const user = userEvent.setup();
+    let rect = { top: 300, bottom: 330, left: 0, right: 300, width: 300, height: 30 };
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(() => rect);
     const vv = Object.assign(new EventTarget(), { height: 730, width: 400 });
     const originalVv = window.visualViewport;
     Object.defineProperty(window, "visualViewport", { value: vv, configurable: true, writable: true });
@@ -288,28 +324,116 @@ describe("useFloatingPosition (vía SearchSelect) — la dirección arriba/abajo
     render(<SearchSelect value="" onChange={() => {}} options={[{ value: "a", label: "Alpha" }]} placeholder="Elige" />);
     await user.click(screen.getByRole("textbox", { name: "Elige" }));
     const panel = screen.getByRole("listbox");
-    expect(panel.style.bottom).toBe(""); // abrió hacia abajo
+    expect(panel.style.bottom).toBe(""); // abrió hacia abajo (400px libres)
 
-    // El teclado termina de abrirse: visualViewport se encoge de golpe
-    // (400 -> 300, deja menos de 280px libres debajo) y dispara su propio
-    // resize — la dirección debe corregirse a "arriba" esta vez sí. El
-    // dispatch ocurre fuera del ciclo de eventos de React (no es un
-    // evento de usuario simulado por Testing Library), así que la
-    // actualización de estado que dispara se confirma con waitFor, no
-    // leyendo el DOM en la misma línea.
+    // Primer evento (resize): el teclado empieza a abrirse, pero el
+    // campo TODAVÍA no se ha desplazado (medida de tránsito) — con el
+    // fix anterior (una única corrección), esta sería la única medida
+    // usada para siempre.
     vv.height = 300;
     vv.dispatchEvent(new Event("resize"));
-    await waitFor(() => expect(panel.style.top).toBe(""));
-    expect(panel.style.bottom).not.toBe("");
 
-    // Un segundo resize de visualViewport (p. ej. el usuario escribe y el
-    // teclado se reacomoda un poco) NO debe volver a mover el panel —
-    // solo la primera corrección tras abrir está permitida.
-    vv.height = 730;
-    vv.dispatchEvent(new Event("resize"));
-    await waitFor(() => expect(panel.style.top).toBe(""));
-    expect(panel.style.bottom).not.toBe("");
+    // Segundo evento (scroll), llega antes de que se cumplan los 120ms
+    // de debounce del primero: el scroll nativo termina de traer el
+    // campo arriba del todo — la corrección final debe reflejar ESTA
+    // medida, no la de tránsito del primer evento.
+    rect = { top: 100, bottom: 130, left: 0, right: 300, width: 300, height: 30 };
+    vv.dispatchEvent(new Event("scroll"));
+
+    // Con rect.top=100 y vh=300, sobra sitio debajo (170px) y apenas hay
+    // sitio encima (100px) — debe seguir abriendo hacia abajo, nunca
+    // saltar a "arriba" con la medida de tránsito del primer evento.
+    await waitFor(() => expect(panel.style.bottom).toBe(""));
+    expect(panel.style.top).not.toBe("");
 
     Object.defineProperty(window, "visualViewport", { value: originalVv, configurable: true, writable: true });
+  });
+});
+
+// Navegación por década/año/mes/día añadida 2026-09-08 (pedido explícito,
+// fecha de nacimiento: "poder navegar en bloques de 10 años, luego elegir
+// el mes, y luego el día, para no generar tantos clics como hace falta
+// ahora"). Sustituye al salto de año de un clic por año que ya existía en
+// el nivel de día.
+describe("DatePicker — navegación por década/año/mes/día", () => {
+  it("abre en el nivel de día, con la cabecera 'mes año' como botón que abre el nivel de mes", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+
+    expect(screen.getByRole("button", { name: "15 de Marzo" })).toBeInTheDocument(); // celda del día 15, no ambigua con la cabecera
+    const monthHeader = screen.getByRole("button", { name: "Elegir mes" });
+    expect(monthHeader).toHaveTextContent("Marzo 2024");
+  });
+
+  it("tocar la cabecera de día abre el nivel de mes con los 12 meses y salto de año", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+
+    expect(screen.getByRole("button", { name: "Julio" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Año anterior" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Elegir año" })).toHaveTextContent("2024");
+  });
+
+  it("elegir un mes vuelve al nivel de día con ese mes ya mostrado", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+    await user.click(screen.getByRole("button", { name: "Julio" }));
+
+    expect(screen.getByRole("button", { name: "Elegir mes" })).toHaveTextContent("Julio 2024");
+  });
+
+  it("desde el nivel de mes, tocar el año abre el nivel de año con la década (+1 a cada lado) y salto de década", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+    await user.click(screen.getByRole("button", { name: "Elegir año" }));
+
+    expect(screen.getByText("2020–2029")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Década anterior" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2024" })).toBeInTheDocument();
+    // Los años de fuera de la década (uno de cada lado) también aparecen, atenuados — ver yearCells en shared.jsx.
+    expect(screen.getByRole("button", { name: "2019" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2030" })).toBeInTheDocument();
+  });
+
+  it("elegir un año vuelve al nivel de mes con ese año ya mostrado", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+    await user.click(screen.getByRole("button", { name: "Elegir año" }));
+    await user.click(screen.getByRole("button", { name: "2019" }));
+
+    expect(screen.getByRole("button", { name: "Elegir año" })).toHaveTextContent("2019");
+  });
+
+  it("saltar de década mueve la rejilla en bloques de 10 años", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+    await user.click(screen.getByRole("button", { name: "Elegir año" }));
+
+    await user.click(screen.getByRole("button", { name: "Década anterior" }));
+    expect(screen.getByText("2010–2019")).toBeInTheDocument();
+  });
+
+  it("cerrar y volver a abrir reinicia siempre al nivel de día", async () => {
+    const user = userEvent.setup();
+    render(<DatePicker value="2024-03-15" onChange={() => {}} />);
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    await user.click(screen.getByRole("button", { name: "Elegir mes" }));
+    await user.click(screen.getByRole("button", { name: "Elegir año" }));
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
+    expect(screen.getByRole("button", { name: "Elegir mes" })).toBeInTheDocument();
+    expect(screen.queryByText("2020–2029")).not.toBeInTheDocument();
   });
 });

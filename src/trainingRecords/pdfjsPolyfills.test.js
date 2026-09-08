@@ -83,4 +83,60 @@ describe("applyPdfjsPolyfills", () => {
     applyPdfjsPolyfills(target);
     expect(target.Promise.try).toBe(existing);
   });
+
+  // Uint8Array.prototype.toHex/.toBase64 y Uint8Array.fromBase64: bug real
+  // reportado 2026-09-08 en un Mac/iPhone real, mismo patrón que
+  // Promise.try — "UnknownErrorException: i.toHex is not a function" al
+  // calcular la huella de un PDF (PDFDocument#fingerprints, pdf.worker.mjs)
+  // más un DataCloneError secundario al propagar esa excepción. A
+  // diferencia de Promise/Iterator (arriba, con un `target` de mentira
+  // completo), aquí se prueba sobre el Uint8Array REAL del proceso de
+  // test — necesario porque `new Uint8Array(...)`/`Uint8Array.fromBase64`
+  // en las aserciones siempre resuelven al global real, no a un doble —
+  // por eso cada test borra y restaura el método exacto que toca en vez
+  // de sustituir la clase entera.
+  describe("Uint8Array.prototype.toHex/.toBase64 y Uint8Array.fromBase64", () => {
+    let hadToHex, hadToBase64, hadFromBase64;
+    beforeEach(() => {
+      hadToHex = Object.getOwnPropertyDescriptor(Uint8Array.prototype, "toHex");
+      hadToBase64 = Object.getOwnPropertyDescriptor(Uint8Array.prototype, "toBase64");
+      hadFromBase64 = Object.getOwnPropertyDescriptor(Uint8Array, "fromBase64");
+      delete Uint8Array.prototype.toHex;
+      delete Uint8Array.prototype.toBase64;
+      delete Uint8Array.fromBase64;
+    });
+    afterEach(() => {
+      if (hadToHex) Object.defineProperty(Uint8Array.prototype, "toHex", hadToHex); else delete Uint8Array.prototype.toHex;
+      if (hadToBase64) Object.defineProperty(Uint8Array.prototype, "toBase64", hadToBase64); else delete Uint8Array.prototype.toBase64;
+      if (hadFromBase64) Object.defineProperty(Uint8Array, "fromBase64", hadFromBase64); else delete Uint8Array.fromBase64;
+    });
+
+    const realTarget = () => ({ Promise, Uint8Array, btoa, atob });
+
+    it("añade toHex cuando el entorno no lo tiene, y codifica bytes reales", () => {
+      applyPdfjsPolyfills(realTarget());
+      expect(new Uint8Array([0, 255, 16]).toHex()).toBe("00ff10");
+    });
+
+    it("no toca Uint8Array.prototype.toHex si el entorno ya lo tiene", () => {
+      const existing = () => "ya estaba";
+      Uint8Array.prototype.toHex = existing;
+      applyPdfjsPolyfills(realTarget());
+      expect(Uint8Array.prototype.toHex).toBe(existing);
+    });
+
+    it("añade toBase64/fromBase64 cuando el entorno no los tiene, y son inversos entre sí", () => {
+      applyPdfjsPolyfills(realTarget());
+      const original = new Uint8Array([72, 111, 108, 97]); // "Hola"
+      const decoded = Uint8Array.fromBase64(original.toBase64());
+      expect(Array.from(decoded)).toEqual(Array.from(original));
+    });
+
+    it("toBase64 no revienta con un array grande (fuente embebida de varios cientos de KB)", () => {
+      applyPdfjsPolyfills(realTarget());
+      const big = new Uint8Array(300000).fill(65);
+      expect(() => big.toBase64()).not.toThrow();
+      expect(Uint8Array.fromBase64(big.toBase64()).length).toBe(big.length);
+    });
+  });
 });

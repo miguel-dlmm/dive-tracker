@@ -45,6 +45,7 @@
     "inicialesHint": "Calculées automatiquement — vous pouvez les corriger si besoin.",
     "plantilla": "Cours à certifier",
     "cambiarPlantilla": "Changer de modèle",
+    "verAyuda": "Voir l'aide",
     "confirmarCambioPlantilla": {
       "titulo": "Changer de modèle ?",
       "mensaje": "Vous allez perdre la progression, les dates et les signatures déjà remplies pour cet élève.",
