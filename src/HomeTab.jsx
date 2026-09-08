@@ -296,32 +296,60 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           interno, la tarjeta "Pendiente de cobrar" `p-4`): sin ningún
           borde/fondo propio que lo compense, el contenido se veía pegado
           al borde en vez de guardar el mismo ritmo horizontal que sus
-          vecinos. */}
+          vecinos.
+
+          Cuarta vuelta (2026-09-08, con captura real del móvil delante):
+          el `px-3` de arriba resultó ser un parche sobre un problema más
+          de fondo, medido en píxeles reales sobre la captura — el propio
+          `<button>` no llegaba a `w-full`, así que se encogía al ancho de
+          su contenido (línea divisoria incluida) en vez de estirarse
+          como el resto de Home; por eso cambiaba de ancho entre el
+          estado vacío y el estado con actividad, y por eso a la derecha
+          "no había aire de más", literalmente no había fila ahí. Se
+          añade `w-full` y el contenido pasa a ir CENTRADO (no pegado a
+          la izquierda) — pedido explícito tras ver la fila ya
+          implementada: "queda todo muy a la izquierda y demasiado aire a
+          la derecha... plantea más mockups centrando la info". Con
+          actividad, la insignia lleva además un halo sutil detrás
+          (mismo tono que ya usa `${BRAND_OCEAN}1A` en otras insignias
+          del archivo) para reforzar la respiración ya existente — solo
+          en ese estado: en el estado vacío un halo difuminado detrás de
+          una insignia clara se veía sucio en vez de vistoso, así que ahí
+          se queda sin ningún efecto extra. */}
       {onOpenTrainingRecords && (
         <button
           type="button"
           onClick={onOpenTrainingRecords}
-          className="flex items-center gap-2.5 border-b border-t border-gray-100 px-3 py-2.5 text-left"
+          className="flex w-full items-center justify-center gap-2.5 border-b border-t border-gray-100 px-3 py-2.5 text-center"
         >
-          <motion.span
-            className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg"
-            style={{ backgroundColor: generatedCount > 0 ? BRAND_NAVY : `${BRAND_OCEAN}1A` }}
-            animate={reducedMotion ? undefined : { scale: [1, 1.06, 1] }}
-            transition={reducedMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <Award size={13} style={{ color: generatedCount > 0 ? "#fff" : BRAND_OCEAN }} aria-hidden="true" />
-          </motion.span>
-          <span className="min-w-0 flex-1">
+          <span className="relative flex shrink-0 items-center justify-center">
+            {generatedCount > 0 && (
+              <span
+                className="absolute h-11 w-11 rounded-full"
+                style={{ background: `radial-gradient(circle, ${BRAND_OCEAN}66 0%, ${BRAND_OCEAN}1A 55%, transparent 78%)` }}
+                aria-hidden="true"
+              />
+            )}
+            <motion.span
+              className="relative flex h-[26px] w-[26px] items-center justify-center rounded-lg"
+              style={{ backgroundColor: generatedCount > 0 ? BRAND_NAVY : `${BRAND_OCEAN}1A` }}
+              animate={reducedMotion ? undefined : { scale: [1, 1.06, 1] }}
+              transition={reducedMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Award size={13} style={{ color: generatedCount > 0 ? "#fff" : BRAND_OCEAN }} aria-hidden="true" />
+            </motion.span>
+          </span>
+          <span className="flex flex-col">
             {generatedCount > 0 ? (
               <>
-                <span className="block text-[11.5px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</span>
+                <span className="text-[11.5px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</span>
                 <span className="flex items-baseline gap-1">
                   <span className="text-xs font-extrabold leading-none tabular-nums" style={{ color: BRAND_OCEAN }}>{animatedGeneratedCount}</span>
                   <span className="text-[9.5px] font-semibold uppercase leading-none tracking-wide text-gray-400">{t("trainingRecordsCard.generatedLabel")}</span>
                 </span>
               </>
             ) : (
-              <span className="block text-[11.5px] font-bold leading-tight" style={{ color: BRAND_OCEAN }}>{t("trainingRecordsCard.ctaFirstTime")}</span>
+              <span className="text-[11.5px] font-bold leading-tight" style={{ color: BRAND_OCEAN }}>{t("trainingRecordsCard.ctaFirstTime")}</span>
             )}
           </span>
           <ChevronRight size={16} className="shrink-0" style={{ color: generatedCount > 0 ? "#CBD5E1" : BRAND_OCEAN }} aria-hidden="true" />

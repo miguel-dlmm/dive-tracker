@@ -587,6 +587,12 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
       const pdfBytes = await fillTrainingRecordPdf(templateBytes, templateMap, data);
       setSession((s) => ({ ...s, students: s.students.map((x) => (x.id === student.id ? { ...x, pdfBytes, generatedAt: Date.now() } : x)) }));
       toast?.success(t("roster.regeneradoCorrectamente"));
+      // Contador decorativo de Home (2026-09-08) — bug real reportado: esta
+      // llamada individual (un alumno a la vez) no sumaba nada, solo
+      // generateAll lo hacía. "para contar los generados tienes q tener en
+      // cuenta cada vez q se llame a la app de generar, la puedo llamar
+      // individualmente para cada alumno o en el generar todos".
+      addGeneratedCount(profile?.user_id, 1);
     } catch (err) {
       console.error(err);
       toast?.error(t("studentSheet.noSePudoGenerar"));

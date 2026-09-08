@@ -4826,3 +4826,84 @@ seguía mostrando la invitación vacía; al escribir el contador bajo el
 `user_id` real de la sesión activa y recargar, la fila pasó al estado
 con actividad, alineada al mismo margen que "Alumnos"/"Cursos" y
 "Pendiente de cobrar" — igual que el mockup. Sin errores de consola.
+
+### 12.29 — Fila de Training Records: causa real del hueco a la derecha + contador por cada llamada a generar
+
+Con 12.28 ya en el Preview, feedback real desde el móvil sobre la propia
+fila corregida: "no crees q en la banda de training record queda todo
+muy en el lado izquierdo cuando da el número de generados". El `px-3`
+de 12.28 no lo resolvía del todo — hacía falta una tercera ronda,
+pedida explícitamente con mockups antes de tocar código otra vez
+(mismo Artifact reutilizado en el mismo enlace en las tres rondas:
+`https://claude.ai/code/artifact/f0a9bdf3-4a6f-4472-ab18-56a57a7e8f1c`).
+
+**Causa real, medida en píxeles sobre la captura del usuario** (no una
+suposición): el propio `<button>` de la fila nunca llevó `w-full` — se
+encogía al ancho de su contenido (línea divisoria incluida) en vez de
+estirarse como el resto de Home. Medido con precisión sobre la foto
+real: la línea solo llegaba hasta la mitad de la pantalla en el estado
+con actividad y hasta más allá en el estado vacío (contenido distinto,
+ancho distinto) — de ahí que "sobrara aire a la derecha": literalmente
+no había fila ahí, no era un problema de padding. Confirmado también
+que el dispositivo real es de 430pt CSS de ancho, con 16pt de margen de
+página y 8pt de separación entre las tres tarjetas KPI — cifras usadas
+para calibrar los mockups de esta ronda a escala real en vez de a ojo
+(pedido explícito: "los mockups q hiciste quedaban bien pero no
+reflejaban la realidad de anchos").
+
+**Proceso de mockups (varias rondas sobre el mismo Artifact):** primero
+3 opciones con el valor a la derecha/tinte de fondo/segunda línea de
+tendencia — descartadas ("me resulta muy pobre el diseño de la
+pastilla... quiero centrando la info"); tras eso, 3 opciones con
+contenido centrado (A: minimal: B: cifra en mini-insignia; C: halo
+dinámico sutil) — elegida la C. Ajustada dos veces más tras feedback
+directo sobre cómo se veía el icono: primero quitando el halo del
+estado vacío (se veía sucio sobre el badge claro — un resplandor
+difuminado necesita un fondo sólido/oscuro detrás para leerse limpio,
+no funciona sobre un tinte pálido), después quitando también el anillo
+que lo sustituía (su propia sombra volvía a leerse oscura alrededor de
+un icono claro) — el estado vacío se queda sin ningún efecto extra,
+solo el icono en azul océano sobre el tinte claro.
+
+**Implementación** (`HomeTab.jsx`): `w-full` + `justify-center` en el
+botón (arreglo real del bug de base, no solo un parche de padding);
+icono+título+cifra+flecha ahora van agrupados y centrados como un único
+bloque, nunca pegados a la izquierda. Con actividad, la insignia lleva
+un halo radial sutil detrás (mismo criterio de opacidad hexadecimal
+`${BRAND_OCEAN}66/1A` que ya usan otras insignias del archivo) además
+de la respiración en bucle que ya tenía; sin actividad, sin ningún
+efecto extra.
+
+**Segundo hallazgo, de correctness, del propio usuario**: "para contar
+los generados tienes q tener en cuenta cada vez q se llame a la app de
+generar, la puedo llamar individualmente para cada alumno o en el
+generar todos que sumará una por alumno". Al revisar `TrainingRecordsTab.jsx`
+se confirmó un bug real: `addGeneratedCount` solo se llamaba desde
+`generateAll` ("Generar para todos los alumnos") — la acción de
+regenerar UN solo alumno (`regenerateStudent`, botón "Regenerar TR",
+pensada para no repetir el resto del listado) no sumaba nada al
+contador. **Fix**: `regenerateStudent` también llama a
+`addGeneratedCount(profile?.user_id, 1)` tras generar con éxito.
+
+**Verificado**: 865/865 tests (1 nuevo en `TrainingRecordsTab.test.jsx`
+que reproduce exactamente el caso reportado: pulsar "Regenerar TR" sin
+haber pasado nunca por "Generar para todos" también suma al contador),
+lint 0 errores, build correcto. Confirmado en Chrome real contra el
+dev server TEST: estado vacío con el icono+texto centrados como grupo
+(ya no pegados a la izquierda); simulando un contador de 23 vía
+`localStorage`, estado con actividad con el halo visible detrás del
+badge navy, icono legible, "Training Records"/"23 GENERADOS" centrados.
+Sin errores de consola en ningún estado.
+
+**Pendiente, explícitamente aparcado por el propio usuario para el
+siguiente turno** ("implementa la opción C... y luego ponte con esto
+del logo"): la legibilidad del icono (Award, lucide-react) en blanco
+sobre el badge navy de 26px — el mismo patrón "icono blanco sobre
+fondo navy sólido" se usa en muchos otros sitios de la app (Login,
+Crear contraseña, Registro, Configuración, Mi perfil...), pero siempre
+en insignias bastante más grandes (44-56px) que las 26px de esta fila;
+antes de tocar `ESTILO.md` hace falta que el usuario confirme, mirando
+el badge de 26px en el Artifact, si el problema es el tamaño/grosor de
+trazo concreto de esta fila (fix puntual, subir `strokeWidth`) o si se
+aprecia igual de débil en las insignias grandes ya existentes (ahí sí
+sería una revisión transversal real del libro de estilo).

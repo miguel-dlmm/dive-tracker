@@ -56,7 +56,11 @@ Registro de cambios relevantes de Ocean Flow.
   invitación real ("Genera tu primer Training Record"); en cuanto lo hay,
   muestra la cifra animada junto a "Generados", mismo patrón que
   Alumnos/Cursos/Captados justo arriba, alineada al mismo margen que el
-  resto de tarjetas de Home.
+  resto de tarjetas de Home. El contenido (icono, título, cifra, flecha)
+  va agrupado y centrado en la fila, ahora de ancho completo — antes se
+  encogía al ancho de su propio contenido y por eso quedaba todo pegado
+  a la izquierda con un hueco vacío a la derecha. Con actividad, la
+  insignia lleva además un resplandor sutil detrás.
 - **Training Records**: en Nitrox, Deep Diving, Basic Diver, Diver
   Stress & Rescue, Navigation, Night & Limited Visibility, Perfect
   Buoyancy y React Right, las filas de progreso del curso que de verdad
@@ -209,6 +213,10 @@ Registro de cambios relevantes de Ocean Flow.
   "pendiente de configurar" que ya está configurado).
 
 ### Fixed
+- **Regenerar un solo Training Record ("Regenerar TR") no sumaba al
+  contador de Home** — solo "Generar para todos los alumnos" lo hacía.
+  Ahora cuenta cualquier generación con éxito, se llame de una en una o
+  para todo el listado a la vez.
 - **El contador de Training Records generados se compartía entre
   cuentas del mismo navegador** — al entrar con otra cuenta se seguía
   viendo la cifra generada por la cuenta anterior, aunque la nueva no
