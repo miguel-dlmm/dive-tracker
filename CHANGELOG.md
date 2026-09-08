@@ -4,14 +4,6 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
-### Fixed
-- **Listado de Mi trabajo/Home/Resumen/Comisiones podía mostrar un
-  importe distinto al del popup de edición** para el mismo movimiento,
-  cuando había una tarifa desactivada (migración 0015) junto a la
-  activa para la misma escuela+actividad — el listado podía coger la
-  desactivada en vez de la vigente. Ahora usa siempre la tarifa activa,
-  igual que ya hacía el popup.
-
 ## [1.1.0] - 2026-09-07
 
 ### Added
@@ -235,6 +227,12 @@ Registro de cambios relevantes de Ocean Flow.
   "pendiente de configurar" que ya está configurado).
 
 ### Fixed
+- **Listado de Mi trabajo/Home/Resumen/Comisiones podía mostrar un
+  importe distinto al del popup de edición** para el mismo movimiento,
+  cuando había una tarifa desactivada (migración 0015) junto a la
+  activa para la misma escuela+actividad — el listado podía coger la
+  desactivada en vez de la vigente. Ahora usa siempre la tarifa activa,
+  igual que ya hacía el popup.
 - **Ayuda: al abrir una categoría distinta, la que quedaba abierta se
   cerraba de golpe y la nueva podía acabar en cualquier posición de la
   pantalla** (a veces por encima de la propia cabecera), sobre todo si
