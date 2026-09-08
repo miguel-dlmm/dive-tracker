@@ -4,6 +4,8 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.2.1] - 2026-09-09
+
 ### Fixed
 - **Descargar/exportar a JPG en Training Records, apagado temporalmente**:
   el polyfill de `Uint8Array.toHex/toBase64` (v1.2.0) no resolvió el
