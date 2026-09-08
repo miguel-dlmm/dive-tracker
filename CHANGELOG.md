@@ -4,6 +4,14 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Fixed
+- **Registro externo, campo "País de residencia" en móvil**: en iOS
+  Safari, al abrirse el teclado la tarjeta entera se recentraba de
+  golpe (`min-h-dvh` + `items-center`) justo cuando el desplegable de
+  país ya había fijado su posición, dejándolo superpuesto sobre el
+  propio campo — inusable para escribir. Bug real reportado en
+  producción, 2026-09-08.
+
 ### Removed
 - Pantallas huérfanas de antes de la unificación de "Mi trabajo"
   (Registro, Comisiones, Compañeros, Pagos) — sin ningún punto de

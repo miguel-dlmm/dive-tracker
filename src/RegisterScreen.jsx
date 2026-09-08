@@ -113,8 +113,24 @@ export default function RegisterScreen({ onBack, inviteToken }) {
     }
   };
 
+  // items-start, no items-center (bug real reportado 2026-09-08 en
+  // producción, iPhone 14 Pro Max/Safari: "el país de residencia es
+  // inusable, una capa carga encima del campo"): con items-center,
+  // min-h-dvh encoge de golpe al abrirse el teclado (dvh sigue al
+  // viewport visual en iOS) y el flex recentra la tarjeta ENTERA en pleno
+  // gesto — justo mientras SearchSelect (país) ya decidió y "congeló" la
+  // dirección arriba/abajo de su panel flotante (useFloatingPosition,
+  // shared.jsx) para no saltar mientras se escribe. El campo se mueve por
+  // debajo del panel ya posicionado, no al revés. items-start evita el
+  // recentrado: mismo criterio que ya usa CreatePasswordScreen.jsx para
+  // el mismo min-h-dvh, la tarjeta arranca fija bajo el padding superior
+  // y no se recoloca con el teclado. Nunca reproducido antes porque
+  // ningún otro campo de Registro abre un panel flotante sobre un input
+  // de texto — el propio SearchSelect ya funciona bien en Mi perfil, que
+  // vive en una pantalla con scroll normal, no en un contenedor que se
+  // recentra.
   return (
-    <div className="flex min-h-dvh items-center justify-center px-5 py-10" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+    <div className="flex min-h-dvh items-start justify-center px-5 py-10" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-2">
           <img src="/brand/logo-mark-navy.svg" alt="" width={44} height={44} aria-hidden="true" />
