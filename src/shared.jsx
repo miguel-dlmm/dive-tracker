@@ -1821,32 +1821,6 @@ function useFloatingPosition(open, anchorRef, align = "left") {
     if (!open) return;
     decideOpenUp();
   }, [open, decideOpenUp]);
-  // Segunda decisión, solo la primera vez que cambia visualViewport tras
-  // abrir (2026-09-08, bug real reportado — "la lista aparece encima del
-  // propio campo y se hace difícil hacer select sobre él"): en un campo
-  // de texto (SearchSelect, país de residencia p.ej.), tocarlo ABRE EL
-  // TECLADO a la vez que el panel — la decisión de arriba/abajo de justo
-  // encima se toma con el viewport TODAVÍA SIN encoger (la animación del
-  // teclado en iOS tarda ~250-300ms), así que puede quedar mal elegida
-  // desde el principio y quedarse así el resto de la apertura (a
-  // propósito no se re-decide en cada recálculo, ver el comentario de
-  // arriba). Escuchar un único evento `resize` de visualViewport después
-  // de abrir permite corregir la decisión una vez, ya con el teclado
-  // asentado, sin reintroducir el salto continuo mientras se escribe que
-  // motivó congelarla en primer lugar.
-  useEffect(() => {
-    if (!open) return;
-    const vv = window.visualViewport;
-    if (!vv) return;
-    let handled = false;
-    function onSettle() {
-      if (handled) return;
-      handled = true;
-      decideOpenUp();
-    }
-    vv.addEventListener("resize", onSettle);
-    return () => vv.removeEventListener("resize", onSettle);
-  }, [open, decideOpenUp]);
   const recalc = useCallback(() => {
     const el = anchorRef.current;
     if (!open || !el) return;
@@ -1894,6 +1868,44 @@ function useFloatingPosition(open, anchorRef, align = "left") {
       vv?.removeEventListener("scroll", recalc);
     };
   }, [open, recalc]);
+
+  // Segunda decisión de dirección, con DEBOUNCE, tras abrir (segunda
+  // vuelta de un bug real, 2026-09-08 — "el país de residencia sigue
+  // tapado al escribir, y al filtrar el panel queda flotando muy
+  // separado del campo, a la altura de otro campo distinto", reportado
+  // en Registro Y en Mi perfil, dos pantallas con layouts distintos: la
+  // causa no podía ser específica de una — confirma que el hook
+  // compartido es el sitio real a corregir). El primer intento
+  // corregía la dirección UNA ÚNICA VEZ, en el primer `resize` de
+  // visualViewport tras abrir — pero en iOS, abrirse el teclado (resize)
+  // y el scroll nativo que hace Safari para revelar el campo por encima
+  // del teclado pueden llegar como DOS eventos separados y en cualquier
+  // orden; si la única corrección se consume con el primero, se queda
+  // fijada con la posición todavía de tránsito, antes de que el campo
+  // termine de moverse. Debounce en vez de "una vez": cada resize/scroll
+  // de visualViewport reprograma la re-decisión 120ms más tarde,
+  // así que por muchos eventos intermedios que lleguen durante la
+  // animación del teclado, solo se corrige cuando el viewport deja de
+  // moverse — nunca mientras el usuario escribe (teclear no dispara
+  // resize/scroll de visualViewport, así que no reintroduce el salto
+  // continuo que motivó congelar la dirección en primer lugar).
+  useEffect(() => {
+    if (!open) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    let timer = null;
+    function onSettle() {
+      clearTimeout(timer);
+      timer = setTimeout(() => { decideOpenUp(); recalc(); }, 120);
+    }
+    vv.addEventListener("resize", onSettle);
+    vv.addEventListener("scroll", onSettle);
+    return () => {
+      clearTimeout(timer);
+      vv.removeEventListener("resize", onSettle);
+      vv.removeEventListener("scroll", onSettle);
+    };
+  }, [open, decideOpenUp, recalc]);
 
   return pos;
 }

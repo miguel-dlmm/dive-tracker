@@ -11,6 +11,16 @@ Registro de cambios relevantes de Ocean Flow.
   usa hoy la mayoría de instructores.
 
 ### Fixed
+- **Desplegables con teclado en móvil (país de residencia y cualquier
+  otro `SearchSelect`/`Select`/`DatePicker`)**: la corrección de
+  dirección arriba/abajo tras abrirse el teclado solo escuchaba un
+  `resize` de `visualViewport` una única vez — en iOS, el scroll nativo
+  que revela el campo por encima del teclado es una señal aparte
+  (`scroll`, no `resize`) que se ignoraba por completo, dejando el
+  panel flotando en una posición ya obsoleta. Ahora escucha ambas, con
+  debounce, hasta que el viewport deja de moverse (`useFloatingPosition`,
+  `shared.jsx`) — corrige Registro, Mi perfil y cualquier otro
+  desplegable con el mismo patrón de una sola vez.
 - **Training Records en producción no ofrecía ninguna plantilla**: la
   migración de esquema de la Fase 5 sí se había aplicado, pero las 10
   filas + los PDF reales se sembraron a mano solo contra TEST durante
