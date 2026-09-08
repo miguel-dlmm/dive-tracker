@@ -476,7 +476,7 @@ describe("HomeTab — enlace 'Descargar app'", () => {
 describe("HomeTab — tarjeta de Training Records", () => {
   beforeEach(() => { localStorage.clear(); });
 
-  function renderHomeWithTR(onOpenTrainingRecords = vi.fn()) {
+  function renderHomeWithTR(onOpenTrainingRecords = vi.fn(), userId = "u1") {
     render(
       <HomeTab
         worklog={rowsHook([])} comisiones={rowsHook([])} colleaguePayments={rowsHook([])}
@@ -484,6 +484,7 @@ describe("HomeTab — tarjeta de Training Records", () => {
         activities={rowsHook([{ name: "Open Water" }])} schools={rowsHook([{ name: "PADI Cozumel" }])}
         currencies={rowsHook([{ code: "EUR", symbol: "€", is_default: true }])} navSections={rowsHook([])}
         paymentStatuses={PAYMENT_STATUSES} onQuickCreate={vi.fn()} onOpenTrainingRecords={onOpenTrainingRecords}
+        userId={userId}
       />
     );
   }
@@ -496,7 +497,7 @@ describe("HomeTab — tarjeta de Training Records", () => {
   });
 
   it("con Training Records ya generados, cambia a 'Training Records' + la cifra + 'Generados' (mismo patrón que los KPI)", async () => {
-    localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount", "7");
+    localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount:u1", "7");
     renderHomeWithTR();
     expect(screen.getByText("Training Records")).toBeInTheDocument();
     await waitFor(() => {
@@ -504,6 +505,22 @@ describe("HomeTab — tarjeta de Training Records", () => {
     }, { timeout: 4000 });
     expect(screen.getByText("Generados")).toBeInTheDocument();
     expect(screen.queryByText("Genera tu primer Training Record")).not.toBeInTheDocument();
+  });
+
+  // Bug real (2026-09-08): "he creado un TR con el admin y cuando entro
+  // con una cuenta demo mía sigue poniendo el número de generados pese a
+  // q aún no he generado ninguno" — el contador vivía en una clave de
+  // localStorage compartida por cualquier cuenta del mismo navegador.
+  it("los Training Records generados por otra cuenta en el mismo navegador no se cuelan aquí", () => {
+    localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount:admin-1", "12");
+    renderHomeWithTR(vi.fn(), "demo-2");
+    // Si el bug se reprodujera, esta cuenta ("demo-2") vería el estado
+    // "con actividad" (título + cifra) heredado de "admin-1" en vez de la
+    // invitación real — comprobar la invitación ya es suficiente, sin
+    // buscar "12" suelto en el documento (coincide por casualidad con el
+    // día 12 del calendario de abajo).
+    expect(screen.getByText("Genera tu primer Training Record")).toBeInTheDocument();
+    expect(screen.queryByText("Training Records")).not.toBeInTheDocument();
   });
 
   it("pulsar la fila llama a onOpenTrainingRecords", async () => {

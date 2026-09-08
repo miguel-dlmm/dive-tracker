@@ -55,7 +55,8 @@ Registro de cambios relevantes de Ocean Flow.
   menos pesada visualmente. Sin ningún documento generado todavía es una
   invitación real ("Genera tu primer Training Record"); en cuanto lo hay,
   muestra la cifra animada junto a "Generados", mismo patrón que
-  Alumnos/Cursos/Captados justo arriba.
+  Alumnos/Cursos/Captados justo arriba, alineada al mismo margen que el
+  resto de tarjetas de Home.
 - **Training Records**: en Nitrox, Deep Diving, Basic Diver, Diver
   Stress & Rescue, Navigation, Night & Limited Visibility, Perfect
   Buoyancy y React Right, las filas de progreso del curso que de verdad
@@ -208,6 +209,11 @@ Registro de cambios relevantes de Ocean Flow.
   "pendiente de configurar" que ya está configurado).
 
 ### Fixed
+- **El contador de Training Records generados se compartía entre
+  cuentas del mismo navegador** — al entrar con otra cuenta se seguía
+  viendo la cifra generada por la cuenta anterior, aunque la nueva no
+  hubiera generado ninguno todavía. Ahora cada cuenta tiene su propio
+  contador, igual que ya pasa con "Qué hay de nuevo".
 - **`manifest.json` nunca llegaba al build de producción** (vivía en la
   raíz del repositorio, no en `public/` — Vite solo empaqueta esa
   carpeta): probable causa de que el icono de la app no aparezca bien

@@ -5,21 +5,28 @@
 // rellenes aquí se guarda, solo se descarga" — ver installApp.json/
 // help.json), así que no existe ningún sitio real donde llevar la cuenta
 // de certificados emitidos sin romper esa garantía. Este contador es un
-// entero suelto en localStorage (mismo criterio "preferencia de
-// dispositivo, no de cuenta" que installBannerDismissed en HomeTab.jsx
-// tenía) — no identifica a ningún alumno, solo cuántas veces se ha
-// generado un PDF con éxito desde ESTE navegador/móvil.
+// entero suelto en localStorage — no identifica a ningún alumno, solo
+// cuántas veces se ha generado un PDF con éxito.
 //
-// Limitación conocida, aceptada a propósito: regenerar el mismo listado
-// de alumnos (p. ej. tras corregir una fecha) vuelve a sumar — no es un
-// libro de certificados emitidos, es un indicador de actividad/uso. Igual
-// de válido para el propósito real (que la tarjeta de Home se sienta viva
-// y refleje que la herramienta se usa) sin necesitar guardar nada nuevo.
-const GENERATED_COUNT_KEY = "oceanpulse:trainingRecordsGeneratedCount";
+// Por CUENTA, no por dispositivo (bug real reportado 2026-09-08: "he
+// creado un TR con el admin y cuando entro con una cuenta demo mía sigue
+// poniendo el número de generados pese a q aún no he generado ninguno")
+// — a diferencia de installBannerDismissed (HomeTab.jsx), que sí es
+// deliberadamente de dispositivo, este contador representa "cuánto ha
+// generado ESTA cuenta", y varias cuentas comparten navegador a menudo en
+// este proyecto (bypass de login en desarrollo, cuentas admin/demo en el
+// mismo dispositivo de pruebas). Mismo criterio ya establecido por
+// whatsNewSeenKey (App.jsx): la clave de localStorage incluye el user_id,
+// "anon" como respaldo si todavía no hay sesión resuelta.
+const GENERATED_COUNT_KEY_PREFIX = "oceanpulse:trainingRecordsGeneratedCount";
 
-export function getGeneratedCount() {
+function keyFor(userId) {
+  return `${GENERATED_COUNT_KEY_PREFIX}:${userId || "anon"}`;
+}
+
+export function getGeneratedCount(userId) {
   try {
-    const raw = localStorage.getItem(GENERATED_COUNT_KEY);
+    const raw = localStorage.getItem(keyFor(userId));
     const n = Number(raw);
     return Number.isFinite(n) && n > 0 ? n : 0;
   } catch {
@@ -27,11 +34,11 @@ export function getGeneratedCount() {
   }
 }
 
-export function addGeneratedCount(by) {
-  if (!Number.isFinite(by) || by <= 0) return getGeneratedCount();
-  const next = getGeneratedCount() + by;
+export function addGeneratedCount(userId, by) {
+  if (!Number.isFinite(by) || by <= 0) return getGeneratedCount(userId);
+  const next = getGeneratedCount(userId) + by;
   try {
-    localStorage.setItem(GENERATED_COUNT_KEY, String(next));
+    localStorage.setItem(keyFor(userId), String(next));
   } catch { /* no-op — contador decorativo, no crítico */ }
   return next;
 }

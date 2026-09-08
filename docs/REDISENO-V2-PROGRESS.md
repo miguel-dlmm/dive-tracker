@@ -4780,3 +4780,49 @@ valor simulado en `localStorage`, la cifra se anima hasta 23 y "Training
 Records"/"Generados" aparecen con el patrón de los KPI, coincidiendo
 con el mockup elegido fotograma a fotograma; navegación y ausencia de
 errores de consola confirmadas en ambos estados.
+
+### 12.28 — Dos bugs reales de 12.27, reportados desde el iPhone del usuario en el Preview
+
+Captura real desde Safari/iPhone sobre el Preview Deployment
+(`diseno-v2-ocean-pulse1.vercel.app`), logueado como "admin": "he creado
+un tr con el admin y cuando entro con una cuenta demo mía sigue poniendo
+el número de generados pese a q aún no he generado ninguno. el diseño
+implementado no es exactamente igual al mockup. queda todo muy en el
+lado izquierdo cuando da el número de generados". Dos bugs distintos.
+
+**Bug 1 — contador de Training Records compartido entre cuentas del
+mismo navegador.** `generatedCounter.js` guardaba el acumulado bajo una
+única clave fija de `localStorage`
+(`oceanpulse:trainingRecordsGeneratedCount`), sin distinguir de qué
+cuenta venía — el mismo problema, y la misma solución, que ya resolvió
+`whatsNewSeenKey(userId)` en `App.jsx` para "Novedades de esta versión".
+Cualquier cuenta que abriera el navegador en el que "admin" había
+generado TRs veía su cifra, aunque esa cuenta no hubiera generado nada.
+**Fix**: `getGeneratedCount(userId)`/`addGeneratedCount(userId, by)`
+ahora reciben el `user_id` real del perfil y lo incluyen en la clave
+(`...GeneratedCount:<userId>`, o `:anon` si la sesión aún no se ha
+resuelto). `HomeTab` recibe `userId` como prop nueva desde `App.jsx`
+(`profile?.user_id`) y la usa para leer el contador propio de la cuenta
+activa; `TrainingRecordsTab` pasa ese mismo `user_id` al sumar cada
+generación nueva.
+
+**Bug 2 — fila pegada al borde izquierdo, no como en el mockup.** La
+fila de 12.27 usaba `px-1` (4px), mucho menos margen horizontal que las
+tarjetas de KPI y "Pendiente de cobrar" que la rodean (`px-3`/`p-4`) —
+por eso en pantalla real se veía todo el contenido "colgando" del borde
+izquierdo en vez de alineado con el resto de la Home. **Fix**: `px-1` →
+`px-3`, mismo margen horizontal que sus vecinos.
+
+**Verificado**: 864/864 tests (dos nuevos en `generatedCounter.test.js`
+para el aislamiento por cuenta — incluida la sesión sin resolver que usa
+`:anon` — y uno nuevo en `HomeTab.test.jsx` que reproduce el bug exacto
+del usuario: un contador de 12 generados bajo una cuenta simulada
+`admin-1` en `localStorage`, cambio a `demo-2`, se sigue viendo la
+invitación vacía, nunca "Training Records"), lint 0 errores, build
+correcto. Confirmado en Chrome real contra el propio servidor de
+desarrollo TEST (no solo en tests): con una clave falsa de otra cuenta
+(`admin-fake-id`) puesta a 7 en `localStorage`, la cuenta demo real
+seguía mostrando la invitación vacía; al escribir el contador bajo el
+`user_id` real de la sesión activa y recargar, la fila pasó al estado
+con actividad, alineada al mismo margen que "Alumnos"/"Cursos" y
+"Pendiente de cobrar" — igual que el mockup. Sin errores de consola.

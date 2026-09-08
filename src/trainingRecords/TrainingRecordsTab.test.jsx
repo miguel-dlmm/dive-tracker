@@ -321,18 +321,21 @@ it("'Menor de edad' revela el nombre/firma del tutor y los exige antes de guarda
 // generatedCounter.js. Se suma en el mismo punto que ya prueba el test de
 // arriba (generación con éxito de "Generar para todos los alumnos"), solo
 // que aquí se comprueba el efecto secundario en localStorage en vez del
-// PDF en sí.
-it("generar con éxito suma al contador de Training Records generados (localStorage)", async () => {
+// PDF en sí. Clave con sufijo `:u1` (COMPLETE_PROFILE.user_id) — el
+// contador es por CUENTA, no por dispositivo (bug real corregido
+// 2026-09-08: una cuenta demo en el mismo navegador heredaba el contador
+// de la cuenta admin usada antes).
+it("generar con éxito suma al contador de Training Records generados de ESTA cuenta (localStorage)", async () => {
   const user = userEvent.setup();
   renderTab();
   await selectTemplateAndFillSharedConfig(user);
   await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
-  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount")).toBeNull();
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount:u1")).toBeNull();
 
   await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
   await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
 
-  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount")).toBe("1");
+  expect(localStorage.getItem("oceanpulse:trainingRecordsGeneratedCount:u1")).toBe("1");
 }, 15000);
 
 it("el listado y los documentos ya generados sobreviven a un remontaje (recarga de página)", async () => {

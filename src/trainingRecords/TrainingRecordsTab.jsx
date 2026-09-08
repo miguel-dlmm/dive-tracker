@@ -557,7 +557,7 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
       // Contador decorativo de Home (2026-09-08) — ver generatedCounter.js
       // para el porqué de sumar aquí (generación real de PDF) y no en la
       // descarga/compartir, que son solo formas de entregar lo ya generado.
-      addGeneratedCount(updated.length);
+      addGeneratedCount(profile?.user_id, updated.length);
     } catch (err) {
       console.error(err);
       toast?.error(t("studentSheet.noSePudoGenerar"));

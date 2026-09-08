@@ -510,6 +510,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             onOpenSummary={() => changeTab("summary")}
             onOpenTrainingRecords={() => changeTab("training-records")}
             onOpenInstallApp={() => changeTab("install-app")}
+            userId={profile?.user_id}
           />
         )}
         {tab === "log" && (

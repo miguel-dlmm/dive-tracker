@@ -90,7 +90,7 @@ function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
   const { t } = useTranslation("home");
   // Oculta el punto de entrada de "Instalar la app" si la propia app ya
   // corre instalada (display-mode: standalone en Chromium/Android,
@@ -109,7 +109,13 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // una pestaña hermana que se desmonta al salir de ella, así que no
   // hace falta sincronización en vivo entre las dos, solo que Home lea
   // el valor actual cada vez que se vuelve a montar.
-  const [generatedCount] = useState(getGeneratedCount);
+  // Por CUENTA (`userId`), no por dispositivo — bug real reportado
+  // 2026-09-08: con el bypass de login/varias cuentas de prueba en el
+  // mismo navegador, una cuenta demo recién entrada mostraba los
+  // Training Records ya generados por la cuenta admin usada antes en ese
+  // mismo dispositivo. Ver generatedCounter.js, mismo criterio que
+  // whatsNewSeenKey (App.jsx).
+  const [generatedCount] = useState(() => getGeneratedCount(userId));
   const animatedGeneratedCount = useCountUp(generatedCount, { reduced: reducedMotion });
   const now = new Date();
   const currentMonthKey = monthKey(now);
@@ -282,12 +288,20 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
               contar lo ya hecho.
           Insignia rounded-lg (no circular, para no confundirse con los
           badges redondos de los KPI) con la misma respiración sutil en
-          bucle que ya tenía, apagada con prefers-reduced-motion. */}
+          bucle que ya tenía, apagada con prefers-reduced-motion.
+          `px-3` (2026-09-08, bug real reportado: "queda todo muy en el
+          lado izquierdo") — el `px-1` original dejaba el icono/texto de
+          esta fila varios píxeles más a la izquierda que el resto de
+          elementos de Home (las KPI tiles tienen su propio `p-[9px]`
+          interno, la tarjeta "Pendiente de cobrar" `p-4`): sin ningún
+          borde/fondo propio que lo compense, el contenido se veía pegado
+          al borde en vez de guardar el mismo ritmo horizontal que sus
+          vecinos. */}
       {onOpenTrainingRecords && (
         <button
           type="button"
           onClick={onOpenTrainingRecords}
-          className="flex items-center gap-2.5 border-b border-t border-gray-100 px-1 py-2.5 text-left"
+          className="flex items-center gap-2.5 border-b border-t border-gray-100 px-3 py-2.5 text-left"
         >
           <motion.span
             className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg"
