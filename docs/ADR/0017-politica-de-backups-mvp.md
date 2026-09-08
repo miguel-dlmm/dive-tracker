@@ -110,3 +110,38 @@ aceptable).
   explícitamente (subir a Pro, cifrar los backups, montar un cron).
 - `backups/` añadido a `.gitignore` — ya activo, ningún dump puede acabar
   en el historial de git por accidente.
+
+## Addendum 2026-09-09 — respuesta directa a "¿merece la pena, con qué periodicidad, dónde?"
+
+El usuario volvió a plantear la pregunta de fondo una vez la app ya está
+en producción real (v1.1.0/v1.2.x, `oceanflow-web.vercel.app`). La
+política de arriba **sigue vigente sin cambios** — el volumen real (un
+instructor freelance, no un negocio multiusuario) no ha cambiado desde
+que se decidió, y el mecanismo ya se usó de verdad el 2026-09-08 (backup
+real de 368 KB antes de la migración de la release v1.1.0, ver
+`docs/REDISENO-V2-PROGRESS.md`). Recomendación concreta, sin abrir de
+nuevo el análisis completo:
+
+- **¿Merece la pena?** Sí, la copia manual semanal (coste cero) — no
+  hace falta pasar a Supabase Pro todavía. La condición que lo
+  reactivaría (arriba) no se ha cumplido: sigue siendo una sola cuenta
+  real, sin dependencia de terceros para facturación.
+- **¿Con qué periodicidad?** Semanal (`npm run backup:db`, a mano) sigue
+  siendo razonable — RPO de hasta 7 días, aceptado como suficiente para
+  el volumen real de movimientos de un instructor. Si se quiere bajar
+  ese RPO sin pagar Pro, la única palanca real es aumentar la frecuencia
+  manual (p. ej. tras cada sesión de trabajo real con la app), no hay
+  automatización barata intermedia sin resolver antes dónde vive el
+  secreto `SUPABASE_DB_URL` fuera de esta máquina.
+- **¿Dónde guardarlos?** `backups/` (ya en iCloud, gitignored) sigue
+  siendo razonable como copia fuera de la máquina sin coste ni servicio
+  nuevo. La única pregunta que quedaba genuinamente abierta en la
+  decisión original — cifrar el `.dump` antes de dejarlo en iCloud — se
+  resuelve aquí con una recomendación concreta: **sí, cifrarlo**
+  (`age` o `gpg -c`, un paso más al backupear/restaurar) — son datos
+  financieros reales y el perímetro de confianza de iCloud nunca fue
+  parte del diseño original de este proyecto. No implementado esta
+  noche (decisión de una clave/contraseña que debe elegir y guardar el
+  propio usuario, no algo que se pueda decidir en su ausencia) — queda
+  como recomendación explícita para la próxima vez que se toque este
+  script.
