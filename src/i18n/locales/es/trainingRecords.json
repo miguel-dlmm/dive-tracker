@@ -45,6 +45,7 @@
     "inicialesHint": "Se calculan solas — puedes corregirlas si hace falta.",
     "plantilla": "Curso a certificar",
     "cambiarPlantilla": "Cambiar plantilla",
+    "verAyuda": "Ver ayuda",
     "confirmarCambioPlantilla": {
       "titulo": "¿Cambiar de plantilla?",
       "mensaje": "Vas a perder el progreso, las fechas y las firmas que ya has rellenado para este alumno.",

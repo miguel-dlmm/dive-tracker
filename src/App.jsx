@@ -26,7 +26,7 @@ import WhatsNew from "./WhatsNew";
 import DeploymentNotice from "./DeploymentNotice";
 import { APP_VERSION } from "./version";
 import SummaryTab from "./SummaryTab";
-import HelpTab, { clearStoredHelpOpen } from "./HelpTab";
+import HelpTab, { clearStoredHelpOpen, openHelpCategory } from "./HelpTab";
 import InstallAppTab from "./InstallAppTab";
 import ProfileTab from "./ProfileTab";
 import i18n, { setStoredLanguage } from "./i18n";
@@ -542,6 +542,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
           <TrainingRecordsTab
             profile={profile} accentColor={sectionColor("trabajo")}
             onOpenProfile={() => changeTab("perfil")} onProfileUpdated={onProfileUpdated}
+            onOpenHelp={() => { openHelpCategory("quiero-generar-tr"); changeTab("help"); }}
           />
         )}
         {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} onOpenInstallApp={() => changeTab("install-app")} />}

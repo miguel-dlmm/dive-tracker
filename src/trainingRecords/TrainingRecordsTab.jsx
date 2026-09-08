@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { zipSync } from "fflate";
-import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2, Info } from "lucide-react";
+import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2, Info, HelpCircle } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { useToast, RowMenu, DatePicker, Select, ConfirmDialog } from "../shared";
 // TEAL: solo queda como último respaldo (`accentColor || TEAL`) si por lo
@@ -62,11 +62,6 @@ function sortTemplatesForDisplay(templates) {
   });
 }
 
-function bytesToBase64(bytes) {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
-}
 function base64ToBytes(base64) {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -92,7 +87,24 @@ function persistSession(session) {
   try {
     const serializable = {
       ...session,
-      students: session.students.map((s) => ({ ...s, pdfBytes: s.pdfBytes ? bytesToBase64(s.pdfBytes) : null })),
+      // pdfBytes/generatedAt NUNCA se persisten (bug real 2026-09-08:
+      // "al cerrar Training Records resetea completamente el formulario
+      // a añadir plantilla y borra los alumnos"). Causa real: un PDF
+      // generado por alumno son varios cientos de KB en base64 — con un
+      // roster de unos pocos alumnos ya generados, el conjunto supera
+      // fácilmente la cuota de sessionStorage (5-10MB según navegador).
+      // sessionStorage.setItem lanza QuotaExceededError al superarla,
+      // capturado más abajo, así que ESE guardado entero se descartaba en
+      // silencio — la próxima vez que se abría esta pantalla,
+      // loadStoredSession() encontraba el último valor que SÍ había
+      // cabido (a veces ninguno, un roster vacío sin plantilla) en vez
+      // del real. selectTemplate/requestTemplateChange YA tratan
+      // pdfBytes como "regenerable sin pérdida real" (lo ponen a null al
+      // cambiar de plantilla, más abajo) — aquí se aplica el mismo
+      // criterio a lo que se persiste entre pantallas, no a lo que se
+      // mantiene en memoria durante la sesión activa (generar de nuevo
+      // al reabrir es rápido; arriesgarse a perder el roster entero, no).
+      students: session.students.map((s) => ({ ...s, pdfBytes: null, generatedAt: null })),
     };
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(serializable));
   } catch {
@@ -414,7 +426,7 @@ function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf
   );
 }
 
-export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile, onProfileUpdated }) {
+export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile, onProfileUpdated, onOpenHelp }) {
   const { t, i18n } = useTranslation("trainingRecords");
   const toast = useToast();
   const [templates, setTemplates] = useState([]);
@@ -670,9 +682,15 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
       <section>
         <div className="mb-2 flex items-center justify-between gap-2">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("studentForm.plantilla")}</h3>
-          {templateCode && (
-            <button onClick={requestTemplateChange} className="flex min-h-9 shrink-0 items-center gap-1 text-xs font-medium" style={{ color: accentColor || TEAL }}>
-              {t("studentForm.cambiarPlantilla")}
+          {/* "Cambiar plantilla" se movió DENTRO de la propia pastilla
+              (más abajo) — 2026-09-08, pedido explícito: este hueco pasa
+              a ser un enlace fijo a Ayuda, siempre visible (haya o no
+              plantilla elegida todavía), no condicionado como el enlace
+              que sustituye. */}
+          {onOpenHelp && (
+            <button onClick={onOpenHelp} className="flex min-h-9 shrink-0 items-center gap-1 text-xs font-medium" style={{ color: accentColor || TEAL }}>
+              <HelpCircle size={14} aria-hidden="true" />
+              {t("studentForm.verAyuda")}
             </button>
           )}
         </div>
@@ -693,7 +711,13 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
             </div>
           )
         ) : (
-          <p className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-800">{templateMap.name}</p>
+          <div className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white py-2.5 pl-3 pr-2">
+            <p className="text-sm font-medium text-gray-800">{templateMap.name}</p>
+            <button onClick={requestTemplateChange} className="flex min-h-9 shrink-0 items-center gap-1 rounded-md px-2 text-xs font-medium" style={{ color: accentColor || TEAL }}>
+              <RefreshCw size={13} aria-hidden="true" />
+              {t("studentForm.cambiarPlantilla")}
+            </button>
+          </div>
         )}
       </section>
 

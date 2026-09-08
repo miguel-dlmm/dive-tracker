@@ -45,6 +45,7 @@
     "inicialesHint": "Automatisch berechnet — du kannst sie bei Bedarf korrigieren.",
     "plantilla": "Zu zertifizierender Kurs",
     "cambiarPlantilla": "Vorlage ändern",
+    "verAyuda": "Hilfe ansehen",
     "confirmarCambioPlantilla": {
       "titulo": "Vorlage ändern?",
       "mensaje": "Du verlierst den Fortschritt, die Daten und die bereits ausgefüllten Unterschriften für diesen Teilnehmer.",
