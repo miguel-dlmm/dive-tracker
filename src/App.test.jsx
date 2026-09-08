@@ -31,6 +31,7 @@ import App from "./App";
 import { useSession } from "./useSession";
 import { useSupabaseTable } from "./useSupabaseTable";
 import { supabase } from "./supabaseClient";
+import { APP_VERSION } from "./version";
 
 const SESSION = { user: { id: "u1", email: "diver@example.com" } };
 
@@ -224,8 +225,13 @@ describe("AuthGate", () => {
   // tocar su gate de "una vez por versión" (se marca como ya visto en
   // localStorage antes de renderizar, para probar la reapertura de verdad
   // en vez de que ya estuviera abierto por no haberse visto todavía).
+  // Importa APP_VERSION en vez de un literal fijo (bug real ya corregido
+  // una vez, ver docs/REDISENO-V2-PROGRESS.md 12.19): con un literal, cada
+  // release que sube APP_VERSION deja de representar "ya visto" y este
+  // test empieza a fallar porque WhatsNew se abre solo, sin que el
+  // mecanismo que prueba tenga ningún fallo real.
   it("Fase 4 — 'Ver qué hay de nuevo' en Ayuda reabre el slide de novedades ya visto", async () => {
-    localStorage.setItem("oceanpulse:whatsNewSeen:u1", "1.0.0");
+    localStorage.setItem("oceanpulse:whatsNewSeen:u1", APP_VERSION);
     mockUseSession({
       session: SESSION,
       profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
