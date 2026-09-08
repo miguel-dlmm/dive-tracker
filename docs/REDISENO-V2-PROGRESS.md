@@ -5227,3 +5227,67 @@ se puede emular desde este entorno (ni Playwright ni la extensión de
 Chrome de esta sesión reproducen el modo de app instalada de iOS) —
 limitación ya documentada en CLAUDE.md §8; sigue haciendo falta que el
 usuario lo confirme en su iPhone real con el acceso directo.
+
+### 12.37 — KPIs de Mi trabajo: cuarta vuelta, con tres capturas reales del móvil delante
+
+Pedido explícito, con tres capturas reales adjuntas del Preview en el
+iPhone del usuario: "cuando no hay movimientos sale el icono, qno
+debería. a partir de unidades de millar desaparece el icono y antes es
+enano. quiero quitar el icono del texto y más o menos en ese tamaño se
+puede colocar al lado de la cifra si q se salga nada de la caja. cuando
+sean tan grande como para salirse desaparece el icono siguiendo la
+regla definida. y a partir de ahí ya solo se iría encogiendo el
+número".
+
+Tres correcciones sobre el mismo sistema de escala continua de 12.33
+(que se mantiene: sigue midiendo el DOM real, nunca contando
+caracteres) — el diseño de fondo no cambia, sí tres detalles concretos
+del propio icono:
+
+1. **Icono junto a la etiqueta, retirado.** El añadido en 12.30 (icono
+   fijo junto a "Generado"/"Pendiente"/"Cobrado", que nunca se ocultaba)
+   quitaba claridad en vez de darla con dos iconos por KPI — queda uno
+   solo, el de junto a la cifra.
+2. **Icono junto a la cifra, de 14px a 10px** (tercera vuelta, 12.34,
+   había vuelto a subirlo a 14px por indicación anterior; con capturas
+   reales delante, el usuario confirma que 10px es el tamaño correcto
+   "que no se salga nada de la caja"). `ICON_FOOTPRINT`/
+   `TRANSITION_ZONE` bajan de 20/20 a 14/14 y `iconAndGap` de
+   `14 * minScale + 6` a `10 * minScale + 4`, en línea con el nuevo
+   tamaño.
+3. **Icono oculto por completo cuando el KPI no tiene datos** ("—").
+   Bug real: antes, un KPI sin movimientos de ese tipo mostraba el
+   icono a escala completa junto al guion — al ser un texto tan corto,
+   nunca llegaba a activar el encogimiento por falta de espacio, así
+   que el "sin datos" y el "con datos y espacio de sobra" eran
+   visualmente indistinguibles del lado del icono. Ahora el icono (el
+   `<motion.span>` entero) solo se renderiza cuando `entries.length >
+   0`.
+
+**Verificación**: 870/870 tests (incluye un test explícito del punto 3:
+sin movimientos, ningún `<svg>` en la fila de la cifra), lint 0 errores
+nuevos, build correcto. Verificado con Playwright + emulación de
+iPhone 14 Pro Max contra el dataset real de test (importes de 5-6
+dígitos en THB): icono visible y proporcionado con datos, ningún
+`overflowsCard`, y para los importes más grandes el icono se encoge
+hasta quedar casi invisible en vez de desaparecer de golpe — el mismo
+comportamiento ya verificado en 12.33, ahora con el tamaño de icono
+correcto. El caso "sin datos → sin icono" queda cubierto por el test
+unitario nuevo (no se pudo forzar de forma fiable desde la UI real sin
+crear datos de prueba espurios en la cuenta demo compartida).
+
+Al hilo de esta ronda, también se registra en `docs/BACKLOG.md`
+(prioridad alta) la eliminación de las cuatro pantallas huérfanas
+previas a la unificación de Mi trabajo (`WorkLogTab.jsx`,
+`ComisionesTab.jsx`, `CompanerosTab.jsx`, `PaymentsTab.jsx`) — siguen
+importadas en `App.jsx` pero inalcanzables desde `PRIMARY_TABS` desde
+el ADR-0005, ya señaladas como fuera de alcance en 12.36.
+
+**Añadido sobre la marcha, mismo hilo** ("centra los textos también"):
+la etiqueta de cada KPI (`flex items-center gap-1`, sin `justify-center`
+ni `text-center`) quedaba alineada a la izquierda en cuanto ocupaba dos
+líneas ("Generado este" / "mes"), mientras que el icono+cifra de arriba
+sí estaban centrados — inconsistente dentro de la misma tarjeta. Fix:
+añadir `justify-center text-center` a ese `<span>`. Verificado con la
+misma captura de Playwright — las tres etiquetas quedan centradas,
+también en su segunda línea.

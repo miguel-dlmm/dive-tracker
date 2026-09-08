@@ -393,36 +393,40 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
       className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
     >
-      {/* Tercera vuelta (2026-09-08, pedido explícito tras confirmar la
-          segunda: "coloca el icono estéticamente al tamaño q creas al
-          lado de la cifra, ambos centrados en la caja"): 14px — el
-          mismo tamaño de fuente que la propia cifra en su variante más
-          común (`text-sm` de una sola moneda), para que el icono lea
-          como "de la misma familia visual" que el número en vez de
-          verse desproporcionadamente pequeño (10px, el tamaño del icono
-          fijo de la etiqueta) o exagerado (18px, la vuelta anterior con
-          insignia circular). Sin badge de fondo — sigue siendo un icono
-          suelto, pegado a la cifra, con el bloque entero centrado en la
-          tarjeta (`justify-center`, no ocupa el ancho completo).
-          relative: contiene el span invisible de medición (position:
-          absolute, ver más abajo) sin que afecte a la posición de nada
-          visible.
+      {/* Cuarta vuelta (2026-09-08, pedido explícito con capturas reales
+          delante — tres bugs concretos: "cuando no hay movimientos sale
+          el icono, qno debería. a partir de unidades de millar
+          desaparece el icono y antes es enano. quiero quitar el icono
+          del texto y más o menos en ese tamaño se puede colocar al lado
+          de la cifra"): se retira el icono fijo de la etiqueta de abajo
+          (ver ese bloque) y ESTE icono, el único que queda por KPI, baja
+          de 14px a 10px — el tamaño del que se retira, no uno nuevo.
+          `entries.length > 0 &&`: sin datos ("—"), no se muestra ningún
+          icono — antes se mostraba igual (a escala completa, porque "—"
+          es corto y nunca fuerza el encogimiento compartido), aunque no
+          hay nada que ilustrar. Sin badge de fondo — icono suelto,
+          pegado a la cifra, bloque entero centrado en la tarjeta
+          (`justify-center`, no ocupa el ancho completo). relative:
+          contiene el span invisible de medición (position: absolute,
+          ver más abajo) sin que afecte a la posición de nada visible.
           iconScale (0 a 1, ver kpiIconScale en MiTrabajoTab): mismo
-          mecanismo de siempre, sobre el nuevo tamaño de 14px. Calculado
+          mecanismo de siempre, sobre el nuevo tamaño de 10px. Calculado
           sobre las 3 cifras a la vez, no cada tarjeta por su cuenta — si
           una cifra crece tanto que hace falta ocultar el icono, las 3
           tarjetas cambian juntas, para no romper la alineación entre
           ellas con solo una distinta. Nunca se desmonta (sin
           AnimatePresence): el propio ancho/opacidad anima de forma
           continua con Motion hacia el `iconScale` que le llegue. */}
-      <div ref={rowMeasureRef} className="relative flex items-center justify-center gap-1.5">
-        <motion.span
-          initial={false}
-          animate={{ width: 14 * iconScale, opacity: iconScale, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.standard } }}
-          className="flex h-5 shrink-0 items-center justify-center overflow-hidden"
-        >
-          <Icon size={14} style={{ color }} aria-hidden="true" />
-        </motion.span>
+      <div ref={rowMeasureRef} className="relative flex items-center justify-center gap-1">
+        {entries.length > 0 && (
+          <motion.span
+            initial={false}
+            animate={{ width: 10 * iconScale, opacity: iconScale, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.standard } }}
+            className="flex h-4 shrink-0 items-center justify-center overflow-hidden"
+          >
+            <Icon size={10} style={{ color }} aria-hidden="true" />
+          </motion.span>
+        )}
         {/* Sin `break-words` (Fase 11.2): la cifra ya no se parte nunca
             en dos líneas — si no cabe con el icono puesto, el padre lo
             detecta MIDIENDO el span invisible de abajo (mismo texto ya
@@ -447,19 +451,14 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
           {finalText}
         </span>
       </div>
-      {/* Icono fijo junto a la etiqueta (2026-09-07, pedido explícito:
-          "y si añadimos el icono del kpi al lado del texto?") — a
-          diferencia del icono de arriba (junto a la cifra, iconScale
-          0-1, puede llegar a ocultarse del todo si el número es muy
-          largo), este nunca se encoge ni se oculta: la etiqueta tiene
-          ancho fijo y corto, así que no compite nunca por espacio con
-          el número. Sirve de ancla — la identidad de color del KPI
-          sigue visible aunque el de arriba haya desaparecido.
-          size 10 (no 16, el de arriba): junto a texto de 11px, no junto
-          a una cifra grande — aria-hidden porque la propia etiqueta ya
-          nombra el KPI, es puramente decorativo. */}
-      <span className="flex items-center gap-1 text-[11px] font-medium leading-tight text-gray-500">
-        <Icon size={10} style={{ color }} aria-hidden="true" />
+      {/* Icono junto a la etiqueta, retirado (2026-09-08, pedido
+          explícito: "quiero quitar el icono del texto") — vivía aquí
+          desde el 2026-09-07 como ancla que nunca se ocultaba, pero con
+          el icono de la cifra ahora también oculto solo cuando de
+          verdad no hay datos (ver arriba), duplicar el icono en dos
+          sitios de la misma tarjeta ya no aportaba nada — un único
+          icono por KPI, junto a la cifra. */}
+      <span className="flex items-center justify-center gap-1 text-center text-[11px] font-medium leading-tight text-gray-500">
         {label}
         {tooltip && (
           // Mismo truco de objetivo táctil que Field: el icono visual se
@@ -857,16 +856,17 @@ export default function MiTrabajoTab({
       .map((totals) => moneyKpiText(totals, currencies.rows))
       .reduce((max, text) => (text.length > max.length ? text : max), "");
   }, [monthGeneratedTotals, pendingTotals, monthCollectedTotals, currencies.rows]);
-  // ICON_FOOTPRINT: 14px del icono (tercera vuelta, ver comentario en
-  // MoneyKpiTile — antes 10px sin badge, y 28px de badge circular antes
-  // de eso) + 6px del gap (gap-1.5) que deja de hacer falta cuando el
-  // icono llega a 0. TRANSITION_ZONE: cuántos píxeles de margen antes de
-  // tocar el borde se usan para pasar de escala 1 a 0 — ni un salto
-  // brusco (0px) ni una transición tan larga que el icono ya se vea
-  // pequeño con cifras que sobran de espacio de sobra (proporcional al
-  // propio tamaño del icono, igual criterio que antes).
-  const ICON_FOOTPRINT = 20;
-  const TRANSITION_ZONE = 20;
+  // ICON_FOOTPRINT: 10px del icono (cuarta vuelta, ver comentario en
+  // MoneyKpiTile — antes 14px, 10px sin badge antes de eso, y 28px de
+  // badge circular antes de eso) + 4px del gap (gap-1) que deja de
+  // hacer falta cuando el icono llega a 0. TRANSITION_ZONE: cuántos
+  // píxeles de margen antes de tocar el borde se usan para pasar de
+  // escala 1 a 0 — ni un salto brusco (0px) ni una transición tan larga
+  // que el icono ya se vea pequeño con cifras que sobran de espacio de
+  // sobra (proporcional al propio tamaño del icono, igual criterio que
+  // antes).
+  const ICON_FOOTPRINT = 14;
+  const TRANSITION_ZONE = 14;
   // Segunda red de seguridad (2026-09-08, pedido explícito: "los kpis
   // tienen q cumplir q con cifras grandes de 6 dígitos o más no se sale
   // del diseño de la box") — el icono ya puede llegar a 0 (arriba), pero
@@ -896,7 +896,7 @@ export default function MiTrabajoTab({
     }
     setKpiIconScale(minScale);
 
-    const iconAndGap = 14 * minScale + 6;
+    const iconAndGap = 10 * minScale + 4;
     setKpiTextScale(
       rows.map(({ rowEl, textEl }) => {
         if (!rowEl || !textEl) return 1;

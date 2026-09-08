@@ -54,10 +54,14 @@ Registro de cambios relevantes de Ocean Flow.
   altas masivas automatizadas (Vercel BotID).
 
 ### Changed
-- **KPIs de Mi trabajo**: el icono junto a cada cifra pasa de 10 a 14px
-  — el mismo tamaño de fuente que el propio número, para que se vea
-  como parte del mismo elemento en vez de desproporcionadamente
-  pequeño.
+- **KPIs de Mi trabajo**: el icono junto a cada cifra queda en 10px, sin
+  icono aparte junto a la etiqueta (un solo icono por KPI, no dos) y
+  ahora se oculta por completo cuando ese KPI no tiene ningún
+  movimiento — antes se veía a tamaño completo junto al "—", igual que
+  si hubiera datos. La etiqueta ("Generado este mes"/"Pendiente de
+  cobrar"/"Cobrado este mes") queda centrada, también cuando ocupa dos
+  líneas — antes se alineaba a la izquierda pese a que el icono y la
+  cifra de arriba sí estaban centrados.
 - **Training Records de Open Water**: se retira el paso "Certificación"
   (elegir entre Open Water Diver / Scuba Diver) — con Scuba Diver ya
   descartado, solo quedaba una opción real, así que no había nada que
@@ -85,10 +89,6 @@ Registro de cambios relevantes de Ocean Flow.
   claros, y cómo repasarlo luego desde Ayuda. Animación entre
   diapositivas también mejorada: ahora se aprecia con claridad la
   salida de una y la entrada de la siguiente, en vez de solo un fundido.
-- **Mi trabajo**: cada KPI de cabecera lleva ahora un icono fijo junto a
-  su etiqueta, además del que ya se encoge junto a la cifra — la
-  identidad de color del KPI no desaparece del todo aunque la cifra sea
-  muy larga.
 - **Comisión y Ajuste** tienen ahora su propio color de marca dedicado
   (antes reutilizaban colores de estado como "pendiente" o un gris
   genérico) — pensado también para material de campaña/redes, no solo
