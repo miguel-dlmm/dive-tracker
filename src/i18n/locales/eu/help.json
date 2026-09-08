@@ -34,6 +34,10 @@
       "label": "Kontsultatu zenbat sortu duzun",
       "description": "Begirada batean, edo aldiko xehetasunetan"
     },
+    "quiero-generar-tr": {
+      "label": "Sortu Training Record bat",
+      "description": "Ikasle bakoitzaren aurrerapenaren dokumentu ofiziala"
+    },
     "func-mi-trabajo": {
       "label": "Nire lana",
       "description": "Sortu, editatu, kobratu eta ezabatu mugimenduak"
@@ -48,7 +52,7 @@
     },
     "func-perfil": {
       "label": "Nire profila",
-      "description": "Avatarra, datuak, dibisa gogokoena eta pasahitza"
+      "description": "Avatarra, irakaslearen txartela, hizkuntza eta dibisa gogokoena"
     },
     "func-filtros": {
       "label": "Iragazkiak eta bilaketa",
@@ -62,7 +66,7 @@
       "whatYouCanDo": "Ocean Flow-ek irakasle autonomo gisa dituzun sarrerak kontrolatzen laguntzen dizu. Kontzeptu bakar baten pean, \"mugimendua\", ematen dituzun klaseak, erakarritako bezeroengatiko komisioak eta beste irakasleekiko doikuntza ekonomikoak biltzen ditu.",
       "whenToUseIt": "Aplikazioa lehen aldiz irekitzean, edo pantaila bakoitza zertarako den gogoratu nahi duzunean.",
       "steps": [
-        "Hasiera: zenbat daukazun kobratzeke, zure zorrik zaharrenak dituen widget bat, hilabeteko egutegia eta mugimendu bat sortzeko zuzeneko sarbidea.",
+        "Hasiera: zure ikasleak, ikastaroak eta erakarritakoak begirada batean, Training Records-erako sarbidea, zenbat daukazun kobratzeke, hilabeteko egutegia eta mugimendu bat sortzeko zuzeneko sarbidea.",
         "Nire lana: zure mugimendu guztien zerrenda (ikastaroak, komisioak eta doikuntzak), sortzeko, editatzeko, kobratzeko edo ezabatzeko.",
         "Laburpena: aukeratzen duzun aldiko zure balantzea, eskola, ikastaro edo komisioetan sakontzeko aukerarekin."
       ],
@@ -128,11 +132,11 @@
     },
     "consultar-generado": {
       "title": "Kontsultatu zenbat sortu duzun",
-      "summary": "Begirada azkar bat Hasieran, edo Laburpenean aukeratzen duzun aldiko xehetasun osoa.",
-      "whatYouCanDo": "Hasierako \"Hilabete honetan sortua\"-k uneko hilabeteko zenbatekoa ematen dizu, aurreko hilabetea baino hobeto edo okerrago zoazen adierazlearekin. Sakatzean zuzenean Laburpenera eramaten zaitu, haratago doana: edozein aldi, aurrekoarekin alderatuta, eta eskolaka edo ikastaroka sakontzeko aukerarekin.",
-      "whenToUseIt": "Hasiera, aplikaziora sartzean begirada azkar bat botatzeko. Laburpena, uneko hilabetea ez den beste aldi bat nahi duzunean edo dirua nondik datorren ulertu nahi duzunean.",
+      "summary": "Begirada azkar bat Nire lanean, edo Laburpenean aukeratzen duzun aldiko xehetasun osoa.",
+      "whatYouCanDo": "Nire lanako \"Hilabete honetan sortua\"-k uneko hilabeteko zenbatekoa ematen dizu, zerrendaren gainean beti ikusgai. Laburpenak haratago doa: edozein aldi, aurrekoarekin alderatuta, eta eskolaka edo ikastaroka sakontzeko aukerarekin.",
+      "whenToUseIt": "Nire lana, eguneroko lanean begirada azkar bat botatzeko. Laburpena, uneko hilabetea ez den beste aldi bat nahi duzunean edo dirua nondik datorren ulertu nahi duzunean.",
       "steps": [
-        "Hasieran, \"Hilabete honetan sortua\" txartela beti ikusgai dago, ezer ukitu gabe — eta sakatzean Laburpenera eramaten zaitu sakontzeko.",
+        "Nire lanean, \"Hilabete honetan sortua\" txartela beti ikusgai dago zerrendaren gainean, ezer ukitu gabe.",
         "Laburpenean, aukeratu xehetasun-maila eta aldia goiko kontrolean (hilabetekoa, hiruhilekoa, seihilekoa, urtekoa edo tarte pertsonalizatua) eta, nahi izanez gero, mota (Ikastaroa, Komisioa edo Doikuntza).",
         "Txartel nagusiak aldiaren guztizkoa erakusten du eta aurreko aldiarekiko zenbat aldatu den.",
         "Sakatu \"Eskolaka\", \"Ikastaroka\", \"Komisioak\", \"Ikastaro doikuntzak\" edo \"Egutegia\" sakontzeko — bakoitza eskatzen duzunean bakarrik zabaltzen da."
@@ -142,6 +146,24 @@
         "Aurreko aldiarekiko alderaketa ez da agertzen aldi berean dibisa bat baino gehiago nahasten badituzu — kalkulu zehatza ez den bat erakustea saihesteko."
       ],
       "expectedResult": "Aukeratutako aldiaren balantze zenbaki bat duzu, sarrera bakoitza nondik datorren xehetasunarekin, behar izanez gero."
+    },
+    "generar-training-record": {
+      "title": "Sortu Training Record bat",
+      "summary": "Ikasle bakoitzaren SSI aurrerapenaren dokumentu ofiziala, bere sinadura eta zurea barne — ezer ez da hodeian gordetzen, deskargatu bakarrik egiten da.",
+      "whatYouCanDo": "Training Records atalean 10 SSI txantiloietako edozeinen aurrerapenaren dokumentu ofiziala sortzen duzu, ikasle bakoitzaren datuekin eta zure irakasle-sinadura jada txertatuta. Banan-banan edo denak batera sor ditzakezu, eta PDF gisa, irudi gisa deskarga ditzakezu, edo zuzenean partekatu.",
+      "whenToUseIt": "Ikastaro bat amaitzean, edo ikasle batek bere Training Record paperean edo SSIri bidaltzeko behar duenean.",
+      "steps": [
+        "Sartu Training Records atalean Hasierako sarbidetik.",
+        "Aukeratu ikastaroaren SSI txantiloia eta bete konfigurazio partekatua (azterketaren bertsioa, ziurtagiria, ikastaroaren aurrerapena...) — behin bakarrik betetzen da klase osorako.",
+        "\"Gehitu ikaslea\" ikasle bakoitzeko: bere izena, inizialak eta sinadura bakarrik eskatzen ditu — adingabea bada, tutorearen izena eta sinadura ere bai.",
+        "\"Sortu ikasle guztientzat\"-ek zerrenda osoaren dokumentua batera sortzen du; ikasle jakin baten errenkadako \"Sortu TR berriro\"-k bere dokumentua bakarrik berriro sortzen du, gainerakoa errepikatu gabe.",
+        "Ikasle bakoitzeko: \"Deskargatu PDFa\", \"Deskargatu irudia (JPG)\" edo \"Partekatu\". Denentzat batera: \"Deskargatu dena PDFn/JPGn\" edo \"Partekatu dena\", artxibo bakar batean."
+      ],
+      "tips": [
+        "Nire profilean irakaslearen txartela osatuta izan behar duzu (inizialak, SSI Pro zenbakia eta sinadura) ezer sortu ahal izan aurretik — hori da Training Record bakoitzean inprimatzen dena.",
+        "Hemen betetzen duzun ezer ez da Ocean Flow-en gordetzen: dokumentu bakoitza unean sortzen da eta deskargatu bakarrik egiten da."
+      ],
+      "expectedResult": "Ikasle bakoitzaren Training Record-a deskargatzeko edo partekatzeko prest duzu, bere sinadura eta zurea jada barne."
     },
     "mi-trabajo-referencia": {
       "title": "Nire lana, begirada batean",
@@ -191,20 +213,22 @@
     },
     "perfil-referencia": {
       "title": "Nire profila, begirada batean",
-      "summary": "Zure avatarra, zure datuak, zure dibisa gogokoena eta zure pasahitza — dena toki berean, goiburuko zure izenetik eskuragarri.",
-      "whatYouCanDo": "Sakatu zure avatarra edo zure ezizena (goian eskuinean edozein pantailatan) Nire profilera sartzeko: zure identitatea, zure dibisa gogokoena eta zure pasahitza, dena toki berean.",
+      "summary": "Zure avatarra, zure datuak, zure irakaslearen txartela, zure dibisa gogokoena eta zure pasahitza — dena toki berean, goiburuko zure izenetik eskuragarri.",
+      "whatYouCanDo": "Sakatu zure avatarra edo zure ezizena (goian eskuinean edozein pantailatan) Nire profilera sartzeko: zure identitatea, zure irakaslearen txartela, zure hizkuntza, zure dibisa gogokoena eta zure pasahitza, dena toki berean.",
       "whenToUseIt": "Zure kontua pertsonalizatu, datu bat zuzendu, edo saioa itxi eta \"pasahitza ahaztu dut\" bidez pasatu beharrik gabe pasahitza aldatu nahi duzunean.",
       "steps": [
         "Sakatu goiburuko avatarra/ezizena Nire profilera sartzeko.",
         "Avatarraren gaineko arkatzak ikono- eta kolore-hautatzailea irekitzen du — aldaketa aukeratzean gordetzen da, \"Gorde\" botoi bereizirik gabe.",
         "Datu pertsonaletako \"Editatu\"-k izena, abizenak eta ezizena irekitzen ditu; ezizenak ezin du \"@\" eduki ezta beste kontu batenarekin bat etorri ere.",
+        "\"Irakaslearen datuak\" zure txartela da: inizialak, SSI Pro zenbakia eta zure sinadura — hemen behin bakarrik gordetzen dira eta zure Training Recordak automatikoki betetzeko erabiltzen dira.",
         "Dibisa gogokoena Ikastaro doikuntzan erreserba gisa erabiltzen da, hori zehazten duen tarifarik ez dagoenean — gainerako mugimenduek beti erabiltzen dute beren tarifaren dibisa."
       ],
       "tips": [
         "Pasahitza hemen aldatzeak ez dizu uneko pasahitza eskatzen — jada aplikazioaren barruan bazaude, saio aktiboa nahikoa dela fidatzen da.",
+        "Aplikazio osoaren hizkuntza ere hemendik aldatzen da, saioa itxi beharrik gabe.",
         "Zure kontua ezabatzea betikoa da eta zure datu guztiak ezabatzen ditu — berresteko UTZI hitza idatzi behar duzu, ukitu batekin ezer ere ustekabean ezaba ez dadin."
       ],
-      "expectedResult": "Zure kontuak aukeratzen duzun avatarra, datuak eta dibisa islatzen ditu, eta zure pasahitza noiznahi alda dezakezu aplikaziotik atera gabe."
+      "expectedResult": "Zure kontuak aukeratzen duzun avatarra, datuak, irakaslearen txartela eta dibisa islatzen ditu, eta zure pasahitza edo hizkuntza noiznahi alda ditzakezu aplikaziotik atera gabe."
     },
     "filtros-referencia": {
       "title": "Iragazi eta bilatu",

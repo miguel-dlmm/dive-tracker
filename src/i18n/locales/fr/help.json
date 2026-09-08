@@ -34,6 +34,10 @@
       "label": "Consulter ce que vous avez généré",
       "description": "D'un coup d'œil, ou en détail par période"
     },
+    "quiero-generar-tr": {
+      "label": "Générer un Training Record",
+      "description": "Le document officiel de progression de chaque élève"
+    },
     "func-mi-trabajo": {
       "label": "Mon activité",
       "description": "Créer, modifier, encaisser et supprimer des mouvements"
@@ -48,7 +52,7 @@
     },
     "func-perfil": {
       "label": "Mon profil",
-      "description": "Avatar, données, devise favorite et mot de passe"
+      "description": "Avatar, carte d'instructeur, langue et devise favorite"
     },
     "func-filtros": {
       "label": "Filtres et recherche",
@@ -62,7 +66,7 @@
       "whatYouCanDo": "Ocean Flow vous aide à gérer vos revenus en tant qu'instructeur indépendant. Sous un même concept, \"mouvement\", il regroupe les cours que vous dispensez, les commissions pour clients référés et les ajustements financiers avec d'autres instructeurs.",
       "whenToUseIt": "La première fois que vous ouvrez l'app, ou quand vous voulez vous rappeler à quoi sert chaque écran.",
       "steps": [
-        "Accueil : ce qui vous reste à encaisser, un widget avec vos créances les plus anciennes, le calendrier du mois et un accès direct pour créer un mouvement.",
+        "Accueil : vos élèves, cours et clients référés en un coup d'œil, l'accès aux Training Records, ce qui vous reste à encaisser, le calendrier du mois et un accès direct pour créer un mouvement.",
         "Mon activité : la liste complète de vos mouvements (cours, commissions et ajustements), pour les créer, les modifier, les encaisser ou les supprimer.",
         "Résumé : votre bilan sur la période de votre choix, avec la possibilité d'approfondir par école, par cours ou par commissions."
       ],
@@ -128,11 +132,11 @@
     },
     "consultar-generado": {
       "title": "Consulter ce que vous avez généré",
-      "summary": "Un coup d'œil rapide sur l'accueil, ou le détail complet sur la période de votre choix dans Résumé.",
-      "whatYouCanDo": "\"Généré ce mois-ci\" sur l'accueil vous donne le montant du mois en cours, avec une indication de si vous faites mieux ou moins bien que le mois précédent. Le toucher vous emmène directement à Résumé, qui va plus loin : n'importe quelle période, comparée à la précédente, avec la possibilité d'approfondir par école ou par cours.",
-      "whenToUseIt": "Accueil, pour un coup d'œil rapide en entrant dans l'app. Résumé, quand vous voulez une période différente du mois actuel ou comprendre d'où vient l'argent.",
+      "summary": "Un coup d'œil rapide sur Mon activité, ou le détail complet sur la période de votre choix dans Résumé.",
+      "whatYouCanDo": "\"Généré ce mois-ci\" sur Mon activité vous donne le montant du mois en cours, toujours visible au-dessus de la liste. Résumé va plus loin : n'importe quelle période, comparée à la précédente, avec la possibilité d'approfondir par école ou par cours.",
+      "whenToUseIt": "Mon activité, pour un coup d'œil rapide au fil de votre travail quotidien. Résumé, quand vous voulez une période différente du mois actuel ou comprendre d'où vient l'argent.",
       "steps": [
-        "Sur l'accueil, la carte \"Généré ce mois-ci\" est toujours visible, sans rien toucher — et la toucher vous emmène à Résumé pour approfondir.",
+        "Sur Mon activité, la carte \"Généré ce mois-ci\" est toujours visible au-dessus de la liste, sans rien toucher.",
         "Dans Résumé, choisissez la granularité et la période dans le contrôle du haut (mensuel, trimestriel, semestriel, annuel ou une plage personnalisée) et, si vous voulez, le type (Cours, Commission ou Ajustement).",
         "La carte principale affiche le total de la période et son évolution par rapport à la période précédente.",
         "Touchez \"Par école\", \"Par cours\", \"Commissions\", \"Ajustements de cours\" ou \"Calendrier\" pour approfondir — chacun se déplie seulement si vous le demandez."

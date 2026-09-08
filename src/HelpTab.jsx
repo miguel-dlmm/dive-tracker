@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Smartphone } from "lucide-react";
+import { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Smartphone, Award } from "lucide-react";
 import { BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { ExpandableCard } from "./shared";
 import { useSwipeBack } from "./motion";
@@ -12,7 +12,7 @@ import HelpArticleBody from "./help/HelpArticleBody";
 // mismo hallazgo de bundle que en shared.jsx (ver LOADING_ICONS ahí). Si
 // se añade una categoría con un icono nuevo en content.js, se añade aquí
 // también.
-const CATEGORY_ICONS = { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle };
+const CATEGORY_ICONS = { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Award };
 
 // Combina el texto traducido (namespace "help", claves `articles.<id>.*`)
 // con el id del artículo en content.js para dar a HelpArticleBody el

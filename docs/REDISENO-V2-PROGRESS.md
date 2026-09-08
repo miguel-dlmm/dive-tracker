@@ -4994,3 +4994,52 @@ consola — con estos importes concretos (5-6 dígitos, ya casi llenan la
 tarjeta por sí solos) el icono compartido cae en escala 0 igual que
 antes, comportamiento ya existente (Fase 13: los 3 KPI comparten
 escala), no un efecto nuevo de este cambio.
+
+### 12.32 — Revisión de la Ayuda: Training Records y el carnet de instructor, ausentes por completo
+
+Pedido explícito: "cuando acabes haz una revisión rápida por la ayuda
+por si sobra o falta algo". Auditoría de `src/help/content.js` y los 7
+`help.json` contra el estado real de la app (no contra lo que el propio
+contenido de Ayuda decía) — 4 hallazgos, los dos primeros de bastante
+peso:
+
+1. **Training Records no tenía ninguna mención** — pantalla completa,
+   con generador de 10 plantillas SSI, sin una sola categoría/artículo
+   que la documentara.
+2. **"Mi perfil, de un vistazo" no mencionaba el carnet de instructor**
+   (iniciales, número SSI Pro, firma) — una de las 6 novedades
+   destacadas del propio rediseño (WhatsNew) y además el dato que
+   rellena los Training Records automáticamente.
+3. **Contenido desactualizado, no solo incompleto**: "Consultar cuánto
+   has generado" decía que "Generado este mes" vive en Home con un
+   indicador de tendencia — ya no es así, esa cifra vive en Mi trabajo
+   desde el rediseño; y "Empezar a usar Ocean Flow" describía Home con
+   "un widget con tus deudas más antiguas" (ya no existe) sin mencionar
+   los KPI de Alumnos/Cursos/Captados ni el acceso a Training Records.
+4. Menor: el multi-idioma (7 idiomas, otra novedad destacada) tampoco
+   tenía ninguna mención.
+
+**Fix, en los 7 idiomas** (es/en/fr/it/de/ca/eu): nueva categoría
+"Quiero..." + artículo "Generar un Training Record" (pasos con las
+etiquetas reales de la pantalla: "Añadir alumno", "Generar para todos
+los alumnos", "Regenerar TR", descargas individuales/en lote); "Mi
+perfil, de un vistazo" reescrito para incluir el carnet de instructor
+y el cambio de idioma; "Empezar a usar Ocean Flow" y "Consultar cuánto
+has generado" corregidos para reflejar el Home/Mi trabajo actuales.
+
+**Bug real encontrado en la propia verificación visual** (no solo en
+el contenido): el icono elegido para la categoría nueva ("Award", el
+mismo que usa Training Records en el resto de la app) se veía como un
+"?" genérico — `HelpTab.jsx` mantiene su propio mapa `CATEGORY_ICONS`
+con imports nombrados (decisión deliberada de tamaño de bundle, no un
+wildcard `import * as Icons`), y "Award" no estaba en ese mapa. Añadido
+al import y al mapa.
+
+**Verificado**: 867/867 tests (incluye el guard existente de
+`content.test.js` que escanea es/en en busca de vocabulario de
+admin/superadmin — regla permanente, CLAUDE.md §"Reglas permanentes —
+Release V1", punto 1), lint 0 errores, build correcto. Confirmado en
+Chrome real: la categoría nueva se expande con el icono correcto
+(ribbon/medalla, no "?"), el contenido coincide con las etiquetas
+reales de la pantalla, "Mi perfil" ya menciona "carnet de instructor,
+idioma y moneda favorita" en su descripción. Sin errores de consola.

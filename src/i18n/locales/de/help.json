@@ -34,6 +34,10 @@
       "label": "Nachsehen, wie viel du erzielt hast",
       "description": "Auf einen Blick, oder im Detail nach Zeitraum"
     },
+    "quiero-generar-tr": {
+      "label": "Ein Training Record erstellen",
+      "description": "Das offizielle Fortschrittsdokument jedes Teilnehmers"
+    },
     "func-mi-trabajo": {
       "label": "Meine Arbeit",
       "description": "Buchungen erstellen, bearbeiten, einziehen und löschen"
@@ -48,7 +52,7 @@
     },
     "func-perfil": {
       "label": "Mein Profil",
-      "description": "Avatar, Daten, bevorzugte Währung und Passwort"
+      "description": "Avatar, Instructor-Ausweis, Sprache und bevorzugte Währung"
     },
     "func-filtros": {
       "label": "Filter und Suche",
@@ -62,7 +66,7 @@
       "whatYouCanDo": "Ocean Flow hilft dir, deine Einnahmen als freiberuflicher Instructor im Blick zu behalten. Unter einem gemeinsamen Konzept, \"Buchung\", fasst es die Kurse, die du gibst, die Provisionen für vermittelte Kunden und die finanziellen Ausgleiche mit anderen Instructors zusammen.",
       "whenToUseIt": "Beim ersten Öffnen der App, oder wenn du dich daran erinnern möchtest, wofür jeder Bildschirm da ist.",
       "steps": [
-        "Home: wie viel du noch einziehen musst, ein Widget mit deinen ältesten offenen Posten, der Kalender des Monats und ein direkter Zugang, um eine Buchung zu erstellen.",
+        "Home: deine Teilnehmer, Kurse und Vermittlungen auf einen Blick, der Zugang zu Training Records, wie viel du noch einziehen musst, der Kalender des Monats und ein direkter Zugang, um eine Buchung zu erstellen.",
         "Meine Arbeit: die vollständige Liste deiner Buchungen (Kurse, Provisionen und Ausgleiche), um sie zu erstellen, zu bearbeiten, einzuziehen oder zu löschen.",
         "Übersicht: deine Bilanz für den gewählten Zeitraum, mit der Möglichkeit, nach Schule, nach Kurs oder nach Provisionen zu vertiefen."
       ],
@@ -128,11 +132,11 @@
     },
     "consultar-generado": {
       "title": "Nachsehen, wie viel du erzielt hast",
-      "summary": "Ein schneller Blick in Home, oder das vollständige Detail für den in Übersicht gewählten Zeitraum.",
-      "whatYouCanDo": "\"Diesen Monat erzielt\" in Home zeigt dir die Zahl des laufenden Monats, mit einem Hinweis, ob es besser oder schlechter läuft als im Vormonat. Ein Tipp darauf bringt dich direkt zur Übersicht, die weiter geht: jeder Zeitraum, verglichen mit dem vorherigen, mit der Möglichkeit, nach Schule oder nach Kurs zu vertiefen.",
-      "whenToUseIt": "Home, für einen schnellen Überblick beim Öffnen der App. Übersicht, wenn du einen anderen Zeitraum als den aktuellen Monat möchtest oder verstehen willst, woher das Geld kommt.",
+      "summary": "Ein schneller Blick in Meine Arbeit, oder das vollständige Detail für den in Übersicht gewählten Zeitraum.",
+      "whatYouCanDo": "\"Diesen Monat erzielt\" in Meine Arbeit zeigt dir die Zahl des laufenden Monats, immer sichtbar oberhalb der Liste. Übersicht geht weiter: jeder Zeitraum, verglichen mit dem vorherigen, mit der Möglichkeit, nach Schule oder nach Kurs zu vertiefen.",
+      "whenToUseIt": "Meine Arbeit, für einen schnellen Überblick bei der täglichen Arbeit. Übersicht, wenn du einen anderen Zeitraum als den aktuellen Monat möchtest oder verstehen willst, woher das Geld kommt.",
       "steps": [
-        "In Home ist die Karte \"Diesen Monat erzielt\" immer sichtbar, ohne dass du etwas tippen musst — und ein Tipp darauf bringt dich zur Übersicht, um zu vertiefen.",
+        "In Meine Arbeit ist die Karte \"Diesen Monat erzielt\" immer oberhalb der Liste sichtbar, ohne dass du etwas tippen musst.",
         "Wähle in der Übersicht die Granularität und den Zeitraum im oberen Steuerelement (monatlich, vierteljährlich, halbjährlich, jährlich oder ein individueller Zeitraum) und, falls gewünscht, den Typ (Kurs, Provision oder Ausgleich).",
         "Die Hauptkarte zeigt den Gesamtbetrag des Zeitraums und wie er sich gegenüber dem vorherigen Zeitraum verändert hat.",
         "Tippe auf \"Nach Schule\", \"Nach Kurs\", \"Provisionen\", \"Kursausgleiche\" oder \"Kalender\", um zu vertiefen — jede Karte öffnet sich nur, wenn du es anforderst."
@@ -142,6 +146,24 @@
         "Der Vergleich mit dem vorherigen Zeitraum erscheint nicht, wenn du mehr als eine Währung im selben Zeitraum mischst — um eine nicht exakte Berechnung zu vermeiden."
       ],
       "expectedResult": "Du hast eine Bilanzzahl für den gewählten Zeitraum, mit dem Detail, woher jede Einnahme kommt, wenn du es brauchst."
+    },
+    "generar-training-record": {
+      "title": "Ein Training Record erstellen",
+      "summary": "Das offizielle SSI-Fortschrittsdokument jedes Teilnehmers, mit dessen Unterschrift und deiner — nichts wird in der Cloud gespeichert, es wird nur heruntergeladen.",
+      "whatYouCanDo": "In Training Records erstellst du das offizielle Fortschrittsdokument für jede der 10 SSI-Vorlagen, mit den Daten jedes Teilnehmers und deiner Instructor-Unterschrift bereits eingefügt. Du kannst sie einzeln oder alle auf einmal erstellen und als PDF, als Bild herunterladen oder direkt teilen.",
+      "whenToUseIt": "Wenn ein Kurs endet, oder wenn ein Teilnehmer sein Training Record auf Papier oder zum Versenden an SSI benötigt.",
+      "steps": [
+        "Öffne Training Records über den Zugang in Home.",
+        "Wähle die SSI-Vorlage des Kurses und fülle die gemeinsame Konfiguration aus (Prüfungsversion, Zertifizierung, Kursfortschritt...) — wird einmal für die ganze Klasse ausgefüllt.",
+        "\"Teilnehmer hinzufügen\" für jeden Teilnehmer: verlangt nur Name, Initialen und Unterschrift — bei Minderjährigen zusätzlich Name und Unterschrift des Erziehungsberechtigten.",
+        "\"Für alle Teilnehmer erstellen\" erstellt das Dokument für die ganze Liste auf einmal; \"TR neu erstellen\" in der Zeile eines einzelnen Teilnehmers erstellt nur dessen neu, ohne den Rest zu wiederholen.",
+        "Pro Teilnehmer: \"PDF herunterladen\", \"Bild herunterladen (JPG)\" oder \"Teilen\". Für alle auf einmal: \"Alle als PDF/JPG herunterladen\" oder \"Alle teilen\", als ein einziges Archiv."
+      ],
+      "tips": [
+        "Du brauchst deinen vollständigen Instructor-Ausweis in Mein Profil (Initialen, SSI-Pro-Nummer und Unterschrift), bevor du irgendetwas erstellen kannst — das wird auf jedem Training Record gedruckt.",
+        "Nichts von dem, was du hier ausfüllst, wird in Ocean Flow gespeichert: Jedes Dokument wird im Moment erstellt und nur heruntergeladen."
+      ],
+      "expectedResult": "Du hast das Training Record jedes Teilnehmers bereit zum Herunterladen oder Teilen, mit dessen Unterschrift und deiner bereits enthalten."
     },
     "mi-trabajo-referencia": {
       "title": "Meine Arbeit, auf einen Blick",
@@ -191,20 +213,22 @@
     },
     "perfil-referencia": {
       "title": "Mein Profil, auf einen Blick",
-      "summary": "Dein Avatar, deine Daten, deine bevorzugte Währung und dein Passwort — alles an einem Ort, zugänglich über deinen Namen in der Kopfzeile.",
-      "whatYouCanDo": "Tippe auf deinen Avatar oder deinen Nickname (oben rechts auf jedem Bildschirm), um in Mein Profil zu gelangen: deine Identität, deine bevorzugte Währung und dein Passwort, alles an einem Ort.",
+      "summary": "Dein Avatar, deine Daten, dein Instructor-Ausweis, deine bevorzugte Währung und dein Passwort — alles an einem Ort, zugänglich über deinen Namen in der Kopfzeile.",
+      "whatYouCanDo": "Tippe auf deinen Avatar oder deinen Nickname (oben rechts auf jedem Bildschirm), um in Mein Profil zu gelangen: deine Identität, deinen Instructor-Ausweis, deine Sprache, deine bevorzugte Währung und dein Passwort, alles an einem Ort.",
       "whenToUseIt": "Wenn du dein Konto personalisieren, ein Datum korrigieren oder das Passwort ändern möchtest, ohne dich abzumelden und über \"Passwort vergessen\" zu gehen.",
       "steps": [
         "Tippe auf Avatar/Nickname in der Kopfzeile, um in Mein Profil zu gelangen.",
         "Der Stift über dem Avatar öffnet die Symbol- und Farbauswahl — die Änderung wird bei der Auswahl gespeichert, ohne separaten \"Speichern\"-Button.",
         "\"Bearbeiten\" bei Persönliche Daten öffnet Vorname, Nachname und Nickname; der Nickname darf kein \"@\" enthalten und nicht mit dem eines anderen Kontos übereinstimmen.",
+        "\"Instructor-Daten\" ist dein Ausweis: Initialen, SSI-Pro-Nummer und deine Unterschrift — werden hier einmalig gespeichert und dienen dazu, deine Training Records automatisch auszufüllen.",
         "Die bevorzugte Währung wird bei Kursausgleich als Ersatz verwendet, wenn kein Tarif sie bestimmt — alle anderen Buchungen verwenden immer die Währung ihres eigenen Tarifs."
       ],
       "tips": [
         "Das Ändern des Passworts hier verlangt nicht das aktuelle Passwort — wenn du bereits in der App angemeldet bist, wird davon ausgegangen, dass die aktive Sitzung ausreicht.",
+        "Auch die Sprache der gesamten App wird hier geändert, ohne dass du dich abmelden musst.",
         "Das Löschen deines Kontos ist endgültig und löscht alle deine Daten — zur Bestätigung musst du das Wort ABBRECHEN eingeben, damit nichts durch einen versehentlichen Tipp gelöscht wird."
       ],
-      "expectedResult": "Dein Konto spiegelt den gewählten Avatar, die Daten und die Währung wider, und du kannst dein Passwort jederzeit ändern, ohne die App zu verlassen."
+      "expectedResult": "Dein Konto spiegelt den gewählten Avatar, die Daten, den Instructor-Ausweis und die Währung wider, und du kannst dein Passwort oder deine Sprache jederzeit ändern, ohne die App zu verlassen."
     },
     "filtros-referencia": {
       "title": "Filtern und Suchen",

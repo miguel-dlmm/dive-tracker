@@ -34,6 +34,10 @@
       "label": "Consultar quant has generat",
       "description": "D'una ullada, o en detall per període"
     },
+    "quiero-generar-tr": {
+      "label": "Generar un Training Record",
+      "description": "El document oficial de progrés de cada alumne"
+    },
     "func-mi-trabajo": {
       "label": "La meva feina",
       "description": "Crea, edita, cobra i elimina moviments"
@@ -48,7 +52,7 @@
     },
     "func-perfil": {
       "label": "El meu perfil",
-      "description": "Avatar, dades, moneda preferida i contrasenya"
+      "description": "Avatar, carnet d'instructor, idioma i moneda preferida"
     },
     "func-filtros": {
       "label": "Filtres i cerca",
@@ -62,7 +66,7 @@
       "whatYouCanDo": "Ocean Flow t'ajuda a portar el control dels teus ingressos com a instructor freelance. Sota un mateix concepte, \"moviment\", agrupa les classes que imparteixes, les comissions per clients referits i els ajustos econòmics amb altres instructors.",
       "whenToUseIt": "La primera vegada que obres l'app, o quan vulguis recordar per a què serveix cada pantalla.",
       "steps": [
-        "Home: quant tens pendent de cobrar, un widget amb els teus deutes més antics, el calendari del mes i un accés directe per crear un moviment.",
+        "Home: els teus alumnes, cursos i clients captats d'una ullada, l'accés a Training Records, quant tens pendent de cobrar, el calendari del mes i un accés directe per crear un moviment.",
         "La meva feina: la llista completa dels teus moviments (cursos, comissions i ajustos), per crear-los, editar-los, cobrar-los o eliminar-los.",
         "Resum: el teu balanç pel període que triïs, amb la possibilitat d'aprofundir per escola, per curs o per comissions."
       ],
@@ -128,11 +132,11 @@
     },
     "consultar-generado": {
       "title": "Consultar quant has generat",
-      "summary": "Una ullada ràpida a Home, o el detall complet pel període que triïs a Resum.",
-      "whatYouCanDo": "\"Generat aquest mes\" a Home et dona la xifra del mes en curs, amb un indici de si vas millor o pitjor que el mes anterior. Tocar-la et porta directament a Resum, que va més enllà: qualsevol període, comparat amb l'anterior, i amb la possibilitat d'aprofundir per escola o per curs.",
-      "whenToUseIt": "Home, per a una ullada ràpida en entrar a l'app. Resum, quan vulguis un període diferent al mes actual o entendre d'on ve el diner.",
+      "summary": "Una ullada ràpida a La meva feina, o el detall complet pel període que triïs a Resum.",
+      "whatYouCanDo": "\"Generat aquest mes\" a La meva feina et dona la xifra del mes en curs, sempre visible a sobre de la llista. Resum va més enllà: qualsevol període, comparat amb l'anterior, i amb la possibilitat d'aprofundir per escola o per curs.",
+      "whenToUseIt": "La meva feina, per a una ullada ràpida durant la teva feina diària. Resum, quan vulguis un període diferent al mes actual o entendre d'on ve el diner.",
       "steps": [
-        "A Home, la targeta \"Generat aquest mes\" ja és sempre visible, sense tocar res — i tocar-la et porta a Resum per aprofundir.",
+        "A La meva feina, la targeta \"Generat aquest mes\" ja és sempre visible a sobre de la llista, sense tocar res.",
         "A Resum, tria la granularitat i el període al control de dalt (mensual, trimestral, semestral, anual o un interval personalitzat) i, si vols, el tipus (Curs, Comissió o Ajust).",
         "La targeta principal mostra el total del període i quant ha canviat respecte al període anterior.",
         "Toca \"Per escola\", \"Per curs\", \"Comissions\", \"Ajustos de curs\" o \"Calendari\" per aprofundir — cadascun es desplega només si ho demanes."
@@ -142,6 +146,24 @@
         "La comparació amb el període anterior no apareix si barreges més d'una moneda en el mateix període — evita mostrar un càlcul que no seria exacte."
       ],
       "expectedResult": "Tens una xifra de balanç del període triat, amb el detall d'on ve cada ingrés si el necessites."
+    },
+    "generar-training-record": {
+      "title": "Generar un Training Record",
+      "summary": "El document oficial de progrés SSI de cada alumne, amb la seva signatura i la teva — no es desa res al núvol, només es descarrega.",
+      "whatYouCanDo": "Des de Training Records generes el document de progrés oficial de qualsevol de les 10 plantilles SSI, amb les dades de cada alumne i la teva signatura d'instructor ja incloses. Els pots generar un a un o de cop, i descarregar-los en PDF, en imatge, o compartir-los directament.",
+      "whenToUseIt": "En acabar un curs, quan un alumne necessita el seu Training Record en paper o per enviar-lo a SSI.",
+      "steps": [
+        "Entra a Training Records des de l'accés a Home.",
+        "Tria la plantilla SSI del curs i omple la configuració compartida (versió de l'examen, certificació, progrés del curs...) — s'omple una sola vegada per a tota la classe.",
+        "\"Afegeix alumne\" per a cada alumne: només demana el seu nom, inicials i signatura — si és menor d'edat, també el nom i la signatura del tutor.",
+        "\"Genera per a tots els alumnes\" crea el document de tota la llista de cop; \"Regenera el TR\" a la fila d'un alumne concret torna a generar només el seu, sense repetir la resta.",
+        "Per alumne: \"Descarrega el PDF\", \"Descarrega la imatge (JPG)\" o \"Comparteix\". Per a tots alhora: \"Descarrega-ho tot en PDF/JPG\" o \"Comparteix-ho tot\", en un únic arxiu comprimit."
+      ],
+      "tips": [
+        "Necessites el teu carnet d'instructor complet a El meu perfil (inicials, número SSI Pro i signatura) abans de poder generar res — és el que s'imprimeix a cada Training Record.",
+        "Res del que ompliràs aquí es desa a Ocean Flow: cada document es genera al moment i només es descarrega."
+      ],
+      "expectedResult": "Tens el Training Record de cada alumne llest per descarregar o compartir, amb la seva signatura i la teva ja incloses."
     },
     "mi-trabajo-referencia": {
       "title": "La meva feina, d'una ullada",
@@ -191,20 +213,22 @@
     },
     "perfil-referencia": {
       "title": "El meu perfil, d'una ullada",
-      "summary": "El teu avatar, les teves dades, la teva moneda preferida i la teva contrasenya — tot en un mateix lloc, accessible des del teu nom a la capçalera.",
-      "whatYouCanDo": "Toca el teu avatar o el teu nickname (a dalt a la dreta a qualsevol pantalla) per entrar a El meu perfil: la teva identitat, la teva moneda preferida i la teva contrasenya, tot en un mateix lloc.",
+      "summary": "El teu avatar, les teves dades, el teu carnet d'instructor, la teva moneda preferida i la teva contrasenya — tot en un mateix lloc, accessible des del teu nom a la capçalera.",
+      "whatYouCanDo": "Toca el teu avatar o el teu nickname (a dalt a la dreta a qualsevol pantalla) per entrar a El meu perfil: la teva identitat, el teu carnet d'instructor, el teu idioma, la teva moneda preferida i la teva contrasenya, tot en un mateix lloc.",
       "whenToUseIt": "Quan vulguis personalitzar el teu compte, corregir una dada, o canviar la contrasenya sense haver de tancar sessió i passar per \"he oblidat la contrasenya\".",
       "steps": [
         "Toca l'avatar/nickname de la capçalera per entrar a El meu perfil.",
         "El llapis sobre l'avatar obre el selector d'icona i color — el canvi es desa en triar, sense botó \"Desa\" a part.",
         "\"Edita\" a Dades personals obre nom, cognoms i nickname; el nickname no pot portar \"@\" ni coincidir amb el d'un altre compte.",
+        "\"Dades d'instructor\" és el teu carnet: inicials, número SSI Pro i la teva signatura — es desen aquí una sola vegada i serveixen per omplir automàticament els teus Training Records.",
         "La moneda preferida s'utilitza com a reserva a Ajust de curs quan no hi ha una tarifa que la determini — la resta de moviments sempre fan servir la moneda de la seva pròpia tarifa."
       ],
       "tips": [
         "Canviar la contrasenya aquí no et demana la contrasenya actual — si ja ets dins de l'app, es confia que la sessió activa és suficient.",
+        "L'idioma de tota l'app també es canvia des d'aquí, sense haver de tancar sessió.",
         "Eliminar el teu compte és permanent i esborra totes les teves dades — per confirmar-ho has d'escriure la paraula CANCEL·LA, així no s'esborra res per un toc accidental."
       ],
-      "expectedResult": "El teu compte reflecteix l'avatar, les dades i la moneda que triïs, i pots canviar la teva contrasenya quan vulguis sense sortir de l'app."
+      "expectedResult": "El teu compte reflecteix l'avatar, les dades, el carnet d'instructor i la moneda que triïs, i pots canviar la teva contrasenya o el teu idioma quan vulguis sense sortir de l'app."
     },
     "filtros-referencia": {
       "title": "Filtrar i cercar",

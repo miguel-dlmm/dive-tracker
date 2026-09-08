@@ -114,6 +114,19 @@ export const HELP_CATEGORIES = [
     icon: "TrendingUp",
     articles: [{ id: "consultar-generado" }],
   },
+  // Añadida 2026-09-08 (revisión de la Ayuda: "haz una revisión rápida
+  // por la ayuda por si sobra o falta algo") — Training Records es una
+  // pantalla completa, con su propio generador de 10 plantillas SSI, que
+  // no tenía ninguna mención en la Ayuda. Sin sectionKey: no tiene su
+  // propia fila en nav_sections (se accede desde Home, no es una pestaña
+  // propia) — usa el color por defecto, igual que "func-perfil"/
+  // "func-filtros" más abajo.
+  {
+    id: "quiero-generar-tr",
+    group: "quiero",
+    icon: "Award",
+    articles: [{ id: "generar-training-record" }],
+  },
 
   // ---------------- Funcionalidades (referencia por pantalla) ----------------
   {

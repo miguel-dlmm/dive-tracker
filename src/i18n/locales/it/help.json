@@ -34,6 +34,10 @@
       "label": "Consultare quanto hai generato",
       "description": "A colpo d'occhio, o in dettaglio per periodo"
     },
+    "quiero-generar-tr": {
+      "label": "Generare un Training Record",
+      "description": "Il documento ufficiale di progresso di ogni allievo"
+    },
     "func-mi-trabajo": {
       "label": "Il mio lavoro",
       "description": "Creare, modificare, incassare ed eliminare movimenti"
@@ -48,7 +52,7 @@
     },
     "func-perfil": {
       "label": "Il mio profilo",
-      "description": "Avatar, dati, valuta preferita e password"
+      "description": "Avatar, tesserino istruttore, lingua e valuta preferita"
     },
     "func-filtros": {
       "label": "Filtri e ricerca",
@@ -62,7 +66,7 @@
       "whatYouCanDo": "Ocean Flow ti aiuta a tenere sotto controllo le tue entrate come istruttore freelance. Sotto un unico concetto, \"movimento\", raggruppa le lezioni che tieni, le commissioni per i clienti procurati e le rettifiche economiche con altri istruttori.",
       "whenToUseIt": "La prima volta che apri l'app, o quando vuoi ricordare a cosa serve ogni schermata.",
       "steps": [
-        "Home: quanto hai da incassare, un widget con i tuoi debiti più vecchi, il calendario del mese e un accesso rapido per creare un movimento.",
+        "Home: i tuoi allievi, corsi e clienti procurati a colpo d'occhio, l'accesso a Training Records, quanto hai da incassare, il calendario del mese e un accesso rapido per creare un movimento.",
         "Il mio lavoro: l'elenco completo dei tuoi movimenti (corsi, commissioni e rettifiche), per crearli, modificarli, incassarli o eliminarli.",
         "Riepilogo: il tuo bilancio per il periodo che scegli, con la possibilità di approfondire per scuola, per corso o per commissioni."
       ],
@@ -128,11 +132,11 @@
     },
     "consultar-generado": {
       "title": "Consultare quanto hai generato",
-      "summary": "Uno sguardo rapido in Home, o il dettaglio completo per il periodo che scegli in Riepilogo.",
-      "whatYouCanDo": "\"Generato questo mese\" in Home ti dà la cifra del mese in corso, con un'indicazione se stai andando meglio o peggio del mese precedente. Toccandola vai direttamente a Riepilogo, che va oltre: qualsiasi periodo, confrontato con quello precedente, con la possibilità di approfondire per scuola o per corso.",
-      "whenToUseIt": "Home, per uno sguardo rapido entrando nell'app. Riepilogo, quando vuoi un periodo diverso dal mese attuale o capire da dove viene il denaro.",
+      "summary": "Uno sguardo rapido in Il mio lavoro, o il dettaglio completo per il periodo che scegli in Riepilogo.",
+      "whatYouCanDo": "\"Generato questo mese\" in Il mio lavoro ti dà la cifra del mese in corso, sempre visibile sopra l'elenco. Riepilogo va oltre: qualsiasi periodo, confrontato con quello precedente, con la possibilità di approfondire per scuola o per corso.",
+      "whenToUseIt": "Il mio lavoro, per uno sguardo rapido durante il lavoro quotidiano. Riepilogo, quando vuoi un periodo diverso dal mese attuale o capire da dove viene il denaro.",
       "steps": [
-        "In Home, la scheda \"Generato questo mese\" è sempre visibile, senza toccare nulla — e toccandola vai a Riepilogo per approfondire.",
+        "In Il mio lavoro, la scheda \"Generato questo mese\" è sempre visibile sopra l'elenco, senza toccare nulla.",
         "In Riepilogo, scegli la granularità e il periodo nel controllo in alto (mensile, trimestrale, semestrale, annuale o un intervallo personalizzato) e, se vuoi, il tipo (Corso, Commissione o Rettifica).",
         "La scheda principale mostra il totale del periodo e quanto è cambiato rispetto al periodo precedente.",
         "Tocca \"Per scuola\", \"Per corso\", \"Commissioni\", \"Rettifiche di corso\" o \"Calendario\" per approfondire — ognuno si apre solo se lo richiedi."
@@ -142,6 +146,24 @@
         "Il confronto con il periodo precedente non compare se mescoli più di una valuta nello stesso periodo — per evitare di mostrare un calcolo non esatto."
       ],
       "expectedResult": "Hai una cifra di bilancio del periodo scelto, con il dettaglio di dove viene ogni entrata se ti serve."
+    },
+    "generar-training-record": {
+      "title": "Generare un Training Record",
+      "summary": "Il documento ufficiale di progresso SSI di ogni allievo, con la sua firma e la tua — nulla si salva nel cloud, si scarica soltanto.",
+      "whatYouCanDo": "Da Training Records generi il documento di progresso ufficiale di una qualsiasi dei 10 modelli SSI, con i dati di ogni allievo e la tua firma di istruttore già inclusi. Puoi generarli uno alla volta o tutti insieme, e scaricarli in PDF, in immagine, o condividerli direttamente.",
+      "whenToUseIt": "Alla fine di un corso, quando un allievo ha bisogno del suo Training Record su carta o per inviarlo a SSI.",
+      "steps": [
+        "Entra in Training Records dall'accesso in Home.",
+        "Scegli il modello SSI del corso e compila la configurazione condivisa (versione dell'esame, certificazione, progresso del corso...) — si compila una sola volta per tutta la classe.",
+        "\"Aggiungi allievo\" per ogni allievo: chiede solo il suo nome, le iniziali e la firma — se è minorenne, anche il nome e la firma del tutore.",
+        "\"Genera per tutti gli allievi\" crea il documento di tutto l'elenco insieme; \"Rigenera il TR\" sulla riga di un allievo specifico rigenera solo il suo, senza ripetere il resto.",
+        "Per ogni allievo: \"Scarica il PDF\", \"Scarica l'immagine (JPG)\" o \"Condividi\". Per tutti insieme: \"Scarica tutto in PDF/JPG\" o \"Condividi tutto\", in un unico archivio."
+      ],
+      "tips": [
+        "Ti serve il tesserino istruttore completo in Il mio profilo (iniziali, numero SSI Pro e firma) prima di poter generare qualsiasi cosa — è ciò che viene stampato su ogni Training Record.",
+        "Nulla di ciò che compili qui si salva in Ocean Flow: ogni documento si genera al momento e si scarica soltanto."
+      ],
+      "expectedResult": "Hai il Training Record di ogni allievo pronto da scaricare o condividere, con la sua firma e la tua già incluse."
     },
     "mi-trabajo-referencia": {
       "title": "Il mio lavoro, a colpo d'occhio",
@@ -191,20 +213,22 @@
     },
     "perfil-referencia": {
       "title": "Il mio profilo, a colpo d'occhio",
-      "summary": "Il tuo avatar, i tuoi dati, la tua valuta preferita e la tua password — tutto in un unico posto, accessibile dal tuo nome nell'intestazione.",
-      "whatYouCanDo": "Tocca il tuo avatar o il tuo nickname (in alto a destra in qualsiasi schermata) per entrare in Il mio profilo: la tua identità, la tua valuta preferita e la tua password, tutto in un unico posto.",
+      "summary": "Il tuo avatar, i tuoi dati, il tuo tesserino istruttore, la tua valuta preferita e la tua password — tutto in un unico posto, accessibile dal tuo nome nell'intestazione.",
+      "whatYouCanDo": "Tocca il tuo avatar o il tuo nickname (in alto a destra in qualsiasi schermata) per entrare in Il mio profilo: la tua identità, il tuo tesserino istruttore, la tua lingua, la tua valuta preferita e la tua password, tutto in un unico posto.",
       "whenToUseIt": "Quando vuoi personalizzare il tuo account, correggere un dato, o cambiare la password senza dover uscire e passare per \"password dimenticata\".",
       "steps": [
         "Tocca l'avatar/nickname dell'intestazione per entrare in Il mio profilo.",
         "La matita sull'avatar apre il selettore di icona e colore — la modifica si salva alla scelta, senza un pulsante \"Salva\" separato.",
         "\"Modifica\" in Dati personali apre nome, cognome e nickname; il nickname non può contenere \"@\" né coincidere con quello di un altro account.",
+        "\"Dati istruttore\" è il tuo tesserino: iniziali, numero SSI Pro e la tua firma — si salvano qui una sola volta e servono a compilare automaticamente i tuoi Training Records.",
         "La valuta preferita si usa come riserva in Rettifica di corso quando non c'è una tariffa che la determini — gli altri movimenti usano sempre la valuta della propria tariffa."
       ],
       "tips": [
         "Cambiare la password qui non richiede la password attuale — se sei già dentro l'app, si fida che la sessione attiva sia sufficiente.",
+        "Anche la lingua di tutta l'app si cambia da qui, senza dover uscire.",
         "Eliminare il tuo account è permanente e cancella tutti i tuoi dati — per confermarlo devi scrivere la parola ANNULLA, così non si cancella nulla per un tocco accidentale."
       ],
-      "expectedResult": "Il tuo account riflette l'avatar, i dati e la valuta che scegli, e puoi cambiare la password quando vuoi senza uscire dall'app."
+      "expectedResult": "Il tuo account riflette l'avatar, i dati, il tesserino istruttore e la valuta che scegli, e puoi cambiare la password o la lingua quando vuoi senza uscire dall'app."
     },
     "filtros-referencia": {
       "title": "Filtrare e cercare",

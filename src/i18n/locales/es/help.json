@@ -34,6 +34,10 @@
       "label": "Consultar cuánto has generado",
       "description": "De un vistazo, o en detalle por periodo"
     },
+    "quiero-generar-tr": {
+      "label": "Generar un Training Record",
+      "description": "El documento oficial de progreso de cada alumno"
+    },
     "func-mi-trabajo": {
       "label": "Mi trabajo",
       "description": "Crear, editar, cobrar y eliminar movimientos"
@@ -48,7 +52,7 @@
     },
     "func-perfil": {
       "label": "Mi perfil",
-      "description": "Avatar, datos, moneda favorita y contraseña"
+      "description": "Avatar, carnet de instructor, idioma y moneda favorita"
     },
     "func-filtros": {
       "label": "Filtros y búsqueda",
@@ -62,7 +66,7 @@
       "whatYouCanDo": "Ocean Flow te ayuda a llevar el control de tus ingresos como instructor freelance. Bajo un mismo concepto, \"movimiento\", agrupa las clases que impartes, las comisiones por clientes referidos y los ajustes económicos con otros instructores.",
       "whenToUseIt": "La primera vez que abres la app, o cuando quieras recordar para qué sirve cada pantalla.",
       "steps": [
-        "Home: cuánto tienes pendiente de cobrar, un widget con tus deudas más antiguas, el calendario del mes y un acceso directo para crear un movimiento.",
+        "Home: tus alumnos, cursos y clientes captados de un vistazo, el acceso a Training Records, cuánto tienes pendiente de cobrar, el calendario del mes y un acceso directo para crear un movimiento.",
         "Mi trabajo: la lista completa de tus movimientos (cursos, comisiones y ajustes), para crearlos, editarlos, cobrarlos o eliminarlos.",
         "Resumen: tu balance por el periodo que elijas, con la posibilidad de profundizar por escuela, por curso o por comisiones."
       ],
@@ -128,11 +132,11 @@
     },
     "consultar-generado": {
       "title": "Consultar cuánto has generado",
-      "summary": "Un vistazo rápido en Home, o el detalle completo por el periodo que elijas en Resumen.",
-      "whatYouCanDo": "\"Generado este mes\" en Home te da la cifra del mes en curso, con un indicio de si vas mejor o peor que el mes anterior. Tocarla te lleva directo a Resumen, que va más allá: cualquier periodo, comparado con el anterior, y con la posibilidad de profundizar por escuela o por curso.",
-      "whenToUseIt": "Home, para un vistazo rápido al entrar en la app. Resumen, cuando quieras un periodo distinto al mes actual o entender de dónde viene el dinero.",
+      "summary": "Un vistazo rápido en Mi trabajo, o el detalle completo por el periodo que elijas en Resumen.",
+      "whatYouCanDo": "\"Generado este mes\" en Mi trabajo te da la cifra del mes en curso, siempre visible arriba de la lista. Resumen va más allá: cualquier periodo, comparado con el anterior, y con la posibilidad de profundizar por escuela o por curso.",
+      "whenToUseIt": "Mi trabajo, para un vistazo rápido junto al resto de tu trabajo diario. Resumen, cuando quieras un periodo distinto al mes actual o entender de dónde viene el dinero.",
       "steps": [
-        "En Home, la tarjeta \"Generado este mes\" ya está siempre visible, sin tocar nada — y tocarla te lleva a Resumen para profundizar.",
+        "En Mi trabajo, la tarjeta \"Generado este mes\" ya está siempre visible, arriba de la lista, sin tocar nada.",
         "En Resumen, elige la granularidad y el periodo en el control de arriba (mensual, trimestral, semestral, anual o un rango personalizado) y, si quieres, el tipo (Curso, Comisión o Ajuste).",
         "La tarjeta principal muestra el total del periodo y cuánto ha cambiado respecto al periodo anterior.",
         "Toca \"Por escuela\", \"Por curso\", \"Comisiones\", \"Ajustes de curso\" o \"Calendario\" para profundizar — cada uno se despliega solo si lo pides."
@@ -142,6 +146,24 @@
         "La comparación con el periodo anterior no aparece si mezclas más de una moneda en el mismo periodo — evita mostrar un cálculo que no sería exacto."
       ],
       "expectedResult": "Tienes una cifra de balance del periodo elegido, con el detalle de dónde viene cada ingreso si lo necesitas."
+    },
+    "generar-training-record": {
+      "title": "Generar un Training Record",
+      "summary": "El documento oficial de progreso SSI de cada alumno, con su firma y la tuya — nada se guarda en la nube, solo se descarga.",
+      "whatYouCanDo": "Desde Training Records generas el documento de progreso oficial de cualquiera de las 10 plantillas SSI, con los datos de cada alumno y tu firma de instructor ya incluidos. Puedes generarlos uno a uno o de golpe, y descargarlos en PDF, en imagen, o compartirlos directamente.",
+      "whenToUseIt": "Al terminar un curso, cuando un alumno necesita su Training Record en papel o para enviarlo a SSI.",
+      "steps": [
+        "Entra en Training Records desde el acceso en Home.",
+        "Elige la plantilla SSI del curso y rellena la configuración compartida (versión del examen, certificación, progreso del curso...) — se rellena una sola vez para toda la clase.",
+        "\"Añadir alumno\" por cada alumno: solo pide su nombre, iniciales y firma — si es menor de edad, también el nombre y la firma de su tutor.",
+        "\"Generar para todos los alumnos\" crea el documento de todo el listado de golpe; \"Regenerar TR\" en la fila de un alumno concreto vuelve a generar solo el suyo, sin repetir el resto.",
+        "Por alumno: \"Descargar PDF\", \"Descargar imagen (JPG)\" o \"Compartir\". Para todos a la vez: \"Descargar todo en PDF/JPG\" o \"Compartir todo\", en un único archivo comprimido."
+      ],
+      "tips": [
+        "Necesitas tu carnet de instructor completo en Mi perfil (iniciales, número SSI Pro y firma) antes de poder generar nada — es lo que se imprime en cada Training Record.",
+        "Nada de lo que rellenes aquí se guarda en Ocean Flow: cada documento se genera en el momento y solo se descarga."
+      ],
+      "expectedResult": "Tienes el Training Record de cada alumno listo para descargar o compartir, con su firma y la tuya ya incluidas."
     },
     "mi-trabajo-referencia": {
       "title": "Mi trabajo, de un vistazo",
@@ -191,20 +213,22 @@
     },
     "perfil-referencia": {
       "title": "Mi perfil, de un vistazo",
-      "summary": "Tu avatar, tus datos, tu moneda favorita y tu contraseña — todo en un mismo sitio, accesible desde tu nombre en la cabecera.",
-      "whatYouCanDo": "Toca tu avatar o tu nickname (arriba a la derecha en cualquier pantalla) para entrar en Mi perfil: tu identidad, tu moneda favorita y tu contraseña, todo en un mismo sitio.",
+      "summary": "Tu avatar, tus datos, tu carnet de instructor, tu moneda favorita y tu contraseña — todo en un mismo sitio, accesible desde tu nombre en la cabecera.",
+      "whatYouCanDo": "Toca tu avatar o tu nickname (arriba a la derecha en cualquier pantalla) para entrar en Mi perfil: tu identidad, tu carnet de instructor, tu idioma, tu moneda favorita y tu contraseña, todo en un mismo sitio.",
       "whenToUseIt": "Cuando quieras personalizar tu cuenta, corregir un dato, o cambiar la contraseña sin tener que cerrar sesión y pasar por \"olvidé mi contraseña\".",
       "steps": [
         "Toca el avatar/nickname de la cabecera para entrar en Mi perfil.",
         "El lápiz sobre el avatar abre el selector de icono y color — el cambio se guarda al elegir, sin botón \"Guardar\" aparte.",
         "\"Editar\" en Datos personales abre nombre, apellidos y nickname; el nickname no puede llevar \"@\" ni coincidir con el de otra cuenta.",
+        "\"Datos de instructor\" es tu carnet: iniciales, número SSI Pro y tu firma — se guardan aquí una sola vez y son los que se usan para rellenar tus Training Records automáticamente.",
         "Moneda favorita se usa como respaldo en Ajuste de curso cuando no hay una tarifa que la determine — el resto de movimientos siempre usan la moneda de su propia tarifa."
       ],
       "tips": [
         "Cambiar la contraseña aquí no te pide la contraseña actual — si ya estás dentro de la app, se confía en que la sesión activa es suficiente.",
+        "El idioma de toda la app se cambia también desde aquí, sin tener que cerrar sesión.",
         "Eliminar tu cuenta es permanente y borra todos tus datos — para confirmarlo tienes que escribir la palabra CANCELAR, así no se borra nada por un toque accidental."
       ],
-      "expectedResult": "Tu cuenta refleja el avatar, los datos y la moneda que elijas, y puedes cambiar tu contraseña cuando quieras sin salir de la app."
+      "expectedResult": "Tu cuenta refleja el avatar, los datos, el carnet de instructor y la moneda que elijas, y puedes cambiar tu contraseña o tu idioma cuando quieras sin salir de la app."
     },
     "filtros-referencia": {
       "title": "Filtrar y buscar",

@@ -5,6 +5,10 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Added
+- **Ayuda → "Generar un Training Record"**: nueva categoría/artículo
+  (en los 7 idiomas) que explica cómo generar el documento de progreso
+  de un alumno desde Training Records — antes no tenía ninguna mención
+  en la Ayuda, pese a ser una pantalla completa con su propio generador.
 - **Cinco idiomas nuevos**: francés, italiano, alemán, catalán y
   euskera, junto a español e inglés — toda la interfaz, incluida la
   Política de Privacidad y los Términos de Uso, elegibles desde Mi
@@ -213,6 +217,12 @@ Registro de cambios relevantes de Ocean Flow.
   "pendiente de configurar" que ya está configurado).
 
 ### Fixed
+- **Ayuda → "Mi perfil" y "Consultar cuánto has generado" tenían
+  contenido desactualizado** — "Mi perfil" no mencionaba el carnet de
+  instructor (una de las novedades del rediseño), y "Consultar cuánto
+  has generado" seguía diciendo que "Generado este mes" vivía en Home
+  con un indicador de tendencia — hoy esa cifra vive en Mi trabajo.
+  Corregidos, en los 7 idiomas.
 - **KPIs de Mi trabajo (Generado/Pendiente/Cobrado): un importe de 6+
   dígitos podía llegar a salirse del recuadro** — el icono ya podía
   ocultarse del todo para dejarle sitio, pero el propio número no tenía
