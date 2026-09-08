@@ -4,6 +4,12 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Changed
+- Texto de bienvenida de la pantalla de Registro, en los 7 idiomas: de
+  "deja el cuaderno y las notas sueltas" a "deja los Excel complicados
+  y las notas desordenadas del móvil" — más cercano al método real que
+  usa hoy la mayoría de instructores.
+
 ### Fixed
 - **Registro externo, campo "País de residencia" en móvil**: en iOS
   Safari, al abrirse el teclado la tarjeta entera se recentraba de
