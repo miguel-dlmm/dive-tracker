@@ -219,8 +219,8 @@ Registro de cambios relevantes de Ocean Flow.
   ninguna protección si aun así no cabía. Ahora, en ese caso extremo, el
   número reduce su propio tamaño de letra lo justo para caber, sin
   afectar a los otros dos KPI. De paso, el icono junto a cada cifra
-  pasa a ser un poco más grande y queda centrado con el número (antes
-  se alineaba arriba).
+  queda centrado con el número (antes se alineaba arriba) y pasa a ser
+  un icono suelto, sin insignia de fondo, pegado a la cifra.
 - **Regenerar un solo Training Record ("Regenerar TR") no sumaba al
   contador de Home** — solo "Generar para todos los alumnos" lo hacía.
   Ahora cuenta cualquier generación con éxito, se llame de una en una o

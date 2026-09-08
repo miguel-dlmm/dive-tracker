@@ -4961,3 +4961,36 @@ datos reales — tarjetas de 127px de ancho real, importes reales de
 "32.945,45 ฿" y "114.609,14 ฿" (5-6 dígitos) cayeron directamente en
 escala de icono 0 (oculto) y `font-size` reducido a 10.5px (suelo),
 sin desbordar la tarjeta en ningún momento y sin errores de consola.
+
+### 12.31 — KPIs de Mi trabajo: segunda vuelta, icono pequeño sin insignia junto a la cifra
+
+Experimento explícito a continuación de 12.30, con aviso previo del
+propio usuario de que podía no convencerle y pedir revertirlo: "quiero
+probar a poner el icono en pequeño como está pero al lado de la
+cifra, y q todo quede centrado".
+
+**Cambio** (`MoneyKpiTile`, `MiTrabajoTab.jsx`): la insignia circular
+de 28px con icono a 18px (12.30) se sustituye por un icono suelto de
+10px — mismo tamaño que el icono fijo de la etiqueta, no un tercer
+tamaño nuevo — sin ningún fondo/badge detrás, pegado directamente a la
+cifra. La fila pasa a `justify-center` (antes ocupaba el ancho
+disponible sin centrarse como grupo). `ICON_FOOTPRINT`/
+`TRANSITION_ZONE` (sistema de encogido de Fase 13) bajan de 34/36 a
+14/14 para seguir siendo proporcionales al nuevo tamaño de icono; la
+red de seguridad del número (`kpiTextScale`, 12.30) no cambia de
+fórmula, solo el footprint que resta.
+
+**Diseñado para ser fácil de revertir**: cambio quirúrgico y aislado
+(un solo commit, sin tocar la arquitectura del sistema de medición
+existente) — si no convence, `git revert` de este commit por sí solo
+deja 12.30 intacto.
+
+**Verificado**: 867/867 tests (3 tests existentes actualizados —
+localizan el icono por `.h-4` en vez de `.rounded-full`, ya no hay
+badge; valores de ancho actualizados de 28px a 10px), lint 0 errores,
+build correcto. Confirmado en mobile real (Playwright, iPhone 14 Pro
+Max) contra datos reales de TEST: sin desbordamiento ni errores de
+consola — con estos importes concretos (5-6 dígitos, ya casi llenan la
+tarjeta por sí solos) el icono compartido cae en escala 0 igual que
+antes, comportamiento ya existente (Fase 13: los 3 KPI comparten
+escala), no un efecto nuevo de este cambio.
