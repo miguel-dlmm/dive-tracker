@@ -4,6 +4,8 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.2.0] - 2026-09-08
+
 ### Changed
 - Texto de bienvenida de la pantalla de Registro, en los 7 idiomas: de
   "deja el cuaderno y las notas sueltas" a "deja los Excel complicados
