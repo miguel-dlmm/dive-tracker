@@ -11,6 +11,13 @@ Registro de cambios relevantes de Ocean Flow.
   usa hoy la mayoría de instructores.
 
 ### Fixed
+- **Descargar JPG de un Training Record fallaba en Safari real** (Mac e
+  iPhone): `pdfjs-dist` calcula la huella de cada PDF con
+  `Uint8Array.prototype.toHex()`, una API sin soporte confirmado en
+  Safari — "UnknownErrorException: i.toHex is not a function" y un
+  DataCloneError secundario al propagar esa excepción por su canal
+  interno de mensajes. Añadido a `pdfjsPolyfills.js` junto al resto de
+  parches ya existentes para esta misma dependencia.
 - **Desplegables con teclado en móvil (país de residencia y cualquier
   otro `SearchSelect`/`Select`/`DatePicker`)**: la corrección de
   dirección arriba/abajo tras abrirse el teclado solo escuchaba un

@@ -37,6 +37,23 @@
 //    tropieza. Arreglar el Promise.try que falta evita que el worker
 //    real llegue a fallar, así que nunca hace falta ese camino de
 //    recuperación — un único parche soluciona los dos errores.
+// 4. `Uint8Array.prototype.toHex()`/`.toBase64()` y `Uint8Array.fromBase64()`
+//    (propuesta TC39 "Uint8Array to/from base64/hex", sin soporte
+//    confirmado en Safari a día de hoy) — bug real reportado 2026-09-08
+//    en un Mac/iPhone real, mismo patrón que el punto 3: pdf.mjs calcula
+//    la "huella" (fingerprint) de cada PDF con
+//    `hashOriginal.toHex()` (PDFDocument.get fingerprints, pdf.worker.mjs)
+//    sobre un `Uint8Array` normal (los bytes del `/ID` del trailer o un
+//    hash MD5) — no un método propio de pdfjs-dist, da por hecho que el
+//    motor ya trae esta API nativa. Sin ella: "UnknownErrorException:
+//    i.toHex is not a function" dentro del worker/loopback y, exactamente
+//    igual que el punto 3, un "DataCloneError" secundario al intentar
+//    propagar esa excepción de vuelta por el canal de mensajes de
+//    pdfjs-dist — el mismo mecanismo de recuperación que ya falla con
+//    cualquier excepción no nativa. `toBase64()`/`fromBase64()` (usados
+//    en pdf.mjs para incrustar fuentes como data-URL y en pdf.worker.mjs
+//    para adjuntos de flujo) se rellenan a la vez por ser la misma
+//    propuesta — si Safari no trae una, no trae ninguna de las cuatro.
 //
 // CRÍTICO: estas tres piezas hacen falta en DOS sitios, no solo uno — el
 // hilo principal (pdf.mjs, ya cubierto aplicando esto sobre `globalThis`
@@ -91,6 +108,42 @@ export function applyPdfjsPolyfills(target = globalThis) {
     target.Promise.try = function ptry(fn, ...args) {
       return new target.Promise((resolve) => resolve(fn(...args)));
     };
+  }
+
+  // target.Uint8Array es opcional (los tests de Promise/Iterator de
+  // arriba pasan un target mínimo que no lo necesita) — en uso real
+  // (globalThis o self, ver applyPdfjsPolyfills(globalThis) más abajo y
+  // pdfWorkerEntry.js) siempre está presente.
+  if (target.Uint8Array) {
+    // CHUNK: evita "Maximum call stack size exceeded" al usar spread sobre
+    // un array grande (String.fromCharCode(...bytes)) — una fuente
+    // embebida en un PDF puede pesar varios cientos de KB.
+    const CHUNK = 0x8000;
+    const bytesToBase64 = (bytes) => {
+      let binary = "";
+      for (let i = 0; i < bytes.length; i += CHUNK) binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+      return target.btoa(binary);
+    };
+    const base64ToBytes = (base64) => {
+      const binary = target.atob(base64);
+      const bytes = new target.Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    };
+    const bytesToHex = (bytes) => {
+      let hex = "";
+      for (let i = 0; i < bytes.length; i++) hex += bytes[i].toString(16).padStart(2, "0");
+      return hex;
+    };
+    if (typeof target.Uint8Array.prototype.toHex !== "function") {
+      target.Uint8Array.prototype.toHex = function toHex() { return bytesToHex(this); };
+    }
+    if (typeof target.Uint8Array.prototype.toBase64 !== "function") {
+      target.Uint8Array.prototype.toBase64 = function toBase64() { return bytesToBase64(this); };
+    }
+    if (typeof target.Uint8Array.fromBase64 !== "function") {
+      target.Uint8Array.fromBase64 = function fromBase64(base64) { return base64ToBytes(base64); };
+    }
   }
 }
 
