@@ -14,9 +14,8 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "subtitle": "Erstelle das SSI-Fortschrittsprotokoll jedes Teilnehmers, signiert und versandbereit",
-    "subtitleWithCount_one": "Du hast bereits {{count}} Training Record erstellt",
-    "subtitleWithCount_other": "Du hast bereits {{count}} Training Records erstellt"
+    "ctaFirstTime": "Erstelle deinen ersten Training Record",
+    "generatedLabel": "Erstellt"
   },
   "installApp": "App herunterladen"
 }

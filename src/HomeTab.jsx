@@ -262,69 +262,55 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         </div>
       </div>
 
-      {/* 2. Training Records (2026-09-04, pedido explícito: "el generador de
-          TR es una herramienta de uso frecuente, colócalo más arriba y con
-          un estilo acorde a la Home") — rediseñada más prominente y subida
-          justo debajo de los KPIs (antes cerraba la pantalla, compitiendo
-          por atención con "Generado este mes"). Mismo lenguaje visual que
-          el resto de tarjetas de Home (rounded-xl, tinte de color de
-          marca), pero con más peso — icono más grande en badge circular
-          con el propio BRAND_NAVY de fondo (no solo un 10% de opacidad
-          como el resto de filas de icono+chevron) y un borde sutil a juego, para
-          que destaque como acceso directo a una herramienta, no como una
-          fila más de ajustes.
-          onOpenTrainingRecords (App.jsx) simplemente cambia a la pestaña
-          secundaria "training-records" (rediseño de navegación 2026-09-07:
-          antes se abría "dentro" de Configuración vía setStoredSection(),
-          así que su "‹ atrás" real acababa en el menú de Configuración —
-          una pantalla que ni siquiera la lista. Ahora es independiente,
-          al mismo nivel que Ayuda/Configuración/Mi perfil, y cerrar
-          siempre vuelve aquí, a Home).
-          Reactivado de forma permanente el 2026-09-06 (decisión del
-          usuario: "ya irá a la próxima release" — ver
-          docs/RELEASE-V1-PROGRESS.md, Fase 9 y el bloque de reversión
-          justo debajo). Estuvo desconectado a propósito solo para el
-          lanzamiento de v1.0.0. */}
+      {/* 2. Training Records — tercera vuelta de diseño (2026-09-08).
+          Historial: nació como tarjeta grande con borde y degradado
+          (2026-09-04); feedback directo "es muy grande y queda como
+          pegada, no lo veo muy integrado" llevó a explorar mockups
+          (Artifact, 3 direcciones) — elegida "Opción A" (fila fina, sin
+          tarjeta propia, mismo espíritu que el enlace "Descargar app" de
+          arriba). Segunda vuelta de mockups sobre esa misma opción,
+          pidiendo "dinamismo, texto, call to action, Generados" — elegida
+          la combinación de dos ideas:
+          (1) "Generados" como cuarta palabra del mismo vocabulario que ya
+              usan los KPI de arriba (Alumnos/Cursos/Captados) — mismo
+              patrón número-en-grande + etiqueta-pequeña, no un contador
+              inventado aparte.
+          (2) el texto CAMBIA según haya actividad real: sin ningún
+              documento generado todavía, es una invitación de verdad
+              ("Genera tu primer Training Record", en azul océano — nunca
+              un "0 Generados" desangelado); en cuanto hay alguno, pasa a
+              contar lo ya hecho.
+          Insignia rounded-lg (no circular, para no confundirse con los
+          badges redondos de los KPI) con la misma respiración sutil en
+          bucle que ya tenía, apagada con prefers-reduced-motion. */}
       {onOpenTrainingRecords && (
         <button
           type="button"
           onClick={onOpenTrainingRecords}
-          className="flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-transform active:scale-[0.98]"
-          style={{ borderColor: `${BRAND_NAVY}40`, background: `linear-gradient(135deg, ${BRAND_NAVY}17 0%, ${BRAND_NAVY}05 100%)` }}
+          className="flex items-center gap-2.5 border-b border-t border-gray-100 px-1 py-2.5 text-left"
         >
-          {/* Insignia con respiración sutil (2026-09-08) — antes un
-              círculo estático; un latido lento (escala 1 → 1.05, ida y
-              vuelta, en bucle) le da vida sin distraer, apagado del todo
-              con prefers-reduced-motion (motion.span sin `animate` cuando
-              reducedMotion, se queda en su tamaño base). */}
           <motion.span
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
-            style={{ backgroundColor: BRAND_NAVY }}
+            className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg"
+            style={{ backgroundColor: generatedCount > 0 ? BRAND_NAVY : `${BRAND_OCEAN}1A` }}
             animate={reducedMotion ? undefined : { scale: [1, 1.06, 1] }}
             transition={reducedMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
           >
-            <Award size={22} className="text-white" aria-hidden="true" />
+            <Award size={13} style={{ color: generatedCount > 0 ? "#fff" : BRAND_OCEAN }} aria-hidden="true" />
           </motion.span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</span>
-            {/* Subtítulo dinámico (2026-09-08, pedido explícito: "otra
-                manera dinámica y atractiva de integrarlo en la home") —
-                mientras no se ha generado ningún documento todavía, se
-                mantiene el texto explicativo de siempre (más útil para
-                quien nunca ha usado la herramienta que una cifra en
-                cero); en cuanto hay alguno, pasa a un mensaje de
-                actividad real con la cifra animada (mismo useCountUp que
-                los KPI de arriba) — ver generatedCounter.js para qué
-                cuenta exactamente y por qué. */}
             {generatedCount > 0 ? (
-              <span className="block text-xs text-gray-500">
-                {t("trainingRecordsCard.subtitleWithCount", { count: animatedGeneratedCount })}
-              </span>
+              <>
+                <span className="block text-[11.5px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</span>
+                <span className="flex items-baseline gap-1">
+                  <span className="text-xs font-extrabold leading-none tabular-nums" style={{ color: BRAND_OCEAN }}>{animatedGeneratedCount}</span>
+                  <span className="text-[9.5px] font-semibold uppercase leading-none tracking-wide text-gray-400">{t("trainingRecordsCard.generatedLabel")}</span>
+                </span>
+              </>
             ) : (
-              <span className="block text-xs text-gray-500">{t("trainingRecordsCard.subtitle")}</span>
+              <span className="block text-[11.5px] font-bold leading-tight" style={{ color: BRAND_OCEAN }}>{t("trainingRecordsCard.ctaFirstTime")}</span>
             )}
           </span>
-          <ChevronRight size={20} className="shrink-0" style={{ color: BRAND_NAVY }} aria-hidden="true" />
+          <ChevronRight size={16} className="shrink-0" style={{ color: generatedCount > 0 ? "#CBD5E1" : BRAND_OCEAN }} aria-hidden="true" />
         </button>
       )}
 

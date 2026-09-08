@@ -14,9 +14,8 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "subtitle": "Genera el registro de progreso SSI de cada alumno, firmado y listo para entregar",
-    "subtitleWithCount_one": "Ya has generado {{count}} Training Record",
-    "subtitleWithCount_other": "Ya has generado {{count}} Training Records"
+    "ctaFirstTime": "Genera tu primer Training Record",
+    "generatedLabel": "Generados"
   },
   "installApp": "Descargar app"
 }

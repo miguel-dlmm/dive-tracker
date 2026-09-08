@@ -4713,3 +4713,70 @@ lint 0 errores, build correcto. Confirmado en Chrome real: con el
 contador a 0, texto explicativo de siempre; con un valor simulado en
 `localStorage`, la tarjeta cambia al mensaje de actividad con la cifra
 animada asentándose en el valor correcto, sin errores de consola.
+
+### 12.27 — Training Records en Home: de tarjeta a fila fina, con mockups antes de tocar código
+
+Feedback directo tras 12.26: "no iba tanto por hacer esto sino por el
+estilo y como se integra en la home el acceso al TR... creo que es muy
+grande y queda como pegada donde está, no lo veo muy integrado en la
+home el diseño". Pedido explícito de proceso, no solo de resultado:
+"haz varias propuestas antes de implementar con un diseño/imagen de q
+opciones planteas, rollo mockup y elijo una" — la primera vez en esta
+sesión que se piden mockups como paso obligatorio antes de escribir
+ningún código de producción para una decisión de diseño.
+
+**Primera ronda de mockups** (Artifact HTML, `https://claude.ai/code/artifact/f0a9bdf3-4a6f-4472-ab18-56a57a7e8f1c`,
+colores/tipografía/cifras reales de la app, 3 pantallas de teléfono
+lado a lado para comparar proporciones de verdad): 3 direcciones para
+sustituir la tarjeta con borde y degradado de 12.26/lanzamiento
+original —
+(A) fila fina sin tarjeta propia, mismo espíritu que el enlace
+"Descargar app";
+(B) cuarta pieza en la rejilla de KPI (Alumnos/Cursos/Captados/TR);
+(C) píldora dentro de la propia cabecera de sección.
+**Elegida A** — "me gusta la opción A".
+
+**Segunda ronda, sobre la A elegida**: "mira de integrarle dinamismo...
+si cabe algo de texto, call to action, Generados... explora e innova".
+Mismo Artifact actualizado (misma URL) con 3 variaciones de contenido
+sobre la fila ya elegida — (1) "Generados" como cuarta palabra del
+mismo vocabulario que ya usan los KPI (mismo patrón número-en-grande +
+etiqueta-pequeña); (2) el texto cambia según haya actividad real (CTA
+de verdad cuando no hay ninguno, cifra cuando ya los hay); (3) píldora
+de pulso semanal (aparcada — necesitaría saber cuántos se generaron en
+los últimos 7 días, y hoy el contador solo guarda un acumulado, no una
+serie temporal). **Elegida la combinación 1+2** — "me gusta la uno más
+dos", coincidiendo con la recomendación propia ya señalada en el propio
+mockup antes de que el usuario respondiera.
+
+**Implementación** (`HomeTab.jsx`): la tarjeta con borde/degradado/
+badge circular de 44px se sustituye por una fila sin tarjeta propia
+(`border-t`/`border-b` finos, sin fondo ni borde lateral, `px-1 py-2.5`
+— mismo contenedor "elemento de lista" que ya usa el enlace "Descargar
+app"), badge más pequeño (26×26px, `rounded-lg` en vez de círculo, para
+no confundirse con los badges redondos de los KPI) que conserva la
+respiración sutil en bucle de 12.26. Dos estados de contenido, no uno:
+- **Sin actividad** (`generatedCount === 0`): badge con tinte suave de
+  `BRAND_OCEAN`, texto "Genera tu primer Training Record" en el mismo
+  azul — una invitación real, nunca "0 Generados".
+- **Con actividad**: badge sólido `BRAND_NAVY`, "Training Records"
+  (título, igual que antes) + línea de cifra: número en `BRAND_OCEAN`
+  grande + "Generados" en mayúsculas pequeñas grises — mismo patrón
+  visual que "39 Alumnos"/"33 Cursos"/"20 Captados" arriba, para que se
+  lea como parte de la misma familia, no como un elemento aparte.
+
+**Traducciones** (`home.json`, 7 idiomas): `trainingRecordsCard.subtitle`
+y `.subtitleWithCount_one/_other` (de 12.26, ya no usados) sustituidos
+por `.ctaFirstTime` (la invitación) y `.generatedLabel` (la palabra
+suelta "Generados"/equivalente) — sin dejar claves muertas.
+
+**Verificado**: 861/861 tests (3 reescritos en `HomeTab.test.jsx` para
+el nuevo contrato de dos estados: invitación real sin actividad, "7" +
+"Generados" como nodos de texto separados con actividad, clic sobre el
+texto visible en cada estado), lint 0 errores, build correcto.
+Confirmado en Chrome real: estado sin actividad muestra la invitación
+en azul océano, mucho más compacto que la tarjeta anterior; con un
+valor simulado en `localStorage`, la cifra se anima hasta 23 y "Training
+Records"/"Generados" aparecen con el patrón de los KPI, coincidiendo
+con el mockup elegido fotograma a fotograma; navegación y ausencia de
+errores de consola confirmadas en ambos estados.

@@ -50,10 +50,12 @@ Registro de cambios relevantes de Ocean Flow.
   altas masivas automatizadas (Vercel BotID).
 
 ### Changed
-- **Training Records en Home**: la tarjeta ya refleja actividad real —
-  en cuanto se ha generado al menos un documento, el texto cambia a "Ya
-  has generado N Training Records" con la cifra animada; el icono gana
-  además una respiración sutil en bucle.
+- **Training Records en Home**: la tarjeta con borde y degradado pasa a
+  ser una fila fina, sin tarjeta propia — igual de accesible, mucho
+  menos pesada visualmente. Sin ningún documento generado todavía es una
+  invitación real ("Genera tu primer Training Record"); en cuanto lo hay,
+  muestra la cifra animada junto a "Generados", mismo patrón que
+  Alumnos/Cursos/Captados justo arriba.
 - **Training Records**: en Nitrox, Deep Diving, Basic Diver, Diver
   Stress & Rescue, Navigation, Night & Limited Visibility, Perfect
   Buoyancy y React Right, las filas de progreso del curso que de verdad

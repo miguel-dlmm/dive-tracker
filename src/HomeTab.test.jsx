@@ -488,25 +488,29 @@ describe("HomeTab — tarjeta de Training Records", () => {
     );
   }
 
-  it("sin ningún Training Record generado todavía, muestra el texto explicativo de siempre", () => {
+  it("sin ningún Training Record generado todavía, es una invitación de verdad, no un contador en cero", () => {
     renderHomeWithTR();
-    expect(screen.getByText("Genera el registro de progreso SSI de cada alumno, firmado y listo para entregar")).toBeInTheDocument();
+    expect(screen.getByText("Genera tu primer Training Record")).toBeInTheDocument();
+    expect(screen.queryByText("Training Records")).not.toBeInTheDocument();
+    expect(screen.queryByText("Generados")).not.toBeInTheDocument();
   });
 
-  it("con Training Records ya generados, cambia a un mensaje de actividad con la cifra", async () => {
+  it("con Training Records ya generados, cambia a 'Training Records' + la cifra + 'Generados' (mismo patrón que los KPI)", async () => {
     localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount", "7");
     renderHomeWithTR();
+    expect(screen.getByText("Training Records")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText("Ya has generado 7 Training Records")).toBeInTheDocument();
+      expect(screen.getByText("7")).toBeInTheDocument();
     }, { timeout: 4000 });
-    expect(screen.queryByText("Genera el registro de progreso SSI de cada alumno, firmado y listo para entregar")).not.toBeInTheDocument();
+    expect(screen.getByText("Generados")).toBeInTheDocument();
+    expect(screen.queryByText("Genera tu primer Training Record")).not.toBeInTheDocument();
   });
 
-  it("pulsar la tarjeta llama a onOpenTrainingRecords", async () => {
+  it("pulsar la fila llama a onOpenTrainingRecords", async () => {
     const user = userEvent.setup();
     const onOpenTrainingRecords = vi.fn();
     renderHomeWithTR(onOpenTrainingRecords);
-    await user.click(screen.getByText("Training Records"));
+    await user.click(screen.getByText("Genera tu primer Training Record"));
     expect(onOpenTrainingRecords).toHaveBeenCalledTimes(1);
   });
 });
