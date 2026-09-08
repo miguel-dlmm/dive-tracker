@@ -1,0 +1,41 @@
+{
+  "months": {
+    "long": ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
+    "short": ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
+  },
+  "granularity": {
+    "mensual": "Месяц",
+    "trimestral": "Квартал",
+    "semestral": "Полугодие",
+    "anual": "Год",
+    "personalizado": "Диапазон"
+  },
+  "granularityLabel": "Детализация периода",
+  "quarterAbbr": "К",
+  "halfYearAbbr": "П",
+  "trend": {
+    "heading": "Тенденция — нажми на период для перехода",
+    "goTo": "Перейти к {{period}}",
+    "currentSuffix": " (текущий период)"
+  },
+  "from": "С",
+  "to": "По",
+  "chooseRange": "Выбери диапазон",
+  "total": "Итого",
+  "totalCombined": "Общий итог",
+  "totalOf": "Итого {{source}}",
+  "trendVsPreviousPeriod": "{{delta}} по сравнению с предыдущим периодом",
+  "sections": {
+    "bySchool": "По школам",
+    "byActivity": "По курсам",
+    "commissions": "Комиссии",
+    "colleagueAdjustments": "Корректировки курса",
+    "calendar": "Календарь"
+  },
+  "empty": {
+    "noData": "Нет данных.",
+    "noCoursesInPeriod": "Нет курсов за этот период.",
+    "noMovementsInPeriod": "Нет операций за этот период.",
+    "noColleagueAdjustmentsInPeriod": "Нет корректировок курса за этот период."
+  }
+}

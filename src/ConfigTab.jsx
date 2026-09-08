@@ -959,6 +959,14 @@ const LANGUAGE_OPTIONS = [
   { code: "de", label: "Deutsch" },
   { code: "ca", label: "Català" },
   { code: "eu", label: "Euskara" },
+  { code: "nl", label: "Nederlands" },
+  { code: "th", label: "ไทย" },
+  { code: "id", label: "Bahasa Indonesia" },
+  { code: "vi", label: "Tiếng Việt" },
+  { code: "my", label: "မြန်မာဘာသာ" },
+  { code: "ms", label: "Bahasa Melayu" },
+  { code: "ru", label: "Русский" },
+  { code: "pt", label: "Português (Brasil)" },
 ];
 
 // Hoja de creación de usuario — solo visible/usable para superadmin (ver

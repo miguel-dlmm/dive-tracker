@@ -99,6 +99,118 @@ import euRates from "./locales/eu/rates.json";
 import euTrainingRecords from "./locales/eu/trainingRecords.json";
 import euInstallApp from "./locales/eu/installApp.json";
 
+import nlCommon from "./locales/nl/common.json";
+import nlAuth from "./locales/nl/auth.json";
+import nlApp from "./locales/nl/app.json";
+import nlHome from "./locales/nl/home.json";
+import nlTrabajo from "./locales/nl/trabajo.json";
+import nlSummary from "./locales/nl/summary.json";
+import nlConfig from "./locales/nl/config.json";
+import nlProfile from "./locales/nl/profile.json";
+import nlHelp from "./locales/nl/help.json";
+import nlNotices from "./locales/nl/notices.json";
+import nlRates from "./locales/nl/rates.json";
+import nlTrainingRecords from "./locales/nl/trainingRecords.json";
+import nlInstallApp from "./locales/nl/installApp.json";
+
+import thCommon from "./locales/th/common.json";
+import thAuth from "./locales/th/auth.json";
+import thApp from "./locales/th/app.json";
+import thHome from "./locales/th/home.json";
+import thTrabajo from "./locales/th/trabajo.json";
+import thSummary from "./locales/th/summary.json";
+import thConfig from "./locales/th/config.json";
+import thProfile from "./locales/th/profile.json";
+import thHelp from "./locales/th/help.json";
+import thNotices from "./locales/th/notices.json";
+import thRates from "./locales/th/rates.json";
+import thTrainingRecords from "./locales/th/trainingRecords.json";
+import thInstallApp from "./locales/th/installApp.json";
+
+import idCommon from "./locales/id/common.json";
+import idAuth from "./locales/id/auth.json";
+import idApp from "./locales/id/app.json";
+import idHome from "./locales/id/home.json";
+import idTrabajo from "./locales/id/trabajo.json";
+import idSummary from "./locales/id/summary.json";
+import idConfig from "./locales/id/config.json";
+import idProfile from "./locales/id/profile.json";
+import idHelp from "./locales/id/help.json";
+import idNotices from "./locales/id/notices.json";
+import idRates from "./locales/id/rates.json";
+import idTrainingRecords from "./locales/id/trainingRecords.json";
+import idInstallApp from "./locales/id/installApp.json";
+
+import viCommon from "./locales/vi/common.json";
+import viAuth from "./locales/vi/auth.json";
+import viApp from "./locales/vi/app.json";
+import viHome from "./locales/vi/home.json";
+import viTrabajo from "./locales/vi/trabajo.json";
+import viSummary from "./locales/vi/summary.json";
+import viConfig from "./locales/vi/config.json";
+import viProfile from "./locales/vi/profile.json";
+import viHelp from "./locales/vi/help.json";
+import viNotices from "./locales/vi/notices.json";
+import viRates from "./locales/vi/rates.json";
+import viTrainingRecords from "./locales/vi/trainingRecords.json";
+import viInstallApp from "./locales/vi/installApp.json";
+
+import myCommon from "./locales/my/common.json";
+import myAuth from "./locales/my/auth.json";
+import myApp from "./locales/my/app.json";
+import myHome from "./locales/my/home.json";
+import myTrabajo from "./locales/my/trabajo.json";
+import mySummary from "./locales/my/summary.json";
+import myConfig from "./locales/my/config.json";
+import myProfile from "./locales/my/profile.json";
+import myHelp from "./locales/my/help.json";
+import myNotices from "./locales/my/notices.json";
+import myRates from "./locales/my/rates.json";
+import myTrainingRecords from "./locales/my/trainingRecords.json";
+import myInstallApp from "./locales/my/installApp.json";
+
+import msCommon from "./locales/ms/common.json";
+import msAuth from "./locales/ms/auth.json";
+import msApp from "./locales/ms/app.json";
+import msHome from "./locales/ms/home.json";
+import msTrabajo from "./locales/ms/trabajo.json";
+import msSummary from "./locales/ms/summary.json";
+import msConfig from "./locales/ms/config.json";
+import msProfile from "./locales/ms/profile.json";
+import msHelp from "./locales/ms/help.json";
+import msNotices from "./locales/ms/notices.json";
+import msRates from "./locales/ms/rates.json";
+import msTrainingRecords from "./locales/ms/trainingRecords.json";
+import msInstallApp from "./locales/ms/installApp.json";
+
+import ruCommon from "./locales/ru/common.json";
+import ruAuth from "./locales/ru/auth.json";
+import ruApp from "./locales/ru/app.json";
+import ruHome from "./locales/ru/home.json";
+import ruTrabajo from "./locales/ru/trabajo.json";
+import ruSummary from "./locales/ru/summary.json";
+import ruConfig from "./locales/ru/config.json";
+import ruProfile from "./locales/ru/profile.json";
+import ruHelp from "./locales/ru/help.json";
+import ruNotices from "./locales/ru/notices.json";
+import ruRates from "./locales/ru/rates.json";
+import ruTrainingRecords from "./locales/ru/trainingRecords.json";
+import ruInstallApp from "./locales/ru/installApp.json";
+
+import ptCommon from "./locales/pt/common.json";
+import ptAuth from "./locales/pt/auth.json";
+import ptApp from "./locales/pt/app.json";
+import ptHome from "./locales/pt/home.json";
+import ptTrabajo from "./locales/pt/trabajo.json";
+import ptSummary from "./locales/pt/summary.json";
+import ptConfig from "./locales/pt/config.json";
+import ptProfile from "./locales/pt/profile.json";
+import ptHelp from "./locales/pt/help.json";
+import ptNotices from "./locales/pt/notices.json";
+import ptRates from "./locales/pt/rates.json";
+import ptTrainingRecords from "./locales/pt/trainingRecords.json";
+import ptInstallApp from "./locales/pt/installApp.json";
+
 // Idioma preferido — Release V1 Fase 2. Fuente de verdad real: la columna
 // profiles.language (se sincroniza tras cargar sesión, ver useSession.js/
 // App.jsx). Esta clave de localStorage es solo el valor de arranque para
@@ -107,7 +219,7 @@ import euInstallApp from "./locales/eu/installApp.json";
 // personales que no son dato de negocio. 'es' si nunca se ha elegido nada,
 // tal como pide el documento maestro ("por defecto aparecerá español").
 export const LANGUAGE_STORAGE_KEY = "oceanpulse:language";
-export const SUPPORTED_LANGUAGES = ["es", "en", "fr", "it", "de", "ca", "eu"];
+export const SUPPORTED_LANGUAGES = ["es", "en", "fr", "it", "de", "ca", "eu", "nl", "th", "id", "vi", "my", "ms", "ru", "pt"];
 
 export function getStoredLanguage() {
   try {
@@ -140,6 +252,14 @@ i18n.use(initReactI18next).init({
     de: { common: deCommon, auth: deAuth, app: deApp, home: deHome, trabajo: deTrabajo, summary: deSummary, config: deConfig, profile: deProfile, help: deHelp, notices: deNotices, rates: deRates, trainingRecords: deTrainingRecords, installApp: deInstallApp },
     ca: { common: caCommon, auth: caAuth, app: caApp, home: caHome, trabajo: caTrabajo, summary: caSummary, config: caConfig, profile: caProfile, help: caHelp, notices: caNotices, rates: caRates, trainingRecords: caTrainingRecords, installApp: caInstallApp },
     eu: { common: euCommon, auth: euAuth, app: euApp, home: euHome, trabajo: euTrabajo, summary: euSummary, config: euConfig, profile: euProfile, help: euHelp, notices: euNotices, rates: euRates, trainingRecords: euTrainingRecords, installApp: euInstallApp },
+    nl: { common: nlCommon, auth: nlAuth, app: nlApp, home: nlHome, trabajo: nlTrabajo, summary: nlSummary, config: nlConfig, profile: nlProfile, help: nlHelp, notices: nlNotices, rates: nlRates, trainingRecords: nlTrainingRecords, installApp: nlInstallApp },
+    th: { common: thCommon, auth: thAuth, app: thApp, home: thHome, trabajo: thTrabajo, summary: thSummary, config: thConfig, profile: thProfile, help: thHelp, notices: thNotices, rates: thRates, trainingRecords: thTrainingRecords, installApp: thInstallApp },
+    id: { common: idCommon, auth: idAuth, app: idApp, home: idHome, trabajo: idTrabajo, summary: idSummary, config: idConfig, profile: idProfile, help: idHelp, notices: idNotices, rates: idRates, trainingRecords: idTrainingRecords, installApp: idInstallApp },
+    vi: { common: viCommon, auth: viAuth, app: viApp, home: viHome, trabajo: viTrabajo, summary: viSummary, config: viConfig, profile: viProfile, help: viHelp, notices: viNotices, rates: viRates, trainingRecords: viTrainingRecords, installApp: viInstallApp },
+    my: { common: myCommon, auth: myAuth, app: myApp, home: myHome, trabajo: myTrabajo, summary: mySummary, config: myConfig, profile: myProfile, help: myHelp, notices: myNotices, rates: myRates, trainingRecords: myTrainingRecords, installApp: myInstallApp },
+    ms: { common: msCommon, auth: msAuth, app: msApp, home: msHome, trabajo: msTrabajo, summary: msSummary, config: msConfig, profile: msProfile, help: msHelp, notices: msNotices, rates: msRates, trainingRecords: msTrainingRecords, installApp: msInstallApp },
+    ru: { common: ruCommon, auth: ruAuth, app: ruApp, home: ruHome, trabajo: ruTrabajo, summary: ruSummary, config: ruConfig, profile: ruProfile, help: ruHelp, notices: ruNotices, rates: ruRates, trainingRecords: ruTrainingRecords, installApp: ruInstallApp },
+    pt: { common: ptCommon, auth: ptAuth, app: ptApp, home: ptHome, trabajo: ptTrabajo, summary: ptSummary, config: ptConfig, profile: ptProfile, help: ptHelp, notices: ptNotices, rates: ptRates, trainingRecords: ptTrainingRecords, installApp: ptInstallApp },
   },
   lng: getStoredLanguage(),
   fallbackLng: "es",

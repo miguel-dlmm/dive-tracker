@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "personalData": "Thông tin cá nhân",
+    "instructor": "Thông tin huấn luyện viên",
+    "favoriteCurrency": "Tiền tệ yêu thích",
+    "language": "Ngôn ngữ",
+    "security": "Bảo mật",
+    "privacy": "Quyền riêng tư"
+  },
+  "signOut": {
+    "button": "Đăng xuất"
+  },
+  "avatar": {
+    "changeAvatar": "Đổi ảnh đại diện",
+    "closeAvatarPicker": "Đóng bộ chọn ảnh đại diện",
+    "colorLabel": "Màu {{name}}",
+    "iconLabel": "Biểu tượng {{name}}",
+    "previousIcon": "Biểu tượng trước",
+    "nextIcon": "Biểu tượng sau",
+    "save": "Lưu",
+    "saving": "Đang lưu…",
+    "cancel": "Hủy",
+    "toastSuccess": "Đã cập nhật ảnh đại diện",
+    "toastError": "Không thể lưu ảnh đại diện. Vui lòng thử lại."
+  },
+  "personalData": {
+    "nameLine": "Tên:",
+    "nicknameLine": "Biệt danh:",
+    "professionalLine": "Chuyên môn:",
+    "birthDateLine": "Ngày sinh:",
+    "countryLine": "Quốc gia cư trú:",
+    "edit": "Sửa",
+    "nameLabel": "Tên",
+    "lastNameLabel": "Họ",
+    "nicknameLabel": "Biệt danh",
+    "professionalLabel": "Chuyên môn",
+    "professionalPlaceholder": "Chưa chọn",
+    "birthDateLabel": "Ngày sinh",
+    "countryLabel": "Quốc gia cư trú",
+    "countryPlaceholder": "Chọn một quốc gia",
+    "nicknameAtError": "Không được chứa \"@\".",
+    "save": "Lưu",
+    "saving": "Đang lưu…",
+    "toastSuccess": "Đã cập nhật hồ sơ",
+    "errors": {
+      "nicknameTaken": "Biệt danh này đã được sử dụng.",
+      "nicknameAt": "Biệt danh không được chứa \"@\".",
+      "generic": "Không thể lưu. Vui lòng thử lại."
+    }
+  },
+  "instructor": {
+    "hint": "Dùng để tự động điền vào Training Records của bạn — chỉ lưu một lần ở đây, không theo từng thiết bị.",
+    "card": {
+      "role": "Chuyên gia SSI",
+      "roleWithLevel": "SSI {{level}}",
+      "noSignature": "Chưa có chữ ký",
+      "signatureAlt": "Chữ ký của {{name}}",
+      "initialsLabel": "Chữ viết tắt",
+      "numberLabel": "SSI PRO"
+    },
+    "signatureLabel": "Chữ ký của bạn",
+    "edit": "Sửa",
+    "initialsLabel": "Chữ viết tắt",
+    "numberLabel": "Số SSI Pro",
+    "save": "Lưu",
+    "saving": "Đang lưu…",
+    "toastSuccess": "Đã cập nhật thông tin huấn luyện viên",
+    "toastError": "Không thể lưu thông tin huấn luyện viên. Vui lòng thử lại."
+  },
+  "currency": {
+    "hint": "Dùng làm tiền tệ mặc định trong Điều chỉnh khóa học, khi không có mức giá nào xác định. Các giao dịch khác luôn dùng tiền tệ của mức giá tương ứng.",
+    "placeholder": "Chưa chọn — dùng tiền tệ mặc định của ứng dụng",
+    "toastSuccess": "Đã cập nhật tiền tệ yêu thích"
+  },
+  "language": {
+    "placeholder": "Chọn một ngôn ngữ",
+    "toastSuccess": "Đã đổi ngôn ngữ",
+    "toastError": "Không thể đổi ngôn ngữ. Vui lòng thử lại."
+  },
+  "password": {
+    "currentLabel": "Mật khẩu hiện tại",
+    "newLabel": "Mật khẩu mới",
+    "confirmLabel": "Xác nhận mật khẩu",
+    "showCurrent": "Hiện mật khẩu hiện tại",
+    "hideCurrent": "Ẩn mật khẩu hiện tại",
+    "show": "Hiện mật khẩu",
+    "hide": "Ẩn mật khẩu",
+    "minLength": "Tối thiểu 8 ký tự",
+    "matches": "Mật khẩu khớp nhau",
+    "submit": "Đổi mật khẩu",
+    "toastSuccess": "Đã cập nhật mật khẩu",
+    "toastError": "Không thể đổi mật khẩu. Vui lòng thử lại.",
+    "wrongCurrent": "Mật khẩu hiện tại không đúng."
+  },
+  "deleteAccount": {
+    "confirmWord": "HỦY",
+    "description": "Xóa tài khoản sẽ xóa vĩnh viễn quyền truy cập và toàn bộ dữ liệu của bạn trên Ocean Flow: trung tâm, khóa học, mức giá, lịch sử giảng dạy, hoa hồng và điều chỉnh với đồng nghiệp. Không có bản sao lưu nào được giữ lại. Hành động này không thể hoàn tác.",
+    "button": "Xóa tài khoản của tôi",
+    "confirmTitle": "Xóa tài khoản của bạn?",
+    "confirmMessage": "Bạn sắp xóa vĩnh viễn tài khoản \"{{nickname}}\" cùng toàn bộ dữ liệu. Bạn sẽ không thể hoàn tác hành động này.",
+    "continue": "Tiếp tục",
+    "finalCheckTitle": "Kiểm tra cuối cùng",
+    "typeWordPrefix": "Nhập",
+    "typeWordSuffix": "để xác nhận bạn muốn xóa vĩnh viễn tài khoản của mình.",
+    "typeWordAriaLabel": "Nhập {{word}} để xác nhận",
+    "back": "Quay lại",
+    "deleteButton": "Xóa tài khoản",
+    "toastSuccess": "Đã xóa tài khoản",
+    "genericError": "Không thể xóa tài khoản. Vui lòng thử lại.",
+    "networkError": "Không thể xóa tài khoản. Kiểm tra kết nối mạng và thử lại."
+  }
+}

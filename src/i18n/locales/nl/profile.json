@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "personalData": "Persoonlijke gegevens",
+    "instructor": "Instructeursgegevens",
+    "favoriteCurrency": "Favoriete munteenheid",
+    "language": "Taal",
+    "security": "Beveiliging",
+    "privacy": "Privacy"
+  },
+  "signOut": {
+    "button": "Uitloggen"
+  },
+  "avatar": {
+    "changeAvatar": "Avatar wijzigen",
+    "closeAvatarPicker": "Avatarkiezer sluiten",
+    "colorLabel": "Kleur {{name}}",
+    "iconLabel": "Icoon {{name}}",
+    "previousIcon": "Vorig icoon",
+    "nextIcon": "Volgend icoon",
+    "save": "Opslaan",
+    "saving": "Opslaan…",
+    "cancel": "Annuleren",
+    "toastSuccess": "Avatar bijgewerkt",
+    "toastError": "De avatar kon niet worden opgeslagen. Probeer het opnieuw."
+  },
+  "personalData": {
+    "nameLine": "Naam:",
+    "nicknameLine": "Nickname:",
+    "professionalLine": "Beroep:",
+    "birthDateLine": "Geboortedatum:",
+    "countryLine": "Land van verblijf:",
+    "edit": "Bewerken",
+    "nameLabel": "Naam",
+    "lastNameLabel": "Achternaam",
+    "nicknameLabel": "Nickname",
+    "professionalLabel": "Beroep",
+    "professionalPlaceholder": "Niet gekozen",
+    "birthDateLabel": "Geboortedatum",
+    "countryLabel": "Land van verblijf",
+    "countryPlaceholder": "Kies een land",
+    "nicknameAtError": "Mag geen \"@\" bevatten.",
+    "save": "Opslaan",
+    "saving": "Opslaan…",
+    "toastSuccess": "Profiel bijgewerkt",
+    "errors": {
+      "nicknameTaken": "Die nickname is al in gebruik.",
+      "nicknameAt": "De nickname mag geen \"@\" bevatten.",
+      "generic": "Opslaan is niet gelukt. Probeer het opnieuw."
+    }
+  },
+  "instructor": {
+    "hint": "Wordt gebruikt om je Training Records automatisch in te vullen — dit wordt hier eenmalig opgeslagen, niet per apparaat.",
+    "card": {
+      "role": "SSI-professional",
+      "roleWithLevel": "SSI {{level}}",
+      "noSignature": "Geen handtekening",
+      "signatureAlt": "Handtekening van {{name}}",
+      "initialsLabel": "Initialen",
+      "numberLabel": "SSI PRO"
+    },
+    "signatureLabel": "Jouw handtekening",
+    "edit": "Bewerken",
+    "initialsLabel": "Initialen",
+    "numberLabel": "SSI Pro-nummer",
+    "save": "Opslaan",
+    "saving": "Opslaan…",
+    "toastSuccess": "Instructeursgegevens bijgewerkt",
+    "toastError": "De instructeursgegevens konden niet worden opgeslagen. Probeer het opnieuw."
+  },
+  "currency": {
+    "hint": "Wordt gebruikt als standaardmunt bij Cursusaanpassing, wanneer er geen tarief is dat dit bepaalt. Alle andere boekingen gebruiken altijd de munt van hun eigen tarief.",
+    "placeholder": "Niet gekozen — gebruikt de standaardmunt van de app",
+    "toastSuccess": "Favoriete munteenheid bijgewerkt"
+  },
+  "language": {
+    "placeholder": "Selecteer een taal",
+    "toastSuccess": "Taal bijgewerkt",
+    "toastError": "De taal kon niet worden gewijzigd. Probeer het opnieuw."
+  },
+  "password": {
+    "currentLabel": "Huidig wachtwoord",
+    "newLabel": "Nieuw wachtwoord",
+    "confirmLabel": "Wachtwoord bevestigen",
+    "showCurrent": "Huidig wachtwoord tonen",
+    "hideCurrent": "Huidig wachtwoord verbergen",
+    "show": "Wachtwoord tonen",
+    "hide": "Wachtwoord verbergen",
+    "minLength": "Minimaal 8 tekens",
+    "matches": "De wachtwoorden komen overeen",
+    "submit": "Wachtwoord wijzigen",
+    "toastSuccess": "Wachtwoord bijgewerkt",
+    "toastError": "Het wachtwoord kon niet worden gewijzigd. Probeer het opnieuw.",
+    "wrongCurrent": "Huidig wachtwoord onjuist."
+  },
+  "deleteAccount": {
+    "confirmWord": "ANNULEREN",
+    "description": "Als je je account verwijdert, verlies je permanent je toegang en al je gegevens in Ocean Flow: scholen, cursussen, tarieven, lesregistraties, commissies en aanpassingen met collega's. Er wordt geen enkele kopie bewaard. Deze actie kan niet ongedaan worden gemaakt.",
+    "button": "Mijn account verwijderen",
+    "confirmTitle": "Je account verwijderen?",
+    "confirmMessage": "Je staat op het punt het account \"{{nickname}}\" en alle bijbehorende gegevens permanent te verwijderen. Je kunt deze actie niet ongedaan maken.",
+    "continue": "Doorgaan",
+    "finalCheckTitle": "Laatste controle",
+    "typeWordPrefix": "Typ",
+    "typeWordSuffix": "om te bevestigen dat je je account permanent wilt verwijderen.",
+    "typeWordAriaLabel": "Typ {{word}} om te bevestigen",
+    "back": "Terug",
+    "deleteButton": "Account verwijderen",
+    "toastSuccess": "Account verwijderd",
+    "genericError": "Het account kon niet worden verwijderd. Probeer het opnieuw.",
+    "networkError": "Het account kon niet worden verwijderd. Controleer je verbinding en probeer het opnieuw."
+  }
+}

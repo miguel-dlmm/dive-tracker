@@ -1,0 +1,52 @@
+{
+  "filter": {
+    "button": "Filtrar",
+    "type": "Tipo",
+    "typeAll": "Todos",
+    "school": "Escola",
+    "schoolAll": "Todas",
+    "course": "Curso",
+    "courseAll": "Todos",
+    "clear": "Limpar filtros",
+    "showInactive": "Mostrar desativadas"
+  },
+  "search": {
+    "placeholder": "Buscar",
+    "ariaLabel": "Buscar tarifa"
+  },
+  "list": {
+    "count": "{{count}} tarifas",
+    "empty": "Nenhum resultado.",
+    "createdOn": "Cadastro: {{date}} · {{type}}",
+    "inactive": "Desativada"
+  },
+  "fab": "Nova tarifa",
+  "sheet": {
+    "editTitle": "Editar tarifa de {{school}} - {{activity}}",
+    "createTitle": "Nova tarifa de {{type}}",
+    "close": "Fechar",
+    "typeTablistLabel": "Tipo de tarifa",
+    "hintGanado": "O que você cobra por ministrar o curso.",
+    "hintComision": "O que você cobra por trazer um cliente.",
+    "school": "Escola",
+    "course": "Curso",
+    "rateLabel": "Tarifa · {{currency}}",
+    "save": "Salvar"
+  },
+  "toasts": {
+    "saved": "Alterações salvas",
+    "added": "Tarifa adicionada",
+    "saveError": "Não foi possível salvar. Tente novamente.",
+    "duplicate": "Você já tem uma tarifa ativa para esta escola e este curso. Desative-a antes de criar outra.",
+    "reactivateBlocked": "Não é possível reativar: já existe outra tarifa ativa para esta escola e este curso.",
+    "deactivated": "Tarifa desativada",
+    "reactivated": "Tarifa reativada"
+  },
+  "deleteInUse_one": "Não é possível excluir: há {{count}} registro que usa esta tarifa.",
+  "deleteInUse_other": "Não é possível excluir: há {{count}} registros que usam esta tarifa.",
+  "rowMenu": {
+    "itemLabel": "a tarifa de {{school}} - {{activity}}",
+    "deactivate": "Desativar",
+    "reactivate": "Reativar"
+  }
+}

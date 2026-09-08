@@ -1,0 +1,97 @@
+{
+  "loading": { "defaultLabel": "Memuatkan" },
+  "errorBoundary": {
+    "title": "Alamak, ada masalah",
+    "body": "Skrin ini menghadapi masalah tidak dijangka. Ini bukan sesuatu yang anda lakukan — cuba muat semula dan ia sepatutnya kembali normal.",
+    "reload": "Muat semula"
+  },
+  "movementTypes": {
+    "ganado": "Kursus",
+    "comision": "Komisen",
+    "companeros": "Pelarasan"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "Belum dikutip",
+    "empty": "Tiada yang belum selesai",
+    "count_one": "{{count}} bayaran belum selesai",
+    "count_other": "{{count}} bayaran belum selesai",
+    "addMovement": "Tambah transaksi"
+  },
+  "confirmDialog": { "cancel": "Batal", "defaultConfirmLabel": "Padam" },
+  "editActions": { "defaultSaveLabel": "Simpan", "cancel": "Batal" },
+  "deleteButton": {
+    "defaultLabel": "Padam",
+    "defaultItemLabel": "item ini",
+    "deletedToast": "Dipadam",
+    "errorToast": "Tidak dapat memadam. Cuba lagi.",
+    "confirmTitle": "Padam rekod ini?",
+    "confirmMessage": "Anda akan memadam {{item}}. Tindakan ini tidak boleh dibatalkan."
+  },
+  "field": { "hideHelp": "Sembunyikan bantuan", "help": "Bantuan" },
+  "calendar": {
+    "months": ["Januari", "Februari", "Mac", "April", "Mei", "Jun", "Julai", "Ogos", "September", "Oktober", "November", "Disember"],
+    "weekdays": ["I", "S", "R", "K", "J", "S", "A"],
+    "prevMonth": "Bulan sebelumnya",
+    "nextMonth": "Bulan seterusnya",
+    "prevYear": "Tahun sebelumnya",
+    "nextYear": "Tahun seterusnya",
+    "prevDecade": "Dekad sebelumnya",
+    "nextDecade": "Dekad seterusnya",
+    "today": "Hari ini"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "Tarikh",
+    "defaultAriaLabel": "Pilih tarikh",
+    "pickerAriaLabel": "Pemilih tarikh",
+    "chooseMonthAriaLabel": "Pilih bulan",
+    "chooseYearAriaLabel": "Pilih tahun",
+    "dayAriaLabel": "{{day}} {{month}}",
+    "today": "Hari ini",
+    "yesterday": "Semalam",
+    "tomorrow": "Esok",
+    "dayBeforeYesterday": "Kelmarin"
+  },
+  "dateRangePicker": {
+    "from": "Dari",
+    "to": "Hingga",
+    "fromAriaLabel": "Tarikh dari",
+    "toAriaLabel": "Tarikh hingga",
+    "pickerAriaLabel": "Pemilih julat tarikh",
+    "chooseStart": "Pilih tarikh mula",
+    "chooseEnd": "Pilih tarikh akhir",
+    "chooseDate": "Pilih satu tarikh",
+    "okFrom": "OK — dari {{date}} sahaja",
+    "presets": { "today": "Hari ini", "thisWeek": "Minggu ini", "thisMonth": "Bulan ini", "last30Days": "30 hari terakhir" }
+  },
+  "monthCalendar": {
+    "addOnDay": "Tambah transaksi pada {{day}} {{month}}",
+    "addOnDayToday": "Tambah transaksi pada {{day}} {{month}} (hari ini)",
+    "dayToday": "{{day}} {{month}} (hari ini)",
+    "closeDayDetail": "Tutup butiran hari",
+    "dayHeading": "Hari {{day}} {{month}}",
+    "generatedOnDay": "Dijana pada hari",
+    "table": { "course": "Kursus", "comment": "Komen", "people": "Org.", "amount": "Jumlah" }
+  },
+  "select": { "placeholder": "Pilih..." },
+  "multiSelect": { "placeholder": "Semua", "clearSelection": "Kosongkan pilihan", "selectedCount": "{{count}} dipilih" },
+  "searchSelect": { "placeholder": "Cari...", "ariaLabel": "Cari", "noResults": "Tiada hasil" },
+  "currencySearchSelect": { "placeholder": "Cari mata wang..." },
+  "listFilterBar": {
+    "from": "Dari",
+    "to": "Hingga",
+    "school": "Sekolah",
+    "activity": "Aktiviti",
+    "noLimit": "Tiada had",
+    "all": "Semua",
+    "clearFilters": "Kosongkan penapis"
+  },
+  "rowMenu": { "moreActions": "Tindakan lain", "edit": "Sunting", "delete": "Padam" },
+  "statusSwitch": { "ariaLabel": "Status: {{value}}. Ketik untuk tukar kepada {{next}}", "title": "{{value}} — klik untuk tukar kepada \"{{next}}\"" },
+  "signature": {
+    "opcional": "pilihan",
+    "borrar": "Padam",
+    "deshacer": "Buat asal",
+    "firmadoAria": "{{label}}: ditandatangani",
+    "sinFirmarAria": "{{label}}: belum ditandatangani"
+  }
+}

@@ -1,0 +1,266 @@
+{
+  "datasets": {
+    "copySuffix": "копия",
+    "summary_one": "Начальная настройка (школы, курсы и тарифы), которая клонируется в каждый новый аккаунт. Активен {{count}} из {{total}}.",
+    "summary_other": "Начальная настройка (школы, курсы и тарифы), которая клонируется в каждый новый аккаунт. Активно {{count}} из {{total}}.",
+    "inactive": "Неактивен",
+    "setDefault": "Сделать по умолчанию",
+    "setDefaultAria": "Сделать «{{label}}» набором по умолчанию",
+    "duplicate": "Дублировать",
+    "duplicateAria": "Дублировать «{{label}}»",
+    "activeAria": "Набор данных «{{label}}» активен",
+    "deleteItemLabel": "набор данных «{{label}}»",
+    "empty": "Пока нет наборов данных.",
+    "fab": "Новый набор данных",
+    "sheetTitle": "Новый набор данных",
+    "sheetHint": "Создаётся пустым и неактивным — продублируй существующий, если хочешь начать с уже загруженным содержимым.",
+    "nameLabel": "Название",
+    "create": "Создать",
+    "toasts": {
+      "created": "Набор данных создан — добавь содержимое перед активацией",
+      "duplicated": "«{{newLabel}}» создан с тем же содержимым, что и «{{sourceLabel}}»",
+      "duplicateError": "Не удалось продублировать. Попробуй ещё раз.",
+      "keyTaken": "Набор данных с таким ключом уже существует.",
+      "createError": "Не удалось создать. Попробуй ещё раз.",
+      "updateError": "Не удалось обновить."
+    },
+    "errors": {
+      "isDefault": "Это набор данных по умолчанию — сначала выбери другой набор по умолчанию, прежде чем удалить этот.",
+      "lastOne": "Нельзя удалить единственный набор данных — внешняя регистрация и ручное добавление аккаунта нуждаются хотя бы в одном."
+    }
+  },
+  "crudTable": {
+    "buscarPlaceholder": "Поиск...",
+    "buscarAria": "Поиск",
+    "cambiarColor": "Изменить цвет",
+    "favorita": "Избранное",
+    "marcarPredeterminado": "Сделать по умолчанию",
+    "esteElemento": "этот элемент",
+    "sinResultados": "Ничего не найдено.",
+    "cerrar": "Закрыть",
+    "guardar": "Сохранить",
+    "cambiosGuardados": "Изменения сохранены",
+    "anadidoCorrectamente": "Добавлено",
+    "noSePudoGuardar": "Не удалось сохранить. Попробуй ещё раз.",
+    "noSePudoGuardarCambio": "Не удалось сохранить изменение.",
+    "estadoPredeterminadoRazon": "Это статус по умолчанию (обозначает «в ожидании») — сначала выбери другой статус по умолчанию, прежде чем удалить этот"
+  },
+  "sectionColors": {
+    "descripcion": "Используются в панели навигации и в кнопках создания записи в каждом разделе."
+  },
+  "generalSettings": {
+    "iconoCarga": "Иконка загрузки",
+    "descripcion": "Используется в анимации «загрузки» во всём приложении. Когда появится официальный логотип Ocean Flow, сообщи — и мы заменим этот список на настоящую иконку.",
+    "iconoActualizado": "Иконка обновлена",
+    "noSePudoGuardar": "Не удалось сохранить. Попробуй ещё раз.",
+    "vistaPrevia": "Предпросмотр"
+  },
+  "externalRegistration": {
+    "titulo": "Разрешить внешнюю регистрацию",
+    "descripcion": "Показывает «Зарегистрироваться» на экране входа, чтобы любой мог создать свой аккаунт.",
+    "activado": "Внешняя регистрация включена",
+    "desactivado": "Внешняя регистрация отключена",
+    "noSePudoGuardar": "Не удалось сохранить. Попробуй ещё раз."
+  },
+  "roleCheckbox": {
+    "rolProtegido": "{{label}} — защищённая системная роль, недоступна для редактирования",
+    "si": "да",
+    "no": "нет",
+    "etiquetaAria": "{{label}}: {{value}}"
+  },
+  "roleIcon": {
+    "superadmin": "Суперадминистратор",
+    "admin": "Администратор"
+  },
+  "userStatus": {
+    "activo": "Активен",
+    "pendiente": "В ожидании",
+    "desactivado": "Отключён",
+    "nunca": "Никогда"
+  },
+  "swipeToDelete": {
+    "eliminar": "Удалить",
+    "eliminarA": "Удалить {{nickname}}"
+  },
+  "userListRow": {
+    "alta": "Регистрация: {{date}}",
+    "ultimoAcceso": "Последний вход: {{date}}",
+    "baja": "Отключён: {{date}}",
+    "fechaNoRegistrada": "дата не зафиксирована"
+  },
+  "userDetailSheet": {
+    "cerrar": "Закрыть",
+    "nombre": "Имя",
+    "apellidos": "Фамилия",
+    "nickname": "Никнейм",
+    "editarDatos": "Редактировать данные",
+    "email": "Email",
+    "altaLabel": "Регистрация",
+    "ultimoAcceso": "Последний вход",
+    "movimientos": "Операции",
+    "ultimaActividad": "Последняя активность",
+    "baja": "Отключение",
+    "estado": "Статус",
+    "activarUsuario": "Активировать пользователя",
+    "desactivarUsuario": "Отключить пользователя",
+    "pendienteTexto": "Ожидается, что пользователь откроет ссылку и создаст пароль.",
+    "regenerarEnlace": "Обновить ссылку",
+    "admin": "Админ",
+    "superadmin": "Суперадминистратор",
+    "regenerarContrasena": "Сбросить пароль",
+    "eliminarUsuario": "Удалить пользователя"
+  },
+  "activationLinkPanel": {
+    "cerrar": "Закрыть",
+    "enlaceCopiado": "Ссылка скопирована",
+    "noSePudoCopiar": "Не удалось скопировать. Выдели вручную.",
+    "copiarEnlace": "Скопировать ссылку",
+    "simularEnvioMock": "Смоделировать успешную отправку (тест)",
+    "mockEmailEnviado": "(Тест) Письмо успешно отправлено"
+  },
+  "createUserSheet": {
+    "cerrar": "Закрыть",
+    "noSePudieronCargarDatasets": "Не удалось загрузить доступные наборы данных.",
+    "camposObligatorios": "Email, никнейм и начальный набор данных обязательны.",
+    "soloSuperadminCrear": "Только суперадминистратор может создавать пользователей.",
+    "noSePudoCrear": "Не удалось создать пользователя.",
+    "usuarioCreadoSinEmail": "Пользователь создан (письмо не удалось отправить)",
+    "usuarioCreadoCorrectamente": "Пользователь создан",
+    "enlaceCopiado": "Ссылка скопирована",
+    "noSePudoCopiar": "Не удалось скопировать. Выдели вручную.",
+    "noSePudoEnviarEmailTitulo": "Не удалось отправить письмо",
+    "noSePudoEnviarEmailDescripcion": "Не удалось отправить письмо активации. Можешь поделиться этой ссылкой вручную.",
+    "copiarEnlace": "Скопировать ссылку",
+    "simularEnvioMock": "Смоделировать успешную отправку (тест)",
+    "mockUsuarioCreado": "(Тест) Пользователь создан и письмо успешно отправлено",
+    "titulo": "Создать пользователя",
+    "email": "Email",
+    "nombre": "Имя",
+    "apellidos": "Фамилия",
+    "nickname": "Никнейм",
+    "datasetInicial": "Начальный набор данных",
+    "cargando": "Загрузка…",
+    "seleccionaDataset": "Выбери набор данных",
+    "sinDatasets": "Нет доступных наборов данных",
+    "idioma": "Язык",
+    "nota": "Выбранный набор данных автоматически загружает начальные школы, курсы, тарифы, комиссии и справочники платежей. Пользователь получит письмо со ссылкой для одноразового входа и создания собственного пароля.",
+    "creando": "Создание…",
+    "crearUsuario": "Создать пользователя"
+  },
+  "usersDirectory": {
+    "buscarPlaceholder": "Поиск...",
+    "buscarAria": "Поиск пользователей",
+    "leyendaEstadoAria": "Что означает каждый цвет статуса",
+    "crearUsuario": "Создать пользователя",
+    "noSePudoCargarListado": "Не удалось загрузить список пользователей.",
+    "errorDesconocido": "Неизвестная ошибка",
+    "errorCargarListado": "Не удалось загрузить список: {{error}}",
+    "cargandoUsuarios": "Загрузка пользователей…",
+    "sinResultados": "Ничего не найдено.",
+    "soloSuperadminRol": "Только суперадминистратор может менять роль администратора другого аккаунта.",
+    "noSePudoActualizarRol": "Не удалось обновить роль.",
+    "rolActualizado": "Роль обновлена",
+    "soloSuperadminEliminar": "Только суперадминистратор может удалять пользователей.",
+    "noSePudoEliminar": "Не удалось удалить пользователя.",
+    "usuarioEliminado": "Пользователь удалён",
+    "soloSuperadminActivar": "Только суперадминистратор может активировать или отключать пользователей.",
+    "noSePudoActualizarEstado": "Не удалось обновить статус.",
+    "usuarioDesactivado": "Пользователь отключён",
+    "soloSuperadminEnlace": "Только суперадминистратор может активировать аккаунты или обновлять их ссылку доступа.",
+    "noSePudoGenerarEnlace": "Не удалось создать ссылку.",
+    "enlaceGeneradoSinEmail": "Ссылка создана (письмо не удалось отправить {{nickname}})",
+    "enlaceActivacionTitulo": "Ссылка активации создана",
+    "enlaceActivacionDescripcion": "Поделись этой ссылкой с {{nickname}}. Статус останется «В ожидании», пока он не создаст пароль по ней.",
+    "emailActivacionEnviado": "Письмо активации отправлено {{nickname}}",
+    "soloSuperadminContrasena": "Только суперадминистратор может сбрасывать пароль другого аккаунта.",
+    "noSePudoRegenerarContrasena": "Не удалось сбросить пароль.",
+    "contrasenaRegeneradaSinEmail": "Пароль сброшен (письмо не удалось отправить {{nickname}})",
+    "contrasenaRegeneradaTitulo": "Пароль сброшен",
+    "contrasenaRegeneradaDescripcion": "Прежний пароль {{nickname}} больше не действует. Ему нужно создать новый по новой ссылке активации — аккаунт останется «В ожидании» до этого момента.",
+    "contrasenaRegeneradaEmailEnviado": "Пароль сброшен и письмо отправлено {{nickname}}",
+    "nicknameVacio": "Никнейм не может быть пустым.",
+    "datosActualizados": "Данные обновлены",
+    "noSePudieronGuardarCambios": "Не удалось сохранить изменения.",
+    "cambiarRolAdminTitulo": "Изменить роль администратора",
+    "usuarioLabel": "Пользователь: {{nickname}}",
+    "adminLabel": "Админ: {{from}} → {{to}}",
+    "confirmar": "Подтвердить",
+    "eliminarUsuarioTitulo": "Удалить пользователя",
+    "eliminarUsuarioMensaje": "Аккаунт <strong>{{nickname}}</strong> и все его данные (школы, тарифы, операции...) будут удалены безвозвратно. Это действие нельзя отменить.",
+    "eliminarUsuarioAlternativa": "Если хочешь только лишить доступа, сохранив данные, используй «Отключить» вместо удаления.",
+    "eliminar": "Удалить",
+    "desactivarUsuarioTitulo": "Отключить пользователя",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> больше не сможет войти. Все его данные (школы, тарифы, операции...) останутся нетронутыми — ты можешь снова активировать его в любой момент, создав новую ссылку активации.",
+    "desactivar": "Отключить",
+    "generarEnlaceTitulo": "Создать ссылку активации",
+    "generarEnlaceMensaje": "Будет создана новая одноразовая ссылка для <strong>{{nickname}}</strong>. Любая предыдущая ссылка перестанет работать. Аккаунт не получит доступ, пока пользователь не завершит процесс.",
+    "generarEnlace": "Создать ссылку",
+    "regenerarContrasenaTitulo": "Сбросить пароль",
+    "regenerarContrasenaMensaje": "Текущий пароль <strong>{{nickname}}</strong> перестанет работать немедленно. Ему нужно будет создать новый по новой ссылке активации — его данные не пострадают.",
+    "regenerar": "Сбросить",
+    "generarInvitacion": "Создать ссылку-приглашение",
+    "soloSuperadminInvitacion": "Только суперадминистратор может создавать ссылки-приглашения.",
+    "noSePudoGenerarInvitacion": "Не удалось создать ссылку-приглашение.",
+    "enlaceInvitacionTitulo": "Ссылка-приглашение",
+    "enlaceInvitacionDescripcion": "Действительна 24 часа и только для одного использования. Поделись ею с человеком, которого хочешь пригласить — он сможет зарегистрироваться, даже если внешняя регистрация закрыта."
+  },
+  "sections": {
+    "escuelas": {
+      "label": "Школы",
+      "description": "Где ты преподаёшь, со своим цветом"
+    },
+    "cursos": {
+      "label": "Курсы",
+      "description": "Что ты преподаёшь, со своим цветом"
+    },
+    "tarifas": {
+      "label": "Тарифы",
+      "description": "Сколько ты берёшь по школе и курсу"
+    },
+    "estadosPago": {
+      "label": "Статусы платежей",
+      "description": "В ожидании, оплачено..."
+    },
+    "monedas": {
+      "label": "Валюты",
+      "description": "Список, доступный во всём приложении"
+    },
+    "navegacion": {
+      "label": "Цвета навигации",
+      "description": "Визуальная идентичность каждого раздела"
+    },
+    "ajustes": {
+      "label": "Общие настройки",
+      "description": "Иконка загрузки приложения"
+    },
+    "usuarios": {
+      "label": "Пользователи",
+      "description": "Аккаунты с доступом к приложению"
+    },
+    "datasets": {
+      "label": "Начальные наборы данных",
+      "description": "Настройки, клонируемые при создании аккаунта"
+    }
+  },
+  "menu": {
+    "administracion": "Администрирование",
+    "superadmin": "Суперадминистратор",
+    "configuracion": "Настройки"
+  },
+  "crud": {
+    "nuevaEscuela": "Новая школа",
+    "editarEscuela": "Редактировать школу",
+    "nombreCampo": "Название",
+    "colorCampo": "Цвет",
+    "nuevoCurso": "Новый курс",
+    "editarCurso": "Редактировать курс",
+    "nuevoEstadoPago": "Новый статус платежа",
+    "editarEstadoPago": "Редактировать статус платежа",
+    "nuevaMoneda": "Новая валюта",
+    "editarMoneda": "Редактировать валюту",
+    "monedasDescripcion": "Выбери здесь резервную валюту всего приложения: она используется, когда пользователь ещё не выбрал свою любимую валюту в разделе «Мой профиль». Это не личное предпочтение — она применяется по умолчанию к любому новому аккаунту.",
+    "monedaPorDefectoApp": "По умолчанию в приложении",
+    "codigoCampo": "Код (напр., EUR)",
+    "simboloCampo": "Символ"
+  }
+}

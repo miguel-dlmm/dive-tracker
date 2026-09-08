@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "personalData": "Data pribadi",
+    "instructor": "Data instruktur",
+    "favoriteCurrency": "Mata uang favorit",
+    "language": "Bahasa",
+    "security": "Keamanan",
+    "privacy": "Privasi"
+  },
+  "signOut": {
+    "button": "Keluar"
+  },
+  "avatar": {
+    "changeAvatar": "Ganti avatar",
+    "closeAvatarPicker": "Tutup pemilih avatar",
+    "colorLabel": "Warna {{name}}",
+    "iconLabel": "Ikon {{name}}",
+    "previousIcon": "Ikon sebelumnya",
+    "nextIcon": "Ikon berikutnya",
+    "save": "Simpan",
+    "saving": "Menyimpan…",
+    "cancel": "Batal",
+    "toastSuccess": "Avatar diperbarui",
+    "toastError": "Avatar tidak dapat disimpan. Coba lagi."
+  },
+  "personalData": {
+    "nameLine": "Nama:",
+    "nicknameLine": "Nickname:",
+    "professionalLine": "Profesional:",
+    "birthDateLine": "Tanggal lahir:",
+    "countryLine": "Negara tempat tinggal:",
+    "edit": "Edit",
+    "nameLabel": "Nama",
+    "lastNameLabel": "Nama belakang",
+    "nicknameLabel": "Nickname",
+    "professionalLabel": "Profesional",
+    "professionalPlaceholder": "Belum dipilih",
+    "birthDateLabel": "Tanggal lahir",
+    "countryLabel": "Negara tempat tinggal",
+    "countryPlaceholder": "Pilih negara",
+    "nicknameAtError": "Tidak boleh mengandung \"@\".",
+    "save": "Simpan",
+    "saving": "Menyimpan…",
+    "toastSuccess": "Profil diperbarui",
+    "errors": {
+      "nicknameTaken": "Nickname itu sudah digunakan.",
+      "nicknameAt": "Nickname tidak boleh mengandung \"@\".",
+      "generic": "Gagal menyimpan. Coba lagi."
+    }
+  },
+  "instructor": {
+    "hint": "Digunakan untuk mengisi Training Records-mu secara otomatis — disimpan di sini sekali saja, tidak per perangkat.",
+    "card": {
+      "role": "Profesional SSI",
+      "roleWithLevel": "SSI {{level}}",
+      "noSignature": "Tanpa tanda tangan",
+      "signatureAlt": "Tanda tangan {{name}}",
+      "initialsLabel": "Inisial",
+      "numberLabel": "SSI PRO"
+    },
+    "signatureLabel": "Tanda tanganmu",
+    "edit": "Edit",
+    "initialsLabel": "Inisial",
+    "numberLabel": "Nomor SSI Pro",
+    "save": "Simpan",
+    "saving": "Menyimpan…",
+    "toastSuccess": "Data instruktur diperbarui",
+    "toastError": "Data instruktur tidak dapat disimpan. Coba lagi."
+  },
+  "currency": {
+    "hint": "Digunakan sebagai mata uang bawaan pada Penyesuaian Kursus, saat tidak ada tarif yang menentukannya. Transaksi lain selalu memakai mata uang tarifnya sendiri.",
+    "placeholder": "Belum dipilih — pakai mata uang bawaan aplikasi",
+    "toastSuccess": "Mata uang favorit diperbarui"
+  },
+  "language": {
+    "placeholder": "Pilih bahasa",
+    "toastSuccess": "Bahasa diperbarui",
+    "toastError": "Bahasa tidak dapat diubah. Coba lagi."
+  },
+  "password": {
+    "currentLabel": "Kata sandi saat ini",
+    "newLabel": "Kata sandi baru",
+    "confirmLabel": "Konfirmasi kata sandi",
+    "showCurrent": "Tampilkan kata sandi saat ini",
+    "hideCurrent": "Sembunyikan kata sandi saat ini",
+    "show": "Tampilkan kata sandi",
+    "hide": "Sembunyikan kata sandi",
+    "minLength": "Minimal 8 karakter",
+    "matches": "Kata sandi cocok",
+    "submit": "Ubah kata sandi",
+    "toastSuccess": "Kata sandi diperbarui",
+    "toastError": "Kata sandi tidak dapat diubah. Coba lagi.",
+    "wrongCurrent": "Kata sandi saat ini salah."
+  },
+  "deleteAccount": {
+    "confirmWord": "BATALKAN",
+    "description": "Menghapus akunmu akan menghapus akses dan semua datamu di Ocean Flow secara permanen: sekolah, kursus, tarif, catatan kelas, komisi, dan penyesuaian dengan rekan kerja. Tidak ada salinan yang disimpan. Tindakan ini tidak dapat dibatalkan.",
+    "button": "Hapus akunku",
+    "confirmTitle": "Hapus akunmu?",
+    "confirmMessage": "Kamu akan menghapus akun \"{{nickname}}\" dan semua datanya secara permanen. Tindakan ini tidak dapat dibatalkan.",
+    "continue": "Lanjutkan",
+    "finalCheckTitle": "Pemeriksaan terakhir",
+    "typeWordPrefix": "Ketik",
+    "typeWordSuffix": "untuk mengonfirmasi kamu ingin menghapus akunmu secara permanen.",
+    "typeWordAriaLabel": "Ketik {{word}} untuk mengonfirmasi",
+    "back": "Kembali",
+    "deleteButton": "Hapus akun",
+    "toastSuccess": "Akun terhapus",
+    "genericError": "Akun tidak dapat dihapus. Coba lagi.",
+    "networkError": "Akun tidak dapat dihapus. Periksa koneksimu dan coba lagi."
+  }
+}

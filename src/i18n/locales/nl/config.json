@@ -1,0 +1,266 @@
+{
+  "datasets": {
+    "copySuffix": "kopie",
+    "summary_one": "Basisconfiguratie (scholen, cursussen en tarieven) die naar elk nieuw account wordt gekopieerd. {{count}} actief van {{total}}.",
+    "summary_other": "Basisconfiguratie (scholen, cursussen en tarieven) die naar elk nieuw account wordt gekopieerd. {{count}} actief van {{total}}.",
+    "inactive": "Inactief",
+    "setDefault": "Als standaard instellen",
+    "setDefaultAria": "\"{{label}}\" als standaard instellen",
+    "duplicate": "Dupliceren",
+    "duplicateAria": "\"{{label}}\" dupliceren",
+    "activeAria": "Dataset \"{{label}}\" actief",
+    "deleteItemLabel": "de dataset \"{{label}}\"",
+    "empty": "Nog geen datasets.",
+    "fab": "Nieuwe dataset",
+    "sheetTitle": "Nieuwe dataset",
+    "sheetHint": "Begint leeg en inactief — dupliceer een bestaande als je wilt starten met al ingevulde inhoud.",
+    "nameLabel": "Naam",
+    "create": "Aanmaken",
+    "toasts": {
+      "created": "Dataset aangemaakt — vul de inhoud aan voordat je hem activeert",
+      "duplicated": "\"{{newLabel}}\" aangemaakt met dezelfde inhoud als \"{{sourceLabel}}\"",
+      "duplicateError": "Dupliceren is niet gelukt. Probeer het opnieuw.",
+      "keyTaken": "Er bestaat al een dataset met die sleutel.",
+      "createError": "Aanmaken is niet gelukt. Probeer het opnieuw.",
+      "updateError": "Bijwerken is niet gelukt."
+    },
+    "errors": {
+      "isDefault": "Dit is de standaarddataset — stel eerst een andere als standaard in voordat je deze verwijdert.",
+      "lastOne": "Je kunt de enige dataset niet verwijderen — de externe registratie en de handmatige aanmelding hebben er minstens één nodig."
+    }
+  },
+  "crudTable": {
+    "buscarPlaceholder": "Zoeken...",
+    "buscarAria": "Zoeken",
+    "cambiarColor": "Kleur wijzigen",
+    "favorita": "Favoriet",
+    "marcarPredeterminado": "Als standaard instellen",
+    "esteElemento": "dit item",
+    "sinResultados": "Geen resultaten.",
+    "cerrar": "Sluiten",
+    "guardar": "Opslaan",
+    "cambiosGuardados": "Wijzigingen opgeslagen",
+    "anadidoCorrectamente": "Toegevoegd",
+    "noSePudoGuardar": "Opslaan is niet gelukt. Probeer het opnieuw.",
+    "noSePudoGuardarCambio": "De wijziging kon niet worden opgeslagen.",
+    "estadoPredeterminadoRazon": "Dit is de standaardstatus (staat voor \"openstaand\") — stel eerst een andere als standaard in voordat je deze verwijdert"
+  },
+  "sectionColors": {
+    "descripcion": "Gebruikt in de navigatiebalk en in de knoppen om een registratie aan te maken in elk gebied."
+  },
+  "generalSettings": {
+    "iconoCarga": "Laadicoon",
+    "descripcion": "Wordt gebruikt in de \"laden\"-animatie van de hele app. Zodra het officiële Ocean Flow-logo klaar is, laat het weten en dan vervang ik deze lijst door het echte icoon.",
+    "iconoActualizado": "Icoon bijgewerkt",
+    "noSePudoGuardar": "Opslaan is niet gelukt. Probeer het opnieuw.",
+    "vistaPrevia": "Voorbeeld"
+  },
+  "externalRegistration": {
+    "titulo": "Externe registratie toestaan",
+    "descripcion": "Toont \"Registreren\" op het inlogscherm, zodat iedereen zelf een account kan aanmaken.",
+    "activado": "Externe registratie geactiveerd",
+    "desactivado": "Externe registratie gedeactiveerd",
+    "noSePudoGuardar": "Opslaan is niet gelukt. Probeer het opnieuw."
+  },
+  "roleCheckbox": {
+    "rolProtegido": "{{label}} — beschermde systeemrol, niet bewerkbaar",
+    "si": "ja",
+    "no": "nee",
+    "etiquetaAria": "{{label}}: {{value}}"
+  },
+  "roleIcon": {
+    "superadmin": "Superadmin",
+    "admin": "Beheerder"
+  },
+  "userStatus": {
+    "activo": "Actief",
+    "pendiente": "In afwachting",
+    "desactivado": "Gedeactiveerd",
+    "nunca": "Nooit"
+  },
+  "swipeToDelete": {
+    "eliminar": "Verwijderen",
+    "eliminarA": "{{nickname}} verwijderen"
+  },
+  "userListRow": {
+    "alta": "Aangemaakt: {{date}}",
+    "ultimoAcceso": "Laatste toegang: {{date}}",
+    "baja": "Gedeactiveerd: {{date}}",
+    "fechaNoRegistrada": "geen datum geregistreerd"
+  },
+  "userDetailSheet": {
+    "cerrar": "Sluiten",
+    "nombre": "Naam",
+    "apellidos": "Achternaam",
+    "nickname": "Nickname",
+    "editarDatos": "Gegevens bewerken",
+    "email": "E-mail",
+    "altaLabel": "Aangemaakt",
+    "ultimoAcceso": "Laatste toegang",
+    "movimientos": "Boekingen",
+    "ultimaActividad": "Laatste activiteit",
+    "baja": "Gedeactiveerd",
+    "estado": "Status",
+    "activarUsuario": "Gebruiker activeren",
+    "desactivarUsuario": "Gebruiker deactiveren",
+    "pendienteTexto": "In afwachting tot deze persoon de link opent en een wachtwoord aanmaakt.",
+    "regenerarEnlace": "Link opnieuw genereren",
+    "admin": "Beheerder",
+    "superadmin": "Superadmin",
+    "regenerarContrasena": "Wachtwoord opnieuw genereren",
+    "eliminarUsuario": "Gebruiker verwijderen"
+  },
+  "activationLinkPanel": {
+    "cerrar": "Sluiten",
+    "enlaceCopiado": "Link gekopieerd",
+    "noSePudoCopiar": "Kopiëren is niet gelukt. Selecteer de tekst handmatig.",
+    "copiarEnlace": "Link kopiëren",
+    "simularEnvioMock": "Geslaagde verzending simuleren (mock)",
+    "mockEmailEnviado": "(Mock) E-mail succesvol verzonden"
+  },
+  "createUserSheet": {
+    "cerrar": "Sluiten",
+    "noSePudieronCargarDatasets": "De beschikbare datasets konden niet worden geladen.",
+    "camposObligatorios": "E-mail, nickname en initiële dataset zijn verplicht.",
+    "soloSuperadminCrear": "Alleen een superadmin kan gebruikers aanmaken.",
+    "noSePudoCrear": "De gebruiker kon niet worden aangemaakt.",
+    "usuarioCreadoSinEmail": "Gebruiker aangemaakt (de e-mail kon niet worden verzonden)",
+    "usuarioCreadoCorrectamente": "Gebruiker aangemaakt",
+    "enlaceCopiado": "Link gekopieerd",
+    "noSePudoCopiar": "Kopiëren is niet gelukt. Selecteer de tekst handmatig.",
+    "noSePudoEnviarEmailTitulo": "De e-mail kon niet worden verzonden",
+    "noSePudoEnviarEmailDescripcion": "De activatie-e-mail kon niet worden verzonden. Je kunt deze link handmatig delen.",
+    "copiarEnlace": "Link kopiëren",
+    "simularEnvioMock": "Geslaagde verzending simuleren (mock)",
+    "mockUsuarioCreado": "(Mock) Gebruiker aangemaakt en e-mail succesvol verzonden",
+    "titulo": "Gebruiker aanmaken",
+    "email": "E-mail",
+    "nombre": "Naam",
+    "apellidos": "Achternaam",
+    "nickname": "Nickname",
+    "datasetInicial": "Initiële dataset",
+    "cargando": "Laden…",
+    "seleccionaDataset": "Selecteer een dataset",
+    "sinDatasets": "Er zijn geen datasets beschikbaar",
+    "idioma": "Taal",
+    "nota": "De gekozen dataset laadt automatisch de initiële scholen, cursussen, tarieven, commissies en betaalcatalogi. Deze persoon ontvangt een e-mail met een eenmalige link om in te loggen en zijn of haar eigen wachtwoord aan te maken.",
+    "creando": "Aanmaken…",
+    "crearUsuario": "Gebruiker aanmaken"
+  },
+  "usersDirectory": {
+    "buscarPlaceholder": "Zoeken...",
+    "buscarAria": "Gebruikers zoeken",
+    "leyendaEstadoAria": "Wat elke statuskleur betekent",
+    "crearUsuario": "Gebruiker aanmaken",
+    "noSePudoCargarListado": "De gebruikerslijst kon niet worden geladen.",
+    "errorDesconocido": "Onbekende fout",
+    "errorCargarListado": "De lijst kon niet worden geladen: {{error}}",
+    "cargandoUsuarios": "Gebruikers laden…",
+    "sinResultados": "Geen resultaten.",
+    "soloSuperadminRol": "Alleen een superadmin kan de beheerdersrol van een ander account wijzigen.",
+    "noSePudoActualizarRol": "De rol kon niet worden bijgewerkt.",
+    "rolActualizado": "Rol bijgewerkt",
+    "soloSuperadminEliminar": "Alleen een superadmin kan gebruikers verwijderen.",
+    "noSePudoEliminar": "De gebruiker kon niet worden verwijderd.",
+    "usuarioEliminado": "Gebruiker verwijderd",
+    "soloSuperadminActivar": "Alleen een superadmin kan gebruikers activeren of deactiveren.",
+    "noSePudoActualizarEstado": "De status kon niet worden bijgewerkt.",
+    "usuarioDesactivado": "Gebruiker gedeactiveerd",
+    "soloSuperadminEnlace": "Alleen een superadmin kan accounts activeren of hun toegangslink opnieuw genereren.",
+    "noSePudoGenerarEnlace": "De link kon niet worden gegenereerd.",
+    "enlaceGeneradoSinEmail": "Link gegenereerd (de e-mail kon niet worden verzonden naar {{nickname}})",
+    "enlaceActivacionTitulo": "Activatielink gegenereerd",
+    "enlaceActivacionDescripcion": "Deel deze link met {{nickname}}. Deze blijft \"In afwachting\" totdat de link wordt gebruikt om een wachtwoord aan te maken.",
+    "emailActivacionEnviado": "Activatie-e-mail verzonden naar {{nickname}}",
+    "soloSuperadminContrasena": "Alleen een superadmin kan het wachtwoord van een ander account opnieuw genereren.",
+    "noSePudoRegenerarContrasena": "Het wachtwoord kon niet opnieuw worden gegenereerd.",
+    "contrasenaRegeneradaSinEmail": "Wachtwoord opnieuw gegenereerd (de e-mail kon niet worden verzonden naar {{nickname}})",
+    "contrasenaRegeneradaTitulo": "Wachtwoord opnieuw gegenereerd",
+    "contrasenaRegeneradaDescripcion": "Het vorige wachtwoord van {{nickname}} werkt niet meer. Deel deze link zodat een nieuw wachtwoord kan worden aangemaakt — tot die tijd staat het account weer op \"In afwachting\".",
+    "contrasenaRegeneradaEmailEnviado": "Wachtwoord opnieuw gegenereerd en e-mail verzonden naar {{nickname}}",
+    "nicknameVacio": "De nickname mag niet leeg zijn.",
+    "datosActualizados": "Gegevens bijgewerkt",
+    "noSePudieronGuardarCambios": "De wijzigingen konden niet worden opgeslagen.",
+    "cambiarRolAdminTitulo": "Beheerdersrol wijzigen",
+    "usuarioLabel": "Gebruiker: {{nickname}}",
+    "adminLabel": "Beheerder: {{from}} → {{to}}",
+    "confirmar": "Bevestigen",
+    "eliminarUsuarioTitulo": "Gebruiker verwijderen",
+    "eliminarUsuarioMensaje": "Het account van <strong>{{nickname}}</strong> en alle bijbehorende gegevens (scholen, tarieven, boekingen...) worden permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.",
+    "eliminarUsuarioAlternativa": "Als je alleen de toegang wilt intrekken met behoud van de gegevens, gebruik dan \"Deactiveren\" in plaats daarvan.",
+    "eliminar": "Verwijderen",
+    "desactivarUsuarioTitulo": "Gebruiker deactiveren",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> kan niet meer inloggen. Alle gegevens (scholen, tarieven, boekingen...) blijven intact bewaard — je kunt het account op elk moment weer activeren door een nieuwe activatielink te genereren.",
+    "desactivar": "Deactiveren",
+    "generarEnlaceTitulo": "Activatielink genereren",
+    "generarEnlaceMensaje": "Er wordt een nieuwe eenmalige link gegenereerd voor <strong>{{nickname}}</strong>. Elke eerdere link wordt daarmee ongeldig. Het account krijgt geen toegang totdat de link wordt gebruikt.",
+    "generarEnlace": "Link genereren",
+    "regenerarContrasenaTitulo": "Wachtwoord opnieuw genereren",
+    "regenerarContrasenaMensaje": "Het huidige wachtwoord van <strong>{{nickname}}</strong> stopt onmiddellijk met werken. Er moet een nieuw wachtwoord worden aangemaakt via een nieuwe activatielink — de gegevens blijven ongewijzigd.",
+    "regenerar": "Opnieuw genereren",
+    "generarInvitacion": "Uitnodigingslink genereren",
+    "soloSuperadminInvitacion": "Alleen een superadmin kan uitnodigingslinks genereren.",
+    "noSePudoGenerarInvitacion": "De uitnodigingslink kon niet worden gegenereerd.",
+    "enlaceInvitacionTitulo": "Uitnodigingslink",
+    "enlaceInvitacionDescripcion": "24 uur geldig en eenmalig te gebruiken. Deel deze link met de persoon die je wilt uitnodigen — die kan zich registreren, ook als externe registratie is uitgeschakeld."
+  },
+  "sections": {
+    "escuelas": {
+      "label": "Scholen",
+      "description": "Waar je lesgeeft, met bijbehorende kleur"
+    },
+    "cursos": {
+      "label": "Cursussen",
+      "description": "Wat je geeft, met bijbehorende kleur"
+    },
+    "tarifas": {
+      "label": "Tarieven",
+      "description": "Wat je vraagt per school en cursus"
+    },
+    "estadosPago": {
+      "label": "Betaalstatussen",
+      "description": "Openstaand, ontvangen..."
+    },
+    "monedas": {
+      "label": "Munteenheden",
+      "description": "Catalogus beschikbaar in de hele app"
+    },
+    "navegacion": {
+      "label": "Navigatiekleuren",
+      "description": "Visuele identiteit van elk gebied"
+    },
+    "ajustes": {
+      "label": "Algemene instellingen",
+      "description": "Laadicoon van de app"
+    },
+    "usuarios": {
+      "label": "Gebruikers",
+      "description": "Accounts met toegang tot de app"
+    },
+    "datasets": {
+      "label": "Initiële datasets",
+      "description": "Configuratie die wordt gekopieerd bij het aanmaken van een account"
+    }
+  },
+  "menu": {
+    "administracion": "Beheer",
+    "superadmin": "Superadmin",
+    "configuracion": "Instellingen"
+  },
+  "crud": {
+    "nuevaEscuela": "Nieuwe school",
+    "editarEscuela": "School bewerken",
+    "nombreCampo": "Naam",
+    "colorCampo": "Kleur",
+    "nuevoCurso": "Nieuwe cursus",
+    "editarCurso": "Cursus bewerken",
+    "nuevoEstadoPago": "Nieuwe betaalstatus",
+    "editarEstadoPago": "Betaalstatus bewerken",
+    "nuevaMoneda": "Nieuwe munteenheid",
+    "editarMoneda": "Munteenheid bewerken",
+    "monedasDescripcion": "Kies hier de standaardmunt van de hele app: deze wordt gebruikt zolang een gebruiker nog geen eigen favoriete munt heeft gekozen in Mijn profiel. Dit is geen persoonlijke voorkeur — het is de munt die standaard wordt toegepast op elk nieuw account.",
+    "monedaPorDefectoApp": "Standaard van de app",
+    "codigoCampo": "Code (bijv. EUR)",
+    "simboloCampo": "Symbool"
+  }
+}

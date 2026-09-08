@@ -1,0 +1,41 @@
+{
+  "months": {
+    "long": ["ဇန်နဝါရီ", "ဖေဖော်ဝါရီ", "မတ်", "ဧပြီ", "မေ", "ဇွန်", "ဇူလိုင်", "သြဂုတ်", "စက်တင်ဘာ", "အောက်တိုဘာ", "နိုဝင်ဘာ", "ဒီဇင်ဘာ"],
+    "short": ["ဇန်", "ဖေ", "မတ်", "ဧပြီ", "မေ", "ဇွန်", "ဇူ", "သြ", "စက်", "အောက်", "နို", "ဒီ"]
+  },
+  "granularity": {
+    "mensual": "လ",
+    "trimestral": "သုံးလပတ်",
+    "semestral": "ခြောက်လပတ်",
+    "anual": "နှစ်",
+    "personalizado": "ကာလအတိုင်းအတာ"
+  },
+  "granularityLabel": "ကာလ အသေးစိတ်ညွှန်းချက်",
+  "quarterAbbr": "သ",
+  "halfYearAbbr": "ခ",
+  "trend": {
+    "heading": "လမ်းကြောင်း — သွားရန် ကာလကို နှိပ်ပါ",
+    "goTo": "{{period}} သို့ သွားရန်",
+    "currentSuffix": " (လက်ရှိကာလ)"
+  },
+  "from": "မှ",
+  "to": "အထိ",
+  "chooseRange": "ကာလအတိုင်းအတာ ရွေးပါ",
+  "total": "စုစုပေါင်း",
+  "totalCombined": "ပေါင်းစုစုစုပေါင်း",
+  "totalOf": "{{source}} စုစုပေါင်း",
+  "trendVsPreviousPeriod": "ယခင်ကာလနှင့်နှိုင်းစာလျှင် {{delta}}",
+  "sections": {
+    "bySchool": "ကျောင်းအလိုက်",
+    "byActivity": "သင်တန်းအလိုက်",
+    "commissions": "ကော်မရှင်များ",
+    "colleagueAdjustments": "သင်တန်းညှိနှိုင်းချက်များ",
+    "calendar": "ပြက္ခဒိန်"
+  },
+  "empty": {
+    "noData": "ဒေတာမရှိပါ။",
+    "noCoursesInPeriod": "ဤကာလအတွင်း သင်တန်းမရှိပါ။",
+    "noMovementsInPeriod": "ဤကာလအတွင်း လုပ်ဆောင်ချက်မရှိပါ။",
+    "noColleagueAdjustmentsInPeriod": "ဤကာလအတွင်း သင်တန်းညှိနှိုင်းချက်မရှိပါ။"
+  }
+}

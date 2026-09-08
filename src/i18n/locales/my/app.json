@@ -1,0 +1,25 @@
+{
+  "tabs": {
+    "home": "Home",
+    "trabajo": "ကျွန်ုပ်၏အလုပ်",
+    "summary": "အနှစ်ချုပ်"
+  },
+  "secondaryTitles": {
+    "config": "ဆက်တင်များ",
+    "help": "အကူအညီ",
+    "pagos": "ငွေပေးချေမှုများ",
+    "perfil": "ကျွန်ုပ်၏ပရိုဖိုင်",
+    "training-records": "Training Records",
+    "install-app": "အက်ပ် ထည့်သွင်းရန်"
+  },
+  "aria": {
+    "close": "ပိတ်ရန်",
+    "back": "နောက်သို့",
+    "goHome": "Home သို့ သွားရန်",
+    "help": "အကူအညီ",
+    "config": "ဆက်တင်များ",
+    "profile": "ကျွန်ုပ်၏ပရိုဖိုင်",
+    "signOut": "ထွက်ရန်",
+    "mainNav": "ပင်မလမ်းညွှန်"
+  }
+}

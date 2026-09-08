@@ -1,0 +1,266 @@
+{
+  "datasets": {
+    "copySuffix": "salinan",
+    "summary_one": "Konfigurasi awal (sekolah, kursus, dan tarif) yang disalin ke setiap akun baru. {{count}} aktif dari {{total}}.",
+    "summary_other": "Konfigurasi awal (sekolah, kursus, dan tarif) yang disalin ke setiap akun baru. {{count}} aktif dari {{total}}.",
+    "inactive": "Tidak aktif",
+    "setDefault": "Tandai sebagai bawaan",
+    "setDefaultAria": "Tandai \"{{label}}\" sebagai bawaan",
+    "duplicate": "Duplikat",
+    "duplicateAria": "Duplikat \"{{label}}\"",
+    "activeAria": "Dataset \"{{label}}\" aktif",
+    "deleteItemLabel": "dataset \"{{label}}\"",
+    "empty": "Belum ada dataset.",
+    "fab": "Dataset baru",
+    "sheetTitle": "Dataset baru",
+    "sheetHint": "Dimulai kosong dan tidak aktif — duplikat salah satu yang sudah ada jika ingin mulai dari konten yang sudah terisi.",
+    "nameLabel": "Nama",
+    "create": "Buat",
+    "toasts": {
+      "created": "Dataset dibuat — tambahkan kontennya sebelum mengaktifkannya",
+      "duplicated": "\"{{newLabel}}\" dibuat dengan konten yang sama seperti \"{{sourceLabel}}\"",
+      "duplicateError": "Gagal menduplikasi. Coba lagi.",
+      "keyTaken": "Sudah ada dataset dengan kunci itu.",
+      "createError": "Gagal membuat. Coba lagi.",
+      "updateError": "Gagal memperbarui."
+    },
+    "errors": {
+      "isDefault": "Ini adalah dataset bawaan — tandai yang lain sebagai bawaan sebelum menghapus yang ini.",
+      "lastOne": "Kamu tidak bisa menghapus satu-satunya dataset — pendaftaran eksternal dan pendaftaran manual membutuhkan setidaknya satu."
+    }
+  },
+  "crudTable": {
+    "buscarPlaceholder": "Cari...",
+    "buscarAria": "Cari",
+    "cambiarColor": "Ganti warna",
+    "favorita": "Favorit",
+    "marcarPredeterminado": "Tandai sebagai bawaan",
+    "esteElemento": "item ini",
+    "sinResultados": "Tidak ada hasil.",
+    "cerrar": "Tutup",
+    "guardar": "Simpan",
+    "cambiosGuardados": "Perubahan disimpan",
+    "anadidoCorrectamente": "Ditambahkan",
+    "noSePudoGuardar": "Gagal menyimpan. Coba lagi.",
+    "noSePudoGuardarCambio": "Perubahan tidak dapat disimpan.",
+    "estadoPredeterminadoRazon": "Ini adalah status bawaan (mewakili \"tertunda\") — tandai yang lain sebagai bawaan sebelum menghapus yang ini"
+  },
+  "sectionColors": {
+    "descripcion": "Digunakan di bilah navigasi dan tombol buat catatan di setiap area."
+  },
+  "generalSettings": {
+    "iconoCarga": "Ikon pemuatan",
+    "descripcion": "Digunakan pada animasi \"memuat\" di seluruh aplikasi. Setelah logo resmi Ocean Flow siap, beri tahu saya dan akan saya ganti dengan ikon asli, bukan daftar ini.",
+    "iconoActualizado": "Ikon diperbarui",
+    "noSePudoGuardar": "Gagal menyimpan. Coba lagi.",
+    "vistaPrevia": "Pratinjau"
+  },
+  "externalRegistration": {
+    "titulo": "Izinkan pendaftaran eksternal",
+    "descripcion": "Menampilkan \"Daftar\" di halaman masuk agar siapa pun bisa membuat akunnya sendiri.",
+    "activado": "Pendaftaran eksternal diaktifkan",
+    "desactivado": "Pendaftaran eksternal dinonaktifkan",
+    "noSePudoGuardar": "Gagal menyimpan. Coba lagi."
+  },
+  "roleCheckbox": {
+    "rolProtegido": "{{label}} — peran sistem terlindungi, tidak dapat diubah",
+    "si": "ya",
+    "no": "tidak",
+    "etiquetaAria": "{{label}}: {{value}}"
+  },
+  "roleIcon": {
+    "superadmin": "Superadmin",
+    "admin": "Administrator"
+  },
+  "userStatus": {
+    "activo": "Aktif",
+    "pendiente": "Tertunda",
+    "desactivado": "Nonaktif",
+    "nunca": "Belum pernah"
+  },
+  "swipeToDelete": {
+    "eliminar": "Hapus",
+    "eliminarA": "Hapus {{nickname}}"
+  },
+  "userListRow": {
+    "alta": "Dibuat: {{date}}",
+    "ultimoAcceso": "Akses terakhir: {{date}}",
+    "baja": "Dinonaktifkan: {{date}}",
+    "fechaNoRegistrada": "tanggal tidak tercatat"
+  },
+  "userDetailSheet": {
+    "cerrar": "Tutup",
+    "nombre": "Nama",
+    "apellidos": "Nama belakang",
+    "nickname": "Nickname",
+    "editarDatos": "Edit data",
+    "email": "Email",
+    "altaLabel": "Dibuat",
+    "ultimoAcceso": "Akses terakhir",
+    "movimientos": "Transaksi",
+    "ultimaActividad": "Aktivitas terakhir",
+    "baja": "Dinonaktifkan",
+    "estado": "Status",
+    "activarUsuario": "Aktifkan pengguna",
+    "desactivarUsuario": "Nonaktifkan pengguna",
+    "pendienteTexto": "Menunggu orang tersebut membuka tautan dan membuat kata sandinya.",
+    "regenerarEnlace": "Buat ulang tautan",
+    "admin": "Admin",
+    "superadmin": "Superadmin",
+    "regenerarContrasena": "Buat ulang kata sandi",
+    "eliminarUsuario": "Hapus pengguna"
+  },
+  "activationLinkPanel": {
+    "cerrar": "Tutup",
+    "enlaceCopiado": "Tautan disalin",
+    "noSePudoCopiar": "Gagal menyalin. Pilih secara manual.",
+    "copiarEnlace": "Salin tautan",
+    "simularEnvioMock": "Simulasikan pengiriman berhasil (mock)",
+    "mockEmailEnviado": "(Mock) Email berhasil dikirim"
+  },
+  "createUserSheet": {
+    "cerrar": "Tutup",
+    "noSePudieronCargarDatasets": "Dataset yang tersedia tidak dapat dimuat.",
+    "camposObligatorios": "Email, nickname, dan dataset awal wajib diisi.",
+    "soloSuperadminCrear": "Hanya superadmin yang dapat membuat pengguna.",
+    "noSePudoCrear": "Pengguna tidak dapat dibuat.",
+    "usuarioCreadoSinEmail": "Pengguna dibuat (email tidak dapat dikirim)",
+    "usuarioCreadoCorrectamente": "Pengguna berhasil dibuat",
+    "enlaceCopiado": "Tautan disalin",
+    "noSePudoCopiar": "Gagal menyalin. Pilih secara manual.",
+    "noSePudoEnviarEmailTitulo": "Email tidak dapat dikirim",
+    "noSePudoEnviarEmailDescripcion": "Email aktivasi tidak dapat dikirim. Kamu bisa membagikan tautan ini secara manual.",
+    "copiarEnlace": "Salin tautan",
+    "simularEnvioMock": "Simulasikan pengiriman berhasil (mock)",
+    "mockUsuarioCreado": "(Mock) Pengguna dibuat dan email berhasil dikirim",
+    "titulo": "Buat pengguna",
+    "email": "Email",
+    "nombre": "Nama",
+    "apellidos": "Nama belakang",
+    "nickname": "Nickname",
+    "datasetInicial": "Dataset awal",
+    "cargando": "Memuat…",
+    "seleccionaDataset": "Pilih dataset",
+    "sinDatasets": "Tidak ada dataset yang tersedia",
+    "idioma": "Bahasa",
+    "nota": "Dataset yang dipilih akan otomatis memuat sekolah, kursus, tarif, komisi, dan katalog pembayaran awal. Orang tersebut akan menerima email dengan tautan sekali pakai untuk masuk dan membuat kata sandinya sendiri.",
+    "creando": "Membuat…",
+    "crearUsuario": "Buat pengguna"
+  },
+  "usersDirectory": {
+    "buscarPlaceholder": "Cari...",
+    "buscarAria": "Cari pengguna",
+    "leyendaEstadoAria": "Arti setiap warna status",
+    "crearUsuario": "Buat pengguna",
+    "noSePudoCargarListado": "Daftar pengguna tidak dapat dimuat.",
+    "errorDesconocido": "Kesalahan tidak diketahui",
+    "errorCargarListado": "Daftar tidak dapat dimuat: {{error}}",
+    "cargandoUsuarios": "Memuat pengguna…",
+    "sinResultados": "Tidak ada hasil.",
+    "soloSuperadminRol": "Hanya superadmin yang dapat mengubah peran admin akun lain.",
+    "noSePudoActualizarRol": "Peran tidak dapat diperbarui.",
+    "rolActualizado": "Peran diperbarui",
+    "soloSuperadminEliminar": "Hanya superadmin yang dapat menghapus pengguna.",
+    "noSePudoEliminar": "Pengguna tidak dapat dihapus.",
+    "usuarioEliminado": "Pengguna dihapus",
+    "soloSuperadminActivar": "Hanya superadmin yang dapat mengaktifkan atau menonaktifkan pengguna.",
+    "noSePudoActualizarEstado": "Status tidak dapat diperbarui.",
+    "usuarioDesactivado": "Pengguna dinonaktifkan",
+    "soloSuperadminEnlace": "Hanya superadmin yang dapat mengaktifkan akun atau membuat ulang tautan aksesnya.",
+    "noSePudoGenerarEnlace": "Tautan tidak dapat dibuat.",
+    "enlaceGeneradoSinEmail": "Tautan dibuat (email tidak dapat dikirim ke {{nickname}})",
+    "enlaceActivacionTitulo": "Tautan aktivasi dibuat",
+    "enlaceActivacionDescripcion": "Bagikan tautan ini kepada {{nickname}}. Statusnya akan tetap \"Tertunda\" sampai digunakan untuk membuat kata sandi.",
+    "emailActivacionEnviado": "Email aktivasi dikirim ke {{nickname}}",
+    "soloSuperadminContrasena": "Hanya superadmin yang dapat membuat ulang kata sandi akun lain.",
+    "noSePudoRegenerarContrasena": "Kata sandi tidak dapat dibuat ulang.",
+    "contrasenaRegeneradaSinEmail": "Kata sandi dibuat ulang (email tidak dapat dikirim ke {{nickname}})",
+    "contrasenaRegeneradaTitulo": "Kata sandi dibuat ulang",
+    "contrasenaRegeneradaDescripcion": "Kata sandi lama {{nickname}} sudah tidak berlaku. Dia harus membuat yang baru dari tautan aktivasi ini — akun kembali \"Tertunda\" sampai saat itu.",
+    "contrasenaRegeneradaEmailEnviado": "Kata sandi dibuat ulang dan email dikirim ke {{nickname}}",
+    "nicknameVacio": "Nickname tidak boleh kosong.",
+    "datosActualizados": "Data diperbarui",
+    "noSePudieronGuardarCambios": "Perubahan tidak dapat disimpan.",
+    "cambiarRolAdminTitulo": "Ubah peran admin",
+    "usuarioLabel": "Pengguna: {{nickname}}",
+    "adminLabel": "Admin: {{from}} → {{to}}",
+    "confirmar": "Konfirmasi",
+    "eliminarUsuarioTitulo": "Hapus pengguna",
+    "eliminarUsuarioMensaje": "Akun <strong>{{nickname}}</strong> dan semua datanya (sekolah, tarif, transaksi...) akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.",
+    "eliminarUsuarioAlternativa": "Jika kamu hanya ingin mencabut aksesnya tanpa menghapus data, gunakan \"Nonaktifkan\" sebagai gantinya.",
+    "eliminar": "Hapus",
+    "desactivarUsuarioTitulo": "Nonaktifkan pengguna",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> tidak akan bisa masuk lagi. Semua datanya (sekolah, tarif, transaksi...) tetap utuh — kamu bisa mengaktifkannya kembali kapan saja dengan membuat tautan aktivasi baru.",
+    "desactivar": "Nonaktifkan",
+    "generarEnlaceTitulo": "Buat tautan aktivasi",
+    "generarEnlaceMensaje": "Tautan sekali pakai baru akan dibuat untuk <strong>{{nickname}}</strong>. Tautan sebelumnya akan berhenti berfungsi. Akun belum mendapat akses sampai tautan ini digunakan.",
+    "generarEnlace": "Buat tautan",
+    "regenerarContrasenaTitulo": "Buat ulang kata sandi",
+    "regenerarContrasenaMensaje": "Kata sandi <strong>{{nickname}}</strong> saat ini akan langsung berhenti berfungsi. Dia harus membuat yang baru dari tautan aktivasi baru — datanya tidak terpengaruh.",
+    "regenerar": "Buat ulang",
+    "generarInvitacion": "Buat tautan undangan",
+    "soloSuperadminInvitacion": "Hanya superadmin yang dapat membuat tautan undangan.",
+    "noSePudoGenerarInvitacion": "Tautan undangan tidak dapat dibuat.",
+    "enlaceInvitacionTitulo": "Tautan undangan",
+    "enlaceInvitacionDescripcion": "Berlaku 24 jam dan sekali pakai. Bagikan kepada orang yang ingin kamu undang — dia bisa mendaftar meskipun pendaftaran eksternal ditutup."
+  },
+  "sections": {
+    "escuelas": {
+      "label": "Sekolah",
+      "description": "Tempat kamu mengajar, dengan warnanya"
+    },
+    "cursos": {
+      "label": "Kursus",
+      "description": "Apa yang kamu ajarkan, dengan warnanya"
+    },
+    "tarifas": {
+      "label": "Tarif",
+      "description": "Berapa yang kamu tagihkan per sekolah dan kursus"
+    },
+    "estadosPago": {
+      "label": "Status pembayaran",
+      "description": "Tertunda, terbayar..."
+    },
+    "monedas": {
+      "label": "Mata uang",
+      "description": "Katalog yang tersedia di seluruh aplikasi"
+    },
+    "navegacion": {
+      "label": "Warna navigasi",
+      "description": "Identitas visual setiap area"
+    },
+    "ajustes": {
+      "label": "Pengaturan umum",
+      "description": "Ikon pemuatan aplikasi"
+    },
+    "usuarios": {
+      "label": "Pengguna",
+      "description": "Akun dengan akses ke aplikasi"
+    },
+    "datasets": {
+      "label": "Dataset awal",
+      "description": "Konfigurasi yang disalin saat membuat akun"
+    }
+  },
+  "menu": {
+    "administracion": "Administrasi",
+    "superadmin": "Superadmin",
+    "configuracion": "Pengaturan"
+  },
+  "crud": {
+    "nuevaEscuela": "Sekolah baru",
+    "editarEscuela": "Edit sekolah",
+    "nombreCampo": "Nama",
+    "colorCampo": "Warna",
+    "nuevoCurso": "Kursus baru",
+    "editarCurso": "Edit kursus",
+    "nuevoEstadoPago": "Status pembayaran baru",
+    "editarEstadoPago": "Edit status pembayaran",
+    "nuevaMoneda": "Mata uang baru",
+    "editarMoneda": "Edit mata uang",
+    "monedasDescripcion": "Pilih di sini mata uang cadangan untuk seluruh aplikasi: digunakan saat pengguna belum memilih mata uang favoritnya sendiri di Profilku. Ini bukan preferensi pribadi — ini yang diterapkan secara bawaan pada akun baru mana pun.",
+    "monedaPorDefectoApp": "Bawaan aplikasi",
+    "codigoCampo": "Kode (mis. EUR)",
+    "simboloCampo": "Simbol"
+  }
+}

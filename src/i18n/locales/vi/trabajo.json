@@ -1,0 +1,144 @@
+{
+  "actionLabel": {
+    "markPending": "Đánh dấu chờ",
+    "markSettled": "Đánh dấu đã thanh toán",
+    "confirmCollection": "Xác nhận đã thu"
+  },
+  "dateGroup": {
+    "today": "Hôm nay",
+    "yesterday": "Hôm qua",
+    "weekdaysShort": ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
+    "monthsShort": ["Th1", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7", "Th8", "Th9", "Th10", "Th11", "Th12"]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "Không có mục nào chờ với bộ lọc này.",
+    "pendingNoFilters": "Bạn đã xong hết — không có gì chờ.",
+    "paidWithFilters": "Không có mục nào đã thu với bộ lọc này.",
+    "paidNoFilters": "Bạn chưa đánh dấu gì là đã thu."
+  },
+  "rowMenu": {
+    "adjustmentWith": "điều chỉnh với {{name}}",
+    "courseAt": "{{activity}} tại {{school}}",
+    "deleteConfirmMessage": "Bạn sắp xóa {{item}}. Bạn sẽ có vài giây để hoàn tác từ thông báo.",
+    "undoAction": "Hoàn tác",
+    "deleteUndoneToast": "Đã khôi phục",
+    "deleteUndoError": "Không thể hoàn tác. Vui lòng thử lại."
+  },
+  "tabs": {
+    "pending": "Đang chờ",
+    "paid": "Đã thu"
+  },
+  "filter": {
+    "label": "Lọc",
+    "period": "Kỳ",
+    "school": "Trung tâm",
+    "course": "Khóa học",
+    "type": "Loại",
+    "allFeminine": "Tất cả",
+    "allMasculine": "Tất cả",
+    "clear": "Xóa bộ lọc"
+  },
+  "collectAll": {
+    "button": "Thu tất cả",
+    "confirmLabel": "Thu tiền",
+    "title_one": "Thu {{count}} giao dịch đang chờ?",
+    "title_other": "Thu {{count}} giao dịch đang chờ?",
+    "messageAjuste_one": "Bạn sắp đánh dấu giao dịch này là đã thu hoặc đã thanh toán cùng lúc, tùy theo từng trường hợp. Bạn có thể hoàn tác từng cái sau đó, giống như khi xác nhận từng cái một.",
+    "messageAjuste_other": "Bạn sắp đánh dấu {{count}} giao dịch này là đã thu hoặc đã thanh toán cùng lúc, tùy theo từng trường hợp. Bạn có thể hoàn tác từng cái sau đó, giống như khi xác nhận từng cái một.",
+    "messageSimple_one": "Bạn sắp đánh dấu giao dịch này là đã thu cùng lúc. Bạn có thể hoàn tác sau đó, giống như khi xác nhận từng cái một.",
+    "messageSimple_other": "Bạn sắp đánh dấu {{count}} giao dịch này là đã thu cùng lúc. Bạn có thể hoàn tác từng cái sau đó, giống như khi xác nhận từng cái một.",
+    "toastSwitch_one": "Đã đánh dấu {{count}} giao dịch là {{verb}} — chuyển sang \"Đã thu\" để xem",
+    "toastSwitch_other": "Đã đánh dấu {{count}} giao dịch là {{verbPlural}} — chuyển sang \"Đã thu\" để xem",
+    "toastNoSwitch_one": "Đã đánh dấu {{count}} giao dịch là {{verb}}",
+    "toastNoSwitch_other": "Đã đánh dấu {{count}} giao dịch là {{verbPlural}}",
+    "verbCobrado": "đã thu",
+    "verbCobradoPlural": "đã thu",
+    "verbCobradoOLiquidado": "đã thu hoặc đã thanh toán",
+    "verbCobradoOLiquidadoPlural": "đã thu hoặc đã thanh toán"
+  },
+  "markAllPending": {
+    "button": "Đánh dấu tất cả là đang chờ",
+    "confirmLabel": "Đánh dấu chờ",
+    "title_one": "Đánh dấu {{count}} giao dịch đã thu thành đang chờ?",
+    "title_other": "Đánh dấu {{count}} giao dịch đã thu thành đang chờ?",
+    "message_one": "Bạn sắp chuyển giao dịch này về trạng thái chờ. Bạn có thể hoàn tác sau đó, giống như khi làm từng cái một.",
+    "message_other": "Bạn sắp chuyển {{count}} giao dịch này về trạng thái chờ. Bạn có thể hoàn tác từng cái sau đó, giống như khi làm từng cái một.",
+    "toast_one": "Đã đánh dấu {{count}} giao dịch là đang chờ",
+    "toast_other": "Đã đánh dấu {{count}} giao dịch là đang chờ"
+  },
+  "paidCapHint": "Đang hiện {{limit}} giao dịch đã thu gần nhất trong tổng số {{total}} — dùng \"Lọc\" để xem một khoảng thời gian cụ thể.",
+  "fabAdd": "Thêm",
+  "toggleStatus": {
+    "undoneToast": "Đã hoàn tác",
+    "undoError": "Không thể hoàn tác. Vui lòng thử lại.",
+    "undoAction": "Hoàn tác",
+    "markedPending": "Đã đánh dấu là đang chờ",
+    "markedPaidSwitchTab": "Đã đánh dấu là đã thu — chuyển sang \"Đã thu\" để xem",
+    "markedPaid": "Đã đánh dấu là đã thu"
+  },
+  "genericUpdateError": "Không thể cập nhật. Vui lòng thử lại.",
+  "sheet": {
+    "close": "Đóng",
+    "typeSelectorAria": "Loại giao dịch",
+    "createTypes": {
+      "ganado": "Khóa học đã dạy",
+      "comision": "Hoa hồng",
+      "companeros": "Điều chỉnh khóa học"
+    },
+    "titleEdit": {
+      "ganado": "Sửa khóa học đã dạy",
+      "comision": "Sửa hoa hồng",
+      "companeros": "Sửa điều chỉnh khóa học"
+    },
+    "titleNew": {
+      "ganado": "Khóa học đã dạy mới",
+      "comision": "Hoa hồng mới",
+      "companeros": "Điều chỉnh khóa học mới"
+    },
+    "fields": {
+      "course": "Khóa học",
+      "school": "Trung tâm",
+      "date": "Ngày",
+      "relatedColleague": "Huấn luyện viên liên quan",
+      "amount": "Số tiền · {{currency}}",
+      "amountHint": "Số dương nếu bạn được trả; số âm nếu bạn phải trả cho người đó",
+      "colleaguePlaceholder": "Ana, Marc...",
+      "amountPlaceholder": "90 hoặc -30",
+      "peopleCount": "Số người",
+      "lessPeople": "Ít người hơn",
+      "morePeople": "Nhiều người hơn",
+      "total": "Tổng",
+      "perPerson": "/ người",
+      "addRate": "Thêm mức giá",
+      "notes": "Ghi chú",
+      "notesPlaceholder": "Không bắt buộc",
+      "addNote": "Thêm ghi chú"
+    },
+    "rate": {
+      "label": "Mức giá — {{school}} · {{activity}}",
+      "cancel": "Hủy",
+      "placeholder": "Mức giá",
+      "ariaLabel": "Mức giá · {{currency}}",
+      "saving": "Đang lưu mức giá",
+      "save": "Lưu mức giá"
+    },
+    "save": "Lưu",
+    "toasts": {
+      "changesSaved": "Đã lưu thay đổi",
+      "adjustmentAdded": "Đã thêm điều chỉnh",
+      "courseAdded": "Đã thêm khóa học",
+      "commissionAdded": "Đã thêm hoa hồng",
+      "saveError": "Không thể lưu. Vui lòng thử lại.",
+      "rateAdded": "Đã thêm mức giá",
+      "rateSaveError": "Không thể lưu mức giá. Vui lòng thử lại."
+    }
+  },
+  "kpis": {
+    "generatedThisMonth": "Đã tạo ra tháng này",
+    "pendingToCollect": "Chờ thu tiền",
+    "pendingTooltip": "Số tiền này bao gồm các khoản chờ thanh toán từ những tháng trước.",
+    "pendingTooltipShow": "Thông tin: Chờ thu tiền",
+    "pendingTooltipHide": "Ẩn thông tin: Chờ thu tiền",
+    "collectedThisMonth": "Đã thu tháng này"
+  }
+}

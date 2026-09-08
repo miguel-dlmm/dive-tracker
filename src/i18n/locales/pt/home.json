@@ -1,0 +1,21 @@
+{
+  "calendarCaption": "Toque em um dia para ver o detalhe, ou em um dia vazio para adicionar um movimento",
+  "activeSchoolThisMonth": "Escola mais ativa",
+  "activeSchoolCount_one": "{{count}} movimento este mês",
+  "activeSchoolCount_other": "{{count}} movimentos este mês",
+  "activeSchoolCountAndOthers_one": "{{count}} movimento · {{schools}} escolas este mês",
+  "activeSchoolCountAndOthers_other": "{{count}} movimentos · {{schools}} escolas este mês",
+  "noActivityThisMonth": "Sem atividade este mês",
+  "kpis": {
+    "sectionTitle": "Seu impacto este mês",
+    "studentsThisMonth": "Alunos",
+    "coursesTotal": "Cursos",
+    "referredThisMonth": "Captados"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "ctaFirstTime": "Gere seu primeiro Training Record",
+    "generatedLabel": "Gerados"
+  },
+  "installApp": "Baixar app"
+}

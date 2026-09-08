@@ -1,0 +1,144 @@
+{
+  "actionLabel": {
+    "markPending": "Marcar como pendente",
+    "markSettled": "Marcar como liquidado",
+    "confirmCollection": "Confirmar recebimento"
+  },
+  "dateGroup": {
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "weekdaysShort": ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
+    "monthsShort": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "Nenhum item pendente com esses filtros.",
+    "pendingNoFilters": "Você está em dia — nada pendente.",
+    "paidWithFilters": "Nenhum item recebido com esses filtros.",
+    "paidNoFilters": "Você ainda não marcou nada como recebido."
+  },
+  "rowMenu": {
+    "adjustmentWith": "o ajuste com {{name}}",
+    "courseAt": "{{activity}} em {{school}}",
+    "deleteConfirmMessage": "Você vai excluir {{item}}. Vai ter alguns segundos para desfazer pelo aviso.",
+    "undoAction": "Desfazer",
+    "deleteUndoneToast": "Recuperado",
+    "deleteUndoError": "Não foi possível desfazer. Tente novamente."
+  },
+  "tabs": {
+    "pending": "Pendentes",
+    "paid": "Recebidos"
+  },
+  "filter": {
+    "label": "Filtrar",
+    "period": "Período",
+    "school": "Escola",
+    "course": "Curso",
+    "type": "Tipo",
+    "allFeminine": "Todas",
+    "allMasculine": "Todos",
+    "clear": "Limpar filtros"
+  },
+  "collectAll": {
+    "button": "Receber todos",
+    "confirmLabel": "Receber",
+    "title_one": "Receber {{count}} movimento pendente?",
+    "title_other": "Receber {{count}} movimentos pendentes?",
+    "messageAjuste_one": "Você vai marcar este movimento como recebido(s) ou liquidado(s) de uma vez, conforme o caso de cada um. Você pode reverter cada um separadamente depois, assim como ao confirmar um a um.",
+    "messageAjuste_other": "Você vai marcar estes {{count}} movimentos como recebidos ou liquidados de uma vez, conforme o caso de cada um. Você pode reverter cada um separadamente depois, assim como ao confirmar um a um.",
+    "messageSimple_one": "Você vai marcar este movimento como recebido de uma vez. Você pode reverter cada um separadamente depois, assim como ao confirmar um a um.",
+    "messageSimple_other": "Você vai marcar estes {{count}} movimentos como recebidos de uma vez. Você pode reverter cada um separadamente depois, assim como ao confirmar um a um.",
+    "toastSwitch_one": "{{count}} movimento marcado como {{verb}} — mude para \"Recebidos\" para vê-lo",
+    "toastSwitch_other": "{{count}} movimentos marcados como {{verbPlural}} — mude para \"Recebidos\" para vê-los",
+    "toastNoSwitch_one": "{{count}} movimento marcado como {{verb}}",
+    "toastNoSwitch_other": "{{count}} movimentos marcados como {{verbPlural}}",
+    "verbCobrado": "recebido",
+    "verbCobradoPlural": "recebidos",
+    "verbCobradoOLiquidado": "recebido ou liquidado",
+    "verbCobradoOLiquidadoPlural": "recebidos ou liquidados"
+  },
+  "markAllPending": {
+    "button": "Marcar todos como pendentes",
+    "confirmLabel": "Marcar pendentes",
+    "title_one": "Marcar {{count}} movimento recebido como pendente?",
+    "title_other": "Marcar {{count}} movimentos recebidos como pendentes?",
+    "message_one": "Você vai devolver este movimento para pendente de uma vez. Você pode reverter cada um separadamente depois, assim como ao fazer um a um.",
+    "message_other": "Você vai devolver estes {{count}} movimentos para pendente de uma vez. Você pode reverter cada um separadamente depois, assim como ao fazer um a um.",
+    "toast_one": "{{count}} movimento marcado como pendente",
+    "toast_other": "{{count}} movimentos marcados como pendentes"
+  },
+  "paidCapHint": "Mostrando os {{limit}} recebidos mais recentes de {{total}} — use \"Filtrar\" para ver um período específico.",
+  "fabAdd": "Adicionar",
+  "toggleStatus": {
+    "undoneToast": "Desfeito",
+    "undoError": "Não foi possível desfazer. Tente novamente.",
+    "undoAction": "Desfazer",
+    "markedPending": "Marcado como pendente",
+    "markedPaidSwitchTab": "Marcado como recebido — mude para \"Recebidos\" para vê-lo",
+    "markedPaid": "Marcado como recebido"
+  },
+  "genericUpdateError": "Não foi possível atualizar. Tente novamente.",
+  "sheet": {
+    "close": "Fechar",
+    "typeSelectorAria": "Tipo de movimento",
+    "createTypes": {
+      "ganado": "Curso ministrado",
+      "comision": "Comissão",
+      "companeros": "Ajuste de curso"
+    },
+    "titleEdit": {
+      "ganado": "Editar curso ministrado",
+      "comision": "Editar comissão",
+      "companeros": "Editar ajuste de curso"
+    },
+    "titleNew": {
+      "ganado": "Novo curso ministrado",
+      "comision": "Nova comissão",
+      "companeros": "Novo ajuste de curso"
+    },
+    "fields": {
+      "course": "Curso",
+      "school": "Escola",
+      "date": "Data",
+      "relatedColleague": "Instrutor relacionado",
+      "amount": "Valor · {{currency}}",
+      "amountHint": "Positivo se ele te paga; negativo se você paga a ele/ela",
+      "colleaguePlaceholder": "Ana, Marc...",
+      "amountPlaceholder": "90 ou -30",
+      "peopleCount": "Nº de pessoas",
+      "lessPeople": "Menos pessoas",
+      "morePeople": "Mais pessoas",
+      "total": "Total",
+      "perPerson": "/ pessoa",
+      "addRate": "Adicionar tarifa",
+      "notes": "Notas",
+      "notesPlaceholder": "Opcional",
+      "addNote": "Adicionar nota"
+    },
+    "rate": {
+      "label": "Tarifa — {{school}} · {{activity}}",
+      "cancel": "Cancelar",
+      "placeholder": "Tarifa",
+      "ariaLabel": "Tarifa · {{currency}}",
+      "saving": "Salvando tarifa",
+      "save": "Salvar tarifa"
+    },
+    "save": "Salvar",
+    "toasts": {
+      "changesSaved": "Alterações salvas",
+      "adjustmentAdded": "Ajuste adicionado",
+      "courseAdded": "Curso adicionado",
+      "commissionAdded": "Comissão adicionada",
+      "saveError": "Não foi possível salvar. Tente novamente.",
+      "rateAdded": "Tarifa adicionada",
+      "rateSaveError": "Não foi possível salvar a tarifa. Tente novamente."
+    }
+  },
+  "kpis": {
+    "generatedThisMonth": "Gerado este mês",
+    "pendingToCollect": "Pendente de receber",
+    "pendingTooltip": "Esse valor reflete pagamentos pendentes de meses anteriores.",
+    "pendingTooltipShow": "Info: Pendente de receber",
+    "pendingTooltipHide": "Ocultar info: Pendente de receber",
+    "collectedThisMonth": "Recebido este mês"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "filter": {
+    "button": "Фильтр",
+    "type": "Тип",
+    "typeAll": "Все",
+    "school": "Школа",
+    "schoolAll": "Все",
+    "course": "Курс",
+    "courseAll": "Все",
+    "clear": "Сбросить фильтры",
+    "showInactive": "Показать отключённые"
+  },
+  "search": {
+    "placeholder": "Поиск",
+    "ariaLabel": "Поиск тарифа"
+  },
+  "list": {
+    "count": "{{count}} тарифов",
+    "empty": "Ничего не найдено.",
+    "createdOn": "Создан: {{date}} · {{type}}",
+    "inactive": "Отключён"
+  },
+  "fab": "Новый тариф",
+  "sheet": {
+    "editTitle": "Редактировать тариф {{school}} - {{activity}}",
+    "createTitle": "Новый тариф — {{type}}",
+    "close": "Закрыть",
+    "typeTablistLabel": "Тип тарифа",
+    "hintGanado": "То, что ты берёшь за проведение курса.",
+    "hintComision": "То, что ты берёшь за привлечение клиента.",
+    "school": "Школа",
+    "course": "Курс",
+    "rateLabel": "Тариф · {{currency}}",
+    "save": "Сохранить"
+  },
+  "toasts": {
+    "saved": "Изменения сохранены",
+    "added": "Тариф добавлен",
+    "saveError": "Не удалось сохранить. Попробуй ещё раз.",
+    "duplicate": "У тебя уже есть активный тариф для этой школы и курса. Отключи его, прежде чем создавать новый.",
+    "reactivateBlocked": "Нельзя включить: уже есть другой активный тариф для этой школы и курса.",
+    "deactivated": "Тариф отключён",
+    "reactivated": "Тариф включён"
+  },
+  "deleteInUse_one": "Нельзя удалить: этот тариф используется в {{count}} записи.",
+  "deleteInUse_other": "Нельзя удалить: этот тариф используется в {{count}} записях.",
+  "rowMenu": {
+    "itemLabel": "тариф {{school}} - {{activity}}",
+    "deactivate": "Отключить",
+    "reactivate": "Включить"
+  }
+}

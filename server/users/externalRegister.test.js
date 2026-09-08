@@ -154,8 +154,9 @@ it("propaga birth_date/country_of_residence a provisionUser cuando llegan en el 
   expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ birth_date: "1990-05-12", country_of_residence: "MX" }));
 });
 
-// Release V1, Fase 2 (multidioma): language solo se propaga si es uno de
-// los 2 idiomas soportados — cualquier otro valor cae a undefined, y
+// Release V1, Fase 2 (multidioma) + idiomas adicionales (v1.1.0 y
+// 2026-09-09): language solo se propaga si es uno de los idiomas
+// realmente soportados — cualquier otro valor cae a undefined, y
 // provisionUser()/handle_new_user() lo resuelven a 'es' por defecto.
 it("propaga language cuando es un idioma soportado", async () => {
   await handleExternalRegister(request({ body: JSON.stringify({ ...VALID_BODY, language: "en" }) }));
@@ -163,8 +164,20 @@ it("propaga language cuando es un idioma soportado", async () => {
   expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ language: "en" }));
 });
 
-it("ignora un language no soportado, cae a undefined", async () => {
+// Bug real encontrado 2026-09-09: esta lista se había quedado en solo
+// ["es","en"] cuando se añadieron fr/it/de/ca/eu (v1.1.0) — este mismo
+// test usaba "fr" como ejemplo de idioma NO soportado, dando por buena la
+// pérdida silenciosa del idioma elegido en cualquier registro externo con
+// uno de esos 5 idiomas. "fr" ahora se prueba aparte como SOPORTADO; el
+// ejemplo de no soportado pasa a un código que nunca podrá serlo.
+it("un idioma soportado añadido en v1.1.0 (fr/it/de/ca/eu) se propaga igual que es/en", async () => {
   await handleExternalRegister(request({ body: JSON.stringify({ ...VALID_BODY, language: "fr" }) }));
+
+  expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ language: "fr" }));
+});
+
+it("ignora un language no soportado, cae a undefined", async () => {
+  await handleExternalRegister(request({ body: JSON.stringify({ ...VALID_BODY, language: "xx" }) }));
 
   expect(provisionUser).toHaveBeenCalledWith(expect.objectContaining({ language: undefined }));
 });

@@ -1,0 +1,25 @@
+{
+  "tabs": {
+    "home": "Home",
+    "trabajo": "Công việc của tôi",
+    "summary": "Tổng quan"
+  },
+  "secondaryTitles": {
+    "config": "Cài đặt",
+    "help": "Trợ giúp",
+    "pagos": "Thanh toán",
+    "perfil": "Hồ sơ của tôi",
+    "training-records": "Training Records",
+    "install-app": "Cài đặt ứng dụng"
+  },
+  "aria": {
+    "close": "Đóng",
+    "back": "Quay lại",
+    "goHome": "Về Home",
+    "help": "Trợ giúp",
+    "config": "Cài đặt",
+    "profile": "Hồ sơ của tôi",
+    "signOut": "Đăng xuất",
+    "mainNav": "Điều hướng chính"
+  }
+}
