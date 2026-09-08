@@ -48,6 +48,19 @@ import StudentQuickEntrySheet from "./StudentQuickEntrySheet";
 // — sobrevive a recargar la página, no a cerrar la pestaña ni la sesión,
 // mismo criterio "efímero, nunca en Supabase" que ya regía este módulo.
 
+// Apagado temporal 2026-09-09 (bug real en producción, Safari real):
+// pese al polyfill de Uint8Array.toHex/toBase64 (pdfjsPolyfills.js,
+// v1.2.0), el usuario sigue viendo el error al exportar a JPG en
+// producción — sin un mensaje de consola nuevo que diagnosticar, y sin
+// forma de reproducir Safari real en este entorno (CLAUDE.md, "8.
+// Verificación UX/UI"), la vía segura pedida explícitamente es ocultar
+// el icono en vez de arriesgar otro intento a ciegas. PDF y compartir
+// (ambos ajenos a pdfjs-dist/renderPdfToJpgBytes) siguen intactos. Toda
+// la lógica de generación/descarga de JPG se queda tal cual, solo
+// oculta — reactivar cambiando esto a `true` en cuanto se confirme la
+// causa real con datos de un Safari real.
+const JPG_EXPORT_ENABLED = false;
+
 const SESSION_KEY = "oceanpulse:trainingRecordsSession";
 
 // Orden de aparición pedido explícito del usuario (2026-09-02) — no
@@ -411,9 +424,11 @@ function StudentRow({ student, hasError, locale, onEdit, onDelete, onDownloadPdf
           <button onClick={() => onDownloadPdf(student)} aria-label={t("roster.descargarPdf")} title={t("roster.descargarPdf")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color }}>
             <FileText size={17} aria-hidden="true" />
           </button>
-          <button onClick={() => onDownloadJpg(student)} aria-label={t("roster.descargarJpg")} title={t("roster.descargarJpg")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color }}>
-            <ImageDown size={17} aria-hidden="true" />
-          </button>
+          {JPG_EXPORT_ENABLED && (
+            <button onClick={() => onDownloadJpg(student)} aria-label={t("roster.descargarJpg")} title={t("roster.descargarJpg")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color }}>
+              <ImageDown size={17} aria-hidden="true" />
+            </button>
+          )}
           {onShare && (
             <button onClick={() => onShare(student)} aria-label={t("roster.compartir")} title={t("roster.compartir")} className="-m-2 flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2" style={{ color }}>
               <Share2 size={17} aria-hidden="true" />
@@ -900,9 +915,9 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("roster.enLote")}</h3>
                 <span className="text-xs text-gray-400">{t("roster.enLoteCount", { count: generatedStudents.length })}</span>
               </div>
-              <div className={`grid gap-2 ${shareAllSupported ? "grid-cols-3" : "grid-cols-2"}`}>
+              <div className={`grid gap-2 ${shareAllSupported ? "grid-cols-2" : "grid-cols-1"}`}>
                 <BatchActionTile icon={FileText} label={t("roster.descargarTodoPdf")} onClick={() => downloadAllAs("pdf")} disabled={batchWorking} accentColor={accentColor} />
-                <BatchActionTile icon={ImageDown} label={t("roster.descargarTodoJpg")} onClick={() => downloadAllAs("jpg")} disabled={batchWorking} accentColor={accentColor} />
+                {JPG_EXPORT_ENABLED && <BatchActionTile icon={ImageDown} label={t("roster.descargarTodoJpg")} onClick={() => downloadAllAs("jpg")} disabled={batchWorking} accentColor={accentColor} />}
                 {shareAllSupported && <BatchActionTile icon={Share2} label={t("roster.compartirTodo")} onClick={shareAll} accentColor={accentColor} />}
               </div>
             </section>
