@@ -4540,3 +4540,49 @@ app".
 auditados), build correcto. Confirmado en Chrome real: el icono en Home
 navega a la pantalla de instrucciones; el enlace en Ayuda hace lo
 mismo; sin errores de consola en ningún caso.
+
+### 12.24 — WhatsNew: desplazamiento real de carrusel + acceso de Home a texto
+
+Dos peticiones seguidas del usuario, ambas resueltas en el mismo lote.
+
+**1. Animación de WhatsNew, tercera revisión**: "no acaba de gustarme
+la animación, quiero q se aprecie la salida de un slide y la entrada
+de otro". `WhatsNew.jsx` reutilizaba `monthSlideVariants` (`motion.js`)
+— pensada para la rejilla pequeña del calendario, con un desplazamiento
+de solo ±20px, casi imperceptible en una diapositiva a ancho completo
+(~330px): el efecto real que se veía era solo un fundido, no un
+deslizamiento. Nueva función `carouselSlideVariants` (`motion.js`),
+misma convención de dirección/easing que `monthSlideVariants` pero con
+desplazamiento real del 100% del propio ancho — la diapositiva saliente
+recorre visiblemente toda la anchura del diálogo mientras la entrante
+hace lo mismo desde el lado contrario, apoyado en el
+`overflow-hidden` que ya tenía el contenedor. Verificado en Chrome
+capturando el fotograma intermedio de una transición: ambos iconos
+(el que sale, el que entra) visibles a la vez en posiciones horizontales
+claramente distintas, confirmando el desplazamiento real — antes de
+este cambio ese mismo fotograma intermedio habría mostrado ambos textos
+casi superpuestos.
+
+Sobre el pedido de "muéstrame el slide para todos los usuarios después
+de cada cambio, solo ahora en el test": no hizo falta ningún cambio de
+código para eso — el enlace "Ver qué hay de nuevo en esta versión" que
+ya vive en Ayuda (Fase 4, Release V1) abre WhatsNew sin comprobar el
+gate de "una vez por versión" (`showWhatsNewAgain`, `App.jsx`), así que
+ya servía tal cual para verificar la animación repetidamente sin tocar
+`localStorage` a mano ni añadir ningún interruptor nuevo — se ha usado
+ese mecanismo ya existente para toda la verificación de este punto.
+
+**2. El icono de Home, pedido de cambiarlo por texto**: "cambia el
+icono por un texto pequeño que ponga Descargar app". Sustituido el
+icono solo (`Smartphone` en círculo, 12.23) por un botón de texto
+pequeño ("Descargar app"/traducido en los 7 idiomas), mismo criterio de
+objetivo táctil de 44px vía margen negativo, sin fondo ni icono. La
+clave `installApp` (`home.json`, ya existía como aria-label del icono)
+pasa a ser el propio texto visible en los 7 idiomas — ya no hace falta
+aria-label aparte, el texto ya es descriptivo por sí mismo.
+
+**Verificado**: 825/825 tests (incluye la actualización de
+`HomeTab.test.jsx` al nuevo texto), lint 0 errores, build correcto.
+Confirmado en Chrome real: el enlace de texto en Home navega
+correctamente, y la animación de WhatsNew se aprecia con claridad en
+las 6 diapositivas, sin errores de consola.

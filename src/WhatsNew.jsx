@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Languages, LayoutGrid, IdCard, GraduationCap, Palette, Sparkles } from "lucide-react";
 import { TEAL, SUN, GREEN, CORAL, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
-import { usePrefersReducedMotion, monthSlideVariants, useSwipeHorizontal } from "./motion";
+import { usePrefersReducedMotion, carouselSlideVariants, useSwipeHorizontal } from "./motion";
 
 // Píldora de novedades — no un manual: pocas frases por diapositiva,
 // navegable con "Siguiente"/"Atrás", puntos, o deslizando lateralmente
@@ -59,7 +59,7 @@ export default function WhatsNew({ onClose }) {
   const [step, setStep] = useState(0);
   // direction: misma idea que monthDirection en MonthCalendar
   // (shared.jsx) — de qué lado entra/sale cada diapositiva en
-  // monthSlideVariants, para que "Atrás" siempre deslice al revés que
+  // carouselSlideVariants, para que "Atrás" siempre deslice al revés que
   // "Siguiente"/deslizar hacia la izquierda, sea cual sea el punto de
   // partida.
   const [direction, setDirection] = useState(1);
@@ -131,13 +131,26 @@ export default function WhatsNew({ onClose }) {
             MonthCalendar, nunca probado aquí hasta ahora) + swipeProps
             nativo en vez de `drag` — recupera el slide lateral real
             (entra/sale por el lado correcto según `direction`) sin
-            reproducir el bug. */}
+            reproducir el bug.
+
+            Desplazamiento ampliado a un 100% real (2026-09-08, "quiero
+            q se aprecie la salida de un slide y la entrada de otro"):
+            monthSlideVariants (motion.js) se quedaba en unos pocos px,
+            pensado para la rejilla pequeña del calendario, no para una
+            diapositiva a ancho completo — apenas se notaba el
+            desplazamiento, solo el fundido. carouselSlideVariants
+            (motion.js) es la misma convención de dirección/easing con
+            un desplazamiento del 100% del propio ancho, para un
+            carrusel de verdad: la que sale se ve salir del todo, la que
+            entra se ve entrar del todo. Depende de `overflow-hidden`
+            en el contenedor de abajo para no desbordar el diálogo
+            mientras la diapositiva saliente atraviesa el 100%. */}
         <div className="min-h-[220px] touch-pan-y overflow-hidden px-6 pb-2 text-center" {...swipeProps}>
           <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             <motion.div
               key={step}
               custom={direction}
-              variants={monthSlideVariants(reduced)}
+              variants={carouselSlideVariants(reduced)}
               initial="initial"
               animate="animate"
               exit="exit"

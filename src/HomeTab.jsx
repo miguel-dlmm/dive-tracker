@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { GraduationCap, Award, Handshake, ChevronRight, Building2, Smartphone } from "lucide-react";
+import { GraduationCap, Award, Handshake, ChevronRight, Building2 } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
@@ -219,30 +219,27 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-400">
             {t("kpis.sectionTitle")}
           </h2>
-          {/* Instalar la app (2026-09-08, segunda vuelta): el banner
+          {/* Instalar la app (2026-09-08, tercera vuelta): el banner
               descartable de antes "no convencía" — pedido explícito de
               moverlo a un sitio integrado que siempre esté disponible y
               no moleste (ver el enlace fijo en Ayuda, HelpTab.jsx). El
-              usuario matizó después que SÍ quería además un punto de
-              entrada en Home, "botón, pastilla... innova". Diseño
-              elegido: un icono solo, sin texto ni fondo de tarjeta —
-              nunca se cierra ni se recuerda como "descartado" (no hay
-              nada que descartar, es del tamaño de un icono de acción
-              más), oculto únicamente cuando ya no aplica (la app ya
-              corre instalada). Mismo truco de margen negativo que ya
+              usuario pidió además un punto de entrada en Home
+              ("botón, pastilla... innova"), primero como icono solo;
+              después, pedido explícito de cambiarlo por texto pequeño
+              ("Descargar app"). Nunca se cierra ni se recuerda como
+              "descartado" — solo se oculta cuando ya no aplica (la app
+              ya corre instalada). Mismo truco de margen negativo que ya
               usan los botones de navegación del calendario (más abajo)
-              para que el objetivo táctil llegue a 44×44px sin que el
-              círculo visible crezca con él. */}
+              para que el objetivo táctil llegue a 44px de alto sin que
+              la fila crezca visualmente con él. */}
           {onOpenInstallApp && !alreadyInstalled && (
             <button
               type="button"
               onClick={onOpenInstallApp}
-              aria-label={t("installApp")}
-              className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-transform active:scale-90"
+              className="-my-3 flex min-h-11 shrink-0 items-center rounded-md px-1 text-[11px] font-semibold active:opacity-70"
+              style={{ color: BRAND_OCEAN }}
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_OCEAN}1A` }}>
-                <Smartphone size={15} style={{ color: BRAND_OCEAN }} aria-hidden="true" />
-              </span>
+              {t("installApp")}
             </button>
           )}
         </div>

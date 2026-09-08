@@ -16,8 +16,8 @@ Registro de cambios relevantes de Ocean Flow.
 - **Instalar la app**: nueva pantalla con instrucciones paso a paso para
   añadir Ocean Flow a la pantalla de inicio, tanto en iOS (Safari) como
   en Android (Chrome) — accesible desde un enlace fijo en Ayuda y un
-  icono junto a los KPIs de Home, ambos siempre visibles (oculto solo
-  si ya se está usando la app instalada).
+  enlace de texto ("Descargar app") junto a los KPIs de Home, ambos
+  siempre visibles (oculto solo si ya se está usando la app instalada).
 - **Training Records ya tiene acceso propio**, desde una tarjeta en
   Home. Genera el registro de progreso oficial (Training Record) de
   cada alumno para las 10 plantillas SSI, con firma incluida — nada de
@@ -53,7 +53,9 @@ Registro de cambios relevantes de Ocean Flow.
 - **Novedades de esta versión (WhatsNew)**: reescrito con las 6
   novedades reales de este rediseño — rediseño e imagen nueva, carnet
   de instructor, Training Records, multi idioma, Home/Mi trabajo más
-  claros, y cómo repasarlo luego desde Ayuda.
+  claros, y cómo repasarlo luego desde Ayuda. Animación entre
+  diapositivas también mejorada: ahora se aprecia con claridad la
+  salida de una y la entrada de la siguiente, en vez de solo un fundido.
 - **Mi trabajo**: cada KPI de cabecera lleva ahora un icono fijo junto a
   su etiqueta, además del que ya se encoge junto a la cifra — la
   identidad de color del KPI no desaparece del todo aunque la cifra sea

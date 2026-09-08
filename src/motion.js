@@ -102,6 +102,26 @@ export function monthSlideVariants(reduced = false) {
   };
 }
 
+// Diapositiva de carrusel a pantalla completa (WhatsNew) — misma
+// convención de dirección/easing que monthSlideVariants, pero con
+// desplazamiento real (100% del propio ancho) en vez de unos pocos
+// píxeles: la rejilla del calendario es pequeña y un desplazamiento
+// grande ahí se vería brusco, pero un carrusel de diapositivas de
+// ancho completo necesita que se aprecie de verdad la salida de una y
+// la entrada de la otra (pedido explícito 2026-09-08, revisión de la
+// animación de WhatsNew: "quiero q se aprecie la salida de un slide y
+// la entrada de otro"). Requiere que el contenedor tenga
+// `overflow-hidden` (ya lo tiene WhatsNew.jsx) para que la diapositiva
+// saliente no se vea fuera de los límites del diálogo mientras
+// atraviesa el 100%.
+export function carouselSlideVariants(reduced = false) {
+  return {
+    initial: (direction) => ({ opacity: 0, x: direction > 0 ? "100%" : "-100%" }),
+    animate: { opacity: 1, x: "0%", transition: { duration: d(reduced, DURATION.md), ease: EASE.enter } },
+    exit: (direction) => ({ opacity: 0, x: direction > 0 ? "-100%" : "100%", transition: { duration: d(reduced, DURATION.sm), ease: EASE.exit } }),
+  };
+}
+
 // Desplaza la ventana un delta (equivalente animado de `window.scrollBy`) —
 // pedido explícito tras el ajuste anterior de MonthCalendar ("haz una
 // animación al scroll down al calendario al pulsar en un día"), que se

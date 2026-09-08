@@ -419,12 +419,12 @@ describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", (
   });
 });
 
-// "Instalar la app" (2026-09-08, segunda vuelta): el banner descartable
-// de antes se retiró entero — sustituido por un icono solo, sin
-// tarjeta, junto al título de los KPIs. Sin estado de "descartado": solo
-// se oculta si no llega el handler (mismo criterio defensivo que
-// onOpenTrainingRecords) o si la app ya corre instalada.
-describe("HomeTab — icono 'Instalar la app'", () => {
+// "Instalar la app" (2026-09-08, tercera vuelta): el banner descartable
+// de antes se retiró entero — sustituido por un texto pequeño
+// ("Descargar app"), junto al título de los KPIs. Sin estado de
+// "descartado": solo se oculta si no llega el handler (mismo criterio
+// defensivo que onOpenTrainingRecords) o si la app ya corre instalada.
+describe("HomeTab — enlace 'Descargar app'", () => {
   function renderHomeWithInstall(onOpenInstallApp = vi.fn()) {
     render(
       <HomeTab
@@ -447,14 +447,14 @@ describe("HomeTab — icono 'Instalar la app'", () => {
         paymentStatuses={PAYMENT_STATUSES} onQuickCreate={vi.fn()}
       />
     );
-    expect(screen.queryByLabelText("Instalar la app")).not.toBeInTheDocument();
+    expect(screen.queryByText("Descargar app")).not.toBeInTheDocument();
   });
 
-  it("pulsar el icono llama a onOpenInstallApp", async () => {
+  it("pulsar el texto llama a onOpenInstallApp", async () => {
     const user = userEvent.setup();
     const onOpenInstallApp = vi.fn();
     renderHomeWithInstall(onOpenInstallApp);
-    await user.click(screen.getByLabelText("Instalar la app"));
+    await user.click(screen.getByText("Descargar app"));
     expect(onOpenInstallApp).toHaveBeenCalledTimes(1);
   });
 });
