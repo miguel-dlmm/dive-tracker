@@ -5345,3 +5345,72 @@ iPhone 14 Pro Max: se abre "Mi trabajo", se baja la página 400px
 de "Mi trabajo" en la lista) — tras la animación, el botón de "Resumen"
 queda a 15px del borde inferior de la cabecera (objetivo 12px, dentro
 de tolerancia visual), sin errores de consola.
+
+## Estado de cierre de sesión (2026-09-08) — release v1.1.0 preparada, pendiente solo el checklist supervisado
+
+Pedido explícito: "haz commit y push directamente y deja todo
+preparado para hacer un clear y comenzar el despliegue, deja la
+release". Se ha hecho todo lo seguro y reversible (nada toca
+producción); lo que queda es exactamente el checklist ya escrito en
+12.19, con supervisión del usuario — nunca autónomo, coherente con las
+reglas del proyecto sobre migraciones/despliegue.
+
+**Hecho en esta sesión, ya en `origin`**:
+1. `feature/rediseno-v2` (bc9be0e) → `develop`: fast-forward limpio,
+   870/870 tests, lint 0 errores, build correcto. `develop` y
+   `feature/rediseno-v2` quedan en el mismo commit.
+2. `develop` fusionada sobre `release/v1.1.0` (que llevaba desde el
+   12.19 anterior sin las últimas ~20 vueltas del rediseño — KPIs de
+   Mi trabajo, Ayuda con GIFs y con el fix del acordeón, idiomas
+   ca/de/eu/fr/it, PWA/safe-area, país de residencia, Training
+   Records...). Conflicto real solo en 4 ficheros, los 4 por el mismo
+   motivo: **WhatsNew ("Qué hay de nuevo") se había reescrito de forma
+   independiente en las dos ramas** — `release/v1.1.0` tenía una
+   versión de 4 diapositivas ya desactualizada, `develop` una de 6 más
+   completa y posterior (commit `7be945a`, "las 6 novedades reales del
+   rediseño"). Resuelto tomando la versión de `develop` entera en los 4
+   ficheros (`WhatsNew.jsx`, `App.test.jsx`, `notices.json` es/en) —
+   verificado que la copy final (6 diapositivas) no contiene ninguna
+   afirmación desactualizada sobre el comportamiento final de los KPIs.
+3. **Bug real encontrado al resolver el conflicto, corregido de
+   raíz**: al tomar la versión de `develop` de `App.test.jsx` entera,
+   se revirtió sin querer un fix que YA existía solo en
+   `release/v1.1.0` desde el 12.19 anterior (test de "Ver qué hay de
+   nuevo" importando `APP_VERSION` en vez de sembrar el literal
+   `"1.0.0"` a mano) — el mismo bug de fondo que ese fix ya había
+   corregido una vez. Reaplicado en `release/v1.1.0` (commit
+   `ebe8c7a`) y, de paso, aplicado también en `feature/rediseno-v2`/
+   `develop` (nunca lo habían tenido, coincidía con `APP_VERSION` por
+   casualidad porque ninguna de las dos había subido de versión
+   todavía — bug latente ahí también, ahora corregido en las tres
+   ramas).
+4. Validación completa sobre `release/v1.1.0` ya fusionada: 870/870
+   tests, lint 0 errores, build correcto, `npm run mobile-check` sin
+   errores de consola (47 capturas, mismo recorrido que en 12.19).
+   Push a `origin/release/v1.1.0`.
+
+**Migraciones pendientes de producción — actualizadas respecto a
+12.19**: además de `0014` a `0017` (ya documentadas ahí, mismo detalle
+y mismo aviso sobre `0015` sigue vigente, léelo antes de aplicar),
+`develop`/`release/v1.1.0` añaden una migración más, encontrada
+durante esta sesión al probar el selector de idioma con los 5 idiomas
+nuevos:
+
+| Migración | Qué hace | Riesgo |
+|---|---|---|
+| `0018-idiomas-adicionales.sql` | Amplía el `check` de `profiles.language` para admitir `fr`/`it`/`de`/`ca`/`eu` además de `es`/`en` | Bajo — aditiva, ninguna fila existente cambia, rollback documentado dentro del propio fichero |
+
+El checklist final de 12.19 sigue siendo válido tal cual, con un único
+cambio: el paso 3 (aplicar migraciones) pasa a ser **`0014` → `0015` →
+`0016` → `0017` → `0018`**, en ese orden, en vez de parar en `0017`.
+Todo lo demás del checklist (backup previo, fusión de
+`release/v1.1.0` sobre `main`, verificación, tag, `gh release`,
+rollback) se mantiene exactamente igual — no se repite aquí, ver 12.19
+más arriba.
+
+**No hecho a propósito, queda para la próxima sesión con el usuario
+presente** (checklist de 12.19, pasos 1 a 11 — backup real, aplicar
+migraciones contra producción, fusionar sobre `main`, verificar el
+despliegue real, taguear, publicar el release en GitHub): todos tocan
+producción de verdad o son irreversibles sin supervisión activa, así
+que ninguno se ejecuta en modo autónomo, sin excepción.

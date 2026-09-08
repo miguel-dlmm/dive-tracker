@@ -225,11 +225,14 @@ describe("AuthGate", () => {
   // tocar su gate de "una vez por versión" (se marca como ya visto en
   // localStorage antes de renderizar, para probar la reapertura de verdad
   // en vez de que ya estuviera abierto por no haberse visto todavía).
-  // Importa APP_VERSION en vez de un literal fijo (bug real ya corregido
-  // una vez, ver docs/REDISENO-V2-PROGRESS.md 12.19): con un literal, cada
-  // release que sube APP_VERSION deja de representar "ya visto" y este
-  // test empieza a fallar porque WhatsNew se abre solo, sin que el
-  // mecanismo que prueba tenga ningún fallo real.
+  // Importa APP_VERSION en vez de un literal fijo (bug real encontrado al
+  // preparar la release v1.1.0, ver docs/REDISENO-V2-PROGRESS.md 12.19 y
+  // el commit ebe8c7a en release/v1.1.0): con un literal, cada release que
+  // sube APP_VERSION deja de representar "ya visto" y este test empieza a
+  // fallar porque WhatsNew se abre solo, sin que el mecanismo que prueba
+  // tenga ningún fallo real. Aplicado aquí también (develop/feature aún
+  // no habían subido de versión cuando se escribió, por eso el literal
+  // coincidía por casualidad y el bug no se notaba todavía).
   it("Fase 4 — 'Ver qué hay de nuevo' en Ayuda reabre el slide de novedades ya visto", async () => {
     localStorage.setItem("oceanpulse:whatsNewSeen:u1", APP_VERSION);
     mockUseSession({

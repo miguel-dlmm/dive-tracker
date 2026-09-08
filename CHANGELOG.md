@@ -4,6 +4,14 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Fixed
+- **Listado de Mi trabajo/Home/Resumen/Comisiones podía mostrar un
+  importe distinto al del popup de edición** para el mismo movimiento,
+  cuando había una tarifa desactivada (migración 0015) junto a la
+  activa para la misma escuela+actividad — el listado podía coger la
+  desactivada en vez de la vigente. Ahora usa siempre la tarifa activa,
+  igual que ya hacía el popup.
+
 ## [1.1.0] - 2026-09-07
 
 ### Added

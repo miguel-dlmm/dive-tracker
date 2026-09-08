@@ -43,7 +43,7 @@ export function isRateActive(r) {
 // donde vive).
 export function buildEntriesBySource({ worklog, rates, comisiones, commissionRates, colleaguePayments, fallbackCurrency }) {
   const rateTotal = (e, ratesTable) => {
-    const r = ratesTable.find((r) => r.school === e.school && r.activity === e.activity);
+    const r = ratesTable.find((r) => r.school === e.school && r.activity === e.activity && isRateActive(r));
     return { total: computeRateTotal(r, e.people), currency: r?.currency || e.currency || fallbackCurrency };
   };
   return {

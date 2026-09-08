@@ -109,4 +109,19 @@ describe("buildEntriesBySource / buildActivityEntries", () => {
     const { ganado, comision, companeros } = buildEntriesBySource(args);
     expect(buildActivityEntries(args)).toEqual([...ganado, ...comision, ...companeros]);
   });
+
+  // Bug real en producción (2026-09-08): con una tarifa desactivada (migración
+  // 0015, is_active) para la misma escuela+actividad que una activa, un simple
+  // .find() sin filtrar por is_active podía coger la desactivada si el array la
+  // devolvía primero — el listado (Home/Mi trabajo/Resumen) mostraba un importe
+  // distinto al del popup de edición (MovementSheet.jsx, que sí filtraba). Ver
+  // isRateActive en rateCalc.js.
+  it("con una tarifa desactivada antes que la activa en el array, usa la activa, no la primera", () => {
+    const ratesWithHistory = [
+      { school: "PADI Cozumel", activity: "Open Water", rate: 900, currency: "USD", is_active: false },
+      { school: "PADI Cozumel", activity: "Open Water", rate: 2000, currency: "USD", is_active: true },
+    ];
+    const { ganado } = buildEntriesBySource({ ...args, rates: ratesWithHistory });
+    expect(ganado[0]).toMatchObject({ total: 4000, currency: "USD" });
+  });
 });
