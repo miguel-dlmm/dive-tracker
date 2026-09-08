@@ -5175,3 +5175,55 @@ sobra, luego `visualViewport` se encoge de golpe simulando el teclado
 — la dirección se corrige una vez, y un segundo `resize` ya no la
 vuelve a mover; el test existente de Fase 7 sigue en verde sin
 cambios), lint 0 errores, build correcto.
+
+### 12.36 — Instalada como acceso directo en iOS: el pie tapaba el FAB y el final de las pantallas
+
+Pedido explícito: "cuando me instalo la web como acceso directo en
+iOS, al no tener el envoltorio del navegador la pantalla es más alta,
+creo q el contenido 'se estira' y el pie corta algunos elementos como
+el + flotante para crear movimientos y tarifas o el bloque de escuela
+favorita".
+
+**Causa real**: `env(safe-area-inset-bottom)` (el hueco del indicador
+de inicio del iPhone) vale **0 en una pestaña normal de Safari** — la
+propia barra de Safari ya ocupa ese espacio — y solo toma su valor real
+(varios px) **cuando la app corre instalada**, sin ninguna barra de
+navegador que lo absorba. La barra de navegación inferior (`App.jsx`)
+ya sumaba ese inset a su propio alto desde antes, así que en el acceso
+directo se vuelve más alta de verdad — pero dos elementos seguían
+calculando su distancia al borde con un valor FIJO, igual en los dos
+casos:
+- El FAB (`Fab`, `shared.jsx`, usado por Mi trabajo/Tarifas/
+  Configuración vía convención #3): `bottom-24` fijo, sin sumar el
+  inset — en el acceso directo quedaba demasiado cerca de la barra, ya
+  más alta.
+- El `<main>` compartido por TODAS las pantallas (`App.jsx`): `pb-24`
+  fijo — el mismo motivo, aplicado al final de cualquier pantalla en
+  vez de a un botón concreto (de ahí que el bloque de escuela favorita
+  u otro contenido cerca del final también pudiera quedar tapado).
+
+**Fix**: los dos pasan de una clase Tailwind fija (`bottom-24`/`pb-24`)
+a un `calc(6rem + env(safe-area-inset-bottom))` por estilo en línea —
+mismo criterio que ya usan `paddingBottom` en ComisionesTab/WorkLogTab/
+MovementSheet/CompanerosTab y `paddingTop`/`top` en la cabecera y el
+indicador TEST para el mismo tipo de inset. En una pestaña normal de
+Safari el resultado es idéntico a antes (inset 0 → 6rem exactos); en el
+acceso directo, crece exactamente lo que crece la barra inferior real.
+
+**Fuera de alcance a propósito**: `WorkLogTab.jsx`/`ComisionesTab.jsx`/
+`CompanerosTab.jsx`/`PaymentsTab.jsx` tienen su propio FAB/banner
+duplicado con el mismo `bottom-24` sin corregir — no son pantallas
+alcanzables desde la navegación real hoy (`PRIMARY_TABS` en `App.jsx`
+solo lista Home/Mi trabajo/Resumen; estas tres son las pantallas
+previas a la unificación de ADR-0005, todavía importadas pero sin
+ningún botón que lleve a ellas) — corregirlas sería tocar código sin
+usuarios reales detrás, no parte de este bug.
+
+**Verificado**: 868/868 tests, lint 0 errores, build correcto.
+Confirmado en Chrome real que el caso normal (navegador, inset 0) no
+cambia — mismo FAB, misma posición, sin regresión. El propio caso que
+motiva el fix (`display-mode: standalone`/`navigator.standalone`) no
+se puede emular desde este entorno (ni Playwright ni la extensión de
+Chrome de esta sesión reproducen el modo de app instalada de iOS) —
+limitación ya documentada en CLAUDE.md §8; sigue haciendo falta que el
+usuario lo confirme en su iPhone real con el acceso directo.

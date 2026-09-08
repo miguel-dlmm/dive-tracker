@@ -225,6 +225,13 @@ Registro de cambios relevantes de Ocean Flow.
   "pendiente de configurar" que ya está configurado).
 
 ### Fixed
+- **Instalada como acceso directo en iOS: el botón "+" flotante y el
+  final de cualquier pantalla podían quedar tapados por la barra
+  inferior** — la barra crece de verdad al no tener el navegador (para
+  el indicador de inicio del iPhone), pero el botón y el margen final
+  de las pantallas seguían calculando su distancia al borde con un
+  valor fijo, igual que en una pestaña normal de Safari. Corregido para
+  los dos casos.
 - **País de residencia (Registro y Mi perfil): la lista de países podía
   quedar comprimida contra el propio campo, difícil de usar** — al
   tocar el campo, el teclado del móvil se abre a la vez que la lista;

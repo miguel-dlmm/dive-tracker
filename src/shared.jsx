@@ -2030,15 +2030,27 @@ export function ExpandableCard({ title, subtitle, icon: Icon, iconColor = BRAND_
 }
 
 // Botón flotante de creación — convención #3 (CLAUDE.md): mismo lenguaje
-// visual (fixed bottom-24 right-4, 52×52, color de acento de la sección)
-// en toda pantalla de lista con FAB+hoja (Mi trabajo, Tarifas,
-// Configuración). Extraído 2026-08-30 tras encontrar el mismo bloque de
-// clases/estilo copiado en cada una de ellas. `visible` es opcional
-// (por defecto siempre visible/interactivo): Mi trabajo lo usa para
-// ocultar el FAB mientras el usuario baja por la lista, pero ninguna
-// otra pantalla necesita ese comportamiento hoy — con `visible` sin
-// pasar, el componente se comporta exactamente igual que un botón fijo
-// normal.
+// visual (fixed a 6rem del borde inferior + right-4, 52×52, color de
+// acento de la sección) en toda pantalla de lista con FAB+hoja (Mi
+// trabajo, Tarifas, Configuración). Extraído 2026-08-30 tras encontrar
+// el mismo bloque de clases/estilo copiado en cada una de ellas.
+// `visible` es opcional (por defecto siempre visible/interactivo): Mi
+// trabajo lo usa para ocultar el FAB mientras el usuario baja por la
+// lista, pero ninguna otra pantalla necesita ese comportamiento hoy —
+// con `visible` sin pasar, el componente se comporta exactamente igual
+// que un botón fijo normal.
+// `bottom` por estilo en línea, no `bottom-24` de Tailwind (2026-09-08,
+// bug real reportado — "instalada como acceso directo en iOS... el pie
+// corta el + flotante"): la barra inferior (App.jsx) suma
+// `env(safe-area-inset-bottom)` a su alto para el indicador de inicio,
+// pero ese inset vale 0 en una pestaña normal de Safari (la propia
+// barra de Safari ya ocupa ese espacio) y crece de verdad solo cuando
+// la app corre instalada, sin ninguna barra de navegador que lo
+// absorba — la barra inferior real se vuelve más alta ahí, y un
+// `bottom-24` fijo (96px, igual en los dos casos) deja de guardar
+// distancia suficiente con ella. Mismo `calc()` que ya usan
+// paddingBottom en ComisionesTab/WorkLogTab/MovementSheet/CompanerosTab
+// para el mismo inset, aplicado aquí a `bottom` en vez de a un padding.
 export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }) {
   return (
     <button
@@ -2046,9 +2058,10 @@ export function Fab({ onClick, label, icon: Icon = Plus, color, visible = true }
       aria-label={label}
       aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
-      className="fixed bottom-24 right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 active:scale-90"
+      className="fixed right-4 z-20 flex items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 active:scale-90"
       style={{
         backgroundColor: color, width: 52, height: 52,
+        bottom: "calc(6rem + env(safe-area-inset-bottom))",
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0) scale(1)" : "translateY(20px) scale(0.7)",
         pointerEvents: visible ? "auto" : "none",
