@@ -11,6 +11,14 @@ Registro de cambios relevantes de Ocean Flow.
   usa hoy la mayoría de instructores.
 
 ### Fixed
+- **Training Records en producción no ofrecía ninguna plantilla**: la
+  migración de esquema de la Fase 5 sí se había aplicado, pero las 10
+  filas + los PDF reales se sembraron a mano solo contra TEST durante
+  el desarrollo, sin ningún script que lo replicara — producción se
+  quedó con la tabla vacía, sin ningún aviso. Sembrado ya en
+  producción; añadido `scripts/verify-production-seed-data.mjs` como
+  paso del checklist de release (ADR-0010) para no repetir el mismo
+  vacío silencioso en una fase futura.
 - **Registro externo, campo "País de residencia" en móvil**: en iOS
   Safari, al abrirse el teclado la tarjeta entera se recentraba de
   golpe (`min-h-dvh` + `items-center`) justo cuando el desplegable de
