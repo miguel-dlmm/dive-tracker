@@ -13,10 +13,11 @@ Registro de cambios relevantes de Ocean Flow.
   "Cobrar movimientos pendientes", "Configurar tu aplicación") ya
   incluyen un GIF animado con el flujo real, además del paso a paso en
   texto.
-- **Instalar la app**: nuevo banner en Home con instrucciones paso a
-  paso para añadir Ocean Flow a la pantalla de inicio, tanto en iOS
-  (Safari) como en Android (Chrome) — descartable, y oculto solo si ya
-  se está usando la app instalada.
+- **Instalar la app**: nueva pantalla con instrucciones paso a paso para
+  añadir Ocean Flow a la pantalla de inicio, tanto en iOS (Safari) como
+  en Android (Chrome) — accesible desde un enlace fijo en Ayuda y un
+  icono junto a los KPIs de Home, ambos siempre visibles (oculto solo
+  si ya se está usando la app instalada).
 - **Training Records ya tiene acceso propio**, desde una tarjeta en
   Home. Genera el registro de progreso oficial (Training Record) de
   cada alumno para las 10 plantillas SSI, con firma incluida — nada de

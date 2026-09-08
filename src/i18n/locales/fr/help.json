@@ -1,6 +1,7 @@
 {
   "emptyState": "Aucun contenu d'aide pour le moment.",
   "whatsNewReplay": "Voir les nouveautés de cette version",
+  "installAppLink": "Installer l'application sur votre mobile",
   "groupLabels": {
     "quiero": "Je veux...",
     "funcionalidades": "Fonctionnalités"
@@ -13,16 +14,46 @@
     "expectedResult": "Résultat attendu"
   },
   "categories": {
-    "bienvenida": { "label": "Premiers pas", "description": "Ce qu'est Ocean Flow et comment il s'organise" },
-    "quiero-configurar": { "label": "Configurer votre application", "description": "Écoles, cours, tarifs et catalogues" },
-    "quiero-crear-movimiento": { "label": "Enregistrer un mouvement", "description": "Un cours dispensé, une commission ou un ajustement" },
-    "quiero-cobrar": { "label": "Encaisser les mouvements en attente", "description": "Marquer comme encaissé, un par un ou tous d'un coup" },
-    "quiero-consultar-generado": { "label": "Consulter ce que vous avez généré", "description": "D'un coup d'œil, ou en détail par période" },
-    "func-mi-trabajo": { "label": "Mon activité", "description": "Créer, modifier, encaisser et supprimer des mouvements" },
-    "func-resumen": { "label": "Résumé", "description": "Aperçu rapide et profondeur à la demande" },
-    "func-configuracion": { "label": "Configuration", "description": "Le menu, et ce qu'il y a dans chaque section" },
-    "func-perfil": { "label": "Mon profil", "description": "Avatar, données, devise favorite et mot de passe" },
-    "func-filtros": { "label": "Filtres et recherche", "description": "Le même modèle dans toute l'app" }
+    "bienvenida": {
+      "label": "Premiers pas",
+      "description": "Ce qu'est Ocean Flow et comment il s'organise"
+    },
+    "quiero-configurar": {
+      "label": "Configurer votre application",
+      "description": "Écoles, cours, tarifs et catalogues"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Enregistrer un mouvement",
+      "description": "Un cours dispensé, une commission ou un ajustement"
+    },
+    "quiero-cobrar": {
+      "label": "Encaisser les mouvements en attente",
+      "description": "Marquer comme encaissé, un par un ou tous d'un coup"
+    },
+    "quiero-consultar-generado": {
+      "label": "Consulter ce que vous avez généré",
+      "description": "D'un coup d'œil, ou en détail par période"
+    },
+    "func-mi-trabajo": {
+      "label": "Mon activité",
+      "description": "Créer, modifier, encaisser et supprimer des mouvements"
+    },
+    "func-resumen": {
+      "label": "Résumé",
+      "description": "Aperçu rapide et profondeur à la demande"
+    },
+    "func-configuracion": {
+      "label": "Configuration",
+      "description": "Le menu, et ce qu'il y a dans chaque section"
+    },
+    "func-perfil": {
+      "label": "Mon profil",
+      "description": "Avatar, données, devise favorite et mot de passe"
+    },
+    "func-filtros": {
+      "label": "Filtres et recherche",
+      "description": "Le même modèle dans toute l'app"
+    }
   },
   "articles": {
     "primeros-pasos": {

@@ -1,6 +1,7 @@
 {
   "emptyState": "Oraindik ez dago laguntza-edukirik.",
   "whatsNewReplay": "Ikusi bertsio honetako berritasunak",
+  "installAppLink": "Instalatu aplikazioa zure mugikorrean",
   "groupLabels": {
     "quiero": "Nahi dut...",
     "funcionalidades": "Funtzionalitateak"
@@ -13,16 +14,46 @@
     "expectedResult": "Espero den emaitza"
   },
   "categories": {
-    "bienvenida": { "label": "Lehen urratsak", "description": "Ocean Flow zer den eta nola antolatzen den" },
-    "quiero-configurar": { "label": "Konfiguratu zure aplikazioa", "description": "Eskolak, ikastaroak, tarifak eta katalogoak" },
-    "quiero-crear-movimiento": { "label": "Erregistratu mugimendu bat", "description": "Emandako ikastaro bat, komisio bat edo doikuntza bat" },
-    "quiero-cobrar": { "label": "Kobratu zain dauden mugimenduak", "description": "Markatu kobratuta, banan-banan edo denak batera" },
-    "quiero-consultar-generado": { "label": "Kontsultatu zenbat sortu duzun", "description": "Begirada batean, edo aldiko xehetasunetan" },
-    "func-mi-trabajo": { "label": "Nire lana", "description": "Sortu, editatu, kobratu eta ezabatu mugimenduak" },
-    "func-resumen": { "label": "Laburpena", "description": "Begirada azkarra eta eskatutako sakontasuna" },
-    "func-configuracion": { "label": "Ezarpenak", "description": "Menua, eta atal bakoitzean zer dagoen" },
-    "func-perfil": { "label": "Nire profila", "description": "Avatarra, datuak, dibisa gogokoena eta pasahitza" },
-    "func-filtros": { "label": "Iragazkiak eta bilaketa", "description": "Aplikazio osoko eredu bera" }
+    "bienvenida": {
+      "label": "Lehen urratsak",
+      "description": "Ocean Flow zer den eta nola antolatzen den"
+    },
+    "quiero-configurar": {
+      "label": "Konfiguratu zure aplikazioa",
+      "description": "Eskolak, ikastaroak, tarifak eta katalogoak"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Erregistratu mugimendu bat",
+      "description": "Emandako ikastaro bat, komisio bat edo doikuntza bat"
+    },
+    "quiero-cobrar": {
+      "label": "Kobratu zain dauden mugimenduak",
+      "description": "Markatu kobratuta, banan-banan edo denak batera"
+    },
+    "quiero-consultar-generado": {
+      "label": "Kontsultatu zenbat sortu duzun",
+      "description": "Begirada batean, edo aldiko xehetasunetan"
+    },
+    "func-mi-trabajo": {
+      "label": "Nire lana",
+      "description": "Sortu, editatu, kobratu eta ezabatu mugimenduak"
+    },
+    "func-resumen": {
+      "label": "Laburpena",
+      "description": "Begirada azkarra eta eskatutako sakontasuna"
+    },
+    "func-configuracion": {
+      "label": "Ezarpenak",
+      "description": "Menua, eta atal bakoitzean zer dagoen"
+    },
+    "func-perfil": {
+      "label": "Nire profila",
+      "description": "Avatarra, datuak, dibisa gogokoena eta pasahitza"
+    },
+    "func-filtros": {
+      "label": "Iragazkiak eta bilaketa",
+      "description": "Aplikazio osoko eredu bera"
+    }
   },
   "articles": {
     "primeros-pasos": {

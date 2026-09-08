@@ -142,6 +142,27 @@ describe("HelpTab — 'Ver qué hay de nuevo'", () => {
   });
 });
 
+// "Instalar la app" (2026-09-08, pedido explícito) — reemplaza al banner
+// descartable de HomeTab.jsx por un enlace fijo en Ayuda, mismo patrón
+// que "Ver qué hay de nuevo" justo arriba: siempre visible si se pasa el
+// handler, sin estado propio de "descartado".
+describe("HelpTab — 'Instalar la app'", () => {
+  it("sin onOpenInstallApp, no muestra el enlace", () => {
+    render(<HelpTab navSections={navSections} />);
+    expect(screen.queryByText("Instalar la app en tu móvil")).not.toBeInTheDocument();
+  });
+
+  it("con onOpenInstallApp, pulsar el enlace lo llama", async () => {
+    const user = userEvent.setup();
+    const onOpenInstallApp = vi.fn();
+    render(<HelpTab navSections={navSections} onOpenInstallApp={onOpenInstallApp} />);
+
+    await user.click(screen.getByText("Instalar la app en tu móvil"));
+
+    expect(onOpenInstallApp).toHaveBeenCalledTimes(1);
+  });
+});
+
 // GIFs animados (2026-09-08, ver content.js) — reintroducidos, revierte
 // la decisión "sin capturas" del rediseño 2026-09-04 (histórico: dataset
 // de prueba "ihasia"/cuenta dev-bypass no presentables en ese momento;

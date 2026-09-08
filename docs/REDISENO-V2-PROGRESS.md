@@ -4483,3 +4483,60 @@ Confirmado en Chrome real contra la cuenta demo de TEST: las 6
 diapositivas navegadas una a una con "Siguiente", icono/color/título/
 cuerpo correctos en cada una, el botón final dice "Empezar" en la 6ª
 en vez de "Siguiente", sin errores de consola.
+
+### 12.23 — Banner "Instalar la app" retirado de Home, dos puntos de entrada permanentes en su lugar
+
+Petición explícita del usuario en dos vueltas seguidas. Primera: "el
+banner de descargar la app para iOS y Android... no me convence,
+búscale otro sitio, integrado q siempre esté disponible y que no
+moleste". Segunda, tras ver la primera solución (solo en Ayuda): "pero
+quiero q haya un algo en la home q me lleve a ver las instrucciones:
+botón, pastilla.. innova y crea tu como head designer y siempre en la
+línea ocean flow".
+
+**Retirado por completo el banner de `HomeTab.jsx`**: la tarjeta con
+título/subtítulo/✕ y su estado de "descartado" en localStorage
+(`oceanpulse:installBannerDismissed`) — ya no existe ningún sitio de la
+app con esa lógica de "cerrar para siempre en este dispositivo".
+
+**Dos puntos de entrada nuevos, permanentes, sin estado de
+descartado**:
+1. **Ayuda** (`HelpTab.jsx`): enlace de texto fijo "Instalar la app en
+   tu móvil", mismo patrón visual y de comportamiento que el ya
+   existente "Ver qué hay de nuevo en esta versión" justo encima —
+   ambos son la respuesta a "acciones que existen pero no hace falta
+   empujar en el flujo principal, siempre accesibles".
+2. **Home** (`HomeTab.jsx`): un icono sin texto ni tarjeta, junto al
+   título "TU IMPACTO ESTE MES" (flex `justify-between`) — decisión de
+   diseño propia como respuesta a "innova, tú como head designer": en
+   vez de repetir el patrón de tarjeta/banner que ya se había
+   descartado, un icono de acción minimalista, del mismo peso visual
+   que cualquier icono de la cabecera de la app, que no compite por
+   atención con "Pendiente de cobrar" ni con la tarjeta de Training
+   Records. Círculo visual de 32px (mismo lenguaje que los badges de
+   icono de KPI) envuelto en un botón de 44×44px reales mediante margen
+   negativo — mismo truco ya usado en los botones de navegación del
+   calendario (`shared.jsx`) para cumplir el mínimo táctil de la
+   convención 7 sin agrandar el icono visualmente. Se oculta solo
+   cuando deja de aplicar (la app ya corre instalada), nunca por
+   decisión del usuario de "no volver a mostrar".
+
+**Traducciones**: `installBanner` (title/subtitle/dismiss) eliminado de
+`home.json` en los 7 idiomas — ya no queda ningún banner que traducir.
+Clave nueva `installAppLink` en `help.json` (frase larga, para el
+enlace de texto) y `installApp` en `home.json` (frase corta, para el
+`aria-label` del icono — reutiliza la misma traducción ya existente en
+`app.json` → `secondaryTitles["install-app"]`, sin duplicar esfuerzo de
+traducción), ambas en los 7 idiomas.
+
+**Tests**: el `describe` de banner en `HomeTab.test.jsx` (3 tests sobre
+descartar/recordar) se sustituye por uno de icono (2 tests: ausente sin
+handler, click llama al handler — ya no hay nada que "recordar" al no
+tener estado de descartado). `HelpTab.test.jsx` gana un `describe`
+gemelo al de "Ver qué hay de nuevo" para el enlace de "Instalar la
+app".
+
+**Verificado**: 825/825 tests, lint 0 errores (mismos 10 warnings ya
+auditados), build correcto. Confirmado en Chrome real: el icono en Home
+navega a la pantalla de instrucciones; el enlace en Ayuda hace lo
+mismo; sin errores de consola en ningún caso.

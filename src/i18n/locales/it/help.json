@@ -1,6 +1,7 @@
 {
   "emptyState": "Non c'è ancora contenuto di aiuto.",
   "whatsNewReplay": "Vedi le novità di questa versione",
+  "installAppLink": "Installa l'app sul tuo cellulare",
   "groupLabels": {
     "quiero": "Voglio...",
     "funcionalidades": "Funzionalità"
@@ -13,16 +14,46 @@
     "expectedResult": "Risultato atteso"
   },
   "categories": {
-    "bienvenida": { "label": "Primi passi", "description": "Cos'è Ocean Flow e come è organizzata" },
-    "quiero-configurar": { "label": "Configurare la tua applicazione", "description": "Scuole, corsi, tariffe e cataloghi" },
-    "quiero-crear-movimiento": { "label": "Registrare un movimento", "description": "Un corso tenuto, una commissione o una rettifica" },
-    "quiero-cobrar": { "label": "Incassare movimenti in sospeso", "description": "Segnare come incassato, uno alla volta o tutti insieme" },
-    "quiero-consultar-generado": { "label": "Consultare quanto hai generato", "description": "A colpo d'occhio, o in dettaglio per periodo" },
-    "func-mi-trabajo": { "label": "Il mio lavoro", "description": "Creare, modificare, incassare ed eliminare movimenti" },
-    "func-resumen": { "label": "Riepilogo", "description": "Sguardo rapido e approfondimento a richiesta" },
-    "func-configuracion": { "label": "Configurazione", "description": "Il menu, e cosa c'è in ogni sezione" },
-    "func-perfil": { "label": "Il mio profilo", "description": "Avatar, dati, valuta preferita e password" },
-    "func-filtros": { "label": "Filtri e ricerca", "description": "Lo stesso schema in tutta l'app" }
+    "bienvenida": {
+      "label": "Primi passi",
+      "description": "Cos'è Ocean Flow e come è organizzata"
+    },
+    "quiero-configurar": {
+      "label": "Configurare la tua applicazione",
+      "description": "Scuole, corsi, tariffe e cataloghi"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Registrare un movimento",
+      "description": "Un corso tenuto, una commissione o una rettifica"
+    },
+    "quiero-cobrar": {
+      "label": "Incassare movimenti in sospeso",
+      "description": "Segnare come incassato, uno alla volta o tutti insieme"
+    },
+    "quiero-consultar-generado": {
+      "label": "Consultare quanto hai generato",
+      "description": "A colpo d'occhio, o in dettaglio per periodo"
+    },
+    "func-mi-trabajo": {
+      "label": "Il mio lavoro",
+      "description": "Creare, modificare, incassare ed eliminare movimenti"
+    },
+    "func-resumen": {
+      "label": "Riepilogo",
+      "description": "Sguardo rapido e approfondimento a richiesta"
+    },
+    "func-configuracion": {
+      "label": "Configurazione",
+      "description": "Il menu, e cosa c'è in ogni sezione"
+    },
+    "func-perfil": {
+      "label": "Il mio profilo",
+      "description": "Avatar, dati, valuta preferita e password"
+    },
+    "func-filtros": {
+      "label": "Filtri e ricerca",
+      "description": "Lo stesso schema in tutta l'app"
+    }
   },
   "articles": {
     "primeros-pasos": {

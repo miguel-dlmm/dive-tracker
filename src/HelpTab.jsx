@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle } from "lucide-react";
-import { BRAND_NAVY } from "./App";
+import { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Smartphone } from "lucide-react";
+import { BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { ExpandableCard } from "./shared";
 import { useSwipeBack } from "./motion";
 import { HELP_CATEGORIES } from "./help/content";
@@ -89,7 +89,7 @@ export function clearStoredHelpOpen() {
   try { sessionStorage.removeItem(HELP_OPEN_KEY); } catch { /* no-op */ }
 }
 
-export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
+export default function HelpTab({ navSections, onClose, onShowWhatsNew, onOpenInstallApp }) {
   const { t } = useTranslation("help");
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || BRAND_NAVY;
   const [openId, setOpenIdState] = useState(readStoredOpen);
@@ -133,6 +133,26 @@ export default function HelpTab({ navSections, onClose, onShowWhatsNew }) {
         >
           <Sparkles size={16} style={{ color: BRAND_NAVY }} aria-hidden="true" />
           {t("whatsNewReplay")}
+        </button>
+      )}
+      {/* "Instalar la app" (2026-09-08, pedido explícito: el banner
+          descartable de Home "no convence... búscale otro sitio,
+          integrado, que siempre esté disponible y que no moleste") —
+          mismo patrón visual que el enlace de arriba, mismo criterio de
+          fondo: Ayuda ya es el sitio natural para "acciones que existen
+          pero no hace falta empujar en el flujo principal", siempre
+          accesible sin ocupar espacio en Home ni poder cerrarse/
+          desaparecer por accidente. Sustituye al banner de HomeTab.jsx,
+          que se retira entero (icono, estado de "descartado" en
+          localStorage y todo). */}
+      {onOpenInstallApp && (
+        <button
+          type="button"
+          onClick={onOpenInstallApp}
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-gray-700"
+        >
+          <Smartphone size={16} style={{ color: BRAND_OCEAN }} aria-hidden="true" />
+          {t("installAppLink")}
         </button>
       )}
       {GROUP_ORDER.map((group) => {

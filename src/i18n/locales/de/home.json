@@ -16,9 +16,5 @@
     "title": "Training Records",
     "subtitle": "Erstelle das SSI-Fortschrittsprotokoll jedes Teilnehmers, signiert und versandbereit"
   },
-  "installBanner": {
-    "title": "Installiere Ocean Flow auf deinem Handy",
-    "subtitle": "Öffne sie wie eine App, ohne über den Browser zu gehen",
-    "dismiss": "Nicht mehr anzeigen"
-  }
+  "installApp": "App installieren"
 }

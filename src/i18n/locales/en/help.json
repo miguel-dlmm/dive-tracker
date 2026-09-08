@@ -1,6 +1,7 @@
 {
   "emptyState": "No help content yet.",
   "whatsNewReplay": "See what's new in this version",
+  "installAppLink": "Install the app on your phone",
   "groupLabels": {
     "quiero": "I want to...",
     "funcionalidades": "Features"
@@ -13,16 +14,46 @@
     "expectedResult": "Expected result"
   },
   "categories": {
-    "bienvenida": { "label": "Getting started", "description": "What Ocean Flow is and how it's organised" },
-    "quiero-configurar": { "label": "Set up your app", "description": "Schools, courses, rates and catalogues" },
-    "quiero-crear-movimiento": { "label": "Log an entry", "description": "A course taught, a commission, or an adjustment" },
-    "quiero-cobrar": { "label": "Collect pending entries", "description": "Mark as collected, one by one or all at once" },
-    "quiero-consultar-generado": { "label": "Check how much you've earned", "description": "At a glance, or in detail by period" },
-    "func-mi-trabajo": { "label": "My work", "description": "Create, edit, collect and delete entries" },
-    "func-resumen": { "label": "Summary", "description": "Quick glance and depth on demand" },
-    "func-configuracion": { "label": "Settings", "description": "The menu, and what's in each section" },
-    "func-perfil": { "label": "My profile", "description": "Avatar, details, favourite currency and password" },
-    "func-filtros": { "label": "Filters and search", "description": "The same pattern across the whole app" }
+    "bienvenida": {
+      "label": "Getting started",
+      "description": "What Ocean Flow is and how it's organised"
+    },
+    "quiero-configurar": {
+      "label": "Set up your app",
+      "description": "Schools, courses, rates and catalogues"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Log an entry",
+      "description": "A course taught, a commission, or an adjustment"
+    },
+    "quiero-cobrar": {
+      "label": "Collect pending entries",
+      "description": "Mark as collected, one by one or all at once"
+    },
+    "quiero-consultar-generado": {
+      "label": "Check how much you've earned",
+      "description": "At a glance, or in detail by period"
+    },
+    "func-mi-trabajo": {
+      "label": "My work",
+      "description": "Create, edit, collect and delete entries"
+    },
+    "func-resumen": {
+      "label": "Summary",
+      "description": "Quick glance and depth on demand"
+    },
+    "func-configuracion": {
+      "label": "Settings",
+      "description": "The menu, and what's in each section"
+    },
+    "func-perfil": {
+      "label": "My profile",
+      "description": "Avatar, details, favourite currency and password"
+    },
+    "func-filtros": {
+      "label": "Filters and search",
+      "description": "The same pattern across the whole app"
+    }
   },
   "articles": {
     "primeros-pasos": {

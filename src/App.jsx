@@ -87,7 +87,15 @@ const PRIMARY_TABS = [
 // la app a tu escritorio como acceso directo, en iOS y en android...
 // una página que se abre sobre toda la pantalla como la ayuda") — mismo
 // patrón que "training-records": pestaña secundaria independiente,
-// cerrar siempre vuelve a Home (ver closeSecondary más abajo).
+// cerrar siempre vuelve a Home (ver closeSecondary más abajo). El banner
+// descartable de Home (2026-09-07) se retiró el 2026-09-08 ("no me
+// convence, búscale otro sitio, integrado, que siempre esté disponible
+// y que no moleste"): ahora hay dos puntos de entrada permanentes y sin
+// estado de "descartado" — un enlace de texto fijo en Ayuda
+// (HelpTab.jsx) y un icono solo, sin tarjeta ni banner, junto al título
+// de los KPIs en Home (HomeTab.jsx, pedido explícito de después: "quiero
+// q haya un algo en la home"). La pestaña "install-app" en sí no
+// cambia, solo desde dónde se llega a ella.
 const SECONDARY_TABS = ["config", "help", "pagos", "perfil", "training-records", "install-app"];
 
 // Recuerda la pestaña activa y a cuál "volver" desde una pantalla
@@ -543,7 +551,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             onOpenProfile={() => changeTab("perfil")} onProfileUpdated={onProfileUpdated}
           />
         )}
-        {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} />}
+        {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} onOpenInstallApp={() => changeTab("install-app")} />}
         {tab === "install-app" && <InstallAppTab />}
         {tab === "perfil" && (
           <ProfileTab

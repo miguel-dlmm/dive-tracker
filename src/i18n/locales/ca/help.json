@@ -1,6 +1,7 @@
 {
   "emptyState": "Encara no hi ha contingut d'ajuda.",
   "whatsNewReplay": "Veure què hi ha de nou en aquesta versió",
+  "installAppLink": "Instal·la l'app al teu mòbil",
   "groupLabels": {
     "quiero": "Vull...",
     "funcionalidades": "Funcionalitats"
@@ -13,16 +14,46 @@
     "expectedResult": "Resultat esperat"
   },
   "categories": {
-    "bienvenida": { "label": "Primers passos", "description": "Què és Ocean Flow i com s'organitza" },
-    "quiero-configurar": { "label": "Configurar la teva aplicació", "description": "Escoles, cursos, tarifes i catàlegs" },
-    "quiero-crear-movimiento": { "label": "Registrar un moviment", "description": "Un curs impartit, una comissió o un ajust" },
-    "quiero-cobrar": { "label": "Cobrar moviments pendents", "description": "Marca com a cobrat, un a un o tots de cop" },
-    "quiero-consultar-generado": { "label": "Consultar quant has generat", "description": "D'una ullada, o en detall per període" },
-    "func-mi-trabajo": { "label": "La meva feina", "description": "Crea, edita, cobra i elimina moviments" },
-    "func-resumen": { "label": "Resum", "description": "Ullada ràpida i profunditat a demanda" },
-    "func-configuracion": { "label": "Configuració", "description": "El menú, i què hi ha a cada secció" },
-    "func-perfil": { "label": "El meu perfil", "description": "Avatar, dades, moneda preferida i contrasenya" },
-    "func-filtros": { "label": "Filtres i cerca", "description": "El mateix patró a tota l'app" }
+    "bienvenida": {
+      "label": "Primers passos",
+      "description": "Què és Ocean Flow i com s'organitza"
+    },
+    "quiero-configurar": {
+      "label": "Configurar la teva aplicació",
+      "description": "Escoles, cursos, tarifes i catàlegs"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Registrar un moviment",
+      "description": "Un curs impartit, una comissió o un ajust"
+    },
+    "quiero-cobrar": {
+      "label": "Cobrar moviments pendents",
+      "description": "Marca com a cobrat, un a un o tots de cop"
+    },
+    "quiero-consultar-generado": {
+      "label": "Consultar quant has generat",
+      "description": "D'una ullada, o en detall per període"
+    },
+    "func-mi-trabajo": {
+      "label": "La meva feina",
+      "description": "Crea, edita, cobra i elimina moviments"
+    },
+    "func-resumen": {
+      "label": "Resum",
+      "description": "Ullada ràpida i profunditat a demanda"
+    },
+    "func-configuracion": {
+      "label": "Configuració",
+      "description": "El menú, i què hi ha a cada secció"
+    },
+    "func-perfil": {
+      "label": "El meu perfil",
+      "description": "Avatar, dades, moneda preferida i contrasenya"
+    },
+    "func-filtros": {
+      "label": "Filtres i cerca",
+      "description": "El mateix patró a tota l'app"
+    }
   },
   "articles": {
     "primeros-pasos": {

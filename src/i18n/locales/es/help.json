@@ -1,6 +1,7 @@
 {
   "emptyState": "Todavía no hay contenido de ayuda.",
   "whatsNewReplay": "Ver qué hay de nuevo en esta versión",
+  "installAppLink": "Instalar la app en tu móvil",
   "groupLabels": {
     "quiero": "Quiero...",
     "funcionalidades": "Funcionalidades"
@@ -13,16 +14,46 @@
     "expectedResult": "Resultado esperado"
   },
   "categories": {
-    "bienvenida": { "label": "Primeros pasos", "description": "Qué es Ocean Flow y cómo se organiza" },
-    "quiero-configurar": { "label": "Configurar tu aplicación", "description": "Escuelas, cursos, tarifas y catálogos" },
-    "quiero-crear-movimiento": { "label": "Registrar un movimiento", "description": "Un curso impartido, una comisión o un ajuste" },
-    "quiero-cobrar": { "label": "Cobrar movimientos pendientes", "description": "Marcar como cobrado, uno a uno o todos de golpe" },
-    "quiero-consultar-generado": { "label": "Consultar cuánto has generado", "description": "De un vistazo, o en detalle por periodo" },
-    "func-mi-trabajo": { "label": "Mi trabajo", "description": "Crear, editar, cobrar y eliminar movimientos" },
-    "func-resumen": { "label": "Resumen", "description": "Vistazo rápido y profundidad bajo demanda" },
-    "func-configuracion": { "label": "Configuración", "description": "El menú, y qué hay en cada sección" },
-    "func-perfil": { "label": "Mi perfil", "description": "Avatar, datos, moneda favorita y contraseña" },
-    "func-filtros": { "label": "Filtros y búsqueda", "description": "El mismo patrón en toda la app" }
+    "bienvenida": {
+      "label": "Primeros pasos",
+      "description": "Qué es Ocean Flow y cómo se organiza"
+    },
+    "quiero-configurar": {
+      "label": "Configurar tu aplicación",
+      "description": "Escuelas, cursos, tarifas y catálogos"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Registrar un movimiento",
+      "description": "Un curso impartido, una comisión o un ajuste"
+    },
+    "quiero-cobrar": {
+      "label": "Cobrar movimientos pendientes",
+      "description": "Marcar como cobrado, uno a uno o todos de golpe"
+    },
+    "quiero-consultar-generado": {
+      "label": "Consultar cuánto has generado",
+      "description": "De un vistazo, o en detalle por periodo"
+    },
+    "func-mi-trabajo": {
+      "label": "Mi trabajo",
+      "description": "Crear, editar, cobrar y eliminar movimientos"
+    },
+    "func-resumen": {
+      "label": "Resumen",
+      "description": "Vistazo rápido y profundidad bajo demanda"
+    },
+    "func-configuracion": {
+      "label": "Configuración",
+      "description": "El menú, y qué hay en cada sección"
+    },
+    "func-perfil": {
+      "label": "Mi perfil",
+      "description": "Avatar, datos, moneda favorita y contraseña"
+    },
+    "func-filtros": {
+      "label": "Filtros y búsqueda",
+      "description": "El mismo patrón en toda la app"
+    }
   },
   "articles": {
     "primeros-pasos": {

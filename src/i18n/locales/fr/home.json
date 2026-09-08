@@ -16,9 +16,5 @@
     "title": "Training Records",
     "subtitle": "Générez le registre de progression SSI de chaque élève, signé et prêt à remettre"
   },
-  "installBanner": {
-    "title": "Installez Ocean Flow sur votre mobile",
-    "subtitle": "Ouvrez-la comme une app, sans passer par le navigateur",
-    "dismiss": "Ne plus afficher"
-  }
+  "installApp": "Installer l'app"
 }

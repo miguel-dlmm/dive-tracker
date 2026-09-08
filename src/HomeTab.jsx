@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { GraduationCap, Award, Handshake, ChevronRight, Building2, Smartphone, X } from "lucide-react";
+import { GraduationCap, Award, Handshake, ChevronRight, Building2, Smartphone } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
@@ -89,26 +89,14 @@ function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-// Preferencia de dispositivo, no de cuenta — ver comentario junto a su uso.
-const INSTALL_BANNER_DISMISSED_KEY = "oceanpulse:installBannerDismissed";
-
 export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp }) {
   const { t } = useTranslation("home");
-  const [installBannerDismissed, setInstallBannerDismissed] = useState(() => {
-    try { return localStorage.getItem(INSTALL_BANNER_DISMISSED_KEY) === "true"; } catch { return false; }
-  });
-  // De dispositivo, no de cuenta (a diferencia de la moneda favorita,
-  // ver ADR-0007): "ya lo he visto" es sobre este navegador/móvil, no
-  // sobre qué usuario haya iniciado sesión en él. Oculto también si la
-  // propia app ya se está ejecutando instalada (display-mode:
-  // standalone en Chromium/Android, navigator.standalone en iOS Safari
-  // — ningún estándar cubre ambos con la misma propiedad) — no tiene
-  // sentido ofrecer instalar algo que ya está instalado.
+  // Oculta el punto de entrada de "Instalar la app" si la propia app ya
+  // corre instalada (display-mode: standalone en Chromium/Android,
+  // navigator.standalone en iOS Safari — ningún estándar cubre ambos con
+  // la misma propiedad): no tiene sentido ofrecer instalar algo que ya
+  // está instalado.
   const alreadyInstalled = typeof window !== "undefined" && (window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator?.standalone === true);
-  const dismissInstallBanner = () => {
-    setInstallBannerDismissed(true);
-    try { localStorage.setItem(INSTALL_BANNER_DISMISSED_KEY, "true"); } catch { /* no-op — preferencia de UI, no crítica */ }
-  };
   const translatedTypeMeta = useTranslatedMovementTypeMeta(t);
   const reducedMotion = usePrefersReducedMotion();
   const now = new Date();
@@ -227,9 +215,37 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           ascendente + entrada escalonada (KpiTile, arriba) en vez de
           aparecer estáticas de golpe. */}
       <div>
-        <h2 className="mb-2 px-0.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
-          {t("kpis.sectionTitle")}
-        </h2>
+        <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            {t("kpis.sectionTitle")}
+          </h2>
+          {/* Instalar la app (2026-09-08, segunda vuelta): el banner
+              descartable de antes "no convencía" — pedido explícito de
+              moverlo a un sitio integrado que siempre esté disponible y
+              no moleste (ver el enlace fijo en Ayuda, HelpTab.jsx). El
+              usuario matizó después que SÍ quería además un punto de
+              entrada en Home, "botón, pastilla... innova". Diseño
+              elegido: un icono solo, sin texto ni fondo de tarjeta —
+              nunca se cierra ni se recuerda como "descartado" (no hay
+              nada que descartar, es del tamaño de un icono de acción
+              más), oculto únicamente cuando ya no aplica (la app ya
+              corre instalada). Mismo truco de margen negativo que ya
+              usan los botones de navegación del calendario (más abajo)
+              para que el objetivo táctil llegue a 44×44px sin que el
+              círculo visible crezca con él. */}
+          {onOpenInstallApp && !alreadyInstalled && (
+            <button
+              type="button"
+              onClick={onOpenInstallApp}
+              aria-label={t("installApp")}
+              className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-transform active:scale-90"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_OCEAN}1A` }}>
+                <Smartphone size={15} style={{ color: BRAND_OCEAN }} aria-hidden="true" />
+              </span>
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-3 gap-2">
           <KpiTile icon={GraduationCap} color={TEAL} value={peopleTrainedThisMonth} label={t("kpis.studentsThisMonth")} index={0} reduced={reducedMotion} />
           <KpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
@@ -278,28 +294,6 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         </button>
       )}
 
-      {/* Banner "Instalar la app" (2026-09-07, pedido explícito) —
-          distinto a propósito de la tarjeta de Training Records de
-          arriba: es descartable (✕, oculto para siempre en este
-          dispositivo tras cerrarlo) y de menor peso visual (banner
-          fino, no una tarjeta de acceso a una herramienta que se usa a
-          diario). Oculto también si la app ya corre instalada, o si
-          `onOpenInstallApp` no llega (defensivo, mismo criterio que
-          `onOpenTrainingRecords` arriba). */}
-      {onOpenInstallApp && !installBannerDismissed && !alreadyInstalled && (
-        <div className="flex items-center gap-3 rounded-xl border p-3" style={{ borderColor: `${BRAND_OCEAN}40`, backgroundColor: `${BRAND_OCEAN}0D` }}>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_OCEAN}1A` }}>
-            <Smartphone size={16} style={{ color: BRAND_OCEAN }} aria-hidden="true" />
-          </span>
-          <button type="button" onClick={onOpenInstallApp} className="min-w-0 flex-1 text-left">
-            <span className="block text-xs font-semibold" style={{ color: BRAND_OCEAN }}>{t("installBanner.title")}</span>
-            <span className="block text-xs text-gray-500">{t("installBanner.subtitle")}</span>
-          </button>
-          <button type="button" onClick={dismissInstallBanner} className="-m-2 flex h-9 w-9 shrink-0 items-center justify-center p-2 text-gray-400" aria-label={t("installBanner.dismiss")}>
-            <X size={16} aria-hidden="true" />
-          </button>
-        </div>
-      )}
 
       {/* 3. Pendiente de cobrar — información financiera principal, la más
           visible de la pantalla. Integra también el acceso rápido de

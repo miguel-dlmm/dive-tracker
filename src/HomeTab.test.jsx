@@ -419,14 +419,13 @@ describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", (
   });
 });
 
-// Banner "Instalar la app" (2026-09-07, pedido explícito) — descartable
-// (✕, oculto para siempre en ESTE dispositivo, no por cuenta) y ausente
-// si `onOpenInstallApp` no llega (mismo criterio defensivo que
+// "Instalar la app" (2026-09-08, segunda vuelta): el banner descartable
+// de antes se retiró entero — sustituido por un icono solo, sin
+// tarjeta, junto al título de los KPIs. Sin estado de "descartado": solo
+// se oculta si no llega el handler (mismo criterio defensivo que
 // onOpenTrainingRecords) o si la app ya corre instalada.
-describe("HomeTab — banner 'Instalar la app'", () => {
-  beforeEach(() => { localStorage.clear(); });
-
-  function renderHomeWithInstallBanner(onOpenInstallApp = vi.fn()) {
+describe("HomeTab — icono 'Instalar la app'", () => {
+  function renderHomeWithInstall(onOpenInstallApp = vi.fn()) {
     render(
       <HomeTab
         worklog={rowsHook([])} comisiones={rowsHook([])} colleaguePayments={rowsHook([])}
@@ -448,26 +447,14 @@ describe("HomeTab — banner 'Instalar la app'", () => {
         paymentStatuses={PAYMENT_STATUSES} onQuickCreate={vi.fn()}
       />
     );
-    expect(screen.queryByText("Instala Ocean Flow en tu móvil")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Instalar la app")).not.toBeInTheDocument();
   });
 
-  it("pulsar el banner llama a onOpenInstallApp", async () => {
+  it("pulsar el icono llama a onOpenInstallApp", async () => {
     const user = userEvent.setup();
     const onOpenInstallApp = vi.fn();
-    renderHomeWithInstallBanner(onOpenInstallApp);
-    await user.click(screen.getByText("Instala Ocean Flow en tu móvil"));
+    renderHomeWithInstall(onOpenInstallApp);
+    await user.click(screen.getByLabelText("Instalar la app"));
     expect(onOpenInstallApp).toHaveBeenCalledTimes(1);
-  });
-
-  it("cerrar con la ✕ lo oculta y recuerda la decisión en este dispositivo (localStorage)", async () => {
-    const user = userEvent.setup();
-    renderHomeWithInstallBanner();
-    await user.click(screen.getByRole("button", { name: "No volver a mostrar" }));
-    expect(screen.queryByText("Instala Ocean Flow en tu móvil")).not.toBeInTheDocument();
-    expect(localStorage.getItem("oceanpulse:installBannerDismissed")).toBe("true");
-
-    // Remontar (p. ej. recargar la página) — sigue sin aparecer.
-    renderHomeWithInstallBanner();
-    expect(screen.queryByText("Instala Ocean Flow en tu móvil")).not.toBeInTheDocument();
   });
 });

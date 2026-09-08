@@ -16,9 +16,5 @@
     "title": "Training Records",
     "subtitle": "Sortu ikasle bakoitzaren SSI aurrerapen-erregistroa, sinatuta eta emateko prest"
   },
-  "installBanner": {
-    "title": "Instalatu Ocean Flow zure mugikorrean",
-    "subtitle": "Ireki aplikazio gisa, arakatzailetik pasatu gabe",
-    "dismiss": "Ez erakutsi berriro"
-  }
+  "installApp": "Instalatu aplikazioa"
 }

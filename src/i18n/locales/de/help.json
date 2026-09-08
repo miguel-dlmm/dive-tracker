@@ -1,6 +1,7 @@
 {
   "emptyState": "Noch keine Hilfeinhalte vorhanden.",
   "whatsNewReplay": "Neuigkeiten dieser Version ansehen",
+  "installAppLink": "Installiere die App auf deinem Handy",
   "groupLabels": {
     "quiero": "Ich möchte...",
     "funcionalidades": "Funktionen"
@@ -13,16 +14,46 @@
     "expectedResult": "Erwartetes Ergebnis"
   },
   "categories": {
-    "bienvenida": { "label": "Erste Schritte", "description": "Was Ocean Flow ist und wie es aufgebaut ist" },
-    "quiero-configurar": { "label": "Deine Anwendung einrichten", "description": "Schulen, Kurse, Tarife und Kataloge" },
-    "quiero-crear-movimiento": { "label": "Eine Buchung erfassen", "description": "Ein erteilter Kurs, eine Provision oder ein Ausgleich" },
-    "quiero-cobrar": { "label": "Ausstehende Buchungen einziehen", "description": "Als erhalten markieren, einzeln oder alle auf einmal" },
-    "quiero-consultar-generado": { "label": "Nachsehen, wie viel du erzielt hast", "description": "Auf einen Blick, oder im Detail nach Zeitraum" },
-    "func-mi-trabajo": { "label": "Meine Arbeit", "description": "Buchungen erstellen, bearbeiten, einziehen und löschen" },
-    "func-resumen": { "label": "Übersicht", "description": "Schneller Überblick und Detailtiefe bei Bedarf" },
-    "func-configuracion": { "label": "Einstellungen", "description": "Das Menü und was in jedem Bereich steckt" },
-    "func-perfil": { "label": "Mein Profil", "description": "Avatar, Daten, bevorzugte Währung und Passwort" },
-    "func-filtros": { "label": "Filter und Suche", "description": "Dasselbe Muster in der gesamten App" }
+    "bienvenida": {
+      "label": "Erste Schritte",
+      "description": "Was Ocean Flow ist und wie es aufgebaut ist"
+    },
+    "quiero-configurar": {
+      "label": "Deine Anwendung einrichten",
+      "description": "Schulen, Kurse, Tarife und Kataloge"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Eine Buchung erfassen",
+      "description": "Ein erteilter Kurs, eine Provision oder ein Ausgleich"
+    },
+    "quiero-cobrar": {
+      "label": "Ausstehende Buchungen einziehen",
+      "description": "Als erhalten markieren, einzeln oder alle auf einmal"
+    },
+    "quiero-consultar-generado": {
+      "label": "Nachsehen, wie viel du erzielt hast",
+      "description": "Auf einen Blick, oder im Detail nach Zeitraum"
+    },
+    "func-mi-trabajo": {
+      "label": "Meine Arbeit",
+      "description": "Buchungen erstellen, bearbeiten, einziehen und löschen"
+    },
+    "func-resumen": {
+      "label": "Übersicht",
+      "description": "Schneller Überblick und Detailtiefe bei Bedarf"
+    },
+    "func-configuracion": {
+      "label": "Einstellungen",
+      "description": "Das Menü und was in jedem Bereich steckt"
+    },
+    "func-perfil": {
+      "label": "Mein Profil",
+      "description": "Avatar, Daten, bevorzugte Währung und Passwort"
+    },
+    "func-filtros": {
+      "label": "Filter und Suche",
+      "description": "Dasselbe Muster in der gesamten App"
+    }
   },
   "articles": {
     "primeros-pasos": {
