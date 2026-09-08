@@ -90,6 +90,7 @@
   "signature": {
     "opcional": "aukerakoa",
     "borrar": "Ezabatu",
+    "deshacer": "Desegin",
     "firmadoAria": "{{label}}: sinatuta",
     "sinFirmarAria": "{{label}}: sinatu gabe"
   }

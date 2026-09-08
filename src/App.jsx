@@ -542,7 +542,21 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
           <TrainingRecordsTab
             profile={profile} accentColor={sectionColor("trabajo")}
             onOpenProfile={() => changeTab("perfil")} onProfileUpdated={onProfileUpdated}
-            onOpenHelp={() => { openHelpCategory("quiero-generar-tr"); changeTab("help"); }}
+            onOpenHelp={() => {
+              // Bug real reportado 2026-09-09: cerrar la Ayuda abierta
+              // desde Training Records volvía a Home, no a la propia
+              // pantalla de Training Records que se estaba editando —
+              // "training-records" no es una pestaña primaria, así que
+              // el mecanismo automático de returnTab (línea ~265, solo
+              // actúa al SALIR de una pestaña primaria) nunca la fijaba
+              // aquí. Se fija a mano justo antes de navegar — closeSecondary
+              // ya hace `changeTab(returnTab)` al cerrar Ayuda, sin más
+              // cambios. El roster/plantilla en curso ya sobreviven solos
+              // (sessionStorage, ver persistSession en TrainingRecordsTab.jsx).
+              setReturnTab("training-records");
+              openHelpCategory("quiero-generar-tr");
+              changeTab("help");
+            }}
           />
         )}
         {tab === "help" && <HelpTab navSections={navSections} onClose={closeSecondary} onShowWhatsNew={showWhatsNewAgain} onOpenInstallApp={() => changeTab("install-app")} />}

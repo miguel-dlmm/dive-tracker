@@ -90,6 +90,7 @@
   "signature": {
     "opcional": "facoltativo",
     "borrar": "Cancella",
+    "deshacer": "Annulla",
     "firmadoAria": "{{label}}: firmato",
     "sinFirmarAria": "{{label}}: non firmato"
   }

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import SignaturePad from "signature_pad";
 import { useTranslation } from "react-i18next";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Undo2 } from "lucide-react";
 
 // Captura de firma táctil — usada tanto por el generador de Training
 // Records (firma del alumno, efímera, nunca se persiste — ver
@@ -40,6 +40,21 @@ export default function SignatureCapture({ label, value, onChange, optionalHint 
     padRef.current?.clear();
     onChange(null);
   };
+  // Deshacer el último trazo, no la firma entera (pedido explícito
+  // 2026-09-09) — patrón estándar de signature_pad (toData()/fromData(),
+  // documentado por la propia librería): cada trazo es un elemento del
+  // array que devuelve toData(), así que quitar el último y volver a
+  // cargar el resto reconstruye el canvas sin ese trazo, sin rehacer los
+  // anteriores a mano.
+  const undo = () => {
+    const pad = padRef.current;
+    if (!pad) return;
+    const data = pad.toData();
+    if (!data.length) return;
+    data.pop();
+    pad.fromData(data);
+    onChange(pad.isEmpty() ? null : pad.toDataURL("image/png"));
+  };
 
   return (
     <div>
@@ -47,9 +62,14 @@ export default function SignatureCapture({ label, value, onChange, optionalHint 
         <span className="text-xs font-medium text-gray-500">
           {label} {optionalHint && <span className="font-normal text-gray-400">({t("signature.opcional")})</span>}
         </span>
-        <button type="button" onClick={clear} className="-m-2 flex min-h-9 items-center gap-1 p-2 text-xs font-medium text-gray-400">
-          <RotateCcw size={12} aria-hidden="true" /> {t("signature.borrar")}
-        </button>
+        <div className="flex items-center">
+          <button type="button" onClick={undo} className="-m-2 flex min-h-9 items-center gap-1 p-2 text-xs font-medium text-gray-400">
+            <Undo2 size={12} aria-hidden="true" /> {t("signature.deshacer")}
+          </button>
+          <button type="button" onClick={clear} className="-m-2 flex min-h-9 items-center gap-1 p-2 text-xs font-medium text-gray-400">
+            <RotateCcw size={12} aria-hidden="true" /> {t("signature.borrar")}
+          </button>
+        </div>
       </div>
       <canvas
         ref={canvasRef}

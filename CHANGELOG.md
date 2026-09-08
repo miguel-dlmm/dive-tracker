@@ -4,6 +4,16 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Firma táctil**: botón "Deshacer" junto a "Borrar" — quita solo el
+  último trazo dibujado, no la firma entera.
+
+### Fixed
+- **Ayuda abierta desde Training Records**: cerrarla volvía a Home en
+  vez de a la propia pantalla de Training Records que se estaba
+  editando — el roster/plantilla en curso ya sobrevivían (sessionStorage),
+  pero se perdía la pantalla real de origen.
+
 ## [1.2.1] - 2026-09-09
 
 ### Fixed
