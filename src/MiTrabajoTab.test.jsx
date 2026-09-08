@@ -127,6 +127,45 @@ describe("KPIs de Mi trabajo — el icono se encoge de forma continua según lo 
   });
 });
 
+// Segunda red de seguridad (2026-09-08, pedido explícito: "los kpis
+// tienen q cumplir q con cifras grandes de 6 dígitos o más no se sale del
+// diseño de la box") — hasta ahora el sistema de arriba solo protegía el
+// ICONO (puede llegar a escala 0), nunca el propio número: un importe de
+// 6+ dígitos podía seguir sin caber ni con el icono ya oculto. Mismo
+// criterio de medir el DOM real (nunca contar caracteres).
+describe("KPIs de Mi trabajo — el propio número se encoge si ni ocultar el icono basta", () => {
+  const worklogEntry = { id: "w1", date: "2026-08-10", school: "PADI Cozumel", activity: "Open Water", people: 500, status: "Pending" };
+
+  afterEach(() => {
+    delete Element.prototype.scrollWidth;
+    delete Element.prototype.clientWidth;
+  });
+
+  function mockWidths(scrollWidth, clientWidth) {
+    Object.defineProperty(Element.prototype, "scrollWidth", { configurable: true, get() { return scrollWidth; } });
+    Object.defineProperty(Element.prototype, "clientWidth", { configurable: true, get() { return clientWidth; } });
+  }
+
+  it("con un número que no cabe ni con el icono a escala 0, el número reduce su propio tamaño de letra", async () => {
+    // icono ya a 0 (igual que el test de arriba) y, además, con el icono
+    // ya oculto (availableAtMinIcon = 100 - 6 = 94) el número (300) sigue
+    // sin caber -> textScale = max(0.75, 94/300) = 0.75 (suelo).
+    mockWidths(300, 100);
+    renderMiTrabajo({ worklog: [worklogEntry] });
+    const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
+    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("w-full"));
+    await waitFor(() => expect(amount.style.fontSize).toBe("10.5px")); // 14px (text-sm) * 0.75
+  });
+
+  it("con espacio de sobra, el número conserva su tamaño de letra normal (sin estilo inline)", async () => {
+    mockWidths(80, 150); // mismo escenario que "escala 1" arriba
+    renderMiTrabajo({ worklog: [worklogEntry] });
+    const tile = screen.getByText("Pendiente de cobrar").closest("div[class*='rounded-xl']");
+    const amount = within(tile).getByText((_content, node) => node?.classList?.contains("font-bold") && node?.classList?.contains("tabular-nums") && node?.classList?.contains("w-full"));
+    expect(amount.style.fontSize).toBe("");
+  });
+});
+
 const rowsHook = (rows) => ({
   rows, loaded: true,
   insertRow: vi.fn().mockResolvedValue(rows[0]),

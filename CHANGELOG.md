@@ -213,6 +213,14 @@ Registro de cambios relevantes de Ocean Flow.
   "pendiente de configurar" que ya está configurado).
 
 ### Fixed
+- **KPIs de Mi trabajo (Generado/Pendiente/Cobrado): un importe de 6+
+  dígitos podía llegar a salirse del recuadro** — el icono ya podía
+  ocultarse del todo para dejarle sitio, pero el propio número no tenía
+  ninguna protección si aun así no cabía. Ahora, en ese caso extremo, el
+  número reduce su propio tamaño de letra lo justo para caber, sin
+  afectar a los otros dos KPI. De paso, el icono junto a cada cifra
+  pasa a ser un poco más grande y queda centrado con el número (antes
+  se alineaba arriba).
 - **Regenerar un solo Training Record ("Regenerar TR") no sumaba al
   contador de Home** — solo "Generar para todos los alumnos" lo hacía.
   Ahora cuenta cualquier generación con éxito, se llame de una en una o

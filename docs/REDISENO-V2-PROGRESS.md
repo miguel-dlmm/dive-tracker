@@ -4907,3 +4907,57 @@ el badge de 26px en el Artifact, si el problema es el tamaño/grosor de
 trazo concreto de esta fila (fix puntual, subir `strokeWidth`) o si se
 aprecia igual de débil en las insignias grandes ya existentes (ahí sí
 sería una revisión transversal real del libro de estilo).
+
+### 12.30 — KPIs de Mi trabajo: icono más grande y centrado + red de seguridad real contra importes de 6+ dígitos
+
+Encargo nuevo, cambiando de pantalla (Training Records queda aparcado,
+ver 12.29): "quiero revisar KPIs de movimientos [Mi trabajo] el icono
+es muy chico y las cifras con icono no quedan centradas", más un
+requisito explícito de robustez: "los kpis tienen q cumplir q con
+cifras grandes de 6 dígitos o más no se sale del diseño de la box".
+
+**Icono más grande y centrado** (`MoneyKpiTile`, `MiTrabajoTab.jsx`):
+- Icono 16px → 18px (mismo tamaño que `KpiTile` de Home), badge
+  seguía en 28px (no 32, para no perder espacio para el importe).
+- `items-start` → `items-center`: el `items-start` original respondía
+  a que la cifra podía ocupar dos líneas — pero desde Fase 11.2 (ya
+  documentada, mismo fichero) la cifra NUNCA se parte en dos líneas, el
+  icono se encoge en su lugar. Con una sola línea siempre, ya no había
+  ninguna razón real para no centrar icono+cifra verticalmente — el
+  `items-start` era una rareza heredada de una restricción que ya no
+  existe, no una decisión que siguiera aplicando.
+
+**Causa real del riesgo de desbordamiento con 6+ dígitos**: el sistema
+existente (Fase 13, `kpiIconScale`) solo protegía el ICONO — puede
+encogerse hasta desaparecer del todo, pero nunca protegía el propio
+NÚMERO. Con un importe de 6 dígitos y separador de miles/símbolo de
+moneda (p. ej. "114.609,14 ฿"), el ancho real del texto puede superar
+el ancho disponible de la tarjeta (~127pt en móvil real, con 3
+columnas) INCLUSO con el icono ya a escala 0 — un caso real, no
+hipotético, confirmado con Playwright en emulación de iPhone 14 Pro Max
+contra datos reales de TEST (ver "Verificado" abajo).
+
+**Fix — segunda red de seguridad** (`kpiTextScale`, mismo
+`useLayoutEffect` que ya calculaba `kpiIconScale`): con el icono ya en
+su escala mínima compartida, si el número de una tarjeta concreta
+sigue sin caber, se reduce el `font-size` de ESE número lo justo para
+que quepa — nunca el de las otras dos tarjetas, que no tienen el
+problema (a diferencia del icono, que se encoge en las 3 a la vez por
+coherencia visual, esto es puramente funcional). Suelo de escala
+`TEXT_SCALE_FLOOR = 0.75` para que nunca se vuelva ilegible. Misma
+filosofía de todo este sistema desde Fase 11.2: medir el DOM real
+(`scrollWidth`/`clientWidth`), nunca contar caracteres ni adivinar un
+umbral — sigue siendo la única forma que ha demostrado funcionar igual
+en Chromium y en Safari/iOS real.
+
+**Verificado**: 867/867 tests (2 nuevos en `MiTrabajoTab.test.jsx`:
+número que no cabe ni con icono a 0 reduce su `font-size` al suelo de
+0.75, y número con espacio de sobra no lleva ningún estilo inline),
+lint 0 errores, build correcto. **Probado en mobile de verdad**
+(pedido explícito: "probar todo en mobile y en pantallas reducidas"):
+script Playwright puntual con emulación de iPhone 14 Pro Max (mismo
+motor/dispositivo que `mobile-check`) contra el dev server TEST con
+datos reales — tarjetas de 127px de ancho real, importes reales de
+"32.945,45 ฿" y "114.609,14 ฿" (5-6 dígitos) cayeron directamente en
+escala de icono 0 (oculto) y `font-size` reducido a 10.5px (suelo),
+sin desbordar la tarjeta en ningún momento y sin errores de consola.

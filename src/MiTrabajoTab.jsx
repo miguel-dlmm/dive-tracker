@@ -349,7 +349,7 @@ function moneyKpiText(totals, currencyRows) {
   return entries.map(([code, amt]) => formatMoney(amt, code, currencyRows)).join(" + ");
 }
 
-function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel, iconScale = 1, rowMeasureRef, finalTextMeasureRef }) {
+function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel, iconScale = 1, textScale = 1, rowMeasureRef, finalTextMeasureRef }) {
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const entries = Object.entries(totals || {});
   const single = entries.length === 1 ? entries[0] : null;
@@ -369,6 +369,13 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
   // que existe solo para medir su ancho real de una sola vez cuando
   // cambian los totales, no en cada fotograma del conteo.
   const amountSizeCls = single ? "text-sm" : "text-xs";
+  // textScale (2026-09-08, ver kpiTextScale en MiTrabajoTab): red de
+  // seguridad para cuando ni siquiera ocultar el icono basta (importes de
+  // 6+ dígitos) — reduce el font-size real de ESTE número lo justo para
+  // que quepa, nunca por Tailwind (no hay clase por cada valor posible),
+  // así que aquí sí hace falta el px exacto de partida (14/text-sm,
+  // 12/text-xs) para calcular el destino.
+  const amountBasePx = single ? 14 : 12;
   // px-3 (antes px-2.5) y w-full en el span de la cifra (Fase 9,
   // 2026-09-07, feedback real: "cuando hay una cifra grande... queda
   // demasiado pegada al margen derecho de la box") — sin `w-full`, un
@@ -385,12 +392,20 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
     >
       {/* Icono a 28px (no los 32px de KpiTile en Home): un importe con
           separador de miles y símbolo de moneda es mucho más largo que el
-          1-2 dígitos de un KPI simple. items-start, no items-center: la
-          cifra puede ocupar dos líneas (ver amountSizeCls arriba), así
-          que el icono se alinea con la primera línea, no con el centro
-          vertical del bloque entero. relative: contiene el span
+          1-2 dígitos de un KPI simple. relative: contiene el span
           invisible de medición (position:absolute, ver más abajo) sin
           que afecte a la posición de nada visible.
+          items-center (2026-09-08, antes items-start — pedido explícito:
+          "el icono es muy chico y las cifras con icono no quedan
+          centradas"): el items-start original respondía a que la cifra
+          podía ocupar dos líneas, pero desde Fase 11.2 (ver comentario de
+          `amountSizeCls`/`break-words` más abajo) la cifra YA NUNCA se
+          parte en dos líneas — el padre encoge/oculta el icono en su
+          lugar. Con una sola línea siempre, ya no hay ninguna razón para
+          no centrar verticalmente icono+cifra. Icono a 18px (no 16, el
+          mismo tamaño que KpiTile en Home) por el mismo pedido — dentro
+          de un badge que sigue siendo de 28px (no 32), para no perder el
+          espacio ganado para el importe.
           iconScale (0 a 1, ver kpiIconScale en MiTrabajoTab): calculado
           sobre las 3 cifras a la vez, no cada tarjeta por su cuenta — si
           una cifra crece tanto que hace falta encoger/ocultar el icono,
@@ -401,21 +416,25 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
           así que un cambio de 1→0 se ve como un encogimiento gradual,
           no un salto — overflow-hidden evita que se vea recortado a
           medio encoger. */}
-      <div className="relative flex items-start gap-1.5">
+      <div className="relative flex items-center gap-1.5">
         <motion.span
           initial={{ width: 28, opacity: 1, scale: 1 }}
           animate={{ width: 28 * iconScale, opacity: iconScale, scale: 0.6 + 0.4 * iconScale, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.standard } }}
           className="flex h-7 shrink-0 items-center justify-center overflow-hidden rounded-full"
           style={{ backgroundColor: `${color}1A` }}
         >
-          <Icon size={16} style={{ color }} aria-hidden="true" />
+          <Icon size={18} style={{ color }} aria-hidden="true" />
         </motion.span>
         {/* Sin `break-words` (Fase 11.2): la cifra ya no se parte nunca
             en dos líneas — si no cabe con el icono puesto, el padre lo
             detecta MIDIENDO el span invisible de abajo (mismo texto ya
             formateado, sin animar) y encoge el icono en las 3 tarjetas
             a la vez, liberando ancho para que quepa en una sola línea. */}
-        <span ref={rowMeasureRef} className={`w-full min-w-0 ${amountSizeCls} font-bold leading-tight tabular-nums`} style={{ color: BRAND_NAVY }}>
+        <span
+          ref={rowMeasureRef}
+          className={`w-full min-w-0 ${amountSizeCls} font-bold leading-tight tabular-nums`}
+          style={{ color: BRAND_NAVY, fontSize: textScale < 1 ? `${amountBasePx * textScale}px` : undefined }}
+        >
           {entries.length === 0 ? "—" : single ? (
             <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
           ) : (
@@ -832,11 +851,27 @@ export default function MiTrabajoTab({
   // sobra.
   const ICON_FOOTPRINT = 34;
   const TRANSITION_ZONE = 36;
+  // Segunda red de seguridad (2026-09-08, pedido explícito: "los kpis
+  // tienen q cumplir q con cifras grandes de 6 dígitos o más no se sale
+  // del diseño de la box") — el icono ya puede llegar a 0 (arriba), pero
+  // un importe de 6+ dígitos con separador de miles y símbolo de moneda
+  // puede seguir sin caber ni así en una tarjeta de 3 columnas en móvil:
+  // el sistema de arriba solo protegía el ICONO, nunca el propio número.
+  // Misma filosofía que ya demostró funcionar en Safari real (Fase 11.2:
+  // medir el DOM de verdad, nunca adivinar por nº de caracteres) — si con
+  // el icono ya en su escala mínima compartida el número sigue sin caber,
+  // se reduce SOLO el tamaño de ESE número lo justo para que quepa (no
+  // los otros dos KPI, que no tienen el problema) — nunca por debajo de
+  // TEXT_SCALE_FLOOR, para que siga siendo legible.
+  const TEXT_SCALE_FLOOR = 0.75;
+  const [kpiTextScale, setKpiTextScale] = useState([1, 1, 1]);
   useLayoutEffect(() => {
     let minScale = 1;
+    const rows = [];
     for (let i = 0; i < 3; i++) {
       const rowEl = kpiRowRefs.current[i];
       const textEl = kpiFinalTextRefs.current[i];
+      rows.push({ rowEl, textEl });
       if (!rowEl || !textEl) continue;
       const availableForNumber = rowEl.clientWidth - ICON_FOOTPRINT;
       const slack = availableForNumber - textEl.scrollWidth;
@@ -844,6 +879,16 @@ export default function MiTrabajoTab({
       if (scale < minScale) minScale = scale;
     }
     setKpiIconScale(minScale);
+
+    const iconAndGap = 28 * minScale + 6;
+    setKpiTextScale(
+      rows.map(({ rowEl, textEl }) => {
+        if (!rowEl || !textEl) return 1;
+        const availableAtMinIcon = rowEl.clientWidth - iconAndGap;
+        if (textEl.scrollWidth <= availableAtMinIcon) return 1;
+        return Math.max(TEXT_SCALE_FLOOR, availableAtMinIcon / textEl.scrollWidth);
+      })
+    );
   }, [longestKpiText]);
 
   return (
@@ -851,7 +896,7 @@ export default function MiTrabajoTab({
       <div className="grid grid-cols-3 gap-2">
         <MoneyKpiTile
           icon={TrendingUp} color={TEAL} totals={monthGeneratedTotals} label={t("kpis.generatedThisMonth")} index={0} reduced={reducedMotion} currencyRows={currencies.rows}
-          iconScale={kpiIconScale} rowMeasureRef={(el) => (kpiRowRefs.current[0] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[0] = el)}
+          iconScale={kpiIconScale} textScale={kpiTextScale[0]} rowMeasureRef={(el) => (kpiRowRefs.current[0] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[0] = el)}
         />
         {/* A diferencia de sus dos hermanos, "Pendiente de cobrar" NO
             filtra por currentMonthKey (ver pendingTotals más arriba): es
@@ -867,11 +912,11 @@ export default function MiTrabajoTab({
           icon={Wallet} color={SUN} totals={pendingTotals} label={t("kpis.pendingToCollect")} index={1} reduced={reducedMotion} currencyRows={currencies.rows}
           tooltip={hasPendingBeforeCurrentMonth ? t("kpis.pendingTooltip") : null}
           tooltipShowLabel={t("kpis.pendingTooltipShow")} tooltipHideLabel={t("kpis.pendingTooltipHide")}
-          iconScale={kpiIconScale} rowMeasureRef={(el) => (kpiRowRefs.current[1] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[1] = el)}
+          iconScale={kpiIconScale} textScale={kpiTextScale[1]} rowMeasureRef={(el) => (kpiRowRefs.current[1] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[1] = el)}
         />
         <MoneyKpiTile
           icon={CheckCircle2} color={GREEN} totals={monthCollectedTotals} label={t("kpis.collectedThisMonth")} index={2} reduced={reducedMotion} currencyRows={currencies.rows}
-          iconScale={kpiIconScale} rowMeasureRef={(el) => (kpiRowRefs.current[2] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[2] = el)}
+          iconScale={kpiIconScale} textScale={kpiTextScale[2]} rowMeasureRef={(el) => (kpiRowRefs.current[2] = el)} finalTextMeasureRef={(el) => (kpiFinalTextRefs.current[2] = el)}
         />
       </div>
 
