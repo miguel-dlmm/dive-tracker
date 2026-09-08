@@ -50,6 +50,12 @@ Registro de cambios relevantes de Ocean Flow.
   altas masivas automatizadas (Vercel BotID).
 
 ### Changed
+- **Training Records**: en Nitrox, Deep Diving, Basic Diver, Diver
+  Stress & Rescue, Navigation, Night & Limited Visibility, Perfect
+  Buoyancy y React Right, las filas de progreso del curso que de verdad
+  son necesarias para certificarlo pasan a marcarse como "Obligatorio"
+  (ya no se pueden desmarcar por error) — mismo criterio que ya tenían
+  Open Water Diver y Advanced Open Water Diver.
 - **Novedades de esta versión (WhatsNew)**: reescrito con las 6
   novedades reales de este rediseño — rediseño e imagen nueva, carnet
   de instructor, Training Records, multi idioma, Home/Mi trabajo más

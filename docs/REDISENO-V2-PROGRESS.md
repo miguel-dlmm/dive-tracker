@@ -4586,3 +4586,64 @@ aria-label aparte, el texto ya es descriptivo por sí mismo.
 Confirmado en Chrome real: el enlace de texto en Home navega
 correctamente, y la animación de WhatsNew se aprecia con claridad en
 las 6 diapositivas, sin errores de consola.
+
+### 12.25 — Generador de TR: filas de progreso obligatorias por plantilla, pedido explícito curso a curso
+
+Petición explícita del usuario, especificación completa curso a curso
+en un único mensaje: qué filas de "Progreso del curso" pasan a
+`fixed: true` (marcadas, deshabilitadas, con etiqueta "Obligatorio" —
+mecanismo ya existente desde el 2026-09-04 para OWD/AOWD, ver
+`ProgressRowToggle`, `TrainingRecordsTab.jsx`) en cada una de las 8
+plantillas que todavía no lo tenían configurado así.
+
+**Filas marcadas `fixed: true`** (`src/trainingRecords/templateFieldMaps.js`,
+índices 0-based dentro de `sessionRows`):
+- **Nitrox** (`SC-EAN`): las 3 primeras — `[0, 1, 2]`.
+- **Deep Diving** (`SC-DD`): 1ª, 3ª y 4ª — `[0, 2, 3]`.
+- **Basic Diver** (`BD`): todas — `[0, 1, 2]`.
+- **Diver Stress & Rescue** (`SC-SR`): las 7 primeras — `[0..6]`.
+- **Navigation** (`SC-NV`): las 4 primeras — `[0, 1, 2, 3]`.
+- **Night & Limited Visibility** (`SC-LV`): 1ª y 3ª — `[0, 2]`.
+- **Perfect Buoyancy** (`SC-PB`): las 3 primeras — `[0, 1, 2]`.
+- **React Right** (`SC-RR`): todas — `[0..6]`.
+
+**"...y examen"/"...confirmación del cuestionario": ya estaba resuelto,
+sin código nuevo.** `examConfirmation` (la fecha de examen, o en Basic
+Diver la "Confirmación del Cuestionario") se renderiza siempre como
+`DateOnlyRow` — una fecha suelta sin casilla, nunca desmarcable — y
+`validateRecordConfig` (`recordConfig.js`) ya exige esa fecha en
+cualquier plantilla que la tenga, desde el 2026-09-04. El flag `fixed`
+no se le añade a `examConfirmation` en ninguna plantilla (tampoco lo
+tenía OWD/AOWD) porque sería inerte ahí — se documenta explícitamente
+en cada plantilla tocada para que quede claro que no es un olvido.
+
+**Bug potencial evitado, no solo un cambio mecánico**: 3 de las
+plantillas (Nitrox, Navigation, Perfect Buoyancy) tenían alguna de las
+filas ahora obligatorias marcada `optional: true` — flag que significa
+"esta fila puede quedar en blanco porque no aplica a esta variante del
+curso" (p. ej. Open Water en 2 días vs. 3 días), un eje totalmente
+distinto de `fixed`. `buildDefaultConfig` (`recordConfig.js`) inicializa
+`includedRows[i]` a `!row.optional` — si se hubiera añadido `fixed: true`
+sin retirar `optional: true`, la fila se habría visto en la UI como
+marcada/deshabilitada con la etiqueta "Obligatorio" (`fixed` fuerza esa
+apariencia) pero habría quedado **excluida en silencio del documento
+generado** (`includedRows[i]` seguiría en `false`) — un Training Record
+oficial incompleto sin ningún aviso visible. Se retiró `optional: true`
+de esas filas al añadirles `fixed: true` en las 3 plantillas afectadas.
+
+**Test de regresión nuevo** (`templateFieldMaps.test.js`): (1) para las
+10 plantillas con `sessionRows`, ninguna fila `fixed` lleva también
+`optional: true` — cubre exactamente la clase de bug de arriba para
+cualquier cambio futuro, no solo el de hoy; (2) tabla explícita de los
+índices `fixed` esperados por plantilla (incluye OWD/AOWD, que ya los
+tenían, como referencia); (3) las 8 plantillas con `examConfirmation`
+lo tienen definido.
+
+**Verificado**: 853/853 tests (134 en `src/trainingRecords/`, incluidos
+los 2 bloques de tests nuevos), lint 0 errores, build correcto.
+Confirmado en Chrome real contra la cuenta demo de TEST: Nitrox (filas
+2ª/3ª, antes desmarcables, ahora "Obligatorio"), Navigation (4 filas
+"Obligatorio", incluida la de piscina que antes era opcional) y React
+Right (las 7 filas "Obligatorio", incluidas las 3 de "Actualización de
+React Right" con su layout de 3 columnas propio) revisadas fila a fila
+contra el pedido exacto del usuario — sin errores de consola.
