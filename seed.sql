@@ -95,3 +95,41 @@ from setup_datasets, (values
 ) as v(activity, rate)
 where setup_datasets.key = 'ihasia'
 on conflict (dataset_id, school, activity, payment_type) do nothing;
+
+-- Dataset "prueba" — mismo contenido que "ihasia" (cursos, tarifas,
+-- comisiones), pero con una escuela genérica "Escuela de prueba" en vez
+-- de "Ihasia", y marcado is_default = true: es el dataset que hereda
+-- cualquier alta nueva (registro externo, alta por admin) desde
+-- scripts/migrations/0019-dataset-prueba.sql (aplicada a TEST y a
+-- producción) — "ihasia" es la escuela real del usuario, no un punto de
+-- partida genérico para cuentas nuevas. Reproducido aquí para que una
+-- base de datos nueva (TEST, o cualquier entorno futuro) arranque ya con
+-- el mismo comportamiento por defecto, sin depender de relanzar esa
+-- migración a mano contra un schema.sql + seed.sql recién creados.
+insert into setup_datasets (key, label, is_default) values ('prueba', 'Prueba', true)
+on conflict (key) do nothing;
+
+insert into setup_dataset_schools (dataset_id, name, color, is_default)
+select id, 'Escuela de prueba', '#000000', true from setup_datasets where key = 'prueba'
+on conflict (dataset_id, name) do nothing;
+
+insert into setup_dataset_activities (dataset_id, name, color, is_default)
+select d.id, a.name, a.color, a.is_default
+from public.setup_dataset_activities a
+join public.setup_datasets src on src.id = a.dataset_id and src.key = 'ihasia'
+join public.setup_datasets d on d.key = 'prueba'
+on conflict (dataset_id, name) do nothing;
+
+insert into setup_dataset_rates (dataset_id, school, activity, payment_type, rate, currency)
+select d.id, 'Escuela de prueba', r.activity, r.payment_type, r.rate, r.currency
+from public.setup_dataset_rates r
+join public.setup_datasets src on src.id = r.dataset_id and src.key = 'ihasia'
+join public.setup_datasets d on d.key = 'prueba'
+on conflict (dataset_id, school, activity, payment_type) do nothing;
+
+insert into setup_dataset_commission_rates (dataset_id, school, activity, payment_type, rate, currency)
+select d.id, 'Escuela de prueba', r.activity, r.payment_type, r.rate, r.currency
+from public.setup_dataset_commission_rates r
+join public.setup_datasets src on src.id = r.dataset_id and src.key = 'ihasia'
+join public.setup_datasets d on d.key = 'prueba'
+on conflict (dataset_id, school, activity, payment_type) do nothing;
