@@ -37,6 +37,14 @@ const CHECKS = [
   { label: "Secciones de navegación (nav_sections)", table: "nav_sections", min: 1 },
   { label: "Plantillas activas de Training Records", table: "training_record_templates", filter: (q) => q.eq("status", "active"), min: 1 },
   { label: "Configuración de la app (app_config)", table: "app_config", min: 1 },
+  // Añadido en la release v1.3.0: desde scripts/migrations/0019-dataset-prueba.sql,
+  // externalRegister.js/createUser.js dependen de que exista EXACTAMENTE
+  // un dataset activo con is_default = true (pickDatasetKey()) — sin él,
+  // cualquier alta nueva (registro externo o por admin) fallaría con
+  // "no hay ningún dataset activo disponible" en vez de degradar
+  // silenciosamente, pero mejor detectarlo aquí que con el primer alta
+  // real fallida.
+  { label: "Dataset activo por defecto (setup_datasets.is_default)", table: "setup_datasets", filter: (q) => q.eq("is_active", true).eq("is_default", true), min: 1 },
 ];
 
 let failed = false;
