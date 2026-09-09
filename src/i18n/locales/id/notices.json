@@ -1,0 +1,44 @@
+{
+  "whatsNew": {
+    "close": "Tutup",
+    "eyebrow": "Yang baru di versi ini",
+    "slideTablist": "Slide",
+    "back": "Kembali",
+    "next": "Lanjut",
+    "start": "Mulai",
+    "slides": [
+      {
+        "title": "Kini hadir dalam lebih banyak bahasa",
+        "body": "Belanda, Thailand, Indonesia, Vietnam, Myanmar, Melayu, Rusia, dan Portugis — ganti kapan saja dari profilmu."
+      },
+      {
+        "title": "Urungkan pada tanda tangan",
+        "body": "Salah goresan? Urungkan hanya goresan terakhir, tanpa menghapus semua tanda tangan."
+      },
+      {
+        "title": "Lihat lagi kapan saja",
+        "body": "Kembali ke pembaruan ini dari Bantuan → \"Lihat yang baru\", tanpa harus menunggu pembaruan berikutnya."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Tutup",
+    "eyebrow": "Rilis baru",
+    "branchLabel": "Cabang",
+    "commitLabel": "commit",
+    "technicalChanges": "Perubahan teknis",
+    "functionalChanges": "Perubahan fungsional",
+    "uiChangesLabel": "Perubahan UI:",
+    "uiChangesYes": "Ya",
+    "uiChangesNo": "Tidak",
+    "stepsHeading": "Apa yang perlu diuji / dilakukan",
+    "testsLabel": "Tes:",
+    "buildLabel": "Build:",
+    "notReported": "tidak dilaporkan",
+    "previewCommit": "Pratinjau commit",
+    "previewCommitEmpty": "Pratinjau commit: belum ada pratinjau",
+    "previewIntegrated": "Pratinjau terintegrasi (Release-V1)",
+    "previewIntegratedEmpty": "Pratinjau terintegrasi: belum ada pratinjau",
+    "understood": "Mengerti"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "whatsNew": {
+    "close": "Fechar",
+    "eyebrow": "Novidades desta versão",
+    "slideTablist": "Slide",
+    "back": "Voltar",
+    "next": "Próximo",
+    "start": "Começar",
+    "slides": [
+      {
+        "title": "Agora em mais idiomas",
+        "body": "Holandês, tailandês, indonésio, vietnamita, birmanês, malaio, russo e português — troque quando quiser no seu perfil."
+      },
+      {
+        "title": "Desfazer na assinatura",
+        "body": "Traço errado? Desfaça só o último traço, sem apagar a assinatura inteira."
+      },
+      {
+        "title": "Reveja quando quiser",
+        "body": "Volte a essas novidades em Ajuda → \"Ver o que há de novo\", sem esperar pela próxima atualização."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Fechar",
+    "eyebrow": "Nova implantação",
+    "branchLabel": "Branch",
+    "commitLabel": "commit",
+    "technicalChanges": "Alterações técnicas",
+    "functionalChanges": "Alterações de funcionalidade",
+    "uiChangesLabel": "Alterações de UI:",
+    "uiChangesYes": "Sim",
+    "uiChangesNo": "Não",
+    "stepsHeading": "O que testar / o que fazer",
+    "testsLabel": "Testes:",
+    "buildLabel": "Build:",
+    "notReported": "não informado",
+    "previewCommit": "Preview do commit",
+    "previewCommitEmpty": "Preview do commit: sem preview ainda",
+    "previewIntegrated": "Preview integrada (Release-V1)",
+    "previewIntegratedEmpty": "Preview integrada: sem preview ainda",
+    "understood": "Entendi"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "personalData": "Data peribadi",
+    "instructor": "Data instruktor",
+    "favoriteCurrency": "Mata wang kegemaran",
+    "language": "Bahasa",
+    "security": "Keselamatan",
+    "privacy": "Privasi"
+  },
+  "signOut": {
+    "button": "Log keluar"
+  },
+  "avatar": {
+    "changeAvatar": "Tukar avatar",
+    "closeAvatarPicker": "Tutup pemilih avatar",
+    "colorLabel": "Warna {{name}}",
+    "iconLabel": "Ikon {{name}}",
+    "previousIcon": "Ikon sebelumnya",
+    "nextIcon": "Ikon seterusnya",
+    "save": "Simpan",
+    "saving": "Menyimpan…",
+    "cancel": "Batal",
+    "toastSuccess": "Avatar dikemas kini",
+    "toastError": "Tidak dapat menyimpan avatar. Cuba lagi."
+  },
+  "personalData": {
+    "nameLine": "Nama:",
+    "nicknameLine": "Nama pengguna:",
+    "professionalLine": "Profesional:",
+    "birthDateLine": "Tarikh lahir:",
+    "countryLine": "Negara kediaman:",
+    "edit": "Sunting",
+    "nameLabel": "Nama",
+    "lastNameLabel": "Nama keluarga",
+    "nicknameLabel": "Nama pengguna",
+    "professionalLabel": "Profesional",
+    "professionalPlaceholder": "Belum dipilih",
+    "birthDateLabel": "Tarikh lahir",
+    "countryLabel": "Negara kediaman",
+    "countryPlaceholder": "Pilih negara",
+    "nicknameAtError": "Tidak boleh mengandungi \"@\".",
+    "save": "Simpan",
+    "saving": "Menyimpan…",
+    "toastSuccess": "Profil dikemas kini",
+    "errors": {
+      "nicknameTaken": "Nama pengguna itu sudah digunakan.",
+      "nicknameAt": "Nama pengguna tidak boleh mengandungi \"@\".",
+      "generic": "Tidak dapat menyimpan. Cuba lagi."
+    }
+  },
+  "instructor": {
+    "hint": "Digunakan untuk mengisi Training Records anda secara automatik — disimpan di sini sekali sahaja, bukan mengikut peranti.",
+    "card": {
+      "role": "Profesional SSI",
+      "roleWithLevel": "SSI {{level}}",
+      "noSignature": "Tiada tandatangan",
+      "signatureAlt": "Tandatangan {{name}}",
+      "initialsLabel": "Inisial",
+      "numberLabel": "SSI PRO"
+    },
+    "signatureLabel": "Tandatangan anda",
+    "edit": "Sunting",
+    "initialsLabel": "Inisial",
+    "numberLabel": "Nombor SSI Pro",
+    "save": "Simpan",
+    "saving": "Menyimpan…",
+    "toastSuccess": "Data instruktor dikemas kini",
+    "toastError": "Tidak dapat menyimpan data instruktor. Cuba lagi."
+  },
+  "currency": {
+    "hint": "Digunakan sebagai mata wang lalai dalam Pelarasan Kursus, apabila tiada kadar bayaran yang menentukannya. Transaksi lain sentiasa menggunakan mata wang kadar bayarannya sendiri.",
+    "placeholder": "Belum dipilih — guna mata wang lalai aplikasi",
+    "toastSuccess": "Mata wang kegemaran dikemas kini"
+  },
+  "language": {
+    "placeholder": "Pilih satu bahasa",
+    "toastSuccess": "Bahasa dikemas kini",
+    "toastError": "Tidak dapat menukar bahasa. Cuba lagi."
+  },
+  "password": {
+    "currentLabel": "Kata laluan semasa",
+    "newLabel": "Kata laluan baharu",
+    "confirmLabel": "Sahkan kata laluan",
+    "showCurrent": "Tunjukkan kata laluan semasa",
+    "hideCurrent": "Sembunyikan kata laluan semasa",
+    "show": "Tunjukkan kata laluan",
+    "hide": "Sembunyikan kata laluan",
+    "minLength": "Sekurang-kurangnya 8 aksara",
+    "matches": "Kata laluan sepadan",
+    "submit": "Tukar kata laluan",
+    "toastSuccess": "Kata laluan dikemas kini",
+    "toastError": "Tidak dapat menukar kata laluan. Cuba lagi.",
+    "wrongCurrent": "Kata laluan semasa salah."
+  },
+  "deleteAccount": {
+    "confirmWord": "BATAL",
+    "description": "Memadam akaun anda akan memadam akses anda dan semua data anda dari Ocean Flow secara kekal: sekolah, kursus, kadar bayaran, rekod kelas, komisen dan pelarasan dengan rakan sekerja. Tiada salinan disimpan. Tindakan ini tidak boleh dibatalkan.",
+    "button": "Padam akaun saya",
+    "confirmTitle": "Padam akaun anda?",
+    "confirmMessage": "Anda akan memadam akaun \"{{nickname}}\" dan semua datanya secara kekal. Anda tidak boleh membatalkan tindakan ini.",
+    "continue": "Teruskan",
+    "finalCheckTitle": "Semakan terakhir",
+    "typeWordPrefix": "Taip",
+    "typeWordSuffix": "untuk mengesahkan anda mahu memadam akaun anda secara kekal.",
+    "typeWordAriaLabel": "Taip {{word}} untuk mengesahkan",
+    "back": "Kembali",
+    "deleteButton": "Padam akaun",
+    "toastSuccess": "Akaun dipadam",
+    "genericError": "Tidak dapat memadam akaun. Cuba lagi.",
+    "networkError": "Tidak dapat memadam akaun. Semak sambungan anda dan cuba lagi."
+  }
+}

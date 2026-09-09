@@ -1,0 +1,25 @@
+{
+  "tabs": {
+    "home": "Home",
+    "trabajo": "Mijn werk",
+    "summary": "Overzicht"
+  },
+  "secondaryTitles": {
+    "config": "Instellingen",
+    "help": "Hulp",
+    "pagos": "Betalingen",
+    "perfil": "Mijn profiel",
+    "training-records": "Training Records",
+    "install-app": "App installeren"
+  },
+  "aria": {
+    "close": "Sluiten",
+    "back": "Terug",
+    "goHome": "Naar Home",
+    "help": "Hulp",
+    "config": "Instellingen",
+    "profile": "Mijn profiel",
+    "signOut": "Uitloggen",
+    "mainNav": "Hoofdnavigatie"
+  }
+}

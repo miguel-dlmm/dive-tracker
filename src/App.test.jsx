@@ -66,6 +66,15 @@ beforeEach(() => {
     setDefault: vi.fn(),
   });
   window.history.pushState({}, "", "/");
+  // Bug real de aislamiento entre tests, encontrado 2026-09-09 al añadir un
+  // test nuevo justo después de uno que navega a Ayuda: sin este clear, la
+  // navegación (tab/returnTab, NAV_STORAGE_KEY en App.jsx) sobrevivía de un
+  // test al siguiente vía sessionStorage (real, no mockeado), así que un
+  // <App/> "recién montado" en un test podía arrancar en la pantalla donde
+  // el test ANTERIOR se quedó, en vez de en Home. Un solo test de más
+  // arriba ya lo hacía de forma puntual (redundante ahora, no se retira);
+  // aquí se hace para todos.
+  sessionStorage.clear();
 });
 
 // AuthGate (App.jsx) — integración del flujo de activación. Ver
@@ -244,12 +253,45 @@ describe("AuthGate", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText("Ocean Flow");
-    expect(screen.queryByText("Rediseño completo, cara nueva")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ahora en más idiomas")).not.toBeInTheDocument();
 
     await user.click(screen.getByLabelText("Ayuda"));
     await user.click(await screen.findByText("Ver qué hay de nuevo en esta versión"));
 
-    expect(await screen.findByText("Rediseño completo, cara nueva")).toBeInTheDocument();
+    expect(await screen.findByText("Ahora en más idiomas")).toBeInTheDocument();
+  });
+
+  // Bug real reportado 2026-09-09: cerrar la Ayuda abierta desde Training
+  // Records (el enlace "Ver ayuda", ver TrainingRecordsTab.jsx) volvía a
+  // Home, no a Training Records — "training-records" no es una pestaña
+  // primaria, así que el mecanismo automático de returnTab nunca la fijaba
+  // al entrar ahí. onOpenHelp (App.jsx) fija returnTab a mano antes de
+  // navegar a Ayuda, para que closeSecondary vuelva al sitio real de origen.
+  it("cerrar la Ayuda abierta desde Training Records vuelve a Training Records, no a Home", async () => {
+    // instructor completo (first_name/last_name/iniciales/número SSI/firma)
+    // — TrainingRecordsTab.jsx hace un early return a InstructorMissingNotice
+    // si falta cualquiera de estos, antes de llegar a "Ver ayuda".
+    mockUseSession({
+      session: SESSION,
+      profile: {
+        user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada",
+        first_name: "Ada", last_name: "Lovelace", instructor_initials: "AL",
+        ssi_pro_number: "12345", instructor_signature: "data:image/png;base64,AA==",
+      },
+      pendingLegalConsents: [],
+    });
+    localStorage.setItem("oceanpulse:whatsNewSeen:u1", APP_VERSION);
+
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText("Ocean Flow");
+
+    await user.click(await screen.findByRole("button", { name: "Genera tu primer Training Record" }));
+    await user.click(await screen.findByRole("button", { name: "Ver ayuda" }));
+    expect(await screen.findByText(/Generar un Training Record/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cerrar" }));
+    expect(await screen.findByText(/Genera un Training Record oficial/)).toBeInTheDocument();
   });
 
   // 2026-09-07, pedido explícito: "cuando el usuario accede después del

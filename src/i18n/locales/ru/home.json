@@ -1,0 +1,21 @@
+{
+  "calendarCaption": "Нажми на день, чтобы увидеть детали, или на пустой день, чтобы добавить операцию",
+  "activeSchoolThisMonth": "Самая активная школа",
+  "activeSchoolCount_one": "{{count}} операция в этом месяце",
+  "activeSchoolCount_other": "{{count}} операций в этом месяце",
+  "activeSchoolCountAndOthers_one": "{{count}} операция · {{schools}} школ в этом месяце",
+  "activeSchoolCountAndOthers_other": "{{count}} операций · {{schools}} школ в этом месяце",
+  "noActivityThisMonth": "В этом месяце нет активности",
+  "kpis": {
+    "sectionTitle": "Твои результаты за месяц",
+    "studentsThisMonth": "Ученики",
+    "coursesTotal": "Курсы",
+    "referredThisMonth": "Привлечено"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "ctaFirstTime": "Создай свой первый Training Record",
+    "generatedLabel": "Создано"
+  },
+  "installApp": "Скачать приложение"
+}

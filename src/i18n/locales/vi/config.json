@@ -1,0 +1,266 @@
+{
+  "datasets": {
+    "copySuffix": "bản sao",
+    "summary_one": "Cấu hình ban đầu (trung tâm, khóa học và mức giá) được sao chép cho mỗi tài khoản mới. {{count}} đang hoạt động trong tổng số {{total}}.",
+    "summary_other": "Cấu hình ban đầu (trung tâm, khóa học và mức giá) được sao chép cho mỗi tài khoản mới. {{count}} đang hoạt động trong tổng số {{total}}.",
+    "inactive": "Không hoạt động",
+    "setDefault": "Đặt làm mặc định",
+    "setDefaultAria": "Đặt \"{{label}}\" làm mặc định",
+    "duplicate": "Nhân bản",
+    "duplicateAria": "Nhân bản \"{{label}}\"",
+    "activeAria": "Dataset \"{{label}}\" đang hoạt động",
+    "deleteItemLabel": "dataset \"{{label}}\"",
+    "empty": "Chưa có dataset nào.",
+    "fab": "Dataset mới",
+    "sheetTitle": "Dataset mới",
+    "sheetHint": "Bắt đầu trống và không hoạt động — nhân bản một dataset có sẵn nếu bạn muốn bắt đầu từ nội dung đã có.",
+    "nameLabel": "Tên",
+    "create": "Tạo",
+    "toasts": {
+      "created": "Đã tạo dataset — thêm nội dung trước khi kích hoạt",
+      "duplicated": "Đã tạo \"{{newLabel}}\" với cùng nội dung như \"{{sourceLabel}}\"",
+      "duplicateError": "Không thể nhân bản. Vui lòng thử lại.",
+      "keyTaken": "Đã tồn tại dataset với khóa đó.",
+      "createError": "Không thể tạo. Vui lòng thử lại.",
+      "updateError": "Không thể cập nhật."
+    },
+    "errors": {
+      "isDefault": "Đây là dataset mặc định — hãy đặt dataset khác làm mặc định trước khi xóa cái này.",
+      "lastOne": "Bạn không thể xóa dataset duy nhất — đăng ký bên ngoài và tạo tài khoản thủ công cần ít nhất một dataset."
+    }
+  },
+  "crudTable": {
+    "buscarPlaceholder": "Tìm kiếm...",
+    "buscarAria": "Tìm kiếm",
+    "cambiarColor": "Đổi màu",
+    "favorita": "Yêu thích",
+    "marcarPredeterminado": "Đặt làm mặc định",
+    "esteElemento": "mục này",
+    "sinResultados": "Không có kết quả.",
+    "cerrar": "Đóng",
+    "guardar": "Lưu",
+    "cambiosGuardados": "Đã lưu thay đổi",
+    "anadidoCorrectamente": "Đã thêm",
+    "noSePudoGuardar": "Không thể lưu. Vui lòng thử lại.",
+    "noSePudoGuardarCambio": "Không thể lưu thay đổi.",
+    "estadoPredeterminadoRazon": "Đây là trạng thái mặc định (đại diện cho \"đang chờ\") — hãy đặt trạng thái khác làm mặc định trước khi xóa cái này"
+  },
+  "sectionColors": {
+    "descripcion": "Được dùng trong thanh điều hướng và các nút tạo bản ghi của từng khu vực."
+  },
+  "generalSettings": {
+    "iconoCarga": "Biểu tượng đang tải",
+    "descripcion": "Dùng trong hoạt ảnh \"đang tải\" của toàn bộ ứng dụng. Khi có logo chính thức của Ocean Flow, hãy báo tôi và tôi sẽ thay thế bằng biểu tượng thật thay vì danh sách này.",
+    "iconoActualizado": "Đã cập nhật biểu tượng",
+    "noSePudoGuardar": "Không thể lưu. Vui lòng thử lại.",
+    "vistaPrevia": "Xem trước"
+  },
+  "externalRegistration": {
+    "titulo": "Cho phép đăng ký bên ngoài",
+    "descripcion": "Hiện nút \"Đăng ký\" ở màn hình đăng nhập để bất kỳ ai cũng có thể tạo tài khoản riêng.",
+    "activado": "Đã bật đăng ký bên ngoài",
+    "desactivado": "Đã tắt đăng ký bên ngoài",
+    "noSePudoGuardar": "Không thể lưu. Vui lòng thử lại."
+  },
+  "roleCheckbox": {
+    "rolProtegido": "{{label}} — vai trò hệ thống được bảo vệ, không thể chỉnh sửa",
+    "si": "có",
+    "no": "không",
+    "etiquetaAria": "{{label}}: {{value}}"
+  },
+  "roleIcon": {
+    "superadmin": "Siêu quản trị",
+    "admin": "Quản trị viên"
+  },
+  "userStatus": {
+    "activo": "Hoạt động",
+    "pendiente": "Đang chờ",
+    "desactivado": "Đã vô hiệu hóa",
+    "nunca": "Chưa bao giờ"
+  },
+  "swipeToDelete": {
+    "eliminar": "Xóa",
+    "eliminarA": "Xóa {{nickname}}"
+  },
+  "userListRow": {
+    "alta": "Tạo: {{date}}",
+    "ultimoAcceso": "Truy cập gần nhất: {{date}}",
+    "baja": "Vô hiệu hóa: {{date}}",
+    "fechaNoRegistrada": "chưa ghi nhận ngày"
+  },
+  "userDetailSheet": {
+    "cerrar": "Đóng",
+    "nombre": "Tên",
+    "apellidos": "Họ",
+    "nickname": "Biệt danh",
+    "editarDatos": "Sửa thông tin",
+    "email": "Email",
+    "altaLabel": "Ngày tạo",
+    "ultimoAcceso": "Truy cập gần nhất",
+    "movimientos": "Giao dịch",
+    "ultimaActividad": "Hoạt động gần nhất",
+    "baja": "Vô hiệu hóa",
+    "estado": "Trạng thái",
+    "activarUsuario": "Kích hoạt người dùng",
+    "desactivarUsuario": "Vô hiệu hóa người dùng",
+    "pendienteTexto": "Đang chờ người này mở liên kết và tạo mật khẩu.",
+    "regenerarEnlace": "Tạo lại liên kết",
+    "admin": "Quản trị viên",
+    "superadmin": "Siêu quản trị",
+    "regenerarContrasena": "Tạo lại mật khẩu",
+    "eliminarUsuario": "Xóa người dùng"
+  },
+  "activationLinkPanel": {
+    "cerrar": "Đóng",
+    "enlaceCopiado": "Đã sao chép liên kết",
+    "noSePudoCopiar": "Không thể sao chép. Hãy chọn thủ công.",
+    "copiarEnlace": "Sao chép liên kết",
+    "simularEnvioMock": "Giả lập gửi thành công (mock)",
+    "mockEmailEnviado": "(Mock) Email đã gửi thành công"
+  },
+  "createUserSheet": {
+    "cerrar": "Đóng",
+    "noSePudieronCargarDatasets": "Không thể tải các dataset khả dụng.",
+    "camposObligatorios": "Email, biệt danh và dataset ban đầu là bắt buộc.",
+    "soloSuperadminCrear": "Chỉ siêu quản trị mới có thể tạo người dùng.",
+    "noSePudoCrear": "Không thể tạo người dùng.",
+    "usuarioCreadoSinEmail": "Đã tạo người dùng (không gửi được email)",
+    "usuarioCreadoCorrectamente": "Đã tạo người dùng",
+    "enlaceCopiado": "Đã sao chép liên kết",
+    "noSePudoCopiar": "Không thể sao chép. Hãy chọn thủ công.",
+    "noSePudoEnviarEmailTitulo": "Không thể gửi email",
+    "noSePudoEnviarEmailDescripcion": "Không thể gửi email kích hoạt. Bạn có thể chia sẻ liên kết này theo cách thủ công.",
+    "copiarEnlace": "Sao chép liên kết",
+    "simularEnvioMock": "Giả lập gửi thành công (mock)",
+    "mockUsuarioCreado": "(Mock) Đã tạo người dùng và gửi email thành công",
+    "titulo": "Tạo người dùng",
+    "email": "Email",
+    "nombre": "Tên",
+    "apellidos": "Họ",
+    "nickname": "Biệt danh",
+    "datasetInicial": "Dataset ban đầu",
+    "cargando": "Đang tải…",
+    "seleccionaDataset": "Chọn một dataset",
+    "sinDatasets": "Không có dataset khả dụng",
+    "idioma": "Ngôn ngữ",
+    "nota": "Dataset được chọn sẽ tự động tải trung tâm, khóa học, mức giá, hoa hồng và danh mục thanh toán ban đầu. Người dùng sẽ nhận được email với liên kết dùng một lần để đăng nhập và tạo mật khẩu riêng.",
+    "creando": "Đang tạo…",
+    "crearUsuario": "Tạo người dùng"
+  },
+  "usersDirectory": {
+    "buscarPlaceholder": "Tìm kiếm...",
+    "buscarAria": "Tìm kiếm người dùng",
+    "leyendaEstadoAria": "Ý nghĩa của từng màu trạng thái",
+    "crearUsuario": "Tạo người dùng",
+    "noSePudoCargarListado": "Không thể tải danh sách người dùng.",
+    "errorDesconocido": "Lỗi không xác định",
+    "errorCargarListado": "Không thể tải danh sách: {{error}}",
+    "cargandoUsuarios": "Đang tải người dùng…",
+    "sinResultados": "Không có kết quả.",
+    "soloSuperadminRol": "Chỉ siêu quản trị mới có thể đổi vai trò quản trị viên của tài khoản khác.",
+    "noSePudoActualizarRol": "Không thể cập nhật vai trò.",
+    "rolActualizado": "Đã cập nhật vai trò",
+    "soloSuperadminEliminar": "Chỉ siêu quản trị mới có thể xóa người dùng.",
+    "noSePudoEliminar": "Không thể xóa người dùng.",
+    "usuarioEliminado": "Đã xóa người dùng",
+    "soloSuperadminActivar": "Chỉ siêu quản trị mới có thể kích hoạt hoặc vô hiệu hóa người dùng.",
+    "noSePudoActualizarEstado": "Không thể cập nhật trạng thái.",
+    "usuarioDesactivado": "Đã vô hiệu hóa người dùng",
+    "soloSuperadminEnlace": "Chỉ siêu quản trị mới có thể kích hoạt tài khoản hoặc tạo lại liên kết truy cập.",
+    "noSePudoGenerarEnlace": "Không thể tạo liên kết.",
+    "enlaceGeneradoSinEmail": "Đã tạo liên kết (không gửi được email cho {{nickname}})",
+    "enlaceActivacionTitulo": "Đã tạo liên kết kích hoạt",
+    "enlaceActivacionDescripcion": "Chia sẻ liên kết này với {{nickname}}. Tài khoản sẽ vẫn hiện \"Đang chờ\" cho đến khi họ dùng để tạo mật khẩu.",
+    "emailActivacionEnviado": "Đã gửi email kích hoạt cho {{nickname}}",
+    "soloSuperadminContrasena": "Chỉ siêu quản trị mới có thể tạo lại mật khẩu của tài khoản khác.",
+    "noSePudoRegenerarContrasena": "Không thể tạo lại mật khẩu.",
+    "contrasenaRegeneradaSinEmail": "Đã tạo lại mật khẩu (không gửi được email cho {{nickname}})",
+    "contrasenaRegeneradaTitulo": "Đã tạo lại mật khẩu",
+    "contrasenaRegeneradaDescripcion": "Mật khẩu cũ của {{nickname}} không còn hiệu lực. Chia sẻ liên kết này để họ tạo mật khẩu mới — tài khoản sẽ trở lại \"Đang chờ\" cho đến lúc đó.",
+    "contrasenaRegeneradaEmailEnviado": "Đã tạo lại mật khẩu và gửi email cho {{nickname}}",
+    "nicknameVacio": "Biệt danh không được để trống.",
+    "datosActualizados": "Đã cập nhật thông tin",
+    "noSePudieronGuardarCambios": "Không thể lưu các thay đổi.",
+    "cambiarRolAdminTitulo": "Đổi vai trò quản trị viên",
+    "usuarioLabel": "Người dùng: {{nickname}}",
+    "adminLabel": "Quản trị: {{from}} → {{to}}",
+    "confirmar": "Xác nhận",
+    "eliminarUsuarioTitulo": "Xóa người dùng",
+    "eliminarUsuarioMensaje": "Tài khoản của <strong>{{nickname}}</strong> cùng toàn bộ dữ liệu (trung tâm, mức giá, giao dịch...) sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.",
+    "eliminarUsuarioAlternativa": "Nếu bạn chỉ muốn thu hồi quyền truy cập mà vẫn giữ dữ liệu, hãy dùng \"Vô hiệu hóa\" thay vào đó.",
+    "eliminar": "Xóa",
+    "desactivarUsuarioTitulo": "Vô hiệu hóa người dùng",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> sẽ không thể đăng nhập nữa. Toàn bộ dữ liệu (trung tâm, mức giá, giao dịch...) vẫn được giữ nguyên vẹn — bạn có thể kích hoạt lại bất cứ lúc nào bằng cách tạo liên kết kích hoạt mới.",
+    "desactivar": "Vô hiệu hóa",
+    "generarEnlaceTitulo": "Tạo liên kết kích hoạt",
+    "generarEnlaceMensaje": "Một liên kết mới dùng một lần sẽ được tạo cho <strong>{{nickname}}</strong>. Mọi liên kết trước đó sẽ ngừng hoạt động. Tài khoản chưa có quyền truy cập cho đến khi hoàn tất.",
+    "generarEnlace": "Tạo liên kết",
+    "regenerarContrasenaTitulo": "Tạo lại mật khẩu",
+    "regenerarContrasenaMensaje": "Mật khẩu hiện tại của <strong>{{nickname}}</strong> sẽ ngừng hoạt động ngay lập tức. Họ sẽ cần tạo mật khẩu mới từ một liên kết kích hoạt mới — dữ liệu của họ không bị ảnh hưởng.",
+    "regenerar": "Tạo lại",
+    "generarInvitacion": "Tạo liên kết mời",
+    "soloSuperadminInvitacion": "Chỉ siêu quản trị mới có thể tạo liên kết mời.",
+    "noSePudoGenerarInvitacion": "Không thể tạo liên kết mời.",
+    "enlaceInvitacionTitulo": "Liên kết mời",
+    "enlaceInvitacionDescripcion": "Có hiệu lực 24 giờ và dùng một lần. Chia sẻ liên kết này với người bạn muốn mời — họ có thể đăng ký ngay cả khi đăng ký bên ngoài đang bị tắt."
+  },
+  "sections": {
+    "escuelas": {
+      "label": "Trung tâm",
+      "description": "Nơi bạn giảng dạy, cùng màu sắc"
+    },
+    "cursos": {
+      "label": "Khóa học",
+      "description": "Những gì bạn dạy, cùng màu sắc"
+    },
+    "tarifas": {
+      "label": "Mức giá",
+      "description": "Bạn tính phí bao nhiêu theo từng trung tâm và khóa học"
+    },
+    "estadosPago": {
+      "label": "Trạng thái thanh toán",
+      "description": "Đang chờ, đã thu..."
+    },
+    "monedas": {
+      "label": "Tiền tệ",
+      "description": "Danh mục khả dụng trong toàn bộ ứng dụng"
+    },
+    "navegacion": {
+      "label": "Màu điều hướng",
+      "description": "Nhận diện hình ảnh của từng khu vực"
+    },
+    "ajustes": {
+      "label": "Cài đặt chung",
+      "description": "Biểu tượng đang tải của ứng dụng"
+    },
+    "usuarios": {
+      "label": "Người dùng",
+      "description": "Các tài khoản có quyền truy cập ứng dụng"
+    },
+    "datasets": {
+      "label": "Dataset ban đầu",
+      "description": "Cấu hình được sao chép khi tạo tài khoản"
+    }
+  },
+  "menu": {
+    "administracion": "Quản trị",
+    "superadmin": "Siêu quản trị",
+    "configuracion": "Cài đặt"
+  },
+  "crud": {
+    "nuevaEscuela": "Trung tâm mới",
+    "editarEscuela": "Sửa trung tâm",
+    "nombreCampo": "Tên",
+    "colorCampo": "Màu",
+    "nuevoCurso": "Khóa học mới",
+    "editarCurso": "Sửa khóa học",
+    "nuevoEstadoPago": "Trạng thái thanh toán mới",
+    "editarEstadoPago": "Sửa trạng thái thanh toán",
+    "nuevaMoneda": "Tiền tệ mới",
+    "editarMoneda": "Sửa tiền tệ",
+    "monedasDescripcion": "Chọn ở đây tiền tệ dự phòng của toàn bộ ứng dụng: được dùng khi người dùng chưa chọn tiền tệ yêu thích riêng trong Hồ sơ của tôi. Đây không phải là lựa chọn cá nhân — đây là tiền tệ áp dụng mặc định cho mọi tài khoản mới.",
+    "monedaPorDefectoApp": "Mặc định của ứng dụng",
+    "codigoCampo": "Mã (vd. EUR)",
+    "simboloCampo": "Ký hiệu"
+  }
+}

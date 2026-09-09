@@ -1,0 +1,25 @@
+{
+  "tabs": {
+    "home": "Beranda",
+    "trabajo": "Pekerjaanku",
+    "summary": "Ringkasan"
+  },
+  "secondaryTitles": {
+    "config": "Pengaturan",
+    "help": "Bantuan",
+    "pagos": "Pembayaran",
+    "perfil": "Profilku",
+    "training-records": "Training Records",
+    "install-app": "Pasang aplikasi"
+  },
+  "aria": {
+    "close": "Tutup",
+    "back": "Kembali",
+    "goHome": "Ke Beranda",
+    "help": "Bantuan",
+    "config": "Pengaturan",
+    "profile": "Profilku",
+    "signOut": "Keluar",
+    "mainNav": "Navigasi utama"
+  }
+}

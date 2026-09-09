@@ -1,0 +1,18 @@
+{
+  "intro": "Tambahkan Ocean Flow ke layar utama ponselmu dan buka seperti aplikasi lainnya, tanpa perlu membuka browser setiap kali.",
+  "ios": {
+    "title": "iPhone / iPad (Safari)",
+    "step1": "Buka Ocean Flow di Safari — harus Safari, tidak berfungsi dari browser lain di iOS.",
+    "step2": "Ketuk ikon Bagikan di bilah bawah.",
+    "step3": "Gulir ke bawah dan ketuk \"Tambah ke Layar Utama\".",
+    "step4": "Ketuk \"Tambah\" di kanan atas — selesai."
+  },
+  "android": {
+    "title": "Android (Chrome)",
+    "step1": "Buka Ocean Flow di Chrome.",
+    "step2": "Ketuk menu (⋮) di kanan atas.",
+    "step3": "Ketuk \"Instal aplikasi\" atau \"Tambah ke layar utama\".",
+    "step4": "Konfirmasi dengan mengetuk \"Instal\" — selesai."
+  },
+  "note": "Ikonnya akan muncul bersama aplikasi lain. Tidak memakan ruang lebih dari aplikasi lainnya."
+}

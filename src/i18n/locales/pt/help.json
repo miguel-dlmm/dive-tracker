@@ -1,0 +1,249 @@
+{
+  "emptyState": "Ainda não há conteúdo de ajuda.",
+  "whatsNewReplay": "Ver o que há de novo nesta versão",
+  "installAppLink": "Instalar o app no seu celular",
+  "groupLabels": {
+    "quiero": "Eu quero...",
+    "funcionalidades": "Funcionalidades"
+  },
+  "sections": {
+    "whatYouCanDo": "O que você pode fazer",
+    "whenToUseIt": "Quando usar",
+    "steps": "Passos",
+    "tips": "Dicas e erros comuns",
+    "expectedResult": "Resultado esperado"
+  },
+  "categories": {
+    "bienvenida": {
+      "label": "Primeiros passos",
+      "description": "O que é o Ocean Flow e como ele se organiza"
+    },
+    "quiero-configurar": {
+      "label": "Configurar seu aplicativo",
+      "description": "Escolas, cursos, tarifas e catálogos"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Registrar um movimento",
+      "description": "Um curso ministrado, uma comissão ou um ajuste"
+    },
+    "quiero-cobrar": {
+      "label": "Receber movimentos pendentes",
+      "description": "Marcar como recebido, um a um ou todos de uma vez"
+    },
+    "quiero-consultar-generado": {
+      "label": "Consultar quanto você gerou",
+      "description": "De relance, ou em detalhe por período"
+    },
+    "quiero-generar-tr": {
+      "label": "Gerar um Training Record",
+      "description": "O documento oficial de progresso de cada aluno"
+    },
+    "func-mi-trabajo": {
+      "label": "Meu trabalho",
+      "description": "Criar, editar, receber e excluir movimentos"
+    },
+    "func-resumen": {
+      "label": "Resumo",
+      "description": "Visão rápida e profundidade sob demanda"
+    },
+    "func-configuracion": {
+      "label": "Configurações",
+      "description": "O menu, e o que há em cada seção"
+    },
+    "func-perfil": {
+      "label": "Meu perfil",
+      "description": "Avatar, carteira de instrutor, idioma e moeda favorita"
+    },
+    "func-filtros": {
+      "label": "Filtros e busca",
+      "description": "O mesmo padrão em todo o app"
+    }
+  },
+  "articles": {
+    "primeros-pasos": {
+      "title": "Começar a usar o Ocean Flow",
+      "summary": "Uma volta rápida pelas três telas principais antes de registrar seu primeiro movimento.",
+      "whatYouCanDo": "O Ocean Flow ajuda você a controlar seus ganhos como instrutor freelancer. Sob um mesmo conceito, \"movimento\", ele agrupa as aulas que você ministra, as comissões por clientes indicados e os ajustes financeiros com outros instrutores.",
+      "whenToUseIt": "Na primeira vez que você abre o app, ou quando quiser relembrar para que serve cada tela.",
+      "steps": [
+        "Home: seus alunos, cursos e clientes captados de relance, o acesso ao Training Records, quanto você tem pendente de receber, o calendário do mês e um atalho para criar um movimento.",
+        "Meu trabalho: a lista completa dos seus movimentos (cursos, comissões e ajustes), para criá-los, editá-los, recebê-los ou excluí-los.",
+        "Resumo: seu balanço no período que você escolher, com a possibilidade de detalhar por escola, por curso ou por comissões."
+      ],
+      "tips": [
+        "Para uma conta nova, comece por \"Configurar seu aplicativo\" (escolas, cursos, tarifas).",
+        "Continue registrando um movimento de cada tipo que você for usar.",
+        "Termine recebendo: um quando te pagarem, ou todos de uma vez se você revisa periodicamente. Cada passo tem seu próprio guia em \"Eu quero...\" mais abaixo."
+      ],
+      "expectedResult": "Você sabe qual tela usar para cada situação e em que ordem seguir para deixar o app pronto para o seu dia a dia."
+    },
+    "configurar-app": {
+      "title": "Configurar seu aplicativo",
+      "summary": "Nada é fixo no app: escolas, cursos, tarifas e catálogos de pagamento são editados em Configurações.",
+      "whatYouCanDo": "Configurações é onde você mantém seus dados-base: quais escolas trabalham com você, quais cursos você ministra e a que tarifa. Tudo editável, nada fixo no código.",
+      "whenToUseIt": "Antes de registrar seu primeiro movimento, e depois sempre que começar a trabalhar com uma escola ou curso novo, ou mudar um preço.",
+      "steps": [
+        "Entre em Configurações (ícone de engrenagem, no canto superior direito) e toque na seção que precisar.",
+        "Cadastre suas Escolas e Cursos primeiro — uma Tarifa sempre relaciona uma escola a um curso, então os dois precisam existir antes.",
+        "Dentro de uma seção, toque no botão \"+\" flutuante para criar; \"‹ Configurações\" leva você de volta ao menu.",
+        "Toque na cor de uma linha para personalizá-la, e na estrela para marcá-la como favorita."
+      ],
+      "tips": [
+        "Uma escola, curso ou moeda marcada como favorita aparece pré-selecionada nos formulários de criação.",
+        "Fechar Configurações (o \"✕\" do cabeçalho) sempre leva você de volta à aba de onde entrou."
+      ],
+      "expectedResult": "A nova escola, curso ou tarifa fica disponível na hora ao criar um movimento — com isso, você já pode seguir para \"Registrar um movimento\"."
+    },
+    "crear-movimiento": {
+      "title": "Criar um movimento",
+      "summary": "O mesmo formulário serve para um curso ministrado, uma comissão ou um ajuste com um colega — cada tipo tem seus próprios campos.",
+      "whatYouCanDo": "\"Adicionar movimento\" é o único ponto de criação em todo o app — o próprio formulário deixa você escolher o tipo, sem precisar acertar um botão diferente para cada caso.",
+      "whenToUseIt": "Logo depois de dar uma aula, ao fechar uma comissão, ou quando combinar um ajuste com outro instrutor.",
+      "steps": [
+        "Toque em \"Adicionar movimento\": o botão \"+\" do cartão \"Pendente de receber\" na Home, o mesmo botão ao tocar em um dia do calendário da Home, ou o \"+\" flutuante em Meu trabalho.",
+        "No topo do formulário, escolha o tipo: Curso ministrado, Comissão ou Ajuste de curso.",
+        "Curso ministrado: escola, curso, data e nº de pessoas — a tarifa do curso calcula o valor sozinha.",
+        "Comissão: igual a um curso, mas para um cliente que você indicou e que outro instrutor forma — usa sua própria tarifa de comissão, não a de curso.",
+        "Ajuste de curso: não depende de nenhuma tarifa — você mesmo informa o valor (positivo se te devem, negativo se você deve) e com qual colega é o ajuste.",
+        "Salve. Se você abriu o formulário pela Home, verá o movimento em Meu trabalho logo depois de salvar."
+      ],
+      "tips": [
+        "Se ainda não existir uma tarifa para essa escola + curso, o formulário deixa você criá-la na hora sem sair da tela (\"Adicionar tarifa\") — vale só para Curso e Comissão, um Ajuste nunca precisa de tarifa.",
+        "Cancelar ou fechar o formulário sem salvar não cria nada — você pode abri-lo e fechá-lo sem medo de deixar movimentos pela metade."
+      ],
+      "expectedResult": "O movimento aparece em Meu trabalho, dentro de \"Pendentes\", e é somado a \"Gerado este mês\" na Home (exceto um Ajuste contra você, que não conta como gerado)."
+    },
+    "cobrar-movimientos": {
+      "title": "Marcar movimentos como recebidos",
+      "summary": "Controle o que você tem pendente de receber e atualize o status assim que for pago — um a um, ou todos de uma vez.",
+      "whatYouCanDo": "Cada movimento tem um status (pendente ou recebido). Mudá-lo é imediato, com um único toque, com a opção de desfazer se você errar. Você pode fazer isso movimento a movimento, ou de uma vez em toda a lista visível.",
+      "whenToUseIt": "Assim que uma escola ou um colega te pagar (um a um), ou de uma vez quando você revisa periodicamente e já recebeu vários pendentes ao mesmo tempo.",
+      "steps": [
+        "Para receber um: entre em Meu trabalho (a aba \"Pendentes\" abre por padrão) e toque em \"Confirmar recebimento\" na sua linha (ou \"Marcar quitado\" se for um ajuste contra você).",
+        "O cartão \"Pendente de receber\" da Home leva você direto para essa mesma aba — um toque a partir da tela principal.",
+        "Para receber vários de uma vez: em Meu trabalho, use \"Receber todos\" acima da lista — afeta tudo o que estiver visível naquele momento.",
+        "Antes de \"Receber todos\", use \"Filtrar\" (por data, escola, curso ou tipo) para limitar a lista a exatamente o que você quer receber de uma vez."
+      ],
+      "tips": [
+        "Um aviso com \"Desfazer\" aparece depois de cada alteração — você tem alguns segundos para reverter sem precisar procurar o movimento de novo.",
+        "\"Receber todos\" pede confirmação antes de ser aplicado — não há \"Desfazer\" para o lote inteiro, diferente de receber um a um."
+      ],
+      "expectedResult": "O movimento (ou todos os filtrados) passa para a aba \"Recebidos\" e seu valor deixa de contar em \"Pendente de receber\" na Home."
+    },
+    "consultar-generado": {
+      "title": "Consultar quanto você gerou",
+      "summary": "Uma olhada rápida em Meu trabalho, ou o detalhe completo pelo período que você escolher em Resumo.",
+      "whatYouCanDo": "\"Gerado este mês\" em Meu trabalho mostra o valor do mês atual, sempre visível acima da lista. Resumo vai além: qualquer período, comparado com o anterior, e com a possibilidade de detalhar por escola ou por curso.",
+      "whenToUseIt": "Meu trabalho, para uma olhada rápida junto ao restante do seu trabalho diário. Resumo, quando quiser um período diferente do mês atual ou entender de onde vem o dinheiro.",
+      "steps": [
+        "Em Meu trabalho, o cartão \"Gerado este mês\" já fica sempre visível, acima da lista, sem precisar tocar em nada.",
+        "Em Resumo, escolha a granularidade e o período no controle superior (mensal, trimestral, semestral, anual ou um intervalo personalizado) e, se quiser, o tipo (Curso, Comissão ou Ajuste).",
+        "O cartão principal mostra o total do período e quanto mudou em relação ao período anterior.",
+        "Toque em \"Por escola\", \"Por curso\", \"Comissões\", \"Ajustes de curso\" ou \"Calendário\" para detalhar — cada um só se expande se você pedir."
+      ],
+      "tips": [
+        "Dentro de \"Por escola\", toque em uma escola para ver seu detalhamento por curso no próprio lugar, sem mudar de tela.",
+        "A comparação com o período anterior não aparece se você misturar mais de uma moeda no mesmo período — isso evita mostrar um cálculo que não seria exato."
+      ],
+      "expectedResult": "Você tem um valor de balanço do período escolhido, com o detalhe de onde vem cada ganho, se precisar."
+    },
+    "generar-training-record": {
+      "title": "Gerar um Training Record",
+      "summary": "O documento oficial de progresso SSI de cada aluno, com a assinatura dele e a sua — nada é salvo na nuvem, só é baixado.",
+      "whatYouCanDo": "Em Training Records você gera o documento de progresso oficial de qualquer um dos 10 modelos SSI, já com os dados de cada aluno e sua assinatura de instrutor incluídos. Você pode gerá-los um a um ou de uma vez, e baixá-los em PDF, em imagem, ou compartilhá-los diretamente.",
+      "whenToUseIt": "Ao terminar um curso, quando um aluno precisa do Training Record impresso ou para enviar à SSI.",
+      "steps": [
+        "Entre em Training Records pelo atalho na Home.",
+        "Escolha o modelo SSI do curso e preencha a configuração compartilhada (versão da prova, certificação, progresso do curso...) — preenchida uma única vez para toda a turma.",
+        "\"Adicionar aluno\" para cada aluno: só pede nome, iniciais e assinatura — se for menor de idade, também o nome e a assinatura do responsável.",
+        "\"Gerar para todos os alunos\" cria o documento de toda a lista de uma vez; \"Gerar novamente o TR\" na linha de um aluno específico gera de novo só o dele, sem repetir o resto.",
+        "Por aluno: \"Baixar PDF\", \"Baixar imagem (JPG)\" ou \"Compartilhar\". Para todos de uma vez: \"Baixar tudo em PDF/JPG\" ou \"Compartilhar tudo\", em um único arquivo compactado."
+      ],
+      "tips": [
+        "Você precisa da sua carteira de instrutor completa em Meu perfil (iniciais, número SSI Pro e assinatura) antes de poder gerar qualquer coisa — é o que é impresso em cada Training Record.",
+        "Nada do que você preenche aqui é salvo no Ocean Flow: cada documento é gerado na hora e só é baixado."
+      ],
+      "expectedResult": "Você tem o Training Record de cada aluno pronto para baixar ou compartilhar, já com a assinatura dele e a sua."
+    },
+    "mi-trabajo-referencia": {
+      "title": "Meu trabalho, de relance",
+      "summary": "A lista completa dos seus movimentos — cursos, comissões e ajustes — com suas ações.",
+      "whatYouCanDo": "Meu trabalho unifica o que antes eram três telas separadas (Registro, Comissões e Colegas) em um único lugar, agrupado por status de recebimento.",
+      "whenToUseIt": "É sua tela de trabalho diária — criar, revisar, receber e editar movimentos.",
+      "steps": [
+        "Pendentes / Recebidos: as duas abas do topo, com o total pendente no cartão superior.",
+        "\"Filtrar\": limita a lista por período, escola, curso ou tipo de movimento.",
+        "Em cada linha: \"Confirmar recebimento\"/\"Marcar pendente\" para mudar o status, e o menu \"⋯\" para Editar ou Excluir.",
+        "O botão \"+\" flutuante abre o mesmo formulário de criação do restante do app."
+      ],
+      "tips": [
+        "\"Receber todos\"/\"Marcar todos pendentes\" atuam sobre a lista visível — com filtros ativos, afeta só o que está filtrado.",
+        "Excluir pede confirmação e anima a saída da linha, para você ver exatamente o que apagou."
+      ],
+      "expectedResult": "Você encontra e atualiza qualquer movimento sem sair desta tela."
+    },
+    "resumen-referencia": {
+      "title": "Resumo, de relance",
+      "summary": "Um único total em destaque no topo; todo o resto só se expande se você pedir.",
+      "whatYouCanDo": "Resumo combina uma resposta rápida (o total do período, comparado com o anterior) com cartões que se expandem para quem quiser mais detalhe.",
+      "whenToUseIt": "Para entender como está um período, comparar escolas ou cursos, ou revisar comissões e ajustes com colegas.",
+      "steps": [
+        "Escolha a granularidade (mensal, trimestral, semestral, anual ou personalizado); a faixa de períodos abaixo navega sozinha — toque em qualquer um para recentralizar ali.",
+        "Filtre por tipo (Total, Curso, Comissão ou Ajuste) no seletor abaixo.",
+        "O cartão principal mostra o total e, quando faz sentido calculá-la, a comparação com o período anterior.",
+        "Toque em qualquer cartão (Por escola, Por curso, Comissões, Ajustes de curso, Calendário) para expandi-lo."
+      ],
+      "tips": [
+        "Com mais de uma escola, \"Por escola\" começa expandido por ser a pergunta mais frequente depois do total; com apenas uma, essa seção não aparece (não haveria nada para comparar) e é \"Por curso\" que começa expandido. Os demais sempre começam fechados.",
+        "Dentro de \"Por escola\", toque em uma escola para ver seu detalhamento por curso sem sair do cartão."
+      ],
+      "expectedResult": "Você tem o número que procurava, com tanto ou tão pouco detalhe quanto pediu."
+    },
+    "configuracion-referencia": {
+      "title": "Configurações, de relance",
+      "summary": "O menu onde você mantém seus próprios dados-base: escolas, cursos e tarifas.",
+      "whatYouCanDo": "Escolas, Cursos e Tarifas — os catálogos que você usa ao registrar um movimento em Meu trabalho.",
+      "whenToUseIt": "Para manter seus dados-base em dia: adicionar uma escola nova, um curso novo, ou ajustar uma tarifa.",
+      "steps": [
+        "Toque em qualquer linha do menu para entrar nessa seção; \"‹ Configurações\" volta ao menu.",
+        "Escolas e Cursos são criados pelo botão \"+\" flutuante, igual em Meu trabalho.",
+        "Tarifas mostra Curso e Comissão em uma única lista (o tipo é escolhido como filtro, ou ao criar, dentro da própria tela) — mesmo padrão visual de Meu trabalho."
+      ],
+      "expectedResult": "Você encontra qualquer catálogo ou ajuste sem precisar lembrar em qual aba ele vivia antes."
+    },
+    "perfil-referencia": {
+      "title": "Meu perfil, de relance",
+      "summary": "Seu avatar, seus dados, sua carteira de instrutor, sua moeda favorita e sua senha — tudo em um mesmo lugar, acessível pelo seu nome no cabeçalho.",
+      "whatYouCanDo": "Toque no seu avatar ou no seu apelido (canto superior direito em qualquer tela) para entrar em Meu perfil: sua identidade, sua carteira de instrutor, seu idioma, sua moeda favorita e sua senha, tudo em um mesmo lugar.",
+      "whenToUseIt": "Quando quiser personalizar sua conta, corrigir um dado, ou mudar a senha sem precisar sair da conta e passar por \"esqueci minha senha\".",
+      "steps": [
+        "Toque no avatar/apelido do cabeçalho para entrar em Meu perfil.",
+        "O lápis sobre o avatar abre o seletor de ícone e cor — a alteração é salva ao escolher, sem um botão \"Salvar\" separado.",
+        "\"Editar\" em Dados pessoais abre nome, sobrenome e apelido; o apelido não pode ter \"@\" nem coincidir com o de outra conta.",
+        "\"Dados de instrutor\" é sua carteira: iniciais, número SSI Pro e sua assinatura — salvos aqui uma única vez e usados para preencher seus Training Records automaticamente.",
+        "Moeda favorita é usada como reserva em Ajuste de curso quando não há uma tarifa que a determine — os demais movimentos sempre usam a moeda da sua própria tarifa."
+      ],
+      "tips": [
+        "Mudar a senha aqui não pede a senha atual — se você já está dentro do app, considera-se que a sessão ativa já é suficiente.",
+        "O idioma de todo o app também é mudado por aqui, sem precisar sair da conta.",
+        "Excluir sua conta é permanente e apaga todos os seus dados — para confirmar, você precisa digitar a palavra CANCELAR, para que nada seja apagado por um toque acidental."
+      ],
+      "expectedResult": "Sua conta reflete o avatar, os dados, a carteira de instrutor e a moeda que você escolher, e você pode mudar sua senha ou seu idioma quando quiser sem sair do app."
+    },
+    "filtros-referencia": {
+      "title": "Filtrar e buscar",
+      "summary": "Meu trabalho, Tarifas e os catálogos de Configurações compartilham o mesmo padrão de filtros.",
+      "whatYouCanDo": "Um botão \"Filtrar\" (com o número de filtros ativos) expande um painel com os campos disponíveis — período, escola, curso, tipo... — em vez de mostrá-los sempre acima da lista.",
+      "whenToUseIt": "Quando a lista tem itens demais para revisar todos de uma vez.",
+      "steps": [
+        "Toque em \"Filtrar\" para expandir o painel de campos disponíveis nessa tela.",
+        "Escolha um ou vários — o filtro de curso permite seleção múltipla.",
+        "\"Limpar filtros\" aparece assim que houver pelo menos um ativo."
+      ],
+      "tips": [
+        "O buscador de catálogos (Cursos, Moedas) filtra enquanto você digita, sem diferenciar maiúsculas/minúsculas nem acentos."
+      ],
+      "expectedResult": "A lista mostra só o que interessa a você, sem perder de vista quantos filtros estão ativos."
+    }
+  }
+}

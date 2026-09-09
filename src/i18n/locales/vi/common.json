@@ -1,0 +1,97 @@
+{
+  "loading": { "defaultLabel": "Đang tải" },
+  "errorBoundary": {
+    "title": "Ối, có gì đó không ổn",
+    "body": "Màn hình này gặp sự cố bất ngờ. Không phải do bạn làm gì sai — hãy thử tải lại trang, mọi thứ sẽ trở lại bình thường.",
+    "reload": "Tải lại"
+  },
+  "movementTypes": {
+    "ganado": "Khóa học",
+    "comision": "Hoa hồng",
+    "companeros": "Điều chỉnh"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "Chờ thu tiền",
+    "empty": "Không có khoản nào chờ",
+    "count_one": "{{count}} khoản chờ thanh toán",
+    "count_other": "{{count}} khoản chờ thanh toán",
+    "addMovement": "Thêm giao dịch"
+  },
+  "confirmDialog": { "cancel": "Hủy", "defaultConfirmLabel": "Xóa" },
+  "editActions": { "defaultSaveLabel": "Lưu", "cancel": "Hủy" },
+  "deleteButton": {
+    "defaultLabel": "Xóa",
+    "defaultItemLabel": "mục này",
+    "deletedToast": "Đã xóa",
+    "errorToast": "Không thể xóa. Vui lòng thử lại.",
+    "confirmTitle": "Xóa bản ghi này?",
+    "confirmMessage": "Bạn sắp xóa {{item}}. Hành động này không thể hoàn tác."
+  },
+  "field": { "hideHelp": "Ẩn trợ giúp", "help": "Trợ giúp" },
+  "calendar": {
+    "months": ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"],
+    "weekdays": ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
+    "prevMonth": "Tháng trước",
+    "nextMonth": "Tháng sau",
+    "prevYear": "Năm trước",
+    "nextYear": "Năm sau",
+    "prevDecade": "Thập kỷ trước",
+    "nextDecade": "Thập kỷ sau",
+    "today": "Hôm nay"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "Ngày",
+    "defaultAriaLabel": "Chọn ngày",
+    "pickerAriaLabel": "Bộ chọn ngày",
+    "chooseMonthAriaLabel": "Chọn tháng",
+    "chooseYearAriaLabel": "Chọn năm",
+    "dayAriaLabel": "Ngày {{day}} {{month}}",
+    "today": "Hôm nay",
+    "yesterday": "Hôm qua",
+    "tomorrow": "Ngày mai",
+    "dayBeforeYesterday": "Hôm kia"
+  },
+  "dateRangePicker": {
+    "from": "Từ",
+    "to": "Đến",
+    "fromAriaLabel": "Ngày bắt đầu",
+    "toAriaLabel": "Ngày kết thúc",
+    "pickerAriaLabel": "Bộ chọn khoảng ngày",
+    "chooseStart": "Chọn ngày bắt đầu",
+    "chooseEnd": "Chọn ngày kết thúc",
+    "chooseDate": "Chọn một ngày",
+    "okFrom": "OK — chỉ từ {{date}}",
+    "presets": { "today": "Hôm nay", "thisWeek": "Tuần này", "thisMonth": "Tháng này", "last30Days": "30 ngày qua" }
+  },
+  "monthCalendar": {
+    "addOnDay": "Thêm giao dịch ngày {{day}} {{month}}",
+    "addOnDayToday": "Thêm giao dịch ngày {{day}} {{month}} (hôm nay)",
+    "dayToday": "Ngày {{day}} {{month}} (hôm nay)",
+    "closeDayDetail": "Đóng chi tiết ngày",
+    "dayHeading": "Ngày {{day}} {{month}}",
+    "generatedOnDay": "Tạo vào ngày",
+    "table": { "course": "Khóa học", "comment": "Ghi chú", "people": "Người", "amount": "Số tiền" }
+  },
+  "select": { "placeholder": "Chọn..." },
+  "multiSelect": { "placeholder": "Tất cả", "clearSelection": "Bỏ chọn tất cả", "selectedCount": "Đã chọn {{count}}" },
+  "searchSelect": { "placeholder": "Tìm kiếm...", "ariaLabel": "Tìm kiếm", "noResults": "Không có kết quả" },
+  "currencySearchSelect": { "placeholder": "Tìm tiền tệ..." },
+  "listFilterBar": {
+    "from": "Từ",
+    "to": "Đến",
+    "school": "Trung tâm",
+    "activity": "Hoạt động",
+    "noLimit": "Không giới hạn",
+    "all": "Tất cả",
+    "clearFilters": "Xóa bộ lọc"
+  },
+  "rowMenu": { "moreActions": "Thêm hành động", "edit": "Sửa", "delete": "Xóa" },
+  "statusSwitch": { "ariaLabel": "Trạng thái: {{value}}. Nhấn để chuyển sang {{next}}", "title": "{{value}} — nhấn để chuyển sang \"{{next}}\"" },
+  "signature": {
+    "opcional": "không bắt buộc",
+    "borrar": "Xóa",
+    "deshacer": "Hoàn tác",
+    "firmadoAria": "{{label}}: đã ký",
+    "sinFirmarAria": "{{label}}: chưa ký"
+  }
+}

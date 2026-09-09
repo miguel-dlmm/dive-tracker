@@ -90,6 +90,7 @@
   "signature": {
     "opcional": "opcional",
     "borrar": "Borrar",
+    "deshacer": "Deshacer",
     "firmadoAria": "{{label}}: firmado",
     "sinFirmarAria": "{{label}}: sin firmar"
   }

@@ -1,0 +1,97 @@
+{
+  "loading": { "defaultLabel": "กำลังโหลด" },
+  "errorBoundary": {
+    "title": "อ๊ะ มีบางอย่างผิดพลาด",
+    "body": "หน้านี้เกิดปัญหาที่ไม่คาดคิด ไม่ใช่ความผิดของคุณเลย — ลองรีเฟรชดูอีกครั้ง น่าจะกลับมาเป็นปกติ",
+    "reload": "รีเฟรช"
+  },
+  "movementTypes": {
+    "ganado": "คอร์ส",
+    "comision": "ค่าคอมมิชชัน",
+    "companeros": "รายการปรับปรุง"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "รอเก็บเงิน",
+    "empty": "ไม่มีรายการค้าง",
+    "count_one": "{{count}} รายการรอเก็บเงิน",
+    "count_other": "{{count}} รายการรอเก็บเงิน",
+    "addMovement": "เพิ่มรายการ"
+  },
+  "confirmDialog": { "cancel": "ยกเลิก", "defaultConfirmLabel": "ลบ" },
+  "editActions": { "defaultSaveLabel": "บันทึก", "cancel": "ยกเลิก" },
+  "deleteButton": {
+    "defaultLabel": "ลบ",
+    "defaultItemLabel": "รายการนี้",
+    "deletedToast": "ลบแล้ว",
+    "errorToast": "ไม่สามารถลบได้ กรุณาลองใหม่อีกครั้ง",
+    "confirmTitle": "ลบรายการนี้หรือไม่?",
+    "confirmMessage": "คุณกำลังจะลบ {{item}} การกระทำนี้ไม่สามารถย้อนกลับได้"
+  },
+  "field": { "hideHelp": "ซ่อนคำแนะนำ", "help": "ช่วยเหลือ" },
+  "calendar": {
+    "months": ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"],
+    "weekdays": ["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"],
+    "prevMonth": "เดือนก่อนหน้า",
+    "nextMonth": "เดือนถัดไป",
+    "prevYear": "ปีก่อนหน้า",
+    "nextYear": "ปีถัดไป",
+    "prevDecade": "ทศวรรษก่อนหน้า",
+    "nextDecade": "ทศวรรษถัดไป",
+    "today": "วันนี้"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "วันที่",
+    "defaultAriaLabel": "เลือกวันที่",
+    "pickerAriaLabel": "ตัวเลือกวันที่",
+    "chooseMonthAriaLabel": "เลือกเดือน",
+    "chooseYearAriaLabel": "เลือกปี",
+    "dayAriaLabel": "{{day}} {{month}}",
+    "today": "วันนี้",
+    "yesterday": "เมื่อวาน",
+    "tomorrow": "พรุ่งนี้",
+    "dayBeforeYesterday": "วานซืน"
+  },
+  "dateRangePicker": {
+    "from": "จาก",
+    "to": "ถึง",
+    "fromAriaLabel": "วันที่เริ่มต้น",
+    "toAriaLabel": "วันที่สิ้นสุด",
+    "pickerAriaLabel": "ตัวเลือกช่วงวันที่",
+    "chooseStart": "เลือกวันที่เริ่มต้น",
+    "chooseEnd": "เลือกวันที่สิ้นสุด",
+    "chooseDate": "เลือกวันที่",
+    "okFrom": "ตกลง — เฉพาะวันที่ {{date}}",
+    "presets": { "today": "วันนี้", "thisWeek": "สัปดาห์นี้", "thisMonth": "เดือนนี้", "last30Days": "30 วันล่าสุด" }
+  },
+  "monthCalendar": {
+    "addOnDay": "เพิ่มรายการวันที่ {{day}} {{month}}",
+    "addOnDayToday": "เพิ่มรายการวันที่ {{day}} {{month}} (วันนี้)",
+    "dayToday": "{{day}} {{month}} (วันนี้)",
+    "closeDayDetail": "ปิดรายละเอียดวัน",
+    "dayHeading": "วันที่ {{day}} {{month}}",
+    "generatedOnDay": "สร้างเมื่อวันที่",
+    "table": { "course": "คอร์ส", "comment": "หมายเหตุ", "people": "จำนวนคน", "amount": "จำนวนเงิน" }
+  },
+  "select": { "placeholder": "เลือก..." },
+  "multiSelect": { "placeholder": "ทั้งหมด", "clearSelection": "ล้างการเลือก", "selectedCount": "เลือกแล้ว {{count}}" },
+  "searchSelect": { "placeholder": "ค้นหา...", "ariaLabel": "ค้นหา", "noResults": "ไม่พบผลลัพธ์" },
+  "currencySearchSelect": { "placeholder": "ค้นหาสกุลเงิน..." },
+  "listFilterBar": {
+    "from": "จาก",
+    "to": "ถึง",
+    "school": "โรงเรียน",
+    "activity": "กิจกรรม",
+    "noLimit": "ไม่จำกัด",
+    "all": "ทั้งหมด",
+    "clearFilters": "ล้างตัวกรอง"
+  },
+  "rowMenu": { "moreActions": "ตัวเลือกเพิ่มเติม", "edit": "แก้ไข", "delete": "ลบ" },
+  "statusSwitch": { "ariaLabel": "สถานะ: {{value}} แตะเพื่อเปลี่ยนเป็น {{next}}", "title": "{{value}} — คลิกเพื่อเปลี่ยนเป็น \"{{next}}\"" },
+  "signature": {
+    "opcional": "ไม่บังคับ",
+    "borrar": "ลบ",
+    "deshacer": "เลิกทำ",
+    "firmadoAria": "{{label}}: ลงชื่อแล้ว",
+    "sinFirmarAria": "{{label}}: ยังไม่ได้ลงชื่อ"
+  }
+}

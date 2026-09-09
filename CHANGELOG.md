@@ -4,6 +4,37 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.3.0] - 2026-09-09
+
+### Added
+- **Firma táctil**: botón "Deshacer" junto a "Borrar" — quita solo el
+  último trazo dibujado, no la firma entera.
+- **8 idiomas nuevos**: neerlandés, tailandés, indonesio, vietnamita,
+  birmano, malayo, ruso y portugués (Brasil) — mismo patrón que los 5
+  añadidos en v1.2.0 (`fallbackLng: "es"` cubre cualquier hueco). Migración
+  `0020-idiomas-adicionales-2.sql` amplía el check de `profiles.language`,
+  aplicada a producción como parte de esta release.
+- **Dataset "prueba"**: copia genérica del dataset "ihasia" (escuela,
+  cursos y tarifas), pasa a ser el dataset por defecto para altas nuevas
+  (registro externo y alta manual) en vez de "ihasia" — migración
+  `0019-dataset-prueba.sql`, aplicada a producción como parte de esta
+  release.
+
+### Fixed
+- **Ayuda abierta desde Training Records**: cerrarla volvía a Home en
+  vez de a la propia pantalla de Training Records que se estaba
+  editando — el roster/plantilla en curso ya sobrevivían (sessionStorage),
+  pero se perdía la pantalla real de origen.
+- **Idioma elegido en el alta se perdía en silencio para fr/it/de/ca/eu**:
+  la lista de idiomas válidos en `createUser.js`/`externalRegister.js`
+  (servidor) se quedó en `["es","en"]` cuando esos 5 idiomas se añadieron
+  en v1.1.0 — el cliente los aceptaba pero el servidor los descartaba a
+  `null` sin avisar, y la cuenta quedaba en español por defecto. Bug real
+  encontrado al añadir los 8 idiomas de esta versión; las tres listas
+  (schema.sql, createUser.js, externalRegister.js) quedan documentadas
+  como una única fuente de verdad duplicada a propósito, a sincronizar
+  juntas en cada idioma nuevo.
+
 ## [1.2.1] - 2026-09-09
 
 ### Fixed

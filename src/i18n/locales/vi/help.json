@@ -1,0 +1,249 @@
+{
+  "emptyState": "Chưa có nội dung trợ giúp.",
+  "whatsNewReplay": "Xem điểm mới trong phiên bản này",
+  "installAppLink": "Cài đặt ứng dụng trên điện thoại",
+  "groupLabels": {
+    "quiero": "Tôi muốn...",
+    "funcionalidades": "Chức năng"
+  },
+  "sections": {
+    "whatYouCanDo": "Bạn có thể làm gì",
+    "whenToUseIt": "Khi nào nên dùng",
+    "steps": "Các bước",
+    "tips": "Mẹo và lỗi thường gặp",
+    "expectedResult": "Kết quả mong đợi"
+  },
+  "categories": {
+    "bienvenida": {
+      "label": "Bắt đầu",
+      "description": "Ocean Flow là gì và được tổ chức ra sao"
+    },
+    "quiero-configurar": {
+      "label": "Cài đặt ứng dụng của bạn",
+      "description": "Trung tâm, khóa học, mức giá và danh mục"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Ghi lại một giao dịch",
+      "description": "Một khóa học đã dạy, một hoa hồng hoặc một điều chỉnh"
+    },
+    "quiero-cobrar": {
+      "label": "Thu các khoản đang chờ",
+      "description": "Đánh dấu đã thu, từng cái một hoặc tất cả cùng lúc"
+    },
+    "quiero-consultar-generado": {
+      "label": "Xem bạn đã tạo ra bao nhiêu",
+      "description": "Nhìn nhanh, hoặc chi tiết theo từng kỳ"
+    },
+    "quiero-generar-tr": {
+      "label": "Tạo một Training Record",
+      "description": "Tài liệu tiến độ chính thức của từng học viên"
+    },
+    "func-mi-trabajo": {
+      "label": "Công việc của tôi",
+      "description": "Tạo, sửa, thu tiền và xóa giao dịch"
+    },
+    "func-resumen": {
+      "label": "Tổng quan",
+      "description": "Nhìn nhanh và đào sâu khi cần"
+    },
+    "func-configuracion": {
+      "label": "Cài đặt",
+      "description": "Menu, và những gì có trong từng mục"
+    },
+    "func-perfil": {
+      "label": "Hồ sơ của tôi",
+      "description": "Ảnh đại diện, thẻ huấn luyện viên, ngôn ngữ và tiền tệ yêu thích"
+    },
+    "func-filtros": {
+      "label": "Bộ lọc và tìm kiếm",
+      "description": "Cùng một kiểu trong toàn bộ ứng dụng"
+    }
+  },
+  "articles": {
+    "primeros-pasos": {
+      "title": "Bắt đầu sử dụng Ocean Flow",
+      "summary": "Một vòng nhanh qua ba màn hình chính trước khi ghi lại giao dịch đầu tiên của bạn.",
+      "whatYouCanDo": "Ocean Flow giúp bạn quản lý thu nhập với tư cách huấn luyện viên tự do. Dưới cùng một khái niệm, \"giao dịch\", ứng dụng gộp chung các lớp bạn dạy, hoa hồng từ khách hàng được giới thiệu và các điều chỉnh tài chính với huấn luyện viên khác.",
+      "whenToUseIt": "Lần đầu mở ứng dụng, hoặc khi bạn muốn nhớ lại công dụng của từng màn hình.",
+      "steps": [
+        "Home: học viên, khóa học và khách được giới thiệu của bạn trong một cái nhìn nhanh, lối vào Training Records, số tiền đang chờ thu, lịch của tháng và một lối tắt để tạo giao dịch.",
+        "Công việc của tôi: danh sách đầy đủ các giao dịch của bạn (khóa học, hoa hồng và điều chỉnh), để tạo, sửa, thu tiền hoặc xóa.",
+        "Tổng quan: số dư của bạn theo kỳ bạn chọn, với khả năng đào sâu theo trung tâm, theo khóa học hoặc theo hoa hồng."
+      ],
+      "tips": [
+        "Với tài khoản mới, hãy bắt đầu từ \"Cài đặt ứng dụng của bạn\" (trung tâm, khóa học, mức giá).",
+        "Tiếp tục ghi lại một giao dịch của mỗi loại bạn sẽ dùng.",
+        "Kết thúc bằng việc thu tiền: từng cái khi được trả, hoặc tất cả cùng lúc nếu bạn kiểm tra định kỳ. Mỗi bước có hướng dẫn riêng trong \"Tôi muốn...\" bên dưới."
+      ],
+      "expectedResult": "Bạn biết dùng màn hình nào cho từng tình huống và thứ tự nào để chuẩn bị ứng dụng cho công việc hằng ngày."
+    },
+    "configurar-app": {
+      "title": "Cài đặt ứng dụng của bạn",
+      "summary": "Không có gì cố định trong ứng dụng: trung tâm, khóa học, mức giá và danh mục thanh toán đều chỉnh sửa được từ Cài đặt.",
+      "whatYouCanDo": "Cài đặt là nơi bạn duy trì dữ liệu nền tảng: trung tâm nào hợp tác với bạn, khóa học nào bạn dạy và với mức giá nào. Tất cả đều chỉnh sửa được, không có gì cố định trong mã nguồn.",
+      "whenToUseIt": "Trước khi ghi lại giao dịch đầu tiên, và sau đó mỗi khi bạn bắt đầu làm việc với trung tâm hoặc khóa học mới, hoặc thay đổi giá.",
+      "steps": [
+        "Vào Cài đặt (biểu tượng bánh răng, góc trên bên phải) và chạm vào mục bạn cần.",
+        "Tạo Trung tâm và Khóa học trước — một Mức giá luôn liên kết một trung tâm với một khóa học, nên cả hai phải tồn tại trước.",
+        "Trong mỗi mục, nhấn nút \"+\" nổi để tạo mới; \"‹ Cài đặt\" đưa bạn về menu.",
+        "Chạm vào màu của một dòng để tùy chỉnh, và ngôi sao để đánh dấu yêu thích."
+      ],
+      "tips": [
+        "Một trung tâm, khóa học hoặc tiền tệ được đánh dấu yêu thích sẽ được chọn sẵn trong các biểu mẫu tạo mới.",
+        "Đóng Cài đặt (nút \"✕\" ở đầu trang) sẽ luôn đưa bạn về tab mà bạn đã vào từ đó."
+      ],
+      "expectedResult": "Trung tâm, khóa học hoặc mức giá mới có sẵn ngay khi tạo giao dịch — với việc này bạn đã sẵn sàng tiếp tục với \"Ghi lại một giao dịch\"."
+    },
+    "crear-movimiento": {
+      "title": "Tạo một giao dịch",
+      "summary": "Cùng một biểu mẫu dùng cho khóa học đã dạy, hoa hồng hoặc điều chỉnh với đồng nghiệp — mỗi loại có trường riêng.",
+      "whatYouCanDo": "\"Thêm giao dịch\" là lối tạo mới duy nhất trong toàn bộ ứng dụng — chính biểu mẫu để bạn chọn loại, không cần bấm đúng nút riêng cho từng trường hợp.",
+      "whenToUseIt": "Ngay sau khi dạy một lớp, khi chốt một khoản hoa hồng, hoặc khi thỏa thuận điều chỉnh với huấn luyện viên khác.",
+      "steps": [
+        "Nhấn \"Thêm giao dịch\": nút \"+\" trên thẻ \"Chờ thu tiền\" ở Home, cùng nút đó khi chạm vào một ngày trên lịch của Home, hoặc nút \"+\" nổi ở Công việc của tôi.",
+        "Ở đầu biểu mẫu, chọn loại: Khóa học đã dạy, Hoa hồng hoặc Điều chỉnh khóa học.",
+        "Khóa học đã dạy: trung tâm, khóa học, ngày và số người — mức giá theo khóa học sẽ tự tính số tiền.",
+        "Hoa hồng: giống khóa học, nhưng dành cho khách hàng bạn giới thiệu và một huấn luyện viên khác dạy — dùng mức giá hoa hồng riêng, không phải mức giá khóa học.",
+        "Điều chỉnh khóa học: không phụ thuộc vào mức giá nào — bạn tự nhập số tiền (dương nếu được nợ, âm nếu bạn nợ) và với đồng nghiệp nào.",
+        "Lưu lại. Nếu bạn mở biểu mẫu từ Home, bạn sẽ thấy giao dịch trong Công việc của tôi ngay sau khi lưu."
+      ],
+      "tips": [
+        "Nếu chưa có mức giá cho trung tâm + khóa học đó, biểu mẫu cho phép bạn tạo ngay tại chỗ (\"Thêm mức giá\") mà không cần rời màn hình — chỉ áp dụng cho Khóa học và Hoa hồng, Điều chỉnh không bao giờ cần mức giá.",
+        "Hủy hoặc đóng biểu mẫu mà không lưu sẽ không tạo gì cả — bạn có thể mở và đóng thoải mái mà không sợ để lại giao dịch dang dở."
+      ],
+      "expectedResult": "Giao dịch xuất hiện trong Công việc của tôi, mục \"Đang chờ\", và được cộng vào \"Đã tạo ra tháng này\" ở Home (trừ Điều chỉnh bất lợi cho bạn, không tính là đã tạo ra)."
+    },
+    "cobrar-movimientos": {
+      "title": "Đánh dấu giao dịch là đã thu",
+      "summary": "Theo dõi những gì bạn đang chờ thu và cập nhật trạng thái ngay khi được trả — từng cái một, hoặc tất cả cùng lúc.",
+      "whatYouCanDo": "Mỗi giao dịch có một trạng thái (đang chờ hoặc đã thu). Đổi trạng thái chỉ cần một chạm, có thể hoàn tác nếu nhầm. Bạn có thể làm từng giao dịch một, hoặc cùng lúc cho toàn bộ danh sách đang hiển thị.",
+      "whenToUseIt": "Ngay khi một trung tâm hoặc đồng nghiệp trả tiền cho bạn (từng cái một), hoặc cùng lúc khi bạn kiểm tra định kỳ và đã được trả nhiều khoản đang chờ.",
+      "steps": [
+        "Để thu một khoản: vào Công việc của tôi (tab \"Đang chờ\" mở mặc định) và nhấn \"Xác nhận đã thu\" ở dòng tương ứng (hoặc \"Đánh dấu đã thanh toán\" nếu là điều chỉnh bất lợi cho bạn).",
+        "Thẻ \"Chờ thu tiền\" ở Home đưa bạn thẳng đến tab đó — chỉ một chạm từ màn hình chính.",
+        "Để thu nhiều khoản cùng lúc: trong Công việc của tôi, dùng \"Thu tất cả\" ở đầu danh sách — áp dụng cho mọi thứ đang hiển thị lúc đó.",
+        "Trước khi dùng \"Thu tất cả\", hãy dùng \"Lọc\" (theo ngày, trung tâm, khóa học hoặc loại) để thu hẹp danh sách đúng những gì bạn muốn thu cùng lúc."
+      ],
+      "tips": [
+        "Một thông báo với nút \"Hoàn tác\" xuất hiện sau mỗi thay đổi — bạn có vài giây để hoàn tác mà không cần tìm lại giao dịch.",
+        "\"Thu tất cả\" yêu cầu xác nhận trước khi áp dụng — không có \"Hoàn tác\" cho toàn bộ lô, khác với thu từng cái một."
+      ],
+      "expectedResult": "Giao dịch (hoặc tất cả các mục đã lọc) chuyển sang tab \"Đã thu\" và số tiền của nó không còn tính vào \"Chờ thu tiền\" ở Home."
+    },
+    "consultar-generado": {
+      "title": "Xem bạn đã tạo ra bao nhiêu",
+      "summary": "Nhìn nhanh trong Công việc của tôi, hoặc chi tiết đầy đủ theo kỳ bạn chọn trong Tổng quan.",
+      "whatYouCanDo": "\"Đã tạo ra tháng này\" trong Công việc của tôi cho bạn con số của tháng hiện tại, luôn hiển thị ở đầu danh sách. Tổng quan đi xa hơn: bất kỳ kỳ nào, so sánh với kỳ trước, và khả năng đào sâu theo trung tâm hoặc theo khóa học.",
+      "whenToUseIt": "Công việc của tôi, để nhìn nhanh cùng với công việc hằng ngày. Tổng quan, khi bạn muốn một kỳ khác ngoài tháng hiện tại hoặc hiểu rõ tiền đến từ đâu.",
+      "steps": [
+        "Trong Công việc của tôi, thẻ \"Đã tạo ra tháng này\" luôn hiển thị sẵn, ở đầu danh sách, không cần chạm gì.",
+        "Trong Tổng quan, chọn đơn vị thời gian và kỳ ở phần điều khiển phía trên (tháng, quý, nửa năm, năm hoặc khoảng tùy chỉnh) và, nếu muốn, loại (Khóa học, Hoa hồng hoặc Điều chỉnh).",
+        "Thẻ chính hiển thị tổng của kỳ và mức thay đổi so với kỳ trước.",
+        "Chạm vào \"Theo trung tâm\", \"Theo khóa học\", \"Hoa hồng\", \"Điều chỉnh khóa học\" hoặc \"Lịch\" để đào sâu — mỗi mục chỉ mở ra khi bạn yêu cầu."
+      ],
+      "tips": [
+        "Trong \"Theo trung tâm\", chạm vào một trung tâm để xem chi tiết theo khóa học ngay tại chỗ, không cần chuyển màn hình.",
+        "So sánh với kỳ trước không hiển thị nếu bạn trộn nhiều loại tiền tệ trong cùng kỳ — tránh hiển thị một phép tính không chính xác."
+      ],
+      "expectedResult": "Bạn có một con số tổng cho kỳ đã chọn, cùng chi tiết từng nguồn thu nếu cần."
+    },
+    "generar-training-record": {
+      "title": "Tạo một Training Record",
+      "summary": "Tài liệu tiến độ SSI chính thức của từng học viên, kèm chữ ký của họ và của bạn — không lưu gì trên đám mây, chỉ tải xuống.",
+      "whatYouCanDo": "Từ Training Records, bạn tạo tài liệu tiến độ chính thức từ bất kỳ mẫu nào trong 10 mẫu SSI, với thông tin của từng học viên và chữ ký huấn luyện viên đã có sẵn. Bạn có thể tạo từng cái một hoặc cùng lúc, và tải về dạng PDF, ảnh, hoặc chia sẻ trực tiếp.",
+      "whenToUseIt": "Khi kết thúc một khóa học, khi học viên cần Training Record bản giấy hoặc để gửi cho SSI.",
+      "steps": [
+        "Vào Training Records từ lối vào trên Home.",
+        "Chọn mẫu SSI của khóa học và điền cấu hình chung (phiên bản bài kiểm tra, chứng chỉ, tiến độ khóa học...) — chỉ điền một lần cho cả lớp.",
+        "\"Thêm học viên\" cho từng người: chỉ cần tên, chữ viết tắt và chữ ký — nếu là vị thành niên, thêm cả tên và chữ ký của người giám hộ.",
+        "\"Tạo cho tất cả học viên\" tạo tài liệu cho toàn bộ danh sách cùng lúc; \"Tạo lại TR\" trên dòng của một học viên cụ thể chỉ tạo lại của người đó, không lặp lại phần còn lại.",
+        "Theo từng học viên: \"Tải PDF\", \"Tải ảnh (JPG)\" hoặc \"Chia sẻ\". Cho tất cả cùng lúc: \"Tải tất cả dạng PDF/JPG\" hoặc \"Chia sẻ tất cả\", trong một tệp nén duy nhất."
+      ],
+      "tips": [
+        "Bạn cần hoàn thiện thẻ huấn luyện viên trong Hồ sơ của tôi (chữ viết tắt, số SSI Pro và chữ ký) trước khi có thể tạo bất kỳ tài liệu nào — đây là những gì được in trên mỗi Training Record.",
+        "Không có gì bạn điền ở đây được lưu trên Ocean Flow: mỗi tài liệu được tạo ngay lúc đó và chỉ để tải xuống."
+      ],
+      "expectedResult": "Bạn có Training Record của từng học viên sẵn sàng để tải xuống hoặc chia sẻ, đã có chữ ký của họ và của bạn."
+    },
+    "mi-trabajo-referencia": {
+      "title": "Công việc của tôi, nhìn nhanh",
+      "summary": "Danh sách đầy đủ các giao dịch của bạn — khóa học, hoa hồng và điều chỉnh — cùng các thao tác.",
+      "whatYouCanDo": "Công việc của tôi gộp lại những gì trước đây là ba màn hình riêng biệt (Ghi nhận, Hoa hồng và Đồng nghiệp) vào một nơi duy nhất, được nhóm theo trạng thái thu tiền.",
+      "whenToUseIt": "Đây là màn hình làm việc hằng ngày của bạn — tạo, xem lại, thu tiền và sửa giao dịch.",
+      "steps": [
+        "Đang chờ / Đã thu: hai tab ở đầu trang, với tổng đang chờ trên thẻ phía trên.",
+        "\"Lọc\": thu hẹp danh sách theo kỳ, trung tâm, khóa học hoặc loại giao dịch.",
+        "Trên mỗi dòng: \"Xác nhận đã thu\"/\"Đánh dấu chờ\" để đổi trạng thái, và menu \"⋯\" để Sửa hoặc Xóa.",
+        "Nút \"+\" nổi mở cùng biểu mẫu tạo mới như phần còn lại của ứng dụng."
+      ],
+      "tips": [
+        "\"Thu tất cả\"/\"Đánh dấu tất cả là đang chờ\" áp dụng cho danh sách đang hiển thị — khi có bộ lọc, chỉ ảnh hưởng đến những gì đã lọc.",
+        "Xóa yêu cầu xác nhận và có hiệu ứng khi dòng biến mất, để bạn thấy rõ mình đã xóa gì."
+      ],
+      "expectedResult": "Bạn tìm và cập nhật bất kỳ giao dịch nào mà không cần rời khỏi màn hình này."
+    },
+    "resumen-referencia": {
+      "title": "Tổng quan, nhìn nhanh",
+      "summary": "Một tổng số duy nhất nổi bật ở đầu trang; mọi thứ khác chỉ mở ra khi bạn yêu cầu.",
+      "whatYouCanDo": "Tổng quan kết hợp một câu trả lời nhanh (tổng của kỳ, so với kỳ trước) với các thẻ có thể mở ra cho ai muốn đào sâu hơn.",
+      "whenToUseIt": "Để hiểu một kỳ diễn ra thế nào, so sánh trung tâm hoặc khóa học, hoặc xem lại hoa hồng và điều chỉnh với đồng nghiệp.",
+      "steps": [
+        "Chọn đơn vị thời gian (tháng, quý, nửa năm, năm hoặc tùy chỉnh); dải các kỳ bên dưới tự cuộn — chạm vào bất kỳ kỳ nào để chuyển đến đó.",
+        "Lọc theo loại (Tổng, Khóa học, Hoa hồng hoặc Điều chỉnh) bằng thanh phân đoạn bên dưới.",
+        "Thẻ chính hiển thị tổng và, khi có ý nghĩa để tính, so sánh với kỳ trước.",
+        "Chạm vào bất kỳ thẻ nào (Theo trung tâm, Theo khóa học, Hoa hồng, Điều chỉnh khóa học, Lịch) để mở ra."
+      ],
+      "tips": [
+        "Với nhiều hơn một trung tâm, \"Theo trung tâm\" mở sẵn vì đây là câu hỏi thường gặp nhất sau tổng số; với chỉ một trung tâm, mục này không xuất hiện (không có gì để so sánh) và \"Theo khóa học\" sẽ mở sẵn thay vào đó. Các mục khác luôn bắt đầu đóng.",
+        "Trong \"Theo trung tâm\", chạm vào một trung tâm để xem chi tiết theo khóa học mà không cần rời khỏi thẻ."
+      ],
+      "expectedResult": "Bạn có con số bạn cần tìm, với mức độ chi tiết tùy theo yêu cầu."
+    },
+    "configuracion-referencia": {
+      "title": "Cài đặt, nhìn nhanh",
+      "summary": "Menu nơi bạn duy trì dữ liệu nền tảng của mình: trung tâm, khóa học và mức giá.",
+      "whatYouCanDo": "Trung tâm, Khóa học và Mức giá — các danh mục bạn dùng khi ghi lại giao dịch trong Công việc của tôi.",
+      "whenToUseIt": "Để cập nhật dữ liệu nền tảng: thêm trung tâm mới, khóa học mới, hoặc điều chỉnh mức giá.",
+      "steps": [
+        "Chạm vào bất kỳ dòng nào trong menu để vào mục đó; \"‹ Cài đặt\" quay lại menu.",
+        "Trung tâm và Khóa học được tạo bằng nút \"+\" nổi, giống như trong Công việc của tôi.",
+        "Mức giá hiển thị Khóa học và Hoa hồng trong cùng một danh sách (loại được chọn qua bộ lọc, hoặc khi tạo mới, ngay trong biểu mẫu) — cùng kiểu hiển thị như Công việc của tôi."
+      ],
+      "expectedResult": "Bạn tìm thấy bất kỳ danh mục hay cài đặt nào mà không cần nhớ nó từng nằm ở tab nào."
+    },
+    "perfil-referencia": {
+      "title": "Hồ sơ của tôi, nhìn nhanh",
+      "summary": "Ảnh đại diện, thông tin, thẻ huấn luyện viên, tiền tệ yêu thích và mật khẩu của bạn — tất cả ở một nơi, truy cập từ tên của bạn trên đầu trang.",
+      "whatYouCanDo": "Chạm vào ảnh đại diện hoặc biệt danh của bạn (góc trên bên phải ở bất kỳ màn hình nào) để vào Hồ sơ của tôi: danh tính, thẻ huấn luyện viên, ngôn ngữ, tiền tệ yêu thích và mật khẩu, tất cả ở cùng một nơi.",
+      "whenToUseIt": "Khi bạn muốn cá nhân hóa tài khoản, sửa một thông tin, hoặc đổi mật khẩu mà không cần đăng xuất và qua bước \"quên mật khẩu\".",
+      "steps": [
+        "Chạm vào ảnh đại diện/biệt danh trên đầu trang để vào Hồ sơ của tôi.",
+        "Bút chì trên ảnh đại diện mở bộ chọn biểu tượng và màu — thay đổi được lưu ngay khi chọn, không cần nút \"Lưu\" riêng.",
+        "\"Sửa\" trong Thông tin cá nhân mở tên, họ và biệt danh; biệt danh không được chứa \"@\" hoặc trùng với tài khoản khác.",
+        "\"Thông tin huấn luyện viên\" là thẻ của bạn: chữ viết tắt, số SSI Pro và chữ ký — chỉ lưu một lần ở đây và được dùng để tự động điền vào Training Records của bạn.",
+        "Tiền tệ yêu thích được dùng làm dự phòng trong Điều chỉnh khóa học khi không có mức giá nào xác định — các giao dịch khác luôn dùng tiền tệ của mức giá riêng."
+      ],
+      "tips": [
+        "Đổi mật khẩu ở đây không yêu cầu mật khẩu hiện tại — nếu bạn đã đăng nhập vào ứng dụng, phiên đăng nhập hiện tại được coi là đủ tin cậy.",
+        "Ngôn ngữ của toàn bộ ứng dụng cũng được đổi từ đây, không cần đăng xuất.",
+        "Xóa tài khoản là vĩnh viễn và xóa toàn bộ dữ liệu của bạn — để xác nhận, bạn phải nhập từ HỦY, để không có gì bị xóa do chạm nhầm."
+      ],
+      "expectedResult": "Tài khoản của bạn phản ánh ảnh đại diện, thông tin, thẻ huấn luyện viên và tiền tệ bạn chọn, và bạn có thể đổi mật khẩu hoặc ngôn ngữ bất cứ lúc nào mà không cần rời khỏi ứng dụng."
+    },
+    "filtros-referencia": {
+      "title": "Lọc và tìm kiếm",
+      "summary": "Công việc của tôi, Mức giá và các danh mục trong Cài đặt dùng chung một kiểu lọc.",
+      "whatYouCanDo": "Một nút \"Lọc\" (kèm số bộ lọc đang áp dụng) mở ra một bảng với các trường khả dụng — kỳ, trung tâm, khóa học, loại... — thay vì luôn hiện phía trên danh sách.",
+      "whenToUseIt": "Khi danh sách có quá nhiều mục để xem hết cùng lúc.",
+      "steps": [
+        "Nhấn \"Lọc\" để mở bảng các trường khả dụng ở màn hình đó.",
+        "Chọn một hoặc nhiều mục — bộ lọc khóa học cho phép chọn nhiều.",
+        "\"Xóa bộ lọc\" xuất hiện ngay khi có ít nhất một bộ lọc đang áp dụng."
+      ],
+      "tips": [
+        "Ô tìm kiếm trong các danh mục (Khóa học, Tiền tệ) lọc ngay khi bạn gõ, không phân biệt hoa thường hay dấu."
+      ],
+      "expectedResult": "Danh sách chỉ hiển thị những gì bạn quan tâm, mà vẫn thấy rõ có bao nhiêu bộ lọc đang áp dụng."
+    }
+  }
+}

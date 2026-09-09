@@ -1,0 +1,44 @@
+{
+  "whatsNew": {
+    "close": "Sluiten",
+    "eyebrow": "Nieuw in deze versie",
+    "slideTablist": "Dia",
+    "back": "Terug",
+    "next": "Volgende",
+    "start": "Beginnen",
+    "slides": [
+      {
+        "title": "Nu in meer talen",
+        "body": "Nederlands, Thai, Indonesisch, Vietnamees, Birmees, Maleis, Russisch en Portugees — wissel wanneer je wilt via je profiel."
+      },
+      {
+        "title": "Ongedaan maken bij de handtekening",
+        "body": "Verkeerde lijn? Maak alleen de laatste lijn ongedaan, zonder de hele handtekening te wissen."
+      },
+      {
+        "title": "Bekijk het opnieuw wanneer je wilt",
+        "body": "Kom terug naar deze nieuwtjes via Hulp → \"Wat is er nieuw\", zonder te wachten op de volgende update."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Sluiten",
+    "eyebrow": "Nieuwe release",
+    "branchLabel": "Branch",
+    "commitLabel": "commit",
+    "technicalChanges": "Technische wijzigingen",
+    "functionalChanges": "Functionele wijzigingen",
+    "uiChangesLabel": "UI-wijzigingen:",
+    "uiChangesYes": "Ja",
+    "uiChangesNo": "Nee",
+    "stepsHeading": "Wat te testen / wat te doen",
+    "testsLabel": "Tests:",
+    "buildLabel": "Build:",
+    "notReported": "niet gerapporteerd",
+    "previewCommit": "Preview van de commit",
+    "previewCommitEmpty": "Preview van de commit: nog geen preview",
+    "previewIntegrated": "Geïntegreerde preview (Release-V1)",
+    "previewIntegratedEmpty": "Geïntegreerde preview: nog geen preview",
+    "understood": "Begrepen"
+  }
+}

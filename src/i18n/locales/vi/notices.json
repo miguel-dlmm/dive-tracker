@@ -1,0 +1,44 @@
+{
+  "whatsNew": {
+    "close": "Đóng",
+    "eyebrow": "Điểm mới trong phiên bản này",
+    "slideTablist": "Slide",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "start": "Bắt đầu",
+    "slides": [
+      {
+        "title": "Giờ đây có thêm nhiều ngôn ngữ",
+        "body": "Tiếng Hà Lan, Thái, Indonesia, Việt, Miến Điện, Mã Lai, Nga và Bồ Đào Nha — đổi bất cứ lúc nào từ hồ sơ của bạn."
+      },
+      {
+        "title": "Hoàn tác nét chữ ký",
+        "body": "Ký nhầm nét? Hoàn tác chỉ nét cuối cùng, không cần xóa cả chữ ký."
+      },
+      {
+        "title": "Xem lại bất cứ lúc nào",
+        "body": "Quay lại những điểm mới này từ Trợ giúp → \"Xem điểm mới\", không cần chờ bản cập nhật tiếp theo."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Đóng",
+    "eyebrow": "Bản cập nhật mới",
+    "branchLabel": "Nhánh",
+    "commitLabel": "commit",
+    "technicalChanges": "Thay đổi kỹ thuật",
+    "functionalChanges": "Thay đổi chức năng",
+    "uiChangesLabel": "Thay đổi giao diện:",
+    "uiChangesYes": "Có",
+    "uiChangesNo": "Không",
+    "stepsHeading": "Cần thử / cần làm gì",
+    "testsLabel": "Kiểm thử:",
+    "buildLabel": "Build:",
+    "notReported": "chưa báo cáo",
+    "previewCommit": "Xem trước commit",
+    "previewCommitEmpty": "Xem trước commit: chưa có bản xem trước",
+    "previewIntegrated": "Bản xem trước tích hợp (Release-V1)",
+    "previewIntegratedEmpty": "Bản xem trước tích hợp: chưa có bản xem trước",
+    "understood": "Đã hiểu"
+  }
+}

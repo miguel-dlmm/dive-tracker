@@ -1,0 +1,144 @@
+{
+  "actionLabel": {
+    "markPending": "Tandakan belum selesai",
+    "markSettled": "Tandakan diselesaikan",
+    "confirmCollection": "Sahkan kutipan"
+  },
+  "dateGroup": {
+    "today": "Hari ini",
+    "yesterday": "Semalam",
+    "weekdaysShort": ["Isn", "Sel", "Rab", "Kha", "Jum", "Sab", "Ahd"],
+    "monthsShort": ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"]
+  },
+  "emptyMessage": {
+    "pendingWithFilters": "Tiada item belum selesai dengan penapis ini.",
+    "pendingNoFilters": "Semuanya kemas kini — tiada apa-apa belum selesai.",
+    "paidWithFilters": "Tiada item dikutip dengan penapis ini.",
+    "paidNoFilters": "Anda belum menandakan apa-apa sebagai dikutip lagi."
+  },
+  "rowMenu": {
+    "adjustmentWith": "pelarasan dengan {{name}}",
+    "courseAt": "{{activity}} di {{school}}",
+    "deleteConfirmMessage": "Anda akan memadam {{item}}. Anda ada beberapa saat untuk membuat asal daripada makluman itu.",
+    "undoAction": "Buat asal",
+    "deleteUndoneToast": "Dipulihkan",
+    "deleteUndoError": "Tidak dapat membuat asal. Cuba lagi."
+  },
+  "tabs": {
+    "pending": "Belum selesai",
+    "paid": "Dikutip"
+  },
+  "filter": {
+    "label": "Tapis",
+    "period": "Tempoh",
+    "school": "Sekolah",
+    "course": "Kursus",
+    "type": "Jenis",
+    "allFeminine": "Semua",
+    "allMasculine": "Semua",
+    "clear": "Kosongkan penapis"
+  },
+  "collectAll": {
+    "button": "Kutip semua",
+    "confirmLabel": "Kutip",
+    "title_one": "Kutip {{count}} transaksi belum selesai?",
+    "title_other": "Kutip {{count}} transaksi belum selesai?",
+    "messageAjuste_one": "Anda akan menandakan transaksi ini sebagai dikutip atau diselesaikan sekali gus, mengikut yang berkenaan bagi setiap satu. Anda boleh membuat asal setiap satu secara berasingan selepas itu, sama seperti mengesahkannya satu demi satu.",
+    "messageAjuste_other": "Anda akan menandakan {{count}} transaksi ini sebagai dikutip atau diselesaikan sekali gus, mengikut yang berkenaan bagi setiap satu. Anda boleh membuat asal setiap satu secara berasingan selepas itu, sama seperti mengesahkannya satu demi satu.",
+    "messageSimple_one": "Anda akan menandakan transaksi ini sebagai dikutip sekali gus. Anda boleh membuat asal setiap satu secara berasingan selepas itu, sama seperti mengesahkannya satu demi satu.",
+    "messageSimple_other": "Anda akan menandakan {{count}} transaksi ini sebagai dikutip sekali gus. Anda boleh membuat asal setiap satu secara berasingan selepas itu, sama seperti mengesahkannya satu demi satu.",
+    "toastSwitch_one": "{{count}} transaksi ditandakan sebagai {{verb}} — tukar ke \"Dikutip\" untuk melihatnya",
+    "toastSwitch_other": "{{count}} transaksi ditandakan sebagai {{verbPlural}} — tukar ke \"Dikutip\" untuk melihatnya",
+    "toastNoSwitch_one": "{{count}} transaksi ditandakan sebagai {{verb}}",
+    "toastNoSwitch_other": "{{count}} transaksi ditandakan sebagai {{verbPlural}}",
+    "verbCobrado": "dikutip",
+    "verbCobradoPlural": "dikutip",
+    "verbCobradoOLiquidado": "dikutip atau diselesaikan",
+    "verbCobradoOLiquidadoPlural": "dikutip atau diselesaikan"
+  },
+  "markAllPending": {
+    "button": "Tandakan semua sebagai belum selesai",
+    "confirmLabel": "Tandakan belum selesai",
+    "title_one": "Tandakan {{count}} transaksi dikutip sebagai belum selesai?",
+    "title_other": "Tandakan {{count}} transaksi dikutip sebagai belum selesai?",
+    "message_one": "Anda akan mengembalikan transaksi ini kepada belum selesai sekali gus. Anda boleh membuat asal setiap satu secara berasingan selepas itu, sama seperti melakukannya satu demi satu.",
+    "message_other": "Anda akan mengembalikan {{count}} transaksi ini kepada belum selesai sekali gus. Anda boleh membuat asal setiap satu secara berasingan selepas itu, sama seperti melakukannya satu demi satu.",
+    "toast_one": "{{count}} transaksi ditandakan sebagai belum selesai",
+    "toast_other": "{{count}} transaksi ditandakan sebagai belum selesai"
+  },
+  "paidCapHint": "Menunjukkan {{limit}} yang paling baru dikutip daripada {{total}} — guna \"Tapis\" untuk melihat tempoh tertentu.",
+  "fabAdd": "Tambah",
+  "toggleStatus": {
+    "undoneToast": "Dibuat asal",
+    "undoError": "Tidak dapat membuat asal. Cuba lagi.",
+    "undoAction": "Buat asal",
+    "markedPending": "Ditandakan sebagai belum selesai",
+    "markedPaidSwitchTab": "Ditandakan sebagai dikutip — tukar ke \"Dikutip\" untuk melihatnya",
+    "markedPaid": "Ditandakan sebagai dikutip"
+  },
+  "genericUpdateError": "Tidak dapat mengemas kini. Cuba lagi.",
+  "sheet": {
+    "close": "Tutup",
+    "typeSelectorAria": "Jenis transaksi",
+    "createTypes": {
+      "ganado": "Kursus diajar",
+      "comision": "Komisen",
+      "companeros": "Pelarasan kursus"
+    },
+    "titleEdit": {
+      "ganado": "Sunting kursus diajar",
+      "comision": "Sunting komisen",
+      "companeros": "Sunting pelarasan kursus"
+    },
+    "titleNew": {
+      "ganado": "Kursus diajar baharu",
+      "comision": "Komisen baharu",
+      "companeros": "Pelarasan kursus baharu"
+    },
+    "fields": {
+      "course": "Kursus",
+      "school": "Sekolah",
+      "date": "Tarikh",
+      "relatedColleague": "Instruktor berkaitan",
+      "amount": "Jumlah · {{currency}}",
+      "amountHint": "Positif jika dia membayar anda; negatif jika anda membayar dia",
+      "colleaguePlaceholder": "Ana, Marc...",
+      "amountPlaceholder": "90 atau -30",
+      "peopleCount": "Bil. orang",
+      "lessPeople": "Kurangkan orang",
+      "morePeople": "Tambah orang",
+      "total": "Jumlah",
+      "perPerson": "/ orang",
+      "addRate": "Tambah kadar bayaran",
+      "notes": "Nota",
+      "notesPlaceholder": "Pilihan",
+      "addNote": "Tambah nota"
+    },
+    "rate": {
+      "label": "Kadar bayaran — {{school}} · {{activity}}",
+      "cancel": "Batal",
+      "placeholder": "Kadar bayaran",
+      "ariaLabel": "Kadar bayaran · {{currency}}",
+      "saving": "Menyimpan kadar bayaran",
+      "save": "Simpan kadar bayaran"
+    },
+    "save": "Simpan",
+    "toasts": {
+      "changesSaved": "Perubahan disimpan",
+      "adjustmentAdded": "Pelarasan ditambah",
+      "courseAdded": "Kursus ditambah",
+      "commissionAdded": "Komisen ditambah",
+      "saveError": "Tidak dapat menyimpan. Cuba lagi.",
+      "rateAdded": "Kadar bayaran ditambah",
+      "rateSaveError": "Tidak dapat menyimpan kadar bayaran. Cuba lagi."
+    }
+  },
+  "kpis": {
+    "generatedThisMonth": "Dijana bulan ini",
+    "pendingToCollect": "Belum dikutip",
+    "pendingTooltip": "Jumlah ini menggambarkan bayaran belum selesai daripada bulan-bulan sebelumnya.",
+    "pendingTooltipShow": "Maklumat: Belum dikutip",
+    "pendingTooltipHide": "Sembunyikan maklumat: Belum dikutip",
+    "collectedThisMonth": "Dikutip bulan ini"
+  }
+}

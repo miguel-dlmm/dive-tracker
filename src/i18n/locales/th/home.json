@@ -1,0 +1,21 @@
+{
+  "calendarCaption": "แตะวันที่เพื่อดูรายละเอียด หรือแตะวันว่างเพื่อเพิ่มรายการ",
+  "activeSchoolThisMonth": "โรงเรียนที่มีกิจกรรมมากที่สุด",
+  "activeSchoolCount_one": "{{count}} รายการเดือนนี้",
+  "activeSchoolCount_other": "{{count}} รายการเดือนนี้",
+  "activeSchoolCountAndOthers_one": "{{count}} รายการ · {{schools}} โรงเรียนเดือนนี้",
+  "activeSchoolCountAndOthers_other": "{{count}} รายการ · {{schools}} โรงเรียนเดือนนี้",
+  "noActivityThisMonth": "ไม่มีกิจกรรมเดือนนี้",
+  "kpis": {
+    "sectionTitle": "ผลงานของคุณเดือนนี้",
+    "studentsThisMonth": "นักเรียน",
+    "coursesTotal": "คอร์สทั้งหมด",
+    "referredThisMonth": "ลูกค้าที่แนะนำ"
+  },
+  "trainingRecordsCard": {
+    "title": "Training Records",
+    "ctaFirstTime": "สร้าง Training Record แรกของคุณ",
+    "generatedLabel": "สร้างแล้ว"
+  },
+  "installApp": "ดาวน์โหลดแอป"
+}

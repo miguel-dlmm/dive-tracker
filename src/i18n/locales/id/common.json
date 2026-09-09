@@ -1,0 +1,97 @@
+{
+  "loading": { "defaultLabel": "Memuat" },
+  "errorBoundary": {
+    "title": "Aduh, ada yang tidak beres",
+    "body": "Layar ini mengalami masalah yang tidak terduga. Ini bukan salahmu — coba muat ulang, biasanya langsung normal lagi.",
+    "reload": "Muat ulang"
+  },
+  "movementTypes": {
+    "ganado": "Kursus",
+    "comision": "Komisi",
+    "companeros": "Penyesuaian"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "Menunggu dibayar",
+    "empty": "Tidak ada yang tertunda",
+    "count_one": "{{count}} pembayaran tertunda",
+    "count_other": "{{count}} pembayaran tertunda",
+    "addMovement": "Tambah transaksi"
+  },
+  "confirmDialog": { "cancel": "Batal", "defaultConfirmLabel": "Hapus" },
+  "editActions": { "defaultSaveLabel": "Simpan", "cancel": "Batal" },
+  "deleteButton": {
+    "defaultLabel": "Hapus",
+    "defaultItemLabel": "item ini",
+    "deletedToast": "Terhapus",
+    "errorToast": "Gagal menghapus. Coba lagi.",
+    "confirmTitle": "Hapus catatan ini?",
+    "confirmMessage": "Kamu akan menghapus {{item}}. Tindakan ini tidak bisa dibatalkan."
+  },
+  "field": { "hideHelp": "Sembunyikan bantuan", "help": "Bantuan" },
+  "calendar": {
+    "months": ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"],
+    "weekdays": ["S", "S", "R", "K", "J", "S", "M"],
+    "prevMonth": "Bulan sebelumnya",
+    "nextMonth": "Bulan berikutnya",
+    "prevYear": "Tahun sebelumnya",
+    "nextYear": "Tahun berikutnya",
+    "prevDecade": "Dekade sebelumnya",
+    "nextDecade": "Dekade berikutnya",
+    "today": "Hari ini"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "Tanggal",
+    "defaultAriaLabel": "Pilih tanggal",
+    "pickerAriaLabel": "Pemilih tanggal",
+    "chooseMonthAriaLabel": "Pilih bulan",
+    "chooseYearAriaLabel": "Pilih tahun",
+    "dayAriaLabel": "{{day}} {{month}}",
+    "today": "Hari ini",
+    "yesterday": "Kemarin",
+    "tomorrow": "Besok",
+    "dayBeforeYesterday": "Kemarin lusa"
+  },
+  "dateRangePicker": {
+    "from": "Dari",
+    "to": "Sampai",
+    "fromAriaLabel": "Tanggal mulai",
+    "toAriaLabel": "Tanggal akhir",
+    "pickerAriaLabel": "Pemilih rentang tanggal",
+    "chooseStart": "Pilih tanggal mulai",
+    "chooseEnd": "Pilih tanggal akhir",
+    "chooseDate": "Pilih tanggal",
+    "okFrom": "OK — hanya dari {{date}}",
+    "presets": { "today": "Hari ini", "thisWeek": "Minggu ini", "thisMonth": "Bulan ini", "last30Days": "30 hari terakhir" }
+  },
+  "monthCalendar": {
+    "addOnDay": "Tambah transaksi pada {{day}} {{month}}",
+    "addOnDayToday": "Tambah transaksi pada {{day}} {{month}} (hari ini)",
+    "dayToday": "{{day}} {{month}} (hari ini)",
+    "closeDayDetail": "Tutup detail hari",
+    "dayHeading": "Hari ke-{{day}} {{month}}",
+    "generatedOnDay": "Dihasilkan pada hari",
+    "table": { "course": "Kursus", "comment": "Komentar", "people": "Org.", "amount": "Jumlah" }
+  },
+  "select": { "placeholder": "Pilih..." },
+  "multiSelect": { "placeholder": "Semua", "clearSelection": "Hapus pilihan", "selectedCount": "{{count}} dipilih" },
+  "searchSelect": { "placeholder": "Cari...", "ariaLabel": "Cari", "noResults": "Tidak ada hasil" },
+  "currencySearchSelect": { "placeholder": "Cari mata uang..." },
+  "listFilterBar": {
+    "from": "Dari",
+    "to": "Sampai",
+    "school": "Sekolah",
+    "activity": "Aktivitas",
+    "noLimit": "Tanpa batas",
+    "all": "Semua",
+    "clearFilters": "Hapus filter"
+  },
+  "rowMenu": { "moreActions": "Aksi lainnya", "edit": "Ubah", "delete": "Hapus" },
+  "statusSwitch": { "ariaLabel": "Status: {{value}}. Ketuk untuk mengubah ke {{next}}", "title": "{{value}} — klik untuk mengubah ke \"{{next}}\"" },
+  "signature": {
+    "opcional": "opsional",
+    "borrar": "Hapus",
+    "deshacer": "Urungkan",
+    "firmadoAria": "{{label}}: sudah ditandatangani",
+    "sinFirmarAria": "{{label}}: belum ditandatangani"
+  }
+}

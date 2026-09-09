@@ -1,0 +1,44 @@
+{
+  "whatsNew": {
+    "close": "Tutup",
+    "eyebrow": "Kemas kini versi ini",
+    "slideTablist": "Slaid",
+    "back": "Kembali",
+    "next": "Seterusnya",
+    "start": "Mula",
+    "slides": [
+      {
+        "title": "Kini dalam lebih banyak bahasa",
+        "body": "Belanda, Thai, Indonesia, Vietnam, Myanmar, Melayu, Rusia dan Portugis — tukar bila-bila masa dari profil anda."
+      },
+      {
+        "title": "Buat asal pada tandatangan",
+        "body": "Silap lakaran? Buat asal lakaran terakhir sahaja, tanpa memadam seluruh tandatangan."
+      },
+      {
+        "title": "Semak semula bila-bila masa",
+        "body": "Kembali ke kemas kini ini dari Bantuan → \"Lihat apa yang baharu\", tanpa perlu menunggu kemas kini seterusnya."
+      }
+    ]
+  },
+  "deploymentNotice": {
+    "close": "Tutup",
+    "eyebrow": "Pelancaran baharu",
+    "branchLabel": "Cabang",
+    "commitLabel": "commit",
+    "technicalChanges": "Perubahan teknikal",
+    "functionalChanges": "Perubahan fungsi",
+    "uiChangesLabel": "Perubahan UI:",
+    "uiChangesYes": "Ya",
+    "uiChangesNo": "Tidak",
+    "stepsHeading": "Apa yang perlu diuji / dilakukan",
+    "testsLabel": "Ujian:",
+    "buildLabel": "Build:",
+    "notReported": "tidak dilaporkan",
+    "previewCommit": "Pratonton commit",
+    "previewCommitEmpty": "Pratonton commit: belum ada pratonton",
+    "previewIntegrated": "Pratonton bersepadu (Release-V1)",
+    "previewIntegratedEmpty": "Pratonton bersepadu: belum ada pratonton",
+    "understood": "Faham"
+  }
+}

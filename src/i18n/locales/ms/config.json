@@ -1,0 +1,266 @@
+{
+  "datasets": {
+    "copySuffix": "salinan",
+    "summary_one": "Tetapan awal (sekolah, kursus dan kadar bayaran) yang diklon pada setiap akaun baharu. {{count}} aktif daripada {{total}}.",
+    "summary_other": "Tetapan awal (sekolah, kursus dan kadar bayaran) yang diklon pada setiap akaun baharu. {{count}} aktif daripada {{total}}.",
+    "inactive": "Tidak aktif",
+    "setDefault": "Tandakan sebagai lalai",
+    "setDefaultAria": "Tandakan \"{{label}}\" sebagai lalai",
+    "duplicate": "Duplikasi",
+    "duplicateAria": "Duplikasi \"{{label}}\"",
+    "activeAria": "Dataset \"{{label}}\" aktif",
+    "deleteItemLabel": "dataset \"{{label}}\"",
+    "empty": "Belum ada dataset.",
+    "fab": "Dataset baharu",
+    "sheetTitle": "Dataset baharu",
+    "sheetHint": "Bermula kosong dan tidak aktif — duplikasi yang sedia ada jika anda mahu bermula dengan kandungan yang sudah dimuatkan.",
+    "nameLabel": "Nama",
+    "create": "Cipta",
+    "toasts": {
+      "created": "Dataset dicipta — tambah kandungannya sebelum mengaktifkannya",
+      "duplicated": "\"{{newLabel}}\" dicipta dengan kandungan yang sama seperti \"{{sourceLabel}}\"",
+      "duplicateError": "Tidak dapat duplikasi. Cuba lagi.",
+      "keyTaken": "Sudah ada dataset dengan kunci itu.",
+      "createError": "Tidak dapat mencipta. Cuba lagi.",
+      "updateError": "Tidak dapat mengemas kini."
+    },
+    "errors": {
+      "isDefault": "Ini adalah dataset lalai — tandakan yang lain sebagai lalai sebelum memadam yang ini.",
+      "lastOne": "Anda tidak boleh memadam satu-satunya dataset — pendaftaran luaran dan pendaftaran manual memerlukan sekurang-kurangnya satu."
+    }
+  },
+  "crudTable": {
+    "buscarPlaceholder": "Cari...",
+    "buscarAria": "Cari",
+    "cambiarColor": "Tukar warna",
+    "favorita": "Kegemaran",
+    "marcarPredeterminado": "Tandakan sebagai lalai",
+    "esteElemento": "item ini",
+    "sinResultados": "Tiada hasil.",
+    "cerrar": "Tutup",
+    "guardar": "Simpan",
+    "cambiosGuardados": "Perubahan disimpan",
+    "anadidoCorrectamente": "Ditambah",
+    "noSePudoGuardar": "Tidak dapat menyimpan. Cuba lagi.",
+    "noSePudoGuardarCambio": "Tidak dapat menyimpan perubahan.",
+    "estadoPredeterminadoRazon": "Ini adalah status lalai (mewakili \"belum selesai\") — tandakan yang lain sebagai lalai sebelum memadam yang ini"
+  },
+  "sectionColors": {
+    "descripcion": "Digunakan pada bar navigasi dan pada butang cipta rekod bagi setiap kawasan."
+  },
+  "generalSettings": {
+    "iconoCarga": "Ikon pemuatan",
+    "descripcion": "Digunakan dalam animasi \"memuatkan\" seluruh aplikasi. Apabila anda mempunyai logo rasmi Ocean Flow, beritahu saya dan saya akan menggantikannya dengan ikon sebenar bukannya senarai ini.",
+    "iconoActualizado": "Ikon dikemas kini",
+    "noSePudoGuardar": "Tidak dapat menyimpan. Cuba lagi.",
+    "vistaPrevia": "Pratonton"
+  },
+  "externalRegistration": {
+    "titulo": "Benarkan pendaftaran luaran",
+    "descripcion": "Tunjukkan \"Daftar\" pada log masuk supaya sesiapa sahaja boleh mencipta akaun mereka sendiri.",
+    "activado": "Pendaftaran luaran diaktifkan",
+    "desactivado": "Pendaftaran luaran dinyahaktifkan",
+    "noSePudoGuardar": "Tidak dapat menyimpan. Cuba lagi."
+  },
+  "roleCheckbox": {
+    "rolProtegido": "{{label}} — peranan sistem dilindungi, tidak boleh disunting",
+    "si": "ya",
+    "no": "tidak",
+    "etiquetaAria": "{{label}}: {{value}}"
+  },
+  "roleIcon": {
+    "superadmin": "Superadmin",
+    "admin": "Pentadbir"
+  },
+  "userStatus": {
+    "activo": "Aktif",
+    "pendiente": "Belum selesai",
+    "desactivado": "Dinyahaktifkan",
+    "nunca": "Tidak pernah"
+  },
+  "swipeToDelete": {
+    "eliminar": "Padam",
+    "eliminarA": "Padam {{nickname}}"
+  },
+  "userListRow": {
+    "alta": "Didaftarkan: {{date}}",
+    "ultimoAcceso": "Akses terakhir: {{date}}",
+    "baja": "Dinyahaktifkan: {{date}}",
+    "fechaNoRegistrada": "tarikh tidak direkodkan"
+  },
+  "userDetailSheet": {
+    "cerrar": "Tutup",
+    "nombre": "Nama",
+    "apellidos": "Nama keluarga",
+    "nickname": "Nama pengguna",
+    "editarDatos": "Sunting data",
+    "email": "Emel",
+    "altaLabel": "Didaftarkan",
+    "ultimoAcceso": "Akses terakhir",
+    "movimientos": "Transaksi",
+    "ultimaActividad": "Aktiviti terakhir",
+    "baja": "Dinyahaktifkan",
+    "estado": "Status",
+    "activarUsuario": "Aktifkan pengguna",
+    "desactivarUsuario": "Nyahaktifkan pengguna",
+    "pendienteTexto": "Menunggu orang itu membuka pautan dan mencipta kata laluannya.",
+    "regenerarEnlace": "Jana semula pautan",
+    "admin": "Admin",
+    "superadmin": "Superadmin",
+    "regenerarContrasena": "Jana semula kata laluan",
+    "eliminarUsuario": "Padam pengguna"
+  },
+  "activationLinkPanel": {
+    "cerrar": "Tutup",
+    "enlaceCopiado": "Pautan disalin",
+    "noSePudoCopiar": "Tidak dapat menyalin. Pilih secara manual.",
+    "copiarEnlace": "Salin pautan",
+    "simularEnvioMock": "Simulasi penghantaran berjaya (mock)",
+    "mockEmailEnviado": "(Mock) Emel dihantar dengan berjaya"
+  },
+  "createUserSheet": {
+    "cerrar": "Tutup",
+    "noSePudieronCargarDatasets": "Tidak dapat memuatkan dataset yang tersedia.",
+    "camposObligatorios": "Emel, nama pengguna dan dataset awal adalah wajib.",
+    "soloSuperadminCrear": "Hanya superadmin boleh mencipta pengguna.",
+    "noSePudoCrear": "Tidak dapat mencipta pengguna.",
+    "usuarioCreadoSinEmail": "Pengguna dicipta (emel tidak dapat dihantar)",
+    "usuarioCreadoCorrectamente": "Pengguna dicipta",
+    "enlaceCopiado": "Pautan disalin",
+    "noSePudoCopiar": "Tidak dapat menyalin. Pilih secara manual.",
+    "noSePudoEnviarEmailTitulo": "Tidak dapat menghantar emel",
+    "noSePudoEnviarEmailDescripcion": "Tidak dapat menghantar emel pengaktifan. Anda boleh berkongsi pautan ini secara manual.",
+    "copiarEnlace": "Salin pautan",
+    "simularEnvioMock": "Simulasi penghantaran berjaya (mock)",
+    "mockUsuarioCreado": "(Mock) Pengguna dicipta dan emel dihantar dengan berjaya",
+    "titulo": "Cipta pengguna",
+    "email": "Emel",
+    "nombre": "Nama",
+    "apellidos": "Nama keluarga",
+    "nickname": "Nama pengguna",
+    "datasetInicial": "Dataset awal",
+    "cargando": "Memuatkan…",
+    "seleccionaDataset": "Pilih satu dataset",
+    "sinDatasets": "Tiada dataset tersedia",
+    "idioma": "Bahasa",
+    "nota": "Dataset yang dipilih akan memuatkan secara automatik sekolah, kursus, kadar bayaran, komisen dan katalog bayaran awal. Orang itu akan menerima emel dengan pautan sekali guna untuk log masuk dan mencipta kata laluan sendiri.",
+    "creando": "Mencipta…",
+    "crearUsuario": "Cipta pengguna"
+  },
+  "usersDirectory": {
+    "buscarPlaceholder": "Cari...",
+    "buscarAria": "Cari pengguna",
+    "leyendaEstadoAria": "Apa yang dimaksudkan oleh setiap warna status",
+    "crearUsuario": "Cipta pengguna",
+    "noSePudoCargarListado": "Tidak dapat memuatkan senarai pengguna.",
+    "errorDesconocido": "Ralat tidak diketahui",
+    "errorCargarListado": "Tidak dapat memuatkan senarai: {{error}}",
+    "cargandoUsuarios": "Memuatkan pengguna…",
+    "sinResultados": "Tiada hasil.",
+    "soloSuperadminRol": "Hanya superadmin boleh menukar peranan admin akaun lain.",
+    "noSePudoActualizarRol": "Tidak dapat mengemas kini peranan.",
+    "rolActualizado": "Peranan dikemas kini",
+    "soloSuperadminEliminar": "Hanya superadmin boleh memadam pengguna.",
+    "noSePudoEliminar": "Tidak dapat memadam pengguna.",
+    "usuarioEliminado": "Pengguna dipadam",
+    "soloSuperadminActivar": "Hanya superadmin boleh mengaktifkan atau menyahaktifkan pengguna.",
+    "noSePudoActualizarEstado": "Tidak dapat mengemas kini status.",
+    "usuarioDesactivado": "Pengguna dinyahaktifkan",
+    "soloSuperadminEnlace": "Hanya superadmin boleh mengaktifkan akaun atau menjana semula pautan aksesnya.",
+    "noSePudoGenerarEnlace": "Tidak dapat menjana pautan.",
+    "enlaceGeneradoSinEmail": "Pautan dijana (emel tidak dapat dihantar kepada {{nickname}})",
+    "enlaceActivacionTitulo": "Pautan pengaktifan dijana",
+    "enlaceActivacionDescripcion": "Kongsi pautan ini dengan {{nickname}}. Ia akan kekal sebagai \"Belum selesai\" sehingga digunakan untuk mencipta kata laluannya.",
+    "emailActivacionEnviado": "Emel pengaktifan dihantar kepada {{nickname}}",
+    "soloSuperadminContrasena": "Hanya superadmin boleh menjana semula kata laluan akaun lain.",
+    "noSePudoRegenerarContrasena": "Tidak dapat menjana semula kata laluan.",
+    "contrasenaRegeneradaSinEmail": "Kata laluan dijana semula (emel tidak dapat dihantar kepada {{nickname}})",
+    "contrasenaRegeneradaTitulo": "Kata laluan dijana semula",
+    "contrasenaRegeneradaDescripcion": "Kata laluan lama {{nickname}} tidak lagi sah. Kongsi pautan ini supaya dia boleh mencipta yang baharu — akaun akan kembali kepada \"Belum selesai\" sehingga itu.",
+    "contrasenaRegeneradaEmailEnviado": "Kata laluan dijana semula dan emel dihantar kepada {{nickname}}",
+    "nicknameVacio": "Nama pengguna tidak boleh kosong.",
+    "datosActualizados": "Data dikemas kini",
+    "noSePudieronGuardarCambios": "Tidak dapat menyimpan perubahan.",
+    "cambiarRolAdminTitulo": "Tukar peranan admin",
+    "usuarioLabel": "Pengguna: {{nickname}}",
+    "adminLabel": "Admin: {{from}} → {{to}}",
+    "confirmar": "Sahkan",
+    "eliminarUsuarioTitulo": "Padam pengguna",
+    "eliminarUsuarioMensaje": "Akaun <strong>{{nickname}}</strong> dan semua datanya (sekolah, kadar bayaran, transaksi...) akan dipadam secara kekal. Tindakan ini tidak boleh dibatalkan.",
+    "eliminarUsuarioAlternativa": "Jika anda hanya mahu menarik balik aksesnya sambil mengekalkan datanya, guna \"Nyahaktifkan\" sebaliknya.",
+    "eliminar": "Padam",
+    "desactivarUsuarioTitulo": "Nyahaktifkan pengguna",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> tidak akan dapat log masuk lagi. Semua datanya (sekolah, kadar bayaran, transaksi...) kekal utuh — anda boleh mengaktifkannya semula bila-bila masa dengan menjana pautan pengaktifan baharu.",
+    "desactivar": "Nyahaktifkan",
+    "generarEnlaceTitulo": "Jana pautan pengaktifan",
+    "generarEnlaceMensaje": "Pautan sekali guna yang baharu akan dijana untuk <strong>{{nickname}}</strong>. Sebarang pautan sebelumnya akan tidak lagi berfungsi. Akaun tidak mendapat akses sehingga selesai.",
+    "generarEnlace": "Jana pautan",
+    "regenerarContrasenaTitulo": "Jana semula kata laluan",
+    "regenerarContrasenaMensaje": "Kata laluan semasa <strong>{{nickname}}</strong> akan berhenti berfungsi serta-merta. Dia perlu mencipta yang baharu dari pautan pengaktifan baharu — datanya tidak terjejas.",
+    "regenerar": "Jana semula",
+    "generarInvitacion": "Jana pautan jemputan",
+    "soloSuperadminInvitacion": "Hanya superadmin boleh menjana pautan jemputan.",
+    "noSePudoGenerarInvitacion": "Tidak dapat menjana pautan jemputan.",
+    "enlaceInvitacionTitulo": "Pautan jemputan",
+    "enlaceInvitacionDescripcion": "Sah selama 24 jam dan sekali guna. Kongsikan dengan orang yang anda mahu jemput — dia boleh mendaftar walaupun pendaftaran luaran ditutup."
+  },
+  "sections": {
+    "escuelas": {
+      "label": "Sekolah",
+      "description": "Di mana anda mengajar, dengan warnanya"
+    },
+    "cursos": {
+      "label": "Kursus",
+      "description": "Apa yang anda ajar, dengan warnanya"
+    },
+    "tarifas": {
+      "label": "Kadar bayaran",
+      "description": "Berapa yang anda caj mengikut sekolah dan kursus"
+    },
+    "estadosPago": {
+      "label": "Status bayaran",
+      "description": "Belum selesai, telah dikutip..."
+    },
+    "monedas": {
+      "label": "Mata wang",
+      "description": "Katalog tersedia dalam seluruh aplikasi"
+    },
+    "navegacion": {
+      "label": "Warna navigasi",
+      "description": "Identiti visual setiap kawasan"
+    },
+    "ajustes": {
+      "label": "Tetapan umum",
+      "description": "Ikon pemuatan aplikasi"
+    },
+    "usuarios": {
+      "label": "Pengguna",
+      "description": "Akaun dengan akses ke aplikasi"
+    },
+    "datasets": {
+      "label": "Dataset awal",
+      "description": "Tetapan diklon apabila mencipta akaun"
+    }
+  },
+  "menu": {
+    "administracion": "Pentadbiran",
+    "superadmin": "Superadmin",
+    "configuracion": "Tetapan"
+  },
+  "crud": {
+    "nuevaEscuela": "Sekolah baharu",
+    "editarEscuela": "Sunting sekolah",
+    "nombreCampo": "Nama",
+    "colorCampo": "Warna",
+    "nuevoCurso": "Kursus baharu",
+    "editarCurso": "Sunting kursus",
+    "nuevoEstadoPago": "Status bayaran baharu",
+    "editarEstadoPago": "Sunting status bayaran",
+    "nuevaMoneda": "Mata wang baharu",
+    "editarMoneda": "Sunting mata wang",
+    "monedasDescripcion": "Pilih di sini mata wang sandaran seluruh aplikasi: digunakan apabila pengguna belum memilih mata wang kegemarannya sendiri dalam Profil Saya. Ini bukan keutamaan peribadi — ia adalah lalai bagi mana-mana akaun baharu.",
+    "monedaPorDefectoApp": "Lalai aplikasi",
+    "codigoCampo": "Kod (cth. EUR)",
+    "simboloCampo": "Simbol"
+  }
+}

@@ -1,0 +1,249 @@
+{
+  "emptyState": "Belum ada kandungan bantuan.",
+  "whatsNewReplay": "Lihat apa yang baharu dalam versi ini",
+  "installAppLink": "Pasang aplikasi pada telefon anda",
+  "groupLabels": {
+    "quiero": "Saya mahu...",
+    "funcionalidades": "Fungsi"
+  },
+  "sections": {
+    "whatYouCanDo": "Apa yang boleh anda lakukan",
+    "whenToUseIt": "Bila menggunakannya",
+    "steps": "Langkah",
+    "tips": "Petua dan kesilapan biasa",
+    "expectedResult": "Hasil yang dijangka"
+  },
+  "categories": {
+    "bienvenida": {
+      "label": "Langkah pertama",
+      "description": "Apa itu Ocean Flow dan bagaimana ia disusun"
+    },
+    "quiero-configurar": {
+      "label": "Tetapkan aplikasi anda",
+      "description": "Sekolah, kursus, kadar bayaran dan katalog"
+    },
+    "quiero-crear-movimiento": {
+      "label": "Rekod satu transaksi",
+      "description": "Kursus yang diajar, komisen atau pelarasan"
+    },
+    "quiero-cobrar": {
+      "label": "Kutip transaksi belum selesai",
+      "description": "Tandakan sebagai dikutip, satu demi satu atau semua sekaligus"
+    },
+    "quiero-consultar-generado": {
+      "label": "Semak berapa yang telah anda jana",
+      "description": "Sekilas pandang, atau butiran mengikut tempoh"
+    },
+    "quiero-generar-tr": {
+      "label": "Jana satu Training Record",
+      "description": "Dokumen rasmi kemajuan setiap pelajar"
+    },
+    "func-mi-trabajo": {
+      "label": "Kerja Saya",
+      "description": "Cipta, sunting, kutip dan padam transaksi"
+    },
+    "func-resumen": {
+      "label": "Ringkasan",
+      "description": "Pandangan pantas dan butiran apabila diperlukan"
+    },
+    "func-configuracion": {
+      "label": "Tetapan",
+      "description": "Menu, dan apa yang ada dalam setiap bahagian"
+    },
+    "func-perfil": {
+      "label": "Profil Saya",
+      "description": "Avatar, kad instruktor, bahasa dan mata wang kegemaran"
+    },
+    "func-filtros": {
+      "label": "Penapis dan carian",
+      "description": "Corak yang sama di seluruh aplikasi"
+    }
+  },
+  "articles": {
+    "primeros-pasos": {
+      "title": "Mula menggunakan Ocean Flow",
+      "summary": "Pandangan pantas tiga skrin utama sebelum merekod transaksi pertama anda.",
+      "whatYouCanDo": "Ocean Flow membantu anda mengawal pendapatan sebagai instruktor bebas. Di bawah satu konsep, \"transaksi\", ia mengumpulkan kelas yang anda ajar, komisen daripada pelanggan yang dirujuk dan pelarasan kewangan dengan instruktor lain.",
+      "whenToUseIt": "Kali pertama anda membuka aplikasi, atau apabila anda ingin mengingati kegunaan setiap skrin.",
+      "steps": [
+        "Home: pelajar, kursus dan pelanggan yang dirujuk sekilas pandang, akses ke Training Records, berapa yang belum anda kutip, kalendar bulan itu dan akses pantas untuk mencipta transaksi.",
+        "Kerja Saya: senarai penuh transaksi anda (kursus, komisen dan pelarasan), untuk mencipta, menyunting, mengutip atau memadamnya.",
+        "Ringkasan: baki anda bagi tempoh yang anda pilih, dengan kemungkinan untuk meneliti lebih lanjut mengikut sekolah, kursus atau komisen."
+      ],
+      "tips": [
+        "Untuk akaun baharu, mulakan dengan \"Tetapkan aplikasi anda\" (sekolah, kursus, kadar bayaran).",
+        "Teruskan dengan merekod satu transaksi bagi setiap jenis yang akan anda gunakan.",
+        "Akhiri dengan mengutip: satu apabila anda dibayar, atau semua sekaligus jika anda menyemak secara berkala. Setiap langkah mempunyai panduannya sendiri dalam \"Saya mahu...\" di bawah."
+      ],
+      "expectedResult": "Anda tahu skrin mana untuk digunakan bagi setiap situasi dan susunan yang perlu diikuti untuk menyediakan aplikasi bagi kehidupan harian anda."
+    },
+    "configurar-app": {
+      "title": "Tetapkan aplikasi anda",
+      "summary": "Tiada apa yang tetap dalam aplikasi ini: sekolah, kursus, kadar bayaran dan katalog bayaran disunting dari Tetapan.",
+      "whatYouCanDo": "Tetapan adalah tempat anda menyimpan data asas anda: sekolah mana yang bekerjasama dengan anda, kursus mana yang anda ajar dan pada kadar berapa. Semuanya boleh disunting, tiada yang tetap dalam kod.",
+      "whenToUseIt": "Sebelum merekod transaksi pertama anda, dan selepas itu setiap kali anda mula bekerja dengan sekolah atau kursus baharu, atau menukar harga.",
+      "steps": [
+        "Masuk ke Tetapan (ikon gear, di atas sebelah kanan) dan ketik bahagian yang anda perlukan.",
+        "Daftarkan Sekolah dan Kursus anda dahulu — Kadar Bayaran sentiasa mengaitkan sekolah dengan kursus, jadi kedua-duanya perlu wujud dahulu.",
+        "Dalam satu bahagian, tekan butang \"+\" terapung untuk mencipta; \"‹ Tetapan\" membawa anda kembali ke menu.",
+        "Ketik warna satu baris untuk memperibadikannya, dan bintang untuk menandakannya sebagai kegemaran."
+      ],
+      "tips": [
+        "Sekolah, kursus atau mata wang yang ditandakan sebagai kegemaran akan muncul terpilih terlebih dahulu dalam borang penciptaan.",
+        "Menutup Tetapan (\"✕\" pada pengepala) sentiasa membawa anda kembali ke tab dari mana anda masuk."
+      ],
+      "expectedResult": "Sekolah, kursus atau kadar bayaran baharu tersedia serta-merta apabila mencipta transaksi — dengan ini anda boleh teruskan dengan \"Rekod satu transaksi\"."
+    },
+    "crear-movimiento": {
+      "title": "Cipta satu transaksi",
+      "summary": "Borang yang sama digunakan untuk kursus yang diajar, komisen atau pelarasan dengan rakan sekerja — setiap jenis mempunyai medannya sendiri.",
+      "whatYouCanDo": "\"Tambah transaksi\" adalah satu-satunya akses penciptaan dalam seluruh aplikasi — borang itu sendiri membenarkan anda memilih jenisnya, tidak perlu mencari butang berbeza untuk setiap kes.",
+      "whenToUseIt": "Sejurus selepas memberikan kelas, apabila menutup komisen, atau apabila anda bersetuju dengan pelarasan bersama instruktor lain.",
+      "steps": [
+        "Tekan \"Tambah transaksi\": butang \"+\" pada kad \"Belum dikutip\" di Home, butang yang sama dengan mengetik satu hari pada kalendar Home, atau \"+\" terapung di Kerja Saya.",
+        "Di atas borang, pilih jenis: Kursus diajar, Komisen atau Pelarasan kursus.",
+        "Kursus diajar: sekolah, kursus, tarikh dan bilangan orang — kadar bayaran mengikut kursus mengira jumlah secara automatik.",
+        "Komisen: sama seperti kursus, tetapi untuk pelanggan yang anda rujuk dan diajar oleh instruktor lain — menggunakan kadar komisennya sendiri, bukan kadar kursus.",
+        "Pelarasan kursus: tidak bergantung pada mana-mana kadar bayaran — anda sendiri menyatakan jumlahnya (positif jika terhutang kepada anda, negatif jika anda berhutang) dan dengan rakan sekerja mana pelarasan itu.",
+        "Simpan. Jika anda membuka borang dari Home, anda akan melihat transaksi itu di Kerja Saya sejurus selepas menyimpan."
+      ],
+      "tips": [
+        "Jika belum ada kadar bayaran untuk sekolah + kursus itu, borang membenarkan anda mencipta satu serta-merta tanpa keluar dari skrin (\"Tambah kadar bayaran\") — hanya berlaku untuk Kursus dan Komisen, Pelarasan tidak pernah memerlukan kadar bayaran.",
+        "Membatalkan atau menutup borang tanpa menyimpan tidak mencipta apa-apa — anda boleh membukanya dan menutupnya tanpa risau meninggalkan transaksi separuh siap."
+      ],
+      "expectedResult": "Transaksi itu muncul di Kerja Saya, dalam \"Belum selesai\", dan ditambah kepada \"Dijana bulan ini\" di Home (kecuali Pelarasan yang menentang anda, yang tidak dikira sebagai dijana)."
+    },
+    "cobrar-movimientos": {
+      "title": "Tandakan transaksi sebagai telah dikutip",
+      "summary": "Kawal apa yang belum anda kutip dan kemas kini statusnya sebaik sahaja anda dibayar — satu demi satu, atau semua sekaligus.",
+      "whatYouCanDo": "Setiap transaksi mempunyai status (belum selesai atau telah dikutip). Menukarnya adalah serta-merta, dengan satu ketikan, dengan pilihan untuk membuat asal jika anda tersilap. Anda boleh melakukannya satu demi satu, atau sekaligus ke atas keseluruhan senarai yang kelihatan.",
+      "whenToUseIt": "Sebaik sahaja sekolah atau rakan sekerja membayar anda (satu demi satu), atau sekaligus apabila anda menyemak secara berkala dan sudah beberapa dibayar sekaligus.",
+      "steps": [
+        "Untuk mengutip satu: masuk ke Kerja Saya (tab \"Belum selesai\" terbuka secara lalai) dan tekan \"Sahkan kutipan\" pada barisnya (atau \"Tandakan diselesaikan\" jika ia pelarasan yang menentang anda).",
+        "Kad \"Belum dikutip\" di Home membawa anda terus ke tab yang sama — satu ketikan dari skrin utama.",
+        "Untuk mengutip beberapa sekaligus: di Kerja Saya, guna \"Kutip semua\" di atas senarai — ia mempengaruhi semua yang kelihatan pada masa itu.",
+        "Sebelum \"Kutip semua\", guna \"Tapis\" (mengikut tarikh, sekolah, kursus atau jenis) untuk mengehadkan senarai kepada tepat apa yang anda mahu kutip sekaligus."
+      ],
+      "tips": [
+        "Notis dengan \"Buat asal\" muncul selepas setiap perubahan — anda ada beberapa saat untuk membalikkannya tanpa perlu mencari semula transaksi itu.",
+        "\"Kutip semua\" meminta pengesahan sebelum ia berlaku — tiada \"Buat asal\" untuk keseluruhan kumpulan, berbeza dengan mengutip satu demi satu."
+      ],
+      "expectedResult": "Transaksi itu (atau semua yang ditapis) berpindah ke tab \"Telah dikutip\" dan jumlahnya tidak lagi dikira dalam \"Belum dikutip\" di Home."
+    },
+    "consultar-generado": {
+      "title": "Semak berapa yang telah anda jana",
+      "summary": "Pandangan pantas di Kerja Saya, atau butiran penuh mengikut tempoh yang anda pilih di Ringkasan.",
+      "whatYouCanDo": "\"Dijana bulan ini\" di Kerja Saya memberikan anda angka bulan semasa, sentiasa kelihatan di atas senarai. Ringkasan pergi lebih jauh: mana-mana tempoh, dibandingkan dengan yang sebelumnya, dan dengan kemungkinan meneliti lebih lanjut mengikut sekolah atau kursus.",
+      "whenToUseIt": "Kerja Saya, untuk pandangan pantas bersama kerja harian anda yang lain. Ringkasan, apabila anda mahukan tempoh berbeza daripada bulan semasa atau memahami dari mana wang itu datang.",
+      "steps": [
+        "Di Kerja Saya, kad \"Dijana bulan ini\" sentiasa kelihatan, di atas senarai, tanpa perlu menyentuh apa-apa.",
+        "Di Ringkasan, pilih kehalusan dan tempoh pada kawalan di atas (bulanan, suku tahun, setengah tahun, tahunan atau julat tersuai) dan, jika anda mahu, jenisnya (Kursus, Komisen atau Pelarasan).",
+        "Kad utama menunjukkan jumlah tempoh itu dan berapa perubahannya berbanding tempoh sebelumnya.",
+        "Ketik \"Mengikut sekolah\", \"Mengikut kursus\", \"Komisen\", \"Pelarasan kursus\" atau \"Kalendar\" untuk meneliti lebih lanjut — setiap satu hanya terbuka apabila anda memintanya."
+      ],
+      "tips": [
+        "Dalam \"Mengikut sekolah\", ketik satu sekolah untuk melihat butirannya mengikut kursus di tempat yang sama, tanpa menukar skrin.",
+        "Perbandingan dengan tempoh sebelumnya tidak muncul jika anda mencampurkan lebih daripada satu mata wang dalam tempoh yang sama — ini mengelakkan menunjukkan pengiraan yang tidak tepat."
+      ],
+      "expectedResult": "Anda mempunyai angka baki bagi tempoh yang dipilih, dengan butiran dari mana setiap pendapatan datang jika anda perlukan."
+    },
+    "generar-training-record": {
+      "title": "Jana satu Training Record",
+      "summary": "Dokumen rasmi kemajuan SSI setiap pelajar, dengan tandatangannya dan tandatangan anda — tiada apa yang disimpan dalam awan, hanya dimuat turun.",
+      "whatYouCanDo": "Dari Training Records anda menjana dokumen kemajuan rasmi bagi mana-mana daripada 10 templat SSI, lengkap dengan data setiap pelajar dan tandatangan instruktor anda sudah termasuk. Anda boleh menjananya satu demi satu atau sekaligus, dan memuat turunnya dalam PDF, sebagai imej, atau berkongsi terus.",
+      "whenToUseIt": "Selepas menamatkan satu kursus, apabila seorang pelajar memerlukan Training Record bercetak atau untuk dihantar kepada SSI.",
+      "steps": [
+        "Masuk ke Training Records dari akses di Home.",
+        "Pilih templat SSI kursus itu dan isi tetapan bersama (versi peperiksaan, pensijilan, kemajuan kursus...) — diisi sekali sahaja untuk keseluruhan kelas.",
+        "\"Tambah pelajar\" bagi setiap pelajar: hanya memerlukan nama, inisial dan tandatangannya — jika bawah umur, juga nama dan tandatangan penjaganya.",
+        "\"Jana untuk semua pelajar\" mencipta dokumen bagi keseluruhan senarai sekaligus; \"Jana semula TR\" pada baris seorang pelajar tertentu menjana semula hanya yang dia punya, tanpa mengulangi yang lain.",
+        "Bagi setiap pelajar: \"Muat turun PDF\", \"Muat turun imej (JPG)\" atau \"Kongsi\". Untuk semua sekaligus: \"Muat turun semua dalam PDF/JPG\" atau \"Kongsi semua\", dalam satu fail termampat."
+      ],
+      "tips": [
+        "Anda memerlukan kad instruktor lengkap di Profil Saya (inisial, nombor SSI Pro dan tandatangan) sebelum boleh menjana apa-apa — inilah yang dicetak pada setiap Training Record.",
+        "Tiada apa yang anda isi di sini disimpan dalam Ocean Flow: setiap dokumen dijana pada masa itu dan hanya dimuat turun."
+      ],
+      "expectedResult": "Anda mempunyai Training Record setiap pelajar sedia untuk dimuat turun atau dikongsi, lengkap dengan tandatangannya dan tandatangan anda."
+    },
+    "mi-trabajo-referencia": {
+      "title": "Kerja Saya, sekilas pandang",
+      "summary": "Senarai penuh transaksi anda — kursus, komisen dan pelarasan — dengan tindakannya.",
+      "whatYouCanDo": "Kerja Saya menyatukan apa yang dahulunya tiga skrin berasingan (Rekod, Komisen dan Rakan Sekerja) dalam satu tempat, dikumpulkan mengikut status kutipan.",
+      "whenToUseIt": "Ini adalah skrin kerja harian anda — mencipta, menyemak, mengutip dan menyunting transaksi.",
+      "steps": [
+        "Belum selesai / Telah dikutip: dua tab di atas, dengan jumlah belum selesai pada kad di atas.",
+        "\"Tapis\": hadkan senarai mengikut tempoh, sekolah, kursus atau jenis transaksi.",
+        "Pada setiap baris: \"Sahkan kutipan\"/\"Tandakan belum selesai\" untuk menukar status, dan menu \"⋯\" untuk Sunting atau Padam.",
+        "Butang \"+\" terapung membuka borang penciptaan yang sama seperti selebihnya aplikasi ini."
+      ],
+      "tips": [
+        "\"Kutip semua\"/\"Tandakan semua belum selesai\" beroperasi ke atas senarai yang kelihatan — dengan penapis aktif, hanya mempengaruhi yang ditapis.",
+        "Memadam meminta pengesahan dan menganimasikan baris keluar, supaya anda melihat dengan tepat apa yang telah anda padam."
+      ],
+      "expectedResult": "Anda menemui dan mengemas kini mana-mana transaksi tanpa keluar dari skrin ini."
+    },
+    "resumen-referencia": {
+      "title": "Ringkasan, sekilas pandang",
+      "summary": "Satu jumlah utama di atas; segala-galanya yang lain terbuka hanya apabila anda memintanya.",
+      "whatYouCanDo": "Ringkasan menggabungkan jawapan pantas (jumlah tempoh itu, dibandingkan dengan yang sebelumnya) dengan kad boleh lipat bagi sesiapa yang mahu meneliti lebih lanjut.",
+      "whenToUseIt": "Untuk memahami perkembangan satu tempoh, membandingkan sekolah atau kursus, atau menyemak semula komisen dan pelarasan dengan rakan sekerja.",
+      "steps": [
+        "Pilih kehalusan (bulanan, suku tahun, setengah tahun, tahunan atau tersuai); jalur tempoh di bawah bergerak sendiri — ketik mana-mana untuk memfokus di situ.",
+        "Tapis mengikut jenis (Jumlah, Kursus, Komisen atau Pelarasan) dengan segmen di bawah.",
+        "Kad utama menunjukkan jumlah dan, apabila munasabah untuk dikira, perbandingan dengan tempoh sebelumnya.",
+        "Ketik mana-mana kad (Mengikut sekolah, Mengikut kursus, Komisen, Pelarasan kursus, Kalendar) untuk membukanya."
+      ],
+      "tips": [
+        "Dengan lebih daripada satu sekolah, \"Mengikut sekolah\" bermula terbuka kerana ia soalan yang paling kerap ditanya selepas jumlah; dengan hanya satu, bahagian itu tidak muncul (tiada apa untuk dibandingkan) dan \"Mengikut kursus\" pula yang bermula terbuka. Yang lain sentiasa bermula tertutup.",
+        "Dalam \"Mengikut sekolah\", ketik satu sekolah untuk melihat butirannya mengikut kursus tanpa keluar dari kad itu."
+      ],
+      "expectedResult": "Anda mempunyai angka yang anda cari, dengan sebanyak atau sesedikit butiran yang anda minta."
+    },
+    "configuracion-referencia": {
+      "title": "Tetapan, sekilas pandang",
+      "summary": "Menu tempat anda menyimpan data asas anda sendiri: sekolah, kursus dan kadar bayaran.",
+      "whatYouCanDo": "Sekolah, Kursus dan Kadar Bayaran — katalog yang anda gunakan semasa merekod transaksi di Kerja Saya.",
+      "whenToUseIt": "Untuk mengemas kini data asas anda: menambah sekolah baharu, kursus baharu, atau melaraskan kadar bayaran.",
+      "steps": [
+        "Ketik mana-mana baris pada menu untuk masuk ke bahagian itu; \"‹ Tetapan\" kembali ke menu.",
+        "Sekolah dan Kursus dicipta melalui butang \"+\" terapung, sama seperti di Kerja Saya.",
+        "Kadar Bayaran menunjukkan Kursus dan Komisen dalam satu senarai (jenis dipilih sebagai penapis, atau semasa mencipta, dalam helaian itu sendiri) — corak visual yang sama seperti Kerja Saya."
+      ],
+      "expectedResult": "Anda menemui mana-mana katalog atau tetapan tanpa perlu mengingati tab mana ia berada dahulu."
+    },
+    "perfil-referencia": {
+      "title": "Profil Saya, sekilas pandang",
+      "summary": "Avatar anda, data anda, kad instruktor anda, mata wang kegemaran anda dan kata laluan anda — semuanya di satu tempat, boleh diakses dari nama anda di pengepala.",
+      "whatYouCanDo": "Ketik avatar atau nama pengguna anda (di atas sebelah kanan pada mana-mana skrin) untuk masuk ke Profil Saya: identiti anda, kad instruktor anda, bahasa anda, mata wang kegemaran anda dan kata laluan anda, semuanya di satu tempat.",
+      "whenToUseIt": "Apabila anda mahu memperibadikan akaun anda, membetulkan satu data, atau menukar kata laluan tanpa perlu log keluar dan melalui \"lupa kata laluan saya\".",
+      "steps": [
+        "Ketik avatar/nama pengguna pada pengepala untuk masuk ke Profil Saya.",
+        "Pensel di atas avatar membuka pemilih ikon dan warna — perubahan disimpan sebaik sahaja anda memilih, tanpa butang \"Simpan\" berasingan.",
+        "\"Sunting\" dalam Data Peribadi membuka nama, nama keluarga dan nama pengguna; nama pengguna tidak boleh mengandungi \"@\" atau sama dengan akaun lain.",
+        "\"Data instruktor\" adalah kad anda: inisial, nombor SSI Pro dan tandatangan anda — disimpan di sini sekali sahaja dan digunakan untuk mengisi Training Records anda secara automatik.",
+        "Mata wang kegemaran digunakan sebagai sandaran dalam Pelarasan Kursus apabila tiada kadar bayaran yang menentukannya — transaksi lain sentiasa menggunakan mata wang kadar bayarannya sendiri."
+      ],
+      "tips": [
+        "Menukar kata laluan di sini tidak meminta kata laluan semasa anda — jika anda sudah berada dalam aplikasi, sesi aktif dianggap mencukupi.",
+        "Bahasa seluruh aplikasi juga ditukar dari sini, tanpa perlu log keluar.",
+        "Memadam akaun anda adalah kekal dan memadam semua data anda — untuk mengesahkannya anda perlu menaip perkataan BATAL, supaya tiada apa yang dipadam secara tidak sengaja."
+      ],
+      "expectedResult": "Akaun anda mencerminkan avatar, data, kad instruktor dan mata wang yang anda pilih, dan anda boleh menukar kata laluan atau bahasa anda bila-bila masa tanpa keluar dari aplikasi."
+    },
+    "filtros-referencia": {
+      "title": "Tapis dan cari",
+      "summary": "Kerja Saya, Kadar Bayaran dan katalog Tetapan berkongsi corak penapis yang sama.",
+      "whatYouCanDo": "Satu butang \"Tapis\" (dengan bilangan penapis aktif) membuka panel dengan medan yang tersedia — tempoh, sekolah, kursus, jenis... — bukannya sentiasa menunjukkannya di atas senarai.",
+      "whenToUseIt": "Apabila senarai mempunyai terlalu banyak item untuk disemak semuanya sekali pandang.",
+      "steps": [
+        "Tekan \"Tapis\" untuk membuka panel medan yang tersedia pada skrin itu.",
+        "Pilih satu atau beberapa — penapis kursus membenarkan pilihan berbilang.",
+        "\"Kosongkan penapis\" muncul sebaik sahaja sekurang-kurangnya satu aktif."
+      ],
+      "tips": [
+        "Carian katalog (Kursus, Mata Wang) menapis semasa anda menaip, tanpa mengira huruf besar/kecil atau tanda diakritik."
+      ],
+      "expectedResult": "Senarai menunjukkan hanya apa yang anda mahu, tanpa kehilangan pandangan tentang berapa banyak penapis yang aktif."
+    }
+  }
+}

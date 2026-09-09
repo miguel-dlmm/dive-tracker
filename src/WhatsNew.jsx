@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Languages, LayoutGrid, IdCard, GraduationCap, Palette, Sparkles } from "lucide-react";
-import { TEAL, SUN, GREEN, CORAL, BRAND_NAVY, BRAND_OCEAN } from "./App";
+import { X, Languages, Undo2, Sparkles } from "lucide-react";
+import { GREEN, CORAL, BRAND_NAVY } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { usePrefersReducedMotion, carouselSlideVariants, useSwipeHorizontal } from "./motion";
 
@@ -36,22 +36,26 @@ import { usePrefersReducedMotion, carouselSlideVariants, useSwipeHorizontal } fr
 // coherente con el resto de la app cumple igual el objetivo ("muy
 // visual") sin ese riesgo.
 //
-// Contenido reescrito 2026-09-08 (cierre de la cola de Release V1,
-// pedido explícito del usuario) para reflejar el alcance real de este
-// rediseño completo: 6 diapositivas, una por bloque grande de la
-// iniciativa. icon/color no son traducibles — título/cuerpo de cada
+// Contenido reescrito 2026-09-09 (release v1.3.0) — las 6 diapositivas
+// del rediseño completo (v1.2.0) ya se le mostraron a cada usuario
+// existente; repetirlas tal cual con esta versión nueva sería anunciar
+// como "novedad" algo que ya vieron (whatsNewSeenKey en App.jsx compara
+// contra APP_VERSION exacto, así que cualquier bump vuelve a mostrar el
+// modal). Reducido a lo que de verdad es nuevo y visible para un
+// usuario ya existente en esta release: los 8 idiomas añadidos y el
+// deshacer de la firma táctil — el fix de navegación Ayuda↔Training
+// Records y el dataset "prueba" (solo afecta a altas nuevas) se quedan
+// fuera a propósito, ninguno es una novedad que un usuario ya activo
+// note o valore. icon/color no son traducibles — título/cuerpo de cada
 // diapositiva viven en notices.json (whatsNew.slides, mismo orden por
 // índice) y se combinan con este array en el componente. La última
 // diapositiva se queda última a propósito, como siempre: es un
 // meta-mensaje sobre el propio WhatsNew ("consúltalo de nuevo en
 // Ayuda"), no una funcionalidad más.
 const SLIDE_ICONS = [
-  { icon: Palette, color: BRAND_OCEAN }, // 1. Rediseño completo, logo y look&feel nuevos
-  { icon: IdCard, color: TEAL }, // 2. Mi perfil — carnet de instructor
-  { icon: GraduationCap, color: SUN }, // 3. Training Records
-  { icon: Languages, color: GREEN }, // 4. Multi idioma
-  { icon: LayoutGrid, color: CORAL }, // 5. Home y Mi trabajo, más claros y estructurados
-  { icon: Sparkles, color: BRAND_NAVY }, // 6. Repásalo cuando quieras, desde Ayuda
+  { icon: Languages, color: GREEN }, // 1. 8 idiomas nuevos
+  { icon: Undo2, color: CORAL }, // 2. Deshacer en la firma táctil
+  { icon: Sparkles, color: BRAND_NAVY }, // 3. Repásalo cuando quieras, desde Ayuda
 ];
 
 export default function WhatsNew({ onClose }) {

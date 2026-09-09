@@ -1,0 +1,97 @@
+{
+  "loading": { "defaultLabel": "Laden" },
+  "errorBoundary": {
+    "title": "Oeps, er ging iets mis",
+    "body": "Dit scherm liep tegen een onverwacht probleem aan. Dit ligt niet aan jou — probeer te vernieuwen, dan zou alles weer normaal moeten werken.",
+    "reload": "Vernieuwen"
+  },
+  "movementTypes": {
+    "ganado": "Cursus",
+    "comision": "Commissie",
+    "companeros": "Aanpassing"
+  },
+  "pendingCollectionCard": {
+    "pendingLabel": "Nog te innen",
+    "empty": "Niets openstaand",
+    "count_one": "{{count}} openstaande betaling",
+    "count_other": "{{count}} openstaande betalingen",
+    "addMovement": "Boeking toevoegen"
+  },
+  "confirmDialog": { "cancel": "Annuleren", "defaultConfirmLabel": "Verwijderen" },
+  "editActions": { "defaultSaveLabel": "Opslaan", "cancel": "Annuleren" },
+  "deleteButton": {
+    "defaultLabel": "Verwijderen",
+    "defaultItemLabel": "dit item",
+    "deletedToast": "Verwijderd",
+    "errorToast": "Verwijderen is niet gelukt. Probeer het opnieuw.",
+    "confirmTitle": "Deze registratie verwijderen?",
+    "confirmMessage": "Je staat op het punt {{item}} te verwijderen. Deze actie kan niet ongedaan worden gemaakt."
+  },
+  "field": { "hideHelp": "Hulp verbergen", "help": "Hulp" },
+  "calendar": {
+    "months": ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"],
+    "weekdays": ["M", "D", "W", "D", "V", "Z", "Z"],
+    "prevMonth": "Vorige maand",
+    "nextMonth": "Volgende maand",
+    "prevYear": "Vorig jaar",
+    "nextYear": "Volgend jaar",
+    "prevDecade": "Vorig decennium",
+    "nextDecade": "Volgend decennium",
+    "today": "Vandaag"
+  },
+  "datePicker": {
+    "defaultPlaceholder": "Datum",
+    "defaultAriaLabel": "Datum kiezen",
+    "pickerAriaLabel": "Datumkiezer",
+    "chooseMonthAriaLabel": "Maand kiezen",
+    "chooseYearAriaLabel": "Jaar kiezen",
+    "dayAriaLabel": "{{day}} {{month}}",
+    "today": "Vandaag",
+    "yesterday": "Gisteren",
+    "tomorrow": "Morgen",
+    "dayBeforeYesterday": "Eergisteren"
+  },
+  "dateRangePicker": {
+    "from": "Van",
+    "to": "Tot",
+    "fromAriaLabel": "Datum vanaf",
+    "toAriaLabel": "Datum tot",
+    "pickerAriaLabel": "Kiezer voor datumbereik",
+    "chooseStart": "Kies de startdatum",
+    "chooseEnd": "Kies de einddatum",
+    "chooseDate": "Kies een datum",
+    "okFrom": "OK — alleen vanaf {{date}}",
+    "presets": { "today": "Vandaag", "thisWeek": "Deze week", "thisMonth": "Deze maand", "last30Days": "Laatste 30 dagen" }
+  },
+  "monthCalendar": {
+    "addOnDay": "Boeking toevoegen op {{day}} {{month}}",
+    "addOnDayToday": "Boeking toevoegen op {{day}} {{month}} (vandaag)",
+    "dayToday": "{{day}} {{month}} (vandaag)",
+    "closeDayDetail": "Dagdetail sluiten",
+    "dayHeading": "Dag {{day}} van {{month}}",
+    "generatedOnDay": "Gegenereerd op deze dag",
+    "table": { "course": "Cursus", "comment": "Opmerking", "people": "Pers.", "amount": "Bedrag" }
+  },
+  "select": { "placeholder": "Selecteer..." },
+  "multiSelect": { "placeholder": "Alle", "clearSelection": "Selectie wissen", "selectedCount": "{{count}} geselecteerd" },
+  "searchSelect": { "placeholder": "Zoeken...", "ariaLabel": "Zoeken", "noResults": "Geen resultaten" },
+  "currencySearchSelect": { "placeholder": "Munteenheid zoeken..." },
+  "listFilterBar": {
+    "from": "Van",
+    "to": "Tot",
+    "school": "School",
+    "activity": "Activiteit",
+    "noLimit": "Geen limiet",
+    "all": "Alle",
+    "clearFilters": "Filters wissen"
+  },
+  "rowMenu": { "moreActions": "Meer acties", "edit": "Bewerken", "delete": "Verwijderen" },
+  "statusSwitch": { "ariaLabel": "Status: {{value}}. Tik om naar {{next}} te wisselen", "title": "{{value}} — klik om naar \"{{next}}\" te wisselen" },
+  "signature": {
+    "opcional": "optioneel",
+    "borrar": "Wissen",
+    "deshacer": "Ongedaan maken",
+    "firmadoAria": "{{label}}: ondertekend",
+    "sinFirmarAria": "{{label}}: niet ondertekend"
+  }
+}

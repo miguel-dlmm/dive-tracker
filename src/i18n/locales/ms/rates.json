@@ -1,0 +1,52 @@
+{
+  "filter": {
+    "button": "Tapis",
+    "type": "Jenis",
+    "typeAll": "Semua",
+    "school": "Sekolah",
+    "schoolAll": "Semua",
+    "course": "Kursus",
+    "courseAll": "Semua",
+    "clear": "Kosongkan penapis",
+    "showInactive": "Tunjuk yang tidak aktif"
+  },
+  "search": {
+    "placeholder": "Cari",
+    "ariaLabel": "Cari kadar bayaran"
+  },
+  "list": {
+    "count": "{{count}} kadar bayaran",
+    "empty": "Tiada hasil.",
+    "createdOn": "Dicipta: {{date}} · {{type}}",
+    "inactive": "Tidak aktif"
+  },
+  "fab": "Kadar bayaran baharu",
+  "sheet": {
+    "editTitle": "Sunting kadar bayaran {{school}} - {{activity}}",
+    "createTitle": "Kadar bayaran baharu {{type}}",
+    "close": "Tutup",
+    "typeTablistLabel": "Jenis kadar bayaran",
+    "hintGanado": "Apa yang anda caj untuk mengajar kursus itu sendiri.",
+    "hintComision": "Apa yang anda caj untuk membawa seorang pelanggan.",
+    "school": "Sekolah",
+    "course": "Kursus",
+    "rateLabel": "Kadar bayaran · {{currency}}",
+    "save": "Simpan"
+  },
+  "toasts": {
+    "saved": "Perubahan disimpan",
+    "added": "Kadar bayaran ditambah",
+    "saveError": "Tidak dapat menyimpan. Cuba lagi.",
+    "duplicate": "Anda sudah ada kadar bayaran aktif untuk sekolah dan kursus ini. Nyahaktifkannya dahulu sebelum mencipta yang lain.",
+    "reactivateBlocked": "Tidak dapat diaktifkan semula: sudah ada kadar bayaran aktif lain untuk sekolah dan kursus ini.",
+    "deactivated": "Kadar bayaran dinyahaktifkan",
+    "reactivated": "Kadar bayaran diaktifkan semula"
+  },
+  "deleteInUse_one": "Tidak dapat dipadam: ada {{count}} rekod yang menggunakan kadar bayaran ini.",
+  "deleteInUse_other": "Tidak dapat dipadam: ada {{count}} rekod yang menggunakan kadar bayaran ini.",
+  "rowMenu": {
+    "itemLabel": "kadar bayaran {{school}} - {{activity}}",
+    "deactivate": "Nyahaktifkan",
+    "reactivate": "Aktifkan semula"
+  }
+}
