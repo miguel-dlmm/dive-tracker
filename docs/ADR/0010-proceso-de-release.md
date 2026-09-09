@@ -218,6 +218,21 @@ paso más de "preparar la release" (punto 3 de arriba), no una tarea
 aparte — se escribe a la vez que se redacta la entrada del changelog, de
 la misma fuente de verdad.
 
+**Addendum 2026-09-09 (incidente real, v1.3.0 → v1.3.1):** la release
+v1.3.0 reescribió el contenido de WhatsNew (nuevas diapositivas sobre
+idiomas añadidos y deshacer de firma, sustituyendo las del rediseño de
+v1.2.0) y lo desplegó a producción dentro del commit general
+`chore: prepara release`, sin enseñar antes el texto exacto de cada
+diapositiva para su aprobación — solo una descripción en abstracto del
+cambio. El usuario pidió revertirlo ya en producción (parche v1.3.1) y
+corrigió el proceso: decidir que WhatsNew "toca" en esta release sigue
+siendo parte de preparar la release, pero el texto propuesto de cada
+diapositiva (título + cuerpo, no solo la intención) se enseña aparte y
+necesita aprobación explícita sobre ese contenido concreto antes de
+comitearlo — mismo nivel de revisión que cualquier otro commit, aplicado
+de forma visible a esta pieza de copy de cara al usuario en vez de
+quedar implícito dentro del resumen general de la release.
+
 ## Alternativas descartadas
 
 - **Rama `release/*` con periodo de estabilización** — mismo motivo que
