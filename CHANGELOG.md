@@ -4,11 +4,15 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.3.1] - 2026-09-09
+
 ### Fixed
 - **"Qué hay de nuevo" de v1.3.0 revertido al contenido de v1.2.0**:
-  pedido explícito del usuario — el contenido de esta pantalla se
-  mantiene igual entre releases y solo se actualiza cuando lo pida
-  explícitamente, no de forma automática al preparar cada versión.
+  el contenido nuevo (idiomas añadidos, deshacer en firma) se desplegó
+  a producción sin aprobación explícita del texto exacto de cada
+  diapositiva — revertido al contenido de v1.2.0. A partir de ahora,
+  el texto propuesto de WhatsNew se enseña y aprueba aparte antes de
+  comitearlo (ver ADR-0010, addendum 2026-09-09).
 
 ## [1.3.0] - 2026-09-09
 
