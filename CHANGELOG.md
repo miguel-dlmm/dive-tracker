@@ -4,6 +4,12 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Fixed
+- **"Qué hay de nuevo" de v1.3.0 revertido al contenido de v1.2.0**:
+  pedido explícito del usuario — el contenido de esta pantalla se
+  mantiene igual entre releases y solo se actualiza cuando lo pida
+  explícitamente, no de forma automática al preparar cada versión.
+
 ## [1.3.0] - 2026-09-09
 
 ### Added
