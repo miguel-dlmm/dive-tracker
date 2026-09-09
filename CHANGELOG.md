@@ -4,18 +4,21 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.3.0] - 2026-09-09
+
 ### Added
 - **Firma táctil**: botón "Deshacer" junto a "Borrar" — quita solo el
   último trazo dibujado, no la firma entera.
 - **8 idiomas nuevos**: neerlandés, tailandés, indonesio, vietnamita,
   birmano, malayo, ruso y portugués (Brasil) — mismo patrón que los 5
   añadidos en v1.2.0 (`fallbackLng: "es"` cubre cualquier hueco). Migración
-  `0020-idiomas-adicionales-2.sql` amplía el check de `profiles.language`.
-  Aplicada a TEST; pendiente de aplicar a producción en el próximo release.
+  `0020-idiomas-adicionales-2.sql` amplía el check de `profiles.language`,
+  aplicada a producción como parte de esta release.
 - **Dataset "prueba"**: copia genérica del dataset "ihasia" (escuela,
   cursos y tarifas), pasa a ser el dataset por defecto para altas nuevas
-  (registro externo y alta manual) en vez de "ihasia" — solo en TEST por
-  ahora (migración `0019-dataset-prueba.sql`).
+  (registro externo y alta manual) en vez de "ihasia" — migración
+  `0019-dataset-prueba.sql`, aplicada a producción como parte de esta
+  release.
 
 ### Fixed
 - **Ayuda abierta desde Training Records**: cerrarla volvía a Home en
