@@ -8,7 +8,10 @@
   "noActivityThisMonth": "ไม่มีกิจกรรมเดือนนี้",
   "kpis": {
     "sectionTitle": "ผลงานของคุณเดือนนี้",
-    "studentsThisMonth": "นักเรียน",
+    "dailyAverageThisMonth": "เฉลี่ยต่อวัน",
+    "dailyAverageTooltip": "รายได้เฉลี่ยต่อวันของเดือนนี้ นับถึงวันนี้เท่านั้น",
+    "dailyAverageTooltipShow": "ข้อมูล: เฉลี่ยต่อวัน",
+    "dailyAverageTooltipHide": "ซ่อนข้อมูล: เฉลี่ยต่อวัน",
     "coursesTotal": "คอร์สทั้งหมด",
     "referredThisMonth": "ลูกค้าที่แนะนำ"
   },

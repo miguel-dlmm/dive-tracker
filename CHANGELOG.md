@@ -29,6 +29,16 @@ Registro de cambios relevantes de Ocean Flow.
   acceso" — refleja el último movimiento (Mi trabajo, Comisiones o pagos
   de compañeros) dado de alta, editado o eliminado, un dato más útil que
   el último login para saber si una cuenta sigue en uso real.
+- **Home: KPI "Media diaria"**: sustituye al KPI "Alumnos", que sumaba
+  `people` de cada Curso y contaba dos veces al mismo alumno si repetía
+  curso en el mes — una cifra inexacta sin una forma barata de
+  deduplicar hoy. La nueva tarjeta muestra cuánto ganas de media cada
+  día del mes en curso (solo Cursos, dividido entre el día de hoy), con
+  un tooltip ⓘ que aclara el alcance ("hasta hoy").
+- **Editar un movimiento desde el calendario de Home**: tocar un apunte
+  del desglose del día abre la misma hoja de edición que en Mi trabajo,
+  sin cambiar de pestaña — al guardar, el desglose se actualiza en el
+  sitio (Home ya no navega a Mi trabajo tras editar, solo tras crear).
 
 ### Fixed
 - **`ConfigTab.jsx` colisionaba con `LANGUAGE_OPTIONS`**: el nuevo

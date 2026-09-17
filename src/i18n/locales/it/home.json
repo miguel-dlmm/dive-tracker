@@ -8,7 +8,10 @@
   "noActivityThisMonth": "Nessuna attività questo mese",
   "kpis": {
     "sectionTitle": "Il tuo impatto questo mese",
-    "studentsThisMonth": "Allievi",
+    "dailyAverageThisMonth": "Media giornaliera",
+    "dailyAverageTooltip": "Quanto guadagni in media al giorno questo mese, contando solo fino a oggi.",
+    "dailyAverageTooltipShow": "Info: Media giornaliera",
+    "dailyAverageTooltipHide": "Nascondi info: Media giornaliera",
     "coursesTotal": "Corsi",
     "referredThisMonth": "Portati"
   },
