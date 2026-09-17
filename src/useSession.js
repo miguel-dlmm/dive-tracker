@@ -23,7 +23,7 @@ const ACTIVATION_LINK_INVALID =
 
 // Texto idéntico al que CreatePasswordScreen ya usa como mensaje genérico
 // de error — así su catch no necesita distinguir el origen del fallo.
-const ACTIVATION_GENERIC_RETRY = "No se pudo guardar la contraseña. Inténtalo de nuevo.";
+const ACTIVATION_GENERIC_RETRY = "No hemos podido guardar la contraseña, prueba otra vez.";
 
 const ACTIVATION_SESSION_MISMATCH = "No se pudo activar esta cuenta desde la sesión actual.";
 

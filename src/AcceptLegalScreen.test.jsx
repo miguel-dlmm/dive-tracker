@@ -42,7 +42,7 @@ describe("AcceptLegalScreen", () => {
     await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: /continuar/i }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo guardar");
+    expect(await screen.findByRole("alert")).toHaveTextContent("No hemos podido guardar");
   });
 
   it("abre el visor de la Política de Privacidad al pulsar su enlace", async () => {

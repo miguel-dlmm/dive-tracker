@@ -107,7 +107,7 @@ describe("CreatePasswordScreen", () => {
 
     await fillAndSubmit(user, { password: "Password123!", confirm: "Password123!" });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo guardar");
+    expect(await screen.findByRole("alert")).toHaveTextContent("No hemos podido guardar");
   });
 
   it("deshabilita el botón mientras onSubmit está en curso, evitando doble envío", async () => {

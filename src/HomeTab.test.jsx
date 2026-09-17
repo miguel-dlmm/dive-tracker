@@ -411,19 +411,18 @@ describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", (
     expect(screen.getByText("Cursos")).toBeInTheDocument();
     expect(screen.getByText("Captados")).toBeInTheDocument();
 
-    // timeout 4000 (2026-09-08, hallazgo real): con la suite completa
-    // corriendo (muchos archivos de test en paralelo, CPU bajo presión
-    // real), el bucle de requestAnimationFrame de useCountUp (motion.js)
-    // puede tardar bastante más de 2s en asentarse en su valor final —
-    // visto fallar en vivo con la suite completa, nunca en solitario.
-    // 2000ms bastaba en aislamiento pero era un margen demasiado justo
-    // bajo contención real; no es un cambio de comportamiento, solo más
-    // paciencia para el mismo resultado esperado.
+    // timeout 8000 (2026-09-08, hallazgo real, ampliado 2026-09-18): con la
+    // suite completa corriendo (muchos archivos de test en paralelo, CPU
+    // bajo presión real), el bucle de requestAnimationFrame de useCountUp
+    // (motion.js) puede tardar bastante más de 4s en asentarse en su valor
+    // final — visto fallar en vivo con la suite completa varias veces
+    // seguidas incluso a 4000ms, nunca en solitario; no es un cambio de
+    // comportamiento, solo más paciencia para el mismo resultado esperado.
     await waitFor(() => {
       expect(screen.getByText("Alumnos").previousSibling).toHaveTextContent("3"); // 2 + 1, solo este mes
       expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("2"); // w1 + w2, solo este mes (w3 es del mes pasado)
       expect(screen.getByText("Captados").previousSibling).toHaveTextContent("4"); // solo c1, este mes
-    }, { timeout: 4000 });
+    }, { timeout: 8000 });
   });
 });
 

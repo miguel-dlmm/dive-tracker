@@ -23,7 +23,7 @@
     "defaultLabel": "Eliminar",
     "defaultItemLabel": "este elemento",
     "deletedToast": "Eliminado",
-    "errorToast": "No se pudo eliminar. Inténtalo de nuevo.",
+    "errorToast": "No hemos podido eliminarlo, prueba otra vez.",
     "confirmTitle": "¿Eliminar este registro?",
     "confirmMessage": "Vas a eliminar {{item}}. Esta acción no se puede deshacer."
   },

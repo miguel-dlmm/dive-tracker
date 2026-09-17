@@ -4,6 +4,26 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Changed
+- **Revisión de tono — mensajes de error (español)**: sustituido el
+  patrón "No se pudo {verbo}. Inténtalo de nuevo." (repetido ~25 veces
+  casi idéntico en auth/común/config/trabajo/tarifas/perfil/Training
+  Records) por un tono más cercano y personal: "No hemos podido
+  {verbo}, prueba otra vez." — incluye también el mensaje equivalente
+  hardcodeado en `useSession.js` (activación de cuenta), que hasta ahora
+  no pasaba por i18n. Primera pasada de la revisión global de textos
+  pedida por el usuario; cubre español — el resto de idiomas y el resto
+  de pantallas (Ayuda, WhatsNew excluido a propósito) quedan para una
+  sesión de continuación. Esta rama no se fusiona con la del exportador
+  de PDF hasta revisión.
+
+### Fixed
+- **Descripción de "Icono de carga" en Configuración obsoleta**: seguía
+  diciendo "cuando tengáis el logo oficial, avisadme y lo sustituyo" —
+  una nota de desarrollo que se quedó en el texto tras haberse añadido
+  ya el logo real (2026-09-06/07). Actualizada para describir lo que la
+  opción hace hoy.
+
 ## [1.3.1] - 2026-09-09
 
 ### Fixed

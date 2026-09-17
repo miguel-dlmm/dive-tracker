@@ -22,7 +22,7 @@
     "deleteConfirmMessage": "Vas a eliminar {{item}}. Tendrás unos segundos para deshacerlo desde el aviso.",
     "undoAction": "Deshacer",
     "deleteUndoneToast": "Recuperado",
-    "deleteUndoError": "No se pudo deshacer. Inténtalo de nuevo."
+    "deleteUndoError": "No hemos podido deshacerlo, prueba otra vez."
   },
   "tabs": {
     "pending": "Pendientes",
@@ -70,13 +70,13 @@
   "fabAdd": "Añadir",
   "toggleStatus": {
     "undoneToast": "Deshecho",
-    "undoError": "No se pudo deshacer. Inténtalo de nuevo.",
+    "undoError": "No hemos podido deshacerlo, prueba otra vez.",
     "undoAction": "Deshacer",
     "markedPending": "Marcado como pendiente",
     "markedPaidSwitchTab": "Marcado como cobrado — cámbialo a \"Cobrados\" para verlo",
     "markedPaid": "Marcado como cobrado"
   },
-  "genericUpdateError": "No se pudo actualizar. Inténtalo de nuevo.",
+  "genericUpdateError": "No hemos podido actualizarlo, prueba otra vez.",
   "sheet": {
     "close": "Cerrar",
     "typeSelectorAria": "Tipo de movimiento",
@@ -128,9 +128,9 @@
       "adjustmentAdded": "Ajuste añadido",
       "courseAdded": "Curso añadido",
       "commissionAdded": "Comisión añadida",
-      "saveError": "No se pudo guardar. Inténtalo de nuevo.",
+      "saveError": "No hemos podido guardarlo, prueba otra vez.",
       "rateAdded": "Tarifa añadida",
-      "rateSaveError": "No se pudo guardar la tarifa. Inténtalo de nuevo."
+      "rateSaveError": "No hemos podido guardar la tarifa, prueba otra vez."
     }
   },
   "kpis": {

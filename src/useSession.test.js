@@ -308,7 +308,7 @@ describe("activateAccount", () => {
 
     await expect(
       result.current.activateAccount({ tokenHash: "hash-1", type: "recovery", expectedEmail: "diver@example.com", password: "nueva-123" })
-    ).rejects.toThrow("No se pudo guardar la contraseña. Inténtalo de nuevo.");
+    ).rejects.toThrow("No hemos podido guardar la contraseña, prueba otra vez.");
 
     expect(supabase.auth.verifyOtp).toHaveBeenCalledTimes(1);
 

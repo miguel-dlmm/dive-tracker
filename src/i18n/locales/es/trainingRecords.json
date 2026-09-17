@@ -1,8 +1,8 @@
 {
   "intro": "Genera un Training Record oficial (registro de progreso SSI) para cada alumno, con firma incluida — nada de lo que rellenes aquí se guarda en la nube, solo se descarga.",
   "sinPlantillas": "Todavía no hay ninguna plantilla lista para usar.",
-  "noSePudieronCargarPlantillas": "No se pudieron cargar las plantillas.",
-  "noSePudoDescargarPlantilla": "No se pudo descargar esta plantilla.",
+  "noSePudieronCargarPlantillas": "No hemos podido cargar las plantillas.",
+  "noSePudoDescargarPlantilla": "No hemos podido descargar esta plantilla.",
   "cargandoPlantillas": "Cargando…",
   "instructorMissing": {
     "mensaje": "Antes de generar, completa tus datos de instructor (nombre, iniciales, número SSI Pro y firma) en tu perfil.",
@@ -22,8 +22,8 @@
     "generadoEl": "Generado el {{date}}",
     "faltanDatos": "Faltan datos de este alumno",
     "imagenDescargada": "Imagen descargada.",
-    "noSePudoExportarImagen": "No se pudo exportar la imagen. Inténtalo de nuevo.",
-    "noSePudoCompartir": "No se pudo compartir el documento. Inténtalo de nuevo.",
+    "noSePudoExportarImagen": "No hemos podido exportar la imagen, prueba otra vez.",
+    "noSePudoCompartir": "No hemos podido compartir el documento, prueba otra vez.",
     "enLote": "Todo el listado",
     "enLoteCount_one": "{{count}} documento",
     "enLoteCount_other": "{{count}} documentos",
@@ -31,7 +31,7 @@
     "descargarTodoJpg": "Descargar todo en JPG",
     "compartirTodo": "Compartir todo",
     "zipDescargado": "Comprimido descargado con todos los archivos.",
-    "noSePudoDescargarZip": "No se pudo generar el comprimido. Inténtalo de nuevo."
+    "noSePudoDescargarZip": "No hemos podido generar el comprimido, prueba otra vez."
   },
   "studentForm": {
     "nuevoAlumno": "Nuevo alumno",
@@ -81,7 +81,7 @@
     "generarTodos": "Generar para todos los alumnos",
     "generando": "Generando…",
     "generadoCorrectamente": "Registros generados correctamente.",
-    "noSePudoGenerar": "No se pudo generar el registro.",
+    "noSePudoGenerar": "No hemos podido generar el registro.",
     "faltanCampos": "Faltan campos obligatorios — revisa los avisos en rojo.",
     "sinAlumnos": "Añade al menos un alumno antes de generar."
   }

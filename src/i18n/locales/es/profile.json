@@ -21,7 +21,7 @@
     "saving": "Guardando…",
     "cancel": "Cancelar",
     "toastSuccess": "Avatar actualizado",
-    "toastError": "No se pudo guardar el avatar. Inténtalo de nuevo."
+    "toastError": "No hemos podido guardar el avatar, prueba otra vez."
   },
   "personalData": {
     "nameLine": "Nombre:",
@@ -45,7 +45,7 @@
     "errors": {
       "nicknameTaken": "Ese nickname ya está en uso.",
       "nicknameAt": "El nickname no puede contener \"@\".",
-      "generic": "No se pudo guardar. Inténtalo de nuevo."
+      "generic": "No hemos podido guardarlo, prueba otra vez."
     }
   },
   "instructor": {
@@ -65,7 +65,7 @@
     "save": "Guardar",
     "saving": "Guardando…",
     "toastSuccess": "Datos de instructor actualizados",
-    "toastError": "No se pudieron guardar los datos de instructor. Inténtalo de nuevo."
+    "toastError": "No hemos podido guardar los datos de instructor, prueba otra vez."
   },
   "currency": {
     "hint": "Se usa como moneda por defecto en Ajuste de curso, cuando no hay una tarifa que la determine. El resto de movimientos siempre usan la moneda de su tarifa.",
@@ -75,7 +75,7 @@
   "language": {
     "placeholder": "Selecciona un idioma",
     "toastSuccess": "Idioma actualizado",
-    "toastError": "No se pudo cambiar el idioma. Inténtalo de nuevo."
+    "toastError": "No hemos podido cambiar el idioma, prueba otra vez."
   },
   "password": {
     "currentLabel": "Contraseña actual",
@@ -89,7 +89,7 @@
     "matches": "Las contraseñas coinciden",
     "submit": "Cambiar contraseña",
     "toastSuccess": "Contraseña actualizada",
-    "toastError": "No se pudo cambiar la contraseña. Inténtalo de nuevo.",
+    "toastError": "No hemos podido cambiar la contraseña, prueba otra vez.",
     "wrongCurrent": "Contraseña actual incorrecta."
   },
   "deleteAccount": {
@@ -106,7 +106,7 @@
     "back": "Volver",
     "deleteButton": "Eliminar cuenta",
     "toastSuccess": "Cuenta eliminada",
-    "genericError": "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
-    "networkError": "No se pudo eliminar la cuenta. Comprueba tu conexión e inténtalo de nuevo."
+    "genericError": "No hemos podido eliminar la cuenta, prueba otra vez.",
+    "networkError": "No hemos podido eliminar la cuenta — comprueba tu conexión y prueba otra vez."
   }
 }
