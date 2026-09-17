@@ -1,4 +1,4 @@
-import { buildExportReportData, listAdjustmentCandidates } from "./buildExportReportData";
+import { buildExportReportData, listAdjustmentCandidates, groupByDayAndActivity } from "./buildExportReportData";
 
 const paymentStatuses = [
   { name: "Pending", is_default: true },
@@ -152,5 +152,54 @@ describe("listAdjustmentCandidates", () => {
     ];
     const candidates = listAdjustmentCandidates({ school: "Ihasia", from: "2026-09-01", to: "2026-09-30", colleaguePayments, fallbackCurrency: "EUR" });
     expect(candidates.map((c) => c.id)).toEqual(["dentro"]);
+  });
+});
+
+describe("groupByDayAndActivity", () => {
+  it("agrega varias sesiones idénticas (misma actividad, mismo día, mismo estado) en una sola línea", () => {
+    const entries = [
+      { date: "2026-09-04", activity: "Try Scuba", people: 1, status: "Pending", currency: "EUR", total: 800 },
+      { date: "2026-09-04", activity: "Try Scuba", people: 1, status: "Pending", currency: "EUR", total: 800 },
+      { date: "2026-09-04", activity: "Try Scuba", people: 1, status: "Pending", currency: "EUR", total: 800 },
+    ];
+    const days = groupByDayAndActivity(entries);
+    expect(days).toHaveLength(1);
+    expect(days[0].groups).toHaveLength(1);
+    expect(days[0].groups[0]).toMatchObject({ activity: "Try Scuba", sessions: 3, people: 3, total: 2400 });
+    expect(days[0].dayTotal).toEqual({ EUR: 2400 });
+  });
+
+  it("no mezcla actividades distintas del mismo día en la misma línea", () => {
+    const entries = [
+      { date: "2026-09-04", activity: "Try Scuba", people: 1, status: "Pending", currency: "EUR", total: 800 },
+      { date: "2026-09-04", activity: "Fun Dive", people: 3, status: "Pending", currency: "EUR", total: 900 },
+    ];
+    const days = groupByDayAndActivity(entries);
+    expect(days).toHaveLength(1);
+    expect(days[0].groups.map((g) => g.activity).sort()).toEqual(["Fun Dive", "Try Scuba"]);
+    expect(days[0].dayTotal).toEqual({ EUR: 1700 });
+  });
+
+  it("no mezcla cobrado y pendiente de la misma actividad bajo un único importe", () => {
+    const entries = [
+      { date: "2026-09-04", activity: "Try Scuba", people: 1, status: "Paid", currency: "EUR", total: 800 },
+      { date: "2026-09-04", activity: "Try Scuba", people: 1, status: "Pending", currency: "EUR", total: 800 },
+    ];
+    const days = groupByDayAndActivity(entries);
+    expect(days[0].groups).toHaveLength(2);
+    expect(days[0].groups.map((g) => g.status).sort()).toEqual(["Paid", "Pending"]);
+  });
+
+  it("mantiene el orden de los días tal como llegan las entradas", () => {
+    const entries = [
+      { date: "2026-09-20", activity: "A", people: 1, status: "Pending", currency: "EUR", total: 10 },
+      { date: "2026-09-04", activity: "B", people: 1, status: "Pending", currency: "EUR", total: 20 },
+    ];
+    const days = groupByDayAndActivity(entries);
+    expect(days.map((d) => d.date)).toEqual(["2026-09-20", "2026-09-04"]);
+  });
+
+  it("sin entradas, devuelve una lista vacía", () => {
+    expect(groupByDayAndActivity([])).toEqual([]);
   });
 });

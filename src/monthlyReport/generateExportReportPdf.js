@@ -15,6 +15,7 @@
 import pdfMake from "pdfmake/build/pdfmake";
 import vfsFonts from "pdfmake/build/vfs_fonts";
 import { isPendingStatus } from "../shared";
+import { groupByDayAndActivity } from "./buildExportReportData";
 
 let vfsReady = false;
 function ensureFonts() {
@@ -111,40 +112,47 @@ const hairlineLayout = {
   paddingBottom: () => 6,
 };
 
-function statusCell(statusName, paymentStatusRows, t) {
-  const pending = isPendingStatus(statusName, paymentStatusRows);
-  return { text: pending ? t("export.pendingLabel") : t("export.paidLabel"), color: pending ? WARNING : SUCCESS, bold: true, fontSize: 8 };
-}
-
-function moneyCell(amount, code) {
-  return { text: formatMoneyPdf(amount, code), alignment: "right", bold: true, color: NAVY, fontSize: 9 };
-}
-
-// Los anchos de columna de esta tabla y de adjustmentsTable suman siempre
-// CONTENT_WIDTH y la columna Importe es siempre la última con el mismo
-// ancho fijo (64) en las dos — así su borde derecho cae exactamente en el
-// mismo punto en cualquier tabla del documento, aunque tengan un número de
-// columnas distinto (bug real reportado: "el total no queda alineado en
-// la columna" — antes cada tabla repartía su propio "*" de forma
-// independiente, sin garantía de que las columnas Importe de tablas
-// distintas cayeran en la misma x).
-function entriesTable({ entries, paymentStatusRows, t, kind, rowDate }) {
-  const secondColLabel = kind === "commissions" ? t("export.colReferredFor") : t("export.colCourse");
-  const header = [
-    { text: t("export.colDate"), style: "th" },
-    { text: secondColLabel, style: "th" },
-    { text: t("export.colPeople"), style: "th", alignment: "center" },
-    { text: t("export.colStatus"), style: "th" },
-    { text: t("export.colAmount"), style: "th", alignment: "right" },
-  ];
-  const body = entries.map((e) => [
-    { text: rowDate(e.date), color: MUTED, fontSize: 9, noWrap: true },
-    { text: e.activity, fontSize: 9 },
-    { text: String(e.people || 0), alignment: "center", fontSize: 9 },
-    statusCell(e.status, paymentStatusRows, t),
-    moneyCell(e.total, e.currency),
-  ]);
-  return { table: { headerRows: 1, widths: [34, "*", 30, 48, 64], body: [header, ...body] }, layout: hairlineLayout };
+// Tabla agrupada por día y, dentro de cada día, por actividad+estado —
+// sustituye a la antigua "una fila por movimiento" (pedido explícito tras
+// generar un informe real: muchas sesiones idénticas del mismo curso el
+// mismo día se imprimían como filas repetidas, y la tabla de 5 columnas se
+// leía muy ancha y desperdigada en un PDF que se abre sobre todo en el
+// móvil). Cada fila de actividad es un bloque de 2 líneas (nombre arriba,
+// "N sesiones · M personas [· Estado]" abajo, en gris) + el importe a la
+// derecha — el mismo patrón visual que ya usa `EntryTitle`/`EntryRow` en
+// el resto de la app (curso arriba, detalle abajo, importe a la derecha),
+// no una tabla de hoja de cálculo. El estado solo se imprime en la línea
+// de detalle cuando showCollected está activo: con cobrados ocultos TODA
+// fila es pendiente por definición (ya lo dice el aviso de cabecera), así
+// que repetirlo en cada línea sería ruido, no información.
+// Solo 2 columnas anchas ('*' y 64, igual que adjustmentsTable) — la
+// columna Importe sigue cayendo en el mismo punto que el resto de tablas
+// del documento (ver la nota histórica de alineación en adjustmentsTable).
+function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate }) {
+  const body = [];
+  dayGroups.forEach((day) => {
+    const dayTotalText = Object.entries(day.dayTotal).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ");
+    body.push([
+      { text: rowDate(day.date), bold: true, fontSize: 8.5, color: NAVY, fillColor: "#F1F6FA" },
+      { text: dayTotalText, bold: true, fontSize: 8.5, color: NAVY, alignment: "right", fillColor: "#F1F6FA" },
+    ]);
+    day.groups.forEach((g) => {
+      const captionParts = [];
+      if (g.sessions > 1) captionParts.push(t("export.sessionsCount", { count: g.sessions }));
+      captionParts.push(t("export.peopleCount", { count: g.people }));
+      if (showCollected) captionParts.push(isPendingStatus(g.status, paymentStatusRows) ? t("export.pendingLabel") : t("export.paidLabel"));
+      body.push([
+        {
+          stack: [
+            { text: g.activity, bold: true, fontSize: 9, color: "#1E2A33" },
+            { text: captionParts.join("  ·  "), fontSize: 7.5, color: MUTED, margin: [0, 1, 0, 0] },
+          ],
+        },
+        { text: formatMoneyPdf(g.total, g.currency), alignment: "right", bold: true, color: NAVY, fontSize: 9 },
+      ]);
+    });
+  });
+  return { table: { widths: ["*", 64], body }, layout: hairlineLayout };
 }
 
 function adjustmentsTable({ entries, t, rowDate }) {
@@ -244,14 +252,14 @@ export async function generateExportReportPdf({
   if (data.courses.length > 0) {
     pushGroup(
       t("export.coursesGroup"), TEAL,
-      entriesTable({ entries: data.courses, paymentStatusRows, t, kind: "courses", rowDate }),
+      groupedActivityTable({ dayGroups: groupByDayAndActivity(data.courses), showCollected, paymentStatusRows, t, rowDate }),
       t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal
     );
   }
   if (data.commissions.length > 0) {
     pushGroup(
       t("export.commissionsGroup"), GOLD,
-      entriesTable({ entries: data.commissions, paymentStatusRows, t, kind: "commissions", rowDate }),
+      groupedActivityTable({ dayGroups: groupByDayAndActivity(data.commissions), showCollected, paymentStatusRows, t, rowDate }),
       t("export.subtotal", { group: t("export.commissionsGroup").toLowerCase() }), data.commissionsSubtotal
     );
   }

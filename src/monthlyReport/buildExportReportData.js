@@ -32,6 +32,39 @@ function addTotals(a, b) {
 
 const isPending = (statusName, paymentStatusRows) => paymentStatusRows.find((s) => s.name === statusName)?.is_default ?? false;
 
+// Agrupa una lista de movimientos YA filtrada (courses/commissions de
+// buildExportReportData) por día y, dentro de cada día, por
+// actividad+estado+moneda — pedido explícito tras generar un informe real
+// (dev-bypass, septiembre): un mes con varias reservas idénticas del mismo
+// curso el mismo día ("Try Scuba" x7 el día 4, por ejemplo) se imprimía
+// como 7 filas idénticas en vez de una sola línea agregada con el conteo.
+// Se agrupa por estado también (no solo actividad) para que una fila
+// nunca mezcle "Cobrado" y "Pendiente" bajo un único importe — si un
+// mismo curso tiene sesiones en los dos estados el mismo día, salen como
+// dos líneas separadas, cada una con su propio estado real. Entradas ya
+// vienen ordenadas por fecha (buildExportReportData) — el orden de salida
+// de los días respeta ese mismo orden.
+export function groupByDayAndActivity(entries) {
+  const dayOrder = [];
+  const dayMap = new Map();
+  entries.forEach((e) => {
+    if (!dayMap.has(e.date)) { dayMap.set(e.date, new Map()); dayOrder.push(e.date); }
+    const groups = dayMap.get(e.date);
+    const key = `${e.activity}__${e.status}__${e.currency}`;
+    if (!groups.has(key)) groups.set(key, { activity: e.activity, status: e.status, currency: e.currency, sessions: 0, people: 0, total: 0 });
+    const g = groups.get(key);
+    g.sessions += 1;
+    g.people += e.people || 0;
+    g.total += e.total || 0;
+  });
+  return dayOrder.map((date) => {
+    const groups = [...dayMap.get(date).values()];
+    const dayTotal = {};
+    groups.forEach((g) => { dayTotal[g.currency] = (dayTotal[g.currency] || 0) + g.total; });
+    return { date, groups, dayTotal };
+  });
+}
+
 // school/from/to: el alcance del informe — una escuela, un rango de fechas
 // (siempre los dos, nunca "todo"). showCollected=false (por defecto, pedido
 // explícito): el informe empieza enseñando solo lo pendiente de cobro.
