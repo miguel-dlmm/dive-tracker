@@ -8,12 +8,23 @@ import {
 } from "lucide-react";
 import { GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
 import { ENTITY_COLOR_PALETTE } from "./colors";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle, ColorSwatchPicker, useFloatingDropdown, FloatingPanel } from "./shared";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle, ColorSwatchPicker, DatePicker, useFloatingDropdown, FloatingPanel } from "./shared";
 import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
 import i18n from "./i18n";
 import RatesTab from "./RatesTab";
 import DatasetsSection from "./DatasetsSection";
+// LANGUAGE_OPTIONS se importa con alias: ConfigTab.jsx ya tenía su propia
+// constante local con el mismo nombre (más abajo, usada por el selector de
+// idioma de alta de usuario) — mismos 15 idiomas, duplicada por su cuenta
+// antes de que ProfileTab.jsx la exportara. Se deja así a propósito (no se
+// consolidan en una sola en esta misma pasada): no es un cambio
+// estructural, pero sí toca un flujo ya en producción (CreateUserSheet)
+// que no formaba parte de este encargo — cambiarlo de paso sería la
+// sobreingeniería que CLAUDE.md pide evitar, se marca en
+// docs/LOTE-2026-09-17-PROGRESS.md como limpieza pendiente aparte.
+import { countryOptionsFor, PROFESSIONAL_LEVEL_OPTIONS, LANGUAGE_OPTIONS as PROFILE_LANGUAGE_OPTIONS } from "./ProfileTab";
+import { AVATAR_ICONS } from "./avatarCatalog";
 
 const inputCls = "min-h-11 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-gray-400";
 
@@ -620,7 +631,7 @@ function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
   );
 }
 
-function UserListRow({ user, status, lastSignInAt, deactivatedAt, onOpen }) {
+function UserListRow({ user, status, lastActivityAt, deactivatedAt, onOpen }) {
   const { t } = useTranslation("config");
   // Fila "apagada" para una cuenta desactivada (feedback explícito
   // 2026-09-07: "querría q todos los colores q muestra sean mas
@@ -652,14 +663,16 @@ function UserListRow({ user, status, lastSignInAt, deactivatedAt, onOpen }) {
         </p>
       </div>
       <div className="shrink-0 text-right text-xs text-gray-400">
-        {/* Último acceso en vez de fecha de alta (pedido explícito del
-            usuario) — "cuándo se dio de alta" dice poco de si la cuenta
-            sigue viva; "cuándo entró por última vez" sí. Solo fecha, sin
-            hora (2026-09-04, pedido explícito): la hora exacta no aporta
-            nada para reconocer de un vistazo si una cuenta sigue viva,
-            solo añade ruido. Reutiliza shortDate de shared.jsx en vez de
-            shortDateTime, que sigue usándose para "Fecha de baja". */}
-        <div>{t("userListRow.ultimoAcceso", { date: lastSignInAt ? shortDate(lastSignInAt) : t("userStatus.nunca") })}</div>
+        {/* Última actividad en vez de último acceso (2026-09-17, pedido
+            explícito: "último acceso" solo dice que la persona abrió la
+            app, no que hiciera nada con ella — última actividad real
+            (worklog/comisiones/colleague_payments) es la pregunta que de
+            verdad importa para saber si una cuenta sigue viva de verdad.
+            "Último acceso" se mantiene en la ficha de detalle, junto al
+            resto de datos de la cuenta — no desaparece, solo deja de ser
+            lo primero que se ve en el listado). Solo fecha, sin hora
+            (mismo criterio que antes) — reutiliza shortDate. */}
+        <div>{t("userListRow.ultimaActividad", { date: lastActivityAt ? shortDate(lastActivityAt) : t("userStatus.nunca") })}</div>
         {status === "desactivado" && (
           <div className="mt-0.5 italic">{t("userListRow.baja", { date: deactivatedAt ? shortDate(deactivatedAt) : t("userListRow.fechaNoRegistrada") })}</div>
         )}
@@ -687,12 +700,12 @@ function UserListRow({ user, status, lastSignInAt, deactivatedAt, onOpen }) {
 // estructura de pantalla que no pinta nada en este caso.
 function UserDetailSheet({
   open, user: userProp, status: statusProp, lastSignInAt: lastSignInAtProp, deactivatedAt: deactivatedAtProp,
-  activitySummary,
+  activitySummary, fullProfile,
   currentUserId, viewerIsSuperadmin, actionBusy,
   onClose, onRequestToggleAdmin, onRequestToggleActive, onRequestRegenerateLink,
   onRequestRegeneratePassword, onRequestDelete, onSaveProfile,
 }) {
-  const { t } = useTranslation("config");
+  const { t, i18n: i18nInstance } = useTranslation("config");
   // Retenidos juntos (mismo snapshot) porque están relacionados entre sí —
   // ver useRetained arriba. Antes de la primera apertura no hay nada que
   // retener todavía, la hoja no debe montar ningún contenido real. Los
@@ -701,7 +714,13 @@ function UserDetailSheet({
   // apuntando al snapshot retenido — ver el shadowing explícito más abajo.
   const snapshot = useRetained(userProp ? { user: userProp, status: statusProp, lastSignInAt: lastSignInAtProp, deactivatedAt: deactivatedAtProp } : null);
   const [editingProfile, setEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({ first_name: "", last_name: "", nickname: "" });
+  const emptyForm = {
+    first_name: "", last_name: "", nickname: "",
+    avatar_icon: "", avatar_color: "",
+    birth_date: "", country_of_residence: "", professional_level: "",
+    instructor_initials: "", ssi_pro_number: "", language: "es",
+  };
+  const [profileForm, setProfileForm] = useState(emptyForm);
   // Cierra siempre sin edición pendiente — reabrir (el mismo usuario u
   // otro distinto) debe partir en blanco, igual que antes cuando cada
   // apertura remontaba el componente desde cero. Todos los hooks van ANTES
@@ -718,9 +737,31 @@ function UserDetailSheet({
   const { user, status, lastSignInAt, deactivatedAt } = snapshot;
   const editable = viewerIsSuperadmin && user.user_id !== currentUserId && !user.is_superadmin;
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "—";
+  // fullProfile: fila completa de `profiles` (todas las columnas, incluidas
+  // las de "la card" — avatar, datos personales, datos de instructor,
+  // idioma), cargada aparte bajo demanda al abrir la hoja (ver el efecto en
+  // UsersDirectory, mismo patrón que activitySummary) — admin_list_profiles()
+  // (el listado) solo expone nombre/nickname/email/fechas/roles a propósito,
+  // no toda la fila. RLS de profiles ya deja a un admin leer/editar
+  // cualquier fila directamente (política "select/update own or admin sees
+  // all"), así que esto no necesita ningún cambio de esquema ni de función —
+  // solo una consulta más, igual de "de cliente" que la que ya hace
+  // saveProfile más abajo. null mientras carga: los campos nuevos muestran
+  // "…", igual que ya hace activitySummary con Movimientos/Última actividad.
+  const countryOptions = countryOptionsFor(i18nInstance.language);
+  const countryLabel = (code) => countryOptions.find((o) => o.value === code)?.label || "—";
+  const professionalLabel = (code) => PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === code)?.label || "—";
+  const languageLabel = (code) => PROFILE_LANGUAGE_OPTIONS.find((o) => o.code === code)?.label || "—";
 
   const startEditProfile = () => {
-    setProfileForm({ first_name: user.first_name || "", last_name: user.last_name || "", nickname: user.nickname || "" });
+    setProfileForm({
+      first_name: user.first_name || "", last_name: user.last_name || "", nickname: user.nickname || "",
+      avatar_icon: fullProfile?.avatar_icon || "", avatar_color: fullProfile?.avatar_color || "",
+      birth_date: fullProfile?.birth_date || "", country_of_residence: fullProfile?.country_of_residence || "",
+      professional_level: fullProfile?.professional_level || "",
+      instructor_initials: fullProfile?.instructor_initials || "", ssi_pro_number: fullProfile?.ssi_pro_number || "",
+      language: fullProfile?.language || "es",
+    });
     setEditingProfile(true);
   };
   const saveProfile = async () => {
@@ -750,6 +791,69 @@ function UserDetailSheet({
                 </Field>
               </div>
             </div>
+
+            {/* Resto de campos del perfil (2026-09-17, pedido explícito:
+                "quiero poder ver y editar todos los campos del usuario,
+                incluidos los campos de la card" — Mi perfil los reparte en
+                varias secciones con su propio carrusel de iconos/firma
+                táctil; aquí, al ser una herramienta de admin y no la
+                pantalla del propio usuario, van todos juntos como campos de
+                formulario normales, sin esa presentación — nunca se pidió
+                que fuera "bonito", solo editable). La firma táctil
+                (instructor_signature) queda fuera a propósito: es la firma
+                de la propia persona, cambiarla desde fuera le quitaría
+                sentido como firma — se ve más abajo, en modo lectura, con
+                una nota de por qué no es editable aquí. */}
+            <div className="grid grid-cols-2 gap-2 border-t border-gray-200 pt-2.5">
+              <Field label={t("userDetailSheet.avatarIcono")}>
+                <Select
+                  value={profileForm.avatar_icon}
+                  onChange={(v) => setProfileForm({ ...profileForm, avatar_icon: v })}
+                  options={AVATAR_ICONS.map((a) => a.name)}
+                  placeholder="—"
+                />
+              </Field>
+              <div className="flex flex-col gap-1">
+                <ColorSwatchPicker
+                  label={t("userDetailSheet.avatarColor")}
+                  value={profileForm.avatar_color}
+                  onChange={(hex) => setProfileForm({ ...profileForm, avatar_color: hex })}
+                />
+              </div>
+              <Field label={t("userDetailSheet.fechaNacimiento")}>
+                <DatePicker value={profileForm.birth_date} onChange={(v) => setProfileForm({ ...profileForm, birth_date: v })} quickAccess={false} />
+              </Field>
+              <Field label={t("userDetailSheet.paisResidencia")}>
+                <Select
+                  value={countryOptions.find((o) => o.value === profileForm.country_of_residence)?.label || ""}
+                  onChange={(label) => setProfileForm({ ...profileForm, country_of_residence: countryOptions.find((o) => o.label === label)?.value || "" })}
+                  options={countryOptions.map((o) => o.label)}
+                  placeholder={t("userDetailSheet.paisPlaceholder")}
+                />
+              </Field>
+              <Field label={t("userDetailSheet.nivelProfesional")}>
+                <Select
+                  value={PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === profileForm.professional_level)?.label || ""}
+                  onChange={(label) => setProfileForm({ ...profileForm, professional_level: PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.label === label)?.code || "" })}
+                  options={PROFESSIONAL_LEVEL_OPTIONS.map((o) => o.label)}
+                  placeholder={t("userDetailSheet.nivelProfesionalPlaceholder")}
+                />
+              </Field>
+              <Field label={t("userDetailSheet.idioma")}>
+                <Select
+                  value={PROFILE_LANGUAGE_OPTIONS.find((o) => o.code === profileForm.language)?.label || ""}
+                  onChange={(label) => setProfileForm({ ...profileForm, language: PROFILE_LANGUAGE_OPTIONS.find((o) => o.label === label)?.code || "es" })}
+                  options={PROFILE_LANGUAGE_OPTIONS.map((o) => o.label)}
+                />
+              </Field>
+              <Field label={t("userDetailSheet.inicialesInstructor")}>
+                <input value={profileForm.instructor_initials} onChange={(e) => setProfileForm({ ...profileForm, instructor_initials: e.target.value })} className={`${inputCls} w-full`} />
+              </Field>
+              <Field label={t("userDetailSheet.numeroProSsi")}>
+                <input value={profileForm.ssi_pro_number} onChange={(e) => setProfileForm({ ...profileForm, ssi_pro_number: e.target.value })} className={`${inputCls} w-full`} />
+              </Field>
+            </div>
+
             <EditActions onSave={saveProfile} onCancel={() => setEditingProfile(false)} />
           </div>
         ) : (
@@ -790,6 +894,53 @@ function UserDetailSheet({
                 {!activitySummary ? "…" : activitySummary.lastActivityAt ? shortDate(activitySummary.lastActivityAt) : t("userStatus.nunca")}
               </span>
             </div>
+
+            {/* Resto de campos del perfil, en modo lectura — "…" mientras
+                fullProfile no ha llegado todavía (mismo criterio que
+                Movimientos/Última actividad, arriba). */}
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.avatarLabel")}</span>
+              <span className="flex items-center gap-1.5 text-gray-700">
+                {!fullProfile ? "…" : (
+                  <>
+                    <span className="h-3 w-3 shrink-0 rounded-full border border-gray-200" style={{ backgroundColor: fullProfile.avatar_color || "#E5E7EB" }} aria-hidden="true" />
+                    {fullProfile.avatar_icon || "—"}
+                  </>
+                )}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.fechaNacimiento")}</span>
+              <span className="text-gray-700">{!fullProfile ? "…" : fullProfile.birth_date ? shortDate(fullProfile.birth_date) : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.paisResidencia")}</span>
+              <span className="truncate text-right text-gray-700">{!fullProfile ? "…" : fullProfile.country_of_residence ? countryLabel(fullProfile.country_of_residence) : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.nivelProfesional")}</span>
+              <span className="text-gray-700">{!fullProfile ? "…" : fullProfile.professional_level ? professionalLabel(fullProfile.professional_level) : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.idioma")}</span>
+              <span className="text-gray-700">{!fullProfile ? "…" : languageLabel(fullProfile.language)}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.inicialesInstructor")}</span>
+              <span className="text-gray-700">{!fullProfile ? "…" : fullProfile.instructor_initials || "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.numeroProSsi")}</span>
+              <span className="text-gray-700">{!fullProfile ? "…" : fullProfile.ssi_pro_number || "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.firma")}</span>
+              <span className="text-gray-700">{!fullProfile ? "…" : fullProfile.instructor_signature ? t("userDetailSheet.firmaConfigurada") : t("userDetailSheet.firmaNoConfigurada")}</span>
+            </div>
+            {fullProfile?.instructor_signature && (
+              <p className="text-[11px] italic text-gray-400">{t("userDetailSheet.firmaNota")}</p>
+            )}
+
             {/* Solo se muestra con una fecha real (2026-09-04, pedido
                 explícito) — antes se gateaba en status === "desactivado" y,
                 sin deactivated_at registrado (baja anterior a la migración
@@ -1181,6 +1332,11 @@ function UsersDirectory({ profile }) {
   const [rows, setRows] = useState([]);
   const [activeByUser, setActiveByUser] = useState({});
   const [lastSignInByUser, setLastSignInByUser] = useState({});
+  // Última actividad de cada usuario (worklog/comisiones/colleague_payments,
+  // la más reciente de las tres) — pedido explícito: el listado muestra
+  // esto en vez de "último acceso" (que sigue viéndose en la ficha de
+  // detalle, UserDetailSheet, junto al resto de datos de la cuenta).
+  const [lastActivityByUser, setLastActivityByUser] = useState({});
   const [activatedAtByUser, setActivatedAtByUser] = useState({});
   const [deactivatedAtByUser, setDeactivatedAtByUser] = useState({});
   const [loading, setLoading] = useState(true);
@@ -1221,6 +1377,27 @@ function UsersDirectory({ profile }) {
         // silencioso a propósito, mismo criterio que loadActiveStatus — un
         // fallo aquí no debe impedir ver el resto de la hoja de detalle
       }
+    })();
+    return () => { cancelled = true; };
+  }, [openUserId]);
+  // Fila completa de `profiles` para la hoja de detalle (2026-09-17, pedido
+  // explícito: "ver y editar todos los campos del usuario, incluidos los
+  // campos de la card") — bajo demanda al abrir la hoja, mismo patrón que
+  // activitySummary justo arriba. admin_list_profiles() (usada por `rows`
+  // más abajo, el listado) solo expone lo mínimo para pintar el directorio
+  // a propósito; el resto de columnas (avatar, datos personales, datos de
+  // instructor, idioma) se piden aparte, solo para el usuario que se está
+  // mirando. Consulta de cliente normal, no un RPC nuevo: la política RLS
+  // "select own or admin sees all" de profiles ya deja a un admin leer
+  // cualquier fila completa — sin cambio de esquema ni de función.
+  const [fullProfile, setFullProfile] = useState(null);
+  useEffect(() => {
+    if (!openUserId) { setFullProfile(null); return; }
+    let cancelled = false;
+    setFullProfile(null);
+    (async () => {
+      const { data, error } = await supabase.from("profiles").select("*").eq("user_id", openUserId).maybeSingle();
+      if (!cancelled && !error && data) setFullProfile(data);
     })();
     return () => { cancelled = true; };
   }, [openUserId]);
@@ -1267,6 +1444,7 @@ function UsersDirectory({ profile }) {
       if (res.ok) {
         setActiveByUser(payload.active || {});
         setLastSignInByUser(payload.lastSignInAt || {});
+        setLastActivityByUser(payload.lastActivityAt || {});
       }
     } catch {
       // silencioso a propósito — ver comentario de arriba
@@ -1564,20 +1742,32 @@ function UsersDirectory({ profile }) {
 
   // RLS de profiles ya permite a un admin actualizar cualquier fila salvo
   // is_admin/is_superadmin (protegidos aparte por trigger) — no hace falta
-  // ningún endpoint de servidor nuevo para nombre/apellidos/nickname.
+  // ningún endpoint de servidor nuevo para nombre/apellidos/nickname ni
+  // para el resto de campos añadidos 2026-09-17 (avatar, datos personales,
+  // datos de instructor, idioma) — mismo `update` de siempre, solo con más
+  // columnas en el patch. `language` nunca se manda vacío: la columna es
+  // `not null default 'es'` con un check de idiomas soportados, así que un
+  // valor vacío rompería la fila en vez de "no establecido" como sí vale
+  // para el resto (avatar_icon, birth_date...), todas nullable de verdad.
   const saveProfile = async (user, form) => {
     const nickname = form.nickname.trim();
     if (!nickname) {
       toast?.error(t("usersDirectory.nicknameVacio"));
       return false;
     }
+    const patch = {
+      first_name: form.first_name.trim() || null, last_name: form.last_name.trim() || null, nickname,
+      avatar_icon: form.avatar_icon || null, avatar_color: form.avatar_color || null,
+      birth_date: form.birth_date || null, country_of_residence: form.country_of_residence || null,
+      professional_level: form.professional_level || null,
+      instructor_initials: form.instructor_initials.trim() || null, ssi_pro_number: form.ssi_pro_number.trim() || null,
+      language: form.language || "es",
+    };
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ first_name: form.first_name.trim() || null, last_name: form.last_name.trim() || null, nickname })
-        .eq("user_id", user.user_id);
+      const { error } = await supabase.from("profiles").update(patch).eq("user_id", user.user_id);
       if (error) throw error;
       toast?.success(t("usersDirectory.datosActualizados"));
+      setFullProfile((prev) => (prev ? { ...prev, ...patch } : prev));
       reload();
       return true;
     } catch (err) {
@@ -1642,7 +1832,7 @@ function UsersDirectory({ profile }) {
               <UserListRow
                 user={p}
                 status={userStatus(activeByUser[p.user_id] ?? true, activatedAtByUser[p.user_id])}
-                lastSignInAt={lastSignInByUser[p.user_id] ?? null}
+                lastActivityAt={lastActivityByUser[p.user_id] ?? null}
                 deactivatedAt={deactivatedAtByUser[p.user_id]}
                 onOpen={setOpenUserId}
               />
@@ -1679,6 +1869,7 @@ function UsersDirectory({ profile }) {
         lastSignInAt={openUser ? (lastSignInByUser[openUser.user_id] ?? null) : null}
         deactivatedAt={openUser ? deactivatedAtByUser[openUser.user_id] : null}
         activitySummary={activitySummary}
+        fullProfile={fullProfile}
         currentUserId={profile?.user_id}
         viewerIsSuperadmin={!!profile?.is_superadmin}
         actionBusy={submitting}
