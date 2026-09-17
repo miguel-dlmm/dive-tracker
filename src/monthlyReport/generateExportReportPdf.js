@@ -30,14 +30,56 @@ const GOLD = "#8C6118";
 const SLATE = "#5B7286";
 const SUCCESS = "#15803D";
 const WARNING = "#B45309";
+const WARNING_BG = "#FCF1E5";
 const DANGER = "#C2542F";
 const MUTED = "#3D5C73";
 const HAIRLINE = "#D7E0E8";
+
+// A4 (595.28pt) menos los márgenes laterales de pageMargins (40+40).
+const CONTENT_WIDTH = 515.28;
 
 const pad2 = (n) => String(n).padStart(2, "0");
 function ddmmyyyy(iso) {
   const [y, m, d] = iso.split("-");
   return `${pad2(d)}/${pad2(m)}/${y}`;
+}
+function ddmm(iso) {
+  const [, m, d] = iso.split("-");
+  return `${pad2(d)}/${pad2(m)}`;
+}
+
+// pdfmake no tiene "border-radius" en tablas — un rectángulo con esquinas
+// redondeadas se dibuja con `canvas` (que sí soporta el parámetro `r`) y el
+// contenido de verdad se superpone encima con un margen superior negativo
+// (el propio canvas ya reserva su alto en el flujo del documento; el bloque
+// siguiente "sube" ese mismo alto menos el hueco que se le quiera dejar
+// arriba). Es el patrón estándar de pdfmake para "caja de color con texto
+// dentro" — nunca placeholders sin probar: los radios (10pt caja de total,
+// 8pt aviso) replican los tokens `radius-card`/`radius-control` que ya usa
+// el resto de la app (docs/DESIGN-SYSTEM.md §4).
+function roundedBox({ height, radius, color, topInset, content, marginTop = 16 }) {
+  return {
+    margin: [0, marginTop, 0, 0],
+    stack: [
+      { canvas: [{ type: "rect", x: 0, y: 0, w: CONTENT_WIDTH, h: height, r: radius, color }] },
+      { margin: [14, -(height - topInset), 14, 0], ...content },
+    ],
+  };
+}
+
+// Punto de color + etiqueta, como un solo run de texto (nunca canvas
+// posicionado a mano dentro de columnas): con un único punto de fallo
+// (el motor de texto de pdfmake, ya fiable) en vez de dos elementos que
+// puedan desalinearse verticalmente entre sí sin poder verlo en pantalla
+// aquí mismo.
+function groupLabel(text, color) {
+  return {
+    margin: [0, 18, 0, 6],
+    text: [
+      { text: "●  ", color, fontSize: 7 },
+      { text: text.toUpperCase(), bold: true, fontSize: 8, color, characterSpacing: 0.6 },
+    ],
+  };
 }
 
 const hairlineLayout = {
@@ -46,19 +88,9 @@ const hairlineLayout = {
   hLineColor: () => HAIRLINE,
   paddingLeft: () => 0,
   paddingRight: () => 8,
-  paddingTop: () => 5,
-  paddingBottom: () => 5,
+  paddingTop: () => 6,
+  paddingBottom: () => 6,
 };
-
-function groupLabel(text, color) {
-  return {
-    margin: [0, 14, 2, 4],
-    columns: [
-      { width: 7, height: 7, canvas: [{ type: "ellipse", x: 3, y: 4, r1: 3, r2: 3, color }] },
-      { width: "auto", text: text.toUpperCase(), bold: true, fontSize: 8, color, characterSpacing: 0.6, margin: [4, 0, 0, 0] },
-    ],
-  };
-}
 
 function statusCell(statusName, paymentStatusRows, t) {
   const pending = isPendingStatus(statusName, paymentStatusRows);
@@ -69,7 +101,15 @@ function moneyCell(amount, code, currencyRows) {
   return { text: formatMoney(amount, code, currencyRows), alignment: "right", bold: true, color: NAVY, fontSize: 9 };
 }
 
-function entriesTable({ entries, currencyRows, paymentStatusRows, t, kind }) {
+// Los anchos de columna de esta tabla y de adjustmentsTable suman siempre
+// CONTENT_WIDTH y la columna Importe es siempre la última con el mismo
+// ancho fijo (64) en las dos — así su borde derecho cae exactamente en el
+// mismo punto en cualquier tabla del documento, aunque tengan un número de
+// columnas distinto (bug real reportado: "el total no queda alineado en
+// la columna" — antes cada tabla repartía su propio "*" de forma
+// independiente, sin garantía de que las columnas Importe de tablas
+// distintas cayeran en la misma x).
+function entriesTable({ entries, currencyRows, paymentStatusRows, t, kind, rowDate }) {
   const secondColLabel = kind === "commissions" ? t("export.colReferredFor") : t("export.colCourse");
   const header = [
     { text: t("export.colDate"), style: "th" },
@@ -79,16 +119,16 @@ function entriesTable({ entries, currencyRows, paymentStatusRows, t, kind }) {
     { text: t("export.colAmount"), style: "th", alignment: "right" },
   ];
   const body = entries.map((e) => [
-    { text: ddmmyyyy(e.date), color: MUTED, fontSize: 9 },
+    { text: rowDate(e.date), color: MUTED, fontSize: 9, noWrap: true },
     { text: e.activity, fontSize: 9 },
     { text: String(e.people || 0), alignment: "center", fontSize: 9 },
     statusCell(e.status, paymentStatusRows, t),
     moneyCell(e.total, e.currency, currencyRows),
   ]);
-  return { table: { headerRows: 1, widths: [46, "*", 34, 46, 62], body: [header, ...body] }, layout: hairlineLayout };
+  return { table: { headerRows: 1, widths: [34, "*", 30, 48, 64], body: [header, ...body] }, layout: hairlineLayout };
 }
 
-function adjustmentsTable({ entries, currencyRows, t }) {
+function adjustmentsTable({ entries, currencyRows, t, rowDate }) {
   const header = [
     { text: t("export.colDate"), style: "th" },
     { text: t("export.colColleague"), style: "th" },
@@ -96,18 +136,18 @@ function adjustmentsTable({ entries, currencyRows, t }) {
     { text: t("export.colAmount"), style: "th", alignment: "right" },
   ];
   const body = entries.map((e) => [
-    { text: ddmmyyyy(e.date), color: MUTED, fontSize: 9 },
+    { text: rowDate(e.date), color: MUTED, fontSize: 9, noWrap: true },
     { text: e.colleague_name, fontSize: 9 },
     { text: e.notes || "—", fontSize: 9, color: MUTED },
     { text: formatMoney(e.total, e.currency, currencyRows), alignment: "right", bold: true, color: e.total < 0 ? DANGER : SUCCESS, fontSize: 9 },
   ]);
-  return { table: { headerRows: 1, widths: [46, "*", "*", 62], body: [header, ...body] }, layout: hairlineLayout };
+  return { table: { headerRows: 1, widths: [34, "*", "*", 64], body: [header, ...body] }, layout: hairlineLayout };
 }
 
 function subtotalLine(label, totals, currencyRows) {
   const lines = Object.entries(totals).map(([code, amount]) => formatMoney(amount, code, currencyRows)).join("  ·  ");
   return {
-    margin: [0, 2, 0, 0],
+    margin: [0, 3, 0, 0],
     columns: [
       { width: "*", text: label, fontSize: 8.5, bold: true, color: MUTED },
       { width: "auto", text: lines, fontSize: 8.5, bold: true, color: NAVY },
@@ -121,7 +161,7 @@ function totalBox({ totals, label, splitPaidPending, currencyRows, t }) {
     width: "*",
     stack: [
       { text: label.toUpperCase(), fontSize: 8, bold: true, color: SKY, characterSpacing: 0.5 },
-      { text: figureLines.join("  ·  "), fontSize: 19, bold: true, color: "#FFFFFF", margin: [0, 2, 0, 0] },
+      { text: figureLines.join("  ·  "), fontSize: 20, bold: true, color: "#FFFFFF", margin: [0, 3, 0, 0] },
     ],
   }];
   if (splitPaidPending) {
@@ -132,15 +172,21 @@ function totalBox({ totals, label, splitPaidPending, currencyRows, t }) {
       alignment: "right",
       stack: [
         { text: `${t("export.paidLabel").toUpperCase()}   ${fmtSplit(paid)}`, fontSize: 7.5, color: "#7FD9A4" },
-        { text: `${t("export.pendingLabel").toUpperCase()}   ${fmtSplit(pending)}`, fontSize: 7.5, color: "#F3C382", margin: [0, 3, 0, 0] },
+        { text: `${t("export.pendingLabel").toUpperCase()}   ${fmtSplit(pending)}`, fontSize: 7.5, color: "#F3C382", margin: [0, 4, 0, 0] },
       ],
     });
   }
-  return {
-    margin: [0, 14, 0, 0],
-    table: { widths: columns.map((c) => c.width), body: [columns.map((c) => ({ stack: c.stack, alignment: c.alignment, fillColor: NAVY }))] },
-    layout: { hLineWidth: () => 0, vLineWidth: () => 0, paddingLeft: () => 14, paddingRight: () => 14, paddingTop: () => 12, paddingBottom: () => 12 },
-  };
+  return roundedBox({
+    height: 64, radius: 10, color: NAVY, topInset: 16, marginTop: 18,
+    content: { columns, columnGap: 16 },
+  });
+}
+
+function pendingBanner(text) {
+  return roundedBox({
+    height: 27, radius: 8, color: WARNING_BG, topInset: 8, marginTop: 12,
+    content: { text, color: WARNING, bold: true, fontSize: 8.5 },
+  });
 }
 
 export async function generateExportReportPdf({
@@ -151,6 +197,13 @@ export async function generateExportReportPdf({
 
   const now = new Date();
   const generatedLabel = t("export.generatedOn", { date: `${ddmmyyyy(now.toISOString().slice(0, 10))}, ${pad2(now.getHours())}:${pad2(now.getMinutes())}` });
+  // Fila corta ("03/09") salvo que el rango cruce un cambio de año — el
+  // año completo ya está siempre visible una vez, en la cabecera, así que
+  // repetirlo en cada fila solo restaba ancho a la columna (bug real
+  // reportado: "las fechas se caen de línea" — 10 caracteres de
+  // "dd/mm/yyyy" no cabían en la columna de fecha).
+  const sameYear = from.slice(0, 4) === to.slice(0, 4);
+  const rowDate = sameYear ? ddmm : ddmmyyyy;
 
   const content = [];
 
@@ -161,13 +214,7 @@ export async function generateExportReportPdf({
     ],
   });
 
-  if (!showCollected) {
-    content.push({
-      margin: [0, 10, 0, 0],
-      table: { widths: ["*"], body: [[{ text: t("export.onlyPendingNote"), color: WARNING, bold: true, fontSize: 8.5, fillColor: "#FCF1E5", margin: [8, 5, 8, 5] }]] },
-      layout: "noBorders",
-    });
-  }
+  if (!showCollected) content.push(pendingBanner(t("export.onlyPendingNote")));
 
   const pushGroup = (label, color, table, subtotalLabel, totals) => {
     content.push(groupLabel(label, color));
@@ -178,14 +225,14 @@ export async function generateExportReportPdf({
   if (data.courses.length > 0) {
     pushGroup(
       t("export.coursesGroup"), TEAL,
-      entriesTable({ entries: data.courses, currencyRows, paymentStatusRows, t, kind: "courses" }),
+      entriesTable({ entries: data.courses, currencyRows, paymentStatusRows, t, kind: "courses", rowDate }),
       t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal
     );
   }
   if (data.commissions.length > 0) {
     pushGroup(
       t("export.commissionsGroup"), GOLD,
-      entriesTable({ entries: data.commissions, currencyRows, paymentStatusRows, t, kind: "commissions" }),
+      entriesTable({ entries: data.commissions, currencyRows, paymentStatusRows, t, kind: "commissions", rowDate }),
       t("export.subtotal", { group: t("export.commissionsGroup").toLowerCase() }), data.commissionsSubtotal
     );
   }
@@ -194,7 +241,7 @@ export async function generateExportReportPdf({
   if (showAdjustmentsBeforeTotal) {
     pushGroup(
       t("export.adjustmentsGroup"), SLATE,
-      adjustmentsTable({ entries: data.adjustments, currencyRows, t }),
+      adjustmentsTable({ entries: data.adjustments, currencyRows, t, rowDate }),
       t("export.subtotal", { group: t("export.adjustmentsGroup").toLowerCase() }), data.adjustmentsSubtotal
     );
   }
@@ -208,10 +255,10 @@ export async function generateExportReportPdf({
 
   const showAdjustmentsAfterTotal = includeAdjustments && !sumAdjustments && data.adjustments.length > 0;
   if (showAdjustmentsAfterTotal) {
-    content.push({ margin: [0, 18, 0, 0], canvas: [{ type: "line", x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.75, lineColor: HAIRLINE, dash: { length: 3 } }] });
-    content.push({ margin: [0, 6, 0, 0], text: t("export.adjustmentsAsideNote"), fontSize: 7.5, bold: true, color: "#8095A6", characterSpacing: 0.3 });
+    content.push({ margin: [0, 20, 0, 0], canvas: [{ type: "line", x1: 0, y1: 0, x2: CONTENT_WIDTH, y2: 0, lineWidth: 0.75, lineColor: HAIRLINE, dash: { length: 3 } }] });
+    content.push({ margin: [0, 7, 0, 0], text: t("export.adjustmentsAsideNote"), fontSize: 7.5, bold: true, color: "#8095A6", characterSpacing: 0.3 });
     content.push(groupLabel(t("export.adjustmentsGroup"), SLATE));
-    content.push(adjustmentsTable({ entries: data.adjustments, currencyRows, t }));
+    content.push(adjustmentsTable({ entries: data.adjustments, currencyRows, t, rowDate }));
   }
 
   const docDefinition = {
