@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus, FileDown } from "lucide-react";
 import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr, ExpandableCard } from "./shared";
 import { listItemVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
 import { buildEntriesBySource, comparePeriods } from "./rateCalc";
 import { BRAND_NAVY, CORAL, GREEN, BRAND_SLATE_FILL } from "./App";
+import ExportReportSheet from "./monthlyReport/ExportReportSheet";
 
 // Rediseño 2026-08-29 (ver docs/ADR/0009-rediseno-resumen.md): Resumen deja
 // de mostrar todo a la vez (antes: calendario global + total + 2 desgloses,
@@ -370,7 +371,7 @@ function SchoolGrowthBadge({ growth }) {
 }
 
 // worklog / rates / comisiones / commissionRates / activities / schools / currencies / colleaguePayments: hooks de useSupabaseTable
-export default function SummaryTab({ worklog, rates, comisiones, commissionRates, activities, schools, currencies, colleaguePayments }) {
+export default function SummaryTab({ worklog, rates, comisiones, commissionRates, activities, schools, currencies, colleaguePayments, paymentStatuses, profile }) {
   const { t } = useTranslation("summary");
   const reducedMotion = usePrefersReducedMotion();
   const now = new Date();
@@ -385,6 +386,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   const [customTo, setCustomTo] = useState(todayStr());
   const [expandedSchool, setExpandedSchool] = useState(null);
   const [expandedActivity, setExpandedActivity] = useState(null);
+  const [exportOpen, setExportOpen] = useState(false);
 
   // MONTHS/GRANULARITY_LABELS dependen de t() — no pueden ser constantes de
   // módulo (Release V1, Fase 2, multidioma). GRANULARITY_LABEL_LIST/
@@ -648,6 +650,26 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         )}
       </div>
 
+      {/* Exportar informe (Cuadre mensual, ver el informe de diseño de la
+          sesión que lo encargó): vive aquí, no en Home ni en Mi trabajo —
+          Resumen ya es la pantalla que responde "cuánto he generado, por
+          escuela, en qué periodo", este botón es una salida más de esa
+          misma pregunta. La hoja tiene su propio rango de fechas y su
+          propia escuela (nunca "todas" a la vez) — independiente de la
+          granularidad/periodo que esté mirando Resumen en ese momento;
+          solo hereda `expandedSchool` como sugerencia de partida. */}
+      {schools.rows.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setExportOpen(true)}
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium"
+          style={{ borderColor: "#CCDBE6", color: BRAND_NAVY }}
+        >
+          <FileDown size={16} aria-hidden="true" />
+          {t("export.button")}
+        </button>
+      )}
+
       {granularity === "personalizado" && (
         <div className="grid grid-cols-2 gap-2 rounded-lg border border-gray-200 bg-white p-3">
           <div>
@@ -786,6 +808,17 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
           />
         </ExpandableCard>
       )}
+
+      <ExportReportSheet
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        schools={schools} currencies={currencies} paymentStatuses={paymentStatuses}
+        worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
+        rates={rates} commissionRates={commissionRates}
+        fallbackCurrency={fallbackCurrency}
+        instructorName={[profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || profile?.nickname}
+        defaultSchool={expandedSchool}
+      />
     </div>
   );
 }

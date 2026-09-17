@@ -1,0 +1,238 @@
+// generateExportReportPdf.js — construye y descarga el PDF de "Exportar
+// informe" con pdfmake. Se importa siempre de forma dinámica (ver
+// ExportReportSheet.jsx: `await import("./generateExportReportPdf")`) para
+// que pdfmake (con Roboto embebida) nunca entre en el bundle principal —
+// solo se descarga cuando alguien pulsa "Generar PDF".
+//
+// pdfmake 0.3.x (la versión instalada) cambió el registro de fuentes
+// respecto a las guías más comunes en internet: ya no es
+// `pdfMake.vfs = pdfFonts.pdfMake.vfs`, sino `addVirtualFileSystem(vfs)`
+// sobre el propio `vfs_fonts.js` (que ahora exporta el mapa de fuentes
+// directamente, sin el envoltorio `{pdfMake:{vfs}}` de versiones
+// anteriores) — verificado leyendo el paquete instalado, no asumido de
+// memoria. Roboto ya viene como fuente por defecto de la build de
+// navegador, sin configurarla a mano.
+import pdfMake from "pdfmake/build/pdfmake";
+import vfsFonts from "pdfmake/build/vfs_fonts";
+import { formatMoney, isPendingStatus } from "../shared";
+
+let vfsReady = false;
+function ensureFonts() {
+  if (vfsReady) return;
+  pdfMake.addVirtualFileSystem(vfsFonts);
+  vfsReady = true;
+}
+
+const NAVY = "#063256";
+const SKY = "#8AACCE";
+const TEAL = "#0F766E";
+const GOLD = "#8C6118";
+const SLATE = "#5B7286";
+const SUCCESS = "#15803D";
+const WARNING = "#B45309";
+const DANGER = "#C2542F";
+const MUTED = "#3D5C73";
+const HAIRLINE = "#D7E0E8";
+
+const pad2 = (n) => String(n).padStart(2, "0");
+function ddmmyyyy(iso) {
+  const [y, m, d] = iso.split("-");
+  return `${pad2(d)}/${pad2(m)}/${y}`;
+}
+
+const hairlineLayout = {
+  hLineWidth: (i) => (i === 0 ? 0 : 0.75),
+  vLineWidth: () => 0,
+  hLineColor: () => HAIRLINE,
+  paddingLeft: () => 0,
+  paddingRight: () => 8,
+  paddingTop: () => 5,
+  paddingBottom: () => 5,
+};
+
+function groupLabel(text, color) {
+  return {
+    margin: [0, 14, 2, 4],
+    columns: [
+      { width: 7, height: 7, canvas: [{ type: "ellipse", x: 3, y: 4, r1: 3, r2: 3, color }] },
+      { width: "auto", text: text.toUpperCase(), bold: true, fontSize: 8, color, characterSpacing: 0.6, margin: [4, 0, 0, 0] },
+    ],
+  };
+}
+
+function statusCell(statusName, paymentStatusRows, t) {
+  const pending = isPendingStatus(statusName, paymentStatusRows);
+  return { text: pending ? t("export.pendingLabel") : t("export.paidLabel"), color: pending ? WARNING : SUCCESS, bold: true, fontSize: 8 };
+}
+
+function moneyCell(amount, code, currencyRows) {
+  return { text: formatMoney(amount, code, currencyRows), alignment: "right", bold: true, color: NAVY, fontSize: 9 };
+}
+
+function entriesTable({ entries, currencyRows, paymentStatusRows, t, kind }) {
+  const secondColLabel = kind === "commissions" ? t("export.colReferredFor") : t("export.colCourse");
+  const header = [
+    { text: t("export.colDate"), style: "th" },
+    { text: secondColLabel, style: "th" },
+    { text: t("export.colPeople"), style: "th", alignment: "center" },
+    { text: t("export.colStatus"), style: "th" },
+    { text: t("export.colAmount"), style: "th", alignment: "right" },
+  ];
+  const body = entries.map((e) => [
+    { text: ddmmyyyy(e.date), color: MUTED, fontSize: 9 },
+    { text: e.activity, fontSize: 9 },
+    { text: String(e.people || 0), alignment: "center", fontSize: 9 },
+    statusCell(e.status, paymentStatusRows, t),
+    moneyCell(e.total, e.currency, currencyRows),
+  ]);
+  return { table: { headerRows: 1, widths: [46, "*", 34, 46, 62], body: [header, ...body] }, layout: hairlineLayout };
+}
+
+function adjustmentsTable({ entries, currencyRows, t }) {
+  const header = [
+    { text: t("export.colDate"), style: "th" },
+    { text: t("export.colColleague"), style: "th" },
+    { text: t("export.colConcept"), style: "th" },
+    { text: t("export.colAmount"), style: "th", alignment: "right" },
+  ];
+  const body = entries.map((e) => [
+    { text: ddmmyyyy(e.date), color: MUTED, fontSize: 9 },
+    { text: e.colleague_name, fontSize: 9 },
+    { text: e.notes || "—", fontSize: 9, color: MUTED },
+    { text: formatMoney(e.total, e.currency, currencyRows), alignment: "right", bold: true, color: e.total < 0 ? DANGER : SUCCESS, fontSize: 9 },
+  ]);
+  return { table: { headerRows: 1, widths: [46, "*", "*", 62], body: [header, ...body] }, layout: hairlineLayout };
+}
+
+function subtotalLine(label, totals, currencyRows) {
+  const lines = Object.entries(totals).map(([code, amount]) => formatMoney(amount, code, currencyRows)).join("  ·  ");
+  return {
+    margin: [0, 2, 0, 0],
+    columns: [
+      { width: "*", text: label, fontSize: 8.5, bold: true, color: MUTED },
+      { width: "auto", text: lines, fontSize: 8.5, bold: true, color: NAVY },
+    ],
+  };
+}
+
+function totalBox({ totals, label, splitPaidPending, currencyRows, t }) {
+  const figureLines = Object.entries(totals).map(([code, amount]) => formatMoney(amount, code, currencyRows));
+  const columns = [{
+    width: "*",
+    stack: [
+      { text: label.toUpperCase(), fontSize: 8, bold: true, color: SKY, characterSpacing: 0.5 },
+      { text: figureLines.join("  ·  "), fontSize: 19, bold: true, color: "#FFFFFF", margin: [0, 2, 0, 0] },
+    ],
+  }];
+  if (splitPaidPending) {
+    const { paid, pending } = splitPaidPending;
+    const fmtSplit = (totalsObj) => Object.entries(totalsObj).map(([code, amount]) => formatMoney(amount, code, currencyRows)).join("  ·  ") || "—";
+    columns.push({
+      width: "auto",
+      alignment: "right",
+      stack: [
+        { text: `${t("export.paidLabel").toUpperCase()}   ${fmtSplit(paid)}`, fontSize: 7.5, color: "#7FD9A4" },
+        { text: `${t("export.pendingLabel").toUpperCase()}   ${fmtSplit(pending)}`, fontSize: 7.5, color: "#F3C382", margin: [0, 3, 0, 0] },
+      ],
+    });
+  }
+  return {
+    margin: [0, 14, 0, 0],
+    table: { widths: columns.map((c) => c.width), body: [columns.map((c) => ({ stack: c.stack, alignment: c.alignment, fillColor: NAVY }))] },
+    layout: { hLineWidth: () => 0, vLineWidth: () => 0, paddingLeft: () => 14, paddingRight: () => 14, paddingTop: () => 12, paddingBottom: () => 12 },
+  };
+}
+
+export async function generateExportReportPdf({
+  school, from, to, data, currencyRows, paymentStatusRows, instructorName, showCollected, includeAdjustments, sumAdjustments, t,
+}) {
+  ensureFonts();
+  const styles = { th: { bold: true, fontSize: 7, color: MUTED, characterSpacing: 0.4 } };
+
+  const now = new Date();
+  const generatedLabel = t("export.generatedOn", { date: `${ddmmyyyy(now.toISOString().slice(0, 10))}, ${pad2(now.getHours())}:${pad2(now.getMinutes())}` });
+
+  const content = [];
+
+  content.push({
+    columns: [
+      { width: "*", text: school, fontSize: 15, bold: true, color: NAVY },
+      { width: "auto", alignment: "right", text: `${ddmmyyyy(from)} – ${ddmmyyyy(to)}\n${instructorName || ""}`, fontSize: 8.5, color: MUTED, lineHeight: 1.3 },
+    ],
+  });
+
+  if (!showCollected) {
+    content.push({
+      margin: [0, 10, 0, 0],
+      table: { widths: ["*"], body: [[{ text: t("export.onlyPendingNote"), color: WARNING, bold: true, fontSize: 8.5, fillColor: "#FCF1E5", margin: [8, 5, 8, 5] }]] },
+      layout: "noBorders",
+    });
+  }
+
+  const pushGroup = (label, color, table, subtotalLabel, totals) => {
+    content.push(groupLabel(label, color));
+    content.push(table);
+    content.push(subtotalLine(subtotalLabel, totals, currencyRows));
+  };
+
+  if (data.courses.length > 0) {
+    pushGroup(
+      t("export.coursesGroup"), TEAL,
+      entriesTable({ entries: data.courses, currencyRows, paymentStatusRows, t, kind: "courses" }),
+      t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal
+    );
+  }
+  if (data.commissions.length > 0) {
+    pushGroup(
+      t("export.commissionsGroup"), GOLD,
+      entriesTable({ entries: data.commissions, currencyRows, paymentStatusRows, t, kind: "commissions" }),
+      t("export.subtotal", { group: t("export.commissionsGroup").toLowerCase() }), data.commissionsSubtotal
+    );
+  }
+
+  const showAdjustmentsBeforeTotal = includeAdjustments && sumAdjustments && data.adjustments.length > 0;
+  if (showAdjustmentsBeforeTotal) {
+    pushGroup(
+      t("export.adjustmentsGroup"), SLATE,
+      adjustmentsTable({ entries: data.adjustments, currencyRows, t }),
+      t("export.subtotal", { group: t("export.adjustmentsGroup").toLowerCase() }), data.adjustmentsSubtotal
+    );
+  }
+
+  content.push(totalBox({
+    totals: data.mainTotal,
+    label: t("export.totalLabel"),
+    splitPaidPending: showCollected ? { paid: data.paidTotal, pending: data.pendingTotal } : null,
+    currencyRows, t,
+  }));
+
+  const showAdjustmentsAfterTotal = includeAdjustments && !sumAdjustments && data.adjustments.length > 0;
+  if (showAdjustmentsAfterTotal) {
+    content.push({ margin: [0, 18, 0, 0], canvas: [{ type: "line", x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.75, lineColor: HAIRLINE, dash: { length: 3 } }] });
+    content.push({ margin: [0, 6, 0, 0], text: t("export.adjustmentsAsideNote"), fontSize: 7.5, bold: true, color: "#8095A6", characterSpacing: 0.3 });
+    content.push(groupLabel(t("export.adjustmentsGroup"), SLATE));
+    content.push(adjustmentsTable({ entries: data.adjustments, currencyRows, t }));
+  }
+
+  const docDefinition = {
+    pageSize: "A4",
+    pageMargins: [40, 56, 40, 46],
+    header: (currentPage, pageCount) => ({
+      margin: [40, 20, 40, 0],
+      columns: [
+        { width: "*", text: "Ocean Flow", bold: true, fontSize: 11, color: NAVY },
+        { width: "auto", text: t("export.page", { current: currentPage, total: pageCount }), fontSize: 8, color: MUTED },
+      ],
+    }),
+    footer: () => ({
+      margin: [40, 10, 40, 0],
+      columns: [{ width: "*", text: `${t("export.footerNote")} · ${generatedLabel}`, fontSize: 7, color: "#94A3AF" }],
+    }),
+    content,
+    styles,
+    defaultStyle: { font: "Roboto" },
+  };
+
+  const filename = `Ocean Flow - ${school} - ${from} a ${to}.pdf`;
+  await pdfMake.createPdf(docDefinition).download(filename);
+}

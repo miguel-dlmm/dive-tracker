@@ -568,7 +568,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             onSignOut={handleSignOut}
           />
         )}
-        {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} />}
+        {tab === "summary" && <SummaryTab worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} activities={activities} schools={schools} currencies={currencies} colleaguePayments={colleaguePayments} paymentStatuses={paymentStatuses} profile={profile} />}
       </ErrorBoundary>
       </motion.div>
       </AnimatePresence>
