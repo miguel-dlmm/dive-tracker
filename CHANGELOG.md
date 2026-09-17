@@ -11,6 +11,8 @@ Registro de cambios relevantes de Ocean Flow.
   sumarlos al total o mostrarlos aparte, cobrado/pendiente con "mostrar
   cobrados" apagado por defecto) y genera un PDF con `pdfmake` — pensado
   para mandárselo a la escuela y cuadrar cuentas con ella a fin de mes.
+  Esquinas redondeadas en la caja de total y el aviso "solo pendiente",
+  mismo lenguaje visual que el resto de la app.
 
 ## [1.3.1] - 2026-09-09
 
