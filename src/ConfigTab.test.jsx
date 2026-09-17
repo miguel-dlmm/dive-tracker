@@ -302,17 +302,43 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     email: "admin@example.com", is_admin: true, is_superadmin: true, created_at: "2026-08-01T00:00:00Z",
   };
 
+  // Fila completa de perfil que devuelve el `.select("*").eq(...).maybeSingle()`
+  // de la hoja de detalle (2026-09-17, "ver y editar todos los campos") —
+  // por defecto, ninguno de los campos nuevos tiene valor todavía (mismo
+  // estado que una cuenta recién creada); los tests que necesiten
+  // comprobar un valor concreto pasan su propio `fullProfileRow`.
+  const DEFAULT_FULL_PROFILE_ROW = {
+    user_id: "target-1", avatar_icon: null, avatar_color: null,
+    birth_date: null, country_of_residence: null, professional_level: null,
+    instructor_initials: null, ssi_pro_number: null, instructor_signature: null,
+    language: "es",
+  };
+
   // activated_at/deactivated_at viven en profiles, no en
   // admin_list_profiles() — se leen aparte (loadAccountDates) y se cruzan
   // por user_id. `activatedAt: null` reproduce una cuenta nunca activada
   // ("Pendiente" aunque no esté baneada); `deactivatedAt` solo importa
   // cuando el estado es "Desactivado" (banned_until, mockeado aparte vía
   // fetch("/api/list-user-status")).
-  function mockProfilesFrom(activatedAt, deactivatedAt = null) {
+  //
+  // `select(...)` tiene que servir a la vez a dos formas de llamada muy
+  // distintas contra la misma tabla (2026-09-17, desde que la hoja de
+  // detalle empezó a pedir también la fila completa del perfil): usado
+  // directo con `await` (loadAccountDates, sin filtro, siempre las
+  // activated_at/deactivated_at de todas las cuentas) y encadenado con
+  // `.eq(...).maybeSingle()` (fullProfile, una sola fila completa). El
+  // objeto que devuelve `select()` es a la vez "thenable" (así un `await`
+  // directo dispara `.then()`) y tiene su propio `.eq().maybeSingle()` —
+  // mismo truco ya usado en listUserStatus.test.js para un problema
+  // equivalente.
+  function mockProfilesFrom(activatedAt, deactivatedAt = null, fullProfileRow = DEFAULT_FULL_PROFILE_ROW) {
     supabase.from.mockImplementation((table) => {
       if (table !== "profiles") throw new Error(`tabla inesperada en el mock: ${table}`);
       return {
-        select: vi.fn().mockResolvedValue({ data: [{ user_id: "target-1", activated_at: activatedAt, deactivated_at: deactivatedAt }], error: null }),
+        select: vi.fn(() => ({
+          eq: () => ({ maybeSingle: () => Promise.resolve({ data: fullProfileRow, error: null }) }),
+          then: (resolve) => Promise.resolve({ data: [{ user_id: "target-1", activated_at: activatedAt, deactivated_at: deactivatedAt }], error: null }).then(resolve),
+        })),
         update: vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) }),
       };
     });
@@ -373,32 +399,37 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
   });
 
   // Pedido explícito del usuario (job nocturno, Bloque 4): la fila mostraba
-  // la fecha de alta, que dice poco de si la cuenta sigue viva — pasa a
-  // mostrar el último acceso, el mismo dato que ya se pedía para la hoja
-  // de detalle (listUserStatus.js), solo que ahora también en la fila.
-  it("la fila del listado muestra el último acceso, no la fecha de alta", async () => {
+  // la fecha de alta, que dice poco de si la cuenta sigue viva. Pasó
+  // primero a mostrar el último acceso, y 2026-09-17 (pedido explícito de
+  // nuevo) a "última actividad" — "último acceso" solo dice que la
+  // persona abrió la app, no que hiciera nada; última actividad real
+  // (worklog/comisiones/colleague_payments) es la pregunta que importa.
+  // "Último acceso" se mantiene en la ficha de detalle (no desaparece del
+  // todo), solo deja de ser lo que se ve en el listado.
+  it("la fila del listado muestra la última actividad, no la fecha de alta ni el último acceso", async () => {
     const user = userEvent.setup();
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": "2026-08-15T10:00:00Z" } }),
+      json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null }, lastActivityAt: { "target-1": "2026-08-15T10:00:00Z" } }),
     });
 
     await openUsuarios(user);
 
-    await waitFor(() => expect(screen.getByText(/Último acceso:/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Última actividad:/)).toBeInTheDocument());
     expect(screen.queryByText(/^Alta:/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Último acceso:/)).not.toBeInTheDocument();
   });
 
-  it("muestra 'Nunca' como último acceso en la fila si la cuenta no ha iniciado sesión todavía", async () => {
+  it("muestra 'Nunca' como última actividad en la fila si la cuenta no tiene ningún movimiento", async () => {
     const user = userEvent.setup();
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null } }),
+      json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null }, lastActivityAt: {} }),
     });
 
     await openUsuarios(user);
 
-    await waitFor(() => expect(screen.getByText("Último acceso: Nunca")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Última actividad: Nunca")).toBeInTheDocument());
   });
 
   it("muestra 'Pendiente' para una cuenta sin banned_until pero nunca activada (activated_at null)", async () => {
@@ -666,6 +697,71 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
 
     expect(screen.queryByLabelText("Nickname")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Editar datos" })).toBeInTheDocument();
+  });
+
+  // 2026-09-17, pedido explícito: "quiero poder ver y editar todos los
+  // campos del usuario, incluidos los campos de la card" — la ficha de
+  // admin pasa a pedir también la fila completa de `profiles` (fullProfile,
+  // ver el efecto dedicado en UsersDirectory) en vez de solo lo que ya
+  // trae admin_list_profiles() (nombre/nickname/email/fechas/roles).
+  it("la ficha de detalle enseña los campos completos del perfil una vez llega fullProfile", async () => {
+    const user = userEvent.setup();
+    mockProfilesFrom(null, null, {
+      user_id: "target-1", avatar_icon: "Turtle", avatar_color: "#0F766E",
+      birth_date: "1990-05-20", country_of_residence: "ES", professional_level: "instructor",
+      instructor_initials: "AL", ssi_pro_number: "12345", instructor_signature: null, language: "en",
+    });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+
+    await openUsuarios(user);
+    await user.click(screen.getByRole("button", { name: /ana/ }));
+
+    await waitFor(() => expect(screen.getByText("Turtle")).toBeInTheDocument());
+    expect(screen.getByText("Instructor")).toBeInTheDocument();
+    expect(screen.getByText("AL")).toBeInTheDocument();
+    expect(screen.getByText("12345")).toBeInTheDocument();
+    expect(screen.getByText("English")).toBeInTheDocument();
+    expect(screen.getByText("Sin configurar")).toBeInTheDocument();
+  });
+
+  it("editar y guardar manda también los campos nuevos del perfil en el mismo update", async () => {
+    const user = userEvent.setup();
+    let capturedPatch = null;
+    supabase.from.mockImplementation((table) => {
+      if (table !== "profiles") throw new Error(`tabla inesperada en el mock: ${table}`);
+      return {
+        select: vi.fn(() => ({
+          eq: () => ({
+            maybeSingle: () => Promise.resolve({
+              data: {
+                user_id: "target-1", avatar_icon: "Turtle", avatar_color: "#0F766E",
+                birth_date: "1990-05-20", country_of_residence: "ES", professional_level: "instructor",
+                instructor_initials: "AL", ssi_pro_number: "12345", instructor_signature: null, language: "en",
+              },
+              error: null,
+            }),
+          }),
+          then: (resolve) => Promise.resolve({ data: [{ user_id: "target-1", activated_at: null, deactivated_at: null }], error: null }).then(resolve),
+        })),
+        update: vi.fn((patch) => { capturedPatch = patch; return { eq: vi.fn().mockResolvedValue({ error: null }) }; }),
+      };
+    });
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+
+    await openUsuarios(user);
+    await user.click(screen.getByRole("button", { name: /ana/ }));
+    await waitFor(() => expect(screen.getByText("Turtle")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Editar datos" }));
+    await user.clear(screen.getByLabelText("Iniciales de instructor"));
+    await user.type(screen.getByLabelText("Iniciales de instructor"), "ZZ");
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => expect(capturedPatch).toMatchObject({
+      instructor_initials: "ZZ", ssi_pro_number: "12345",
+      avatar_icon: "Turtle", avatar_color: "#0F766E",
+      birth_date: "1990-05-20", country_of_residence: "ES", professional_level: "instructor",
+      language: "en",
+    }));
   });
 
   it("cerrar 'Crear usuario' con datos a medio rellenar, y reabrir, muestra el formulario en blanco", async () => {

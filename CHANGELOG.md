@@ -4,6 +4,26 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Ficha de usuario del admin (Config → Usuarios) editable por completo**:
+  la hoja de detalle ahora enseña y permite editar todos los campos del
+  perfil (icono/color de avatar, fecha de nacimiento, país de residencia,
+  nivel profesional, idioma, iniciales de instructor, número SSI PRO),
+  no solo email/rol/dataset — pensada como panel de administración, no
+  como la tarjeta "bonita" del propio usuario. El estado de la firma se
+  enseña de solo lectura (solo el propio usuario puede firmar).
+- **"Última actividad" en el listado de Usuarios**: sustituye a "último
+  acceso" — refleja el último movimiento (Mi trabajo, Comisiones o pagos
+  de compañeros) dado de alta, editado o eliminado, un dato más útil que
+  el último login para saber si una cuenta sigue en uso real.
+
+### Fixed
+- **`ConfigTab.jsx` colisionaba con `LANGUAGE_OPTIONS`**: el nuevo
+  `import` desde `ProfileTab.jsx` chocaba con una constante local ya
+  existente del mismo nombre usada por el selector de idioma de alta de
+  usuario — resuelto con un alias de importación
+  (`PROFILE_LANGUAGE_OPTIONS`), sin tocar el selector existente.
+
 ## [1.3.1] - 2026-09-09
 
 ### Fixed
