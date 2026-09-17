@@ -14,7 +14,10 @@ Registro de cambios relevantes de Ocean Flow.
   Esquinas redondeadas en la caja de total y el aviso "solo pendiente",
   mismo lenguaje visual que el resto de la app. Los importes del PDF
   usan siempre el código de moneda (EUR, THB...), nunca el símbolo —
-  la fuente embebida no cubre todos los símbolos posibles.
+  la fuente embebida no cubre todos los símbolos posibles. Clases y
+  Comisiones se agrupan por día y actividad, con subtotal por día —
+  sesiones idénticas del mismo curso el mismo día se agregan en una
+  sola línea en vez de repetirse fila a fila.
 
 ## [1.3.1] - 2026-09-09
 
