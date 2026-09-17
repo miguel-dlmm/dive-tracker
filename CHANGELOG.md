@@ -12,7 +12,9 @@ Registro de cambios relevantes de Ocean Flow.
   cobrados" apagado por defecto) y genera un PDF con `pdfmake` — pensado
   para mandárselo a la escuela y cuadrar cuentas con ella a fin de mes.
   Esquinas redondeadas en la caja de total y el aviso "solo pendiente",
-  mismo lenguaje visual que el resto de la app.
+  mismo lenguaje visual que el resto de la app. Los importes del PDF
+  usan siempre el código de moneda (EUR, THB...), nunca el símbolo —
+  la fuente embebida no cubre todos los símbolos posibles.
 
 ## [1.3.1] - 2026-09-09
 
