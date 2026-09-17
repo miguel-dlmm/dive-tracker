@@ -4,6 +4,14 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Exportar informe (cuadre mensual en PDF)**: botón nuevo en Resumen
+  que abre una hoja de configuración (escuela, rango de fechas propio,
+  ajustes de curso opcionales y seleccionables uno a uno con opción de
+  sumarlos al total o mostrarlos aparte, cobrado/pendiente con "mostrar
+  cobrados" apagado por defecto) y genera un PDF con `pdfmake` — pensado
+  para mandárselo a la escuela y cuadrar cuentas con ella a fin de mes.
+
 ## [1.3.1] - 2026-09-09
 
 ### Fixed
