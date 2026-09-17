@@ -8,13 +8,12 @@
 // aquí antes que en el navegador del usuario. `file-saver` se mockea:
 // no hay descarga real que verificar en un test, solo que el PDF se
 // generó (tamaño de buffer > 0).
-import { generateExportReportPdf } from "./generateExportReportPdf";
+import { generateExportReportPdf, formatMoneyPdf } from "./generateExportReportPdf";
 import { buildExportReportData } from "./buildExportReportData";
 
 vi.mock("file-saver", () => ({ saveAs: vi.fn() }));
 
 const paymentStatuses = [{ name: "Pending", is_default: true }, { name: "Paid", is_default: false }];
-const currencyRows = [{ code: "EUR", symbol: "€", is_default: true }];
 const rates = [{ school: "Ihasia", activity: "Bautismo", rate: 45, currency: "EUR", is_active: true }];
 const commissionRates = [{ school: "Ihasia", activity: "Bautismo", rate: 12, currency: "EUR", is_active: true }];
 const t = (key, opts) => {
@@ -54,11 +53,32 @@ function buildData(overrides = {}) {
   });
 }
 
+// Bug real encontrado generando un PDF de verdad con una cuenta en baht
+// tailandés: la Roboto que trae pdfmake por defecto no incluye el bloque
+// Unicode tailandés donde vive "฿" (U+0E3F) — el símbolo se imprimía como
+// un glifo roto. El PDF usa siempre el código ISO (3 letras latinas,
+// garantizado en cualquier fuente) en vez del símbolo — ver el porqué en
+// el propio generateExportReportPdf.js.
+describe("formatMoneyPdf", () => {
+  it("usa el código de moneda, nunca el símbolo — ni siquiera para símbolos fuera de latín/cirílico/griego", () => {
+    expect(formatMoneyPdf(24434, "THB")).toBe("24.434,00 THB");
+    expect(formatMoneyPdf(24434, "THB")).not.toContain("฿");
+  });
+
+  it("agrupa los miles con el mismo criterio es-ES que el resto de la app", () => {
+    expect(formatMoneyPdf(4400, "EUR")).toBe("4.400,00 EUR");
+  });
+
+  it("un importe negativo (ajuste en contra) conserva el signo", () => {
+    expect(formatMoneyPdf(-250, "EUR")).toBe("-250,00 EUR");
+  });
+});
+
 describe("generateExportReportPdf", () => {
   it("genera un PDF (clases + comisiones + ajustes aparte, solo pendientes) sin lanzar", async () => {
     const data = buildData();
     await expect(generateExportReportPdf({
-      school: "Ihasia", from: "2026-09-01", to: "2026-09-30", data, currencyRows, paymentStatusRows: paymentStatuses,
+      school: "Ihasia", from: "2026-09-01", to: "2026-09-30", data, paymentStatusRows: paymentStatuses,
       instructorName: "Nerea Lizarraga", showCollected: false, includeAdjustments: true, sumAdjustments: false, t,
     })).resolves.not.toThrow();
   });
@@ -66,7 +86,7 @@ describe("generateExportReportPdf", () => {
   it("genera un PDF con ajustes sumados al total y cobrados visibles (aparece el desglose cobrado/pendiente)", async () => {
     const data = buildData({ showCollected: true, sumAdjustments: true });
     await expect(generateExportReportPdf({
-      school: "Ihasia", from: "2026-09-01", to: "2026-09-30", data, currencyRows, paymentStatusRows: paymentStatuses,
+      school: "Ihasia", from: "2026-09-01", to: "2026-09-30", data, paymentStatusRows: paymentStatuses,
       instructorName: "Nerea Lizarraga", showCollected: true, includeAdjustments: true, sumAdjustments: true, t,
     })).resolves.not.toThrow();
   });
@@ -79,7 +99,7 @@ describe("generateExportReportPdf", () => {
       fallbackCurrency: "EUR", paymentStatuses, showCollected: false, includeAdjustments: false,
     });
     await expect(generateExportReportPdf({
-      school: "Ihasia", from: "2026-09-01", to: "2026-09-30", data, currencyRows, paymentStatusRows: paymentStatuses,
+      school: "Ihasia", from: "2026-09-01", to: "2026-09-30", data, paymentStatusRows: paymentStatuses,
       instructorName: "Nerea Lizarraga", showCollected: false, includeAdjustments: false, sumAdjustments: false, t,
     })).resolves.not.toThrow();
   });
@@ -92,7 +112,7 @@ describe("generateExportReportPdf", () => {
       fallbackCurrency: "EUR", paymentStatuses, showCollected: false, includeAdjustments: false,
     });
     await expect(generateExportReportPdf({
-      school: "Ihasia", from: "2025-12-20", to: "2026-01-10", data, currencyRows, paymentStatusRows: paymentStatuses,
+      school: "Ihasia", from: "2025-12-20", to: "2026-01-10", data, paymentStatusRows: paymentStatuses,
       instructorName: "Nerea Lizarraga", showCollected: false, includeAdjustments: false, sumAdjustments: false, t,
     })).resolves.not.toThrow();
   });

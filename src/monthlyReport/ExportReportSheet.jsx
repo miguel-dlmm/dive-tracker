@@ -61,7 +61,7 @@ export default function ExportReportSheet({
       const { generateExportReportPdf } = await import("./generateExportReportPdf");
       await generateExportReportPdf({
         school, from: range.from, to: range.to, data,
-        currencyRows: currencies.rows, paymentStatusRows: paymentStatuses.rows, instructorName,
+        paymentStatusRows: paymentStatuses.rows, instructorName,
         showCollected, includeAdjustments: includeAdjustments && data.adjustments.length > 0,
         sumAdjustments: sumAdjustments === t("export.sumToTotal"),
         t,

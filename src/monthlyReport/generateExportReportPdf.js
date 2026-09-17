@@ -14,7 +14,7 @@
 // navegador, sin configurarla a mano.
 import pdfMake from "pdfmake/build/pdfmake";
 import vfsFonts from "pdfmake/build/vfs_fonts";
-import { formatMoney, isPendingStatus } from "../shared";
+import { isPendingStatus } from "../shared";
 
 let vfsReady = false;
 function ensureFonts() {
@@ -46,6 +46,25 @@ function ddmmyyyy(iso) {
 function ddmm(iso) {
   const [, m, d] = iso.split("-");
   return `${pad2(d)}/${pad2(m)}`;
+}
+
+// El PDF usa siempre el CÓDIGO de moneda (EUR, THB, USD...), nunca el
+// símbolo de currencies.symbol — bug real encontrado al generar un PDF de
+// verdad (única forma de verlo: este entorno no tiene forma de comprobar
+// a ojo el resultado hasta descargarlo): el símbolo del baht tailandés
+// (฿) se imprimía como un glifo roto (un tofu box) porque la Roboto que
+// trae pdfmake por defecto solo cubre latín/cirílico/griego, no el bloque
+// Unicode tailandés donde vive ese símbolo concreto. Como el símbolo es
+// texto libre editable en Configuración → Monedas, no hay ninguna forma
+// de garantizar que la fuente embebida lo cubra siempre; el código ISO sí
+// son siempre 3 letras latinas mayúsculas, sin excepción — se sacrifica
+// un poco de la fidelidad visual de la app (símbolo bonito) a cambio de
+// que ninguna moneda pueda salir rota en un documento que se manda fuera
+// de la app. Misma agrupación es-ES que formatMoney (shared.jsx) — solo
+// cambia qué va después del número.
+export function formatMoneyPdf(amount, code) {
+  const n = (amount || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" });
+  return `${n} ${code}`;
 }
 
 // pdfmake no tiene "border-radius" en tablas — un rectángulo con esquinas
@@ -97,8 +116,8 @@ function statusCell(statusName, paymentStatusRows, t) {
   return { text: pending ? t("export.pendingLabel") : t("export.paidLabel"), color: pending ? WARNING : SUCCESS, bold: true, fontSize: 8 };
 }
 
-function moneyCell(amount, code, currencyRows) {
-  return { text: formatMoney(amount, code, currencyRows), alignment: "right", bold: true, color: NAVY, fontSize: 9 };
+function moneyCell(amount, code) {
+  return { text: formatMoneyPdf(amount, code), alignment: "right", bold: true, color: NAVY, fontSize: 9 };
 }
 
 // Los anchos de columna de esta tabla y de adjustmentsTable suman siempre
@@ -109,7 +128,7 @@ function moneyCell(amount, code, currencyRows) {
 // la columna" — antes cada tabla repartía su propio "*" de forma
 // independiente, sin garantía de que las columnas Importe de tablas
 // distintas cayeran en la misma x).
-function entriesTable({ entries, currencyRows, paymentStatusRows, t, kind, rowDate }) {
+function entriesTable({ entries, paymentStatusRows, t, kind, rowDate }) {
   const secondColLabel = kind === "commissions" ? t("export.colReferredFor") : t("export.colCourse");
   const header = [
     { text: t("export.colDate"), style: "th" },
@@ -123,12 +142,12 @@ function entriesTable({ entries, currencyRows, paymentStatusRows, t, kind, rowDa
     { text: e.activity, fontSize: 9 },
     { text: String(e.people || 0), alignment: "center", fontSize: 9 },
     statusCell(e.status, paymentStatusRows, t),
-    moneyCell(e.total, e.currency, currencyRows),
+    moneyCell(e.total, e.currency),
   ]);
   return { table: { headerRows: 1, widths: [34, "*", 30, 48, 64], body: [header, ...body] }, layout: hairlineLayout };
 }
 
-function adjustmentsTable({ entries, currencyRows, t, rowDate }) {
+function adjustmentsTable({ entries, t, rowDate }) {
   const header = [
     { text: t("export.colDate"), style: "th" },
     { text: t("export.colColleague"), style: "th" },
@@ -139,13 +158,13 @@ function adjustmentsTable({ entries, currencyRows, t, rowDate }) {
     { text: rowDate(e.date), color: MUTED, fontSize: 9, noWrap: true },
     { text: e.colleague_name, fontSize: 9 },
     { text: e.notes || "—", fontSize: 9, color: MUTED },
-    { text: formatMoney(e.total, e.currency, currencyRows), alignment: "right", bold: true, color: e.total < 0 ? DANGER : SUCCESS, fontSize: 9 },
+    { text: formatMoneyPdf(e.total, e.currency), alignment: "right", bold: true, color: e.total < 0 ? DANGER : SUCCESS, fontSize: 9 },
   ]);
   return { table: { headerRows: 1, widths: [34, "*", "*", 64], body: [header, ...body] }, layout: hairlineLayout };
 }
 
-function subtotalLine(label, totals, currencyRows) {
-  const lines = Object.entries(totals).map(([code, amount]) => formatMoney(amount, code, currencyRows)).join("  ·  ");
+function subtotalLine(label, totals) {
+  const lines = Object.entries(totals).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ");
   return {
     margin: [0, 3, 0, 0],
     columns: [
@@ -155,8 +174,8 @@ function subtotalLine(label, totals, currencyRows) {
   };
 }
 
-function totalBox({ totals, label, splitPaidPending, currencyRows, t }) {
-  const figureLines = Object.entries(totals).map(([code, amount]) => formatMoney(amount, code, currencyRows));
+function totalBox({ totals, label, splitPaidPending, t }) {
+  const figureLines = Object.entries(totals).map(([code, amount]) => formatMoneyPdf(amount, code));
   const columns = [{
     width: "*",
     stack: [
@@ -166,7 +185,7 @@ function totalBox({ totals, label, splitPaidPending, currencyRows, t }) {
   }];
   if (splitPaidPending) {
     const { paid, pending } = splitPaidPending;
-    const fmtSplit = (totalsObj) => Object.entries(totalsObj).map(([code, amount]) => formatMoney(amount, code, currencyRows)).join("  ·  ") || "—";
+    const fmtSplit = (totalsObj) => Object.entries(totalsObj).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ") || "—";
     columns.push({
       width: "auto",
       alignment: "right",
@@ -190,7 +209,7 @@ function pendingBanner(text) {
 }
 
 export async function generateExportReportPdf({
-  school, from, to, data, currencyRows, paymentStatusRows, instructorName, showCollected, includeAdjustments, sumAdjustments, t,
+  school, from, to, data, paymentStatusRows, instructorName, showCollected, includeAdjustments, sumAdjustments, t,
 }) {
   ensureFonts();
   const styles = { th: { bold: true, fontSize: 7, color: MUTED, characterSpacing: 0.4 } };
@@ -219,20 +238,20 @@ export async function generateExportReportPdf({
   const pushGroup = (label, color, table, subtotalLabel, totals) => {
     content.push(groupLabel(label, color));
     content.push(table);
-    content.push(subtotalLine(subtotalLabel, totals, currencyRows));
+    content.push(subtotalLine(subtotalLabel, totals));
   };
 
   if (data.courses.length > 0) {
     pushGroup(
       t("export.coursesGroup"), TEAL,
-      entriesTable({ entries: data.courses, currencyRows, paymentStatusRows, t, kind: "courses", rowDate }),
+      entriesTable({ entries: data.courses, paymentStatusRows, t, kind: "courses", rowDate }),
       t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal
     );
   }
   if (data.commissions.length > 0) {
     pushGroup(
       t("export.commissionsGroup"), GOLD,
-      entriesTable({ entries: data.commissions, currencyRows, paymentStatusRows, t, kind: "commissions", rowDate }),
+      entriesTable({ entries: data.commissions, paymentStatusRows, t, kind: "commissions", rowDate }),
       t("export.subtotal", { group: t("export.commissionsGroup").toLowerCase() }), data.commissionsSubtotal
     );
   }
@@ -241,7 +260,7 @@ export async function generateExportReportPdf({
   if (showAdjustmentsBeforeTotal) {
     pushGroup(
       t("export.adjustmentsGroup"), SLATE,
-      adjustmentsTable({ entries: data.adjustments, currencyRows, t, rowDate }),
+      adjustmentsTable({ entries: data.adjustments, t, rowDate }),
       t("export.subtotal", { group: t("export.adjustmentsGroup").toLowerCase() }), data.adjustmentsSubtotal
     );
   }
@@ -250,7 +269,7 @@ export async function generateExportReportPdf({
     totals: data.mainTotal,
     label: t("export.totalLabel"),
     splitPaidPending: showCollected ? { paid: data.paidTotal, pending: data.pendingTotal } : null,
-    currencyRows, t,
+    t,
   }));
 
   const showAdjustmentsAfterTotal = includeAdjustments && !sumAdjustments && data.adjustments.length > 0;
@@ -258,7 +277,7 @@ export async function generateExportReportPdf({
     content.push({ margin: [0, 20, 0, 0], canvas: [{ type: "line", x1: 0, y1: 0, x2: CONTENT_WIDTH, y2: 0, lineWidth: 0.75, lineColor: HAIRLINE, dash: { length: 3 } }] });
     content.push({ margin: [0, 7, 0, 0], text: t("export.adjustmentsAsideNote"), fontSize: 7.5, bold: true, color: "#8095A6", characterSpacing: 0.3 });
     content.push(groupLabel(t("export.adjustmentsGroup"), SLATE));
-    content.push(adjustmentsTable({ entries: data.adjustments, currencyRows, t, rowDate }));
+    content.push(adjustmentsTable({ entries: data.adjustments, t, rowDate }));
   }
 
   const docDefinition = {
