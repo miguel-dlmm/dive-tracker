@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { GraduationCap, Award, Handshake, ChevronRight, Building2 } from "lucide-react";
+import { CalendarDays, Award, Handshake, ChevronRight, Building2, HelpCircle } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
-import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
+import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, useFloatingDropdown, FloatingPanel } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import PendingCollectionCard from "./PendingCollectionCard";
@@ -90,7 +90,76 @@ function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
+// Variante de KpiTile para una cifra de dinero (Media diaria) en vez de un
+// conteo entero — mismo envoltorio visual (insignia + cifra en una fila,
+// etiqueta debajo), pero la cifra se formatea con <Money> y admite un
+// tooltip opcional (mismo patrón que MoneyKpiTile en MiTrabajoTab.jsx:
+// botón "?" con aria-label propio y objetivo táctil de 44px vía
+// -inset-[15px], en vez del genérico "Ayuda"/"Ocultar ayuda" de Field —
+// MovementSheet puede estar abierto encima de Home a la vez, ver
+// onQuickCreate más abajo, así que ambos tooltips conviven en el DOM y
+// necesitan aria-labels que no choquen). Sin la maquinaria de
+// icono/texto-que-se-encoge de MiTrabajoTab: aquí cada tarjeta es
+// independiente, no se miden las 3 juntas — proporcional al caso real,
+// una cifra diaria rara vez alcanza el mismo número de dígitos que un
+// total mensual.
+function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel }) {
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
+  const entries = Object.entries(totals || {});
+  const single = entries.length === 1 ? entries[0] : null;
+  const animatedCents = useCountUp(single ? Math.round(single[1] * 100) : 0, { reduced });
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
+      className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
+    >
+      <div className="flex items-center gap-2">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+          <Icon size={18} style={{ color }} aria-hidden="true" />
+        </span>
+        <span className="min-w-0 truncate text-xl font-bold leading-none tabular-nums" style={{ color: BRAND_NAVY }}>
+          {entries.length === 0 ? (
+            "—"
+          ) : single ? (
+            <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
+          ) : (
+            entries.map(([code, amt], i) => (
+              <span key={code}>
+                {i > 0 && " + "}
+                <Money amount={amt} code={code} currencyRows={currencyRows} />
+              </span>
+            ))
+          )}
+        </span>
+      </div>
+      <span className="flex items-center gap-1 text-[11px] font-medium leading-tight text-gray-500">
+        {label}
+        {tooltip && (
+          <span className="relative inline-flex h-3 w-3 shrink-0">
+            <button
+              ref={anchorRef}
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-label={open ? tooltipHideLabel : tooltipShowLabel}
+              className="absolute -inset-[15px] flex items-center justify-center text-gray-400"
+            >
+              <HelpCircle size={11} aria-hidden="true" />
+            </button>
+          </span>
+        )}
+      </span>
+      {tooltip && (
+        <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} className="w-48 max-w-[75vw] px-2.5 py-1.5">
+          <span className="block text-[11px] font-normal italic normal-case text-gray-500">{tooltip}</span>
+        </FloatingPanel>
+      )}
+    </motion.div>
+  );
+}
+
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
   const { t } = useTranslation("home");
   // Oculta el punto de entrada de "Instalar la app" si la propia app ya
   // corre instalada (display-mode: standalone en Chromium/Android,
@@ -155,27 +224,40 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const calendarEntries = useMemo(() => [...ganadoEntries, ...comisionEntries, ...companerosEntries],
     [ganadoEntries, comisionEntries, companerosEntries]);
 
-  // Dato secundario de "Generado este mes" — personas formadas, no comisión
-  // ni ajustes: son clientes que TÚ has impartido este mes, un dato humano y
-  // sin ambigüedad de alcance (no cuenta clientes referidos que forma otro
-  // instructor, ni ajustes económicos, que no representan formación). Da a
-  // la tarjeta un segundo dato con el mismo peso visual que "N pagos
-  // pendientes" en la tarjeta de al lado.
-  const peopleTrainedThisMonth = useMemo(() => ganadoEntries
-    .filter((e) => e.date.slice(0, 7) === currentMonthKey)
-    .reduce((sum, e) => sum + (e.people || 0), 0), [ganadoEntries, currentMonthKey]);
+  // Media diaria ganada este mes, hasta hoy (Bloque Home, lote 2026-09-17,
+  // pedido explícito del usuario) — sustituye al KPI "Alumnos" que vivía
+  // aquí antes. Motivo del cambio, no cosmético: "Alumnos" sumaba
+  // `people` de cada apunte de Curso, así que un mismo alumno que repite
+  // varios cursos en el mes contaba varias veces — una cifra que "no es
+  // real" (palabras del propio usuario), sin una forma barata de
+  // deduplicar por alumno hoy (no hay ninguna identidad de alumno en el
+  // modelo de datos, solo nombre libre por movimiento). En vez de forzar
+  // una deduplicación imprecisa, se sustituye por un ángulo que SÍ es
+  // exacto con los datos que ya existen: cuánto ganas de media cada día
+  // del mes en curso, contando solo cursos (ganadoEntries, no comisiones
+  // ni ajustes — "ganada" es el término que usó el propio usuario, y
+  // coincide con el tipo de movimiento "Curso" del resto de la app).
+  // Se divide entre el día del mes de HOY (now.getDate(), 1-31), no entre
+  // los días transcurridos con actividad real ni entre los días totales
+  // del mes — así la cifra sube de forma predecible según avanza el mes,
+  // en vez de dar saltos bruscos cada vez que se registra un curso nuevo.
+  const dayOfMonth = now.getDate();
+  const dailyAverageTotals = useMemo(() => {
+    const totals = {};
+    ganadoEntries
+      .filter((e) => e.date.slice(0, 7) === currentMonthKey)
+      .forEach((e) => { totals[e.currency] = (totals[e.currency] || 0) + e.total; });
+    Object.keys(totals).forEach((code) => { totals[code] = totals[code] / dayOfMonth; });
+    return totals;
+  }, [ganadoEntries, currentMonthKey, dayOfMonth]);
 
-  // KPIs de Fase 3 (Release V1) — tres ángulos distintos de "cómo me está
-  // yendo", deliberadamente no financieros (eso ya lo cubren "Pendiente de
-  // cobrar" y "Generado este mes" arriba): alumnos este mes ya se calculaba
-  // (peopleTrainedThisMonth, se reutiliza tal cual). Cursos impartidos era
-  // al principio un total histórico (sensación de trayectoria) — cambiado
-  // a mensual (pedido explícito del usuario 2026-09-03: "TU IMPACTO ESTE
-  // MES" como título único, los 3 KPIs deben ser del mes, no mezclar un
-  // total de siempre con dos del mes actual). Personas captadas: mismo
-  // criterio que people trained pero sobre comisionEntries (aclaración
-  // explícita del usuario: "personas por las que he comisionado" —
-  // clientes referidos, no formados por ti).
+  // KPIs de Fase 3 (Release V1) — Cursos impartidos era al principio un
+  // total histórico (sensación de trayectoria) — cambiado a mensual
+  // (pedido explícito del usuario 2026-09-03: "TU IMPACTO ESTE MES" como
+  // título único, los 3 KPIs deben ser del mes, no mezclar un total de
+  // siempre con dos del mes actual). Personas captadas: sobre
+  // comisionEntries (aclaración explícita del usuario: "personas por las
+  // que he comisionado" — clientes referidos, no formados por ti).
   const coursesTotal = useMemo(() => worklog.rows
     .filter((e) => e.date.slice(0, 7) === currentMonthKey).length, [worklog.rows, currentMonthKey]);
   const referredThisMonth = useMemo(() => comisionEntries
@@ -212,7 +294,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // convención #1 de CLAUDE.md) en vez de una fuente de datos nueva.
   // Se cuentan MOVIMIENTOS (cuántas veces aparece esa escuela este mes),
   // no personas — "más activa" se lee mejor como frecuencia de trabajo
-  // que como volumen de alumnos, que ya cubre el KPI "Alumnos" de arriba.
+  // que como volumen de alumnos.
   const schoolActivityThisMonth = useMemo(() => {
     const counts = {};
     incomeEntries
@@ -262,7 +344,12 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           )}
         </div>
         <div className="grid grid-cols-3 gap-2">
-          <KpiTile icon={GraduationCap} color={TEAL} value={peopleTrainedThisMonth} label={t("kpis.studentsThisMonth")} index={0} reduced={reducedMotion} />
+          <MoneyKpiTile
+            icon={CalendarDays} color={TEAL} totals={dailyAverageTotals} currencyRows={currencies.rows}
+            label={t("kpis.dailyAverageThisMonth")} tooltip={t("kpis.dailyAverageTooltip")}
+            tooltipShowLabel={t("kpis.dailyAverageTooltipShow")} tooltipHideLabel={t("kpis.dailyAverageTooltipHide")}
+            index={0} reduced={reducedMotion}
+          />
           <KpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
           <KpiTile icon={Handshake} color={GREEN} value={referredThisMonth} label={t("kpis.referredThisMonth")} index={2} reduced={reducedMotion} />
         </div>
@@ -278,7 +365,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           pidiendo "dinamismo, texto, call to action, Generados" — elegida
           la combinación de dos ideas:
           (1) "Generados" como cuarta palabra del mismo vocabulario que ya
-              usan los KPI de arriba (Alumnos/Cursos/Captados) — mismo
+              usan los KPI de arriba (Media diaria/Cursos/Captados) — mismo
               patrón número-en-grande + etiqueta-pequeña, no un contador
               inventado aparte.
           (2) el texto CAMBIA según haya actividad real: sin ningún
@@ -415,6 +502,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           groupBySource
           sourceMeta={translatedTypeMeta}
           onCreateForDay={(dateStr) => onQuickCreate("ganado", dateStr)}
+          onEditEntry={onEditEntry}
           onPrevMonth={goToPrevMonth}
           onNextMonth={goToNextMonth}
           onGoToday={goToCurrentMonth}

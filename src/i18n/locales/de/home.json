@@ -8,7 +8,10 @@
   "noActivityThisMonth": "Keine Aktivität diesen Monat",
   "kpis": {
     "sectionTitle": "Deine Bilanz diesen Monat",
-    "studentsThisMonth": "Teilnehmer",
+    "dailyAverageThisMonth": "Tagesdurchschnitt",
+    "dailyAverageTooltip": "Was du diesen Monat im Schnitt pro Tag verdienst, gezählt nur bis heute.",
+    "dailyAverageTooltipShow": "Info: Tagesdurchschnitt",
+    "dailyAverageTooltipHide": "Info ausblenden: Tagesdurchschnitt",
     "coursesTotal": "Kurse",
     "referredThisMonth": "Geworben"
   },

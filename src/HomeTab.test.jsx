@@ -57,7 +57,7 @@ function money(expected) {
   };
 }
 
-function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rates = [], commissionRates = [], currencies = [{ code: "EUR", symbol: "€", is_default: true }] } = {}) {
+function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rates = [], commissionRates = [], currencies = [{ code: "EUR", symbol: "€", is_default: true }], onEditEntry } = {}) {
   render(
     <HomeTab
       worklog={rowsHook(worklog)}
@@ -71,6 +71,7 @@ function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rat
       navSections={rowsHook([])}
       paymentStatuses={PAYMENT_STATUSES}
       onQuickCreate={vi.fn()}
+      onEditEntry={onEditEntry}
     />
   );
   return {
@@ -381,6 +382,36 @@ describe("HomeTab — calendario: total del día seleccionado", () => {
     const label = screen.getByText("Generado el día");
     expect(label.parentElement).toHaveTextContent("25,00"); // 20€ del curso + 5€ del ajuste
   });
+
+  // Editar desde el calendario de Home (lote 2026-09-17, pedido explícito:
+  // "al hacer click en los movimientos pueda editarlos"). onEditEntry
+  // recibe la entrada tal cual la usa el propio desglose (con _source e
+  // id) — MovementSheet solo necesita reenviarla como editingEntry (ver
+  // startHomeEdit, App.jsx), así que basta comprobar que el clic entrega
+  // exactamente ese shape.
+  it("un apunte del desglose es pulsable y entrega la entrada a onEditEntry", async () => {
+    const user = userEvent.setup();
+    const onEditEntry = vi.fn();
+    renderHome({
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }],
+      rates: RATES,
+      onEditEntry,
+    });
+    await user.click(screen.getByRole("button", { name: /Open Water/ }));
+    expect(onEditEntry).toHaveBeenCalledTimes(1);
+    const entry = onEditEntry.mock.calls[0][0];
+    expect(entry.id).toBe("w1");
+    expect(entry._source).toBe("ganado");
+  });
+
+  it("sin onEditEntry, el desglose no es pulsable (Resumen, calendario de solo lectura)", () => {
+    renderHome({
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }],
+      rates: RATES,
+    });
+    expect(screen.queryByRole("button", { name: /Open Water/ })).not.toBeInTheDocument();
+    expect(screen.getByText("Open Water")).toBeInTheDocument();
+  });
 });
 
 // Fase 3, Release V1: KPIs animados al final de Home. La cifra hace un
@@ -390,7 +421,12 @@ describe("HomeTab — calendario: total del día seleccionado", () => {
 // mes" y los 3 KPIs son del mes actual (antes "Cursos impartidos" era un
 // total histórico, deliberadamente distinto de los otros dos — se
 // unifica).
-describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", () => {
+// "Alumnos" sustituido por "Media diaria" (lote 2026-09-17, ver
+// comentario junto a dailyAverageTotals en HomeTab.jsx): el importe
+// esperado se calcula igual que el propio componente (total ganado este
+// mes ÷ NOW.getDate()) en vez de un valor fijo, porque ese divisor
+// depende del día real en que corra el test.
+describe("HomeTab — KPIs (media diaria, cursos, captados, todos del mes actual)", () => {
   it("los 3 KPIs cuentan solo el mes actual", async () => {
     renderHome({
       worklog: [
@@ -407,9 +443,13 @@ describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", (
     });
 
     expect(screen.getByText("Tu impacto este mes")).toBeInTheDocument();
-    expect(screen.getByText("Alumnos")).toBeInTheDocument();
+    expect(screen.getByText("Media diaria")).toBeInTheDocument();
     expect(screen.getByText("Cursos")).toBeInTheDocument();
     expect(screen.getByText("Captados")).toBeInTheDocument();
+
+    // w1 (40€) + w2 (20€) = 60€ ganados este mes, ÷ día del mes de hoy.
+    const dailyAverage = Math.round((60 / NOW.getDate()) * 100) / 100;
+    const dailyAverageText = dailyAverage.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" });
 
     // timeout 4000 (2026-09-08, hallazgo real): con la suite completa
     // corriendo (muchos archivos de test en paralelo, CPU bajo presión
@@ -418,12 +458,16 @@ describe("HomeTab — KPIs (alumnos, cursos, captados, todos del mes actual)", (
     // visto fallar en vivo con la suite completa, nunca en solitario.
     // 2000ms bastaba en aislamiento pero era un margen demasiado justo
     // bajo contención real; no es un cambio de comportamiento, solo más
-    // paciencia para el mismo resultado esperado.
+    // paciencia para el mismo resultado esperado. 8000ms (2026-09-18,
+    // sustituye el 4000ms anterior): la propia tarjeta de "Media diaria"
+    // cuenta en CÉNTIMOS (más pasos de animación que un entero pequeño
+    // como "Cursos"/"Captados") — visto fallar en vivo con la suite
+    // completa incluso a 4000ms, nunca en solitario.
     await waitFor(() => {
-      expect(screen.getByText("Alumnos").previousSibling).toHaveTextContent("3"); // 2 + 1, solo este mes
+      expect(screen.getByText("Media diaria").previousSibling).toHaveTextContent(dailyAverageText);
       expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("2"); // w1 + w2, solo este mes (w3 es del mes pasado)
       expect(screen.getByText("Captados").previousSibling).toHaveTextContent("4"); // solo c1, este mes
-    }, { timeout: 4000 });
+    }, { timeout: 8000 });
   });
 });
 

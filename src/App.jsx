@@ -292,6 +292,15 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
   // trabajo aunque no hubiera guardado nada.
   const [homeSheetRequest, setHomeSheetRequest] = useState(null);
   const startHomeCreate = (type, date) => setHomeSheetRequest({ type, editingEntry: null, date });
+  // Editar desde el desglose del calendario de Home (lote 2026-09-17,
+  // pedido explícito: "al hacer click en los movimientos pueda editarlos,
+  // se levantará el popup y al guardar veré el dato actualizado en la
+  // info") — misma hoja que startHomeCreate, en modo edición
+  // (request.editingEntry, ver MovementSheet.jsx). `entry` ya trae
+  // `_source`, así que `type` es solo el valor inicial que MovementSheet
+  // ignora en cuanto ve editingEntry presente (ver su propio comentario
+  // de `request`).
+  const startHomeEdit = (entry) => setHomeSheetRequest({ type: entry._source, editingEntry: entry, date: null });
 
   // "Qué hay de nuevo" — se decide en el primer render tras conocer al
   // usuario (profile.user_id), no en un efecto con dependencia vacía: con
@@ -516,6 +525,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             worklog={worklog} rates={rates} comisiones={comisiones} commissionRates={commissionRates} colleaguePayments={colleaguePayments}
             activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
             onQuickCreate={startHomeCreate}
+            onEditEntry={startHomeEdit}
             onOpenPending={() => changeTab("trabajo")}
             onOpenSummary={() => changeTab("summary")}
             onOpenTrainingRecords={() => changeTab("training-records")}
@@ -623,11 +633,19 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
           MiTrabajoTab ya monta su propia instancia para el FAB/editar fila
           (con su propio sheetRequest, independiente); esta de aquí solo
           se activa cuando homeSheetRequest no es null, así que nunca hay
-          dos hojas abiertas a la vez. */}
+          dos hojas abiertas a la vez.
+          onSaved solo cambia a Mi trabajo cuando `isNew` (crear desde
+          Home) — al EDITAR desde el desglose del calendario (startHomeEdit
+          más arriba, lote 2026-09-17, pedido explícito: "al guardar veré
+          el dato actualizado en la info") el usuario se queda en Home: el
+          propio calendario ya recalcula su desglose solo en cuanto
+          worklog/comisiones/colleaguePayments reciben el dato actualizado
+          (son props reactivas, useSupabaseTable), sin necesitar ningún
+          refresco explícito aquí. */}
       <MovementSheet
         request={homeSheetRequest}
         onClose={() => setHomeSheetRequest(null)}
-        onSaved={() => { setHomeSheetRequest(null); changeTab("trabajo"); }}
+        onSaved={(_entry, { isNew }) => { setHomeSheetRequest(null); if (isNew) changeTab("trabajo"); }}
         schools={schools} activities={activities} paymentStatuses={paymentStatuses}
         currencies={currencies} rates={rates} commissionRates={commissionRates}
         worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}

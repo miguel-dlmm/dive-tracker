@@ -1253,7 +1253,19 @@ export const MOVEMENT_TYPE_META = {
 // (isCurrentMonth === false), un atajo "Hoy" para volver de un salto. Sin
 // estos props (Resumen, que ya tiene su propio selector de periodo fuera
 // del calendario) el comportamiento visual es exactamente el de antes.
-export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, caption, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false, onCreateForDay, onPrevMonth, onNextMonth, onGoToday, isCurrentMonth = true }) {
+// onEditEntry(entry): opcional (lote 2026-09-17, pedido explícito del
+// usuario) — cuando se pasa, cada apunte del desglose "por entrada"
+// (groupBySource && detailed, el único modo que muestra entradas
+// individuales con su propio id — el resto agrega por actividad/escuela,
+// donde "editar" no tendría una única fila a la que apuntar) se vuelve
+// pulsable y lo abre para editar. `entry` ya trae `_source` (ganado/
+// comision/companeros, puesto por buildEntriesBySource en rateCalc.js) —
+// mismo shape que `editingEntry` espera MovementSheet, así que quien
+// llama solo necesita reenviarlo tal cual (ver startHomeEdit, App.jsx).
+// Sin este prop (Resumen, calendario de solo lectura — ver "Cosas que NO
+// existen todavía" en CLAUDE.md) el comportamiento es exactamente el de
+// antes, ninguna fila se vuelve pulsable.
+export function MonthCalendar({ year, month, entries, dotColor, currencyRows, activityColor, legend, caption, detailed = false, groupBySource = false, sourceMeta, autoSelectFirstDay = false, showSchool = false, onCreateForDay, onEditEntry, onPrevMonth, onNextMonth, onGoToday, isCurrentMonth = true }) {
   const { t, months: CAL_MONTHS, weekdays: CAL_WEEKDAYS } = useCalendarLabels();
   const reducedMotion = usePrefersReducedMotion();
   // La selección se guarda junto con el mes al que pertenece (monthKey) en
@@ -1678,29 +1690,45 @@ export function MonthCalendar({ year, month, entries, dotColor, currencyRows, ac
                   <ul className="space-y-1.5 pl-2">
                     {group.entries.map((e) => {
                       const isColleague = group.key === "companeros";
+                      // Mismo contenido, dos envoltorios: <button> cuando se
+                      // puede editar (área pulsable a todo lo ancho,
+                      // -my-1.5/py-1.5 amplía el objetivo táctil hacia las
+                      // 44px de convención #7 sin ensanchar el espacio
+                      // visible entre filas, mismo truco que el botón "+" de
+                      // la cabecera del desglose más arriba) o <div> normal
+                      // en modo solo lectura (Resumen) — nunca un <button>
+                      // inerte sin onClick, que confundiría a un lector de
+                      // pantalla anunciándolo como interactivo sin serlo.
+                      const Row = onEditEntry ? "button" : "div";
                       return (
-                        <li key={e.id} className="flex items-start justify-between gap-2 text-sm">
-                          <div className="min-w-0">
-                            {isColleague ? (
-                              <div className="truncate font-medium text-gray-700">{e.colleague_name}</div>
-                            ) : (
-                              <div className="truncate font-medium" style={{ color: activityColor(e.activity) }}>{e.activity}</div>
-                            )}
-                            <div className="truncate text-[11px] text-gray-400">
-                              {e.school}
-                              {isColleague && e.activity && ` · ${e.activity}`}
-                              {e.notes && ` · ${e.notes}`}
+                        <li key={e.id}>
+                          <Row
+                            type={onEditEntry ? "button" : undefined}
+                            onClick={onEditEntry ? () => onEditEntry(e) : undefined}
+                            className={`flex w-full items-start justify-between gap-2 text-left text-sm ${onEditEntry ? "-my-1.5 rounded-md py-1.5 active:bg-gray-100" : ""}`}
+                          >
+                            <div className="min-w-0">
+                              {isColleague ? (
+                                <div className="truncate font-medium text-gray-700">{e.colleague_name}</div>
+                              ) : (
+                                <div className="truncate font-medium" style={{ color: activityColor(e.activity) }}>{e.activity}</div>
+                              )}
+                              <div className="truncate text-[11px] text-gray-400">
+                                {e.school}
+                                {isColleague && e.activity && ` · ${e.activity}`}
+                                {e.notes && ` · ${e.notes}`}
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex shrink-0 items-center gap-2 pt-0.5 tabular-nums text-gray-600">
-                            {!isColleague && <span className="text-xs text-gray-400">{e.people || 0}p</span>}
-                            <span
-                              className="font-semibold"
-                              style={isColleague ? { color: e.total >= 0 ? GREEN : CORAL } : { color: "#1F2937" }}
-                            >
-                              <Money amount={Math.abs(e.total)} code={e.currency} currencyRows={currencyRows} />
-                            </span>
-                          </div>
+                            <div className="flex shrink-0 items-center gap-2 pt-0.5 tabular-nums text-gray-600">
+                              {!isColleague && <span className="text-xs text-gray-400">{e.people || 0}p</span>}
+                              <span
+                                className="font-semibold"
+                                style={isColleague ? { color: e.total >= 0 ? GREEN : CORAL } : { color: "#1F2937" }}
+                              >
+                                <Money amount={Math.abs(e.total)} code={e.currency} currencyRows={currencyRows} />
+                              </span>
+                            </div>
+                          </Row>
                         </li>
                       );
                     })}

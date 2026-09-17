@@ -4,6 +4,18 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Home: KPI "Media diaria"**: sustituye al KPI "Alumnos", que sumaba
+  `people` de cada Curso y contaba dos veces al mismo alumno si repetía
+  curso en el mes — una cifra inexacta sin una forma barata de
+  deduplicar hoy. La nueva tarjeta muestra cuánto ganas de media cada
+  día del mes en curso (solo Cursos, dividido entre el día de hoy), con
+  un tooltip ⓘ que aclara el alcance ("hasta hoy").
+- **Editar un movimiento desde el calendario de Home**: tocar un apunte
+  del desglose del día abre la misma hoja de edición que en Mi trabajo,
+  sin cambiar de pestaña — al guardar, el desglose se actualiza en el
+  sitio (Home ya no navega a Mi trabajo tras editar, solo tras crear).
+
 ## [1.3.1] - 2026-09-09
 
 ### Fixed
