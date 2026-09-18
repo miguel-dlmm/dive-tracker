@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FileDown, X, Check, Loader2 } from "lucide-react";
 import { Sheet, Field, Select, DateRangePicker, BooleanToggle, ChipGroup, formatMoney, useToast } from "../shared";
@@ -18,17 +18,38 @@ function currentMonthRange() {
 // configuración de un único uso, se descarta al cerrar la hoja, nunca hace
 // falta recordarla entre aperturas — ver el informe de diseño de la sesión
 // que encargó esta pantalla para el porqué de cada campo.
+// defaultFrom/defaultTo (2026-09-18, pedido explícito: "aparecerá seteada
+// por defecto las fechas q estaban en el resumen en ese momento, y después
+// podré editarlas") — mismo patrón que defaultSchool: un valor inicial
+// nada más, editable libremente después de abrir la hoja (DateRangePicker
+// no queda "atado" a Resumen en ningún sentido). Rango del periodo que se
+// estuviera viendo en Resumen (rangeStart/rangeEnd, SummaryTab.jsx) —
+// puede llegar `null` (granularidad "personalizado" sin fechas elegidas
+// todavía), así que el mes actual sigue siendo el respaldo de siempre.
 export default function ExportReportSheet({
   open, onClose, schools, currencies, paymentStatuses,
   worklog, comisiones, colleaguePayments, rates, commissionRates,
-  fallbackCurrency, instructorName, defaultSchool,
+  fallbackCurrency, instructorName, defaultSchool, defaultFrom, defaultTo,
 }) {
   const { t } = useTranslation("summary");
   const toast = useToast();
   const hasMultipleSchools = schools.rows.length > 1;
 
   const [school, setSchool] = useState(() => defaultSchool || schools.rows.find((s) => s.is_default)?.name || schools.rows[0]?.name || "");
-  const [range, setRange] = useState(currentMonthRange);
+  const [range, setRange] = useState(() => (defaultFrom && defaultTo ? { from: defaultFrom, to: defaultTo } : currentMonthRange()));
+  // La hoja permanece montada entre aperturas (Sheet la anima al
+  // abrir/cerrar en vez de desmontarla), así que el `useState` de arriba
+  // solo sembraría `range` la PRIMERA vez que se abre en toda la sesión
+  // — si el usuario cambia de periodo en Resumen entre dos exportaciones,
+  // la segunda apertura seguiría mostrando las fechas de la primera. Este
+  // efecto vuelve a sembrar `range` cada vez que `open` pasa a true, con
+  // el periodo que Resumen tenga EN ESE MOMENTO — sigue siendo solo el
+  // valor inicial (`setRange` normal, no un valor controlado): en cuanto
+  // se abre, el usuario puede editarlo libremente sin que este efecto lo
+  // vuelva a pisar (no corre de nuevo hasta el siguiente open→true).
+  useEffect(() => {
+    if (open) setRange(defaultFrom && defaultTo ? { from: defaultFrom, to: defaultTo } : currentMonthRange());
+  }, [open, defaultFrom, defaultTo]);
   const [includeAdjustments, setIncludeAdjustments] = useState(false);
   const [adjustmentMode, setAdjustmentMode] = useState(t("export.adjustmentsAll"));
   const [selectedIds, setSelectedIds] = useState([]);

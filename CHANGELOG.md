@@ -72,6 +72,11 @@ Registro de cambios relevantes de Ocean Flow.
   del desglose del día abre la misma hoja de edición que en Mi trabajo,
   sin cambiar de pestaña — al guardar, el desglose se actualiza en el
   sitio (Home ya no navega a Mi trabajo tras editar, solo tras crear).
+- **"Exportar informe" abre con el rango de fechas de Resumen ya
+  puesto**: antes siempre arrancaba en el mes en curso, sin relación con
+  el periodo que se estuviera viendo en Resumen al pulsar el botón —
+  ahora hereda ese rango como valor inicial (personalizado incluido),
+  editable libremente después sin quedar "atado" a Resumen.
 
 ### Fixed
 - **`ConfigTab.jsx` colisionaba con `LANGUAGE_OPTIONS`**: el nuevo
@@ -134,6 +139,21 @@ Registro de cambios relevantes de Ocean Flow.
   apellidos sí están en el formulario), Email se enseña junto a ellos
   de solo lectura por ser el mismo tipo de dato (identidad de la
   persona), aunque cambiarlo no se pidió aquí.
+- **Tabla de "Exportar informe" (PDF) demasiado ancha y con letra
+  pequeña**: pedido explícito tras generar un informe real — ocupaba
+  todo el ancho de la página, difícil de leer ampliando en el móvil.
+  Rediseñada: columna de actividad a un ancho fijo calculado sobre el
+  nombre más largo de todo el informe (mínimo 150pt para que no quede
+  apretada, máximo 260pt para que un nombre desproporcionado envuelva en
+  vez de seguir ensanchando la tabla), tipografía subida de paso en toda
+  la tabla (actividad, detalle, importe y cabecera de día), y la tabla
+  ya no ocupa todo el ancho de la página sino solo lo que necesita,
+  centrada. Al construir el centrado se detectó que el primer mecanismo
+  probado (`alignment: "center"` sobre una tabla de pdfmake) no hace
+  nada en la versión instalada (0.3.11) — confirmado leyendo el propio
+  paquete, `DocMeasure.measureTable()` guarda ese valor pero nunca lo
+  usa para desplazar la tabla; sustituido por un margen izquierdo
+  calculado, que sí es el mecanismo que pdfmake respeta.
 
 ## [1.3.1] - 2026-09-09
 

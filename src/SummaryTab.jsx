@@ -818,6 +818,8 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
         fallbackCurrency={fallbackCurrency}
         instructorName={[profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || profile?.nickname}
         defaultSchool={expandedSchool}
+        defaultFrom={rangeStart}
+        defaultTo={rangeEnd}
       />
     </div>
   );
