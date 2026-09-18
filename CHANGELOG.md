@@ -112,6 +112,28 @@ Registro de cambios relevantes de Ocean Flow.
   ("no cabía a su lado sin apretarlo... a todo el ancho, en su propia
   fila") — no se aplicó al construir la ficha de admin. Corregido para
   ocupar la fila entera, como en el resto de sitios donde ya se usa.
+- **"Cursos"/"Captados" (Home), alineación final**: tres pedidos a la
+  vez — iconos alineados entre las dos tarjetas, mismo aire a los dos
+  lados, icono y texto sin separarse — no podían cumplirse juntos con
+  ancho de texto libre: "Cursos" y "Captados" tienen longitudes reales
+  distintas, así que cualquier reparto flexible (`flex-1`, `justify-
+  between`, `justify-center` sueltos, probados uno tras otro) arreglaba
+  un pedido rompiendo otro. Solución de raíz: columna de texto a ancho
+  FIJO (`w-14`) en vez de ajustado a su contenido — con eso, icono+texto
+  ya es un bloque de ancho idéntico en las dos tarjetas, y `justify-
+  center` + `gap-2` cumplen los tres pedidos a la vez sin más
+  compromiso. Verificado con una captura recortada de las dos tarjetas
+  juntas, no solo la pantalla completa. De paso, ajustado el reparto de
+  ancho del grid de 2/3+1/3 a 3/5+2/5 (pedido explícito: "media diaria"
+  un poco más estrecho, los dos apilados un poco más anchos).
+- **Ficha de admin, reubicación de Nombre/Email/Alta**: "Alta" es una
+  fecha observada de la cuenta, no un dato personal editable — pasa a
+  ser la primera fila de "Datos de actividad" (antes vivía suelta,
+  fuera de las dos secciones). Nombre y Email pasan a "Datos
+  personales" — Nombre ya era editable desde ahí (nickname/nombre/
+  apellidos sí están en el formulario), Email se enseña junto a ellos
+  de solo lectura por ser el mismo tipo de dato (identidad de la
+  persona), aunque cambiarlo no se pidió aquí.
 
 ## [1.3.1] - 2026-09-09
 

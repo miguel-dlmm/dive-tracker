@@ -876,27 +876,21 @@ function UserDetailSheet({
           </div>
         ) : (
           <div className="space-y-2.5 rounded-lg border border-gray-200 bg-gray-50/60 p-3 text-sm">
-            <div className="flex items-start justify-between gap-3">
-              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.nombre")}</span>
-              <span className="truncate text-right text-gray-700">{fullName}</span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.email")}</span>
-              <span className="truncate text-right text-gray-700">{user.email || "—"}</span>
+            {/* Datos de actividad (2026-09-18, pedido explícito: "agrupa
+                datos personales y datos de actividad") — todo lo que se
+                OBSERVA de la cuenta, nunca se edita a mano: alta, accesos,
+                movimientos, Training Records generados. Corregido el
+                mismo día: "Alta" vivía suelta arriba de las dos
+                secciones — es fecha observada, no dato personal, así que
+                pasa a ser la primera fila de esta sección (antes de
+                "Último acceso"). Antes iba todo mezclado en una sola
+                lista plana junto a los datos personales de abajo. */}
+            <div className="pt-0.5">
+              <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{t("userDetailSheet.seccionActividad")}</h4>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.altaLabel")}</span>
               <span className="text-gray-700">{shortDate(user.created_at)}</span>
-            </div>
-
-            {/* Datos de actividad (2026-09-18, pedido explícito: "agrupa
-                datos personales y datos de actividad") — todo lo que se
-                OBSERVA de la cuenta, nunca se edita a mano: accesos,
-                movimientos, Training Records generados. Antes iba todo
-                mezclado en una sola lista plana junto a los datos
-                personales de abajo. */}
-            <div className="border-t border-gray-200 pt-2.5">
-              <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{t("userDetailSheet.seccionActividad")}</h4>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.ultimoAcceso")}</span>
@@ -969,6 +963,23 @@ function UserDetailSheet({
                   <Pencil size={13} aria-hidden="true" /> {t("userDetailSheet.editarDatos")}
                 </button>
               )}
+            </div>
+            {/* Nombre y email pasan aquí (2026-09-18, pedido explícito:
+                "nombre y email son datos personales") — antes vivían
+                sueltos arriba de las dos secciones. Nombre es editable
+                (nickname/first_name/last_name sí están en profileForm,
+                ver startEditProfile más arriba); email se enseña de
+                solo lectura junto a ellos por ser el mismo tipo de dato
+                (identidad de la persona), aunque este formulario no lo
+                edite — cambiar el email de otra cuenta es una acción más
+                delicada (afecta al login) que no se pidió aquí. */}
+            <div className="flex items-start justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.nombre")}</span>
+              <span className="truncate text-right text-gray-700">{fullName}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.email")}</span>
+              <span className="truncate text-right text-gray-700">{user.email || "—"}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.avatarLabel")}</span>

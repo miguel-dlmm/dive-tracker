@@ -179,14 +179,24 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
 // MiniKpiTile ya no cabe en la mitad exacta de la altura "compacta" de
 // antes — el grid entero crece un poco a cambio de que las 3 tarjetas
 // del grupo tengan una proporción consistente entre sí.
-// justify-center + icono/texto como dos bloques centrados aparte
-// (2026-09-18, mismo pedido y mismo criterio que MoneyKpiTile arriba):
-// aquí no cabe apilar icono arriba y texto debajo (la tarjeta es
-// demasiado baja), así que el reparto en dos zonas se mantiene en
-// horizontal — insignia centrada a la izquierda, cifra+etiqueta como
-// bloque centrado (`text-center`, no ya pegado al borde izquierdo del
-// icono) a la derecha — y todo el conjunto se centra dentro de la
-// tarjeta en vez de arrancar en el borde izquierdo.
+// Columna de texto a ANCHO FIJO (2026-09-18, cuarto ajuste el mismo
+// día — los tres anteriores cada uno arreglaba una cosa rompiendo otra:
+// `flex-1` alineaba iconos pero dejaba un hueco vacío grande tras el
+// texto; `justify-between` igualaba el aire a los lados pero mandaba
+// todo ese aire a un único hueco central; `justify-center` con ancho
+// libre volvía a juntar icono+texto pero desalineaba los iconos entre
+// "Cursos" y "Captados" (etiquetas de distinta longitud). Los tres
+// pedidos (iconos alineados entre las dos tarjetas + mismo aire a los
+// dos lados + icono y texto pegados) solo pueden cumplirse los tres a
+// la vez si el ANCHO TOTAL del contenido (icono+gap+texto) es idéntico
+// en ambas tarjetas — y con etiquetas de longitud real distinta, la
+// única forma de garantizarlo es reservar un ancho fijo para la columna
+// de texto (`w-14`, cubre "Captados" de sobra a este tamaño de fuente)
+// en vez de dejar que se ajuste a su propio contenido. Con eso, icono +
+// columna de texto ya son un bloque de ancho constante en las dos
+// tarjetas: `justify-center` los centra igual en ambas (iconos
+// alineados), `gap-2` los mantiene pegados (sin hueco central) y el aire
+// sobrante se reparte igual a los dos lados por construcción.
 function MiniKpiTile({ icon: Icon, color, value, label, index, reduced }) {
   const count = useCountUp(value, { reduced });
   return (
@@ -198,9 +208,9 @@ function MiniKpiTile({ icon: Icon, color, value, label, index, reduced }) {
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
         <Icon size={13} style={{ color }} aria-hidden="true" />
       </span>
-      <span className="flex min-w-0 flex-col items-center text-center leading-none">
+      <span className="flex w-14 shrink-0 flex-col items-center text-center leading-none">
         <span className="text-base font-bold tabular-nums" style={{ color: BRAND_NAVY }}>{count}</span>
-        <span className="mt-0.5 truncate text-[10px] font-medium text-gray-500">{label}</span>
+        <span className="mt-0.5 w-full truncate text-[10px] font-medium text-gray-500">{label}</span>
       </span>
     </motion.div>
   );
@@ -390,20 +400,24 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             </button>
           )}
         </div>
-        {/* 2/3 + 1/3 (2026-09-18, corrige un bug real encontrado en
-            mobile-check iPhone 14 Pro Max): antes las 3 tarjetas se
-            repartían el ancho a partes iguales — bien para dos enteros
-            cortos ("37", "20"), pero una cifra de dinero de 4+ dígitos
-            ("2.106,33 ฿") no cabía y se recortaba con "…", ilegible. En
-            vez de encoger la fuente de esa cifra (quedaría más pequeña
-            que sus vecinas sin motivo aparente, la única tarjeta de
-            dinero del grupo, a diferencia de MiTrabajoTab donde las 3
-            SÍ son dinero y se encogen juntas), se le da más ancho de
-            verdad: Media diaria ocupa 2/3 del grid, Cursos/Captados se
-            apilan en el 1/3 restante como tarjetas compactas
-            (MiniKpiTile) — misma altura total de fila que antes. */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="col-span-2">
+        {/* 3/5 + 2/5 (2026-09-18, ajustado el mismo día — "haz un poco más
+            pequeño de ancho el kpi principal, haciendo los dos apilados un
+            pelín más anchos": antes era 2/3+1/3, exactamente igual de
+            ancho pero desplazando un poco el reparto). Origen del reparto
+            asimétrico (corrige un bug real encontrado en mobile-check
+            iPhone 14 Pro Max): antes las 3 tarjetas se repartían el ancho
+            a partes iguales — bien para dos enteros cortos ("37", "20"),
+            pero una cifra de dinero de 4+ dígitos ("2.106,33 ฿") no cabía
+            y se recortaba con "…", ilegible. En vez de encoger la fuente
+            de esa cifra (quedaría más pequeña que sus vecinas sin motivo
+            aparente, la única tarjeta de dinero del grupo, a diferencia de
+            MiTrabajoTab donde las 3 SÍ son dinero y se encogen juntas), se
+            le da más ancho de verdad: Media diaria ocupa la mayoría del
+            grid, Cursos/Captados se apilan en el resto como tarjetas
+            compactas (MiniKpiTile) — misma altura total de fila que
+            antes. */}
+        <div className="grid grid-cols-5 gap-2">
+          <div className="col-span-3">
             <MoneyKpiTile
               icon={CalendarDays} color={TEAL} totals={dailyAverageTotals} currencyRows={currencies.rows}
               label={t("kpis.dailyAverageThisMonth")} tooltip={t("kpis.dailyAverageTooltip")}
@@ -411,7 +425,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
               index={0} reduced={reducedMotion}
             />
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="col-span-2 flex flex-col gap-2">
             <MiniKpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
             <MiniKpiTile icon={Handshake} color={GREEN} value={referredThisMonth} label={t("kpis.referredThisMonth")} index={2} reduced={reducedMotion} />
           </div>
