@@ -1,12 +1,17 @@
-// Contador de "Training Records generados" — puramente decorativo para la
-// tarjeta de Home (2026-09-08, "otra manera dinámica y atractiva de
-// integrarlo en la home"). Deliberadamente NO es un histórico de verdad:
-// la app nunca guarda datos de alumnos en la nube ("nada de lo que
-// rellenes aquí se guarda, solo se descarga" — ver installApp.json/
-// help.json), así que no existe ningún sitio real donde llevar la cuenta
-// de certificados emitidos sin romper esa garantía. Este contador es un
-// entero suelto en localStorage — no identifica a ningún alumno, solo
-// cuántas veces se ha generado un PDF con éxito.
+// Contador de "Training Records generados" — cache LOCAL para la tarjeta
+// de Home (2026-09-08, "otra manera dinámica y atractiva de integrarlo en
+// la home"), lectura instantánea sin esperar red. Desde el lote
+// 2026-09-17/18 este mismo número (+ la fecha del último) también se
+// guarda en `profiles` vía `increment_training_records_count()` (ver
+// schema.sql, llamado desde TrainingRecordsTab.jsx junto a las llamadas a
+// `addGeneratedCount` de aquí abajo) — pedido explícito: verlo desde la
+// ficha de admin de otro usuario, no solo desde el propio dispositivo del
+// instructor. La garantía de privacidad no cambia: la app sigue sin
+// guardar datos de alumnos en la nube ("nada de lo que rellenes aquí se
+// guarda, solo se descarga" — ver installApp.json/help.json), el servidor
+// solo recibe un entero y una fecha, nunca un nombre ni el documento.
+// Este módulo en sí sigue siendo puro localStorage — no identifica a
+// ningún alumno, solo cuántas veces se ha generado un PDF con éxito.
 //
 // Por CUENTA, no por dispositivo (bug real reportado 2026-09-08: "he
 // creado un TR con el admin y cuando entro con una cuenta demo mía sigue

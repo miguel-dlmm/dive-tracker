@@ -943,6 +943,23 @@ function UserDetailSheet({
               <p className="text-[11px] italic text-gray-400">{t("userDetailSheet.firmaNota")}</p>
             )}
 
+            {/* Training Records generados + fecha del último (lote
+                2026-09-17/18, pedido explícito) — mismo criterio de
+                FieldSkeleton mientras fullProfile carga que el resto de
+                campos de arriba. Solo lectura: se incrementa desde el
+                propio generador (TrainingRecordsTab.jsx vía
+                increment_training_records_count()), nunca editable a
+                mano — no tendría sentido que un admin "corrigiera" un
+                conteo de eventos ya ocurridos. */}
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.trGenerados")}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={20} /> : fullProfile.training_records_generated_count ?? 0}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.trUltimaGeneracion")}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={64} /> : fullProfile.training_records_last_generated_at ? shortDate(fullProfile.training_records_last_generated_at) : "—"}</span>
+            </div>
+
             {/* Solo se muestra con una fecha real (2026-09-04, pedido
                 explícito) — antes se gateaba en status === "desactivado" y,
                 sin deactivated_at registrado (baja anterior a la migración

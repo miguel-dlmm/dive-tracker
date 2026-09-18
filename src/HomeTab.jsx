@@ -79,11 +79,15 @@ function useTranslatedMovementTypeMeta(t) {
 // MovementSheet puede estar abierto encima de Home a la vez, ver
 // onQuickCreate más abajo, así que ambos tooltips conviven en el DOM y
 // necesitan aria-labels que no choquen).
-// h-full + justify-between (2026-09-18): esta tarjeta vive junto a un par
-// de MiniKpiTile más compactas (ver el grid de abajo) — si su columna resulta
-// más alta que esta, `h-full` la estira para igualar esa altura y
-// `justify-between` reparte el aire de más entre la fila de cifra y la
-// etiqueta, en vez de dejar un hueco vacío pegado abajo.
+// h-full + justify-center (2026-09-18, ajustado el mismo día tras verlo
+// en mobile-check real): esta tarjeta vive junto a un par de MiniKpiTile
+// más compactas (ver el grid de abajo) — si su columna resulta más alta
+// que esta, `h-full` la estira para igualar esa altura. Primer intento,
+// `justify-between`: separaba la fila de cifra y la etiqueta a los dos
+// extremos de la tarjeta ya crecida, dejando un hueco vacío enorme en
+// medio — se veía como un bug de layout, no como aire deliberado.
+// `justify-center` mantiene cifra+etiqueta como un único bloque, centrado
+// verticalmente en el espacio de más.
 // Sin la maquinaria de icono/texto-que-se-encoge de MiTrabajoTab: aquí
 // solo hay UNA cifra de dinero en el grupo (Cursos/Captados son enteros
 // cortos), así que el problema real no era "todas las cifras deben
@@ -103,7 +107,7 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex h-full flex-col justify-between gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
+      className="flex h-full flex-col justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
     >
       <div className="flex items-center gap-2">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
@@ -157,13 +161,23 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
 // envuelve: las dos se reparten a partes iguales la altura total de la
 // columna, que a su vez iguala la de MoneyKpiTile vía `items-stretch`
 // (comportamiento por defecto del grid).
+// py-2 (2026-09-18, feedback en vivo sobre mobile-check real: "quedan
+// demasiado estrechos de altura"): la primera versión no llevaba ningún
+// padding vertical (solo `px-2.5`), así que la tarjeta se ajustaba al
+// alto exacto de su contenido (icono+texto, ~33px) sin ningún aire
+// alrededor — se leía como una tira plana, no como una tarjeta con el
+// mismo peso visual que sus vecinas. Con el padding, el par de
+// MiniKpiTile ya no cabe en la mitad exacta de la altura "compacta" de
+// antes — el grid entero crece un poco (justify-between en MoneyKpiTile
+// reparte ese aire de más), a cambio de que las 3 tarjetas del grupo
+// tengan una proporción consistente entre sí.
 function MiniKpiTile({ icon: Icon, color, value, label, index, reduced }) {
   const count = useCountUp(value, { reduced });
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex flex-1 items-center gap-2 rounded-xl border border-gray-200 bg-white px-2.5"
+      className="flex flex-1 items-center gap-2 rounded-xl border border-gray-200 bg-white px-2.5 py-2"
     >
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
         <Icon size={13} style={{ color }} aria-hidden="true" />

@@ -1,6 +1,7 @@
 import { render, screen, waitFor, fireEvent, act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ConfigTab from "./ConfigTab";
+import { shortDate } from "./shared";
 
 vi.mock("./supabaseClient", () => ({
   supabase: {
@@ -311,6 +312,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     user_id: "target-1", avatar_icon: null, avatar_color: null,
     birth_date: null, country_of_residence: null, professional_level: null,
     instructor_initials: null, ssi_pro_number: null, instructor_signature: null,
+    training_records_generated_count: 0, training_records_last_generated_at: null,
     language: "es",
   };
 
@@ -710,6 +712,7 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       user_id: "target-1", avatar_icon: "Turtle", avatar_color: "#0F766E",
       birth_date: "1990-05-20", country_of_residence: "ES", professional_level: "instructor",
       instructor_initials: "AL", ssi_pro_number: "12345", instructor_signature: null, language: "en",
+      training_records_generated_count: 12, training_records_last_generated_at: "2026-09-10T10:00:00Z",
     });
     globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
 
@@ -722,6 +725,21 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     expect(screen.getByText("12345")).toBeInTheDocument();
     expect(screen.getByText("English")).toBeInTheDocument();
     expect(screen.getByText("Sin configurar")).toBeInTheDocument();
+    expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.getByText(shortDate("2026-09-10T10:00:00Z"))).toBeInTheDocument();
+  });
+
+  it("la ficha de detalle muestra 0 Training Records generados y sin fecha para una cuenta que aún no ha generado ninguno", async () => {
+    const user = userEvent.setup();
+    mockProfilesFrom(null, null);
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+
+    await openUsuarios(user);
+    await user.click(screen.getByRole("button", { name: /ana/ }));
+
+    await waitFor(() => expect(screen.getByText("Training Records generados")).toBeInTheDocument());
+    expect(screen.getByText("Training Records generados").nextElementSibling).toHaveTextContent("0");
+    expect(screen.getByText("Último generado").nextElementSibling).toHaveTextContent("—");
   });
 
   it("editar y guardar manda también los campos nuevos del perfil en el mismo update", async () => {

@@ -5,6 +5,16 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Added
+- **Nº de Training Records generados en la ficha de admin (Config →
+  Usuarios)**: contador + fecha del último, guardados ahora en
+  `profiles` (antes solo en `localStorage` del dispositivo del
+  instructor) — migración aditiva `0021-training-records-count.sql`,
+  aplicada a TEST, **pendiente de aplicar a producción en el despliegue
+  de esta release** (ver `docs/LOTE-2026-09-17-PROGRESS.md`). Se
+  incrementa de forma atómica vía una función `security definer`
+  (`increment_training_records_count`), nunca con un update directo del
+  cliente — solo un entero y una fecha, la garantía de privacidad de
+  Training Records (nunca se guardan datos de alumnos) no cambia.
 - **Branding real en el PDF de "Exportar informe"**: la cabecera pasa de
   solo texto ("Ocean Flow") al isotipo real de la app junto al nombre; el
   pie de cada página suma una línea de marca con el eslogan ya usado en
@@ -64,6 +74,14 @@ Registro de cambios relevantes de Ocean Flow.
   que sus vecinas, la única tarjeta de dinero del grupo), rediseñado el
   grid: "Media diaria" pasa a ocupar 2/3 del ancho, "Cursos"/"Captados"
   se apilan compactos en el 1/3 restante.
+- **Las tarjetas apiladas "Cursos"/"Captados" quedaban demasiado
+  estrechas de altura**: feedback en vivo tras el cambio anterior — no
+  llevaban padding vertical, así que se ajustaban al alto exacto de su
+  contenido, sin nada de aire alrededor. Con padding real, "Media
+  diaria" vuelve a crecer un poco para igualar la altura del par; el
+  primer intento de repartir ese aire de más (`justify-between`, cifra y
+  etiqueta a los dos extremos) dejaba un hueco vacío feo en medio —
+  sustituido por `justify-center` (cifra+etiqueta como un bloque único).
 
 ## [1.3.1] - 2026-09-09
 
