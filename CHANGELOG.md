@@ -5,6 +5,11 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Added
+- **`FieldSkeleton` (shared.jsx)**: barra gris que pulsa para el valor de
+  un campo aislado que aún está cargando — sustituye al "…" estático que
+  usaba la ficha de detalle de Config → Usuarios (Movimientos, Última
+  actividad y el resto de campos de `fullProfile`) mientras llegan sus
+  datos, para que se note a simple vista que está cargando.
 - **Exportar informe (cuadre mensual en PDF)**: botón nuevo en Resumen
   que abre una hoja de configuración (escuela, rango de fechas propio,
   ajustes de curso opcionales y seleccionables uno a uno con opción de

@@ -169,6 +169,21 @@ export function AppLoading({ iconName = "Logo", color = BRAND_NAVY, size = 40, l
   );
 }
 
+// Placeholder de carga para el VALOR de un campo aislado dentro de una
+// fila ya visible (Config → Usuarios, ficha de detalle: Movimientos,
+// Última actividad y el resto de campos de `fullProfile` llegan aparte,
+// bajo demanda, mientras el resto de la ficha ya está en pantalla) —
+// pedido explícito del usuario (2026-09-18): antes esas filas mostraban
+// un "…" estático mientras cargaban, indistinguible a primer vistazo de
+// un valor real corto. Una barra gris que pulsa dentro dice "esto está
+// cargando" sin palabras. `width` en px (no una talla fija tipo sm/md):
+// cada campo sustituye a un tipo de valor de longitud muy distinta (un
+// conteo de 1-2 dígitos vs. una fecha vs. un nombre), así que quien la
+// usa decide el ancho que mejor sugiere lo que va a aparecer ahí.
+export function FieldSkeleton({ width = 48 }) {
+  return <span className="inline-block h-3 animate-pulse rounded bg-gray-200" style={{ width }} aria-hidden="true" />;
+}
+
 // Red de seguridad ante un error de render no previsto (Bug real,
 // 2026-09-04): sin esto, cualquier excepción durante el render de una
 // pantalla desmontaba TODO el árbol de React sin ningún aviso — pantalla

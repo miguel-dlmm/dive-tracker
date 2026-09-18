@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
 import { ENTITY_COLOR_PALETTE } from "./colors";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle, ColorSwatchPicker, DatePicker, useFloatingDropdown, FloatingPanel } from "./shared";
+import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle, ColorSwatchPicker, DatePicker, useFloatingDropdown, FloatingPanel, FieldSkeleton } from "./shared";
 import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
 import i18n from "./i18n";
@@ -881,27 +881,29 @@ function UserDetailSheet({
                 (ver el efecto en UsersDirectory que llama a
                 /api/list-user-status con user_id al abrir esta hoja),
                 nunca bloquea el resto del detalle: mientras no ha llegado
-                (activitySummary null) se muestra "…" en vez de dejar el
-                valor en blanco, para que quede claro que está cargando y
-                no que la cuenta no tiene movimientos. */}
+                (activitySummary null) se muestra un FieldSkeleton en vez
+                de dejar el valor en blanco o un "…" estático (pedido
+                explícito 2026-09-18: que se note que está cargando, no
+                que sea ya el valor real), para que quede claro que está
+                cargando y no que la cuenta no tiene movimientos. */}
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.movimientos")}</span>
-              <span className="text-gray-700">{activitySummary ? activitySummary.count : "…"}</span>
+              <span className="text-gray-700">{activitySummary ? activitySummary.count : <FieldSkeleton width={20} />}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.ultimaActividad")}</span>
               <span className="text-gray-700">
-                {!activitySummary ? "…" : activitySummary.lastActivityAt ? shortDate(activitySummary.lastActivityAt) : t("userStatus.nunca")}
+                {!activitySummary ? <FieldSkeleton width={64} /> : activitySummary.lastActivityAt ? shortDate(activitySummary.lastActivityAt) : t("userStatus.nunca")}
               </span>
             </div>
 
-            {/* Resto de campos del perfil, en modo lectura — "…" mientras
-                fullProfile no ha llegado todavía (mismo criterio que
-                Movimientos/Última actividad, arriba). */}
+            {/* Resto de campos del perfil, en modo lectura — mismo
+                FieldSkeleton mientras fullProfile no ha llegado todavía
+                (mismo criterio que Movimientos/Última actividad, arriba). */}
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.avatarLabel")}</span>
               <span className="flex items-center gap-1.5 text-gray-700">
-                {!fullProfile ? "…" : (
+                {!fullProfile ? <FieldSkeleton width={56} /> : (
                   <>
                     <span className="h-3 w-3 shrink-0 rounded-full border border-gray-200" style={{ backgroundColor: fullProfile.avatar_color || "#E5E7EB" }} aria-hidden="true" />
                     {fullProfile.avatar_icon || "—"}
@@ -911,31 +913,31 @@ function UserDetailSheet({
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.fechaNacimiento")}</span>
-              <span className="text-gray-700">{!fullProfile ? "…" : fullProfile.birth_date ? shortDate(fullProfile.birth_date) : "—"}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={64} /> : fullProfile.birth_date ? shortDate(fullProfile.birth_date) : "—"}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.paisResidencia")}</span>
-              <span className="truncate text-right text-gray-700">{!fullProfile ? "…" : fullProfile.country_of_residence ? countryLabel(fullProfile.country_of_residence) : "—"}</span>
+              <span className="truncate text-right text-gray-700">{!fullProfile ? <FieldSkeleton width={72} /> : fullProfile.country_of_residence ? countryLabel(fullProfile.country_of_residence) : "—"}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.nivelProfesional")}</span>
-              <span className="text-gray-700">{!fullProfile ? "…" : fullProfile.professional_level ? professionalLabel(fullProfile.professional_level) : "—"}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={72} /> : fullProfile.professional_level ? professionalLabel(fullProfile.professional_level) : "—"}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.idioma")}</span>
-              <span className="text-gray-700">{!fullProfile ? "…" : languageLabel(fullProfile.language)}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={56} /> : languageLabel(fullProfile.language)}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.inicialesInstructor")}</span>
-              <span className="text-gray-700">{!fullProfile ? "…" : fullProfile.instructor_initials || "—"}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={32} /> : fullProfile.instructor_initials || "—"}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.numeroProSsi")}</span>
-              <span className="text-gray-700">{!fullProfile ? "…" : fullProfile.ssi_pro_number || "—"}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={64} /> : fullProfile.ssi_pro_number || "—"}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.firma")}</span>
-              <span className="text-gray-700">{!fullProfile ? "…" : fullProfile.instructor_signature ? t("userDetailSheet.firmaConfigurada") : t("userDetailSheet.firmaNoConfigurada")}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={80} /> : fullProfile.instructor_signature ? t("userDetailSheet.firmaConfigurada") : t("userDetailSheet.firmaNoConfigurada")}</span>
             </div>
             {fullProfile?.instructor_signature && (
               <p className="text-[11px] italic text-gray-400">{t("userDetailSheet.firmaNota")}</p>
