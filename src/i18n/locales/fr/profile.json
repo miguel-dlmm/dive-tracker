@@ -21,7 +21,7 @@
     "saving": "Enregistrement…",
     "cancel": "Annuler",
     "toastSuccess": "Avatar mis à jour",
-    "toastError": "Impossible d'enregistrer l'avatar. Réessayez."
+    "toastError": "Nous n'avons pas pu enregistrer l'avatar. Réessayez."
   },
   "personalData": {
     "nameLine": "Prénom :",
@@ -45,7 +45,7 @@
     "errors": {
       "nicknameTaken": "Ce pseudo est déjà utilisé.",
       "nicknameAt": "Le pseudo ne peut pas contenir \"@\".",
-      "generic": "Impossible d'enregistrer. Réessayez."
+      "generic": "Nous n'avons pas pu enregistrer. Réessayez."
     }
   },
   "instructor": {
@@ -65,7 +65,7 @@
     "save": "Enregistrer",
     "saving": "Enregistrement…",
     "toastSuccess": "Données d'instructeur mises à jour",
-    "toastError": "Impossible d'enregistrer les données d'instructeur. Réessayez."
+    "toastError": "Nous n'avons pas pu enregistrer les données d'instructeur. Réessayez."
   },
   "currency": {
     "hint": "Utilisée comme devise par défaut dans Ajustement de cours, quand aucun tarif ne la détermine. Les autres mouvements utilisent toujours la devise de leur propre tarif.",
@@ -75,7 +75,7 @@
   "language": {
     "placeholder": "Sélectionnez une langue",
     "toastSuccess": "Langue mise à jour",
-    "toastError": "Impossible de changer la langue. Réessayez."
+    "toastError": "Nous n'avons pas pu changer la langue. Réessayez."
   },
   "password": {
     "currentLabel": "Mot de passe actuel",
@@ -89,7 +89,7 @@
     "matches": "Les mots de passe correspondent",
     "submit": "Changer le mot de passe",
     "toastSuccess": "Mot de passe mis à jour",
-    "toastError": "Impossible de changer le mot de passe. Réessayez.",
+    "toastError": "Nous n'avons pas pu changer le mot de passe. Réessayez.",
     "wrongCurrent": "Mot de passe actuel incorrect."
   },
   "deleteAccount": {
@@ -106,7 +106,7 @@
     "back": "Retour",
     "deleteButton": "Supprimer le compte",
     "toastSuccess": "Compte supprimé",
-    "genericError": "Impossible de supprimer le compte. Réessayez.",
-    "networkError": "Impossible de supprimer le compte. Vérifiez votre connexion et réessayez."
+    "genericError": "Nous n'avons pas pu supprimer le compte. Réessayez.",
+    "networkError": "Nous n'avons pas pu supprimer le compte. Vérifiez votre connexion et réessayez."
   }
 }

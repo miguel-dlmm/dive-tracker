@@ -12,7 +12,7 @@
   },
   "emptyMessage": {
     "pendingWithFilters": "Keine ausstehenden Einträge mit diesen Filtern.",
-    "pendingNoFilters": "Du bist auf dem Laufenden — nichts ausstehend.",
+    "pendingNoFilters": "Du bist auf dem Laufenden. Nichts ausstehend.",
     "paidWithFilters": "Keine erhaltenen Einträge mit diesen Filtern.",
     "paidNoFilters": "Du hast noch nichts als erhalten markiert."
   },
@@ -47,8 +47,8 @@
     "messageAjuste_other": "Du markierst diese {{count}} Buchungen auf einmal als erhalten oder beglichen, je nachdem. Du kannst jede einzeln rückgängig machen, genau wie bei der Bestätigung nacheinander.",
     "messageSimple_one": "Du markierst diese Buchung auf einmal als erhalten. Du kannst sie danach einzeln rückgängig machen, genau wie bei der Bestätigung nacheinander.",
     "messageSimple_other": "Du markierst diese {{count}} Buchungen auf einmal als erhalten. Du kannst jede einzeln rückgängig machen, genau wie bei der Bestätigung nacheinander.",
-    "toastSwitch_one": "{{count}} Buchung als {{verb}} markiert — wechsle zu \"Erhalten\", um sie zu sehen",
-    "toastSwitch_other": "{{count}} Buchungen als {{verbPlural}} markiert — wechsle zu \"Erhalten\", um sie zu sehen",
+    "toastSwitch_one": "{{count}} Buchung als {{verb}} markiert. Wechsle zu \"Erhalten\", um sie zu sehen",
+    "toastSwitch_other": "{{count}} Buchungen als {{verbPlural}} markiert. Wechsle zu \"Erhalten\", um sie zu sehen",
     "toastNoSwitch_one": "{{count}} Buchung als {{verb}} markiert",
     "toastNoSwitch_other": "{{count}} Buchungen als {{verbPlural}} markiert",
     "verbCobrado": "erhalten",
@@ -66,17 +66,17 @@
     "toast_one": "{{count}} Buchung als ausstehend markiert",
     "toast_other": "{{count}} Buchungen als ausstehend markiert"
   },
-  "paidCapHint": "Die {{limit}} neuesten erhaltenen von {{total}} werden angezeigt — nutze \"Filtern\", um einen bestimmten Zeitraum zu sehen.",
+  "paidCapHint": "Die {{limit}} neuesten erhaltenen von {{total}} werden angezeigt. Nutze \"Filtern\", um einen bestimmten Zeitraum zu sehen.",
   "fabAdd": "Hinzufügen",
   "toggleStatus": {
     "undoneToast": "Rückgängig gemacht",
     "undoError": "Konnte nicht rückgängig gemacht werden. Versuch es erneut.",
     "undoAction": "Rückgängig",
     "markedPending": "Als ausstehend markiert",
-    "markedPaidSwitchTab": "Als erhalten markiert — wechsle zu \"Erhalten\", um es zu sehen",
+    "markedPaidSwitchTab": "Als erhalten markiert. Wechsle zu \"Erhalten\", um es zu sehen",
     "markedPaid": "Als erhalten markiert"
   },
-  "genericUpdateError": "Konnte nicht aktualisiert werden. Versuch es erneut.",
+  "genericUpdateError": "Wir konnten das nicht aktualisieren. Versuch es noch mal.",
   "sheet": {
     "close": "Schließen",
     "typeSelectorAria": "Buchungstyp",
@@ -128,9 +128,9 @@
       "adjustmentAdded": "Ausgleich hinzugefügt",
       "courseAdded": "Kurs hinzugefügt",
       "commissionAdded": "Provision hinzugefügt",
-      "saveError": "Konnte nicht gespeichert werden. Versuch es erneut.",
+      "saveError": "Wir konnten das nicht speichern. Versuch es noch mal.",
       "rateAdded": "Tarif hinzugefügt",
-      "rateSaveError": "Tarif konnte nicht gespeichert werden. Versuch es erneut."
+      "rateSaveError": "Wir konnten den Tarif nicht speichern. Versuch es noch mal."
     }
   },
   "kpis": {

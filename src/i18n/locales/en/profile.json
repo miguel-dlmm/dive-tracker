@@ -21,7 +21,7 @@
     "saving": "Saving…",
     "cancel": "Cancel",
     "toastSuccess": "Avatar updated",
-    "toastError": "Couldn't save your avatar. Please try again."
+    "toastError": "We couldn't save your avatar. Try again."
   },
   "personalData": {
     "nameLine": "Name:",
@@ -45,7 +45,7 @@
     "errors": {
       "nicknameTaken": "That nickname is already taken.",
       "nicknameAt": "The nickname can't contain \"@\".",
-      "generic": "Couldn't save. Please try again."
+      "generic": "We couldn't save. Try again."
     }
   },
   "instructor": {
@@ -65,7 +65,7 @@
     "save": "Save",
     "saving": "Saving…",
     "toastSuccess": "Instructor details updated",
-    "toastError": "Couldn't save your instructor details. Please try again."
+    "toastError": "We couldn't save your instructor details. Try again."
   },
   "currency": {
     "hint": "Used as the default currency for a course adjustment when there's no rate to determine it. Every other movement always uses its own rate's currency.",
@@ -75,7 +75,7 @@
   "language": {
     "placeholder": "Choose a language",
     "toastSuccess": "Language updated",
-    "toastError": "Couldn't change the language. Please try again."
+    "toastError": "We couldn't change the language. Try again."
   },
   "password": {
     "currentLabel": "Current password",
@@ -89,7 +89,7 @@
     "matches": "Passwords match",
     "submit": "Change password",
     "toastSuccess": "Password updated",
-    "toastError": "Couldn't change the password. Please try again.",
+    "toastError": "We couldn't change the password. Try again.",
     "wrongCurrent": "Current password is incorrect."
   },
   "deleteAccount": {
@@ -106,7 +106,7 @@
     "back": "Go back",
     "deleteButton": "Delete account",
     "toastSuccess": "Account deleted",
-    "genericError": "Couldn't delete the account. Please try again.",
-    "networkError": "Couldn't delete the account. Check your connection and try again."
+    "genericError": "We couldn't delete the account. Try again.",
+    "networkError": "We couldn't delete the account. Check your connection and try again."
   }
 }

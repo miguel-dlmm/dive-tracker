@@ -21,7 +21,7 @@
     "saving": "Salvataggio…",
     "cancel": "Annulla",
     "toastSuccess": "Avatar aggiornato",
-    "toastError": "Impossibile salvare l'avatar. Riprova."
+    "toastError": "Non siamo riusciti a salvare l'avatar. Riprova."
   },
   "personalData": {
     "nameLine": "Nome:",
@@ -45,11 +45,11 @@
     "errors": {
       "nicknameTaken": "Questo nickname è già in uso.",
       "nicknameAt": "Il nickname non può contenere \"@\".",
-      "generic": "Impossibile salvare. Riprova."
+      "generic": "Non siamo riusciti a salvare. Riprova."
     }
   },
   "instructor": {
-    "hint": "Si usano per compilare automaticamente i tuoi Training Records — si salvano qui una sola volta, non per dispositivo.",
+    "hint": "Si usano per compilare automaticamente i tuoi Training Records. Si salvano qui una sola volta, non per dispositivo.",
     "card": {
       "role": "Professionista SSI",
       "roleWithLevel": "SSI {{level}}",
@@ -65,7 +65,7 @@
     "save": "Salva",
     "saving": "Salvataggio…",
     "toastSuccess": "Dati istruttore aggiornati",
-    "toastError": "Impossibile salvare i dati istruttore. Riprova."
+    "toastError": "Non siamo riusciti a salvare i dati istruttore. Riprova."
   },
   "currency": {
     "hint": "Si usa come valuta predefinita in Rettifica di corso, quando non c'è una tariffa che la determini. Gli altri movimenti usano sempre la valuta della loro tariffa.",
@@ -75,7 +75,7 @@
   "language": {
     "placeholder": "Seleziona una lingua",
     "toastSuccess": "Lingua aggiornata",
-    "toastError": "Impossibile cambiare lingua. Riprova."
+    "toastError": "Non siamo riusciti a cambiare lingua. Riprova."
   },
   "password": {
     "currentLabel": "Password attuale",
@@ -89,7 +89,7 @@
     "matches": "Le password coincidono",
     "submit": "Cambia password",
     "toastSuccess": "Password aggiornata",
-    "toastError": "Impossibile cambiare la password. Riprova.",
+    "toastError": "Non siamo riusciti a cambiare la password. Riprova.",
     "wrongCurrent": "Password attuale errata."
   },
   "deleteAccount": {
@@ -106,7 +106,7 @@
     "back": "Indietro",
     "deleteButton": "Elimina account",
     "toastSuccess": "Account eliminato",
-    "genericError": "Impossibile eliminare l'account. Riprova.",
-    "networkError": "Impossibile eliminare l'account. Controlla la tua connessione e riprova."
+    "genericError": "Non siamo riusciti ad eliminare l'account. Riprova.",
+    "networkError": "Non siamo riusciti ad eliminare l'account. Controlla la tua connessione e riprova."
   }
 }

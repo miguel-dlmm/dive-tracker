@@ -23,7 +23,7 @@
     "defaultLabel": "Delete",
     "defaultItemLabel": "this item",
     "deletedToast": "Deleted",
-    "errorToast": "Couldn't delete it. Please try again.",
+    "errorToast": "We couldn't delete it. Try again.",
     "confirmTitle": "Delete this entry?",
     "confirmMessage": "You're about to delete {{item}}. This can't be undone."
   },

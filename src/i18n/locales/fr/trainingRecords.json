@@ -1,8 +1,8 @@
 {
   "intro": "Générez un Training Record officiel (registre de progression SSI) pour chaque élève, signature incluse. Rien de ce que vous remplissez ici n'est enregistré dans le cloud, seulement téléchargé.",
   "sinPlantillas": "Aucun modèle prêt à l'emploi pour le moment.",
-  "noSePudieronCargarPlantillas": "Impossible de charger les modèles.",
-  "noSePudoDescargarPlantilla": "Impossible de télécharger ce modèle.",
+  "noSePudieronCargarPlantillas": "Nous n'avons pas pu charger les modèles.",
+  "noSePudoDescargarPlantilla": "Nous n'avons pas pu télécharger ce modèle.",
   "cargandoPlantillas": "Chargement…",
   "instructorMissing": {
     "mensaje": "Avant de générer, complétez vos données d'instructeur (nom, initiales, numéro SSI Pro et signature) dans votre profil.",
@@ -22,8 +22,8 @@
     "generadoEl": "Généré le {{date}}",
     "faltanDatos": "Données manquantes pour cet élève",
     "imagenDescargada": "Image téléchargée.",
-    "noSePudoExportarImagen": "Impossible d'exporter l'image. Réessayez.",
-    "noSePudoCompartir": "Impossible de partager le document. Réessayez.",
+    "noSePudoExportarImagen": "Nous n'avons pas pu exporter l'image. Réessayez.",
+    "noSePudoCompartir": "Nous n'avons pas pu partager le document. Réessayez.",
     "enLote": "Toute la liste",
     "enLoteCount_one": "{{count}} document",
     "enLoteCount_other": "{{count}} documents",
@@ -31,7 +31,7 @@
     "descargarTodoJpg": "Tout télécharger en JPG",
     "compartirTodo": "Tout partager",
     "zipDescargado": "Archive téléchargée avec tous les fichiers.",
-    "noSePudoDescargarZip": "Impossible de générer l'archive. Réessayez."
+    "noSePudoDescargarZip": "Nous n'avons pas pu générer l'archive. Réessayez."
   },
   "studentForm": {
     "nuevoAlumno": "Nouvel élève",
@@ -81,7 +81,7 @@
     "generarTodos": "Générer pour tous les élèves",
     "generando": "Génération…",
     "generadoCorrectamente": "Registres générés avec succès.",
-    "noSePudoGenerar": "Impossible de générer le registre.",
+    "noSePudoGenerar": "Nous n'avons pas pu générer le registre.",
     "faltanCampos": "Champs obligatoires manquants. Vérifiez les avertissements en rouge.",
     "sinAlumnos": "Ajoutez au moins un élève avant de générer."
   }

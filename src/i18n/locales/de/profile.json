@@ -21,7 +21,7 @@
     "saving": "Wird gespeichert…",
     "cancel": "Abbrechen",
     "toastSuccess": "Avatar aktualisiert",
-    "toastError": "Avatar konnte nicht gespeichert werden. Versuch es erneut."
+    "toastError": "Wir konnten den Avatar nicht speichern. Versuch es noch mal."
   },
   "personalData": {
     "nameLine": "Name:",
@@ -45,11 +45,11 @@
     "errors": {
       "nicknameTaken": "Dieser Nickname wird bereits verwendet.",
       "nicknameAt": "Der Nickname darf kein \"@\" enthalten.",
-      "generic": "Konnte nicht gespeichert werden. Versuch es erneut."
+      "generic": "Wir konnten das nicht speichern. Versuch es noch mal."
     }
   },
   "instructor": {
-    "hint": "Werden verwendet, um deine Training Records automatisch auszufüllen — sie werden hier einmalig gespeichert, nicht pro Gerät.",
+    "hint": "Werden verwendet, um deine Training Records automatisch auszufüllen. Sie werden hier einmalig gespeichert, nicht pro Gerät.",
     "card": {
       "role": "SSI-Professional",
       "roleWithLevel": "SSI {{level}}",
@@ -75,7 +75,7 @@
   "language": {
     "placeholder": "Sprache auswählen",
     "toastSuccess": "Sprache aktualisiert",
-    "toastError": "Sprache konnte nicht geändert werden. Versuch es erneut."
+    "toastError": "Wir konnten die Sprache nicht ändern. Versuch es noch mal."
   },
   "password": {
     "currentLabel": "Aktuelles Passwort",
@@ -89,7 +89,7 @@
     "matches": "Die Passwörter stimmen überein",
     "submit": "Passwort ändern",
     "toastSuccess": "Passwort aktualisiert",
-    "toastError": "Passwort konnte nicht geändert werden. Versuch es erneut.",
+    "toastError": "Wir konnten das Passwort nicht ändern. Versuch es noch mal.",
     "wrongCurrent": "Aktuelles Passwort falsch."
   },
   "deleteAccount": {
@@ -106,7 +106,7 @@
     "back": "Zurück",
     "deleteButton": "Konto löschen",
     "toastSuccess": "Konto gelöscht",
-    "genericError": "Konto konnte nicht gelöscht werden. Versuch es erneut.",
+    "genericError": "Wir konnten das Konto nicht löschen. Versuch es noch mal.",
     "networkError": "Konto konnte nicht gelöscht werden. Überprüfe deine Verbindung und versuch es erneut."
   }
 }

@@ -22,7 +22,7 @@
     "deleteConfirmMessage": "You're about to delete {{item}}. You'll have a few seconds to undo it from the notice.",
     "undoAction": "Undo",
     "deleteUndoneToast": "Restored",
-    "deleteUndoError": "Couldn't undo. Try again."
+    "deleteUndoError": "We couldn't undo. Try again."
   },
   "tabs": {
     "pending": "Pending",
@@ -70,13 +70,13 @@
   "fabAdd": "Add",
   "toggleStatus": {
     "undoneToast": "Undone",
-    "undoError": "Couldn't undo. Try again.",
+    "undoError": "We couldn't undo. Try again.",
     "undoAction": "Undo",
     "markedPending": "Marked as pending",
     "markedPaidSwitchTab": "Marked as collected. Switch to \"Collected\" to see it",
     "markedPaid": "Marked as collected"
   },
-  "genericUpdateError": "Couldn't update. Try again.",
+  "genericUpdateError": "We couldn't update. Try again.",
   "sheet": {
     "close": "Close",
     "typeSelectorAria": "Movement type",
@@ -128,9 +128,9 @@
       "adjustmentAdded": "Adjustment added",
       "courseAdded": "Course added",
       "commissionAdded": "Commission added",
-      "saveError": "Couldn't save. Try again.",
+      "saveError": "We couldn't save. Try again.",
       "rateAdded": "Rate added",
-      "rateSaveError": "Couldn't save the rate. Try again."
+      "rateSaveError": "We couldn't save the rate. Try again."
     }
   },
   "kpis": {

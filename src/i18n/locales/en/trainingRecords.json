@@ -1,8 +1,8 @@
 {
   "intro": "Generate an official Training Record (SSI progress log) for each student, signature included. Nothing you fill in here is saved to the cloud, it's only downloaded.",
   "sinPlantillas": "There are no templates ready to use yet.",
-  "noSePudieronCargarPlantillas": "Couldn't load the templates.",
-  "noSePudoDescargarPlantilla": "Couldn't download this template.",
+  "noSePudieronCargarPlantillas": "We couldn't load the templates.",
+  "noSePudoDescargarPlantilla": "We couldn't download this template.",
   "cargandoPlantillas": "Loading…",
   "instructorMissing": {
     "mensaje": "Before generating, complete your instructor details (name, initials, SSI Pro number and signature) in your profile.",
@@ -22,8 +22,8 @@
     "generadoEl": "Generated on {{date}}",
     "faltanDatos": "This student is missing some data",
     "imagenDescargada": "Image downloaded.",
-    "noSePudoExportarImagen": "Couldn't export the image. Please try again.",
-    "noSePudoCompartir": "Couldn't share the document. Please try again.",
+    "noSePudoExportarImagen": "We couldn't export the image. Try again.",
+    "noSePudoCompartir": "We couldn't share the document. Try again.",
     "enLote": "Whole roster",
     "enLoteCount_one": "{{count}} document",
     "enLoteCount_other": "{{count}} documents",
@@ -31,7 +31,7 @@
     "descargarTodoJpg": "Download all as JPG",
     "compartirTodo": "Share all",
     "zipDescargado": "ZIP file downloaded with all files.",
-    "noSePudoDescargarZip": "Couldn't create the ZIP file. Please try again."
+    "noSePudoDescargarZip": "We couldn't create the ZIP file. Try again."
   },
   "studentForm": {
     "nuevoAlumno": "New student",
@@ -81,7 +81,7 @@
     "generarTodos": "Generate for all students",
     "generando": "Generating…",
     "generadoCorrectamente": "Records generated successfully.",
-    "noSePudoGenerar": "Couldn't generate the record.",
+    "noSePudoGenerar": "We couldn't generate the record.",
     "faltanCampos": "Some required fields are missing. Check the messages in red.",
     "sinAlumnos": "Add at least one student before generating."
   }

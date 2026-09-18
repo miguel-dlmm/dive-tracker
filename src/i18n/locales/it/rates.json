@@ -36,14 +36,14 @@
   "toasts": {
     "saved": "Modifiche salvate",
     "added": "Tariffa aggiunta",
-    "saveError": "Impossibile salvare. Riprova.",
+    "saveError": "Non siamo riusciti a salvare. Riprova.",
     "duplicate": "Hai già una tariffa attiva per questa scuola e questo corso. Disattivala prima di crearne un'altra.",
-    "reactivateBlocked": "Impossibile riattivare: esiste già un'altra tariffa attiva per questa scuola e questo corso.",
+    "reactivateBlocked": "Non siamo riusciti a riattivare: esiste già un'altra tariffa attiva per questa scuola e questo corso.",
     "deactivated": "Tariffa disattivata",
     "reactivated": "Tariffa riattivata"
   },
-  "deleteInUse_one": "Impossibile eliminare: c'è {{count}} registro che usa questa tariffa.",
-  "deleteInUse_other": "Impossibile eliminare: ci sono {{count}} registri che usano questa tariffa.",
+  "deleteInUse_one": "Non siamo riusciti ad eliminare: c'è {{count}} registro che usa questa tariffa.",
+  "deleteInUse_other": "Non siamo riusciti ad eliminare: ci sono {{count}} registri che usano questa tariffa.",
   "rowMenu": {
     "itemLabel": "la tariffa di {{school}} - {{activity}}",
     "deactivate": "Disattiva",

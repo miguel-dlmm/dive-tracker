@@ -23,7 +23,7 @@
     "defaultLabel": "Supprimer",
     "defaultItemLabel": "cet élément",
     "deletedToast": "Supprimé",
-    "errorToast": "Impossible de supprimer. Réessayez.",
+    "errorToast": "Nous n'avons pas pu supprimer. Réessayez.",
     "confirmTitle": "Supprimer cet enregistrement ?",
     "confirmMessage": "Vous allez supprimer {{item}}. Cette action est irréversible."
   },

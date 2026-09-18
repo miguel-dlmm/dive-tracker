@@ -36,7 +36,7 @@
   "toasts": {
     "saved": "Änderungen gespeichert",
     "added": "Tarif hinzugefügt",
-    "saveError": "Konnte nicht gespeichert werden. Versuch es erneut.",
+    "saveError": "Wir konnten das nicht speichern. Versuch es noch mal.",
     "duplicate": "Du hast bereits einen aktiven Tarif für diese Schule und diesen Kurs. Deaktiviere ihn, bevor du einen neuen anlegst.",
     "reactivateBlocked": "Kann nicht reaktiviert werden: Es gibt bereits einen anderen aktiven Tarif für diese Schule und diesen Kurs.",
     "deactivated": "Tarif deaktiviert",

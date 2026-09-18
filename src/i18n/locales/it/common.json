@@ -2,7 +2,7 @@
   "loading": { "defaultLabel": "Caricamento" },
   "errorBoundary": {
     "title": "Ops, qualcosa è andato storto",
-    "body": "Questa schermata ha avuto un problema imprevisto. Non è colpa tua — prova a ricaricare, dovrebbe tornare tutto normale.",
+    "body": "Questa schermata ha avuto un problema imprevisto. Non è colpa tua. Prova a ricaricare, dovrebbe tornare tutto normale.",
     "reload": "Ricarica"
   },
   "movementTypes": {
@@ -23,7 +23,7 @@
     "defaultLabel": "Elimina",
     "defaultItemLabel": "questo elemento",
     "deletedToast": "Eliminato",
-    "errorToast": "Impossibile eliminare. Riprova.",
+    "errorToast": "Non siamo riusciti ad eliminare. Riprova.",
     "confirmTitle": "Eliminare questo record?",
     "confirmMessage": "Stai per eliminare {{item}}. Questa azione non si può annullare."
   },

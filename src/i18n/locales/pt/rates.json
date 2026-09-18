@@ -36,7 +36,7 @@
   "toasts": {
     "saved": "Alterações salvas",
     "added": "Tarifa adicionada",
-    "saveError": "Não foi possível salvar. Tente novamente.",
+    "saveError": "Não conseguimos salvar. Tente de novo.",
     "duplicate": "Você já tem uma tarifa ativa para esta escola e este curso. Desative-a antes de criar outra.",
     "reactivateBlocked": "Não é possível reativar: já existe outra tarifa ativa para esta escola e este curso.",
     "deactivated": "Tarifa desativada",

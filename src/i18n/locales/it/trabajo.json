@@ -12,7 +12,7 @@
   },
   "emptyMessage": {
     "pendingWithFilters": "Nessun elemento in sospeso con questi filtri.",
-    "pendingNoFilters": "Sei in pari — niente in sospeso.",
+    "pendingNoFilters": "Sei in pari, niente in sospeso.",
     "paidWithFilters": "Nessun elemento incassato con questi filtri.",
     "paidNoFilters": "Non hai ancora segnato nulla come incassato."
   },
@@ -22,7 +22,7 @@
     "deleteConfirmMessage": "Stai per eliminare {{item}}. Avrai qualche secondo per annullare dall'avviso.",
     "undoAction": "Annulla",
     "deleteUndoneToast": "Ripristinato",
-    "deleteUndoError": "Impossibile annullare. Riprova."
+    "deleteUndoError": "Non siamo riusciti ad annullare. Riprova."
   },
   "tabs": {
     "pending": "In sospeso",
@@ -47,8 +47,8 @@
     "messageAjuste_other": "Stai per segnare questi {{count}} movimenti come incassati o saldati in blocco, a seconda del caso. Puoi annullare ognuno separatamente in seguito, come confermandolo uno alla volta.",
     "messageSimple_one": "Stai per segnare questo movimento come incassato in blocco. Puoi annullarlo separatamente in seguito, come confermandolo uno alla volta.",
     "messageSimple_other": "Stai per segnare questi {{count}} movimenti come incassati in blocco. Puoi annullare ognuno separatamente in seguito, come confermandolo uno alla volta.",
-    "toastSwitch_one": "{{count}} movimento segnato come {{verb}} — passa a \"Incassati\" per vederlo",
-    "toastSwitch_other": "{{count}} movimenti segnati come {{verbPlural}} — passa a \"Incassati\" per vederli",
+    "toastSwitch_one": "{{count}} movimento segnato come {{verb}}. Passa a \"Incassati\" per vederlo",
+    "toastSwitch_other": "{{count}} movimenti segnati come {{verbPlural}}. Passa a \"Incassati\" per vederli",
     "toastNoSwitch_one": "{{count}} movimento segnato come {{verb}}",
     "toastNoSwitch_other": "{{count}} movimenti segnati come {{verbPlural}}",
     "verbCobrado": "incassato",
@@ -66,17 +66,17 @@
     "toast_one": "{{count}} movimento segnato come in sospeso",
     "toast_other": "{{count}} movimenti segnati come in sospeso"
   },
-  "paidCapHint": "Mostrando gli ultimi {{limit}} incassati su {{total}} — usa \"Filtra\" per vedere un periodo specifico.",
+  "paidCapHint": "Mostrando gli ultimi {{limit}} incassati su {{total}}. Usa \"Filtra\" per vedere un periodo specifico.",
   "fabAdd": "Aggiungi",
   "toggleStatus": {
     "undoneToast": "Annullato",
-    "undoError": "Impossibile annullare. Riprova.",
+    "undoError": "Non siamo riusciti ad annullare. Riprova.",
     "undoAction": "Annulla",
     "markedPending": "Segnato come in sospeso",
-    "markedPaidSwitchTab": "Segnato come incassato — passa a \"Incassati\" per vederlo",
+    "markedPaidSwitchTab": "Segnato come incassato. Passa a \"Incassati\" per vederlo",
     "markedPaid": "Segnato come incassato"
   },
-  "genericUpdateError": "Impossibile aggiornare. Riprova.",
+  "genericUpdateError": "Non siamo riusciti ad aggiornare. Riprova.",
   "sheet": {
     "close": "Chiudi",
     "typeSelectorAria": "Tipo di movimento",
@@ -128,9 +128,9 @@
       "adjustmentAdded": "Rettifica aggiunta",
       "courseAdded": "Corso aggiunto",
       "commissionAdded": "Commissione aggiunta",
-      "saveError": "Impossibile salvare. Riprova.",
+      "saveError": "Non siamo riusciti a salvare. Riprova.",
       "rateAdded": "Tariffa aggiunta",
-      "rateSaveError": "Impossibile salvare la tariffa. Riprova."
+      "rateSaveError": "Non siamo riusciti a salvare la tariffa. Riprova."
     }
   },
   "kpis": {

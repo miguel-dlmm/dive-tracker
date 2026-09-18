@@ -2,7 +2,7 @@
   "loading": { "defaultLabel": "Carregando" },
   "errorBoundary": {
     "title": "Ops, algo deu errado",
-    "body": "Essa tela apresentou um problema inesperado. Não foi nada que você tenha feito — tente recarregar e deve voltar ao normal.",
+    "body": "Essa tela apresentou um problema inesperado. Não foi nada que você tenha feito. Tente recarregar e deve voltar ao normal.",
     "reload": "Recarregar"
   },
   "movementTypes": {
@@ -23,7 +23,7 @@
     "defaultLabel": "Excluir",
     "defaultItemLabel": "este item",
     "deletedToast": "Excluído",
-    "errorToast": "Não foi possível excluir. Tente novamente.",
+    "errorToast": "Não conseguimos excluir. Tente de novo.",
     "confirmTitle": "Excluir este registro?",
     "confirmMessage": "Você vai excluir {{item}}. Essa ação não pode ser desfeita."
   },

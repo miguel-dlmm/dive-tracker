@@ -21,7 +21,7 @@
     "saving": "Salvando…",
     "cancel": "Cancelar",
     "toastSuccess": "Avatar atualizado",
-    "toastError": "Não foi possível salvar o avatar. Tente novamente."
+    "toastError": "Não conseguimos salvar o avatar. Tente de novo."
   },
   "personalData": {
     "nameLine": "Nome:",
@@ -45,11 +45,11 @@
     "errors": {
       "nicknameTaken": "Esse apelido já está em uso.",
       "nicknameAt": "O apelido não pode conter \"@\".",
-      "generic": "Não foi possível salvar. Tente novamente."
+      "generic": "Não conseguimos salvar. Tente de novo."
     }
   },
   "instructor": {
-    "hint": "Usados para preencher seus Training Records automaticamente — são salvos aqui uma única vez, não por dispositivo.",
+    "hint": "Usados para preencher seus Training Records automaticamente. São salvos aqui uma única vez, não por dispositivo.",
     "card": {
       "role": "Profissional SSI",
       "roleWithLevel": "SSI {{level}}",
@@ -65,7 +65,7 @@
     "save": "Salvar",
     "saving": "Salvando…",
     "toastSuccess": "Dados de instrutor atualizados",
-    "toastError": "Não foi possível salvar os dados de instrutor. Tente novamente."
+    "toastError": "Não conseguimos salvar os dados de instrutor. Tente de novo."
   },
   "currency": {
     "hint": "Usada como moeda padrão em Ajuste de curso, quando não há uma tarifa que a determine. Os demais movimentos sempre usam a moeda da sua tarifa.",
@@ -75,7 +75,7 @@
   "language": {
     "placeholder": "Selecione um idioma",
     "toastSuccess": "Idioma atualizado",
-    "toastError": "Não foi possível mudar o idioma. Tente novamente."
+    "toastError": "Não conseguimos mudar o idioma. Tente de novo."
   },
   "password": {
     "currentLabel": "Senha atual",
@@ -89,7 +89,7 @@
     "matches": "As senhas coincidem",
     "submit": "Alterar senha",
     "toastSuccess": "Senha atualizada",
-    "toastError": "Não foi possível alterar a senha. Tente novamente.",
+    "toastError": "Não conseguimos alterar a senha. Tente de novo.",
     "wrongCurrent": "Senha atual incorreta."
   },
   "deleteAccount": {
@@ -106,7 +106,7 @@
     "back": "Voltar",
     "deleteButton": "Excluir conta",
     "toastSuccess": "Conta excluída",
-    "genericError": "Não foi possível excluir a conta. Tente novamente.",
-    "networkError": "Não foi possível excluir a conta. Verifique sua conexão e tente novamente."
+    "genericError": "Não conseguimos excluir a conta. Tente de novo.",
+    "networkError": "Não conseguimos excluir a conta. Verifique sua conexão e tente novamente."
   }
 }

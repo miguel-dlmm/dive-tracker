@@ -17,20 +17,38 @@ Registro de cambios relevantes de Ocean Flow.
   sesión de continuación. Esta rama no se fusiona con la del exportador
   de PDF hasta revisión.
 
-- **Revisión de tono — guiones dentro de frases (español, inglés y
-  francés)**: sustituido el patrón "cláusula — cláusula explicativa"
-  (el em dash usado como conector retórico dentro de una frase, en vez
-  de puntuación real) por punto, dos puntos o coma según el caso —
-  aplicado en auth/común/config/trabajo/tarifas/perfil/Training
-  Records/Ayuda. Se conservan los guiones que son un patrón de etiqueta
-  compacta (p. ej. "Nombre — rol", "OK — solo desde {{date}}") y los dos
-  cierres cortos de "Instalar la app" ("Toca Añadir — listo"), que no
-  leen como generados. El contenido de WhatsNew (`notices.json` →
-  `whatsNew.slides`) se ha revisado pero no se toca, según la regla
-  permanente de aprobación explícita para ese contenido. Cubre español,
-  inglés y francés; el resto de idiomas queda para una sesión de
-  continuación — ver `docs/` o el historial de esta rama para el detalle
-  exacto de qué falta.
+- **Revisión de tono — guiones dentro de frases (español, inglés,
+  francés, italiano, alemán y portugués)**: sustituido el patrón
+  "cláusula — cláusula explicativa" (el em dash usado como conector
+  retórico dentro de una frase, en vez de puntuación real) por punto,
+  dos puntos o coma según el caso — aplicado en auth/común/config/
+  trabajo/tarifas/perfil/Training Records/Ayuda. Se conservan los
+  guiones que son un patrón de etiqueta compacta (p. ej. "Nombre — rol",
+  "OK — solo desde {{date}}") y los dos cierres cortos de "Instalar la
+  app" ("Toca Añadir — listo"), que no leen como generados. El contenido
+  de WhatsNew (`notices.json` → `whatsNew.slides`) se ha revisado pero
+  no se toca, según la regla permanente de aprobación explícita para ese
+  contenido.
+- **Revisión de tono — patrón de error genérico "No se pudo X. Inténtalo
+  de nuevo." (inglés, francés, italiano, alemán y portugués)**: mismo
+  tratamiento ya aplicado en español la noche anterior — sustituido por
+  un equivalente en primera persona del plural ("We couldn't X. Try
+  again.", "Nous n'avons pas pu X.", "Non siamo riusciti a X.", "Wir
+  konnten X nicht Y.", "Não conseguimos X.") en vez de la construcción
+  pasiva/impersonal original. En alemán, corregido además un fallo real
+  de participio (una primera pasada automática dejó frases como "Wir
+  konnten das nicht gespeichert" — gramaticalmente incorrecto, el modal
+  "konnten" exige infinitivo, no participio — corregido a mano en las
+  ~15 cadenas afectadas antes de comitear).
+- **Descripción de "Icono de carga" obsoleta, también en en/fr/it/ca/pt**:
+  mismo hallazgo que en español la noche anterior (nota de desarrollo
+  "cuando tengáis el logo oficial, avisadme..." que ya no aplica desde
+  que se añadió el logo real) — corregido en los 5 idiomas restantes que
+  todavía la tenían.
+
+Catalán, euskera, neerlandés, tailandés, indonesio, vietnamita, birmano,
+malayo y ruso quedan para una sesión de continuación — ver el historial
+de esta rama para el detalle exacto de qué falta en cada uno.
 
 ### Fixed
 - **Descripción de "Icono de carga" en Configuración obsoleta**: seguía

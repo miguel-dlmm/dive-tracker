@@ -36,7 +36,7 @@
   "toasts": {
     "saved": "Modifications enregistrées",
     "added": "Tarif ajouté",
-    "saveError": "Impossible d'enregistrer. Réessayez.",
+    "saveError": "Nous n'avons pas pu enregistrer. Réessayez.",
     "duplicate": "Vous avez déjà un tarif actif pour cette école et ce cours. Désactivez-le avant d'en créer un autre.",
     "reactivateBlocked": "Réactivation impossible : un autre tarif est déjà actif pour cette école et ce cours.",
     "deactivated": "Tarif désactivé",

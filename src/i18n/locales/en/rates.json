@@ -36,7 +36,7 @@
   "toasts": {
     "saved": "Changes saved",
     "added": "Rate added",
-    "saveError": "Couldn't save. Try again.",
+    "saveError": "We couldn't save. Try again.",
     "duplicate": "You already have an active rate for this school and course. Deactivate it before creating another.",
     "reactivateBlocked": "Can't reactivate: there's already another active rate for this school and course.",
     "deactivated": "Rate deactivated",

@@ -13,20 +13,20 @@
     "empty": "Nessun dataset ancora.",
     "fab": "Nuovo dataset",
     "sheetTitle": "Nuovo dataset",
-    "sheetHint": "Nasce vuoto e inattivo — duplicane uno esistente se vuoi partire da contenuto già caricato.",
+    "sheetHint": "Nasce vuoto e inattivo. Duplicane uno esistente se vuoi partire da contenuto già caricato.",
     "nameLabel": "Nome",
     "create": "Crea",
     "toasts": {
-      "created": "Dataset creato — aggiungi il suo contenuto prima di attivarlo",
+      "created": "Dataset creato. Aggiungi il suo contenuto prima di attivarlo",
       "duplicated": "\"{{newLabel}}\" creato con lo stesso contenuto di \"{{sourceLabel}}\"",
-      "duplicateError": "Impossibile duplicare. Riprova.",
+      "duplicateError": "Non siamo riusciti a duplicare. Riprova.",
       "keyTaken": "Esiste già un dataset con questa chiave.",
-      "createError": "Impossibile creare. Riprova.",
-      "updateError": "Impossibile aggiornare."
+      "createError": "Non siamo riusciti a creare. Riprova.",
+      "updateError": "Non siamo riusciti ad aggiornare."
     },
     "errors": {
-      "isDefault": "È il dataset predefinito — imposta un altro come predefinito prima di eliminare questo.",
-      "lastOne": "Non puoi eliminare l'unico dataset — la registrazione esterna e la creazione manuale ne richiedono almeno uno."
+      "isDefault": "È il dataset predefinito. Imposta un altro come predefinito prima di eliminare questo.",
+      "lastOne": "Non puoi eliminare l'unico dataset. La registrazione esterna e la creazione manuale ne richiedono almeno uno."
     }
   },
   "crudTable": {
@@ -41,18 +41,18 @@
     "guardar": "Salva",
     "cambiosGuardados": "Modifiche salvate",
     "anadidoCorrectamente": "Aggiunto",
-    "noSePudoGuardar": "Impossibile salvare. Riprova.",
-    "noSePudoGuardarCambio": "Impossibile salvare la modifica.",
-    "estadoPredeterminadoRazon": "È lo stato predefinito (rappresenta \"in sospeso\") — imposta un altro come predefinito prima di eliminare questo"
+    "noSePudoGuardar": "Non siamo riusciti a salvare. Riprova.",
+    "noSePudoGuardarCambio": "Non siamo riusciti a salvare la modifica.",
+    "estadoPredeterminadoRazon": "È lo stato predefinito (rappresenta \"in sospeso\"). Imposta un altro come predefinito prima di eliminare questo"
   },
   "sectionColors": {
     "descripcion": "Usati nella barra di navigazione e nei pulsanti di creazione registro di ogni area."
   },
   "generalSettings": {
     "iconoCarga": "Icona di caricamento",
-    "descripcion": "Si usa nell'animazione di \"caricamento\" di tutta l'app. Quando avrete il logo ufficiale di Ocean Flow, avvisatemi e lo sostituirò con l'icona reale al posto di questa lista.",
+    "descripcion": "Si usa nell'animazione di \"caricamento\" di tutta l'app. Di default è il logo di Ocean Flow, ma puoi sostituirlo con una di queste icone.",
     "iconoActualizado": "Icona aggiornata",
-    "noSePudoGuardar": "Impossibile salvare. Riprova.",
+    "noSePudoGuardar": "Non siamo riusciti a salvare. Riprova.",
     "vistaPrevia": "Anteprima"
   },
   "externalRegistration": {
@@ -60,7 +60,7 @@
     "descripcion": "Mostra \"Registrati\" nel login così chiunque può creare il proprio account.",
     "activado": "Registrazione esterna attivata",
     "desactivado": "Registrazione esterna disattivata",
-    "noSePudoGuardar": "Impossibile salvare. Riprova."
+    "noSePudoGuardar": "Non siamo riusciti a salvare. Riprova."
   },
   "roleCheckbox": {
     "rolProtegido": "{{label}} — ruolo di sistema protetto, non modificabile",
@@ -113,23 +113,23 @@
   "activationLinkPanel": {
     "cerrar": "Chiudi",
     "enlaceCopiado": "Link copiato",
-    "noSePudoCopiar": "Impossibile copiare. Selezionalo manualmente.",
+    "noSePudoCopiar": "Non siamo riusciti a copiare. Selezionalo manualmente.",
     "copiarEnlace": "Copia link",
     "simularEnvioMock": "Simula invio riuscito (mock)",
     "mockEmailEnviado": "(Mock) Email inviata correttamente"
   },
   "createUserSheet": {
     "cerrar": "Chiudi",
-    "noSePudieronCargarDatasets": "Impossibile caricare i dataset disponibili.",
+    "noSePudieronCargarDatasets": "Non siamo riusciti a caricare i dataset disponibili.",
     "camposObligatorios": "Email, nickname e dataset iniziale sono obbligatori.",
     "soloSuperadminCrear": "Solo un superadmin può creare utenti.",
-    "noSePudoCrear": "Impossibile creare l'utente.",
+    "noSePudoCrear": "Non siamo riusciti a creare l'utente.",
     "usuarioCreadoSinEmail": "Utente creato (l'email non è stato possibile inviarla)",
     "usuarioCreadoCorrectamente": "Utente creato",
     "enlaceCopiado": "Link copiato",
-    "noSePudoCopiar": "Impossibile copiare. Selezionalo manualmente.",
-    "noSePudoEnviarEmailTitulo": "Impossibile inviare l'email",
-    "noSePudoEnviarEmailDescripcion": "Impossibile inviare l'email di attivazione. Puoi condividere questo link manualmente.",
+    "noSePudoCopiar": "Non siamo riusciti a copiare. Selezionalo manualmente.",
+    "noSePudoEnviarEmailTitulo": "Non siamo riusciti ad inviare l'email",
+    "noSePudoEnviarEmailDescripcion": "Non siamo riusciti ad inviare l'email di attivazione. Puoi condividere questo link manualmente.",
     "copiarEnlace": "Copia link",
     "simularEnvioMock": "Simula invio riuscito (mock)",
     "mockUsuarioCreado": "(Mock) Utente creato ed email inviata correttamente",
@@ -152,35 +152,35 @@
     "buscarAria": "Cerca utenti",
     "leyendaEstadoAria": "Cosa significa ogni colore di stato",
     "crearUsuario": "Crea utente",
-    "noSePudoCargarListado": "Impossibile caricare l'elenco utenti.",
+    "noSePudoCargarListado": "Non siamo riusciti a caricare l'elenco utenti.",
     "errorDesconocido": "Errore sconosciuto",
-    "errorCargarListado": "Impossibile caricare l'elenco: {{error}}",
+    "errorCargarListado": "Non siamo riusciti a caricare l'elenco: {{error}}",
     "cargandoUsuarios": "Caricamento utenti…",
     "sinResultados": "Nessun risultato.",
     "soloSuperadminRol": "Solo un superadmin può cambiare il ruolo admin di un altro account.",
-    "noSePudoActualizarRol": "Impossibile aggiornare il ruolo.",
+    "noSePudoActualizarRol": "Non siamo riusciti ad aggiornare il ruolo.",
     "rolActualizado": "Ruolo aggiornato",
     "soloSuperadminEliminar": "Solo un superadmin può eliminare utenti.",
-    "noSePudoEliminar": "Impossibile eliminare l'utente.",
+    "noSePudoEliminar": "Non siamo riusciti ad eliminare l'utente.",
     "usuarioEliminado": "Utente eliminato",
     "soloSuperadminActivar": "Solo un superadmin può attivare o disattivare utenti.",
-    "noSePudoActualizarEstado": "Impossibile aggiornare lo stato.",
+    "noSePudoActualizarEstado": "Non siamo riusciti ad aggiornare lo stato.",
     "usuarioDesactivado": "Utente disattivato",
     "soloSuperadminEnlace": "Solo un superadmin può attivare account o rigenerare il loro link di accesso.",
-    "noSePudoGenerarEnlace": "Impossibile generare il link.",
+    "noSePudoGenerarEnlace": "Non siamo riusciti a generare il link.",
     "enlaceGeneradoSinEmail": "Link generato (l'email non è stato possibile inviarla a {{nickname}})",
     "enlaceActivacionTitulo": "Link di attivazione generato",
     "enlaceActivacionDescripcion": "Condividi questo link con {{nickname}}. Continuerà a comparire come \"In sospeso\" finché non lo usa per creare la propria password.",
     "emailActivacionEnviado": "Email di attivazione inviata a {{nickname}}",
     "soloSuperadminContrasena": "Solo un superadmin può rigenerare la password di un altro account.",
-    "noSePudoRegenerarContrasena": "Impossibile rigenerare la password.",
+    "noSePudoRegenerarContrasena": "Non siamo riusciti a rigenerare la password.",
     "contrasenaRegeneradaSinEmail": "Password rigenerata (l'email non è stato possibile inviarla a {{nickname}})",
     "contrasenaRegeneradaTitulo": "Password rigenerata",
-    "contrasenaRegeneradaDescripcion": "La password precedente di {{nickname}} non è più valida. Condividi questo link perché ne crei una nuova — l'account torna a \"In sospeso\" fino ad allora.",
+    "contrasenaRegeneradaDescripcion": "La password precedente di {{nickname}} non è più valida. Condividi questo link perché ne crei una nuova. L'account torna a \"In sospeso\" fino ad allora.",
     "contrasenaRegeneradaEmailEnviado": "Password rigenerata ed email inviata a {{nickname}}",
     "nicknameVacio": "Il nickname non può essere vuoto.",
     "datosActualizados": "Dati aggiornati",
-    "noSePudieronGuardarCambios": "Impossibile salvare le modifiche.",
+    "noSePudieronGuardarCambios": "Non siamo riusciti a salvare le modifiche.",
     "cambiarRolAdminTitulo": "Cambia ruolo admin",
     "usuarioLabel": "Utente: {{nickname}}",
     "adminLabel": "Admin: {{from}} → {{to}}",
@@ -190,19 +190,19 @@
     "eliminarUsuarioAlternativa": "Se vuoi solo revocare l'accesso conservando i suoi dati, usa \"Disattiva\" invece.",
     "eliminar": "Elimina",
     "desactivarUsuarioTitulo": "Disattiva utente",
-    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> non potrà più accedere. Tutti i suoi dati (scuole, tariffe, movimenti...) restano intatti — puoi riattivarlo quando vuoi generando un nuovo link di attivazione.",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> non potrà più accedere. Tutti i suoi dati (scuole, tariffe, movimenti...) restano intatti. Puoi riattivarlo quando vuoi generando un nuovo link di attivazione.",
     "desactivar": "Disattiva",
     "generarEnlaceTitulo": "Genera link di attivazione",
     "generarEnlaceMensaje": "Verrà generato un nuovo link monouso per <strong>{{nickname}}</strong>. Qualsiasi link precedente smetterà di funzionare. L'account non ottiene l'accesso finché non lo completa.",
     "generarEnlace": "Genera link",
     "regenerarContrasenaTitulo": "Rigenera password",
-    "regenerarContrasenaMensaje": "La password attuale di <strong>{{nickname}}</strong> smetterà di funzionare immediatamente. Dovrà crearne una nuova da un nuovo link di attivazione — i suoi dati non ne risentono.",
+    "regenerarContrasenaMensaje": "La password attuale di <strong>{{nickname}}</strong> smetterà di funzionare immediatamente. Dovrà crearne una nuova da un nuovo link di attivazione. I suoi dati non ne risentono.",
     "regenerar": "Rigenera",
     "generarInvitacion": "Genera link di invito",
     "soloSuperadminInvitacion": "Solo un superadmin può generare link di invito.",
-    "noSePudoGenerarInvitacion": "Impossibile generare il link di invito.",
+    "noSePudoGenerarInvitacion": "Non siamo riusciti a generare il link di invito.",
     "enlaceInvitacionTitulo": "Link di invito",
-    "enlaceInvitacionDescripcion": "Valido 24 ore e monouso. Condividilo con la persona che vuoi invitare — potrà registrarsi anche se la registrazione esterna è chiusa."
+    "enlaceInvitacionDescripcion": "Valido 24 ore e monouso. Condividilo con la persona che vuoi invitare. Potrà registrarsi anche se la registrazione esterna è chiusa."
   },
   "sections": {
     "escuelas": {
@@ -258,7 +258,7 @@
     "editarEstadoPago": "Modifica stato di pagamento",
     "nuevaMoneda": "Nuova valuta",
     "editarMoneda": "Modifica valuta",
-    "monedasDescripcion": "Scegli qui la valuta di riserva di tutta l'app: si usa quando un utente non ha ancora scelto la propria valuta preferita in Il mio profilo. Non è una preferenza personale — è quella applicata per impostazione predefinita a qualsiasi nuovo account.",
+    "monedasDescripcion": "Scegli qui la valuta di riserva di tutta l'app: si usa quando un utente non ha ancora scelto la propria valuta preferita in Il mio profilo. Non è una preferenza personale. È quella applicata per impostazione predefinita a qualsiasi nuovo account.",
     "monedaPorDefectoApp": "Predefinita dell'app",
     "codigoCampo": "Codice (es. EUR)",
     "simboloCampo": "Simbolo"

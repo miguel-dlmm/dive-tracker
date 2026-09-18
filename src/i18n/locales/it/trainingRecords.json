@@ -1,8 +1,8 @@
 {
-  "intro": "Genera un Training Record ufficiale (registro di progressione SSI) per ogni allievo, firma inclusa — nulla di ciò che compili qui viene salvato nel cloud, solo scaricato.",
+  "intro": "Genera un Training Record ufficiale (registro di progressione SSI) per ogni allievo, firma inclusa. Nulla di ciò che compili qui viene salvato nel cloud, solo scaricato.",
   "sinPlantillas": "Nessun modello pronto all'uso per il momento.",
-  "noSePudieronCargarPlantillas": "Impossibile caricare i modelli.",
-  "noSePudoDescargarPlantilla": "Impossibile scaricare questo modello.",
+  "noSePudieronCargarPlantillas": "Non siamo riusciti a caricare i modelli.",
+  "noSePudoDescargarPlantilla": "Non siamo riusciti a scaricare questo modello.",
   "cargandoPlantillas": "Caricamento…",
   "instructorMissing": {
     "mensaje": "Prima di generare, completa i tuoi dati istruttore (nome, iniziali, numero SSI Pro e firma) nel tuo profilo.",
@@ -10,7 +10,7 @@
   },
   "roster": {
     "titulo": "Allievi",
-    "hint": "Ogni allievo porta solo il proprio nome, le iniziali e la firma — il resto è già configurato sopra.",
+    "hint": "Ogni allievo porta solo il proprio nome, le iniziali e la firma. Il resto è già configurato sopra.",
     "vacio": "Non hai ancora aggiunto nessun allievo.",
     "anadirPrimerAlumno": "Aggiungi il tuo primo allievo",
     "anadirAlumno": "Aggiungi allievo",
@@ -22,8 +22,8 @@
     "generadoEl": "Generato il {{date}}",
     "faltanDatos": "Dati mancanti per questo allievo",
     "imagenDescargada": "Immagine scaricata.",
-    "noSePudoExportarImagen": "Impossibile esportare l'immagine. Riprova.",
-    "noSePudoCompartir": "Impossibile condividere il documento. Riprova.",
+    "noSePudoExportarImagen": "Non siamo riusciti ad esportare l'immagine. Riprova.",
+    "noSePudoCompartir": "Non siamo riusciti a condividere il documento. Riprova.",
     "enLote": "Tutta la lista",
     "enLoteCount_one": "{{count}} documento",
     "enLoteCount_other": "{{count}} documenti",
@@ -31,18 +31,18 @@
     "descargarTodoJpg": "Scarica tutto in JPG",
     "compartirTodo": "Condividi tutto",
     "zipDescargado": "Archivio scaricato con tutti i file.",
-    "noSePudoDescargarZip": "Impossibile generare l'archivio. Riprova."
+    "noSePudoDescargarZip": "Non siamo riusciti a generare l'archivio. Riprova."
   },
   "studentForm": {
     "nuevoAlumno": "Nuovo allievo",
     "editarAlumno": "Modifica allievo",
-    "hint": "Solo ciò che cambia da un allievo all'altro — il corso e le sue date sono già stati compilati una volta per tutta la lista.",
+    "hint": "Solo ciò che cambia da un allievo all'altro. Il corso e le sue date sono già stati compilati una volta per tutta la lista.",
     "nombre": "Nome",
     "apellidos": "Cognome",
     "menorDeEdad": "Minorenne",
     "tutor": "Nome del genitore/tutore",
     "iniciales": "Iniziali",
-    "inicialesHint": "Calcolate automaticamente — puoi correggerle se necessario.",
+    "inicialesHint": "Calcolate automaticamente. Puoi correggerle se necessario.",
     "plantilla": "Corso da certificare",
     "cambiarPlantilla": "Cambia modello",
     "verAyuda": "Vedi la guida",
@@ -64,7 +64,7 @@
     "elegirFechaCorta": "Data",
     "configCompartidaHint": "Questo si compila UNA sola volta per tutta la classe. Ogni allievo porta solo il proprio nome, le iniziali e la firma, più sotto in \"Allievi\".",
     "progreso": "Progressione del corso",
-    "progresoHint": "Spunta ciò che è già stato completato — le righe in grigio sono obbligatorie per certificare il corso.",
+    "progresoHint": "Spunta ciò che è già stato completato. Le righe in grigio sono obbligatorie per certificare il corso.",
     "obligatorio": "Obbligatorio",
     "aventuras": "Avventure",
     "elegirAventura": "Scegli un'avventura",
@@ -81,8 +81,8 @@
     "generarTodos": "Genera per tutti gli allievi",
     "generando": "Generazione…",
     "generadoCorrectamente": "Registri generati con successo.",
-    "noSePudoGenerar": "Impossibile generare il registro.",
-    "faltanCampos": "Campi obbligatori mancanti — controlla gli avvisi in rosso.",
+    "noSePudoGenerar": "Non siamo riusciti a generare il registro.",
+    "faltanCampos": "Campi obbligatori mancanti. Controlla gli avvisi in rosso.",
     "sinAlumnos": "Aggiungi almeno un allievo prima di generare."
   }
 }

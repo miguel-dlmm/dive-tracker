@@ -2,10 +2,10 @@
   "intro": "Adicione o Ocean Flow à tela de início do seu celular e abra-o como qualquer outro app, sem precisar passar pelo navegador toda vez.",
   "ios": {
     "title": "iPhone / iPad (Safari)",
-    "step1": "Abra o Ocean Flow no Safari — precisa ser o Safari, não funciona em outros navegadores no iOS.",
+    "step1": "Abra o Ocean Flow no Safari. Precisa ser o Safari, não funciona em outros navegadores no iOS.",
     "step2": "Toque no ícone Compartilhar na barra inferior.",
     "step3": "Deslize para baixo e toque em \"Adicionar à Tela de Início\".",
-    "step4": "Toque em \"Adicionar\" no canto superior direito — pronto."
+    "step4": "Toque em \"Adicionar\" no canto superior direito. Pronto."
   },
   "android": {
     "title": "Android (Chrome)",

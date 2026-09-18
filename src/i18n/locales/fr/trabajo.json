@@ -22,7 +22,7 @@
     "deleteConfirmMessage": "Vous allez supprimer {{item}}. Vous aurez quelques secondes pour annuler depuis la notification.",
     "undoAction": "Annuler",
     "deleteUndoneToast": "Récupéré",
-    "deleteUndoError": "Impossible d'annuler. Réessayez."
+    "deleteUndoError": "Nous n'avons pas pu annuler. Réessayez."
   },
   "tabs": {
     "pending": "En attente",
@@ -70,13 +70,13 @@
   "fabAdd": "Ajouter",
   "toggleStatus": {
     "undoneToast": "Annulé",
-    "undoError": "Impossible d'annuler. Réessayez.",
+    "undoError": "Nous n'avons pas pu annuler. Réessayez.",
     "undoAction": "Annuler",
     "markedPending": "Marqué en attente",
     "markedPaidSwitchTab": "Marqué comme encaissé. Passez à \"Encaissés\" pour le voir",
     "markedPaid": "Marqué comme encaissé"
   },
-  "genericUpdateError": "Impossible de mettre à jour. Réessayez.",
+  "genericUpdateError": "Nous n'avons pas pu mettre à jour. Réessayez.",
   "sheet": {
     "close": "Fermer",
     "typeSelectorAria": "Type de mouvement",
@@ -128,9 +128,9 @@
       "adjustmentAdded": "Ajustement ajouté",
       "courseAdded": "Cours ajouté",
       "commissionAdded": "Commission ajoutée",
-      "saveError": "Impossible d'enregistrer. Réessayez.",
+      "saveError": "Nous n'avons pas pu enregistrer. Réessayez.",
       "rateAdded": "Tarif ajouté",
-      "rateSaveError": "Impossible d'enregistrer le tarif. Réessayez."
+      "rateSaveError": "Nous n'avons pas pu enregistrer le tarif. Réessayez."
     }
   },
   "kpis": {

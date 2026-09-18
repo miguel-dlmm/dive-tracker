@@ -12,7 +12,7 @@
   },
   "emptyMessage": {
     "pendingWithFilters": "Nenhum item pendente com esses filtros.",
-    "pendingNoFilters": "Você está em dia — nada pendente.",
+    "pendingNoFilters": "Você está em dia. Nada pendente.",
     "paidWithFilters": "Nenhum item recebido com esses filtros.",
     "paidNoFilters": "Você ainda não marcou nada como recebido."
   },
@@ -22,7 +22,7 @@
     "deleteConfirmMessage": "Você vai excluir {{item}}. Vai ter alguns segundos para desfazer pelo aviso.",
     "undoAction": "Desfazer",
     "deleteUndoneToast": "Recuperado",
-    "deleteUndoError": "Não foi possível desfazer. Tente novamente."
+    "deleteUndoError": "Não conseguimos desfazer. Tente de novo."
   },
   "tabs": {
     "pending": "Pendentes",
@@ -47,8 +47,8 @@
     "messageAjuste_other": "Você vai marcar estes {{count}} movimentos como recebidos ou liquidados de uma vez, conforme o caso de cada um. Você pode reverter cada um separadamente depois, assim como ao confirmar um a um.",
     "messageSimple_one": "Você vai marcar este movimento como recebido de uma vez. Você pode reverter cada um separadamente depois, assim como ao confirmar um a um.",
     "messageSimple_other": "Você vai marcar estes {{count}} movimentos como recebidos de uma vez. Você pode reverter cada um separadamente depois, assim como ao confirmar um a um.",
-    "toastSwitch_one": "{{count}} movimento marcado como {{verb}} — mude para \"Recebidos\" para vê-lo",
-    "toastSwitch_other": "{{count}} movimentos marcados como {{verbPlural}} — mude para \"Recebidos\" para vê-los",
+    "toastSwitch_one": "{{count}} movimento marcado como {{verb}}. Mude para \"Recebidos\" para vê-lo",
+    "toastSwitch_other": "{{count}} movimentos marcados como {{verbPlural}}. Mude para \"Recebidos\" para vê-los",
     "toastNoSwitch_one": "{{count}} movimento marcado como {{verb}}",
     "toastNoSwitch_other": "{{count}} movimentos marcados como {{verbPlural}}",
     "verbCobrado": "recebido",
@@ -66,17 +66,17 @@
     "toast_one": "{{count}} movimento marcado como pendente",
     "toast_other": "{{count}} movimentos marcados como pendentes"
   },
-  "paidCapHint": "Mostrando os {{limit}} recebidos mais recentes de {{total}} — use \"Filtrar\" para ver um período específico.",
+  "paidCapHint": "Mostrando os {{limit}} recebidos mais recentes de {{total}}. Use \"Filtrar\" para ver um período específico.",
   "fabAdd": "Adicionar",
   "toggleStatus": {
     "undoneToast": "Desfeito",
-    "undoError": "Não foi possível desfazer. Tente novamente.",
+    "undoError": "Não conseguimos desfazer. Tente de novo.",
     "undoAction": "Desfazer",
     "markedPending": "Marcado como pendente",
-    "markedPaidSwitchTab": "Marcado como recebido — mude para \"Recebidos\" para vê-lo",
+    "markedPaidSwitchTab": "Marcado como recebido. Mude para \"Recebidos\" para vê-lo",
     "markedPaid": "Marcado como recebido"
   },
-  "genericUpdateError": "Não foi possível atualizar. Tente novamente.",
+  "genericUpdateError": "Não conseguimos atualizar. Tente de novo.",
   "sheet": {
     "close": "Fechar",
     "typeSelectorAria": "Tipo de movimento",
@@ -128,9 +128,9 @@
       "adjustmentAdded": "Ajuste adicionado",
       "courseAdded": "Curso adicionado",
       "commissionAdded": "Comissão adicionada",
-      "saveError": "Não foi possível salvar. Tente novamente.",
+      "saveError": "Não conseguimos salvar. Tente de novo.",
       "rateAdded": "Tarifa adicionada",
-      "rateSaveError": "Não foi possível salvar a tarifa. Tente novamente."
+      "rateSaveError": "Não conseguimos salvar a tarifa. Tente de novo."
     }
   },
   "kpis": {

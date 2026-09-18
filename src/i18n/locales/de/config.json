@@ -13,20 +13,20 @@
     "empty": "Noch keine Datensätze.",
     "fab": "Neuer Datensatz",
     "sheetTitle": "Neuer Datensatz",
-    "sheetHint": "Wird leer und inaktiv angelegt — dupliziere einen bestehenden, wenn du mit bereits geladenem Inhalt starten möchtest.",
+    "sheetHint": "Wird leer und inaktiv angelegt. Dupliziere einen bestehenden, wenn du mit bereits geladenem Inhalt starten möchtest.",
     "nameLabel": "Name",
     "create": "Erstellen",
     "toasts": {
-      "created": "Datensatz erstellt — füge seinen Inhalt hinzu, bevor du ihn aktivierst",
+      "created": "Datensatz erstellt. Füge seinen Inhalt hinzu, bevor du ihn aktivierst",
       "duplicated": "\"{{newLabel}}\" mit demselben Inhalt wie \"{{sourceLabel}}\" erstellt",
-      "duplicateError": "Konnte nicht dupliziert werden. Versuch es erneut.",
+      "duplicateError": "Wir konnten das nicht duplizieren. Versuch es noch mal.",
       "keyTaken": "Es existiert bereits ein Datensatz mit diesem Schlüssel.",
-      "createError": "Konnte nicht erstellt werden. Versuch es erneut.",
+      "createError": "Wir konnten das nicht erstellen. Versuch es noch mal.",
       "updateError": "Konnte nicht aktualisiert werden."
     },
     "errors": {
-      "isDefault": "Dies ist der Standarddatensatz — lege einen anderen als Standard fest, bevor du diesen löschst.",
-      "lastOne": "Du kannst den einzigen Datensatz nicht löschen — die externe Registrierung und die manuelle Anlage benötigen mindestens einen."
+      "isDefault": "Dies ist der Standarddatensatz. Lege einen anderen als Standard fest, bevor du diesen löschst.",
+      "lastOne": "Du kannst den einzigen Datensatz nicht löschen. Die externe Registrierung und die manuelle Anlage benötigen mindestens einen."
     }
   },
   "crudTable": {
@@ -41,18 +41,18 @@
     "guardar": "Speichern",
     "cambiosGuardados": "Änderungen gespeichert",
     "anadidoCorrectamente": "Hinzugefügt",
-    "noSePudoGuardar": "Konnte nicht gespeichert werden. Versuch es erneut.",
+    "noSePudoGuardar": "Wir konnten das nicht speichern. Versuch es noch mal.",
     "noSePudoGuardarCambio": "Änderung konnte nicht gespeichert werden.",
-    "estadoPredeterminadoRazon": "Dies ist der Standardstatus (steht für \"ausstehend\") — lege einen anderen als Standard fest, bevor du diesen löschst"
+    "estadoPredeterminadoRazon": "Dies ist der Standardstatus (steht für \"ausstehend\"). Lege einen anderen als Standard fest, bevor du diesen löschst"
   },
   "sectionColors": {
     "descripcion": "Verwendet in der Navigationsleiste und in den Buttons zum Erstellen von Einträgen in jedem Bereich."
   },
   "generalSettings": {
     "iconoCarga": "Ladesymbol",
-    "descripcion": "Wird in der \"Lädt\"-Animation der gesamten App verwendet. Sobald ihr das offizielle Ocean-Flow-Logo habt, sagt mir Bescheid und ich ersetze es durch das echte Symbol statt dieser Liste.",
+    "descripcion": "Wird in der \"Lädt\"-Animation der gesamten App verwendet. Standardmäßig ist es das Ocean-Flow-Logo, du kannst es aber gegen eines dieser Symbole tauschen.",
     "iconoActualizado": "Symbol aktualisiert",
-    "noSePudoGuardar": "Konnte nicht gespeichert werden. Versuch es erneut.",
+    "noSePudoGuardar": "Wir konnten das nicht speichern. Versuch es noch mal.",
     "vistaPrevia": "Vorschau"
   },
   "externalRegistration": {
@@ -60,7 +60,7 @@
     "descripcion": "Zeigt \"Registrieren\" im Login an, damit jeder sein eigenes Konto erstellen kann.",
     "activado": "Externe Registrierung aktiviert",
     "desactivado": "Externe Registrierung deaktiviert",
-    "noSePudoGuardar": "Konnte nicht gespeichert werden. Versuch es erneut."
+    "noSePudoGuardar": "Wir konnten das nicht speichern. Versuch es noch mal."
   },
   "roleCheckbox": {
     "rolProtegido": "{{label}} — geschützte Systemrolle, nicht bearbeitbar",
@@ -176,7 +176,7 @@
     "noSePudoRegenerarContrasena": "Passwort konnte nicht neu erstellt werden.",
     "contrasenaRegeneradaSinEmail": "Passwort neu erstellt (E-Mail konnte nicht an {{nickname}} gesendet werden)",
     "contrasenaRegeneradaTitulo": "Passwort neu erstellt",
-    "contrasenaRegeneradaDescripcion": "Das vorherige Passwort von {{nickname}} ist nicht mehr gültig. Teile diesen Link, damit ein neues erstellt wird — das Konto kehrt bis dahin zu \"Ausstehend\" zurück.",
+    "contrasenaRegeneradaDescripcion": "Das vorherige Passwort von {{nickname}} ist nicht mehr gültig. Teile diesen Link, damit ein neues erstellt wird. Das Konto kehrt bis dahin zu \"Ausstehend\" zurück.",
     "contrasenaRegeneradaEmailEnviado": "Passwort neu erstellt und E-Mail an {{nickname}} gesendet",
     "nicknameVacio": "Der Nickname darf nicht leer sein.",
     "datosActualizados": "Daten aktualisiert",
@@ -190,19 +190,19 @@
     "eliminarUsuarioAlternativa": "Wenn du nur den Zugang widerrufen und die Daten behalten möchtest, verwende stattdessen \"Deaktivieren\".",
     "eliminar": "Löschen",
     "desactivarUsuarioTitulo": "Benutzer deaktivieren",
-    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> kann sich nicht mehr anmelden. Alle Daten (Schulen, Tarife, Buchungen...) bleiben unverändert erhalten — du kannst ihn jederzeit reaktivieren, indem du einen neuen Aktivierungslink erstellst.",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> kann sich nicht mehr anmelden. Alle Daten (Schulen, Tarife, Buchungen...) bleiben unverändert erhalten. Du kannst ihn jederzeit reaktivieren, indem du einen neuen Aktivierungslink erstellst.",
     "desactivar": "Deaktivieren",
     "generarEnlaceTitulo": "Aktivierungslink erstellen",
     "generarEnlaceMensaje": "Es wird ein neuer, einmaliger Link für <strong>{{nickname}}</strong> erstellt. Jeder vorherige Link wird ungültig. Das Konto erhält erst Zugang, sobald der Vorgang abgeschlossen ist.",
     "generarEnlace": "Link erstellen",
     "regenerarContrasenaTitulo": "Passwort neu erstellen",
-    "regenerarContrasenaMensaje": "Das aktuelle Passwort von <strong>{{nickname}}</strong> funktioniert sofort nicht mehr. Er/sie muss über einen neuen Aktivierungslink ein neues erstellen — die Daten sind davon nicht betroffen.",
+    "regenerarContrasenaMensaje": "Das aktuelle Passwort von <strong>{{nickname}}</strong> funktioniert sofort nicht mehr. Er/sie muss über einen neuen Aktivierungslink ein neues erstellen. Die Daten sind davon nicht betroffen.",
     "regenerar": "Neu erstellen",
     "generarInvitacion": "Einladungslink erstellen",
     "soloSuperadminInvitacion": "Nur ein Superadmin kann Einladungslinks erstellen.",
     "noSePudoGenerarInvitacion": "Einladungslink konnte nicht erstellt werden.",
     "enlaceInvitacionTitulo": "Einladungslink",
-    "enlaceInvitacionDescripcion": "24 Stunden gültig und einmalig verwendbar. Teile ihn mit der Person, die du einladen möchtest — sie kann sich registrieren, auch wenn die externe Registrierung geschlossen ist."
+    "enlaceInvitacionDescripcion": "24 Stunden gültig und einmalig verwendbar. Teile ihn mit der Person, die du einladen möchtest. Sie kann sich registrieren, auch wenn die externe Registrierung geschlossen ist."
   },
   "sections": {
     "escuelas": {
@@ -258,7 +258,7 @@
     "editarEstadoPago": "Zahlungsstatus bearbeiten",
     "nuevaMoneda": "Neue Währung",
     "editarMoneda": "Währung bearbeiten",
-    "monedasDescripcion": "Wähle hier die Ersatzwährung der gesamten App: Sie wird verwendet, wenn ein Benutzer in Mein Profil noch keine eigene bevorzugte Währung gewählt hat. Es ist keine persönliche Präferenz — sie wird standardmäßig auf jedes neue Konto angewendet.",
+    "monedasDescripcion": "Wähle hier die Ersatzwährung der gesamten App: Sie wird verwendet, wenn ein Benutzer in Mein Profil noch keine eigene bevorzugte Währung gewählt hat. Es ist keine persönliche Präferenz. Sie wird standardmäßig auf jedes neue Konto angewendet.",
     "monedaPorDefectoApp": "Standard der App",
     "codigoCampo": "Code (z. B. EUR)",
     "simboloCampo": "Symbol"

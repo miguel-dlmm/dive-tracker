@@ -2,7 +2,7 @@
   "loading": { "defaultLabel": "Wird geladen" },
   "errorBoundary": {
     "title": "Ups, etwas ist schiefgelaufen",
-    "body": "Bei diesem Bildschirm ist ein unerwartetes Problem aufgetreten. Das liegt nicht an dir — versuch es neu zu laden, dann sollte wieder alles normal sein.",
+    "body": "Bei diesem Bildschirm ist ein unerwartetes Problem aufgetreten. Das liegt nicht an dir. Versuch es neu zu laden, dann sollte wieder alles normal sein.",
     "reload": "Neu laden"
   },
   "movementTypes": {
@@ -23,7 +23,7 @@
     "defaultLabel": "Löschen",
     "defaultItemLabel": "dieses Element",
     "deletedToast": "Gelöscht",
-    "errorToast": "Konnte nicht gelöscht werden. Versuch es erneut.",
+    "errorToast": "Wir konnten das nicht löschen. Versuch es noch mal.",
     "confirmTitle": "Diesen Eintrag löschen?",
     "confirmMessage": "Du bist dabei, {{item}} zu löschen. Diese Aktion kann nicht rückgängig gemacht werden."
   },
