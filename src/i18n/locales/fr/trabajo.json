@@ -12,7 +12,7 @@
   },
   "emptyMessage": {
     "pendingWithFilters": "Aucun élément en attente avec ces filtres.",
-    "pendingNoFilters": "Tout est à jour — rien en attente.",
+    "pendingNoFilters": "Tout est à jour, rien en attente.",
     "paidWithFilters": "Aucun élément encaissé avec ces filtres.",
     "paidNoFilters": "Vous n'avez encore rien marqué comme encaissé."
   },
@@ -47,8 +47,8 @@
     "messageAjuste_other": "Vous allez marquer ces {{count}} mouvements comme encaissés ou réglés d'un coup, selon le cas. Vous pouvez annuler chacun séparément ensuite, comme en confirmant un par un.",
     "messageSimple_one": "Vous allez marquer ce mouvement comme encaissé d'un coup. Vous pouvez annuler chacun séparément ensuite, comme en confirmant un par un.",
     "messageSimple_other": "Vous allez marquer ces {{count}} mouvements comme encaissés d'un coup. Vous pouvez annuler chacun séparément ensuite, comme en confirmant un par un.",
-    "toastSwitch_one": "{{count}} mouvement marqué comme {{verb}} — passez à \"Encaissés\" pour le voir",
-    "toastSwitch_other": "{{count}} mouvements marqués comme {{verbPlural}} — passez à \"Encaissés\" pour les voir",
+    "toastSwitch_one": "{{count}} mouvement marqué comme {{verb}}. Passez à \"Encaissés\" pour le voir",
+    "toastSwitch_other": "{{count}} mouvements marqués comme {{verbPlural}}. Passez à \"Encaissés\" pour les voir",
     "toastNoSwitch_one": "{{count}} mouvement marqué comme {{verb}}",
     "toastNoSwitch_other": "{{count}} mouvements marqués comme {{verbPlural}}",
     "verbCobrado": "encaissé",
@@ -66,14 +66,14 @@
     "toast_one": "{{count}} mouvement remis en attente",
     "toast_other": "{{count}} mouvements remis en attente"
   },
-  "paidCapHint": "Affichage des {{limit}} encaissements les plus récents sur {{total}} — utilisez \"Filtrer\" pour voir une période précise.",
+  "paidCapHint": "Affichage des {{limit}} encaissements les plus récents sur {{total}}. Utilisez \"Filtrer\" pour voir une période précise.",
   "fabAdd": "Ajouter",
   "toggleStatus": {
     "undoneToast": "Annulé",
     "undoError": "Impossible d'annuler. Réessayez.",
     "undoAction": "Annuler",
     "markedPending": "Marqué en attente",
-    "markedPaidSwitchTab": "Marqué comme encaissé — passez à \"Encaissés\" pour le voir",
+    "markedPaidSwitchTab": "Marqué comme encaissé. Passez à \"Encaissés\" pour le voir",
     "markedPaid": "Marqué comme encaissé"
   },
   "genericUpdateError": "Impossible de mettre à jour. Réessayez.",

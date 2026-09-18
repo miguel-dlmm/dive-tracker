@@ -12,7 +12,7 @@
   },
   "emptyMessage": {
     "pendingWithFilters": "No pending items match these filters.",
-    "pendingNoFilters": "You're all caught up — nothing pending.",
+    "pendingNoFilters": "You're all caught up, nothing pending.",
     "paidWithFilters": "No collected items match these filters.",
     "paidNoFilters": "You haven't marked anything as collected yet."
   },
@@ -47,8 +47,8 @@
     "messageAjuste_other": "You're about to mark these {{count}} movements as collected/settled at once, whichever applies to each. You can revert each one separately afterwards, just like confirming them one by one.",
     "messageSimple_one": "You're about to mark this movement as collected at once. You can revert it afterwards, just like confirming it on its own.",
     "messageSimple_other": "You're about to mark these {{count}} movements as collected at once. You can revert each one separately afterwards, just like confirming them one by one.",
-    "toastSwitch_one": "{{count}} movement marked as {{verb}} — switch to \"Collected\" to see it",
-    "toastSwitch_other": "{{count}} movements marked as {{verbPlural}} — switch to \"Collected\" to see them",
+    "toastSwitch_one": "{{count}} movement marked as {{verb}}. Switch to \"Collected\" to see it",
+    "toastSwitch_other": "{{count}} movements marked as {{verbPlural}}. Switch to \"Collected\" to see them",
     "toastNoSwitch_one": "{{count}} movement marked as {{verb}}",
     "toastNoSwitch_other": "{{count}} movements marked as {{verbPlural}}",
     "verbCobrado": "collected",
@@ -66,14 +66,14 @@
     "toast_one": "{{count}} movement marked as pending",
     "toast_other": "{{count}} movements marked as pending"
   },
-  "paidCapHint": "Showing the {{limit}} most recent collected of {{total}} — use \"Filter\" to see a specific period.",
+  "paidCapHint": "Showing the {{limit}} most recent collected of {{total}}. Use \"Filter\" to see a specific period.",
   "fabAdd": "Add",
   "toggleStatus": {
     "undoneToast": "Undone",
     "undoError": "Couldn't undo. Try again.",
     "undoAction": "Undo",
     "markedPending": "Marked as pending",
-    "markedPaidSwitchTab": "Marked as collected — switch to \"Collected\" to see it",
+    "markedPaidSwitchTab": "Marked as collected. Switch to \"Collected\" to see it",
     "markedPaid": "Marked as collected"
   },
   "genericUpdateError": "Couldn't update. Try again.",

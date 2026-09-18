@@ -2,7 +2,7 @@
   "loading": { "defaultLabel": "Chargement" },
   "errorBoundary": {
     "title": "Oups, un problème est survenu",
-    "body": "Cet écran a rencontré un problème inattendu. Ce n'est pas de votre faute — essayez de recharger, tout devrait revenir à la normale.",
+    "body": "Cet écran a rencontré un problème inattendu. Ce n'est pas de votre faute : essayez de recharger, tout devrait revenir à la normale.",
     "reload": "Recharger"
   },
   "movementTypes": {

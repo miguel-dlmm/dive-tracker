@@ -1,5 +1,5 @@
 {
-  "intro": "Générez un Training Record officiel (registre de progression SSI) pour chaque élève, signature incluse — rien de ce que vous remplissez ici n'est enregistré dans le cloud, seulement téléchargé.",
+  "intro": "Générez un Training Record officiel (registre de progression SSI) pour chaque élève, signature incluse. Rien de ce que vous remplissez ici n'est enregistré dans le cloud, seulement téléchargé.",
   "sinPlantillas": "Aucun modèle prêt à l'emploi pour le moment.",
   "noSePudieronCargarPlantillas": "Impossible de charger les modèles.",
   "noSePudoDescargarPlantilla": "Impossible de télécharger ce modèle.",
@@ -10,7 +10,7 @@
   },
   "roster": {
     "titulo": "Élèves",
-    "hint": "Chaque élève n'apporte que son nom, ses initiales et sa signature — le reste est déjà configuré ci-dessus.",
+    "hint": "Chaque élève n'apporte que son nom, ses initiales et sa signature. Le reste est déjà configuré ci-dessus.",
     "vacio": "Vous n'avez pas encore ajouté d'élève.",
     "anadirPrimerAlumno": "Ajoutez votre premier élève",
     "anadirAlumno": "Ajouter un élève",
@@ -36,13 +36,13 @@
   "studentForm": {
     "nuevoAlumno": "Nouvel élève",
     "editarAlumno": "Modifier l'élève",
-    "hint": "Seulement ce qui change d'un élève à l'autre — le cours et ses dates ont déjà été remplis une fois pour toute la liste.",
+    "hint": "Seulement ce qui change d'un élève à l'autre. Le cours et ses dates ont déjà été remplis une fois pour toute la liste.",
     "nombre": "Prénom",
     "apellidos": "Nom",
     "menorDeEdad": "Mineur",
     "tutor": "Nom du parent/tuteur",
     "iniciales": "Initiales",
-    "inicialesHint": "Calculées automatiquement — vous pouvez les corriger si besoin.",
+    "inicialesHint": "Calculées automatiquement. Vous pouvez les corriger si besoin.",
     "plantilla": "Cours à certifier",
     "cambiarPlantilla": "Changer de modèle",
     "verAyuda": "Voir l'aide",
@@ -64,7 +64,7 @@
     "elegirFechaCorta": "Date",
     "configCompartidaHint": "Ceci se remplit UNE seule fois pour toute la classe. Chaque élève n'apporte que son nom, ses initiales et sa signature, plus bas dans \"Élèves\".",
     "progreso": "Progression du cours",
-    "progresoHint": "Cochez ce qui est déjà accompli — les lignes en gris sont obligatoires pour certifier le cours.",
+    "progresoHint": "Cochez ce qui est déjà accompli. Les lignes en gris sont obligatoires pour certifier le cours.",
     "obligatorio": "Obligatoire",
     "aventuras": "Aventures",
     "elegirAventura": "Choisissez une aventure",
@@ -82,7 +82,7 @@
     "generando": "Génération…",
     "generadoCorrectamente": "Registres générés avec succès.",
     "noSePudoGenerar": "Impossible de générer le registre.",
-    "faltanCampos": "Champs obligatoires manquants — vérifiez les avertissements en rouge.",
+    "faltanCampos": "Champs obligatoires manquants. Vérifiez les avertissements en rouge.",
     "sinAlumnos": "Ajoutez au moins un élève avant de générer."
   }
 }

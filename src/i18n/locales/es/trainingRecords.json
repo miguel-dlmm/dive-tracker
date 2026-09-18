@@ -1,5 +1,5 @@
 {
-  "intro": "Genera un Training Record oficial (registro de progreso SSI) para cada alumno, con firma incluida — nada de lo que rellenes aquí se guarda en la nube, solo se descarga.",
+  "intro": "Genera un Training Record oficial (registro de progreso SSI) para cada alumno, con firma incluida. Nada de lo que rellenes aquí se guarda en la nube, solo se descarga.",
   "sinPlantillas": "Todavía no hay ninguna plantilla lista para usar.",
   "noSePudieronCargarPlantillas": "No hemos podido cargar las plantillas.",
   "noSePudoDescargarPlantilla": "No hemos podido descargar esta plantilla.",
@@ -10,7 +10,7 @@
   },
   "roster": {
     "titulo": "Alumnos",
-    "hint": "Cada alumno solo aporta su nombre, iniciales y firma — el resto ya está configurado arriba.",
+    "hint": "Cada alumno solo aporta su nombre, iniciales y firma. El resto ya está configurado arriba.",
     "vacio": "Todavía no has añadido ningún alumno.",
     "anadirPrimerAlumno": "Añade tu primer alumno",
     "anadirAlumno": "Añadir alumno",
@@ -36,13 +36,13 @@
   "studentForm": {
     "nuevoAlumno": "Nuevo alumno",
     "editarAlumno": "Editar alumno",
-    "hint": "Solo lo que cambia de un alumno a otro — el curso y sus fechas ya se rellenaron una vez para todo el listado.",
+    "hint": "Solo lo que cambia de un alumno a otro. El curso y sus fechas ya se rellenaron una vez para todo el listado.",
     "nombre": "Nombre",
     "apellidos": "Apellidos",
     "menorDeEdad": "Menor de edad",
     "tutor": "Nombre del padre/madre/tutor",
     "iniciales": "Iniciales",
-    "inicialesHint": "Se calculan solas — puedes corregirlas si hace falta.",
+    "inicialesHint": "Se calculan solas. Puedes corregirlas si hace falta.",
     "plantilla": "Curso a certificar",
     "cambiarPlantilla": "Cambiar plantilla",
     "verAyuda": "Ver ayuda",
@@ -64,7 +64,7 @@
     "elegirFechaCorta": "Fecha",
     "configCompartidaHint": "Esto se rellena UNA vez para toda la clase. Cada alumno solo aporta su nombre, iniciales y firma, más abajo en \"Alumnos\".",
     "progreso": "Progreso del curso",
-    "progresoHint": "Marca lo que ya se ha completado — las filas en gris son obligatorias para certificar el curso.",
+    "progresoHint": "Marca lo que ya se ha completado. Las filas en gris son obligatorias para certificar el curso.",
     "obligatorio": "Obligatorio",
     "aventuras": "Aventuras",
     "elegirAventura": "Elige una aventura",
@@ -82,7 +82,7 @@
     "generando": "Generando…",
     "generadoCorrectamente": "Registros generados correctamente.",
     "noSePudoGenerar": "No hemos podido generar el registro.",
-    "faltanCampos": "Faltan campos obligatorios — revisa los avisos en rojo.",
+    "faltanCampos": "Faltan campos obligatorios. Revisa los avisos en rojo.",
     "sinAlumnos": "Añade al menos un alumno antes de generar."
   }
 }

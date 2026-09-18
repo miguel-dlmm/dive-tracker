@@ -17,6 +17,21 @@ Registro de cambios relevantes de Ocean Flow.
   sesión de continuación. Esta rama no se fusiona con la del exportador
   de PDF hasta revisión.
 
+- **Revisión de tono — guiones dentro de frases (español, inglés y
+  francés)**: sustituido el patrón "cláusula — cláusula explicativa"
+  (el em dash usado como conector retórico dentro de una frase, en vez
+  de puntuación real) por punto, dos puntos o coma según el caso —
+  aplicado en auth/común/config/trabajo/tarifas/perfil/Training
+  Records/Ayuda. Se conservan los guiones que son un patrón de etiqueta
+  compacta (p. ej. "Nombre — rol", "OK — solo desde {{date}}") y los dos
+  cierres cortos de "Instalar la app" ("Toca Añadir — listo"), que no
+  leen como generados. El contenido de WhatsNew (`notices.json` →
+  `whatsNew.slides`) se ha revisado pero no se toca, según la regla
+  permanente de aprobación explícita para ese contenido. Cubre español,
+  inglés y francés; el resto de idiomas queda para una sesión de
+  continuación — ver `docs/` o el historial de esta rama para el detalle
+  exacto de qué falta.
+
 ### Fixed
 - **Descripción de "Icono de carga" en Configuración obsoleta**: seguía
   diciendo "cuando tengáis el logo oficial, avisadme y lo sustituyo" —

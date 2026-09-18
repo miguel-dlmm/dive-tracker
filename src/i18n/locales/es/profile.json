@@ -49,7 +49,7 @@
     }
   },
   "instructor": {
-    "hint": "Se usan para rellenar tus Training Records automáticamente — se guardan aquí una sola vez, no por dispositivo.",
+    "hint": "Se usan para rellenar tus Training Records automáticamente. Se guardan aquí una sola vez, no por dispositivo.",
     "card": {
       "role": "Profesional SSI",
       "roleWithLevel": "SSI {{level}}",
@@ -107,6 +107,6 @@
     "deleteButton": "Eliminar cuenta",
     "toastSuccess": "Cuenta eliminada",
     "genericError": "No hemos podido eliminar la cuenta, prueba otra vez.",
-    "networkError": "No hemos podido eliminar la cuenta — comprueba tu conexión y prueba otra vez."
+    "networkError": "No hemos podido eliminar la cuenta. Comprueba tu conexión y prueba otra vez."
   }
 }

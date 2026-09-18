@@ -12,7 +12,7 @@
   },
   "emptyMessage": {
     "pendingWithFilters": "Sin elementos pendientes con estos filtros.",
-    "pendingNoFilters": "Estás al día — nada pendiente.",
+    "pendingNoFilters": "Estás al día, nada pendiente.",
     "paidWithFilters": "Sin elementos cobrados con estos filtros.",
     "paidNoFilters": "Todavía no has marcado nada como cobrado."
   },
@@ -47,8 +47,8 @@
     "messageAjuste_other": "Vas a marcar estos {{count}} movimientos como cobrado(s) o liquidado(s) de golpe, según corresponda a cada uno. Puedes revertir cada uno por separado después, igual que al confirmarlo de uno en uno.",
     "messageSimple_one": "Vas a marcar este movimiento como cobrado de golpe. Puedes revertir cada uno por separado después, igual que al confirmarlo de uno en uno.",
     "messageSimple_other": "Vas a marcar estos {{count}} movimientos como cobrados de golpe. Puedes revertir cada uno por separado después, igual que al confirmarlo de uno en uno.",
-    "toastSwitch_one": "{{count}} movimiento marcado como {{verb}} — cambia a \"Cobrados\" para verlos",
-    "toastSwitch_other": "{{count}} movimientos marcados como {{verbPlural}} — cambia a \"Cobrados\" para verlos",
+    "toastSwitch_one": "{{count}} movimiento marcado como {{verb}}. Cambia a \"Cobrados\" para verlos",
+    "toastSwitch_other": "{{count}} movimientos marcados como {{verbPlural}}. Cambia a \"Cobrados\" para verlos",
     "toastNoSwitch_one": "{{count}} movimiento marcado como {{verb}}",
     "toastNoSwitch_other": "{{count}} movimientos marcados como {{verbPlural}}",
     "verbCobrado": "cobrado",
@@ -66,14 +66,14 @@
     "toast_one": "{{count}} movimiento marcado como pendiente",
     "toast_other": "{{count}} movimientos marcados como pendientes"
   },
-  "paidCapHint": "Mostrando los {{limit}} cobrados más recientes de {{total}} — usa \"Filtrar\" para ver un periodo concreto.",
+  "paidCapHint": "Mostrando los {{limit}} cobrados más recientes de {{total}}. Usa \"Filtrar\" para ver un periodo concreto.",
   "fabAdd": "Añadir",
   "toggleStatus": {
     "undoneToast": "Deshecho",
     "undoError": "No hemos podido deshacerlo, prueba otra vez.",
     "undoAction": "Deshacer",
     "markedPending": "Marcado como pendiente",
-    "markedPaidSwitchTab": "Marcado como cobrado — cámbialo a \"Cobrados\" para verlo",
+    "markedPaidSwitchTab": "Marcado como cobrado. Cámbialo a \"Cobrados\" para verlo",
     "markedPaid": "Marcado como cobrado"
   },
   "genericUpdateError": "No hemos podido actualizarlo, prueba otra vez.",

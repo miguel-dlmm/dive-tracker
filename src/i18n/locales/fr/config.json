@@ -13,11 +13,11 @@
     "empty": "Aucun dataset pour le moment.",
     "fab": "Nouveau dataset",
     "sheetTitle": "Nouveau dataset",
-    "sheetHint": "Naît vide et inactif — dupliquez-en un existant si vous voulez partir d'un contenu déjà chargé.",
+    "sheetHint": "Naît vide et inactif. Dupliquez-en un existant si vous voulez partir d'un contenu déjà chargé.",
     "nameLabel": "Nom",
     "create": "Créer",
     "toasts": {
-      "created": "Dataset créé — ajoutez son contenu avant de l'activer",
+      "created": "Dataset créé. Ajoutez son contenu avant de l'activer",
       "duplicated": "\"{{newLabel}}\" créé avec le même contenu que \"{{sourceLabel}}\"",
       "duplicateError": "Impossible de dupliquer. Réessayez.",
       "keyTaken": "Un dataset avec cette clé existe déjà.",
@@ -25,8 +25,8 @@
       "updateError": "Impossible de mettre à jour."
     },
     "errors": {
-      "isDefault": "C'est le dataset par défaut — marquez-en un autre par défaut avant de supprimer celui-ci.",
-      "lastOne": "Vous ne pouvez pas supprimer le seul dataset — l'inscription externe et la création manuelle en nécessitent au moins un."
+      "isDefault": "C'est le dataset par défaut. Marquez-en un autre par défaut avant de supprimer celui-ci.",
+      "lastOne": "Vous ne pouvez pas supprimer le seul dataset : l'inscription externe et la création manuelle en nécessitent au moins un."
     }
   },
   "crudTable": {
@@ -43,7 +43,7 @@
     "anadidoCorrectamente": "Ajouté",
     "noSePudoGuardar": "Impossible d'enregistrer. Réessayez.",
     "noSePudoGuardarCambio": "Impossible d'enregistrer la modification.",
-    "estadoPredeterminadoRazon": "C'est le statut par défaut (représente \"en attente\") — marquez-en un autre par défaut avant de supprimer celui-ci"
+    "estadoPredeterminadoRazon": "C'est le statut par défaut (représente \"en attente\"). Marquez-en un autre par défaut avant de supprimer celui-ci"
   },
   "sectionColors": {
     "descripcion": "Utilisées dans la barre de navigation et les boutons de création de chaque zone."
@@ -176,7 +176,7 @@
     "noSePudoRegenerarContrasena": "Impossible de régénérer le mot de passe.",
     "contrasenaRegeneradaSinEmail": "Mot de passe régénéré (l'email n'a pas pu être envoyé à {{nickname}})",
     "contrasenaRegeneradaTitulo": "Mot de passe régénéré",
-    "contrasenaRegeneradaDescripcion": "L'ancien mot de passe de {{nickname}} n'est plus valide. Il/elle devra en créer un nouveau à partir d'un lien d'activation nouveau — le compte revient à \"En attente\" jusque-là.",
+    "contrasenaRegeneradaDescripcion": "L'ancien mot de passe de {{nickname}} n'est plus valide. Il/elle devra en créer un nouveau à partir d'un lien d'activation nouveau. En attendant, le compte revient à \"En attente\".",
     "contrasenaRegeneradaEmailEnviado": "Mot de passe régénéré et email envoyé à {{nickname}}",
     "nicknameVacio": "Le pseudo ne peut pas être vide.",
     "datosActualizados": "Données mises à jour",
@@ -190,19 +190,19 @@
     "eliminarUsuarioAlternativa": "Si vous voulez seulement révoquer son accès en conservant ses données, utilisez \"Désactiver\" à la place.",
     "eliminar": "Supprimer",
     "desactivarUsuarioTitulo": "Désactiver l'utilisateur",
-    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> ne pourra plus se connecter. Toutes ses données (écoles, tarifs, mouvements...) sont conservées intactes — vous pouvez le/la réactiver quand vous voulez en générant un nouveau lien d'activation.",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> ne pourra plus se connecter. Toutes ses données (écoles, tarifs, mouvements...) sont conservées intactes. Vous pouvez le/la réactiver quand vous voulez en générant un nouveau lien d'activation.",
     "desactivar": "Désactiver",
     "generarEnlaceTitulo": "Générer un lien d'activation",
     "generarEnlaceMensaje": "Un nouveau lien à usage unique sera généré pour <strong>{{nickname}}</strong>. Tout lien précédent cessera de fonctionner. Le compte n'a pas accès tant qu'il/elle ne l'a pas complété.",
     "generarEnlace": "Générer le lien",
     "regenerarContrasenaTitulo": "Régénérer le mot de passe",
-    "regenerarContrasenaMensaje": "Le mot de passe actuel de <strong>{{nickname}}</strong> cessera de fonctionner immédiatement. Il/elle devra en créer un nouveau à partir d'un nouveau lien d'activation — ses données ne sont pas affectées.",
+    "regenerarContrasenaMensaje": "Le mot de passe actuel de <strong>{{nickname}}</strong> cessera de fonctionner immédiatement. Il/elle devra en créer un nouveau à partir d'un nouveau lien d'activation. Ses données ne sont pas affectées.",
     "regenerar": "Régénérer",
     "generarInvitacion": "Générer un lien d'invitation",
     "soloSuperadminInvitacion": "Seul un super-administrateur peut générer des liens d'invitation.",
     "noSePudoGenerarInvitacion": "Impossible de générer le lien d'invitation.",
     "enlaceInvitacionTitulo": "Lien d'invitation",
-    "enlaceInvitacionDescripcion": "Valide 24 heures et à usage unique. Partagez-le avec la personne que vous voulez inviter — elle pourra s'inscrire même si l'inscription externe est fermée."
+    "enlaceInvitacionDescripcion": "Valide 24 heures et à usage unique. Partagez-le avec la personne que vous voulez inviter : elle pourra s'inscrire même si l'inscription externe est fermée."
   },
   "sections": {
     "escuelas": {
@@ -258,7 +258,7 @@
     "editarEstadoPago": "Modifier le statut de paiement",
     "nuevaMoneda": "Nouvelle devise",
     "editarMoneda": "Modifier la devise",
-    "monedasDescripcion": "Choisissez ici la devise de secours de toute l'app : utilisée quand un utilisateur n'a pas encore choisi sa propre devise favorite dans Mon profil. Ce n'est pas une préférence personnelle — c'est celle appliquée par défaut à tout nouveau compte.",
+    "monedasDescripcion": "Choisissez ici la devise de secours de toute l'app : utilisée quand un utilisateur n'a pas encore choisi sa propre devise favorite dans Mon profil. Ce n'est pas une préférence personnelle : c'est celle appliquée par défaut à tout nouveau compte.",
     "monedaPorDefectoApp": "Par défaut de l'app",
     "codigoCampo": "Code (ex. EUR)",
     "simboloCampo": "Symbole"

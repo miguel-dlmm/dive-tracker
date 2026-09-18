@@ -49,7 +49,7 @@
     }
   },
   "instructor": {
-    "hint": "Used to auto-fill your Training Records — saved here once, not per device.",
+    "hint": "Used to auto-fill your Training Records. Saved here once, not per device.",
     "card": {
       "role": "SSI Professional",
       "roleWithLevel": "SSI {{level}}",

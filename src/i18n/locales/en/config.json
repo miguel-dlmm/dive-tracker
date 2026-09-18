@@ -13,11 +13,11 @@
     "empty": "No datasets yet.",
     "fab": "New dataset",
     "sheetTitle": "New dataset",
-    "sheetHint": "Starts empty and inactive — duplicate an existing one if you want to start from content that's already loaded.",
+    "sheetHint": "Starts empty and inactive. Duplicate an existing one if you want to start from content that's already loaded.",
     "nameLabel": "Name",
     "create": "Create",
     "toasts": {
-      "created": "Dataset created — add its content before activating it",
+      "created": "Dataset created. Add its content before activating it",
       "duplicated": "\"{{newLabel}}\" created with the same content as \"{{sourceLabel}}\"",
       "duplicateError": "Couldn't duplicate. Try again.",
       "keyTaken": "A dataset with that key already exists.",
@@ -25,8 +25,8 @@
       "updateError": "Couldn't update."
     },
     "errors": {
-      "isDefault": "This is the default dataset — set another one as default before deleting it.",
-      "lastOne": "You can't delete the only dataset — external registration and manual sign-up both need at least one."
+      "isDefault": "This is the default dataset. Set another one as default before deleting it.",
+      "lastOne": "You can't delete the only dataset: external registration and manual sign-up both need at least one."
     }
   },
   "crudTable": {
@@ -43,7 +43,7 @@
     "anadidoCorrectamente": "Added",
     "noSePudoGuardar": "Couldn't save. Please try again.",
     "noSePudoGuardarCambio": "Couldn't save the change.",
-    "estadoPredeterminadoRazon": "This is the default status (represents \"pending\") — set another one as default before deleting this"
+    "estadoPredeterminadoRazon": "This is the default status (represents \"pending\"). Set another one as default before deleting this"
   },
   "sectionColors": {
     "descripcion": "Used in the navigation bar and in each area's \"create entry\" buttons."
@@ -176,7 +176,7 @@
     "noSePudoRegenerarContrasena": "Couldn't reset the password.",
     "contrasenaRegeneradaSinEmail": "Password reset (the email couldn't be sent to {{nickname}})",
     "contrasenaRegeneradaTitulo": "Password reset",
-    "contrasenaRegeneradaDescripcion": "{{nickname}}'s previous password is no longer valid. Share this link so they can set a new one — the account goes back to \"Pending\" until then.",
+    "contrasenaRegeneradaDescripcion": "{{nickname}}'s previous password is no longer valid. Share this link so they can set a new one. Until then, the account goes back to \"Pending\".",
     "contrasenaRegeneradaEmailEnviado": "Password reset and email sent to {{nickname}}",
     "nicknameVacio": "Nickname can't be empty.",
     "datosActualizados": "Details updated",
@@ -190,19 +190,19 @@
     "eliminarUsuarioAlternativa": "If you just want to revoke access while keeping their data, use \"Deactivate\" instead.",
     "eliminar": "Delete",
     "desactivarUsuarioTitulo": "Deactivate user",
-    "desactivarUsuarioMensaje": "{{nickname}} will no longer be able to sign in. All their data (schools, rates, entries...) stays intact — you can reactivate them anytime by generating a new activation link.",
+    "desactivarUsuarioMensaje": "{{nickname}} will no longer be able to sign in. All their data (schools, rates, entries...) stays intact. You can reactivate them anytime by generating a new activation link.",
     "desactivar": "Deactivate",
     "generarEnlaceTitulo": "Generate activation link",
     "generarEnlaceMensaje": "A new one-time link will be generated for {{nickname}}. Any earlier link stops working. The account won't gain access until they complete it.",
     "generarEnlace": "Generate link",
     "regenerarContrasenaTitulo": "Reset password",
-    "regenerarContrasenaMensaje": "{{nickname}}'s current password will stop working immediately. They'll need to set a new one from a new activation link — their data isn't affected.",
+    "regenerarContrasenaMensaje": "{{nickname}}'s current password will stop working immediately. They'll need to set a new one from a new activation link. Their data isn't affected.",
     "regenerar": "Reset",
     "generarInvitacion": "Generate invitation link",
     "soloSuperadminInvitacion": "Only a superadmin can generate invitation links.",
     "noSePudoGenerarInvitacion": "Couldn't generate the invitation link.",
     "enlaceInvitacionTitulo": "Invitation link",
-    "enlaceInvitacionDescripcion": "Valid for 24 hours, single use. Share it with the person you want to invite — they'll be able to register even if external registration is closed."
+    "enlaceInvitacionDescripcion": "Valid for 24 hours, single use. Share it with the person you want to invite: they'll be able to register even if external registration is closed."
   },
   "sections": {
     "escuelas": {
@@ -258,7 +258,7 @@
     "editarEstadoPago": "Edit payment status",
     "nuevaMoneda": "New currency",
     "editarMoneda": "Edit currency",
-    "monedasDescripcion": "Choose the app's fallback currency here: it's used when a user hasn't picked their own favorite currency yet in My profile. It's not a personal preference — it's the one applied by default to any new account.",
+    "monedasDescripcion": "Choose the app's fallback currency here: it's used when a user hasn't picked their own favorite currency yet in My profile. It's not a personal preference: it's the one applied by default to any new account.",
     "monedaPorDefectoApp": "App default",
     "codigoCampo": "Code (e.g. EUR)",
     "simboloCampo": "Symbol"

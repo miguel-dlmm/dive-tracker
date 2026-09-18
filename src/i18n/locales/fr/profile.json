@@ -49,7 +49,7 @@
     }
   },
   "instructor": {
-    "hint": "Utilisées pour remplir automatiquement vos Training Records — enregistrées ici une seule fois, pas par appareil.",
+    "hint": "Utilisées pour remplir automatiquement vos Training Records. Enregistrées ici une seule fois, pas par appareil.",
     "card": {
       "role": "Professionnel SSI",
       "roleWithLevel": "SSI {{level}}",

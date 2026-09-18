@@ -2,7 +2,7 @@
   "intro": "Add Ocean Flow to your phone's home screen and open it like any other app, without going through the browser every time.",
   "ios": {
     "title": "iPhone / iPad (Safari)",
-    "step1": "Open Ocean Flow in Safari — it has to be Safari, this doesn't work from other browsers on iOS.",
+    "step1": "Open Ocean Flow in Safari. It has to be Safari, this doesn't work from other browsers on iOS.",
     "step2": "Tap the Share icon in the bottom bar.",
     "step3": "Scroll down and tap \"Add to Home Screen\".",
     "step4": "Tap \"Add\" in the top right — done."
