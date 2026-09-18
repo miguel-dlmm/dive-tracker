@@ -5,6 +5,18 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Added
+- **Ficha de admin (Config → Usuarios) reorganizada en "Datos de
+  actividad" y "Datos personales"**: antes era una sola lista plana
+  mezclando lo que se observa de la cuenta (accesos, movimientos,
+  Training Records generados) con lo que se puede editar (avatar, datos
+  de instructor...) — ahora son dos secciones aparte, con el botón
+  "Editar datos" junto a la de datos personales para acceso rápido, en
+  vez de al final de toda la ficha.
+- **Loading en el listado de Usuarios mientras carga la última
+  actividad**: esa fecha llega en una llamada aparte del propio listado
+  — sin esto, toda fila mostraba "Nunca" un instante antes de que la
+  respuesta real llegara, indistinguible de una cuenta sin actividad de
+  verdad.
 - **Nº de Training Records generados en la ficha de admin (Config →
   Usuarios)**: contador + fecha del último, guardados ahora en
   `profiles` (antes solo en `localStorage` del dispositivo del
@@ -82,6 +94,24 @@ Registro de cambios relevantes de Ocean Flow.
   primer intento de repartir ese aire de más (`justify-between`, cifra y
   etiqueta a los dos extremos) dejaba un hueco vacío feo en medio —
   sustituido por `justify-center` (cifra+etiqueta como un bloque único).
+- **KPIs de Home, tercera vuelta — icono a un lado, cifra+etiqueta
+  apiladas y centradas al otro**: pedido explícito tras ver "Media
+  diaria" ya ensanchada a 2/3 del grid — su contenido seguía anclado al
+  borde izquierdo, con un hueco vacío grande a la derecha. Un primer
+  intento probó insignia arriba y cifra+etiqueta debajo (ambas
+  centradas) — no era lo pedido; corregido a insignia a la izquierda,
+  cifra+etiqueta apiladas y centradas a la derecha, mismo patrón
+  horizontal que ya usan "Cursos"/"Captados" (MiniKpiTile) a menor
+  escala, con el conjunto icono+texto centrado dentro de la tarjeta en
+  vez de anclado al borde izquierdo.
+- **El selector de color de la ficha de admin (avatar) se veía roto**:
+  `ColorSwatchPicker` pinta 12 círculos fijos de 36px en una cuadrícula
+  de 6 columnas — vivía metido en una celda de un grid de 2 columnas
+  (mitad del ancho de la hoja), donde no cabían ni de lejos. Ya existía
+  esta misma lección documentada en otro punto del propio archivo
+  ("no cabía a su lado sin apretarlo... a todo el ancho, en su propia
+  fila") — no se aplicó al construir la ficha de admin. Corregido para
+  ocupar la fila entera, como en el resto de sitios donde ya se usa.
 
 ## [1.3.1] - 2026-09-09
 

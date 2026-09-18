@@ -434,6 +434,32 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await waitFor(() => expect(screen.getByText("Última actividad: Nunca")).toBeInTheDocument());
   });
 
+  // 2026-09-18, bug real reportado: /api/list-user-status llega en un
+  // fetch aparte del propio listado (`rows`) — la fila se pinta antes de
+  // que esa respuesta llegue, así que sin un estado de carga propio toda
+  // fila mostraba "Nunca" un instante, indistinguible de una cuenta sin
+  // actividad de verdad. Promesa controlada a mano (no
+  // mockResolvedValue) para poder comprobar el estado intermedio antes
+  // de resolverla.
+  it("muestra un loading en vez de 'Nunca' mientras la última actividad todavía no ha llegado", async () => {
+    const user = userEvent.setup();
+    let resolveFetch;
+    globalThis.fetch = vi.fn(() => new Promise((resolve) => { resolveFetch = resolve; }));
+
+    render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
+    await user.click(screen.getByText("Usuarios"));
+    await waitFor(() => expect(screen.getByText("ana")).toBeInTheDocument());
+
+    expect(screen.queryByText(/Última actividad/)).not.toBeInTheDocument();
+
+    resolveFetch({
+      ok: true,
+      json: async () => ({ active: { "target-1": true }, lastSignInAt: { "target-1": null }, lastActivityAt: {} }),
+    });
+
+    await waitFor(() => expect(screen.getByText("Última actividad: Nunca")).toBeInTheDocument());
+  });
+
   it("muestra 'Pendiente' para una cuenta sin banned_until pero nunca activada (activated_at null)", async () => {
     const user = userEvent.setup();
     mockProfilesFrom(null);

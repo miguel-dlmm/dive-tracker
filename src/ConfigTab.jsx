@@ -631,7 +631,7 @@ function SwipeToDeleteRow({ children, onDelete, deleteLabel }) {
   );
 }
 
-function UserListRow({ user, status, lastActivityAt, deactivatedAt, onOpen }) {
+function UserListRow({ user, status, lastActivityAt, activityLoaded, deactivatedAt, onOpen }) {
   const { t } = useTranslation("config");
   // Fila "apagada" para una cuenta desactivada (feedback explícito
   // 2026-09-07: "querría q todos los colores q muestra sean mas
@@ -671,8 +671,18 @@ function UserListRow({ user, status, lastActivityAt, deactivatedAt, onOpen }) {
             "Último acceso" se mantiene en la ficha de detalle, junto al
             resto de datos de la cuenta — no desaparece, solo deja de ser
             lo primero que se ve en el listado). Solo fecha, sin hora
-            (mismo criterio que antes) — reutiliza shortDate. */}
-        <div>{t("userListRow.ultimaActividad", { date: lastActivityAt ? shortDate(lastActivityAt) : t("userStatus.nunca") })}</div>
+            (mismo criterio que antes) — reutiliza shortDate.
+            activityLoaded (2026-09-18, bug real reportado): esta fecha
+            llega en un fetch aparte del propio listado (`rows`) — sin
+            esto, toda fila se pintaba un instante con "Nunca" antes de
+            que la respuesta real llegara, indistinguible de una cuenta
+            sin actividad de verdad. FieldSkeleton mientras no ha
+            llegado, en vez de la frase completa ya traducida (la
+            traducción interpola la fecha dentro de la propia frase —
+            "Última actividad: {{date}}" — así que no hay un hueco
+            aislado donde meter el skeleton sin tocar las 15 traducciones,
+            más simple sustituir la línea entera mientras carga). */}
+        <div>{!activityLoaded ? <FieldSkeleton width={110} /> : t("userListRow.ultimaActividad", { date: lastActivityAt ? shortDate(lastActivityAt) : t("userStatus.nunca") })}</div>
         {status === "desactivado" && (
           <div className="mt-0.5 italic">{t("userListRow.baja", { date: deactivatedAt ? shortDate(deactivatedAt) : t("userListRow.fechaNoRegistrada") })}</div>
         )}
@@ -813,7 +823,15 @@ function UserDetailSheet({
                   placeholder="—"
                 />
               </Field>
-              <div className="flex flex-col gap-1">
+              {/* col-span-2 (2026-09-18, bug real reportado — "el datepicker
+                  del color sale fatal"): ColorSwatchPicker pinta su propia
+                  cuadrícula interna de 6 columnas con círculos de 36px fijos
+                  (12 colores, ver ENTITY_COLOR_PALETTE) — nunca se pensó
+                  para vivir dentro de UNA celda de un grid de 2 columnas
+                  (mitad del ancho de la hoja), donde no cabían ni de lejos
+                  y se desbordaban/apretaban. Ocupa la fila entera, como en
+                  el resto de sitios donde ya se usa. */}
+              <div className="col-span-2 flex flex-col gap-1">
                 <ColorSwatchPicker
                   label={t("userDetailSheet.avatarColor")}
                   value={profileForm.avatar_color}
@@ -870,6 +888,16 @@ function UserDetailSheet({
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.altaLabel")}</span>
               <span className="text-gray-700">{shortDate(user.created_at)}</span>
             </div>
+
+            {/* Datos de actividad (2026-09-18, pedido explícito: "agrupa
+                datos personales y datos de actividad") — todo lo que se
+                OBSERVA de la cuenta, nunca se edita a mano: accesos,
+                movimientos, Training Records generados. Antes iba todo
+                mezclado en una sola lista plana junto a los datos
+                personales de abajo. */}
+            <div className="border-t border-gray-200 pt-2.5">
+              <h4 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{t("userDetailSheet.seccionActividad")}</h4>
+            </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.ultimoAcceso")}</span>
               {/* Solo fecha, sin hora (2026-09-04, pedido explícito) — ver
@@ -896,10 +924,52 @@ function UserDetailSheet({
                 {!activitySummary ? <FieldSkeleton width={64} /> : activitySummary.lastActivityAt ? shortDate(activitySummary.lastActivityAt) : t("userStatus.nunca")}
               </span>
             </div>
+            {/* Training Records generados + fecha del último (lote
+                2026-09-17/18, pedido explícito) — mismo criterio de
+                FieldSkeleton mientras fullProfile carga que el resto de
+                campos de arriba. Solo lectura: se incrementa desde el
+                propio generador (TrainingRecordsTab.jsx vía
+                increment_training_records_count()), nunca editable a
+                mano — no tendría sentido que un admin "corrigiera" un
+                conteo de eventos ya ocurridos. */}
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.trGenerados")}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={20} /> : fullProfile.training_records_generated_count ?? 0}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.trUltimaGeneracion")}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={64} /> : fullProfile.training_records_last_generated_at ? shortDate(fullProfile.training_records_last_generated_at) : "—"}</span>
+            </div>
+            {/* Solo se muestra con una fecha real (2026-09-04, pedido
+                explícito) — antes se gateaba en status === "desactivado" y,
+                sin deactivated_at registrado (baja anterior a la migración
+                que añadió esa columna), caía a un aviso placeholder
+                ("fecha no registrada") en vez de ocultar el campo. Gatear
+                directo en deactivatedAt es más simple y evita ese estado
+                intermedio confuso — quien lo necesite ya lo ve en la fila
+                del listado (UserListRow, que sí conserva el aviso). */}
+            {deactivatedAt && (
+              <div className="flex items-center justify-between gap-3">
+                <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.baja")}</span>
+                <span className="text-gray-700">{shortDateTime(deactivatedAt, t("userStatus.nunca"))}</span>
+              </div>
+            )}
 
-            {/* Resto de campos del perfil, en modo lectura — mismo
-                FieldSkeleton mientras fullProfile no ha llegado todavía
-                (mismo criterio que Movimientos/Última actividad, arriba). */}
+            {/* Datos personales — "los campos de la card" (2026-09-17) más
+                idioma/firma. Sección aparte de la de actividad de arriba
+                (mismo pedido 2026-09-18) y con el botón de editar aquí
+                mismo, no al final de toda la ficha — pedido explícito:
+                "debo poder editar los datos personales... de manera
+                rápida". Mismo FieldSkeleton que el resto mientras
+                fullProfile no ha llegado todavía. */}
+            <div className="flex items-center justify-between border-t border-gray-200 pt-2.5">
+              <h4 className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{t("userDetailSheet.seccionPersonal")}</h4>
+              {editable && (
+                <button onClick={startEditProfile} className="flex min-h-9 items-center gap-1 text-xs font-semibold" style={{ color: BRAND_NAVY }}>
+                  <Pencil size={13} aria-hidden="true" /> {t("userDetailSheet.editarDatos")}
+                </button>
+              )}
+            </div>
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.avatarLabel")}</span>
               <span className="flex items-center gap-1.5 text-gray-700">
@@ -941,43 +1011,6 @@ function UserDetailSheet({
             </div>
             {fullProfile?.instructor_signature && (
               <p className="text-[11px] italic text-gray-400">{t("userDetailSheet.firmaNota")}</p>
-            )}
-
-            {/* Training Records generados + fecha del último (lote
-                2026-09-17/18, pedido explícito) — mismo criterio de
-                FieldSkeleton mientras fullProfile carga que el resto de
-                campos de arriba. Solo lectura: se incrementa desde el
-                propio generador (TrainingRecordsTab.jsx vía
-                increment_training_records_count()), nunca editable a
-                mano — no tendría sentido que un admin "corrigiera" un
-                conteo de eventos ya ocurridos. */}
-            <div className="flex items-center justify-between gap-3">
-              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.trGenerados")}</span>
-              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={20} /> : fullProfile.training_records_generated_count ?? 0}</span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.trUltimaGeneracion")}</span>
-              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={64} /> : fullProfile.training_records_last_generated_at ? shortDate(fullProfile.training_records_last_generated_at) : "—"}</span>
-            </div>
-
-            {/* Solo se muestra con una fecha real (2026-09-04, pedido
-                explícito) — antes se gateaba en status === "desactivado" y,
-                sin deactivated_at registrado (baja anterior a la migración
-                que añadió esa columna), caía a un aviso placeholder
-                ("fecha no registrada") en vez de ocultar el campo. Gatear
-                directo en deactivatedAt es más simple y evita ese estado
-                intermedio confuso — quien lo necesite ya lo ve en la fila
-                del listado (UserListRow, que sí conserva el aviso). */}
-            {deactivatedAt && (
-              <div className="flex items-center justify-between gap-3">
-                <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.baja")}</span>
-                <span className="text-gray-700">{shortDateTime(deactivatedAt, t("userStatus.nunca"))}</span>
-              </div>
-            )}
-            {editable && (
-              <button onClick={startEditProfile} className="flex min-h-9 items-center gap-1 text-xs font-semibold" style={{ color: BRAND_NAVY }}>
-                <Pencil size={13} aria-hidden="true" /> {t("userDetailSheet.editarDatos")}
-              </button>
             )}
           </div>
         )}
@@ -1356,6 +1389,16 @@ function UsersDirectory({ profile }) {
   // esto en vez de "último acceso" (que sigue viéndose en la ficha de
   // detalle, UserDetailSheet, junto al resto de datos de la cuenta).
   const [lastActivityByUser, setLastActivityByUser] = useState({});
+  // Distingue "todavía no ha llegado la respuesta de /api/list-user-status"
+  // de "ya llegó y esta cuenta no tiene actividad" (2026-09-18, bug real
+  // reportado: el listado se pinta con `rows` antes de que este fetch
+  // aparte resuelva, así que durante ese hueco toda fila mostraba "Nunca"
+  // — no porque fuera cierto, sino porque `lastActivityByUser` todavía
+  // estaba vacío). Se marca en `finally` (no solo en el camino feliz):
+  // mismo criterio "un fallo no debe tumbar el resto del directorio" que
+  // ya seguía esta función — mejor mostrar "Nunca" tras un fallo real que
+  // dejar el skeleton pulsando para siempre.
+  const [activityLoaded, setActivityLoaded] = useState(false);
   const [activatedAtByUser, setActivatedAtByUser] = useState({});
   const [deactivatedAtByUser, setDeactivatedAtByUser] = useState({});
   const [loading, setLoading] = useState(true);
@@ -1467,6 +1510,8 @@ function UsersDirectory({ profile }) {
       }
     } catch {
       // silencioso a propósito — ver comentario de arriba
+    } finally {
+      setActivityLoaded(true);
     }
   };
 
@@ -1852,6 +1897,7 @@ function UsersDirectory({ profile }) {
                 user={p}
                 status={userStatus(activeByUser[p.user_id] ?? true, activatedAtByUser[p.user_id])}
                 lastActivityAt={lastActivityByUser[p.user_id] ?? null}
+                activityLoaded={activityLoaded}
                 deactivatedAt={deactivatedAtByUser[p.user_id]}
                 onOpen={setOpenUserId}
               />
