@@ -458,16 +458,19 @@ describe("HomeTab — KPIs (media diaria, cursos, captados, todos del mes actual
     // visto fallar en vivo con la suite completa, nunca en solitario.
     // 2000ms bastaba en aislamiento pero era un margen demasiado justo
     // bajo contención real; no es un cambio de comportamiento, solo más
-    // paciencia para el mismo resultado esperado. 8000ms (2026-09-18,
-    // sustituye el 4000ms anterior): la propia tarjeta de "Media diaria"
-    // cuenta en CÉNTIMOS (más pasos de animación que un entero pequeño
-    // como "Cursos"/"Captados") — visto fallar en vivo con la suite
-    // completa incluso a 4000ms, nunca en solitario.
+    // paciencia para el mismo resultado esperado. 12000ms (2026-09-18,
+    // sustituye el 8000ms anterior, que ya sustituía un 4000ms previo):
+    // la propia tarjeta de "Media diaria" cuenta en CÉNTIMOS (más pasos
+    // de animación que un entero pequeño como "Cursos"/"Captados") —
+    // visto fallar en vivo con la suite completa incluso a 8000ms bajo
+    // contención especialmente alta (otro proceso corriendo su propia
+    // suite de tests en paralelo en la misma máquina), nunca en
+    // solitario.
     await waitFor(() => {
       expect(screen.getByText("Media diaria").previousSibling).toHaveTextContent(dailyAverageText);
       expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("2"); // w1 + w2, solo este mes (w3 es del mes pasado)
       expect(screen.getByText("Captados").previousSibling).toHaveTextContent("4"); // solo c1, este mes
-    }, { timeout: 8000 });
+    }, { timeout: 12000 });
   });
 });
 

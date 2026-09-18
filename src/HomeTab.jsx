@@ -56,53 +56,44 @@ function useTranslatedMovementTypeMeta(t) {
 // de retraso entre las tres) y la cifra hace un conteo ascendente
 // (useCountUp, motion.js) — mismo vocabulario EASE.enter/DURATION.md que
 // usa el resto de la app para lo que ENTRA en pantalla, no un cuarto
-// sistema de animación aparte.
-// Compactada (rediseño estructural 2026-09-06, pedido explícito: "los KPI
-// ocupan 3 filas, ¿más compacta?") — icono+cifra pasan a una sola fila en
-// vez de icono/cifra/etiqueta apiladas y centradas; la etiqueta se queda
-// en su propia fila, a todo el ancho, para no perder espacio de lectura
-// frente a etiquetas más largas (mismo motivo que en MoneyKpiTile,
-// MiTrabajoTab.jsx — las dos comparten ahora este mismo patrón).
-// Segunda vuelta de diseño (2026-09-07, feedback explícito: "no acaban de
-// gustarme, dales otra vuelta" tras la primera compactación) — mismo
-// patrón de 2 filas (icono+cifra / etiqueta), pero con más presencia:
-// insignia de 32px (antes 24px) e icono de 18px (antes 13px), cifra en
-// text-xl (antes text-lg) y algo más de aire interno (px-3 py-3 en vez de
-// px-2.5). Pedido explícito de mantener la altura a raya ("que no robe
-// mucho espacio") — sigue siendo 2 filas, no 3; solo crecen los elementos
-// dentro de esas 2 filas, no el número de filas.
-function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
-  const count = useCountUp(value, { reduced });
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
-    >
-      <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
-          <Icon size={18} style={{ color }} aria-hidden="true" />
-        </span>
-        <span className="text-xl font-bold leading-none tabular-nums" style={{ color: BRAND_NAVY }}>{count}</span>
-      </div>
-      <span className="text-[11px] font-medium leading-tight text-gray-500">{label}</span>
-    </motion.div>
-  );
-}
-
-// Variante de KpiTile para una cifra de dinero (Media diaria) en vez de un
-// conteo entero — mismo envoltorio visual (insignia + cifra en una fila,
-// etiqueta debajo), pero la cifra se formatea con <Money> y admite un
+// sistema de animación aparte. Dos variantes viven en este archivo:
+// MoneyKpiTile (cifra de dinero, Media diaria) y MiniKpiTile (conteo
+// entero compacto, Cursos/Captados) — ver el grid de KPIs más abajo para
+// el porqué del reparto de ancho 2/3+1/3 entre ambas.
+//
+// La tarjeta de conteo entero pasó antes por su propio componente
+// (`KpiTile`, ya retirado 2026-09-18 al dejar de usarse) con su propio
+// historial de rediseños — icono+cifra en una sola fila, etiqueta debajo
+// (2026-09-06, "los KPI ocupan 3 filas, ¿más compacta?"), después más
+// presencia visual (2026-09-07, "no acaban de gustarme, dales otra
+// vuelta": insignia 32px, icono 18px, cifra text-xl). MiniKpiTile
+// (abajo) es su sucesora directa, comprimida a una sola fila para caber
+// apilada junto a otra igual.
+//
+// Variante de dinero (Media diaria) — mismo envoltorio visual (insignia +
+// cifra en una fila, etiqueta debajo) que la de conteo entero, pero la
+// cifra se formatea con <Money> y admite un
 // tooltip opcional (mismo patrón que MoneyKpiTile en MiTrabajoTab.jsx:
 // botón "?" con aria-label propio y objetivo táctil de 44px vía
 // -inset-[15px], en vez del genérico "Ayuda"/"Ocultar ayuda" de Field —
 // MovementSheet puede estar abierto encima de Home a la vez, ver
 // onQuickCreate más abajo, así que ambos tooltips conviven en el DOM y
-// necesitan aria-labels que no choquen). Sin la maquinaria de
-// icono/texto-que-se-encoge de MiTrabajoTab: aquí cada tarjeta es
-// independiente, no se miden las 3 juntas — proporcional al caso real,
-// una cifra diaria rara vez alcanza el mismo número de dígitos que un
-// total mensual.
+// necesitan aria-labels que no choquen).
+// h-full + justify-between (2026-09-18): esta tarjeta vive junto a un par
+// de MiniKpiTile más compactas (ver el grid de abajo) — si su columna resulta
+// más alta que esta, `h-full` la estira para igualar esa altura y
+// `justify-between` reparte el aire de más entre la fila de cifra y la
+// etiqueta, en vez de dejar un hueco vacío pegado abajo.
+// Sin la maquinaria de icono/texto-que-se-encoge de MiTrabajoTab: aquí
+// solo hay UNA cifra de dinero en el grupo (Cursos/Captados son enteros
+// cortos), así que el problema real no era "todas las cifras deben
+// encogerse juntas" (eso sí lo necesita MiTrabajoTab, con 3 cifras de
+// dinero a la vez) sino "esta cifra necesita más ancho que sus vecinas"
+// — resuelto dándole 2/3 del grid en vez de encogiendo su fuente. Bug
+// real encontrado en mobile-check (iPhone 14 Pro Max) el 2026-09-18: con
+// las 3 tarjetas a ancho igual, un importe de 4+ dígitos ("2.106,33 ฿")
+// se recortaba con "…" a media cifra — ilegible para un dato de dinero,
+// muy distinto de truncar una etiqueta de texto.
 function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel }) {
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const entries = Object.entries(totals || {});
@@ -112,7 +103,7 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
+      className="flex h-full flex-col justify-between gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
     >
       <div className="flex items-center gap-2">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
@@ -155,6 +146,32 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
           <span className="block text-[11px] font-normal italic normal-case text-gray-500">{tooltip}</span>
         </FloatingPanel>
       )}
+    </motion.div>
+  );
+}
+
+// Tarjeta de KPI compacta — icono+cifra+etiqueta en una sola fila en
+// vez de dos, pensada para vivir apilada junto a otra igual en la columna
+// estrecha que deja MoneyKpiTile al ocupar 2/3 del grid (ver el grid de
+// KPIs más abajo). flex-1 + el `flex flex-col` del contenedor que las
+// envuelve: las dos se reparten a partes iguales la altura total de la
+// columna, que a su vez iguala la de MoneyKpiTile vía `items-stretch`
+// (comportamiento por defecto del grid).
+function MiniKpiTile({ icon: Icon, color, value, label, index, reduced }) {
+  const count = useCountUp(value, { reduced });
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
+      className="flex flex-1 items-center gap-2 rounded-xl border border-gray-200 bg-white px-2.5"
+    >
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+        <Icon size={13} style={{ color }} aria-hidden="true" />
+      </span>
+      <span className="flex min-w-0 flex-col leading-none">
+        <span className="text-base font-bold tabular-nums" style={{ color: BRAND_NAVY }}>{count}</span>
+        <span className="mt-0.5 truncate text-[10px] font-medium text-gray-500">{label}</span>
+      </span>
     </motion.div>
   );
 }
@@ -312,7 +329,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           Bloque 9, pedido explícito del usuario) — antes cerraba la
           pantalla; tres ángulos no financieros de "cómo me está yendo"
           (financiero lo cubren las dos tarjetas de más abajo). Conteo
-          ascendente + entrada escalonada (KpiTile, arriba) en vez de
+          ascendente + entrada escalonada (MoneyKpiTile/MiniKpiTile, arriba) en vez de
           aparecer estáticas de golpe. */}
       <div>
         <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
@@ -343,15 +360,31 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             </button>
           )}
         </div>
+        {/* 2/3 + 1/3 (2026-09-18, corrige un bug real encontrado en
+            mobile-check iPhone 14 Pro Max): antes las 3 tarjetas se
+            repartían el ancho a partes iguales — bien para dos enteros
+            cortos ("37", "20"), pero una cifra de dinero de 4+ dígitos
+            ("2.106,33 ฿") no cabía y se recortaba con "…", ilegible. En
+            vez de encoger la fuente de esa cifra (quedaría más pequeña
+            que sus vecinas sin motivo aparente, la única tarjeta de
+            dinero del grupo, a diferencia de MiTrabajoTab donde las 3
+            SÍ son dinero y se encogen juntas), se le da más ancho de
+            verdad: Media diaria ocupa 2/3 del grid, Cursos/Captados se
+            apilan en el 1/3 restante como tarjetas compactas
+            (MiniKpiTile) — misma altura total de fila que antes. */}
         <div className="grid grid-cols-3 gap-2">
-          <MoneyKpiTile
-            icon={CalendarDays} color={TEAL} totals={dailyAverageTotals} currencyRows={currencies.rows}
-            label={t("kpis.dailyAverageThisMonth")} tooltip={t("kpis.dailyAverageTooltip")}
-            tooltipShowLabel={t("kpis.dailyAverageTooltipShow")} tooltipHideLabel={t("kpis.dailyAverageTooltipHide")}
-            index={0} reduced={reducedMotion}
-          />
-          <KpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
-          <KpiTile icon={Handshake} color={GREEN} value={referredThisMonth} label={t("kpis.referredThisMonth")} index={2} reduced={reducedMotion} />
+          <div className="col-span-2">
+            <MoneyKpiTile
+              icon={CalendarDays} color={TEAL} totals={dailyAverageTotals} currencyRows={currencies.rows}
+              label={t("kpis.dailyAverageThisMonth")} tooltip={t("kpis.dailyAverageTooltip")}
+              tooltipShowLabel={t("kpis.dailyAverageTooltipShow")} tooltipHideLabel={t("kpis.dailyAverageTooltipHide")}
+              index={0} reduced={reducedMotion}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <MiniKpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
+            <MiniKpiTile icon={Handshake} color={GREEN} value={referredThisMonth} label={t("kpis.referredThisMonth")} index={2} reduced={reducedMotion} />
+          </div>
         </div>
       </div>
 

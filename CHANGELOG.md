@@ -46,6 +46,13 @@ Registro de cambios relevantes de Ocean Flow.
   existente del mismo nombre usada por el selector de idioma de alta de
   usuario — resuelto con un alias de importación
   (`PROFILE_LANGUAGE_OPTIONS`), sin tocar el selector existente.
+- **KPI "Media diaria" (Home) se recortaba en móvil**: con las 3
+  tarjetas de KPI a ancho igual, un importe de 4+ dígitos ("2.106,33 ฿")
+  no cabía y se cortaba con "…", ilegible — encontrado con mobile-check
+  (iPhone 14 Pro Max). En vez de encoger la fuente (quedaría más pequeña
+  que sus vecinas, la única tarjeta de dinero del grupo), rediseñado el
+  grid: "Media diaria" pasa a ocupar 2/3 del ancho, "Cursos"/"Captados"
+  se apilan compactos en el 1/3 restante.
 
 ## [1.3.1] - 2026-09-09
 
