@@ -2,7 +2,7 @@
   "loading": { "defaultLabel": "Carregant" },
   "errorBoundary": {
     "title": "Vaja, alguna cosa ha fallat",
-    "body": "Aquesta pantalla ha tingut un problema inesperat. No és culpa teva — prova a recarregar, hauria de tornar a la normalitat.",
+    "body": "Aquesta pantalla ha tingut un problema inesperat. No és culpa teva. Prova a recarregar, hauria de tornar a la normalitat.",
     "reload": "Recarrega"
   },
   "movementTypes": {
@@ -23,7 +23,7 @@
     "defaultLabel": "Elimina",
     "defaultItemLabel": "aquest element",
     "deletedToast": "Eliminat",
-    "errorToast": "No s'ha pogut eliminar. Torna-ho a provar.",
+    "errorToast": "No hem pogut eliminar. Torna-ho a provar.",
     "confirmTitle": "Vols eliminar aquest registre?",
     "confirmMessage": "Estàs a punt d'eliminar {{item}}. Aquesta acció no es pot desfer."
   },

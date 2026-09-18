@@ -49,7 +49,7 @@
     }
   },
   "instructor": {
-    "hint": "Zure Training Recordak automatikoki betetzeko erabiltzen dira — hemen behin bakarrik gordetzen dira, ez gailuka.",
+    "hint": "Zure Training Recordak automatikoki betetzeko erabiltzen dira. Hemen behin bakarrik gordetzen dira, ez gailuka.",
     "card": {
       "role": "SSI profesionala",
       "roleWithLevel": "SSI {{level}}",

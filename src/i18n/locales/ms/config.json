@@ -13,11 +13,11 @@
     "empty": "Belum ada dataset.",
     "fab": "Dataset baharu",
     "sheetTitle": "Dataset baharu",
-    "sheetHint": "Bermula kosong dan tidak aktif — duplikasi yang sedia ada jika anda mahu bermula dengan kandungan yang sudah dimuatkan.",
+    "sheetHint": "Bermula kosong dan tidak aktif. Duplikasi yang sedia ada jika anda mahu bermula dengan kandungan yang sudah dimuatkan.",
     "nameLabel": "Nama",
     "create": "Cipta",
     "toasts": {
-      "created": "Dataset dicipta — tambah kandungannya sebelum mengaktifkannya",
+      "created": "Dataset dicipta. Tambah kandungannya sebelum mengaktifkannya",
       "duplicated": "\"{{newLabel}}\" dicipta dengan kandungan yang sama seperti \"{{sourceLabel}}\"",
       "duplicateError": "Tidak dapat duplikasi. Cuba lagi.",
       "keyTaken": "Sudah ada dataset dengan kunci itu.",
@@ -25,8 +25,8 @@
       "updateError": "Tidak dapat mengemas kini."
     },
     "errors": {
-      "isDefault": "Ini adalah dataset lalai — tandakan yang lain sebagai lalai sebelum memadam yang ini.",
-      "lastOne": "Anda tidak boleh memadam satu-satunya dataset — pendaftaran luaran dan pendaftaran manual memerlukan sekurang-kurangnya satu."
+      "isDefault": "Ini adalah dataset lalai. Tandakan yang lain sebagai lalai sebelum memadam yang ini.",
+      "lastOne": "Anda tidak boleh memadam satu-satunya dataset. Pendaftaran luaran dan pendaftaran manual memerlukan sekurang-kurangnya satu."
     }
   },
   "crudTable": {
@@ -176,7 +176,7 @@
     "noSePudoRegenerarContrasena": "Tidak dapat menjana semula kata laluan.",
     "contrasenaRegeneradaSinEmail": "Kata laluan dijana semula (emel tidak dapat dihantar kepada {{nickname}})",
     "contrasenaRegeneradaTitulo": "Kata laluan dijana semula",
-    "contrasenaRegeneradaDescripcion": "Kata laluan lama {{nickname}} tidak lagi sah. Kongsi pautan ini supaya dia boleh mencipta yang baharu — akaun akan kembali kepada \"Belum selesai\" sehingga itu.",
+    "contrasenaRegeneradaDescripcion": "Kata laluan lama {{nickname}} tidak lagi sah. Kongsi pautan ini supaya dia boleh mencipta yang baharu. Akaun akan kembali kepada \"Belum selesai\" sehingga itu.",
     "contrasenaRegeneradaEmailEnviado": "Kata laluan dijana semula dan emel dihantar kepada {{nickname}}",
     "nicknameVacio": "Nama pengguna tidak boleh kosong.",
     "datosActualizados": "Data dikemas kini",
@@ -190,19 +190,19 @@
     "eliminarUsuarioAlternativa": "Jika anda hanya mahu menarik balik aksesnya sambil mengekalkan datanya, guna \"Nyahaktifkan\" sebaliknya.",
     "eliminar": "Padam",
     "desactivarUsuarioTitulo": "Nyahaktifkan pengguna",
-    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> tidak akan dapat log masuk lagi. Semua datanya (sekolah, kadar bayaran, transaksi...) kekal utuh — anda boleh mengaktifkannya semula bila-bila masa dengan menjana pautan pengaktifan baharu.",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> tidak akan dapat log masuk lagi. Semua datanya (sekolah, kadar bayaran, transaksi...) kekal utuh. Anda boleh mengaktifkannya semula bila-bila masa dengan menjana pautan pengaktifan baharu.",
     "desactivar": "Nyahaktifkan",
     "generarEnlaceTitulo": "Jana pautan pengaktifan",
     "generarEnlaceMensaje": "Pautan sekali guna yang baharu akan dijana untuk <strong>{{nickname}}</strong>. Sebarang pautan sebelumnya akan tidak lagi berfungsi. Akaun tidak mendapat akses sehingga selesai.",
     "generarEnlace": "Jana pautan",
     "regenerarContrasenaTitulo": "Jana semula kata laluan",
-    "regenerarContrasenaMensaje": "Kata laluan semasa <strong>{{nickname}}</strong> akan berhenti berfungsi serta-merta. Dia perlu mencipta yang baharu dari pautan pengaktifan baharu — datanya tidak terjejas.",
+    "regenerarContrasenaMensaje": "Kata laluan semasa <strong>{{nickname}}</strong> akan berhenti berfungsi serta-merta. Dia perlu mencipta yang baharu dari pautan pengaktifan baharu. Datanya tidak terjejas.",
     "regenerar": "Jana semula",
     "generarInvitacion": "Jana pautan jemputan",
     "soloSuperadminInvitacion": "Hanya superadmin boleh menjana pautan jemputan.",
     "noSePudoGenerarInvitacion": "Tidak dapat menjana pautan jemputan.",
     "enlaceInvitacionTitulo": "Pautan jemputan",
-    "enlaceInvitacionDescripcion": "Sah selama 24 jam dan sekali guna. Kongsikan dengan orang yang anda mahu jemput — dia boleh mendaftar walaupun pendaftaran luaran ditutup."
+    "enlaceInvitacionDescripcion": "Sah selama 24 jam dan sekali guna. Kongsikan dengan orang yang anda mahu jemput. Dia boleh mendaftar walaupun pendaftaran luaran ditutup."
   },
   "sections": {
     "escuelas": {
@@ -258,7 +258,7 @@
     "editarEstadoPago": "Sunting status bayaran",
     "nuevaMoneda": "Mata wang baharu",
     "editarMoneda": "Sunting mata wang",
-    "monedasDescripcion": "Pilih di sini mata wang sandaran seluruh aplikasi: digunakan apabila pengguna belum memilih mata wang kegemarannya sendiri dalam Profil Saya. Ini bukan keutamaan peribadi — ia adalah lalai bagi mana-mana akaun baharu.",
+    "monedasDescripcion": "Pilih di sini mata wang sandaran seluruh aplikasi: digunakan apabila pengguna belum memilih mata wang kegemarannya sendiri dalam Profil Saya. Ini bukan keutamaan peribadi. Ia adalah lalai bagi mana-mana akaun baharu.",
     "monedaPorDefectoApp": "Lalai aplikasi",
     "codigoCampo": "Kod (cth. EUR)",
     "simboloCampo": "Simbol"

@@ -12,7 +12,7 @@
   },
   "emptyMessage": {
     "pendingWithFilters": "Không có mục nào chờ với bộ lọc này.",
-    "pendingNoFilters": "Bạn đã xong hết — không có gì chờ.",
+    "pendingNoFilters": "Bạn đã xong hết. Không có gì chờ.",
     "paidWithFilters": "Không có mục nào đã thu với bộ lọc này.",
     "paidNoFilters": "Bạn chưa đánh dấu gì là đã thu."
   },
@@ -47,8 +47,8 @@
     "messageAjuste_other": "Bạn sắp đánh dấu {{count}} giao dịch này là đã thu hoặc đã thanh toán cùng lúc, tùy theo từng trường hợp. Bạn có thể hoàn tác từng cái sau đó, giống như khi xác nhận từng cái một.",
     "messageSimple_one": "Bạn sắp đánh dấu giao dịch này là đã thu cùng lúc. Bạn có thể hoàn tác sau đó, giống như khi xác nhận từng cái một.",
     "messageSimple_other": "Bạn sắp đánh dấu {{count}} giao dịch này là đã thu cùng lúc. Bạn có thể hoàn tác từng cái sau đó, giống như khi xác nhận từng cái một.",
-    "toastSwitch_one": "Đã đánh dấu {{count}} giao dịch là {{verb}} — chuyển sang \"Đã thu\" để xem",
-    "toastSwitch_other": "Đã đánh dấu {{count}} giao dịch là {{verbPlural}} — chuyển sang \"Đã thu\" để xem",
+    "toastSwitch_one": "Đã đánh dấu {{count}} giao dịch là {{verb}}. Chuyển sang \"Đã thu\" để xem",
+    "toastSwitch_other": "Đã đánh dấu {{count}} giao dịch là {{verbPlural}}. Chuyển sang \"Đã thu\" để xem",
     "toastNoSwitch_one": "Đã đánh dấu {{count}} giao dịch là {{verb}}",
     "toastNoSwitch_other": "Đã đánh dấu {{count}} giao dịch là {{verbPlural}}",
     "verbCobrado": "đã thu",
@@ -66,14 +66,14 @@
     "toast_one": "Đã đánh dấu {{count}} giao dịch là đang chờ",
     "toast_other": "Đã đánh dấu {{count}} giao dịch là đang chờ"
   },
-  "paidCapHint": "Đang hiện {{limit}} giao dịch đã thu gần nhất trong tổng số {{total}} — dùng \"Lọc\" để xem một khoảng thời gian cụ thể.",
+  "paidCapHint": "Đang hiện {{limit}} giao dịch đã thu gần nhất trong tổng số {{total}}. Dùng \"Lọc\" để xem một khoảng thời gian cụ thể.",
   "fabAdd": "Thêm",
   "toggleStatus": {
     "undoneToast": "Đã hoàn tác",
     "undoError": "Không thể hoàn tác. Vui lòng thử lại.",
     "undoAction": "Hoàn tác",
     "markedPending": "Đã đánh dấu là đang chờ",
-    "markedPaidSwitchTab": "Đã đánh dấu là đã thu — chuyển sang \"Đã thu\" để xem",
+    "markedPaidSwitchTab": "Đã đánh dấu là đã thu. Chuyển sang \"Đã thu\" để xem",
     "markedPaid": "Đã đánh dấu là đã thu"
   },
   "genericUpdateError": "Không thể cập nhật. Vui lòng thử lại.",

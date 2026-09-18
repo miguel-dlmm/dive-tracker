@@ -13,11 +13,11 @@
     "empty": "Nog geen datasets.",
     "fab": "Nieuwe dataset",
     "sheetTitle": "Nieuwe dataset",
-    "sheetHint": "Begint leeg en inactief — dupliceer een bestaande als je wilt starten met al ingevulde inhoud.",
+    "sheetHint": "Begint leeg en inactief. Dupliceer een bestaande als je wilt starten met al ingevulde inhoud.",
     "nameLabel": "Naam",
     "create": "Aanmaken",
     "toasts": {
-      "created": "Dataset aangemaakt — vul de inhoud aan voordat je hem activeert",
+      "created": "Dataset aangemaakt. Vul de inhoud aan voordat je hem activeert",
       "duplicated": "\"{{newLabel}}\" aangemaakt met dezelfde inhoud als \"{{sourceLabel}}\"",
       "duplicateError": "Dupliceren is niet gelukt. Probeer het opnieuw.",
       "keyTaken": "Er bestaat al een dataset met die sleutel.",
@@ -25,8 +25,8 @@
       "updateError": "Bijwerken is niet gelukt."
     },
     "errors": {
-      "isDefault": "Dit is de standaarddataset — stel eerst een andere als standaard in voordat je deze verwijdert.",
-      "lastOne": "Je kunt de enige dataset niet verwijderen — de externe registratie en de handmatige aanmelding hebben er minstens één nodig."
+      "isDefault": "Dit is de standaarddataset. Stel eerst een andere als standaard in voordat je deze verwijdert.",
+      "lastOne": "Je kunt de enige dataset niet verwijderen. De externe registratie en de handmatige aanmelding hebben er minstens één nodig."
     }
   },
   "crudTable": {
@@ -176,7 +176,7 @@
     "noSePudoRegenerarContrasena": "Het wachtwoord kon niet opnieuw worden gegenereerd.",
     "contrasenaRegeneradaSinEmail": "Wachtwoord opnieuw gegenereerd (de e-mail kon niet worden verzonden naar {{nickname}})",
     "contrasenaRegeneradaTitulo": "Wachtwoord opnieuw gegenereerd",
-    "contrasenaRegeneradaDescripcion": "Het vorige wachtwoord van {{nickname}} werkt niet meer. Deel deze link zodat een nieuw wachtwoord kan worden aangemaakt — tot die tijd staat het account weer op \"In afwachting\".",
+    "contrasenaRegeneradaDescripcion": "Het vorige wachtwoord van {{nickname}} werkt niet meer. Deel deze link zodat een nieuw wachtwoord kan worden aangemaakt. Tot die tijd staat het account weer op \"In afwachting\".",
     "contrasenaRegeneradaEmailEnviado": "Wachtwoord opnieuw gegenereerd en e-mail verzonden naar {{nickname}}",
     "nicknameVacio": "De nickname mag niet leeg zijn.",
     "datosActualizados": "Gegevens bijgewerkt",
@@ -190,19 +190,19 @@
     "eliminarUsuarioAlternativa": "Als je alleen de toegang wilt intrekken met behoud van de gegevens, gebruik dan \"Deactiveren\" in plaats daarvan.",
     "eliminar": "Verwijderen",
     "desactivarUsuarioTitulo": "Gebruiker deactiveren",
-    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> kan niet meer inloggen. Alle gegevens (scholen, tarieven, boekingen...) blijven intact bewaard — je kunt het account op elk moment weer activeren door een nieuwe activatielink te genereren.",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> kan niet meer inloggen. Alle gegevens (scholen, tarieven, boekingen...) blijven intact bewaard. Je kunt het account op elk moment weer activeren door een nieuwe activatielink te genereren.",
     "desactivar": "Deactiveren",
     "generarEnlaceTitulo": "Activatielink genereren",
     "generarEnlaceMensaje": "Er wordt een nieuwe eenmalige link gegenereerd voor <strong>{{nickname}}</strong>. Elke eerdere link wordt daarmee ongeldig. Het account krijgt geen toegang totdat de link wordt gebruikt.",
     "generarEnlace": "Link genereren",
     "regenerarContrasenaTitulo": "Wachtwoord opnieuw genereren",
-    "regenerarContrasenaMensaje": "Het huidige wachtwoord van <strong>{{nickname}}</strong> stopt onmiddellijk met werken. Er moet een nieuw wachtwoord worden aangemaakt via een nieuwe activatielink — de gegevens blijven ongewijzigd.",
+    "regenerarContrasenaMensaje": "Het huidige wachtwoord van <strong>{{nickname}}</strong> stopt onmiddellijk met werken. Er moet een nieuw wachtwoord worden aangemaakt via een nieuwe activatielink. De gegevens blijven ongewijzigd.",
     "regenerar": "Opnieuw genereren",
     "generarInvitacion": "Uitnodigingslink genereren",
     "soloSuperadminInvitacion": "Alleen een superadmin kan uitnodigingslinks genereren.",
     "noSePudoGenerarInvitacion": "De uitnodigingslink kon niet worden gegenereerd.",
     "enlaceInvitacionTitulo": "Uitnodigingslink",
-    "enlaceInvitacionDescripcion": "24 uur geldig en eenmalig te gebruiken. Deel deze link met de persoon die je wilt uitnodigen — die kan zich registreren, ook als externe registratie is uitgeschakeld."
+    "enlaceInvitacionDescripcion": "24 uur geldig en eenmalig te gebruiken. Deel deze link met de persoon die je wilt uitnodigen. Die kan zich registreren, ook als externe registratie is uitgeschakeld."
   },
   "sections": {
     "escuelas": {
@@ -258,7 +258,7 @@
     "editarEstadoPago": "Betaalstatus bewerken",
     "nuevaMoneda": "Nieuwe munteenheid",
     "editarMoneda": "Munteenheid bewerken",
-    "monedasDescripcion": "Kies hier de standaardmunt van de hele app: deze wordt gebruikt zolang een gebruiker nog geen eigen favoriete munt heeft gekozen in Mijn profiel. Dit is geen persoonlijke voorkeur — het is de munt die standaard wordt toegepast op elk nieuw account.",
+    "monedasDescripcion": "Kies hier de standaardmunt van de hele app: deze wordt gebruikt zolang een gebruiker nog geen eigen favoriete munt heeft gekozen in Mijn profiel. Dit is geen persoonlijke voorkeur. Het is de munt die standaard wordt toegepast op elk nieuw account.",
     "monedaPorDefectoApp": "Standaard van de app",
     "codigoCampo": "Code (bijv. EUR)",
     "simboloCampo": "Symbool"

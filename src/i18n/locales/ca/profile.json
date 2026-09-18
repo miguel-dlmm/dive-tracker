@@ -21,7 +21,7 @@
     "saving": "Desant…",
     "cancel": "Cancel·la",
     "toastSuccess": "Avatar actualitzat",
-    "toastError": "No s'ha pogut desar l'avatar. Torna-ho a provar."
+    "toastError": "No hem pogut desar l'avatar. Torna-ho a provar."
   },
   "personalData": {
     "nameLine": "Nom:",
@@ -45,11 +45,11 @@
     "errors": {
       "nicknameTaken": "Aquest nickname ja s'està fent servir.",
       "nicknameAt": "El nickname no pot contenir \"@\".",
-      "generic": "No s'ha pogut desar. Torna-ho a provar."
+      "generic": "No hem pogut desar. Torna-ho a provar."
     }
   },
   "instructor": {
-    "hint": "S'utilitzen per emplenar els teus Training Records automàticament — es desen aquí una sola vegada, no per dispositiu.",
+    "hint": "S'utilitzen per emplenar els teus Training Records automàticament. Es desen aquí una sola vegada, no per dispositiu.",
     "card": {
       "role": "Professional SSI",
       "roleWithLevel": "SSI {{level}}",
@@ -75,7 +75,7 @@
   "language": {
     "placeholder": "Selecciona un idioma",
     "toastSuccess": "Idioma actualitzat",
-    "toastError": "No s'ha pogut canviar l'idioma. Torna-ho a provar."
+    "toastError": "No hem pogut canviar l'idioma. Torna-ho a provar."
   },
   "password": {
     "currentLabel": "Contrasenya actual",
@@ -89,7 +89,7 @@
     "matches": "Les contrasenyes coincideixen",
     "submit": "Canvia la contrasenya",
     "toastSuccess": "Contrasenya actualitzada",
-    "toastError": "No s'ha pogut canviar la contrasenya. Torna-ho a provar.",
+    "toastError": "No hem pogut canviar la contrasenya. Torna-ho a provar.",
     "wrongCurrent": "Contrasenya actual incorrecta."
   },
   "deleteAccount": {
@@ -106,7 +106,7 @@
     "back": "Enrere",
     "deleteButton": "Elimina el compte",
     "toastSuccess": "Compte eliminat",
-    "genericError": "No s'ha pogut eliminar el compte. Torna-ho a provar.",
-    "networkError": "No s'ha pogut eliminar el compte. Comprova la connexió i torna-ho a provar."
+    "genericError": "No hem pogut eliminar el compte. Torna-ho a provar.",
+    "networkError": "No hem pogut eliminar el compte. Comprova la connexió i torna-ho a provar."
   }
 }

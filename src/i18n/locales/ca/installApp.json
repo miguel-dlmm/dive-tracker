@@ -2,10 +2,10 @@
   "intro": "Afegeix Ocean Flow a la pantalla d'inici del teu mòbil i obre-la com qualsevol altra app, sense passar pel navegador cada vegada.",
   "ios": {
     "title": "iPhone / iPad (Safari)",
-    "step1": "Obre Ocean Flow a Safari — ha de ser Safari, no funciona des d'altres navegadors a iOS.",
+    "step1": "Obre Ocean Flow a Safari. Ha de ser Safari, no funciona des d'altres navegadors a iOS.",
     "step2": "Toca la icona Comparteix a la barra inferior.",
     "step3": "Desplaça't avall i toca \"A la pantalla d'inici\".",
-    "step4": "Toca \"Afegeix\" a dalt a la dreta — ja està."
+    "step4": "Toca \"Afegeix\" a dalt a la dreta. Ja està."
   },
   "android": {
     "title": "Android (Chrome)",

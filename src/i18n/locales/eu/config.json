@@ -13,11 +13,11 @@
     "empty": "Oraindik ez dago datu-multzorik.",
     "fab": "Datu-multzo berria",
     "sheetTitle": "Datu-multzo berria",
-    "sheetHint": "Hutsik eta inaktibo sortzen da — bikoiztu lehendik dagoen bat jada kargatutako edukitik abiatu nahi baduzu.",
+    "sheetHint": "Hutsik eta inaktibo sortzen da. Bikoiztu lehendik dagoen bat jada kargatutako edukitik abiatu nahi baduzu.",
     "nameLabel": "Izena",
     "create": "Sortu",
     "toasts": {
-      "created": "Datu-multzoa sortuta — gehitu bere edukia aktibatu aurretik",
+      "created": "Datu-multzoa sortuta. Gehitu bere edukia aktibatu aurretik",
       "duplicated": "\"{{newLabel}}\" sortu da \"{{sourceLabel}}\"(r)en eduki berarekin",
       "duplicateError": "Ezin izan da bikoiztu. Saiatu berriro.",
       "keyTaken": "Jada badago gako horrekin datu-multzo bat.",
@@ -25,8 +25,8 @@
       "updateError": "Ezin izan da eguneratu."
     },
     "errors": {
-      "isDefault": "Datu-multzo lehenetsia da — markatu beste bat lehenetsi gisa hau ezabatu aurretik.",
-      "lastOne": "Ezin duzu datu-multzo bakarra ezabatu — kanpo-erregistroak eta alta eskuzkoak gutxienez bat behar dute."
+      "isDefault": "Datu-multzo lehenetsia da. Markatu beste bat lehenetsi gisa hau ezabatu aurretik.",
+      "lastOne": "Ezin duzu datu-multzo bakarra ezabatu. Kanpo-erregistroak eta alta eskuzkoak gutxienez bat behar dute."
     }
   },
   "crudTable": {
@@ -43,7 +43,7 @@
     "anadidoCorrectamente": "Gehituta",
     "noSePudoGuardar": "Ezin izan da gorde. Saiatu berriro.",
     "noSePudoGuardarCambio": "Ezin izan da aldaketa gorde.",
-    "estadoPredeterminadoRazon": "Egoera lehenetsia da (\"zain\" adierazten du) — markatu beste bat lehenetsi gisa hau ezabatu aurretik"
+    "estadoPredeterminadoRazon": "Egoera lehenetsia da (\"zain\" adierazten du). Markatu beste bat lehenetsi gisa hau ezabatu aurretik"
   },
   "sectionColors": {
     "descripcion": "Nabigazio-barran eta area bakoitzeko erregistroa sortzeko botoietan erabiltzen dira."
@@ -176,7 +176,7 @@
     "noSePudoRegenerarContrasena": "Ezin izan da pasahitza berriro sortu.",
     "contrasenaRegeneradaSinEmail": "Pasahitza berriro sortuta (emaila ezin izan da {{nickname}}(r)i bidali)",
     "contrasenaRegeneradaTitulo": "Pasahitza berriro sortuta",
-    "contrasenaRegeneradaDescripcion": "{{nickname}}(r)en aurreko pasahitzak ez du balio jada. Partekatu esteka hau berri bat sor dezan — kontua \"Zain\" egoerara itzuliko da harik eta hori gertatu arte.",
+    "contrasenaRegeneradaDescripcion": "{{nickname}}(r)en aurreko pasahitzak ez du balio jada. Partekatu esteka hau berri bat sor dezan. Kontua \"Zain\" egoerara itzuliko da harik eta hori gertatu arte.",
     "contrasenaRegeneradaEmailEnviado": "Pasahitza berriro sortuta eta emaila {{nickname}}(r)i bidalita",
     "nicknameVacio": "Ezizena ezin da hutsik egon.",
     "datosActualizados": "Datuak eguneratuta",
@@ -190,19 +190,19 @@
     "eliminarUsuarioAlternativa": "Sarbidea bakarrik kentu nahi baduzu bere datuak gordez, erabili \"Desaktibatu\" horren ordez.",
     "eliminar": "Ezabatu",
     "desactivarUsuarioTitulo": "Desaktibatu erabiltzailea",
-    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong>(e)k ezingo du saioa hasi jada. Bere datu guztiak (eskolak, tarifak, mugimenduak...) osorik gordetzen dira — nahi duzunean berraktiba dezakezu aktibazio-esteka berri bat sortuz.",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong>(e)k ezingo du saioa hasi jada. Bere datu guztiak (eskolak, tarifak, mugimenduak...) osorik gordetzen dira. Nahi duzunean berraktiba dezakezu aktibazio-esteka berri bat sortuz.",
     "desactivar": "Desaktibatu",
     "generarEnlaceTitulo": "Sortu aktibazio-esteka",
     "generarEnlaceMensaje": "<strong>{{nickname}}</strong>(r)entzat erabilera bakarreko esteka berri bat sortuko da. Aurreko edozein estekak funtzionatzeari utziko dio. Kontuak ez du sarbiderik lortuko prozesua osatu arte.",
     "generarEnlace": "Sortu esteka",
     "regenerarContrasenaTitulo": "Sortu pasahitza berriro",
-    "regenerarContrasenaMensaje": "<strong>{{nickname}}</strong>(r)en uneko pasahitzak berehala funtzionatzeari utziko dio. Aktibazio-esteka berri batetik berri bat sortu beharko du — bere datuei ez die eragiten.",
+    "regenerarContrasenaMensaje": "<strong>{{nickname}}</strong>(r)en uneko pasahitzak berehala funtzionatzeari utziko dio. Aktibazio-esteka berri batetik berri bat sortu beharko du. Bere datuei ez die eragiten.",
     "regenerar": "Sortu berriro",
     "generarInvitacion": "Sortu gonbidapen-esteka",
     "soloSuperadminInvitacion": "Superadmin batek bakarrik sor ditzake gonbidapen-estekak.",
     "noSePudoGenerarInvitacion": "Ezin izan da gonbidapen-esteka sortu.",
     "enlaceInvitacionTitulo": "Gonbidapen-esteka",
-    "enlaceInvitacionDescripcion": "24 orduz baliozkoa eta erabilera bakarrekoa. Partekatu gonbidatu nahi duzun pertsonarekin — erregistratu ahal izango da kanpo-erregistroa itxita badago ere."
+    "enlaceInvitacionDescripcion": "24 orduz baliozkoa eta erabilera bakarrekoa. Partekatu gonbidatu nahi duzun pertsonarekin. Erregistratu ahal izango da kanpo-erregistroa itxita badago ere."
   },
   "sections": {
     "escuelas": {
@@ -258,7 +258,7 @@
     "editarEstadoPago": "Editatu ordainketa-egoera",
     "nuevaMoneda": "Dibisa berria",
     "editarMoneda": "Editatu dibisa",
-    "monedasDescripcion": "Aukeratu hemen aplikazio osoaren erreserba-dibisa: erabiltzaile batek Nire profilan bere dibisa gogokoena aukeratu ez duenean erabiltzen da. Ez da lehentasun pertsonal bat — kontu berri edozeini lehenetsita aplikatzen zaiona da.",
+    "monedasDescripcion": "Aukeratu hemen aplikazio osoaren erreserba-dibisa: erabiltzaile batek Nire profilan bere dibisa gogokoena aukeratu ez duenean erabiltzen da. Ez da lehentasun pertsonal bat. Kontu berri edozeini lehenetsita aplikatzen zaiona da.",
     "monedaPorDefectoApp": "Aplikazioaren lehenetsia",
     "codigoCampo": "Kodea (adib. EUR)",
     "simboloCampo": "Ikurra"

@@ -1,5 +1,5 @@
 {
-  "intro": "Tạo Training Record chính thức (hồ sơ tiến độ SSI) cho từng học viên, kèm chữ ký — không có gì bạn nhập ở đây được lưu trên đám mây, chỉ tải xuống.",
+  "intro": "Tạo Training Record chính thức (hồ sơ tiến độ SSI) cho từng học viên, kèm chữ ký. Không có gì bạn nhập ở đây được lưu trên đám mây, chỉ tải xuống.",
   "sinPlantillas": "Chưa có mẫu nào sẵn sàng sử dụng.",
   "noSePudieronCargarPlantillas": "Không thể tải các mẫu.",
   "noSePudoDescargarPlantilla": "Không thể tải mẫu này.",
@@ -10,7 +10,7 @@
   },
   "roster": {
     "titulo": "Học viên",
-    "hint": "Mỗi học viên chỉ cần cung cấp họ tên, chữ viết tắt và chữ ký — phần còn lại đã được cấu hình ở trên.",
+    "hint": "Mỗi học viên chỉ cần cung cấp họ tên, chữ viết tắt và chữ ký. Phần còn lại đã được cấu hình ở trên.",
     "vacio": "Bạn chưa thêm học viên nào.",
     "anadirPrimerAlumno": "Thêm học viên đầu tiên",
     "anadirAlumno": "Thêm học viên",
@@ -36,7 +36,7 @@
   "studentForm": {
     "nuevoAlumno": "Học viên mới",
     "editarAlumno": "Sửa học viên",
-    "hint": "Chỉ những gì khác nhau giữa các học viên — khóa học và ngày tháng đã được điền một lần cho cả danh sách.",
+    "hint": "Chỉ những gì khác nhau giữa các học viên. Khóa học và ngày tháng đã được điền một lần cho cả danh sách.",
     "nombre": "Tên",
     "apellidos": "Họ",
     "menorDeEdad": "Vị thành niên",
@@ -64,7 +64,7 @@
     "elegirFechaCorta": "Ngày",
     "configCompartidaHint": "Phần này chỉ điền MỘT lần cho cả lớp. Mỗi học viên chỉ cần thêm tên, chữ viết tắt và chữ ký ở phần \"Học viên\" bên dưới.",
     "progreso": "Tiến độ khóa học",
-    "progresoHint": "Đánh dấu những gì đã hoàn thành — các dòng màu xám là bắt buộc để cấp chứng chỉ.",
+    "progresoHint": "Đánh dấu những gì đã hoàn thành. Các dòng màu xám là bắt buộc để cấp chứng chỉ.",
     "obligatorio": "Bắt buộc",
     "aventuras": "Adventure Dives",
     "elegirAventura": "Chọn một Adventure Dive",
@@ -82,7 +82,7 @@
     "generando": "Đang tạo…",
     "generadoCorrectamente": "Đã tạo hồ sơ thành công.",
     "noSePudoGenerar": "Không thể tạo hồ sơ.",
-    "faltanCampos": "Thiếu các trường bắt buộc — kiểm tra các cảnh báo màu đỏ.",
+    "faltanCampos": "Thiếu các trường bắt buộc. Kiểm tra các cảnh báo màu đỏ.",
     "sinAlumnos": "Thêm ít nhất một học viên trước khi tạo."
   }
 }

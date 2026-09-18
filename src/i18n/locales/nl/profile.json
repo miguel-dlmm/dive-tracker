@@ -49,7 +49,7 @@
     }
   },
   "instructor": {
-    "hint": "Wordt gebruikt om je Training Records automatisch in te vullen — dit wordt hier eenmalig opgeslagen, niet per apparaat.",
+    "hint": "Wordt gebruikt om je Training Records automatisch in te vullen. Dit wordt hier eenmalig opgeslagen, niet per apparaat.",
     "card": {
       "role": "SSI-professional",
       "roleWithLevel": "SSI {{level}}",

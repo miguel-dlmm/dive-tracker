@@ -2,7 +2,7 @@
   "loading": { "defaultLabel": "Đang tải" },
   "errorBoundary": {
     "title": "Ối, có gì đó không ổn",
-    "body": "Màn hình này gặp sự cố bất ngờ. Không phải do bạn làm gì sai — hãy thử tải lại trang, mọi thứ sẽ trở lại bình thường.",
+    "body": "Màn hình này gặp sự cố bất ngờ. Không phải do bạn làm gì sai. Hãy thử tải lại trang, mọi thứ sẽ trở lại bình thường.",
     "reload": "Tải lại"
   },
   "movementTypes": {

@@ -49,7 +49,7 @@
     }
   },
   "instructor": {
-    "hint": "Dùng để tự động điền vào Training Records của bạn — chỉ lưu một lần ở đây, không theo từng thiết bị.",
+    "hint": "Dùng để tự động điền vào Training Records của bạn. Chỉ lưu một lần ở đây, không theo từng thiết bị.",
     "card": {
       "role": "Chuyên gia SSI",
       "roleWithLevel": "SSI {{level}}",

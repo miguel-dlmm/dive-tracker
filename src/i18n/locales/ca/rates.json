@@ -36,7 +36,7 @@
   "toasts": {
     "saved": "Canvis desats",
     "added": "Tarifa afegida",
-    "saveError": "No s'ha pogut desar. Torna-ho a provar.",
+    "saveError": "No hem pogut desar. Torna-ho a provar.",
     "duplicate": "Ja tens una tarifa activa per a aquesta escola i aquest curs. Desactiva-la abans de crear-ne una altra.",
     "reactivateBlocked": "No es pot reactivar: ja hi ha una altra tarifa activa per a aquesta escola i aquest curs.",
     "deactivated": "Tarifa desactivada",

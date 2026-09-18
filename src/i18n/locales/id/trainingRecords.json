@@ -1,5 +1,5 @@
 {
-  "intro": "Buat Training Record resmi (catatan kemajuan SSI) untuk setiap siswa, lengkap dengan tanda tangan — apa pun yang kamu isi di sini tidak disimpan di cloud, hanya diunduh.",
+  "intro": "Buat Training Record resmi (catatan kemajuan SSI) untuk setiap siswa, lengkap dengan tanda tangan. Apa pun yang kamu isi di sini tidak disimpan di cloud, hanya diunduh.",
   "sinPlantillas": "Belum ada templat yang siap digunakan.",
   "noSePudieronCargarPlantillas": "Templat tidak dapat dimuat.",
   "noSePudoDescargarPlantilla": "Templat ini tidak dapat diunduh.",
@@ -10,7 +10,7 @@
   },
   "roster": {
     "titulo": "Siswa",
-    "hint": "Setiap siswa hanya mengisi nama, inisial, dan tanda tangan — sisanya sudah diatur di atas.",
+    "hint": "Setiap siswa hanya mengisi nama, inisial, dan tanda tangan. Sisanya sudah diatur di atas.",
     "vacio": "Kamu belum menambahkan siswa apa pun.",
     "anadirPrimerAlumno": "Tambahkan siswa pertamamu",
     "anadirAlumno": "Tambah siswa",
@@ -36,13 +36,13 @@
   "studentForm": {
     "nuevoAlumno": "Siswa baru",
     "editarAlumno": "Edit siswa",
-    "hint": "Hanya yang berbeda dari satu siswa ke siswa lain — kursus dan tanggalnya sudah diisi sekali untuk seluruh daftar.",
+    "hint": "Hanya yang berbeda dari satu siswa ke siswa lain. Kursus dan tanggalnya sudah diisi sekali untuk seluruh daftar.",
     "nombre": "Nama",
     "apellidos": "Nama belakang",
     "menorDeEdad": "Di bawah umur",
     "tutor": "Nama ayah/ibu/wali",
     "iniciales": "Inisial",
-    "inicialesHint": "Dihitung otomatis — bisa kamu perbaiki jika perlu.",
+    "inicialesHint": "Dihitung otomatis. Bisa kamu perbaiki jika perlu.",
     "plantilla": "Kursus yang akan disertifikasi",
     "cambiarPlantilla": "Ganti templat",
     "verAyuda": "Lihat bantuan",
@@ -64,7 +64,7 @@
     "elegirFechaCorta": "Tanggal",
     "configCompartidaHint": "Ini diisi SATU kali untuk seluruh kelas. Setiap siswa hanya mengisi nama, inisial, dan tanda tangan, di bagian \"Siswa\" di bawah.",
     "progreso": "Kemajuan kursus",
-    "progresoHint": "Tandai yang sudah selesai — baris berwarna abu-abu wajib untuk sertifikasi kursus.",
+    "progresoHint": "Tandai yang sudah selesai. Baris berwarna abu-abu wajib untuk sertifikasi kursus.",
     "obligatorio": "Wajib",
     "aventuras": "Petualangan",
     "elegirAventura": "Pilih petualangan",
@@ -82,7 +82,7 @@
     "generando": "Membuat…",
     "generadoCorrectamente": "Catatan berhasil dibuat.",
     "noSePudoGenerar": "Catatan tidak dapat dibuat.",
-    "faltanCampos": "Ada kolom wajib yang belum diisi — periksa peringatan berwarna merah.",
+    "faltanCampos": "Ada kolom wajib yang belum diisi. Periksa peringatan berwarna merah.",
     "sinAlumnos": "Tambahkan setidaknya satu siswa sebelum membuat catatan."
   }
 }

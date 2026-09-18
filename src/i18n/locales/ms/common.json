@@ -2,7 +2,7 @@
   "loading": { "defaultLabel": "Memuatkan" },
   "errorBoundary": {
     "title": "Alamak, ada masalah",
-    "body": "Skrin ini menghadapi masalah tidak dijangka. Ini bukan sesuatu yang anda lakukan — cuba muat semula dan ia sepatutnya kembali normal.",
+    "body": "Skrin ini menghadapi masalah tidak dijangka. Ini bukan sesuatu yang anda lakukan. Cuba muat semula dan ia sepatutnya kembali normal.",
     "reload": "Muat semula"
   },
   "movementTypes": {

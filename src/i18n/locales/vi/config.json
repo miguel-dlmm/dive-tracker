@@ -13,11 +13,11 @@
     "empty": "Chưa có dataset nào.",
     "fab": "Dataset mới",
     "sheetTitle": "Dataset mới",
-    "sheetHint": "Bắt đầu trống và không hoạt động — nhân bản một dataset có sẵn nếu bạn muốn bắt đầu từ nội dung đã có.",
+    "sheetHint": "Bắt đầu trống và không hoạt động. Nhân bản một dataset có sẵn nếu bạn muốn bắt đầu từ nội dung đã có.",
     "nameLabel": "Tên",
     "create": "Tạo",
     "toasts": {
-      "created": "Đã tạo dataset — thêm nội dung trước khi kích hoạt",
+      "created": "Đã tạo dataset. Thêm nội dung trước khi kích hoạt",
       "duplicated": "Đã tạo \"{{newLabel}}\" với cùng nội dung như \"{{sourceLabel}}\"",
       "duplicateError": "Không thể nhân bản. Vui lòng thử lại.",
       "keyTaken": "Đã tồn tại dataset với khóa đó.",
@@ -25,7 +25,7 @@
       "updateError": "Không thể cập nhật."
     },
     "errors": {
-      "isDefault": "Đây là dataset mặc định — hãy đặt dataset khác làm mặc định trước khi xóa cái này.",
+      "isDefault": "Đây là dataset mặc định. Hãy đặt dataset khác làm mặc định trước khi xóa cái này.",
       "lastOne": "Bạn không thể xóa dataset duy nhất — đăng ký bên ngoài và tạo tài khoản thủ công cần ít nhất một dataset."
     }
   },
@@ -176,7 +176,7 @@
     "noSePudoRegenerarContrasena": "Không thể tạo lại mật khẩu.",
     "contrasenaRegeneradaSinEmail": "Đã tạo lại mật khẩu (không gửi được email cho {{nickname}})",
     "contrasenaRegeneradaTitulo": "Đã tạo lại mật khẩu",
-    "contrasenaRegeneradaDescripcion": "Mật khẩu cũ của {{nickname}} không còn hiệu lực. Chia sẻ liên kết này để họ tạo mật khẩu mới — tài khoản sẽ trở lại \"Đang chờ\" cho đến lúc đó.",
+    "contrasenaRegeneradaDescripcion": "Mật khẩu cũ của {{nickname}} không còn hiệu lực. Chia sẻ liên kết này để họ tạo mật khẩu mới. Tài khoản sẽ trở lại \"Đang chờ\" cho đến lúc đó.",
     "contrasenaRegeneradaEmailEnviado": "Đã tạo lại mật khẩu và gửi email cho {{nickname}}",
     "nicknameVacio": "Biệt danh không được để trống.",
     "datosActualizados": "Đã cập nhật thông tin",
@@ -190,19 +190,19 @@
     "eliminarUsuarioAlternativa": "Nếu bạn chỉ muốn thu hồi quyền truy cập mà vẫn giữ dữ liệu, hãy dùng \"Vô hiệu hóa\" thay vào đó.",
     "eliminar": "Xóa",
     "desactivarUsuarioTitulo": "Vô hiệu hóa người dùng",
-    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> sẽ không thể đăng nhập nữa. Toàn bộ dữ liệu (trung tâm, mức giá, giao dịch...) vẫn được giữ nguyên vẹn — bạn có thể kích hoạt lại bất cứ lúc nào bằng cách tạo liên kết kích hoạt mới.",
+    "desactivarUsuarioMensaje": "<strong>{{nickname}}</strong> sẽ không thể đăng nhập nữa. Toàn bộ dữ liệu (trung tâm, mức giá, giao dịch...) vẫn được giữ nguyên vẹn. Bạn có thể kích hoạt lại bất cứ lúc nào bằng cách tạo liên kết kích hoạt mới.",
     "desactivar": "Vô hiệu hóa",
     "generarEnlaceTitulo": "Tạo liên kết kích hoạt",
     "generarEnlaceMensaje": "Một liên kết mới dùng một lần sẽ được tạo cho <strong>{{nickname}}</strong>. Mọi liên kết trước đó sẽ ngừng hoạt động. Tài khoản chưa có quyền truy cập cho đến khi hoàn tất.",
     "generarEnlace": "Tạo liên kết",
     "regenerarContrasenaTitulo": "Tạo lại mật khẩu",
-    "regenerarContrasenaMensaje": "Mật khẩu hiện tại của <strong>{{nickname}}</strong> sẽ ngừng hoạt động ngay lập tức. Họ sẽ cần tạo mật khẩu mới từ một liên kết kích hoạt mới — dữ liệu của họ không bị ảnh hưởng.",
+    "regenerarContrasenaMensaje": "Mật khẩu hiện tại của <strong>{{nickname}}</strong> sẽ ngừng hoạt động ngay lập tức. Họ sẽ cần tạo mật khẩu mới từ một liên kết kích hoạt mới. Dữ liệu của họ không bị ảnh hưởng.",
     "regenerar": "Tạo lại",
     "generarInvitacion": "Tạo liên kết mời",
     "soloSuperadminInvitacion": "Chỉ siêu quản trị mới có thể tạo liên kết mời.",
     "noSePudoGenerarInvitacion": "Không thể tạo liên kết mời.",
     "enlaceInvitacionTitulo": "Liên kết mời",
-    "enlaceInvitacionDescripcion": "Có hiệu lực 24 giờ và dùng một lần. Chia sẻ liên kết này với người bạn muốn mời — họ có thể đăng ký ngay cả khi đăng ký bên ngoài đang bị tắt."
+    "enlaceInvitacionDescripcion": "Có hiệu lực 24 giờ và dùng một lần. Chia sẻ liên kết này với người bạn muốn mời. Họ có thể đăng ký ngay cả khi đăng ký bên ngoài đang bị tắt."
   },
   "sections": {
     "escuelas": {

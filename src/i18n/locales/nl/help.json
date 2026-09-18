@@ -84,7 +84,7 @@
       "whenToUseIt": "Voordat je je eerste boeking registreert, en daarna elke keer dat je met een nieuwe school of cursus begint te werken, of een prijs wijzigt.",
       "steps": [
         "Ga naar Instellingen (tandwielicoon, rechtsboven) en tik op de gewenste sectie.",
-        "Voeg eerst je Scholen en Cursussen toe — een Tarief koppelt altijd een school aan een cursus, dus beide moeten al bestaan.",
+        "Voeg eerst je Scholen en Cursussen toe. Een Tarief koppelt altijd een school aan een cursus, dus beide moeten al bestaan.",
         "Tik binnen een sectie op de zwevende \"+\"-knop om iets aan te maken; \"‹ Instellingen\" brengt je terug naar het menu.",
         "Tik op de kleur van een rij om die aan te passen, en op de ster om als favoriet te markeren."
       ],
@@ -92,41 +92,41 @@
         "Een school, cursus of munt die als favoriet is gemarkeerd, staat al voorgeselecteerd in aanmaakformulieren.",
         "Instellingen sluiten (de \"✕\" in de kop) brengt je altijd terug naar het tabblad waar je vandaan kwam."
       ],
-      "expectedResult": "De nieuwe school, cursus of tarief is direct beschikbaar bij het maken van een boeking — hierna kun je verder met \"Een boeking registreren\"."
+      "expectedResult": "De nieuwe school, cursus of tarief is direct beschikbaar bij het maken van een boeking. Hierna kun je verder met \"Een boeking registreren\"."
     },
     "crear-movimiento": {
       "title": "Een boeking aanmaken",
-      "summary": "Hetzelfde formulier werkt voor een gegeven cursus, een commissie of een correctie met een collega — elk type heeft zijn eigen velden.",
-      "whatYouCanDo": "\"Boeking toevoegen\" is de enige plek om iets aan te maken in de hele app — het formulier zelf laat je het type kiezen, je hoeft niet de juiste knop voor elk geval te vinden.",
+      "summary": "Hetzelfde formulier werkt voor een gegeven cursus, een commissie of een correctie met een collega. Elk type heeft zijn eigen velden.",
+      "whatYouCanDo": "\"Boeking toevoegen\" is de enige plek om iets aan te maken in de hele app. Het formulier zelf laat je het type kiezen, je hoeft niet de juiste knop voor elk geval te vinden.",
       "whenToUseIt": "Meteen na het geven van een les, bij het afsluiten van een commissie, of wanneer je een correctie afspreekt met een andere instructeur.",
       "steps": [
         "Tik op \"Boeking toevoegen\": de \"+\"-knop op de kaart \"Nog te innen\" op Home, dezelfde knop door op een dag in de Home-kalender te tikken, of de zwevende \"+\" van Mijn werk.",
         "Kies bovenaan het formulier het type: Gegeven cursus, Commissie of Correctie.",
-        "Gegeven cursus: school, cursus, datum en aantal personen — het cursustarief berekent het bedrag zelf.",
-        "Commissie: net als een cursus, maar voor een klant die je hebt doorverwezen en die door een andere instructeur wordt opgeleid — gebruikt zijn eigen commissietarief, niet dat van een cursus.",
-        "Correctie: hangt van geen enkel tarief af — jij geeft zelf het bedrag op (positief als je iets tegoed hebt, negatief als jij iets verschuldigd bent) en met welke collega de correctie is.",
+        "Gegeven cursus: school, cursus, datum en aantal personen. Het cursustarief berekent het bedrag zelf.",
+        "Commissie: net als een cursus, maar voor een klant die je hebt doorverwezen en die door een andere instructeur wordt opgeleid. Gebruikt zijn eigen commissietarief, niet dat van een cursus.",
+        "Correctie: hangt van geen enkel tarief af. Jij geeft zelf het bedrag op (positief als je iets tegoed hebt, negatief als jij iets verschuldigd bent) en met welke collega de correctie is.",
         "Sla op. Als je het formulier vanuit Home opende, zie je de boeking direct daarna in Mijn werk."
       ],
       "tips": [
-        "Bestaat er nog geen tarief voor die school + cursus? Dan kun je het formulier direct een tarief laten aanmaken (\"Tarief toevoegen\") zonder het scherm te verlaten — geldt alleen voor Cursus en Commissie, een Correctie heeft nooit een tarief nodig.",
-        "Het formulier annuleren of sluiten zonder op te slaan, maakt niets aan — je kunt het gerust openen en sluiten zonder bang te zijn voor halve boekingen."
+        "Bestaat er nog geen tarief voor die school + cursus? Dan kun je het formulier direct een tarief laten aanmaken (\"Tarief toevoegen\") zonder het scherm te verlaten. Geldt alleen voor Cursus en Commissie, een Correctie heeft nooit een tarief nodig.",
+        "Het formulier annuleren of sluiten zonder op te slaan, maakt niets aan. Je kunt het gerust openen en sluiten zonder bang te zijn voor halve boekingen."
       ],
       "expectedResult": "De boeking verschijnt in Mijn werk, onder \"In afwachting\", en telt mee bij \"Gegenereerd deze maand\" op Home (behalve een Correctie in je nadeel, die niet als gegenereerd telt)."
     },
     "cobrar-movimientos": {
       "title": "Boekingen als geïnd markeren",
-      "summary": "Houd bij wat je nog moet innen en werk de status bij zodra je betaald wordt — één voor één, of allemaal tegelijk.",
+      "summary": "Houd bij wat je nog moet innen en werk de status bij zodra je betaald wordt. Één voor één, of allemaal tegelijk.",
       "whatYouCanDo": "Elke boeking heeft een status (in afwachting of geïnd). Die wijzigen gaat direct, met één tik, met de mogelijkheid om ongedaan te maken als je je vergist. Je kunt het per boeking doen, of in één keer op de hele zichtbare lijst.",
       "whenToUseIt": "Zodra een school of collega je betaalt (één voor één), of in één keer wanneer je periodiek nakijkt en er al meerdere openstaande betalingen zijn binnengekomen.",
       "steps": [
         "Om er één te innen: ga naar Mijn werk (het tabblad \"In afwachting\" opent standaard) en tik op \"Inning bevestigen\" bij die rij (of \"Markeer verrekend\" als het een correctie in je nadeel is).",
-        "De kaart \"Nog te innen\" op Home brengt je direct naar datzelfde tabblad — één tik vanaf het hoofdscherm.",
-        "Om er meerdere tegelijk te innen: gebruik in Mijn werk \"Alles innen\" boven de lijst — dit werkt op alles wat op dat moment zichtbaar is.",
+        "De kaart \"Nog te innen\" op Home brengt je direct naar datzelfde tabblad. Één tik vanaf het hoofdscherm.",
+        "Om er meerdere tegelijk te innen: gebruik in Mijn werk \"Alles innen\" boven de lijst. Dit werkt op alles wat op dat moment zichtbaar is.",
         "Gebruik vóór \"Alles innen\" de knop \"Filteren\" (op datum, school, cursus of type) om de lijst te beperken tot precies wat je in één keer wilt innen."
       ],
       "tips": [
         "Na elke wijziging verschijnt een melding met \"Ongedaan maken\" — je hebt een paar seconden om het terug te draaien zonder de boeking opnieuw te hoeven zoeken.",
-        "\"Alles innen\" vraagt om bevestiging voordat het wordt toegepast — er is geen \"Ongedaan maken\" voor de hele batch, in tegenstelling tot één voor één innen."
+        "\"Alles innen\" vraagt om bevestiging voordat het wordt toegepast. Er is geen \"Ongedaan maken\" voor de hele batch, in tegenstelling tot één voor één innen."
       ],
       "expectedResult": "De boeking (of alle gefilterde boekingen) verhuist naar het tabblad \"Geïnd\" en telt niet meer mee bij \"Nog te innen\" op Home."
     },
@@ -139,37 +139,37 @@
         "In Mijn werk is de kaart \"Gegenereerd deze maand\" altijd zichtbaar, boven de lijst, zonder iets aan te raken.",
         "Kies in Overzicht de granulariteit en periode in de bediening bovenaan (maandelijks, per kwartaal, per halfjaar, jaarlijks of een aangepast bereik) en, als je wilt, het type (Cursus, Commissie of Correctie).",
         "De hoofdkaart toont het totaal van de periode en hoeveel dit is veranderd ten opzichte van de vorige periode.",
-        "Tik op \"Per school\", \"Per cursus\", \"Commissies\", \"Correcties\" of \"Kalender\" om verder in te zoomen — elk klapt alleen open als je erom vraagt."
+        "Tik op \"Per school\", \"Per cursus\", \"Commissies\", \"Correcties\" of \"Kalender\" om verder in te zoomen. Elk klapt alleen open als je erom vraagt."
       ],
       "tips": [
         "Tik binnen \"Per school\" op een school om ter plekke de uitsplitsing per cursus te zien, zonder van scherm te wisselen.",
-        "De vergelijking met de vorige periode verschijnt niet als je meer dan één munt in dezelfde periode mengt — dit voorkomt een berekening die niet klopt."
+        "De vergelijking met de vorige periode verschijnt niet als je meer dan één munt in dezelfde periode mengt. Dit voorkomt een berekening die niet klopt."
       ],
       "expectedResult": "Je hebt een saldocijfer voor de gekozen periode, met detail over waar elke inkomst vandaan komt als je dat nodig hebt."
     },
     "generar-training-record": {
       "title": "Een Training Record maken",
-      "summary": "Het officiële SSI-voortgangsdocument van elke leerling, met zijn/haar handtekening en die van jou — niets wordt in de cloud opgeslagen, alleen gedownload.",
+      "summary": "Het officiële SSI-voortgangsdocument van elke leerling, met zijn/haar handtekening en die van jou. Niets wordt in de cloud opgeslagen, alleen gedownload.",
       "whatYouCanDo": "Vanuit Training Records maak je het officiële voortgangsdocument van elk van de 10 SSI-sjablonen, met de gegevens van elke leerling en jouw instructeurshandtekening al erin verwerkt. Je kunt ze één voor één of allemaal tegelijk maken, en downloaden als PDF, als afbeelding, of direct delen.",
       "whenToUseIt": "Bij het afronden van een cursus, wanneer een leerling zijn/haar Training Record op papier nodig heeft of om naar SSI te sturen.",
       "steps": [
         "Ga naar Training Records via de snelkoppeling op Home.",
-        "Kies het SSI-sjabloon van de cursus en vul de gedeelde instellingen in (examenversie, certificering, cursusvoortgang...) — dit vul je maar één keer in voor de hele klas.",
-        "\"Leerling toevoegen\" voor elke leerling: er wordt alleen om naam, initialen en handtekening gevraagd — bij een minderjarige ook de naam en handtekening van de ouder/voogd.",
+        "Kies het SSI-sjabloon van de cursus en vul de gedeelde instellingen in (examenversie, certificering, cursusvoortgang...). Dit vul je maar één keer in voor de hele klas.",
+        "\"Leerling toevoegen\" voor elke leerling: er wordt alleen om naam, initialen en handtekening gevraagd. Bij een minderjarige ook de naam en handtekening van de ouder/voogd.",
         "\"Genereer voor alle leerlingen\" maakt het document voor de hele lijst in één keer aan; \"TR opnieuw genereren\" bij een specifieke leerling maakt alleen die van hem/haar opnieuw aan, zonder de rest te herhalen.",
         "Per leerling: \"PDF downloaden\", \"Afbeelding downloaden (JPG)\" of \"Delen\". Voor iedereen tegelijk: \"Alles downloaden als PDF/JPG\" of \"Alles delen\", in één gecomprimeerd bestand."
       ],
       "tips": [
-        "Je hebt je volledige instructeurskaart in Mijn profiel nodig (initialen, SSI Pro-nummer en handtekening) voordat je iets kunt maken — dit wordt op elk Training Record afgedrukt.",
+        "Je hebt je volledige instructeurskaart in Mijn profiel nodig (initialen, SSI Pro-nummer en handtekening) voordat je iets kunt maken. Dit wordt op elk Training Record afgedrukt.",
         "Niets van wat je hier invult, wordt in Ocean Flow opgeslagen: elk document wordt ter plekke gemaakt en alleen gedownload."
       ],
       "expectedResult": "Je hebt het Training Record van elke leerling klaar om te downloaden of te delen, met zijn/haar handtekening en die van jou al erin verwerkt."
     },
     "mi-trabajo-referencia": {
       "title": "Mijn werk, in één oogopslag",
-      "summary": "De volledige lijst van je boekingen — cursussen, commissies en correcties — met hun acties.",
+      "summary": "De volledige lijst van je boekingen (cursussen, commissies en correcties) met hun acties.",
       "whatYouCanDo": "Mijn werk brengt wat vroeger drie aparte schermen waren (Registratie, Commissies en Collega's) samen op één plek, gegroepeerd op innningsstatus.",
-      "whenToUseIt": "Dit is je dagelijkse werkscherm — boekingen aanmaken, controleren, innen en bewerken.",
+      "whenToUseIt": "Dit is je dagelijkse werkscherm. Boekingen aanmaken, controleren, innen en bewerken.",
       "steps": [
         "In afwachting / Geïnd: de twee tabbladen bovenaan, met het openstaande totaal op de bovenste kaart.",
         "\"Filteren\": beperk de lijst op periode, school, cursus of boekingstype.",
@@ -177,7 +177,7 @@
         "De zwevende \"+\"-knop opent hetzelfde aanmaakformulier als de rest van de app."
       ],
       "tips": [
-        "\"Alles innen\"/\"Alles als openstaand markeren\" werken op de zichtbare lijst — met actieve filters werkt dit alleen op wat gefilterd is.",
+        "\"Alles innen\"/\"Alles als openstaand markeren\" werken op de zichtbare lijst. Met actieve filters werkt dit alleen op wat gefilterd is.",
         "Verwijderen vraagt om bevestiging en animeert het verdwijnen van de rij, zodat je precies ziet wat je hebt verwijderd."
       ],
       "expectedResult": "Je vindt en werkt elke boeking bij zonder dit scherm te verlaten."
@@ -188,7 +188,7 @@
       "whatYouCanDo": "Overzicht combineert een snel antwoord (het totaal van de periode, vergeleken met de vorige) met inklapbare kaarten voor wie verder wil inzoomen.",
       "whenToUseIt": "Om te begrijpen hoe een periode verloopt, scholen of cursussen te vergelijken, of commissies en correcties met collega's na te kijken.",
       "steps": [
-        "Kies de granulariteit (maandelijks, per kwartaal, per halfjaar, jaarlijks of aangepast); de periodestrook eronder scrollt vanzelf mee — tik op een periode om daarheen te centreren.",
+        "Kies de granulariteit (maandelijks, per kwartaal, per halfjaar, jaarlijks of aangepast); de periodestrook eronder scrollt vanzelf mee. Tik op een periode om daarheen te centreren.",
         "Filter op type (Totaal, Cursus, Commissie of Correctie) met de segmenten eronder.",
         "De hoofdkaart toont het totaal en, wanneer dat zinvol is, de vergelijking met de vorige periode.",
         "Tik op een kaart (Per school, Per cursus, Commissies, Correcties, Kalender) om deze uit te klappen."
@@ -202,42 +202,42 @@
     "configuracion-referencia": {
       "title": "Instellingen, in één oogopslag",
       "summary": "Het menu waar je je eigen basisgegevens beheert: scholen, cursussen en tarieven.",
-      "whatYouCanDo": "Scholen, Cursussen en Tarieven — de catalogi die je gebruikt bij het registreren van een boeking in Mijn werk.",
+      "whatYouCanDo": "Scholen, Cursussen en Tarieven. De catalogi die je gebruikt bij het registreren van een boeking in Mijn werk.",
       "whenToUseIt": "Om je basisgegevens up-to-date te houden: een nieuwe school toevoegen, een nieuwe cursus, of een tarief aanpassen.",
       "steps": [
         "Tik op een menurij om die sectie te openen; \"‹ Instellingen\" gaat terug naar het menu.",
         "Scholen en Cursussen maak je aan via de zwevende \"+\"-knop, net als in Mijn werk.",
-        "Tarieven toont Cursus en Commissie in één lijst (het type kies je als filter, of bij het aanmaken, binnen het formulier zelf) — hetzelfde visuele patroon als Mijn werk."
+        "Tarieven toont Cursus en Commissie in één lijst (het type kies je als filter, of bij het aanmaken, binnen het formulier zelf). Hetzelfde visuele patroon als Mijn werk."
       ],
       "expectedResult": "Je vindt elke catalogus of instelling zonder te hoeven onthouden op welk tabblad die vroeger stond."
     },
     "perfil-referencia": {
       "title": "Mijn profiel, in één oogopslag",
-      "summary": "Je avatar, je gegevens, je instructeurskaart, je favoriete munt en je wachtwoord — allemaal op één plek, bereikbaar via je naam in de kop.",
+      "summary": "Je avatar, je gegevens, je instructeurskaart, je favoriete munt en je wachtwoord. Allemaal op één plek, bereikbaar via je naam in de kop.",
       "whatYouCanDo": "Tik op je avatar of je nickname (rechtsboven op elk scherm) om naar Mijn profiel te gaan: je identiteit, je instructeurskaart, je taal, je favoriete munt en je wachtwoord, allemaal op één plek.",
       "whenToUseIt": "Wanneer je je account wilt personaliseren, een gegeven wilt corrigeren, of je wachtwoord wilt wijzigen zonder uit te loggen en via \"wachtwoord vergeten\" te gaan.",
       "steps": [
         "Tik op de avatar/nickname in de kop om naar Mijn profiel te gaan.",
-        "Het potlood op de avatar opent de icoon- en kleurkiezer — de wijziging wordt direct opgeslagen bij het kiezen, zonder aparte \"Opslaan\"-knop.",
+        "Het potlood op de avatar opent de icoon- en kleurkiezer. De wijziging wordt direct opgeslagen bij het kiezen, zonder aparte \"Opslaan\"-knop.",
         "\"Bewerken\" bij Persoonlijke gegevens opent naam, achternaam en nickname; de nickname mag geen \"@\" bevatten en mag niet overeenkomen met die van een ander account.",
-        "\"Instructeursgegevens\" is je kaart: initialen, SSI Pro-nummer en je handtekening — deze worden hier één keer opgeslagen en automatisch gebruikt om je Training Records in te vullen.",
-        "Favoriete munt wordt gebruikt als terugvaloptie bij een Correctie wanneer er geen tarief is dat deze bepaalt — de rest van de boekingen gebruikt altijd de munt van hun eigen tarief."
+        "\"Instructeursgegevens\" is je kaart: initialen, SSI Pro-nummer en je handtekening. Deze worden hier één keer opgeslagen en automatisch gebruikt om je Training Records in te vullen.",
+        "Favoriete munt wordt gebruikt als terugvaloptie bij een Correctie wanneer er geen tarief is dat deze bepaalt. De rest van de boekingen gebruikt altijd de munt van hun eigen tarief."
       ],
       "tips": [
-        "Je wachtwoord hier wijzigen vraagt niet om je huidige wachtwoord — als je al in de app bent ingelogd, wordt de actieve sessie als voldoende vertrouwd beschouwd.",
+        "Je wachtwoord hier wijzigen vraagt niet om je huidige wachtwoord. Als je al in de app bent ingelogd, wordt de actieve sessie als voldoende vertrouwd beschouwd.",
         "De taal van de hele app wijzig je ook hier, zonder uit te loggen.",
-        "Je account verwijderen is permanent en wist al je gegevens — om te bevestigen moet je het woord ANNULEREN typen, zodat er niets per ongeluk wordt verwijderd."
+        "Je account verwijderen is permanent en wist al je gegevens. Om te bevestigen moet je het woord ANNULEREN typen, zodat er niets per ongeluk wordt verwijderd."
       ],
       "expectedResult": "Je account weerspiegelt de avatar, gegevens, instructeurskaart en munt die je kiest, en je kunt je wachtwoord of taal wijzigen wanneer je wilt zonder de app te verlaten."
     },
     "filtros-referencia": {
       "title": "Filteren en zoeken",
       "summary": "Mijn werk, Tarieven en de catalogi in Instellingen delen hetzelfde filterpatroon.",
-      "whatYouCanDo": "Een knop \"Filteren\" (met het aantal actieve filters) klapt een paneel open met de beschikbare velden — periode, school, cursus, type... — in plaats van deze altijd boven de lijst te tonen.",
+      "whatYouCanDo": "Een knop \"Filteren\" (met het aantal actieve filters) klapt een paneel open met de beschikbare velden (periode, school, cursus, type...) in plaats van deze altijd boven de lijst te tonen.",
       "whenToUseIt": "Wanneer de lijst te veel elementen heeft om ze allemaal in één oogopslag te bekijken.",
       "steps": [
         "Tik op \"Filteren\" om het paneel met beschikbare velden voor dat scherm te openen.",
-        "Kies er één of meerdere — het cursusfilter staat meerdere selecties toe.",
+        "Kies er één of meerdere. Het cursusfilter staat meerdere selecties toe.",
         "\"Filters wissen\" verschijnt zodra er minstens één actief is."
       ],
       "tips": [

@@ -49,7 +49,7 @@
     }
   },
   "instructor": {
-    "hint": "Digunakan untuk mengisi Training Records anda secara automatik — disimpan di sini sekali sahaja, bukan mengikut peranti.",
+    "hint": "Digunakan untuk mengisi Training Records anda secara automatik. Disimpan di sini sekali sahaja, bukan mengikut peranti.",
     "card": {
       "role": "Profesional SSI",
       "roleWithLevel": "SSI {{level}}",

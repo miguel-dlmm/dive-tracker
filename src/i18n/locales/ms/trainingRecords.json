@@ -1,5 +1,5 @@
 {
-  "intro": "Jana Training Record rasmi (rekod kemajuan SSI) untuk setiap pelajar, lengkap dengan tandatangan — apa sahaja yang anda isi di sini tidak disimpan dalam awan, hanya dimuat turun.",
+  "intro": "Jana Training Record rasmi (rekod kemajuan SSI) untuk setiap pelajar, lengkap dengan tandatangan. Apa sahaja yang anda isi di sini tidak disimpan dalam awan, hanya dimuat turun.",
   "sinPlantillas": "Belum ada templat yang sedia digunakan.",
   "noSePudieronCargarPlantillas": "Tidak dapat memuatkan templat.",
   "noSePudoDescargarPlantilla": "Tidak dapat memuat turun templat ini.",
@@ -10,7 +10,7 @@
   },
   "roster": {
     "titulo": "Pelajar",
-    "hint": "Setiap pelajar hanya perlu memberikan nama, inisial dan tandatangan — selebihnya sudah ditetapkan di atas.",
+    "hint": "Setiap pelajar hanya perlu memberikan nama, inisial dan tandatangan. Selebihnya sudah ditetapkan di atas.",
     "vacio": "Anda belum menambah sebarang pelajar lagi.",
     "anadirPrimerAlumno": "Tambah pelajar pertama anda",
     "anadirAlumno": "Tambah pelajar",
@@ -36,13 +36,13 @@
   "studentForm": {
     "nuevoAlumno": "Pelajar baharu",
     "editarAlumno": "Sunting pelajar",
-    "hint": "Hanya apa yang berbeza bagi setiap pelajar — kursus dan tarikhnya sudah diisi sekali untuk keseluruhan senarai.",
+    "hint": "Hanya apa yang berbeza bagi setiap pelajar. Kursus dan tarikhnya sudah diisi sekali untuk keseluruhan senarai.",
     "nombre": "Nama",
     "apellidos": "Nama keluarga",
     "menorDeEdad": "Bawah umur",
     "tutor": "Nama ibu bapa/penjaga",
     "iniciales": "Inisial",
-    "inicialesHint": "Dikira secara automatik — anda boleh membetulkannya jika perlu.",
+    "inicialesHint": "Dikira secara automatik. Anda boleh membetulkannya jika perlu.",
     "plantilla": "Kursus untuk disahkan",
     "cambiarPlantilla": "Tukar templat",
     "verAyuda": "Lihat bantuan",
@@ -64,7 +64,7 @@
     "elegirFechaCorta": "Tarikh",
     "configCompartidaHint": "Ini diisi SEKALI untuk keseluruhan kelas. Setiap pelajar hanya memberikan nama, inisial dan tandatangan, di bawah dalam \"Pelajar\".",
     "progreso": "Kemajuan kursus",
-    "progresoHint": "Tandakan apa yang telah selesai — baris berwarna kelabu adalah wajib untuk mengesahkan kursus.",
+    "progresoHint": "Tandakan apa yang telah selesai. Baris berwarna kelabu adalah wajib untuk mengesahkan kursus.",
     "obligatorio": "Wajib",
     "aventuras": "Adventure",
     "elegirAventura": "Pilih satu adventure",
@@ -82,7 +82,7 @@
     "generando": "Menjana…",
     "generadoCorrectamente": "Rekod berjaya dijana.",
     "noSePudoGenerar": "Tidak dapat menjana rekod.",
-    "faltanCampos": "Medan wajib tidak lengkap — semak amaran berwarna merah.",
+    "faltanCampos": "Medan wajib tidak lengkap. Semak amaran berwarna merah.",
     "sinAlumnos": "Tambah sekurang-kurangnya seorang pelajar sebelum menjana."
   }
 }

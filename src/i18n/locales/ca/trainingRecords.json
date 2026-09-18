@@ -1,8 +1,8 @@
 {
-  "intro": "Genera un Training Record oficial (registre de progrés SSI) per a cada alumne, amb signatura inclosa — res del que emplenes aquí es desa al núvol, només es descarrega.",
+  "intro": "Genera un Training Record oficial (registre de progrés SSI) per a cada alumne, amb signatura inclosa. Res del que emplenes aquí es desa al núvol, només es descarrega.",
   "sinPlantillas": "De moment no hi ha cap plantilla llesta per fer servir.",
   "noSePudieronCargarPlantillas": "No s'han pogut carregar les plantilles.",
-  "noSePudoDescargarPlantilla": "No s'ha pogut descarregar aquesta plantilla.",
+  "noSePudoDescargarPlantilla": "No hem pogut descarregar aquesta plantilla.",
   "cargandoPlantillas": "Carregant…",
   "instructorMissing": {
     "mensaje": "Abans de generar, completa les teves dades d'instructor (nom, inicials, número SSI Pro i signatura) al teu perfil.",
@@ -10,7 +10,7 @@
   },
   "roster": {
     "titulo": "Alumnes",
-    "hint": "Cada alumne només aporta el seu nom, les inicials i la signatura — la resta ja està configurada a dalt.",
+    "hint": "Cada alumne només aporta el seu nom, les inicials i la signatura. La resta ja està configurada a dalt.",
     "vacio": "Encara no has afegit cap alumne.",
     "anadirPrimerAlumno": "Afegeix el teu primer alumne",
     "anadirAlumno": "Afegeix alumne",
@@ -22,8 +22,8 @@
     "generadoEl": "Generat el {{date}}",
     "faltanDatos": "Falten dades per a aquest alumne",
     "imagenDescargada": "Imatge descarregada.",
-    "noSePudoExportarImagen": "No s'ha pogut exportar la imatge. Torna-ho a provar.",
-    "noSePudoCompartir": "No s'ha pogut compartir el document. Torna-ho a provar.",
+    "noSePudoExportarImagen": "No hem pogut exportar la imatge. Torna-ho a provar.",
+    "noSePudoCompartir": "No hem pogut compartir el document. Torna-ho a provar.",
     "enLote": "Tota la llista",
     "enLoteCount_one": "{{count}} document",
     "enLoteCount_other": "{{count}} documents",
@@ -31,18 +31,18 @@
     "descargarTodoJpg": "Descarrega-ho tot en JPG",
     "compartirTodo": "Comparteix-ho tot",
     "zipDescargado": "Arxiu descarregat amb tots els fitxers.",
-    "noSePudoDescargarZip": "No s'ha pogut generar l'arxiu. Torna-ho a provar."
+    "noSePudoDescargarZip": "No hem pogut generar l'arxiu. Torna-ho a provar."
   },
   "studentForm": {
     "nuevoAlumno": "Nou alumne",
     "editarAlumno": "Edita l'alumne",
-    "hint": "Només el que canvia d'un alumne a un altre — el curs i les seves dates ja s'han emplenat una vegada per a tota la llista.",
+    "hint": "Només el que canvia d'un alumne a un altre. El curs i les seves dates ja s'han emplenat una vegada per a tota la llista.",
     "nombre": "Nom",
     "apellidos": "Cognoms",
     "menorDeEdad": "Menor d'edat",
     "tutor": "Nom del pare/mare o tutor",
     "iniciales": "Inicials",
-    "inicialesHint": "Calculades automàticament — pots corregir-les si cal.",
+    "inicialesHint": "Calculades automàticament. Pots corregir-les si cal.",
     "plantilla": "Curs a certificar",
     "cambiarPlantilla": "Canvia de plantilla",
     "verAyuda": "Veure l'ajuda",
@@ -64,7 +64,7 @@
     "elegirFechaCorta": "Data",
     "configCompartidaHint": "Això s'emplena UNA sola vegada per a tota la classe. Cada alumne només aporta el seu nom, les inicials i la signatura, més avall a \"Alumnes\".",
     "progreso": "Progrés del curs",
-    "progresoHint": "Marca el que ja s'ha completat — les files en gris són obligatòries per certificar el curs.",
+    "progresoHint": "Marca el que ja s'ha completat. Les files en gris són obligatòries per certificar el curs.",
     "obligatorio": "Obligatori",
     "aventuras": "Aventures",
     "elegirAventura": "Tria una aventura",
@@ -81,8 +81,8 @@
     "generarTodos": "Genera per a tots els alumnes",
     "generando": "Generant…",
     "generadoCorrectamente": "Registres generats correctament.",
-    "noSePudoGenerar": "No s'ha pogut generar el registre.",
-    "faltanCampos": "Falten camps obligatoris — comprova els avisos en vermell.",
+    "noSePudoGenerar": "No hem pogut generar el registre.",
+    "faltanCampos": "Falten camps obligatoris. Comprova els avisos en vermell.",
     "sinAlumnos": "Afegeix com a mínim un alumne abans de generar."
   }
 }

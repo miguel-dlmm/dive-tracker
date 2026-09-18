@@ -2,7 +2,7 @@
   "loading": { "defaultLabel": "Kargatzen" },
   "errorBoundary": {
     "title": "Ai, zerbait gaizki joan da",
-    "body": "Pantaila honek ustekabeko arazo bat izan du. Ez da zure errua — saiatu berriro kargatzen, normaltasunera itzuli beharko litzateke.",
+    "body": "Pantaila honek ustekabeko arazo bat izan du. Ez da zure errua. Saiatu berriro kargatzen, normaltasunera itzuli beharko litzateke.",
     "reload": "Birkargatu"
   },
   "movementTypes": {

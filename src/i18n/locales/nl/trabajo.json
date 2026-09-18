@@ -12,7 +12,7 @@
   },
   "emptyMessage": {
     "pendingWithFilters": "Geen openstaande items met deze filters.",
-    "pendingNoFilters": "Je bent helemaal bij — niets openstaand.",
+    "pendingNoFilters": "Je bent helemaal bij. Niets openstaand.",
     "paidWithFilters": "Geen ontvangen items met deze filters.",
     "paidNoFilters": "Je hebt nog niets als ontvangen gemarkeerd."
   },
@@ -47,8 +47,8 @@
     "messageAjuste_other": "Je markeert deze {{count}} boekingen in één keer als ontvangen of vereffend, al naar gelang. Je kunt elke boeking daarna apart terugdraaien, net als bij het één voor één bevestigen.",
     "messageSimple_one": "Je markeert deze boeking in één keer als ontvangen. Je kunt elke boeking daarna apart terugdraaien, net als bij het één voor één bevestigen.",
     "messageSimple_other": "Je markeert deze {{count}} boekingen in één keer als ontvangen. Je kunt elke boeking daarna apart terugdraaien, net als bij het één voor één bevestigen.",
-    "toastSwitch_one": "{{count}} boeking gemarkeerd als {{verb}} — ga naar \"Ontvangen\" om ze te bekijken",
-    "toastSwitch_other": "{{count}} boekingen gemarkeerd als {{verbPlural}} — ga naar \"Ontvangen\" om ze te bekijken",
+    "toastSwitch_one": "{{count}} boeking gemarkeerd als {{verb}}. Ga naar \"Ontvangen\" om ze te bekijken",
+    "toastSwitch_other": "{{count}} boekingen gemarkeerd als {{verbPlural}}. Ga naar \"Ontvangen\" om ze te bekijken",
     "toastNoSwitch_one": "{{count}} boeking gemarkeerd als {{verb}}",
     "toastNoSwitch_other": "{{count}} boekingen gemarkeerd als {{verbPlural}}",
     "verbCobrado": "ontvangen",
@@ -66,14 +66,14 @@
     "toast_one": "{{count}} boeking gemarkeerd als openstaand",
     "toast_other": "{{count}} boekingen gemarkeerd als openstaand"
   },
-  "paidCapHint": "De {{limit}} meest recente ontvangen boekingen van {{total}} worden getoond — gebruik \"Filteren\" om een specifieke periode te bekijken.",
+  "paidCapHint": "De {{limit}} meest recente ontvangen boekingen van {{total}} worden getoond. Gebruik \"Filteren\" om een specifieke periode te bekijken.",
   "fabAdd": "Toevoegen",
   "toggleStatus": {
     "undoneToast": "Ongedaan gemaakt",
     "undoError": "Kon niet ongedaan worden gemaakt. Probeer het opnieuw.",
     "undoAction": "Ongedaan maken",
     "markedPending": "Gemarkeerd als openstaand",
-    "markedPaidSwitchTab": "Gemarkeerd als ontvangen — ga naar \"Ontvangen\" om het te bekijken",
+    "markedPaidSwitchTab": "Gemarkeerd als ontvangen. Ga naar \"Ontvangen\" om het te bekijken",
     "markedPaid": "Gemarkeerd als ontvangen"
   },
   "genericUpdateError": "Kon niet worden bijgewerkt. Probeer het opnieuw.",

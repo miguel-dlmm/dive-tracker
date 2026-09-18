@@ -47,8 +47,8 @@
     "messageAjuste_other": "{{count}} mugimendu hauek kobratuta edo likidatuta gisa markatuko dituzu batera, bakoitzari dagokionaren arabera. Bakoitza bereizita desegin dezakezu ondoren, banan-banan berresterakoan bezala.",
     "messageSimple_one": "Mugimendu hau kobratuta gisa markatuko duzu batera. Ondoren bereizita desegin dezakezu, banan-banan berresterakoan bezala.",
     "messageSimple_other": "{{count}} mugimendu hauek kobratuta gisa markatuko dituzu batera. Bakoitza bereizita desegin dezakezu ondoren, banan-banan berresterakoan bezala.",
-    "toastSwitch_one": "Mugimendu {{count}} {{verb}} gisa markatuta — aldatu \"Kobratuta\"-ra ikusteko",
-    "toastSwitch_other": "{{count}} mugimendu {{verbPlural}} gisa markatuta — aldatu \"Kobratuta\"-ra ikusteko",
+    "toastSwitch_one": "Mugimendu {{count}} {{verb}} gisa markatuta. Aldatu \"Kobratuta\"-ra ikusteko",
+    "toastSwitch_other": "{{count}} mugimendu {{verbPlural}} gisa markatuta. Aldatu \"Kobratuta\"-ra ikusteko",
     "toastNoSwitch_one": "Mugimendu {{count}} {{verb}} gisa markatuta",
     "toastNoSwitch_other": "{{count}} mugimendu {{verbPlural}} gisa markatuta",
     "verbCobrado": "kobratuta",
@@ -66,14 +66,14 @@
     "toast_one": "Mugimendu {{count}} zain gisa markatuta",
     "toast_other": "{{count}} mugimendu zain gisa markatuta"
   },
-  "paidCapHint": "{{total}}-etik kobratutako {{limit}} berrienak erakusten ari da — erabili \"Iragazi\" aldi zehatz bat ikusteko.",
+  "paidCapHint": "{{total}}-etik kobratutako {{limit}} berrienak erakusten ari da. Erabili \"Iragazi\" aldi zehatz bat ikusteko.",
   "fabAdd": "Gehitu",
   "toggleStatus": {
     "undoneToast": "Desegina",
     "undoError": "Ezin izan da desegin. Saiatu berriro.",
     "undoAction": "Desegin",
     "markedPending": "Zain gisa markatuta",
-    "markedPaidSwitchTab": "Kobratuta gisa markatuta — aldatu \"Kobratuta\"-ra ikusteko",
+    "markedPaidSwitchTab": "Kobratuta gisa markatuta. Aldatu \"Kobratuta\"-ra ikusteko",
     "markedPaid": "Kobratuta gisa markatuta"
   },
   "genericUpdateError": "Ezin izan da eguneratu. Saiatu berriro.",

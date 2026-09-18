@@ -2,7 +2,7 @@
   "loading": { "defaultLabel": "Memuat" },
   "errorBoundary": {
     "title": "Aduh, ada yang tidak beres",
-    "body": "Layar ini mengalami masalah yang tidak terduga. Ini bukan salahmu — coba muat ulang, biasanya langsung normal lagi.",
+    "body": "Layar ini mengalami masalah yang tidak terduga. Ini bukan salahmu. Coba muat ulang, biasanya langsung normal lagi.",
     "reload": "Muat ulang"
   },
   "movementTypes": {

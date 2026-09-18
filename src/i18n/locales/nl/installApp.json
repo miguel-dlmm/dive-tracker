@@ -2,7 +2,7 @@
   "intro": "Voeg Ocean Flow toe aan het beginscherm van je telefoon en open het als elke andere app, zonder telkens de browser te gebruiken.",
   "ios": {
     "title": "iPhone / iPad (Safari)",
-    "step1": "Open Ocean Flow in Safari — het moet Safari zijn, dit werkt niet vanuit andere browsers op iOS.",
+    "step1": "Open Ocean Flow in Safari. Het moet Safari zijn, dit werkt niet vanuit andere browsers op iOS.",
     "step2": "Tik op het deelicoon in de onderste balk.",
     "step3": "Scroll omlaag en tik op \"Zet op beginscherm\".",
     "step4": "Tik rechtsboven op \"Voeg toe\" — klaar."

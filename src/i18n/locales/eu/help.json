@@ -92,41 +92,41 @@
         "Gogoko gisa markatutako eskola, ikastaro edo dibisa aurrehautatuta agertzen da sortzeko formularioetan.",
         "Ezarpenak ixteak (goiburuko \"✕\"-ak) sartu zinen fitxara itzultzen zaitu beti."
       ],
-      "expectedResult": "Eskola, ikastaro edo tarifa berria berehala eskuragarri dago mugimendu bat sortzean — honekin \"Erregistratu mugimendu bat\" gidarekin jarrai dezakezu."
+      "expectedResult": "Eskola, ikastaro edo tarifa berria berehala eskuragarri dago mugimendu bat sortzean. Honekin \"Erregistratu mugimendu bat\" gidarekin jarrai dezakezu."
     },
     "crear-movimiento": {
       "title": "Sortu mugimendu bat",
-      "summary": "Formulario berak balio du emandako ikastaro batentzat, komisio batentzat edo lankide batekiko doikuntza batentzat — mota bakoitzak bere eremuak ditu.",
-      "whatYouCanDo": "\"Gehitu mugimendua\" da aplikazio osoko sortzeko sarbide bakarra — formularioak berak uzten dizu mota aukeratzen, ez dago kasu bakoitzerako botoi ezberdin bat asmatu beharrik.",
+      "summary": "Formulario berak balio du emandako ikastaro batentzat, komisio batentzat edo lankide batekiko doikuntza batentzat. Mota bakoitzak bere eremuak ditu.",
+      "whatYouCanDo": "\"Gehitu mugimendua\" da aplikazio osoko sortzeko sarbide bakarra. Formularioak berak uzten dizu mota aukeratzen, ez dago kasu bakoitzerako botoi ezberdin bat asmatu beharrik.",
       "whenToUseIt": "Klase bat eman ondoren, komisio bat itxian, edo beste irakasle batekin doikuntza bat adosten duzunean.",
       "steps": [
         "Sakatu \"Gehitu mugimendua\": Hasierako \"Kobratzeke\" txartelaren \"+\" botoia, botoi bera Hasierako egutegiko egun bat sakatuta, edo Nire lanaren \"+\" flotagarria.",
         "Formularioaren goialdean, aukeratu mota: Emandako ikastaroa, Komisioa edo Ikastaro doikuntza.",
-        "Emandako ikastaroa: eskola, ikastaroa, data eta pertsona kopurua — ikastaro-tarifak zenbatekoa bakarrik kalkulatzen du.",
-        "Komisioa: ikastaro baten antzera, baina erakarri duzun eta beste irakasle batek entrenatzen duen bezero baterako — bere komisio-tarifa propioa erabiltzen du, ez ikastaroarena.",
-        "Ikastaro doikuntza: ez dago inolako tarifaren mende — zuk zeuk adierazten duzu zenbatekoa (positiboa zorretan badaude, negatiboa zuk baduzu zorra) eta zein lankiderekin den doikuntza.",
+        "Emandako ikastaroa: eskola, ikastaroa, data eta pertsona kopurua. Ikastaro-tarifak zenbatekoa bakarrik kalkulatzen du.",
+        "Komisioa: ikastaro baten antzera, baina erakarri duzun eta beste irakasle batek entrenatzen duen bezero baterako. Bere komisio-tarifa propioa erabiltzen du, ez ikastaroarena.",
+        "Ikastaro doikuntza: ez dago inolako tarifaren mende. Zuk zeuk adierazten duzu zenbatekoa (positiboa zorretan badaude, negatiboa zuk baduzu zorra) eta zein lankiderekin den doikuntza.",
         "Gorde. Formularioa Hasieratik ireki baduzu, mugimendua Nire lanan ikusiko duzu gorde eta berehala."
       ],
       "tips": [
         "Eskola + ikastaro horretarako oraindik tarifarik ez badago, formularioak pantailatik atera gabe sortzeko aukera ematen dizu (\"Gehitu tarifa\") — Ikastaro eta Komisiorako bakarrik aplikatzen da, Doikuntza batek ez du inoiz tarifarik behar.",
-        "Formularioa gorde gabe bertan behera uzteak edo isteak ez du ezer sortzen — beldurrik gabe ireki eta itxi dezakezu, erdi eginda mugimendurik utzi gabe."
+        "Formularioa gorde gabe bertan behera uzteak edo isteak ez du ezer sortzen. Beldurrik gabe ireki eta itxi dezakezu, erdi eginda mugimendurik utzi gabe."
       ],
       "expectedResult": "Mugimendua Nire lanan agertzen da, \"Zain\" atalean, eta Hasierako \"Hilabete honetan sortua\"-ri gehitzen zaio (zure aurkako Doikuntza bat izan ezik, sortutzat kontatzen ez dena)."
     },
     "cobrar-movimientos": {
       "title": "Markatu mugimenduak kobratuta gisa",
-      "summary": "Kontrolatu zer daukazun kobratzeke eta eguneratu egoera ordaintzen dizuten bezain laster — banan-banan, edo denak batera.",
+      "summary": "Kontrolatu zer daukazun kobratzeke eta eguneratu egoera ordaintzen dizuten bezain laster. Banan-banan, edo denak batera.",
       "whatYouCanDo": "Mugimendu bakoitzak egoera bat du (zain edo kobratuta). Aldatzea berehalakoa da, ukitu bakar batekin, oker eginez gero desegiteko aukerarekin. Mugimenduz mugimendu egin dezakezu, edo ikusgai dagoen zerrenda osoaren gainean batera.",
       "whenToUseIt": "Eskola edo lankide batek ordaintzen dizun bezain laster (banan-banan), edo aldizka berrikusten duzunean eta jada zain zeuden hainbat aldi berean ordaindu dizutenean.",
       "steps": [
         "Bat kobratzeko: sartu Nire lanean (\"Zain\" fitxa lehenetsita irekitzen da) eta sakatu \"Berretsi kobrantza\" bere errenkadan (edo \"Markatu likidatuta\" zure aurkako doikuntza bat bada).",
-        "Hasierako \"Kobratzeke\" txartelak zuzenean fitxa horretara eramaten zaitu — ukitu bakar batekin pantaila nagusitik.",
-        "Hainbat batera kobratzeko: Nire lanean, erabili \"Kobratu denak\" zerrendaren goialdean — une horretan ikusgai dagoen guztiari eragiten dio.",
+        "Hasierako \"Kobratzeke\" txartelak zuzenean fitxa horretara eramaten zaitu. Ukitu bakar batekin pantaila nagusitik.",
+        "Hainbat batera kobratzeko: Nire lanean, erabili \"Kobratu denak\" zerrendaren goialdean. Une horretan ikusgai dagoen guztiari eragiten dio.",
         "\"Kobratu denak\" baino lehen, erabili \"Iragazi\" (dataz, eskolaz, ikastaroz edo motaz) zerrenda batera kobratu nahi duzun horretara mugatzeko."
       ],
       "tips": [
-        "Aldaketa bakoitzaren ondoren \"Desegin\" duen abiso bat agertzen da — segundo batzuk dituzu mugimendua berriro bilatu behar izan gabe atzera egiteko.",
-        "\"Kobratu denak\"-ek berrespena eskatzen du aplikatu aurretik — ez dago \"Desegin\" saldo osorako, banan-banan kobratzearekin gertatzen den ez bezala."
+        "Aldaketa bakoitzaren ondoren \"Desegin\" duen abiso bat agertzen da. Segundo batzuk dituzu mugimendua berriro bilatu behar izan gabe atzera egiteko.",
+        "\"Kobratu denak\"-ek berrespena eskatzen du aplikatu aurretik. Ez dago \"Desegin\" saldo osorako, banan-banan kobratzearekin gertatzen den ez bezala."
       ],
       "expectedResult": "Mugimendua (edo iragazitako guztiak) \"Kobratuta\" fitxara pasatzen da eta bere zenbatekoak Hasierako \"Kobratzeke\" atalean kontatzeari uzten dio."
     },
@@ -143,33 +143,33 @@
       ],
       "tips": [
         "\"Eskolaka\" atalaren barruan, sakatu eskola bat bere ikastaroko banakapena bertan ikusteko, pantailaz aldatu gabe.",
-        "Aurreko aldiarekiko alderaketa ez da agertzen aldi berean dibisa bat baino gehiago nahasten badituzu — kalkulu zehatza ez den bat erakustea saihesteko."
+        "Aurreko aldiarekiko alderaketa ez da agertzen aldi berean dibisa bat baino gehiago nahasten badituzu. Kalkulu zehatza ez den bat erakustea saihesteko."
       ],
       "expectedResult": "Aukeratutako aldiaren balantze zenbaki bat duzu, sarrera bakoitza nondik datorren xehetasunarekin, behar izanez gero."
     },
     "generar-training-record": {
       "title": "Sortu Training Record bat",
-      "summary": "Ikasle bakoitzaren SSI aurrerapenaren dokumentu ofiziala, bere sinadura eta zurea barne — ezer ez da hodeian gordetzen, deskargatu bakarrik egiten da.",
+      "summary": "Ikasle bakoitzaren SSI aurrerapenaren dokumentu ofiziala, bere sinadura eta zurea barne. Ezer ez da hodeian gordetzen, deskargatu bakarrik egiten da.",
       "whatYouCanDo": "Training Records atalean 10 SSI txantiloietako edozeinen aurrerapenaren dokumentu ofiziala sortzen duzu, ikasle bakoitzaren datuekin eta zure irakasle-sinadura jada txertatuta. Banan-banan edo denak batera sor ditzakezu, eta PDF gisa, irudi gisa deskarga ditzakezu, edo zuzenean partekatu.",
       "whenToUseIt": "Ikastaro bat amaitzean, edo ikasle batek bere Training Record paperean edo SSIri bidaltzeko behar duenean.",
       "steps": [
         "Sartu Training Records atalean Hasierako sarbidetik.",
-        "Aukeratu ikastaroaren SSI txantiloia eta bete konfigurazio partekatua (azterketaren bertsioa, ziurtagiria, ikastaroaren aurrerapena...) — behin bakarrik betetzen da klase osorako.",
-        "\"Gehitu ikaslea\" ikasle bakoitzeko: bere izena, inizialak eta sinadura bakarrik eskatzen ditu — adingabea bada, tutorearen izena eta sinadura ere bai.",
+        "Aukeratu ikastaroaren SSI txantiloia eta bete konfigurazio partekatua (azterketaren bertsioa, ziurtagiria, ikastaroaren aurrerapena...). Behin bakarrik betetzen da klase osorako.",
+        "\"Gehitu ikaslea\" ikasle bakoitzeko: bere izena, inizialak eta sinadura bakarrik eskatzen ditu. Adingabea bada, tutorearen izena eta sinadura ere bai.",
         "\"Sortu ikasle guztientzat\"-ek zerrenda osoaren dokumentua batera sortzen du; ikasle jakin baten errenkadako \"Sortu TR berriro\"-k bere dokumentua bakarrik berriro sortzen du, gainerakoa errepikatu gabe.",
         "Ikasle bakoitzeko: \"Deskargatu PDFa\", \"Deskargatu irudia (JPG)\" edo \"Partekatu\". Denentzat batera: \"Deskargatu dena PDFn/JPGn\" edo \"Partekatu dena\", artxibo bakar batean."
       ],
       "tips": [
-        "Nire profilean irakaslearen txartela osatuta izan behar duzu (inizialak, SSI Pro zenbakia eta sinadura) ezer sortu ahal izan aurretik — hori da Training Record bakoitzean inprimatzen dena.",
+        "Nire profilean irakaslearen txartela osatuta izan behar duzu (inizialak, SSI Pro zenbakia eta sinadura) ezer sortu ahal izan aurretik. Hori da Training Record bakoitzean inprimatzen dena.",
         "Hemen betetzen duzun ezer ez da Ocean Flow-en gordetzen: dokumentu bakoitza unean sortzen da eta deskargatu bakarrik egiten da."
       ],
       "expectedResult": "Ikasle bakoitzaren Training Record-a deskargatzeko edo partekatzeko prest duzu, bere sinadura eta zurea jada barne."
     },
     "mi-trabajo-referencia": {
       "title": "Nire lana, begirada batean",
-      "summary": "Zure mugimendu guztien zerrenda — ikastaroak, komisioak eta doikuntzak — bere ekintzekin.",
+      "summary": "Zure mugimendu guztien zerrenda (ikastaroak, komisioak eta doikuntzak), bere ekintzekin.",
       "whatYouCanDo": "Nire lanak lehen hiru pantaila bereizi izan zirenak (Erregistroa, Komisioak eta Lankideak) toki bakar batean batzen ditu, kobrantza-egoeraren arabera taldekatuta.",
-      "whenToUseIt": "Zure eguneroko laneko pantaila da — mugimenduak sortu, berrikusi, kobratu eta editatzeko.",
+      "whenToUseIt": "Zure eguneroko laneko pantaila da. Mugimenduak sortu, berrikusi, kobratu eta editatzeko.",
       "steps": [
         "Zain / Kobratuta: goiko bi fitxak, guztizko zain dagoenarekin goiko txartelean.",
         "\"Iragazi\": zerrenda aldiz, eskolaz, ikastaroz edo mugimendu-motaz mugatzen du.",
@@ -177,7 +177,7 @@
         "\"+\" botoi flotagarriak aplikazioaren gainerakoak duen sortzeko formulario bera irekitzen du."
       ],
       "tips": [
-        "\"Kobratu denak\"/\"Markatu denak zain gisa\" ikusgai dagoen zerrendaren gainean funtzionatzen dute — iragazkiak aktibo egonda, iragazitakoari bakarrik eragiten dio.",
+        "\"Kobratu denak\"/\"Markatu denak zain gisa\" ikusgai dagoen zerrendaren gainean funtzionatzen dute. Iragazkiak aktibo egonda, iragazitakoari bakarrik eragiten dio.",
         "Ezabatzeak berrespena eskatzen du eta errenkadaren irteera animatzen du, zer ezabatu duzun zehazki ikus dezazun."
       ],
       "expectedResult": "Edozein mugimendu aurkitu eta eguneratzen duzu pantaila honetatik atera gabe."
@@ -188,7 +188,7 @@
       "whatYouCanDo": "Laburpenak erantzun azkar bat konbinatzen du (aldiaren guztizkoa, aurrekoarekin alderatuta) sakondu nahi duenarentzako txartel tolesgarriekin.",
       "whenToUseIt": "Aldi bat nola doan ulertzeko, eskolak edo ikastaroak alderatzeko, edo lankideekiko komisioak eta doikuntzak berrikusteko.",
       "steps": [
-        "Aukeratu xehetasun-maila (hilabetekoa, hiruhilekoa, seihilekoa, urtekoa edo pertsonalizatua); azpiko aldien zerrendak berak nabigatzen du — sakatu edozein hara zentratzeko.",
+        "Aukeratu xehetasun-maila (hilabetekoa, hiruhilekoa, seihilekoa, urtekoa edo pertsonalizatua); azpiko aldien zerrendak berak nabigatzen du. Sakatu edozein hara zentratzeko.",
         "Iragazi motaz (Guztira, Ikastaroa, Komisioa edo Doikuntza) azpiko segmentatuarekin.",
         "Txartel nagusiak guztizkoa erakusten du eta, kalkulatzeak zentzua duenean, aurreko aldiarekiko alderaketa.",
         "Sakatu edozein txartel (Eskolaka, Ikastaroka, Komisioak, Ikastaro doikuntzak, Egutegia) zabaltzeko."
@@ -213,31 +213,31 @@
     },
     "perfil-referencia": {
       "title": "Nire profila, begirada batean",
-      "summary": "Zure avatarra, zure datuak, zure irakaslearen txartela, zure dibisa gogokoena eta zure pasahitza — dena toki berean, goiburuko zure izenetik eskuragarri.",
+      "summary": "Zure avatarra, zure datuak, zure irakaslearen txartela, zure dibisa gogokoena eta zure pasahitza. Dena toki berean, goiburuko zure izenetik eskuragarri.",
       "whatYouCanDo": "Sakatu zure avatarra edo zure ezizena (goian eskuinean edozein pantailatan) Nire profilera sartzeko: zure identitatea, zure irakaslearen txartela, zure hizkuntza, zure dibisa gogokoena eta zure pasahitza, dena toki berean.",
       "whenToUseIt": "Zure kontua pertsonalizatu, datu bat zuzendu, edo saioa itxi eta \"pasahitza ahaztu dut\" bidez pasatu beharrik gabe pasahitza aldatu nahi duzunean.",
       "steps": [
         "Sakatu goiburuko avatarra/ezizena Nire profilera sartzeko.",
-        "Avatarraren gaineko arkatzak ikono- eta kolore-hautatzailea irekitzen du — aldaketa aukeratzean gordetzen da, \"Gorde\" botoi bereizirik gabe.",
+        "Avatarraren gaineko arkatzak ikono- eta kolore-hautatzailea irekitzen du. Aldaketa aukeratzean gordetzen da, \"Gorde\" botoi bereizirik gabe.",
         "Datu pertsonaletako \"Editatu\"-k izena, abizenak eta ezizena irekitzen ditu; ezizenak ezin du \"@\" eduki ezta beste kontu batenarekin bat etorri ere.",
-        "\"Irakaslearen datuak\" zure txartela da: inizialak, SSI Pro zenbakia eta zure sinadura — hemen behin bakarrik gordetzen dira eta zure Training Recordak automatikoki betetzeko erabiltzen dira.",
-        "Dibisa gogokoena Ikastaro doikuntzan erreserba gisa erabiltzen da, hori zehazten duen tarifarik ez dagoenean — gainerako mugimenduek beti erabiltzen dute beren tarifaren dibisa."
+        "\"Irakaslearen datuak\" zure txartela da: inizialak, SSI Pro zenbakia eta zure sinadura. Hemen behin bakarrik gordetzen dira eta zure Training Recordak automatikoki betetzeko erabiltzen dira.",
+        "Dibisa gogokoena Ikastaro doikuntzan erreserba gisa erabiltzen da, hori zehazten duen tarifarik ez dagoenean. Gainerako mugimenduek beti erabiltzen dute beren tarifaren dibisa."
       ],
       "tips": [
-        "Pasahitza hemen aldatzeak ez dizu uneko pasahitza eskatzen — jada aplikazioaren barruan bazaude, saio aktiboa nahikoa dela fidatzen da.",
+        "Pasahitza hemen aldatzeak ez dizu uneko pasahitza eskatzen. Jada aplikazioaren barruan bazaude, saio aktiboa nahikoa dela fidatzen da.",
         "Aplikazio osoaren hizkuntza ere hemendik aldatzen da, saioa itxi beharrik gabe.",
-        "Zure kontua ezabatzea betikoa da eta zure datu guztiak ezabatzen ditu — berresteko UTZI hitza idatzi behar duzu, ukitu batekin ezer ere ustekabean ezaba ez dadin."
+        "Zure kontua ezabatzea betikoa da eta zure datu guztiak ezabatzen ditu. Berresteko UTZI hitza idatzi behar duzu, ukitu batekin ezer ere ustekabean ezaba ez dadin."
       ],
       "expectedResult": "Zure kontuak aukeratzen duzun avatarra, datuak, irakaslearen txartela eta dibisa islatzen ditu, eta zure pasahitza edo hizkuntza noiznahi alda ditzakezu aplikaziotik atera gabe."
     },
     "filtros-referencia": {
       "title": "Iragazi eta bilatu",
       "summary": "Nire lanak, Tarifek eta Ezarpenetako katalogoek iragazkien eredu bera partekatzen dute.",
-      "whatYouCanDo": "\"Iragazi\" botoi batek (iragazki aktiboen kopuruarekin) eskuragarri dauden eremuen panel bat zabaltzen du — aldia, eskola, ikastaroa, mota... — zerrendaren gainean beti erakutsi beharrean.",
+      "whatYouCanDo": "\"Iragazi\" botoi batek (iragazki aktiboen kopuruarekin) eskuragarri dauden eremuen panel bat zabaltzen du (aldia, eskola, ikastaroa, mota...), zerrendaren gainean beti erakutsi beharrean.",
       "whenToUseIt": "Zerrendak begi-kolpe batean berrikusteko elementu gehiegi dituenean.",
       "steps": [
         "Sakatu \"Iragazi\" pantaila horretan eskuragarri dauden eremuen panela zabaltzeko.",
-        "Aukeratu bat edo gehiago — ikastaro-iragazkiak hautaketa anitza onartzen du.",
+        "Aukeratu bat edo gehiago. Ikastaro-iragazkiak hautaketa anitza onartzen du.",
         "\"Garbitu iragazkiak\" agertzen da gutxienez bat aktibo dagoen bezain laster."
       ],
       "tips": [

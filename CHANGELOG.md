@@ -46,9 +46,30 @@ Registro de cambios relevantes de Ocean Flow.
   que se añadió el logo real) — corregido en los 5 idiomas restantes que
   todavía la tenían.
 
-Catalán, euskera, neerlandés, tailandés, indonesio, vietnamita, birmano,
-malayo y ruso quedan para una sesión de continuación — ver el historial
-de esta rama para el detalle exacto de qué falta en cada uno.
+- **Revisión de tono — guiones dentro de frases (catalán)**: mismo
+  tratamiento, incluido el patrón "No s'ha pogut X" → "No hem pogut X"
+  en el error genérico.
+- **Revisión de tono — guiones dentro de frases (neerlandés, euskera,
+  indonesio, malayo y vietnamita), pasada parcial**: aplicado un barrido
+  automático (script, no a mano frase a frase como en los idiomas
+  anteriores) que cubre la mayoría de los casos — quedan sueltos algunos
+  guiones dentro de cadenas con comillas internas escapadas (el propio
+  script no las toca, para no arriesgar cortar mal el JSON) y, en
+  vietnamita, alguna frase con diacríticos que el patrón no reconoció.
+  El patrón de error genérico "No se pudo X. Inténtalo de nuevo." NO se
+  ha tocado en estos 5 idiomas — el equivalente en alemán reveló que
+  automatizar ese cambio sin revisión cuidadosa produce gramática
+  incorrecta (ver más abajo), así que se ha preferido dejarlo pendiente
+  antes que arriesgar el mismo fallo sin poder revisarlo con el mismo
+  nivel de atención en 5 idiomas más.
+
+Tailandés, birmano y ruso quedan completamente sin tocar — mismo motivo:
+la herramienta usada esta noche solo reconoce alfabetos latinos, así que
+tocarlos a mano frase a frase habría necesitado más tiempo del
+disponible con la fiabilidad exigida para no introducir errores en
+idiomas donde no puedo verificar el resultado con la misma confianza.
+Quedan para una sesión de continuación — ver el historial de esta rama
+para el detalle exacto de qué falta en cada uno.
 
 ### Fixed
 - **Descripción de "Icono de carga" en Configuración obsoleta**: seguía

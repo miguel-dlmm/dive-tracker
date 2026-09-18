@@ -92,41 +92,41 @@
         "Sekolah, kursus, atau mata uang yang ditandai favorit akan muncul sudah terpilih di formulir pembuatan.",
         "Menutup Pengaturan (\"✕\" di header) selalu membawamu kembali ke tab tempat kamu masuk."
       ],
-      "expectedResult": "Sekolah, kursus, atau tarif baru langsung tersedia saat membuat transaksi — dari sini kamu bisa lanjut ke \"Mencatat sebuah transaksi\"."
+      "expectedResult": "Sekolah, kursus, atau tarif baru langsung tersedia saat membuat transaksi. Dari sini kamu bisa lanjut ke \"Mencatat sebuah transaksi\"."
     },
     "crear-movimiento": {
       "title": "Membuat sebuah transaksi",
-      "summary": "Formulir yang sama berlaku untuk kursus yang diajarkan, komisi, atau penyesuaian dengan rekan — setiap jenis punya kolomnya sendiri.",
-      "whatYouCanDo": "\"Tambah transaksi\" adalah satu-satunya titik pembuatan di seluruh aplikasi — formulir itu sendiri membiarkanmu memilih jenisnya, tidak perlu mencari tombol yang berbeda untuk setiap kasus.",
+      "summary": "Formulir yang sama berlaku untuk kursus yang diajarkan, komisi, atau penyesuaian dengan rekan. Setiap jenis punya kolomnya sendiri.",
+      "whatYouCanDo": "\"Tambah transaksi\" adalah satu-satunya titik pembuatan di seluruh aplikasi. Formulir itu sendiri membiarkanmu memilih jenisnya, tidak perlu mencari tombol yang berbeda untuk setiap kasus.",
       "whenToUseIt": "Segera setelah mengajar kelas, saat menutup komisi, atau saat menyepakati penyesuaian dengan instruktur lain.",
       "steps": [
         "Ketuk \"Tambah transaksi\": tombol \"+\" di kartu \"Tertunda ditagih\" di Beranda, tombol yang sama saat mengetuk hari di kalender Beranda, atau \"+\" mengambang di Pekerjaanku.",
         "Di atas formulir, pilih jenisnya: Kursus yang diajarkan, Komisi, atau Penyesuaian.",
-        "Kursus yang diajarkan: sekolah, kursus, tanggal, dan jumlah orang — tarif kursus menghitung jumlahnya sendiri.",
-        "Komisi: sama seperti kursus, tetapi untuk klien yang kamu referensikan dan dilatih oleh instruktur lain — menggunakan tarif komisinya sendiri, bukan tarif kursus.",
-        "Penyesuaian: tidak bergantung pada tarif apa pun — kamu sendiri yang menentukan jumlahnya (positif jika kamu berhak menerima, negatif jika kamu berutang) dan dengan rekan mana penyesuaian ini terkait.",
+        "Kursus yang diajarkan: sekolah, kursus, tanggal, dan jumlah orang. Tarif kursus menghitung jumlahnya sendiri.",
+        "Komisi: sama seperti kursus, tetapi untuk klien yang kamu referensikan dan dilatih oleh instruktur lain. Menggunakan tarif komisinya sendiri, bukan tarif kursus.",
+        "Penyesuaian: tidak bergantung pada tarif apa pun. Kamu sendiri yang menentukan jumlahnya (positif jika kamu berhak menerima, negatif jika kamu berutang) dan dengan rekan mana penyesuaian ini terkait.",
         "Simpan. Jika kamu membuka formulir dari Beranda, transaksi akan langsung terlihat di Pekerjaanku setelah disimpan."
       ],
       "tips": [
         "Jika tarif untuk sekolah + kursus itu belum ada, formulir membiarkanmu membuatnya langsung tanpa meninggalkan layar (\"Tambah tarif\") — hanya berlaku untuk Kursus dan Komisi, Penyesuaian tidak pernah butuh tarif.",
-        "Membatalkan atau menutup formulir tanpa menyimpan tidak membuat apa pun — kamu bisa membuka dan menutupnya tanpa takut meninggalkan transaksi setengah jadi."
+        "Membatalkan atau menutup formulir tanpa menyimpan tidak membuat apa pun. Kamu bisa membuka dan menutupnya tanpa takut meninggalkan transaksi setengah jadi."
       ],
       "expectedResult": "Transaksi muncul di Pekerjaanku, di dalam \"Tertunda\", dan ditambahkan ke \"Dihasilkan bulan ini\" di Beranda (kecuali Penyesuaian yang merugikanmu, yang tidak dihitung sebagai hasil)."
     },
     "cobrar-movimientos": {
       "title": "Menandai transaksi sebagai tertagih",
-      "summary": "Kontrol apa yang masih harus kamu tagih dan perbarui statusnya begitu kamu dibayar — satu per satu, atau sekaligus.",
+      "summary": "Kontrol apa yang masih harus kamu tagih dan perbarui statusnya begitu kamu dibayar. Satu per satu, atau sekaligus.",
       "whatYouCanDo": "Setiap transaksi memiliki status (tertunda atau tertagih). Mengubahnya langsung, dengan satu ketukan, dengan opsi membatalkan jika kamu salah. Kamu bisa melakukannya per transaksi, atau sekaligus pada seluruh daftar yang terlihat.",
       "whenToUseIt": "Begitu sekolah atau rekan membayarmu (satu per satu), atau sekaligus saat kamu memeriksa secara berkala dan sudah dibayar untuk beberapa transaksi tertunda.",
       "steps": [
         "Untuk menagih satu: masuk ke Pekerjaanku (tab \"Tertunda\" terbuka secara default) dan ketuk \"Konfirmasi tagihan\" di barisnya (atau \"Tandai lunas\" jika itu penyesuaian yang merugikanmu).",
-        "Kartu \"Tertunda ditagih\" di Beranda langsung membawamu ke tab yang sama — satu ketukan dari layar utama.",
-        "Untuk menagih beberapa sekaligus: di Pekerjaanku, gunakan \"Tagih semua\" di atas daftar — ini memengaruhi semua yang terlihat saat itu.",
+        "Kartu \"Tertunda ditagih\" di Beranda langsung membawamu ke tab yang sama. Satu ketukan dari layar utama.",
+        "Untuk menagih beberapa sekaligus: di Pekerjaanku, gunakan \"Tagih semua\" di atas daftar. Ini memengaruhi semua yang terlihat saat itu.",
         "Sebelum \"Tagih semua\", gunakan \"Filter\" (berdasarkan tanggal, sekolah, kursus, atau jenis) untuk mempersempit daftar hanya pada yang ingin kamu tagih sekaligus."
       ],
       "tips": [
-        "Notifikasi dengan \"Batalkan\" muncul setelah setiap perubahan — kamu punya beberapa detik untuk membatalkannya tanpa perlu mencari transaksi lagi.",
-        "\"Tagih semua\" meminta konfirmasi sebelum diterapkan — tidak ada \"Batalkan\" untuk seluruh kelompok, berbeda dengan menagih satu per satu."
+        "Notifikasi dengan \"Batalkan\" muncul setelah setiap perubahan. Kamu punya beberapa detik untuk membatalkannya tanpa perlu mencari transaksi lagi.",
+        "\"Tagih semua\" meminta konfirmasi sebelum diterapkan. Tidak ada \"Batalkan\" untuk seluruh kelompok, berbeda dengan menagih satu per satu."
       ],
       "expectedResult": "Transaksi (atau semua yang difilter) berpindah ke tab \"Tertagih\" dan jumlahnya tidak lagi dihitung di \"Tertunda ditagih\" di Beranda."
     },
@@ -139,37 +139,37 @@
         "Di Pekerjaanku, kartu \"Dihasilkan bulan ini\" selalu terlihat, di atas daftar, tanpa menyentuh apa pun.",
         "Di Ringkasan, pilih granularitas dan periode di kontrol atas (bulanan, triwulanan, semester, tahunan, atau rentang khusus) dan, jika mau, jenisnya (Kursus, Komisi, atau Penyesuaian).",
         "Kartu utama menampilkan total periode tersebut dan berapa perubahannya dibandingkan periode sebelumnya.",
-        "Ketuk \"Per sekolah\", \"Per kursus\", \"Komisi\", \"Penyesuaian\" atau \"Kalender\" untuk melihat lebih dalam — masing-masing hanya terbuka jika diminta."
+        "Ketuk \"Per sekolah\", \"Per kursus\", \"Komisi\", \"Penyesuaian\" atau \"Kalender\" untuk melihat lebih dalam. Masing-masing hanya terbuka jika diminta."
       ],
       "tips": [
         "Di dalam \"Per sekolah\", ketuk sebuah sekolah untuk melihat rinciannya per kursus di tempat, tanpa berpindah layar.",
-        "Perbandingan dengan periode sebelumnya tidak muncul jika kamu mencampur lebih dari satu mata uang dalam periode yang sama — ini menghindari perhitungan yang tidak akurat."
+        "Perbandingan dengan periode sebelumnya tidak muncul jika kamu mencampur lebih dari satu mata uang dalam periode yang sama. Ini menghindari perhitungan yang tidak akurat."
       ],
       "expectedResult": "Kamu mendapatkan angka saldo untuk periode yang dipilih, dengan rincian dari mana setiap pemasukan berasal jika diperlukan."
     },
     "generar-training-record": {
       "title": "Membuat Training Record",
-      "summary": "Dokumen resmi kemajuan SSI setiap murid, dengan tanda tangannya dan tanda tanganmu — tidak ada yang disimpan di cloud, hanya diunduh.",
+      "summary": "Dokumen resmi kemajuan SSI setiap murid, dengan tanda tangannya dan tanda tanganmu. Tidak ada yang disimpan di cloud, hanya diunduh.",
       "whatYouCanDo": "Dari Training Records kamu membuat dokumen kemajuan resmi dari salah satu dari 10 templat SSI, dengan data setiap murid dan tanda tangan instrukturmu yang sudah disertakan. Kamu bisa membuatnya satu per satu atau sekaligus, dan mengunduhnya sebagai PDF, gambar, atau langsung membagikannya.",
       "whenToUseIt": "Saat menyelesaikan kursus, saat murid membutuhkan Training Record-nya di atas kertas atau untuk dikirim ke SSI.",
       "steps": [
         "Masuk ke Training Records melalui akses di Beranda.",
-        "Pilih templat SSI kursus dan isi pengaturan bersama (versi ujian, sertifikasi, kemajuan kursus...) — diisi sekali untuk seluruh kelas.",
-        "\"Tambah murid\" untuk setiap murid: hanya meminta nama, inisial, dan tanda tangan — jika di bawah umur, juga nama dan tanda tangan wali.",
+        "Pilih templat SSI kursus dan isi pengaturan bersama (versi ujian, sertifikasi, kemajuan kursus...). Diisi sekali untuk seluruh kelas.",
+        "\"Tambah murid\" untuk setiap murid: hanya meminta nama, inisial, dan tanda tangan. Jika di bawah umur, juga nama dan tanda tangan wali.",
         "\"Buat untuk semua murid\" membuat dokumen untuk seluruh daftar sekaligus; \"Buat ulang TR\" di baris seorang murid tertentu hanya membuat ulang miliknya, tanpa mengulang yang lain.",
         "Per murid: \"Unduh PDF\", \"Unduh gambar (JPG)\" atau \"Bagikan\". Untuk semua sekaligus: \"Unduh semua sebagai PDF/JPG\" atau \"Bagikan semua\", dalam satu file terkompresi."
       ],
       "tips": [
-        "Kamu butuh kartu instrukturmu lengkap di Profilku (inisial, nomor SSI Pro, dan tanda tangan) sebelum bisa membuat apa pun — itulah yang tercetak di setiap Training Record.",
+        "Kamu butuh kartu instrukturmu lengkap di Profilku (inisial, nomor SSI Pro, dan tanda tangan) sebelum bisa membuat apa pun. Itulah yang tercetak di setiap Training Record.",
         "Tidak ada yang kamu isi di sini disimpan di Ocean Flow: setiap dokumen dibuat saat itu juga dan hanya diunduh."
       ],
       "expectedResult": "Kamu memiliki Training Record setiap murid siap diunduh atau dibagikan, dengan tanda tangannya dan tanda tanganmu sudah disertakan."
     },
     "mi-trabajo-referencia": {
       "title": "Pekerjaanku, sekilas",
-      "summary": "Daftar lengkap transaksimu — kursus, komisi, dan penyesuaian — beserta aksinya.",
+      "summary": "Daftar lengkap transaksimu (kursus, komisi, dan penyesuaian) beserta aksinya.",
       "whatYouCanDo": "Pekerjaanku menyatukan apa yang dulunya tiga layar terpisah (Catatan, Komisi, dan Rekan) menjadi satu tempat, dikelompokkan berdasarkan status pembayaran.",
-      "whenToUseIt": "Ini adalah layar kerja harianmu — membuat, meninjau, menagih, dan mengedit transaksi.",
+      "whenToUseIt": "Ini adalah layar kerja harianmu. Membuat, meninjau, menagih, dan mengedit transaksi.",
       "steps": [
         "Tertunda / Tertagih: dua tab di atas, dengan total tertunda di kartu paling atas.",
         "\"Filter\": persempit daftar berdasarkan periode, sekolah, kursus, atau jenis transaksi.",
@@ -177,7 +177,7 @@
         "Tombol \"+\" mengambang membuka formulir pembuatan yang sama seperti di seluruh aplikasi."
       ],
       "tips": [
-        "\"Tagih semua\"/\"Tandai semua tertunda\" beroperasi pada daftar yang terlihat — dengan filter aktif, hanya memengaruhi yang difilter.",
+        "\"Tagih semua\"/\"Tandai semua tertunda\" beroperasi pada daftar yang terlihat. Dengan filter aktif, hanya memengaruhi yang difilter.",
         "Menghapus meminta konfirmasi dan menganimasikan hilangnya baris, agar kamu bisa melihat persis apa yang telah dihapus."
       ],
       "expectedResult": "Kamu menemukan dan memperbarui transaksi apa pun tanpa meninggalkan layar ini."
@@ -188,7 +188,7 @@
       "whatYouCanDo": "Ringkasan menggabungkan jawaban cepat (total periode, dibandingkan dengan sebelumnya) dengan kartu yang bisa dilipat bagi yang ingin melihat lebih dalam.",
       "whenToUseIt": "Untuk memahami bagaimana suatu periode berjalan, membandingkan sekolah atau kursus, atau meninjau komisi dan penyesuaian dengan rekan.",
       "steps": [
-        "Pilih granularitas (bulanan, triwulanan, semester, tahunan, atau khusus); jalur periode di bawah bergulir sendiri — ketuk mana pun untuk memusatkan di sana.",
+        "Pilih granularitas (bulanan, triwulanan, semester, tahunan, atau khusus); jalur periode di bawah bergulir sendiri. Ketuk mana pun untuk memusatkan di sana.",
         "Filter berdasarkan jenis (Total, Kursus, Komisi, atau Penyesuaian) dengan segmen di bawah.",
         "Kartu utama menampilkan total dan, jika relevan, perbandingan dengan periode sebelumnya.",
         "Ketuk kartu mana pun (Per sekolah, Per kursus, Komisi, Penyesuaian, Kalender) untuk membukanya."
@@ -202,42 +202,42 @@
     "configuracion-referencia": {
       "title": "Pengaturan, sekilas",
       "summary": "Menu tempat kamu mengelola data dasarmu sendiri: sekolah, kursus, dan tarif.",
-      "whatYouCanDo": "Sekolah, Kursus, dan Tarif — katalog yang kamu gunakan saat mencatat transaksi di Pekerjaanku.",
+      "whatYouCanDo": "Sekolah, Kursus, dan Tarif. Katalog yang kamu gunakan saat mencatat transaksi di Pekerjaanku.",
       "whenToUseIt": "Untuk menjaga data dasarmu tetap terkini: menambah sekolah baru, kursus baru, atau menyesuaikan tarif.",
       "steps": [
         "Ketuk baris mana pun di menu untuk masuk ke bagian itu; \"‹ Pengaturan\" kembali ke menu.",
         "Sekolah dan Kursus dibuat melalui tombol \"+\" mengambang, sama seperti di Pekerjaanku.",
-        "Tarif menampilkan Kursus dan Komisi dalam satu daftar (jenisnya dipilih sebagai filter, atau saat membuat, di dalam formulir itu sendiri) — pola visual yang sama dengan Pekerjaanku."
+        "Tarif menampilkan Kursus dan Komisi dalam satu daftar (jenisnya dipilih sebagai filter, atau saat membuat, di dalam formulir itu sendiri). Pola visual yang sama dengan Pekerjaanku."
       ],
       "expectedResult": "Kamu menemukan katalog atau pengaturan apa pun tanpa harus mengingat di tab mana itu berada sebelumnya."
     },
     "perfil-referencia": {
       "title": "Profilku, sekilas",
-      "summary": "Avatarmu, datamu, kartu instrukturmu, mata uang favoritmu, dan kata sandimu — semua di satu tempat, dapat diakses dari namamu di header.",
+      "summary": "Avatarmu, datamu, kartu instrukturmu, mata uang favoritmu, dan kata sandimu. Semua di satu tempat, dapat diakses dari namamu di header.",
       "whatYouCanDo": "Ketuk avatar atau nickname-mu (kanan atas di layar mana pun) untuk masuk ke Profilku: identitasmu, kartu instrukturmu, bahasamu, mata uang favoritmu, dan kata sandimu, semua di satu tempat.",
       "whenToUseIt": "Saat kamu ingin mempersonalisasi akunmu, memperbaiki data, atau mengganti kata sandi tanpa harus keluar dan melalui \"lupa kata sandi\".",
       "steps": [
         "Ketuk avatar/nickname di header untuk masuk ke Profilku.",
-        "Pensil di atas avatar membuka pemilih ikon dan warna — perubahan langsung tersimpan saat dipilih, tanpa tombol \"Simpan\" terpisah.",
+        "Pensil di atas avatar membuka pemilih ikon dan warna. Perubahan langsung tersimpan saat dipilih, tanpa tombol \"Simpan\" terpisah.",
         "\"Edit\" di Data pribadi membuka nama, nama belakang, dan nickname; nickname tidak boleh mengandung \"@\" atau sama dengan akun lain.",
-        "\"Data instruktur\" adalah kartumu: inisial, nomor SSI Pro, dan tanda tanganmu — disimpan di sini sekali dan digunakan secara otomatis untuk mengisi Training Records-mu.",
-        "Mata uang favorit digunakan sebagai cadangan di Penyesuaian saat tidak ada tarif yang menentukannya — transaksi lain selalu menggunakan mata uang dari tarifnya sendiri."
+        "\"Data instruktur\" adalah kartumu: inisial, nomor SSI Pro, dan tanda tanganmu. Disimpan di sini sekali dan digunakan secara otomatis untuk mengisi Training Records-mu.",
+        "Mata uang favorit digunakan sebagai cadangan di Penyesuaian saat tidak ada tarif yang menentukannya. Transaksi lain selalu menggunakan mata uang dari tarifnya sendiri."
       ],
       "tips": [
-        "Mengganti kata sandi di sini tidak meminta kata sandi saat ini — jika kamu sudah masuk ke aplikasi, sesi aktif dianggap cukup dapat dipercaya.",
+        "Mengganti kata sandi di sini tidak meminta kata sandi saat ini. Jika kamu sudah masuk ke aplikasi, sesi aktif dianggap cukup dapat dipercaya.",
         "Bahasa seluruh aplikasi juga diganti dari sini, tanpa perlu keluar.",
-        "Menghapus akunmu bersifat permanen dan menghapus semua datamu — untuk mengonfirmasi kamu harus mengetik kata BATALKAN, agar tidak ada yang terhapus karena ketukan tidak sengaja."
+        "Menghapus akunmu bersifat permanen dan menghapus semua datamu. Untuk mengonfirmasi kamu harus mengetik kata BATALKAN, agar tidak ada yang terhapus karena ketukan tidak sengaja."
       ],
       "expectedResult": "Akunmu mencerminkan avatar, data, kartu instruktur, dan mata uang yang kamu pilih, dan kamu bisa mengganti kata sandi atau bahasamu kapan saja tanpa meninggalkan aplikasi."
     },
     "filtros-referencia": {
       "title": "Memfilter dan mencari",
       "summary": "Pekerjaanku, Tarif, dan katalog di Pengaturan berbagi pola filter yang sama.",
-      "whatYouCanDo": "Tombol \"Filter\" (dengan jumlah filter aktif) membuka panel dengan kolom yang tersedia — periode, sekolah, kursus, jenis... — alih-alih selalu menampilkannya di atas daftar.",
+      "whatYouCanDo": "Tombol \"Filter\" (dengan jumlah filter aktif) membuka panel dengan kolom yang tersedia (periode, sekolah, kursus, jenis...), bukan selalu menampilkannya di atas daftar.",
       "whenToUseIt": "Saat daftar memiliki terlalu banyak elemen untuk ditinjau semuanya sekaligus.",
       "steps": [
         "Ketuk \"Filter\" untuk membuka panel kolom yang tersedia di layar itu.",
-        "Pilih satu atau beberapa — filter kursus memungkinkan pilihan ganda.",
+        "Pilih satu atau beberapa. Filter kursus memungkinkan pilihan ganda.",
         "\"Hapus filter\" muncul begitu ada setidaknya satu yang aktif."
       ],
       "tips": [

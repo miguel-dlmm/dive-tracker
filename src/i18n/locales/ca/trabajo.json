@@ -12,7 +12,7 @@
   },
   "emptyMessage": {
     "pendingWithFilters": "Sense elements pendents amb aquests filtres.",
-    "pendingNoFilters": "Estàs al dia — res pendent.",
+    "pendingNoFilters": "Estàs al dia, res pendent.",
     "paidWithFilters": "Sense elements cobrats amb aquests filtres.",
     "paidNoFilters": "Encara no has marcat res com a cobrat."
   },
@@ -22,7 +22,7 @@
     "deleteConfirmMessage": "Estàs a punt d'eliminar {{item}}. Tindràs uns segons per desfer-ho des de l'avís.",
     "undoAction": "Desfés",
     "deleteUndoneToast": "Recuperat",
-    "deleteUndoError": "No s'ha pogut desfer. Torna-ho a provar."
+    "deleteUndoError": "No hem pogut desfer. Torna-ho a provar."
   },
   "tabs": {
     "pending": "Pendents",
@@ -47,8 +47,8 @@
     "messageAjuste_other": "Marcaràs aquests {{count}} moviments com a cobrats o liquidats de cop, segons correspongui a cadascun. Pots revertir cadascun per separat després, igual que en confirmar-ho un a un.",
     "messageSimple_one": "Marcaràs aquest moviment com a cobrat de cop. Pots revertir-ho després, igual que en confirmar-ho un a un.",
     "messageSimple_other": "Marcaràs aquests {{count}} moviments com a cobrats de cop. Pots revertir cadascun per separat després, igual que en confirmar-ho un a un.",
-    "toastSwitch_one": "{{count}} moviment marcat com a {{verb}} — canvia a \"Cobrats\" per veure'l",
-    "toastSwitch_other": "{{count}} moviments marcats com a {{verbPlural}} — canvia a \"Cobrats\" per veure'ls",
+    "toastSwitch_one": "{{count}} moviment marcat com a {{verb}}. Canvia a \"Cobrats\" per veure'l",
+    "toastSwitch_other": "{{count}} moviments marcats com a {{verbPlural}}. Canvia a \"Cobrats\" per veure'ls",
     "toastNoSwitch_one": "{{count}} moviment marcat com a {{verb}}",
     "toastNoSwitch_other": "{{count}} moviments marcats com a {{verbPlural}}",
     "verbCobrado": "cobrat",
@@ -66,17 +66,17 @@
     "toast_one": "{{count}} moviment marcat com a pendent",
     "toast_other": "{{count}} moviments marcats com a pendents"
   },
-  "paidCapHint": "Es mostren els {{limit}} cobrats més recents de {{total}} — usa \"Filtra\" per veure un període concret.",
+  "paidCapHint": "Es mostren els {{limit}} cobrats més recents de {{total}}. Usa \"Filtra\" per veure un període concret.",
   "fabAdd": "Afegeix",
   "toggleStatus": {
     "undoneToast": "Desfet",
-    "undoError": "No s'ha pogut desfer. Torna-ho a provar.",
+    "undoError": "No hem pogut desfer. Torna-ho a provar.",
     "undoAction": "Desfés",
     "markedPending": "Marcat com a pendent",
-    "markedPaidSwitchTab": "Marcat com a cobrat — canvia a \"Cobrats\" per veure'l",
+    "markedPaidSwitchTab": "Marcat com a cobrat. Canvia a \"Cobrats\" per veure'l",
     "markedPaid": "Marcat com a cobrat"
   },
-  "genericUpdateError": "No s'ha pogut actualitzar. Torna-ho a provar.",
+  "genericUpdateError": "No hem pogut actualitzar. Torna-ho a provar.",
   "sheet": {
     "close": "Tanca",
     "typeSelectorAria": "Tipus de moviment",
@@ -128,9 +128,9 @@
       "adjustmentAdded": "Ajust afegit",
       "courseAdded": "Curs afegit",
       "commissionAdded": "Comissió afegida",
-      "saveError": "No s'ha pogut desar. Torna-ho a provar.",
+      "saveError": "No hem pogut desar. Torna-ho a provar.",
       "rateAdded": "Tarifa afegida",
-      "rateSaveError": "No s'ha pogut desar la tarifa. Torna-ho a provar."
+      "rateSaveError": "No hem pogut desar la tarifa. Torna-ho a provar."
     }
   },
   "kpis": {

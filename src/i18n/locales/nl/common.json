@@ -2,7 +2,7 @@
   "loading": { "defaultLabel": "Laden" },
   "errorBoundary": {
     "title": "Oeps, er ging iets mis",
-    "body": "Dit scherm liep tegen een onverwacht probleem aan. Dit ligt niet aan jou — probeer te vernieuwen, dan zou alles weer normaal moeten werken.",
+    "body": "Dit scherm liep tegen een onverwacht probleem aan. Dit ligt niet aan jou. Probeer te vernieuwen, dan zou alles weer normaal moeten werken.",
     "reload": "Vernieuwen"
   },
   "movementTypes": {

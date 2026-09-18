@@ -12,7 +12,7 @@
   },
   "emptyMessage": {
     "pendingWithFilters": "Tidak ada item tertunda dengan filter ini.",
-    "pendingNoFilters": "Semua sudah beres — tidak ada yang tertunda.",
+    "pendingNoFilters": "Semua sudah beres. Tidak ada yang tertunda.",
     "paidWithFilters": "Tidak ada item terbayar dengan filter ini.",
     "paidNoFilters": "Kamu belum menandai apa pun sebagai terbayar."
   },
@@ -47,8 +47,8 @@
     "messageAjuste_other": "Kamu akan menandai {{count}} transaksi ini sebagai terbayar atau lunas sekaligus, sesuai jenis masing-masing. Kamu tetap bisa membatalkan satu per satu setelahnya, seperti saat mengonfirmasi satu per satu.",
     "messageSimple_one": "Kamu akan menandai transaksi ini sebagai terbayar sekaligus. Kamu tetap bisa membatalkan satu per satu setelahnya, seperti saat mengonfirmasi satu per satu.",
     "messageSimple_other": "Kamu akan menandai {{count}} transaksi ini sebagai terbayar sekaligus. Kamu tetap bisa membatalkan satu per satu setelahnya, seperti saat mengonfirmasi satu per satu.",
-    "toastSwitch_one": "{{count}} transaksi ditandai sebagai {{verb}} — buka \"Terbayar\" untuk melihatnya",
-    "toastSwitch_other": "{{count}} transaksi ditandai sebagai {{verbPlural}} — buka \"Terbayar\" untuk melihatnya",
+    "toastSwitch_one": "{{count}} transaksi ditandai sebagai {{verb}}. Buka \"Terbayar\" untuk melihatnya",
+    "toastSwitch_other": "{{count}} transaksi ditandai sebagai {{verbPlural}}. Buka \"Terbayar\" untuk melihatnya",
     "toastNoSwitch_one": "{{count}} transaksi ditandai sebagai {{verb}}",
     "toastNoSwitch_other": "{{count}} transaksi ditandai sebagai {{verbPlural}}",
     "verbCobrado": "terbayar",
@@ -66,14 +66,14 @@
     "toast_one": "{{count}} transaksi ditandai sebagai tertunda",
     "toast_other": "{{count}} transaksi ditandai sebagai tertunda"
   },
-  "paidCapHint": "Menampilkan {{limit}} transaksi terbayar paling baru dari total {{total}} — gunakan \"Filter\" untuk melihat periode tertentu.",
+  "paidCapHint": "Menampilkan {{limit}} transaksi terbayar paling baru dari total {{total}}. Gunakan \"Filter\" untuk melihat periode tertentu.",
   "fabAdd": "Tambah",
   "toggleStatus": {
     "undoneToast": "Diurungkan",
     "undoError": "Gagal mengurungkan. Coba lagi.",
     "undoAction": "Urungkan",
     "markedPending": "Ditandai sebagai tertunda",
-    "markedPaidSwitchTab": "Ditandai sebagai terbayar — buka \"Terbayar\" untuk melihatnya",
+    "markedPaidSwitchTab": "Ditandai sebagai terbayar. Buka \"Terbayar\" untuk melihatnya",
     "markedPaid": "Ditandai sebagai terbayar"
   },
   "genericUpdateError": "Gagal memperbarui. Coba lagi.",
