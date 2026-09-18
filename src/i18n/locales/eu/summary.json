@@ -89,6 +89,7 @@
     "subtotal": "{{group}} azpitotala",
     "generatedOn": "{{date}} sortua",
     "page": "{{current}}/{{total}} orrialdea",
-    "footerNote": "Ocean Flow · automatikoki sortua, eskuzko edizio gabe"
+    "footerNote": "Ocean Flow · automatikoki sortua, eskuzko edizio gabe",
+    "tagline": "Urpekaritza gehiago. Kudeaketa gutxiago."
   }
 }

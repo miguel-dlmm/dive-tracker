@@ -89,6 +89,7 @@
     "subtotal": "Tổng phụ {{group}}",
     "generatedOn": "Tạo lúc {{date}}",
     "page": "Trang {{current}} / {{total}}",
-    "footerNote": "Ocean Flow · được tạo tự động, không chỉnh sửa thủ công"
+    "footerNote": "Ocean Flow · được tạo tự động, không chỉnh sửa thủ công",
+    "tagline": "Lặn nhiều hơn. Quản lý ít hơn."
   }
 }

@@ -26,6 +26,7 @@ const t = (key, opts) => {
     "export.totalLabel": "Total del rango elegido", "export.onlyPendingNote": "Este informe muestra solo lo pendiente de cobro",
     "export.adjustmentsAsideNote": "Información adicional · no incluido en el total",
     "export.footerNote": "Ocean Flow · generado automáticamente, sin edición manual",
+    "export.tagline": "Bucea más. Gestiona menos.",
   };
   if (key === "export.subtotal") return `Subtotal ${opts.group}`;
   if (key === "export.generatedOn") return `Generado el ${opts.date}`;

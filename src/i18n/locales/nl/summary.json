@@ -89,6 +89,7 @@
     "subtotal": "Subtotaal {{group}}",
     "generatedOn": "Gegenereerd op {{date}}",
     "page": "Pagina {{current}} van {{total}}",
-    "footerNote": "Ocean Flow · automatisch gegenereerd, zonder handmatige bewerking"
+    "footerNote": "Ocean Flow · automatisch gegenereerd, zonder handmatige bewerking",
+    "tagline": "Duik meer. Beheer minder."
   }
 }

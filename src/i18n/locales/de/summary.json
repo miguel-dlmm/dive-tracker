@@ -89,6 +89,7 @@
     "subtotal": "Zwischensumme {{group}}",
     "generatedOn": "Erstellt am {{date}}",
     "page": "Seite {{current}} von {{total}}",
-    "footerNote": "Ocean Flow · automatisch erstellt, ohne manuelle Bearbeitung"
+    "footerNote": "Ocean Flow · automatisch erstellt, ohne manuelle Bearbeitung",
+    "tagline": "Mehr tauchen. Weniger verwalten."
   }
 }

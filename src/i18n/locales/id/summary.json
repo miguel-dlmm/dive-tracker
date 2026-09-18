@@ -89,6 +89,7 @@
     "subtotal": "Subtotal {{group}}",
     "generatedOn": "Dibuat pada {{date}}",
     "page": "Halaman {{current}} dari {{total}}",
-    "footerNote": "Ocean Flow · dibuat otomatis, tanpa penyuntingan manual"
+    "footerNote": "Ocean Flow · dibuat otomatis, tanpa penyuntingan manual",
+    "tagline": "Menyelam lebih banyak. Mengurus lebih sedikit."
   }
 }

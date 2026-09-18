@@ -5,6 +5,12 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Added
+- **Branding real en el PDF de "Exportar informe"**: la cabecera pasa de
+  solo texto ("Ocean Flow") al isotipo real de la app junto al nombre; el
+  pie de cada página suma una línea de marca con el eslogan ya usado en
+  Login ("Bucea más. Gestiona menos.") y un enlace real (clicable) a
+  oceanflow-web.vercel.app — pensado para cuando el PDF sale de la app y
+  llega a alguien de la escuela que no la conoce todavía.
 - **`FieldSkeleton` (shared.jsx)**: barra gris que pulsa para el valor de
   un campo aislado que aún está cargando — sustituye al "…" estático que
   usaba la ficha de detalle de Config → Usuarios (Movimientos, Última

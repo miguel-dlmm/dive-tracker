@@ -89,6 +89,7 @@
     "subtotal": "Jumlah kecil {{group}}",
     "generatedOn": "Dijana pada {{date}}",
     "page": "Halaman {{current}} daripada {{total}}",
-    "footerNote": "Ocean Flow · dijana secara automatik, tanpa penyuntingan manual"
+    "footerNote": "Ocean Flow · dijana secara automatik, tanpa penyuntingan manual",
+    "tagline": "Selam lebih. Uruskan kurang."
   }
 }

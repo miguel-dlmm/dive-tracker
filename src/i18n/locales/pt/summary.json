@@ -89,6 +89,7 @@
     "subtotal": "Subtotal {{group}}",
     "generatedOn": "Gerado em {{date}}",
     "page": "Página {{current}} de {{total}}",
-    "footerNote": "Ocean Flow · gerado automaticamente, sem edição manual"
+    "footerNote": "Ocean Flow · gerado automaticamente, sem edição manual",
+    "tagline": "Mergulhe mais. Gerencie menos."
   }
 }
