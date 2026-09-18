@@ -30,10 +30,9 @@ const TEAL = "#0F766E";
 const GOLD = "#8C6118";
 const SLATE = "#5B7286";
 const SUCCESS = "#15803D";
-const WARNING = "#B45309";
-const WARNING_BG = "#FCF1E5";
 const DANGER = "#C2542F";
 const MUTED = "#3D5C73";
+const MUTED_LIGHT = "#7C93A3";
 const HAIRLINE = "#D7E0E8";
 
 // Enlace real a la app (canónico desde 2026-09-08, ver CLAUDE.md —
@@ -111,7 +110,7 @@ function roundedBox({ height, radius, color, topInset, content, marginTop = 16 }
 // aquí mismo.
 function groupLabel(text, color) {
   return {
-    margin: [0, 18, 0, 6],
+    margin: [0, 22, 0, 8],
     text: [
       { text: "●  ", color, fontSize: 7 },
       { text: text.toUpperCase(), bold: true, fontSize: 8, color, characterSpacing: 0.6 },
@@ -129,55 +128,18 @@ const hairlineLayout = {
   paddingBottom: () => 7,
 };
 
-// Ancho de columna estimado sin las métricas reales de la fuente (pdfmake
-// no las expone antes de generar el documento) — ratio medio de ancho de
-// carácter para Roboto (bold ~0.58×fontSize, regular ~0.52×fontSize).
-// Suficiente para ELEGIR un ancho de columna razonable, no para maquetar
-// con precisión tipográfica real — un margen de sobra (+6pt) absorbe el
-// margen de error de la estimación.
-function estimateTextWidth(text, fontSize, bold) {
-  return (text || "").length * fontSize * (bold ? 0.58 : 0.52) + 6;
-}
-
-// Ancho de la columna de actividad de `groupedActivityTable` — pedido
-// explícito del usuario 2026-09-18: "la tabla es muy ancha... debería ser
-// centrada con la información junta pero no apretada. en caso de haber
-// textos largos en las actividades se adaptará al texto más largo de
-// toda la tabla con un máximo usable". Se mide sobre TODOS los grupos
-// (cursos + comisiones) para que ambas tablas del mismo informe
-// compartan un único ancho — inconsistente que cada sección tuviera el
-// suyo. `ACTIVITY_COL_MIN/MAX`: nunca más estrecha de lo razonable para
-// una palabra corta ("OWD"), nunca más ancha que un "máximo usable"
-// aunque una actividad tenga un nombre desproporcionado — a partir de
-// ahí el texto envuelve en dos líneas en vez de seguir ensanchando la
-// tabla.
-const ACTIVITY_COL_MIN = 150;
-const ACTIVITY_COL_MAX = 260;
-const ACTIVITY_AMOUNT_COL = 78;
-function activityColumnWidth(allDayGroups) {
-  let widest = 0;
-  allDayGroups.forEach((dayGroups) => {
-    dayGroups.forEach((day) => {
-      day.groups.forEach((g) => { widest = Math.max(widest, estimateTextWidth(g.activity, 11.5, true)); });
-    });
-  });
-  return Math.min(Math.max(widest, ACTIVITY_COL_MIN), ACTIVITY_COL_MAX);
-}
-
-// Envuelve un bloque de contenido (etiqueta de grupo + tabla + subtotal,
-// o solo una tabla) para centrarlo dentro de CONTENT_WIDTH. Primer
-// intento — una tabla 1×1 sin bordes con `alignment: "center"` — no
-// funcionaba: verificado leyendo `DocMeasure.measureTable()` en el
-// paquete instalado (pdfmake 0.3.11), `node._alignment` se guarda pero
-// nunca se usa para desplazar la tabla dentro del ancho disponible, solo
-// para heredar `alignment` de texto a las celdas — confirmado también
-// generando un PDF real: la tabla salía pegada al margen izquierdo, no
-// centrada. Un margen izquierdo calculado sí funciona, es el mecanismo
-// que pdfmake sí respeta para posicionar un bloque de ancho fijo.
-function centeredBlock(width, stackContent) {
-  const side = Math.max(0, (CONTENT_WIDTH - width) / 2);
-  return { stack: stackContent, margin: [side, 0, 0, 0] };
-}
+// Segunda vuelta del rediseño de tabla (2026-09-18) — la primera
+// (columna de actividad a ancho estimado por caracteres + tabla
+// centrada más estrecha que el resto del documento) generaba justo la
+// queja siguiente: "ahora es todo demasiado estrecho y los totales y
+// cabeceras son a todo lo ancho... queda ridículo". Aprobado por mockup
+// (ver artifact de la sesión) antes de tocar este archivo: un único
+// ancho para TODO el documento — la tabla vuelve a ir a CONTENT_WIDTH
+// completo, igual que la cabecera, el aviso y la caja de total, con la
+// columna de actividad a `"*"` (rellena lo que sobra) en vez de un
+// ancho estimado por caracteres. Se retira toda la heurística de ancho
+// de texto y el truco de centrado — ya no hacen falta.
+const AMOUNT_COL = 96;
 
 // Tabla agrupada por día y, dentro de cada día, por actividad+estado —
 // sustituye a la antigua "una fila por movimiento" (pedido explícito tras
@@ -190,20 +152,23 @@ function centeredBlock(width, stackContent) {
 // el resto de la app (curso arriba, detalle abajo, importe a la derecha),
 // no una tabla de hoja de cálculo. El estado solo se imprime en la línea
 // de detalle cuando showCollected está activo: con cobrados ocultos TODA
-// fila es pendiente por definición (ya lo dice el aviso de cabecera), así
-// que repetirlo en cada línea sería ruido, no información.
-// activityColWidth (2026-09-18, sustituye el "*" que antes estiraba la
-// tabla a todo CONTENT_WIDTH — ver activityColumnWidth arriba para el
-// porqué): tipografía subida de paso (9→11.5 la actividad, 7.5→9.5 el
-// detalle, 8.5→10.5 la fila de día) para que se lea sin tener que ampliar
-// en el móvil, el problema real detrás de "el texto es chico".
-function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate, activityColWidth }) {
+// fila es pendiente por definición, así que repetirlo en cada línea sería
+// ruido, no información.
+// Cabecera de día (2026-09-18, aprobado por mockup): ya no es una banda
+// de color sólido tipo hoja de cálculo — es una fecha + total del día en
+// gris, con una regla fina por debajo (el propio hairline de la tabla,
+// que ya dibuja una línea entre cada fila). Pedido explícito de la misma
+// sesión: la cabecera de día debe leerse MÁS GRANDE que la línea de
+// detalle ("2 personas"...) de cada actividad — por eso 10.5pt de
+// cabecera de día frente a 9.5pt de detalle, con la propia actividad
+// (12.5pt) siempre por encima de las dos.
+function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate }) {
   const body = [];
   dayGroups.forEach((day) => {
     const dayTotalText = Object.entries(day.dayTotal).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ");
     body.push([
-      { text: rowDate(day.date), bold: true, fontSize: 10.5, color: NAVY, fillColor: "#F1F6FA" },
-      { text: dayTotalText, bold: true, fontSize: 10.5, color: NAVY, alignment: "right", fillColor: "#F1F6FA" },
+      { text: rowDate(day.date), bold: true, fontSize: 10.5, color: MUTED_LIGHT, characterSpacing: 0.3 },
+      { text: dayTotalText, bold: true, fontSize: 10.5, color: MUTED_LIGHT, alignment: "right" },
     ]);
     day.groups.forEach((g) => {
       const captionParts = [];
@@ -213,18 +178,21 @@ function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, 
       body.push([
         {
           stack: [
-            { text: g.activity, bold: true, fontSize: 11.5, color: "#1E2A33" },
+            { text: g.activity, bold: true, fontSize: 12.5, color: "#1E2A33" },
             { text: captionParts.join("  ·  "), fontSize: 9.5, color: MUTED, margin: [0, 2, 0, 0] },
           ],
         },
-        { text: formatMoneyPdf(g.total, g.currency), alignment: "right", bold: true, color: NAVY, fontSize: 11.5 },
+        { text: formatMoneyPdf(g.total, g.currency), alignment: "right", bold: true, color: NAVY, fontSize: 12.5 },
       ]);
     });
   });
-  return { table: { widths: [activityColWidth, ACTIVITY_AMOUNT_COL], body }, layout: hairlineLayout };
+  return { table: { widths: ["*", AMOUNT_COL], body }, layout: hairlineLayout };
 }
 
-const ADJUSTMENTS_WIDTHS = [50, 130, 155, 78]; // fecha, compañero, concepto, importe — suma 413pt, notablemente más estrecha que CONTENT_WIDTH (515.28pt)
+// Ancho a juego con `groupedActivityTable`/`subtotalLine` — mismo AMOUNT_COL
+// para que el importe de ajustes quede alineado en la misma columna que el
+// resto del informe. "Concepto" a `"*"` en vez de un ancho fijo, igual que
+// la columna de actividad de arriba.
 function adjustmentsTable({ entries, t, rowDate }) {
   const header = [
     { text: t("export.colDate"), style: "th" },
@@ -238,16 +206,16 @@ function adjustmentsTable({ entries, t, rowDate }) {
     { text: e.notes || "—", fontSize: 11, color: MUTED },
     { text: formatMoneyPdf(e.total, e.currency), alignment: "right", bold: true, color: e.total < 0 ? DANGER : SUCCESS, fontSize: 11 },
   ]);
-  return { table: { headerRows: 1, widths: ADJUSTMENTS_WIDTHS, body: [header, ...body] }, layout: hairlineLayout };
+  return { table: { headerRows: 1, widths: [55, 150, "*", AMOUNT_COL], body: [header, ...body] }, layout: hairlineLayout };
 }
 
-function subtotalLine(label, totals, width) {
+function subtotalLine(label, totals) {
   const lines = Object.entries(totals).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ");
   return {
-    margin: [0, 4, 0, 0],
+    margin: [0, 6, 0, 0],
     columns: [
-      { width: width - 90, text: label, fontSize: 9.5, bold: true, color: MUTED },
-      { width: 90, text: lines, fontSize: 9.5, bold: true, color: NAVY, alignment: "right" },
+      { width: "*", text: label, fontSize: 9.5, bold: true, color: MUTED },
+      { width: AMOUNT_COL, text: lines, fontSize: 9.5, bold: true, color: NAVY, alignment: "right" },
     ],
   };
 }
@@ -279,13 +247,6 @@ function totalBox({ totals, label, splitPaidPending, t }) {
   });
 }
 
-function pendingBanner(text) {
-  return roundedBox({
-    height: 27, radius: 8, color: WARNING_BG, topInset: 8, marginTop: 12,
-    content: { text, color: WARNING, bold: true, fontSize: 8.5 },
-  });
-}
-
 export async function generateExportReportPdf({
   school, from, to, data, paymentStatusRows, instructorName, showCollected, includeAdjustments, sumAdjustments, t,
 }) {
@@ -311,40 +272,34 @@ export async function generateExportReportPdf({
     ],
   });
 
-  if (!showCollected) content.push(pendingBanner(t("export.onlyPendingNote")));
+  // El aviso "solo pendiente de cobro" se retiró (2026-09-18, pedido
+  // explícito: "quita la banda de info... este listado solo refleja los
+  // pagos pendientes") — con cobrados ocultos por defecto, todo el
+  // informe ya son importes pendientes sin necesidad de decirlo aparte.
 
-  // Agrupados por día una sola vez (antes se recalculaban dentro de cada
-  // llamada a groupedActivityTable) — hacen falta aparte para medir el
-  // ancho de columna compartido (activityColumnWidth) antes de construir
-  // ninguna de las dos tablas.
   const courseDayGroups = groupByDayAndActivity(data.courses);
   const commissionDayGroups = groupByDayAndActivity(data.commissions);
-  const activityColWidth = activityColumnWidth([courseDayGroups, commissionDayGroups]);
-  const activityTableWidth = activityColWidth + ACTIVITY_AMOUNT_COL;
-  const adjustmentsTableWidth = ADJUSTMENTS_WIDTHS.reduce((a, b) => a + b, 0);
 
-  // pushGroup envuelve etiqueta+tabla+subtotal en un único centeredBlock
-  // (2026-09-18, pedido explícito: "la tabla debería ser centrada con la
-  // información junta pero no apretada") — las tres piezas comparten el
-  // mismo ancho y se centran como un solo bloque, en vez de que la tabla
-  // saliera más estrecha que el resto del documento mientras la etiqueta
-  // y el subtotal seguían a todo CONTENT_WIDTH.
-  const pushGroup = (label, color, table, subtotalLabel, totals, width) => {
-    content.push(centeredBlock(width, [groupLabel(label, color), table, subtotalLine(subtotalLabel, totals, width)]));
+  // pushGroup empuja etiqueta+tabla+subtotal seguidos, todos a
+  // CONTENT_WIDTH — ya no hace falta envolverlos en ningún bloque
+  // centrado (ver AMOUNT_COL arriba): todo el documento comparte un
+  // único ancho.
+  const pushGroup = (label, color, table, subtotalLabel, totals) => {
+    content.push(groupLabel(label, color), table, subtotalLine(subtotalLabel, totals));
   };
 
   if (data.courses.length > 0) {
     pushGroup(
       t("export.coursesGroup"), TEAL,
-      groupedActivityTable({ dayGroups: courseDayGroups, showCollected, paymentStatusRows, t, rowDate, activityColWidth }),
-      t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal, activityTableWidth
+      groupedActivityTable({ dayGroups: courseDayGroups, showCollected, paymentStatusRows, t, rowDate }),
+      t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal
     );
   }
   if (data.commissions.length > 0) {
     pushGroup(
       t("export.commissionsGroup"), GOLD,
-      groupedActivityTable({ dayGroups: commissionDayGroups, showCollected, paymentStatusRows, t, rowDate, activityColWidth }),
-      t("export.subtotal", { group: t("export.commissionsGroup").toLowerCase() }), data.commissionsSubtotal, activityTableWidth
+      groupedActivityTable({ dayGroups: commissionDayGroups, showCollected, paymentStatusRows, t, rowDate }),
+      t("export.subtotal", { group: t("export.commissionsGroup").toLowerCase() }), data.commissionsSubtotal
     );
   }
 
@@ -353,7 +308,7 @@ export async function generateExportReportPdf({
     pushGroup(
       t("export.adjustmentsGroup"), SLATE,
       adjustmentsTable({ entries: data.adjustments, t, rowDate }),
-      t("export.subtotal", { group: t("export.adjustmentsGroup").toLowerCase() }), data.adjustmentsSubtotal, adjustmentsTableWidth
+      t("export.subtotal", { group: t("export.adjustmentsGroup").toLowerCase() }), data.adjustmentsSubtotal
     );
   }
 
@@ -368,10 +323,8 @@ export async function generateExportReportPdf({
   if (showAdjustmentsAfterTotal) {
     content.push({ margin: [0, 20, 0, 0], canvas: [{ type: "line", x1: 0, y1: 0, x2: CONTENT_WIDTH, y2: 0, lineWidth: 0.75, lineColor: HAIRLINE, dash: { length: 3 } }] });
     content.push({ margin: [0, 7, 0, 0], text: t("export.adjustmentsAsideNote"), fontSize: 7.5, bold: true, color: "#8095A6", characterSpacing: 0.3 });
-    content.push(centeredBlock(adjustmentsTableWidth, [
-      groupLabel(t("export.adjustmentsGroup"), SLATE),
-      adjustmentsTable({ entries: data.adjustments, t, rowDate }),
-    ]));
+    content.push(groupLabel(t("export.adjustmentsGroup"), SLATE));
+    content.push(adjustmentsTable({ entries: data.adjustments, t, rowDate }));
   }
 
   const docDefinition = {

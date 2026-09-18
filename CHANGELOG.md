@@ -154,6 +154,24 @@ Registro de cambios relevantes de Ocean Flow.
   paquete, `DocMeasure.measureTable()` guarda ese valor pero nunca lo
   usa para desplazar la tabla; sustituido por un margen izquierdo
   calculado, que sí es el mecanismo que pdfmake respeta.
+- **Tabla de "Exportar informe" (PDF), segunda vuelta**: la tabla
+  centrada y más estrecha de la corrección anterior generaba la queja
+  siguiente — "ahora es todo demasiado estrecho y los totales y
+  cabeceras son a todo lo ancho... queda ridículo". Antes de tocar el
+  código, se acordó un mockup HTML con datos reales de un informe
+  generado, inspirado en el lenguaje visual de extractos/facturas de
+  apps modernas (Stripe, Linear...) y aprobado en vivo. Aplicado: un
+  único ancho para todo el documento (la tabla vuelve a CONTENT_WIDTH
+  completo, columna de actividad a `"*"` en vez de un ancho estimado
+  por caracteres — se retira esa heurística, ya no hace falta); la
+  cabecera de cada día deja de ser una banda de color sólido tipo hoja
+  de cálculo y pasa a una fecha + total en gris con una regla fina
+  debajo, y — pedido explícito en la misma revisión — su tamaño sube
+  para leerse más grande que la línea de detalle ("2 personas...") de
+  cada actividad, aunque siempre por debajo del nombre de la actividad.
+  Se retira también el aviso "este informe muestra solo lo pendiente de
+  cobro": con cobrados ocultos por defecto, todo el informe ya son
+  importes pendientes sin necesidad de decirlo aparte.
 
 ## [1.3.1] - 2026-09-09
 
