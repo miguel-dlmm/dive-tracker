@@ -48,13 +48,6 @@
   "sectionColors": {
     "descripcion": "Utilisées dans la barre de navigation et les boutons de création de chaque zone."
   },
-  "generalSettings": {
-    "iconoCarga": "Icône de chargement",
-    "descripcion": "Utilisée dans l'animation de \"chargement\" de toute l'app. Quand vous aurez le logo officiel d'Ocean Flow, prévenez-nous et nous le remplacerons par l'icône réelle au lieu de cette liste.",
-    "iconoActualizado": "Icône mise à jour",
-    "noSePudoGuardar": "Impossible d'enregistrer. Réessayez.",
-    "vistaPrevia": "Aperçu"
-  },
   "externalRegistration": {
     "titulo": "Autoriser l'inscription externe",
     "descripcion": "Affiche \"S'inscrire\" sur l'écran de connexion pour que n'importe qui puisse créer son propre compte.",

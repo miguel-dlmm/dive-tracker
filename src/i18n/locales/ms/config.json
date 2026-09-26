@@ -48,13 +48,6 @@
   "sectionColors": {
     "descripcion": "Digunakan pada bar navigasi dan pada butang cipta rekod bagi setiap kawasan."
   },
-  "generalSettings": {
-    "iconoCarga": "Ikon pemuatan",
-    "descripcion": "Digunakan dalam animasi \"memuatkan\" seluruh aplikasi. Apabila anda mempunyai logo rasmi Ocean Flow, beritahu saya dan saya akan menggantikannya dengan ikon sebenar bukannya senarai ini.",
-    "iconoActualizado": "Ikon dikemas kini",
-    "noSePudoGuardar": "Tidak dapat menyimpan. Cuba lagi.",
-    "vistaPrevia": "Pratonton"
-  },
   "externalRegistration": {
     "titulo": "Benarkan pendaftaran luaran",
     "descripcion": "Tunjukkan \"Daftar\" pada log masuk supaya sesiapa sahaja boleh mencipta akaun mereka sendiri.",

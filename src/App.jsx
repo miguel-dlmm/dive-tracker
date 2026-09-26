@@ -380,7 +380,6 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
     if (DEV_AUTH_BYPASS) disableDevBypass();
     onSignOut();
   };
-  const logoIcon = appConfig.rows[0]?.logo_icon || "Logo";
   // La cabecera acompaña siempre al usuario (ver rediseño de navegación
   // global) — antes se quedaba en flujo normal y desaparecía al hacer
   // scroll en cualquier lista larga, dejando Ayuda/Configuración/Cerrar
@@ -394,7 +393,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
   if (!loaded) {
     return (
       <div className="flex h-dvh items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
-        <AppLoading iconName={logoIcon} color={BRAND_NAVY} size={64} />
+        <AppLoading size={64} />
       </div>
     );
   }
@@ -866,7 +865,7 @@ function AuthGate() {
   if (loading || (DEV_AUTH_BYPASS && bypassPending && !session)) {
     return (
       <div className="flex h-dvh items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
-        <AppLoading color={BRAND_NAVY} size={64} />
+        <AppLoading size={64} />
       </div>
     );
   }
