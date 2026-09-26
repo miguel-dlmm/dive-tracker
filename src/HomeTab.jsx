@@ -503,12 +503,25 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             <span className="text-[10.5px] font-semibold leading-tight text-white">{t("quickCreate.label")}</span>
           </button>
         </div>
+        {/* items-start, no items-center (pedido explícito: "centra
+            verticalmente entre sí los textos de las pastillas de tr y
+            escuela favorita") — Training Records tiene un estado de una
+            sola línea (invitación, sin datos aún) y otro de dos
+            (título + cifra); Escuela del mes siempre son dos. Con
+            items-center, cada tile centra su propio bloque de texto
+            DENTRO de su alto de fila — el mismo alto para ambas, pero el
+            número de líneas distinto hace que el texto de una y otra no
+            arranquen a la misma altura. Alineando ambas al principio
+            (mismo padding `p-2.5` en las dos), la primera línea de
+            texto —y el icono— quedan siempre a la misma altura,
+            container-a-container, sin depender de cuántas líneas tenga
+            cada una. */}
         <div className="grid grid-cols-2 gap-2">
           {onOpenTrainingRecords && (
             <button
               type="button"
               onClick={onOpenTrainingRecords}
-              className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
+              className="flex items-start justify-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
             >
               <motion.span
                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
@@ -537,7 +550,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             type="button"
             onClick={onOpenSummary}
             data-testid="active-school-this-month-card"
-            className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
+            className="flex items-start justify-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
               <Building2 size={14} style={{ color: TEAL }} aria-hidden="true" />
