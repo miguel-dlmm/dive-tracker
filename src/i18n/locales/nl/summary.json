@@ -67,7 +67,7 @@
     "genericError": "We konden de PDF niet genereren — probeer het opnieuw",
     "success": "PDF gedownload",
     "onlyPendingNote": "Dit rapport toont alleen wat nog openstaat",
-    "totalLabel": "Totaal van het gekozen bereik",
+    "totalLabel": "Totaal van de gekozen periode",
     "paidLabel": "Geïnd",
     "pendingLabel": "Openstaand",
     "coursesGroup": "Gegeven lessen",

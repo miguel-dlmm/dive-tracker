@@ -67,7 +67,7 @@
     "genericError": "Não foi possível gerar o PDF — tente novamente",
     "success": "PDF baixado",
     "onlyPendingNote": "Este relatório mostra apenas o que ainda está pendente de recebimento",
-    "totalLabel": "Total do intervalo escolhido",
+    "totalLabel": "Total do período escolhido",
     "paidLabel": "Recebido",
     "pendingLabel": "Pendente",
     "coursesGroup": "Aulas ministradas",

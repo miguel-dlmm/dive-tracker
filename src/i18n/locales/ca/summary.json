@@ -67,7 +67,7 @@
     "genericError": "No hem pogut generar el PDF — torna-ho a provar",
     "success": "PDF descarregat",
     "onlyPendingNote": "Aquest informe només mostra el que encara està pendent de cobrament",
-    "totalLabel": "Total de l'interval triat",
+    "totalLabel": "Total del període triat",
     "paidLabel": "Cobrat",
     "pendingLabel": "Pendent",
     "coursesGroup": "Classes impartides",

@@ -139,6 +139,31 @@ const hairlineLayout = {
   paddingBottom: () => 7,
 };
 
+// Separador de día más grueso — pedido explícito 2026-09-26: "entre días
+// la línea algo más gruesa o algún separador visual para identificar
+// donde empieza cada día". `hairlineLayout` de arriba dibuja la misma
+// línea fina (0.75pt) entre TODAS las filas, incluida la que separa un
+// día del siguiente — sin nada que distinga dónde empieza cada grupo.
+// `dayStartRows` recibe el índice de fila (dentro de `body`, no de
+// `dayGroups`) de cada cabecera de día salvo la primera del todo (esa
+// línea ya es el borde superior de la tabla, sin nada que separar antes)
+// — devuelve un layout dedicado en vez de reutilizar `hairlineLayout`,
+// ya que `hLineWidth`/`hLineColor` en pdfmake no reciben más contexto que
+// el índice de línea `i` (la línea `i` va inmediatamente ENCIMA de la
+// fila `i`), así que hace falta ese índice precalculado para decidir cuál
+// engrosar.
+function dayGroupedLayout(dayStartRows) {
+  return {
+    hLineWidth: (i) => (i === 0 ? 0 : dayStartRows.has(i) ? 1.5 : 0.75),
+    vLineWidth: () => 0,
+    hLineColor: (i) => (dayStartRows.has(i) ? MUTED_LIGHT : HAIRLINE),
+    paddingLeft: () => 0,
+    paddingRight: () => 8,
+    paddingTop: () => 7,
+    paddingBottom: () => 7,
+  };
+}
+
 // Segunda vuelta del rediseño de tabla (2026-09-18) — la primera
 // (columna de actividad a ancho estimado por caracteres + tabla
 // centrada más estrecha que el resto del documento) generaba justo la
@@ -159,9 +184,14 @@ const AMOUNT_COL = 96;
 // leía muy ancha y desperdigada en un PDF que se abre sobre todo en el
 // móvil).
 // Cabecera de día (2026-09-18, aprobado por mockup): ya no es una banda
-// de color sólido tipo hoja de cálculo — es una fecha + total del día,
-// con una regla fina por debajo (el propio hairline de la tabla, que ya
-// dibuja una línea entre cada fila).
+// de color sólido tipo hoja de cálculo — es una fecha + total del día.
+// La línea justo encima de cada cabecera de día (salvo la primera del
+// informe) es más gruesa y de un gris más marcado que el resto de
+// hairlines de la tabla (`dayGroupedLayout`, ver más abajo) — pedido
+// explícito 2026-09-26: "entre días la línea algo más gruesa... para
+// identificar donde empieza cada día", ya que con el mismo grosor en
+// toda la tabla no había forma de distinguir a golpe de vista dónde
+// terminaba un día y empezaba el siguiente.
 // Pesos, segunda corrección (2026-09-26, pedido explícito: "no era en un
 // tono más oscuro, es alterar el tamaño... para darle más peso a la
 // cabecera, como en todos los listados") — el primer intento (2026-09-26,
@@ -182,7 +212,9 @@ const AMOUNT_COL = 96;
 // showCollected está activo) — el conteo de personas ya no se repite ahí.
 function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate, quantityFormat }) {
   const body = [];
-  dayGroups.forEach((day) => {
+  const dayStartRows = new Set();
+  dayGroups.forEach((day, dayIndex) => {
+    if (dayIndex > 0) dayStartRows.add(body.length);
     const dayTotalText = Object.entries(day.dayTotal).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ");
     body.push([
       { text: rowDate(day.date), bold: true, fontSize: 12.5, color: MUTED, characterSpacing: 0.3 },
@@ -205,7 +237,7 @@ function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, 
       ]);
     });
   });
-  return { table: { widths: ["*", AMOUNT_COL], body }, layout: hairlineLayout };
+  return { table: { widths: ["*", AMOUNT_COL], body }, layout: dayGroupedLayout(dayStartRows) };
 }
 
 // Ancho a juego con `groupedActivityTable`/`subtotalLine` — mismo AMOUNT_COL
@@ -228,13 +260,18 @@ function adjustmentsTable({ entries, t, rowDate }) {
   return { table: { headerRows: 1, widths: [55, 150, "*", AMOUNT_COL], body: [header, ...body] }, layout: hairlineLayout };
 }
 
-function subtotalLine(label, totals) {
+// fontSize por defecto (9.5) para Comisiones/Ajustes; Cursos pide el
+// mismo tamaño que la cabecera de día (2026-09-26, pedido explícito:
+// "quiero el subtotal por cursos... igual de grande que el día (la
+// cabecera de día)") — 12.5pt, igual que `groupedActivityTable` arriba.
+// Solo Cursos por ahora, Comisiones/Ajustes no lo pidieron.
+function subtotalLine(label, totals, fontSize = 9.5) {
   const lines = Object.entries(totals).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ");
   return {
     margin: [0, 6, 0, 0],
     columns: [
-      { width: "*", text: label, fontSize: 9.5, bold: true, color: MUTED },
-      { width: AMOUNT_COL, text: lines, fontSize: 9.5, bold: true, color: NAVY, alignment: "right" },
+      { width: "*", text: label, fontSize, bold: true, color: MUTED },
+      { width: AMOUNT_COL, text: lines, fontSize, bold: true, color: NAVY, alignment: "right" },
     ],
   };
 }
@@ -303,15 +340,15 @@ export async function generateExportReportPdf({
   // CONTENT_WIDTH — ya no hace falta envolverlos en ningún bloque
   // centrado (ver AMOUNT_COL arriba): todo el documento comparte un
   // único ancho.
-  const pushGroup = (label, color, table, subtotalLabel, totals) => {
-    content.push(groupLabel(label, color), table, subtotalLine(subtotalLabel, totals));
+  const pushGroup = (label, color, table, subtotalLabel, totals, subtotalFontSize) => {
+    content.push(groupLabel(label, color), table, subtotalLine(subtotalLabel, totals, subtotalFontSize));
   };
 
   if (data.courses.length > 0) {
     pushGroup(
       t("export.coursesGroup"), TEAL,
       groupedActivityTable({ dayGroups: courseDayGroups, showCollected, paymentStatusRows, t, rowDate, quantityFormat: true }),
-      t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal
+      t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal, 12.5
     );
   }
   if (data.commissions.length > 0) {

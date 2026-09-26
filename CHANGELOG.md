@@ -189,6 +189,21 @@ Registro de cambios relevantes de Ocean Flow.
   "N × Actividad" en Cursos (p. ej. "2 × Refresh" en vez de "Refresh" +
   "2 personas" en el detalle, como una línea de factura) — solo en
   Cursos, Comisiones conserva el formato anterior.
+- **Tabla de "Exportar informe" (PDF), cuarta vuelta**: tres ajustes
+  más, tras usar la tercera versión. (1) El subtotal de Cursos
+  ("Subtotal clases impartidas") sube a 12.5pt — el mismo tamaño que la
+  cabecera de día — para tener el mismo peso; Comisiones/Ajustes siguen
+  a 9.5pt, no pedido para ellos en esta sesión. (2) Separador visual
+  entre días: la línea justo encima de cada cabecera de día (salvo la
+  primera del informe) pasa de 0.75pt en `HAIRLINE` a 1.5pt en un gris
+  más marcado (`dayGroupedLayout`, capa de layout dedicada que sustituye
+  a `hairlineLayout` en esta tabla) — antes todas las líneas tenían el
+  mismo grosor y no había forma de distinguir a golpe de vista dónde
+  terminaba un día y empezaba el siguiente. (3) "Total del rango
+  elegido" pasa a "Total del periodo elegido" (`export.totalLabel`) —
+  cambiado también en los otros locales que usaban la misma idea de
+  "rango/intervalo" (ca, en, eu, id, it, ms, nl, pt); el resto (de, fr,
+  ru, th, vi, my) ya usaban su equivalente de "periodo", sin cambios.
 
 ## [1.3.1] - 2026-09-09
 

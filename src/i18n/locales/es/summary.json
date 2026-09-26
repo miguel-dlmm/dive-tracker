@@ -67,7 +67,7 @@
     "genericError": "No hemos podido generar el PDF — inténtalo de nuevo",
     "success": "PDF descargado",
     "onlyPendingNote": "Este informe muestra solo lo pendiente de cobro",
-    "totalLabel": "Total del rango elegido",
+    "totalLabel": "Total del periodo elegido",
     "paidLabel": "Cobrado",
     "pendingLabel": "Pendiente",
     "coursesGroup": "Clases impartidas",

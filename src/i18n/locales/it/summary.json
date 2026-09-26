@@ -67,7 +67,7 @@
     "genericError": "Non siamo riusciti a generare il PDF — riprova",
     "success": "PDF scaricato",
     "onlyPendingNote": "Questo report mostra solo ciò che è ancora in sospeso",
-    "totalLabel": "Totale dell'intervallo scelto",
+    "totalLabel": "Totale del periodo scelto",
     "paidLabel": "Incassato",
     "pendingLabel": "In sospeso",
     "coursesGroup": "Corsi tenuti",

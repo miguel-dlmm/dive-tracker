@@ -67,7 +67,7 @@
     "genericError": "We couldn't generate the PDF — try again",
     "success": "PDF downloaded",
     "onlyPendingNote": "This report only shows what's still pending collection",
-    "totalLabel": "Total for the chosen range",
+    "totalLabel": "Total for the chosen period",
     "paidLabel": "Collected",
     "pendingLabel": "Pending",
     "coursesGroup": "Classes taught",

@@ -67,7 +67,7 @@
     "genericError": "Kami tidak dapat membuat PDF — coba lagi",
     "success": "PDF berhasil diunduh",
     "onlyPendingNote": "Laporan ini hanya menampilkan yang masih belum diterima",
-    "totalLabel": "Total rentang yang dipilih",
+    "totalLabel": "Total periode yang dipilih",
     "paidLabel": "Diterima",
     "pendingLabel": "Belum diterima",
     "coursesGroup": "Kelas yang diajarkan",
