@@ -172,6 +172,18 @@ Registro de cambios relevantes de Ocean Flow.
   Se retira también el aviso "este informe muestra solo lo pendiente de
   cobro": con cobrados ocultos por defecto, todo el informe ya son
   importes pendientes sin necesidad de decirlo aparte.
+- **Tabla de "Exportar informe" (PDF), tercera vuelta**: dos ajustes
+  finos tras usar la segunda versión. (1) Márgenes laterales de página
+  subidos de 40 a 60pt (constante `MARGIN_X`, fuente única para
+  `pageMargins`, cabecera y pie): con la tabla a ancho completo, el
+  nombre de cada actividad y su importe quedaban demasiado separados
+  para leerse cómodo — más margen alrededor acerca ambos extremos. (2)
+  Pesos de la cabecera de día corregidos: el tamaño ya cumplía (10.5pt
+  cabecera de día vs 9.5pt línea de detalle), pero el color no —
+  cabecera de día en gris muy claro y detalle en gris más oscuro hacía
+  que el detalle ("2 personas"...) ganara en peso visual pese a ser más
+  pequeño. Colores intercambiados: cabecera de día ahora en el gris más
+  oscuro (más presencia), detalle en el más claro (retrocede).
 
 ## [1.3.1] - 2026-09-09
 

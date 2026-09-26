@@ -52,8 +52,17 @@ const APP_URL_LINK = "https://oceanflow-web.vercel.app";
 // un riesgo real de desincronización.
 const LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="345 152 256 238" fill="#063256"><path d="M405.01,195.95c-16.9,18.12-23.56,43.04-21,67.21-.06,7.5,2.3,14.95,4.74,21.99,3.82,11.04,10.37,20.78,18.15,29.89,2.05,2.4,4.21,3.84,6.14,5.69,6.33,6.08,13.79,10.65,21.72,14.47,16.72,8.07,35.61,10.42,54.02,7.15,23.56-4.19,46.4-17.81,59.16-39.8-16.98,14.26-33.92,23.41-54.31,26.26-16.04.97-31.98-1.71-45.52-10.58-5.28-3.46-10.4-7.89-14.23-12.88-5.79-7.56-9.21-16.02-11.26-25.14-1.24-9.7-.4-19.35,3.83-28.46,8.6-18.51,24.19-8.2,37.05-14.59,6.82-3.39,10.78-10.62,7.95-17.88-2.36-6.08-9.47-8.26-15.27-5.8-9.9,4.2-14.51,10.82-22.71,7.12-2.55-3.11-3.42-6.81-1.17-10.78l1.08-1.91c1.76-3.1,3.95-5.96,6.65-8.3,9.22-8,21.1-9.21,32.35-6.36l16.43,7.52c3.77,1.73,8.6,1.1,12.13-1.36,2.57-1.78,5.06-5.27,5.7-9.43,1.24-8.13-3.26-15.21-9.67-19.23-18.77-11.77-54.26-3.39-74.28,9.3,0,0-6.53,3.94-17.69,15.9ZM384.1,250.85s0,0,0,0c0,0,0,.01,0,.02v-.02Z"/><path d="M591.24,247.76c-2.63-23.11-12.63-44.87-27.66-62.57l-8.69-9.2-.78.76,7.93,9.32c14.96,21.04,22.45,46.12,20.84,71.95-2.05,13.39-4.38,26.85-10.55,39.11-4.45,8.85-9.61,17.61-16.26,25.04-8.13,9.07-17.75,17.06-28.24,23.15-23.85,13.87-51.88,18.08-78.84,12.6-2.41-1.4-5.4-1.84-8.07-2.36-24.72-7.73-46.27-23.51-60.63-45.36-9.26-14.09-15.31-30.54-16.98-47.39-1.7-17.15-.29-35.02,5.95-50.96,2.24-5.72,5-11.16,7.93-16.42,2.8-5.03,6.5-9.23,10.14-15.05-5.28,2.68-7.93,8.16-11.41,12.53-4.67,5.87-8.25,12.58-11.54,19.37-6.03,12.46-9.65,26.16-10.8,40.55-.51,6.4-1.73,12.6.15,18.3-.31,9.25,2.14,18.66,4.83,27.35,14.46,46.74,56.67,79.7,105.43,83.32,14.3,1.06,28.88-.53,42.82-4.73,7.98-2.4,15.77-5.62,23.03-9.54,16.91-9.15,31.13-22.13,41.9-37.84,5.64-8.22,9.43-16.85,13.1-26.1,6.95-17.5,8.54-36.91,6.39-55.85ZM468.34,381.42c.1-.03.21-.05.3-.09.02.04.04.06.07.1-.13,0-.24,0-.37,0ZM583.24,247.8c-.02.08-.05.14-.07.23-.03-.08-.05-.16-.09-.25.06,0,.1.01.16.01Z"/></svg>';
 
-// A4 (595.28pt) menos los márgenes laterales de pageMargins (40+40).
-const CONTENT_WIDTH = 515.28;
+// Margen lateral de página — subido de 40 a 60pt (2026-09-26, pedido
+// explícito: "más margen a los lados... para q los textos y las
+// cantidades queden algo más juntos") tras el rediseño a ancho completo:
+// con la tabla ocupando todo CONTENT_WIDTH, el nombre de la actividad y
+// su importe quedaban demasiado separados para leerse cómodo. Fuente
+// única para pageMargins, la cabecera y el pie (los tres deben coincidir
+// o el logo/CTA quedarían desalineados con el resto del contenido) y
+// para CONTENT_WIDTH.
+const MARGIN_X = 60;
+// A4 (595.28pt) menos los márgenes laterales de arriba.
+const CONTENT_WIDTH = 595.28 - MARGIN_X * 2;
 
 const pad2 = (n) => String(n).padStart(2, "0");
 function ddmmyyyy(iso) {
@@ -155,20 +164,26 @@ const AMOUNT_COL = 96;
 // fila es pendiente por definición, así que repetirlo en cada línea sería
 // ruido, no información.
 // Cabecera de día (2026-09-18, aprobado por mockup): ya no es una banda
-// de color sólido tipo hoja de cálculo — es una fecha + total del día en
-// gris, con una regla fina por debajo (el propio hairline de la tabla,
-// que ya dibuja una línea entre cada fila). Pedido explícito de la misma
-// sesión: la cabecera de día debe leerse MÁS GRANDE que la línea de
-// detalle ("2 personas"...) de cada actividad — por eso 10.5pt de
-// cabecera de día frente a 9.5pt de detalle, con la propia actividad
-// (12.5pt) siempre por encima de las dos.
+// de color sólido tipo hoja de cálculo — es una fecha + total del día,
+// con una regla fina por debajo (el propio hairline de la tabla, que ya
+// dibuja una línea entre cada fila).
+// Pesos corregidos (2026-09-26, pedido explícito: "ahora mismo es más
+// grande el detalle que el texto y la cantidad resumen del día") — el
+// tamaño ya cumplía (10.5pt cabecera de día vs 9.5pt detalle), pero el
+// color no: la cabecera de día usaba MUTED_LIGHT (gris muy claro) y el
+// detalle MUTED (más oscuro), así que el contraste de color ganaba al
+// tamaño y el detalle acababa leyéndose con más peso visual que la
+// cabecera de día que debía dominarlo. Colores intercambiados: cabecera
+// de día a MUTED (más oscuro, más presencia), detalle a MUTED_LIGHT (más
+// claro, retrocede) — la actividad (12.5pt, casi negro) sigue siempre
+// por encima de las dos.
 function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate }) {
   const body = [];
   dayGroups.forEach((day) => {
     const dayTotalText = Object.entries(day.dayTotal).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ");
     body.push([
-      { text: rowDate(day.date), bold: true, fontSize: 10.5, color: MUTED_LIGHT, characterSpacing: 0.3 },
-      { text: dayTotalText, bold: true, fontSize: 10.5, color: MUTED_LIGHT, alignment: "right" },
+      { text: rowDate(day.date), bold: true, fontSize: 10.5, color: MUTED, characterSpacing: 0.3 },
+      { text: dayTotalText, bold: true, fontSize: 10.5, color: MUTED, alignment: "right" },
     ]);
     day.groups.forEach((g) => {
       const captionParts = [];
@@ -179,7 +194,7 @@ function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, 
         {
           stack: [
             { text: g.activity, bold: true, fontSize: 12.5, color: "#1E2A33" },
-            { text: captionParts.join("  ·  "), fontSize: 9.5, color: MUTED, margin: [0, 2, 0, 0] },
+            { text: captionParts.join("  ·  "), fontSize: 9.5, color: MUTED_LIGHT, margin: [0, 2, 0, 0] },
           ],
         },
         { text: formatMoneyPdf(g.total, g.currency), alignment: "right", bold: true, color: NAVY, fontSize: 12.5 },
@@ -329,7 +344,7 @@ export async function generateExportReportPdf({
 
   const docDefinition = {
     pageSize: "A4",
-    pageMargins: [40, 56, 40, 46],
+    pageMargins: [MARGIN_X, 56, MARGIN_X, 46],
     // Isotipo real de la app (no solo el nombre en texto) + nombre —
     // pedido explícito del usuario 2026-09-18: "branding de Ocean Flow
     // en el pdf, logo... todo debe ser 100% corporativo línea y marca
@@ -338,7 +353,7 @@ export async function generateExportReportPdf({
     // `margin` a ojo — mismo patrón que usa la propia cabecera de la app
     // (App.jsx, icono + "Ocean Flow" en fila).
     header: (currentPage, pageCount) => ({
-      margin: [40, 20, 40, 0],
+      margin: [MARGIN_X, 20, MARGIN_X, 0],
       columns: [
         {
           width: "*",
@@ -366,7 +381,7 @@ export async function generateExportReportPdf({
     // compita con el CTA en el mismo run de texto ni fuerce un salto de
     // línea impredecible según cuánto ocupe cada uno.
     footer: () => ({
-      margin: [40, 10, 40, 0],
+      margin: [MARGIN_X, 10, MARGIN_X, 0],
       stack: [
         {
           text: [
