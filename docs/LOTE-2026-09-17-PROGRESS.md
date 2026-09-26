@@ -1,5 +1,14 @@
 # Lote 2026-09-17 — progreso
 
+> **Cerrado 2026-09-26.** Ítems 1-5 desplegados en producción como parte
+> de la release **v1.4.0** (`main`, tag `v1.4.0`,
+> [GitHub Release](https://github.com/miguel-dlmm/dive-tracker/releases/tag/v1.4.0)).
+> `feature/exportar-pdf-mensual` ya no existe — se fusionó en `develop` y
+> luego en `main`, y se borró (local y remoto) tras la release. El ítem 6
+> sigue abierto en su propia rama (`feature/revision-global-de-textos`,
+> sin mergear a propósito) — ver su sección más abajo, no forma parte de
+> este cierre.
+
 > Documento de progreso de una iniciativa por lotes (CLAUDE.md, sección 9
 > de "Reglas de trabajo obligatorias") — encargada de golpe el 2026-09-17,
 > justo después de cerrar la Fase 1 de "Exportar informe" (cuadre mensual
@@ -33,36 +42,46 @@
 
 | # | Ítem | Rama | Estado |
 |---|---|---|---|
-| 1 | Config → Usuarios: fecha de última actividad (no último acceso) en el listado | `feature/config-usuarios-actividad-y-ficha-admin` | **Hecho** — mergeado en `feature/exportar-pdf-mensual` |
-| 2 | Config → Usuarios: ficha de admin edita TODOS los campos (incluidos los de la card), sin necesidad de aspecto "bonito" | `feature/config-usuarios-actividad-y-ficha-admin` | **Hecho** — mergeado en `feature/exportar-pdf-mensual` |
-| 3 | Config → Usuarios: nº de Training Records generados + fecha del último, en la ficha | `feature/exportar-pdf-mensual` | **Hecho** — migración `0021` aplicada a TEST, **pendiente de aplicar a producción en el despliegue de esta release** (ver "Migraciones pendientes de producción") |
-| 4 | Home: media diaria ganada en lo que va de mes — decisión de diseño sobre el KPI "Alumnos" | `feature/home-media-diaria-y-editar-desde-calendario` | **Hecho** — mergeado en `feature/exportar-pdf-mensual` |
-| 5 | Home: editar un movimiento desde el desglose del día del calendario | `feature/home-media-diaria-y-editar-desde-calendario` | **Hecho** — mergeado en `feature/exportar-pdf-mensual` |
+| 1 | Config → Usuarios: fecha de última actividad (no último acceso) en el listado | `feature/config-usuarios-actividad-y-ficha-admin` (borrada) | **Hecho — en producción (v1.4.0)** |
+| 2 | Config → Usuarios: ficha de admin edita TODOS los campos (incluidos los de la card), sin necesidad de aspecto "bonito" | `feature/config-usuarios-actividad-y-ficha-admin` (borrada) | **Hecho — en producción (v1.4.0)** |
+| 3 | Config → Usuarios: nº de Training Records generados + fecha del último, en la ficha | `feature/exportar-pdf-mensual` (borrada) | **Hecho — en producción (v1.4.0)**, migración `0021` aplicada a TEST y a producción (2026-09-26, con backup previo — ver "Migraciones pendientes de producción") |
+| 4 | Home: media diaria ganada en lo que va de mes — decisión de diseño sobre el KPI "Alumnos" | `feature/home-media-diaria-y-editar-desde-calendario` (borrada) | **Hecho — en producción (v1.4.0)** |
+| 5 | Home: editar un movimiento desde el desglose del día del calendario | `feature/home-media-diaria-y-editar-desde-calendario` (borrada) | **Hecho — en producción (v1.4.0)** |
 | 6 | Revisión global de textos — nada debe sonar "escrito por IA", tono humano/cercano/elegante sin ser efusivo | `feature/revision-global-de-textos` (NO mergeada) | **Parcial** — ver "Ítem 6" abajo |
 
 ## Migraciones pendientes de producción
 
-No existe todavía el mecanismo automático de seguimiento propuesto en
+**Resuelto 2026-09-26.** No existe todavía el mecanismo automático de
+seguimiento propuesto en
 `docs/ADR/0025-gestion-de-migraciones-para-release.md` (`schema_migrations`,
-sigue "Propuesto — sin implementar") — hasta que exista, esta sección es
-la anotación manual de qué migración de este lote falta por aplicar
-contra producción el día del despliegue, siguiendo el procedimiento ya
-descrito en esa misma ADR (§3, "Procedimiento del día del despliegue").
+sigue "Propuesto — sin implementar"), así que esto quedó anotado a mano —
+igual que la próxima vez que haga falta, hasta que esa ADR se apruebe e
+implemente.
 
 - **`scripts/migrations/0021-training-records-count.sql`** — 2 columnas
   aditivas en `profiles` (`training_records_generated_count`,
   `training_records_last_generated_at`) + función
-  `increment_training_records_count()`. Aplicada y verificada contra
-  **TEST** (`node --env-file=.env.local scripts/apply-migration.mjs
-  scripts/migrations/0021-training-records-count.sql`). **Pendiente
-  contra producción** — ejecutar el mismo comando con la cadena de
-  conexión de producción el día del despliegue de esta release, antes o
-  junto con el propio despliegue de código (es aditiva, no bloquea nada
-  si se aplica un poco antes).
+  `increment_training_records_count()`. Aplicada contra TEST durante el
+  desarrollo y **contra producción el 2026-09-26**, como parte del
+  despliegue de v1.4.0: backup real previo (`npm run backup:db` →
+  `backups/ocean-flow-2026-09-26.dump`, 494 KB) + `node
+  scripts/apply-migration-prod.mjs
+  scripts/migrations/0021-training-records-count.sql
+  --confirm-production` (transacción confirmada, sin errores). Ver
+  también el addendum de `docs/ADR/0017-politica-de-backups-mvp.md`.
 
 ## Bloqueos
 
-### Envío de email de aviso de despliegue (Resend)
+### Envío de email de aviso de despliegue (Resend) — resuelto
+
+**Resuelto en una sesión posterior** (con el usuario delante, tras su
+"ok" explícito para generar la sesión real de superadmin): ejecutar
+`scripts/send-deployment-notice.mjs` funcionó de principio a fin —
+`sent: true`, email real recibido. La restricción de red descrita abajo
+resultó ser puntual de la sesión que la diagnosticó, no un problema
+persistente del entorno ni del código. Se deja la nota original íntegra
+debajo por el valor del diagnóstico (útil si reaparece), pero ya no
+bloquea nada.
 Confirmado con diagnóstico de red directo (Node `fetch` vs `curl` al
 mismo endpoint `api.resend.com`): `curl` conecta sin problema, pero el
 `fetch` nativo de Node falla con `ETIMEDOUT`/`EHOSTUNREACH` contra los
