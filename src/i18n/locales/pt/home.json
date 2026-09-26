@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "Info: Média diária",
     "dailyAverageTooltipHide": "Ocultar info: Média diária",
     "coursesTotal": "Cursos",
-    "referredThisMonth": "Captados"
+    "referredThisMonth": "Captados",
+    "pendingTooltipShow": "Info: Pendente de receber",
+    "pendingTooltipHide": "Ocultar info: Pendente de receber"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

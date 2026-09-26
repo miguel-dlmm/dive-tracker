@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "Info: Mitjana diària",
     "dailyAverageTooltipHide": "Amaga info: Mitjana diària",
     "coursesTotal": "Cursos",
-    "referredThisMonth": "Captats"
+    "referredThisMonth": "Captats",
+    "pendingTooltipShow": "Info: Per cobrar",
+    "pendingTooltipHide": "Amaga info: Per cobrar"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

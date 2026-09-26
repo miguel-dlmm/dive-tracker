@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
 import { CalendarDays, Award, Handshake, Building2, HelpCircle, Wallet, Plus } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
-import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, MoneyLine, useFloatingDropdown, FloatingPanel } from "./shared";
+import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, useFloatingDropdown, FloatingPanel } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import { getGeneratedCount } from "./trainingRecords/generatedCounter";
@@ -16,9 +16,6 @@ import { getGeneratedCount } from "./trainingRecords/generatedCounter";
 // preselecciona esa fecha en vez de la de hoy (la usa el calendario de
 // abajo). type es directamente "ganado"/"comision"/"companeros" — ya no
 // hace falta el id de pestaña antiguo ("log"), ver docs/ADR/0005 addendum.
-// onOpenPending: () => navega a Mi trabajo (tarjeta "Pendiente de cobrar")
-// — Mi trabajo abre ya en su pestaña "Pendientes" por defecto, así que no
-// hace falta pasarle ningún filtro explícito.
 // onOpenSummary: () => navega a Resumen — puente táctil desde "Generado
 // este mes" (ver comentario junto a esa tarjeta más abajo). Resumen se
 // monta de cero al entrar (no queda en el DOM mientras se ve otra pestaña,
@@ -215,7 +212,7 @@ function MiniKpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
   const { t } = useTranslation("home");
   // Oculta el punto de entrada de "Instalar la app" si la propia app ya
   // corre instalada (display-mode: standalone en Chromium/Android,
@@ -416,11 +413,24 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             compactas (MiniKpiTile) — misma altura total de fila que
             antes. */}
         <div className="grid grid-cols-5 gap-2">
-          <div className="col-span-3">
+          {/* Pendiente de cobrar ocupa ahora el hueco principal de KPIs
+              (antes Media diaria) — pedido explícito del usuario:
+              "cambia el sitio de media diaria por pendiente de cobrar...
+              me refiero a todo el contenido de esas dos pastillas". Sin
+              onClick propio a Mi trabajo (a diferencia de cuando vivía en
+              el bento): MoneyKpiTile ya trae su propio botón real
+              (el "?" del tooltip) — envolverlo en otro `<button>` es HTML
+              inválido (`<button>` dentro de `<button>`, error real de
+              hidratación detectado por los tests) y el resto de esta
+              fila (Cursos/Captados) tampoco es interactiva, así que
+              queda como el resto de KPIs: informativa, no un acceso
+              directo. */}
+          <div data-testid="pending-collection-card" className="col-span-3">
             <MoneyKpiTile
-              icon={CalendarDays} color={TEAL} totals={dailyAverageTotals} currencyRows={currencies.rows}
-              label={t("kpis.dailyAverageThisMonth")} tooltip={t("kpis.dailyAverageTooltip")}
-              tooltipShowLabel={t("kpis.dailyAverageTooltipShow")} tooltipHideLabel={t("kpis.dailyAverageTooltipHide")}
+              icon={Wallet} color={SUN} totals={pendingSummary.totals} currencyRows={currencies.rows}
+              label={t("pendingCard.pendingLabel")}
+              tooltip={pendingSummary.count === 0 ? t("pendingCard.empty") : t("pendingCard.count", { count: pendingSummary.count })}
+              tooltipShowLabel={t("kpis.pendingTooltipShow")} tooltipHideLabel={t("kpis.pendingTooltipHide")}
               index={0} reduced={reducedMotion}
             />
           </div>
@@ -462,29 +472,25 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           movimientos este mes" a "N cursos", más directo). */}
       <div className="mb-4 flex flex-col gap-2">
         <div className="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={onOpenPending}
-            data-testid="pending-collection-card"
-            className="col-span-2 flex flex-col items-center rounded-xl border border-gray-200 bg-white p-3 text-center transition-transform active:scale-[0.98]"
-          >
-            <div className="flex items-center justify-center gap-1.5">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${SUN}1A` }}>
-                <Wallet size={13} style={{ color: SUN }} aria-hidden="true" />
-              </span>
-              <span className="truncate text-[11px] font-medium text-gray-500">{t("pendingCard.pendingLabel")}</span>
-            </div>
-            <div className="mt-1.5 text-xl font-bold leading-none tabular-nums" style={{ color: BRAND_NAVY }}>
-              {Object.keys(pendingSummary.totals).length > 0 ? (
-                <MoneyLine totals={pendingSummary.totals} currencyRows={currencies.rows} />
-              ) : (
-                "—"
-              )}
-            </div>
-            <div className="mt-1 truncate text-[11px] text-gray-400">
-              {pendingSummary.count === 0 ? t("pendingCard.empty") : t("pendingCard.count", { count: pendingSummary.count })}
-            </div>
-          </button>
+          {/* Media diaria ocupa ahora este hueco (antes Pendiente de
+              cobrar) — mismo intercambio de contenido descrito arriba,
+              junto al KPI de arriba. Reutiliza MoneyKpiTile tal cual
+              (mismo componente que antes, solo cambia dónde vive) en vez
+              de un bloque a medida: trae de fábrica el tooltip real
+              (botón "?" que abre/cierra un panel, no un texto siempre
+              visible — pedido explícito: "deja el tooltip de media
+              diaria como tooltip") y la animación de conteo ascendente,
+              sin duplicar nada. Sin `onClick` propio: "Media diaria" no
+              tiene una pantalla a la que navegar, igual que Cursos/
+              Captados en la fila de arriba. */}
+          <div data-testid="daily-average-card" className="col-span-2">
+            <MoneyKpiTile
+              icon={CalendarDays} color={TEAL} totals={dailyAverageTotals} currencyRows={currencies.rows}
+              label={t("kpis.dailyAverageThisMonth")} tooltip={t("kpis.dailyAverageTooltip")}
+              tooltipShowLabel={t("kpis.dailyAverageTooltipShow")} tooltipHideLabel={t("kpis.dailyAverageTooltipHide")}
+              index={0} reduced={reducedMotion}
+            />
+          </div>
           <button
             type="button"
             onClick={() => onQuickCreate("ganado")}
@@ -502,7 +508,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             <button
               type="button"
               onClick={onOpenTrainingRecords}
-              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
+              className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
             >
               <motion.span
                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
@@ -531,18 +537,18 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             type="button"
             onClick={onOpenSummary}
             data-testid="active-school-this-month-card"
-            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
+            className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
               <Building2 size={14} style={{ color: TEAL }} aria-hidden="true" />
             </span>
             <span className="min-w-0">
-              <div className="truncate text-[11px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>{t("activeSchoolThisMonth")}</div>
-              <div className="truncate text-[10.5px] text-gray-500">
+              <div className="truncate text-[11px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>
                 {schoolActivityThisMonth
                   ? `${schoolActivityThisMonth.school} · ${t("activeSchoolCount", { count: schoolActivityThisMonth.count })}`
                   : t("noActivityThisMonth")}
               </div>
+              <div className="truncate text-[10px] text-gray-400">{t("activeSchoolThisMonth")}</div>
             </span>
           </button>
         </div>

@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "Info: Daggemiddelde",
     "dailyAverageTooltipHide": "Info verbergen: Daggemiddelde",
     "coursesTotal": "Cursussen",
-    "referredThisMonth": "Aangebracht"
+    "referredThisMonth": "Aangebracht",
+    "pendingTooltipShow": "Info: Nog te innen",
+    "pendingTooltipHide": "Info verbergen: Nog te innen"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

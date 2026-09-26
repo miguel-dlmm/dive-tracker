@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "Info: Purata harian",
     "dailyAverageTooltipHide": "Sembunyikan info: Purata harian",
     "coursesTotal": "Kursus",
-    "referredThisMonth": "Dirujuk"
+    "referredThisMonth": "Dirujuk",
+    "pendingTooltipShow": "Info: Belum dikutip",
+    "pendingTooltipHide": "Sembunyikan info: Belum dikutip"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

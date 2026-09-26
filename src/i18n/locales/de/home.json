@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "Info: Tagesdurchschnitt",
     "dailyAverageTooltipHide": "Info ausblenden: Tagesdurchschnitt",
     "coursesTotal": "Kurse",
-    "referredThisMonth": "Geworben"
+    "referredThisMonth": "Geworben",
+    "pendingTooltipShow": "Info: Ausstehend",
+    "pendingTooltipHide": "Info ausblenden: Ausstehend"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "Info: Daily average",
     "dailyAverageTooltipHide": "Hide info: Daily average",
     "coursesTotal": "Courses",
-    "referredThisMonth": "Referred"
+    "referredThisMonth": "Referred",
+    "pendingTooltipShow": "Info: Pending to collect",
+    "pendingTooltipHide": "Hide info: Pending to collect"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

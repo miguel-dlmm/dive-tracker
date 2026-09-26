@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "Thông tin: Trung bình mỗi ngày",
     "dailyAverageTooltipHide": "Ẩn thông tin: Trung bình mỗi ngày",
     "coursesTotal": "Khóa học",
-    "referredThisMonth": "Khách giới thiệu"
+    "referredThisMonth": "Khách giới thiệu",
+    "pendingTooltipShow": "Thông tin: Chờ thu tiền",
+    "pendingTooltipHide": "Ẩn thông tin: Chờ thu tiền"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

@@ -525,7 +525,6 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
             onQuickCreate={startHomeCreate}
             onEditEntry={startHomeEdit}
-            onOpenPending={() => changeTab("trabajo")}
             onOpenSummary={() => changeTab("summary")}
             onOpenTrainingRecords={() => changeTab("training-records")}
             onOpenInstallApp={() => changeTab("install-app")}
@@ -629,7 +628,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
                 {active && (
                   <motion.span
                     layoutId="nav-active-line"
-                    className="pointer-events-none absolute left-2 right-2 top-0 h-[3px] rounded-b-full"
+                    className="pointer-events-none absolute left-[42%] right-[42%] top-0 h-[3px] rounded-b-full"
                     style={{ backgroundColor: BRAND_SKY }}
                     transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 32 }}
                   />

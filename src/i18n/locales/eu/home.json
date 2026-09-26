@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "Info: Eguneko batez bestekoa",
     "dailyAverageTooltipHide": "Ezkutatu info: Eguneko batez bestekoa",
     "coursesTotal": "Ikastaroak",
-    "referredThisMonth": "Erakarritakoak"
+    "referredThisMonth": "Erakarritakoak",
+    "pendingTooltipShow": "Info: Kobratzeke",
+    "pendingTooltipHide": "Ezkutatu info: Kobratzeke"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

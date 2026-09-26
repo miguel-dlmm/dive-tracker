@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "Infos : Moyenne quotidienne",
     "dailyAverageTooltipHide": "Masquer les infos : Moyenne quotidienne",
     "coursesTotal": "Cours",
-    "referredThisMonth": "Parrainages"
+    "referredThisMonth": "Parrainages",
+    "pendingTooltipShow": "Infos : En attente d'encaissement",
+    "pendingTooltipHide": "Masquer les infos : En attente d'encaissement"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

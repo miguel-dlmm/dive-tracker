@@ -87,8 +87,15 @@ function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rat
   };
 }
 
+// Pendiente de cobrar vive ahora en el hueco principal de KPIs (lote
+// 2026-09-26, ver comentario junto a su JSX en HomeTab.jsx) reutilizando
+// MoneyKpiTile — a diferencia de la <MoneyLine> estática de antes, la
+// cifra hace un conteo ascendente (useCountUp), así que las aserciones
+// de importe necesitan `waitFor` en vez de leerse en el primer render
+// (mismo motivo que ya tenían los KPIs animados más abajo en este
+// archivo).
 describe("HomeTab — Pendiente de cobrar", () => {
-  it("suma pendientes de Registro, Comisiones y Compañeros, de cualquier mes (ejemplo de referencia)", () => {
+  it("suma pendientes de Registro, Comisiones y Compañeros, de cualquier mes (ejemplo de referencia)", async () => {
     const { pending } = renderHome({
       worklog: [
         { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }, // 40€, pagado, este mes
@@ -106,28 +113,39 @@ describe("HomeTab — Pendiente de cobrar", () => {
     });
 
     // Pendiente de cobrar: 20 (este mes) + 60 (mes anterior) + 15 (comisión) + 30 (compañero) = 125 — el pagado (40) queda fuera por estado, sin filtro de fecha.
-    expect(pending.getByText(money("125,00 €"))).toBeInTheDocument();
+    await waitFor(() => {
+      expect(pending.getByText(money("125,00 €"))).toBeInTheDocument();
+    }, { timeout: 12000 });
   });
 
-  it("Pendiente de cobrar SÍ cuenta entradas de meses anteriores (a diferencia de los KPIs financieros del mes en curso)", () => {
+  it("Pendiente de cobrar SÍ cuenta entradas de meses anteriores (a diferencia de los KPIs financieros del mes en curso)", async () => {
     const { pending } = renderHome({
       worklog: [{ id: "w1", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }], // 20€, mes anterior
       rates: RATES,
     });
-    expect(pending.getByText(money("20,00 €"))).toBeInTheDocument();
+    await waitFor(() => {
+      expect(pending.getByText(money("20,00 €"))).toBeInTheDocument();
+    }, { timeout: 12000 });
   });
 
-  it("excluye pagos de compañeros con importe negativo (es lo que tú debes, no lo que te deben)", () => {
+  it("excluye pagos de compañeros con importe negativo (es lo que tú debes, no lo que te deben)", async () => {
     const { pending } = renderHome({
       colleaguePayments: [
         { id: "p1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", colleague_name: "Marc", amount: -10, currency: "EUR", status: "Pending" },
       ],
     });
-    expect(pending.getByText("Nada pendiente")).toBeInTheDocument();
     expect(pending.queryByText(money("10,00 €"))).not.toBeInTheDocument();
+    // El detalle ("Nada pendiente"/"N pagos pendientes") vive ahora en el
+    // tooltip de la tarjeta (rediseño de portada, lote 2026-09-26: esta
+    // información pasó del bento a la fila de KPIs, reutilizando
+    // MoneyKpiTile y su mecanismo de tooltip) — FloatingPanel (shared.jsx)
+    // hace `createPortal` fuera del propio botón, así que se busca con
+    // `screen`, no con `pending` (acotado al testid de la tarjeta).
+    await userEvent.click(pending.getByLabelText("Info: Pendiente de cobrar"));
+    expect(screen.getByText("Nada pendiente")).toBeInTheDocument();
   });
 
-  it("agrupa Pendiente de cobrar por moneda cuando hay más de una", () => {
+  it("agrupa Pendiente de cobrar por moneda cuando hay más de una", async () => {
     const { pending } = renderHome({
       currencies: [
         { code: "EUR", symbol: "€", is_default: true },
@@ -139,11 +157,19 @@ describe("HomeTab — Pendiente de cobrar", () => {
       ],
       rates: RATES,
     });
-    expect(pending.getByText(/20,00 €/)).toBeInTheDocument();
-    expect(pending.getByText(/12,00 \$/)).toBeInTheDocument();
+    // money(), no una regex suelta: con más de una moneda, MoneyKpiTile
+    // renderiza cada importe con <Money> (número y símbolo en nodos de
+    // texto separados, símbolo más apagado) — una regex de texto plano
+    // como /20,00 €/ nunca encuentra un match partido así entre
+    // elementos. money() sí lo resuelve (compara el textContent agregado
+    // del nodo, ver la nota junto a esa función más arriba).
+    await waitFor(() => {
+      expect(pending.getByText(money("20,00 €"))).toBeInTheDocument();
+      expect(pending.getByText(money("12,00 $"))).toBeInTheDocument();
+    }, { timeout: 12000 });
   });
 
-  it("muestra el número correcto de pagos pendientes (cuenta entradas, no escuelas)", () => {
+  it("muestra el número correcto de pagos pendientes (cuenta entradas, no escuelas)", async () => {
     const { pending } = renderHome({
       worklog: [
         { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" },
@@ -151,7 +177,8 @@ describe("HomeTab — Pendiente de cobrar", () => {
       ],
       rates: RATES,
     });
-    expect(pending.getByText("2 pagos pendientes")).toBeInTheDocument();
+    await userEvent.click(pending.getByLabelText("Info: Pendiente de cobrar"));
+    expect(screen.getByText("2 pagos pendientes")).toBeInTheDocument();
   });
 });
 
@@ -476,8 +503,17 @@ describe("HomeTab — KPIs (media diaria, cursos, captados, todos del mes actual
     // contención especialmente alta (otro proceso corriendo su propia
     // suite de tests en paralelo en la misma máquina), nunca en
     // solitario.
+    // Media diaria ya no vive en la fila de KPIs (lote 2026-09-26,
+    // "cambia el sitio de media diaria por pendiente de cobrar... todo el
+    // contenido de esas dos pastillas") — ahora ocupa el hueco del bento
+    // que antes era Pendiente de cobrar, pero sigue siendo MoneyKpiTile
+    // (pedido explícito: "deja el tooltip de media diaria como tooltip"),
+    // así que sigue animando con useCountUp igual que aquí. El conteo
+    // ascendente de Pendiente de cobrar (que ocupa ahora el hueco
+    // principal de KPIs) se cubre en el describe "Pendiente de cobrar",
+    // no aquí.
     await waitFor(() => {
-      expect(screen.getByText("Media diaria").previousSibling).toHaveTextContent(dailyAverageText);
+      expect(screen.getByText(money(`${dailyAverageText} €`))).toBeInTheDocument();
       expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("2"); // w1 + w2, solo este mes (w3 es del mes pasado)
       expect(screen.getByText("Captados").previousSibling).toHaveTextContent("4"); // solo c1, este mes
     }, { timeout: 12000 });

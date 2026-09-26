@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "Инфо: Среднее в день",
     "dailyAverageTooltipHide": "Скрыть инфо: Среднее в день",
     "coursesTotal": "Курсы",
-    "referredThisMonth": "Привлечено"
+    "referredThisMonth": "Привлечено",
+    "pendingTooltipShow": "Инфо: Ожидает оплаты",
+    "pendingTooltipHide": "Скрыть инфо: Ожидает оплаты"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

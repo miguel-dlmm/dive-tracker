@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "အချက်အလက်: နေ့စဉ်ပျမ်းမျှ",
     "dailyAverageTooltipHide": "အချက်အလက် ဖျောက်ရန်: နေ့စဉ်ပျမ်းမျှ",
     "coursesTotal": "သင်တန်းများ",
-    "referredThisMonth": "ညွှန်းပို့ခဲ့သူများ"
+    "referredThisMonth": "ညွှန်းပို့ခဲ့သူများ",
+    "pendingTooltipShow": "အချက်အလက်: ကောက်ခံရန် ကျန်ရှိသည်",
+    "pendingTooltipHide": "အချက်အလက် ဖျောက်ရန်: ကောက်ခံရန် ကျန်ရှိသည်"
   },
   "trainingRecordsCard": {
     "title": "Training Records",

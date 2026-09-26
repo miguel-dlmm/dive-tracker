@@ -11,7 +11,9 @@
     "dailyAverageTooltipShow": "ข้อมูล: เฉลี่ยต่อวัน",
     "dailyAverageTooltipHide": "ซ่อนข้อมูล: เฉลี่ยต่อวัน",
     "coursesTotal": "คอร์สทั้งหมด",
-    "referredThisMonth": "ลูกค้าที่แนะนำ"
+    "referredThisMonth": "ลูกค้าที่แนะนำ",
+    "pendingTooltipShow": "ข้อมูล: รอเก็บเงิน",
+    "pendingTooltipHide": "ซ่อนข้อมูล: รอเก็บเงิน"
   },
   "trainingRecordsCard": {
     "title": "Training Records",
