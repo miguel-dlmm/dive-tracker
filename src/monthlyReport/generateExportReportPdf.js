@@ -135,29 +135,36 @@ function groupLabel(text, color) {
   };
 }
 
-const hairlineLayout = {
+// Layout de `adjustmentsTable` — única tabla del informe con una
+// cabecera de columnas fija (Fecha/Compañero/Concepto/Importe) en vez de
+// una cabecera de día repetida. Fondo `SKY_50` en la fila 0 (2026-09-26,
+// pedido explícito: "en la tabla de ajuste de curso, iguala el estilo a
+// cursos... fondo a la cabecera") — mismo tratamiento que la cabecera de
+// día de `dayGroupedLayout`, aquí simplificado porque la cabecera es
+// siempre la fila 0, sin necesidad de precalcular un `Set` de índices.
+const headerBandLayout = {
   hLineWidth: (i) => (i === 0 ? 0 : 0.75),
   vLineWidth: () => 0,
   hLineColor: () => HAIRLINE,
+  fillColor: (i) => (i === 0 ? SKY_50 : null),
   paddingLeft: () => 0,
   paddingRight: () => 8,
-  paddingTop: () => 7,
-  paddingBottom: () => 7,
+  paddingTop: (i) => (i === 0 ? 9 : 7),
+  paddingBottom: (i) => (i === 0 ? 9 : 7),
 };
 
 // Separador de día más grueso — pedido explícito 2026-09-26: "entre días
 // la línea algo más gruesa o algún separador visual para identificar
-// donde empieza cada día". `hairlineLayout` de arriba dibuja la misma
-// línea fina (0.75pt) entre TODAS las filas, incluida la que separa un
-// día del siguiente — sin nada que distinga dónde empieza cada grupo.
-// `dayStartRows` recibe el índice de fila (dentro de `body`, no de
-// `dayGroups`) de cada cabecera de día salvo la primera del todo (esa
-// línea ya es el borde superior de la tabla, sin nada que separar antes)
-// — devuelve un layout dedicado en vez de reutilizar `hairlineLayout`,
-// ya que `hLineWidth`/`hLineColor` en pdfmake no reciben más contexto que
-// el índice de línea `i` (la línea `i` va inmediatamente ENCIMA de la
-// fila `i`), así que hace falta ese índice precalculado para decidir cuál
-// engrosar.
+// donde empieza cada día". Sin esto, la misma línea fina (0.75pt) entre
+// TODAS las filas —incluida la que separa un día del siguiente— no
+// distinguía dónde empezaba cada grupo. `dayStartRows` recibe el índice
+// de fila (dentro de `body`, no de `dayGroups`) de cada cabecera de día
+// salvo la primera del todo (esa línea ya es el borde superior de la
+// tabla, sin nada que separar antes) — hace falta un layout dedicado, no
+// uno compartido como `headerBandLayout`, porque `hLineWidth`/
+// `hLineColor` en pdfmake no reciben más contexto que el índice de línea
+// `i` (la línea `i` va inmediatamente ENCIMA de la fila `i`), así que
+// hace falta ese índice precalculado para decidir cuál engrosar.
 // Fondo de la cabecera de día (2026-09-26, pedido explícito: "un color de
 // fondo tenue... formato tabla bonito y elegante") — `dayHeaderRows`
 // recibe TODAS las filas de cabecera de día (incluida la primera, a
@@ -222,16 +229,18 @@ const AMOUNT_COL = 96;
 // actividad baja al tamaño que antes tenía la cabecera de día (10.5pt) —
 // intercambiados sin más, para que la cabecera de día domine igual que el
 // encabezado de grupo en el resto de listados de la app.
-// Formato "N × Actividad" en Cursos (2026-09-26, pedido explícito: "en
-// los cursos quiero el formato [1,2,3,4..] x [Nombre curso]") — el número
-// de personas pasa de la línea de detalle al título de la fila, como en
-// una línea de factura ("2 × Refresh") en vez de "Refresh" + "2 personas"
-// aparte. Solo en Cursos (`quantityFormat=true`) — Comisiones sigue con
-// el formato anterior (nombre + "N personas" en el detalle), que es el
-// pedido explícito de esta sesión. La línea de detalle bajo el título
-// conserva "N sesiones" (si hay más de una) y el estado (si
-// showCollected está activo) — el conteo de personas ya no se repite ahí.
-function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate, quantityFormat }) {
+// Formato "N × Actividad" (p. ej. "2 × Refresh"), como una línea de
+// factura, en vez de "Refresh" + "2 personas" en el detalle aparte —
+// pedido explícito 2026-09-26 para Cursos, extendido a Comisiones la
+// misma sesión ("ajusta también los estilos de las comisiones para ser
+// igual a cursos impartidos") — ya no hace falta un flag por grupo,
+// las dos tablas comparten el mismo formato siempre. "N sesiones" se
+// retira de la línea de detalle (pedido explícito: "ya está indicado en
+// el número que va por delante del nombre del curso") — el conteo de
+// personas ya vive en el título, así que la línea de detalle solo le
+// queda el estado (Cobrado/Pendiente) cuando `showCollected` está
+// activo; sin eso, la mayoría de filas no llevan segunda línea.
+function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate }) {
   const body = [];
   const dayStartRows = new Set();
   const dayHeaderRows = new Set();
@@ -245,10 +254,8 @@ function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, 
     ]);
     day.groups.forEach((g) => {
       const captionParts = [];
-      if (g.sessions > 1) captionParts.push(t("export.sessionsCount", { count: g.sessions }));
-      if (!quantityFormat) captionParts.push(t("export.peopleCount", { count: g.people }));
       if (showCollected) captionParts.push(isPendingStatus(g.status, paymentStatusRows) ? t("export.pendingLabel") : t("export.paidLabel"));
-      const titleText = quantityFormat ? `${g.people} × ${g.activity}` : g.activity;
+      const titleText = `${g.people} × ${g.activity}`;
       body.push([
         {
           stack: [
@@ -267,6 +274,20 @@ function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, 
 // para que el importe de ajustes quede alineado en la misma columna que el
 // resto del informe. "Concepto" a `"*"` en vez de un ancho fijo, igual que
 // la columna de actividad de arriba.
+// Estilo igualado a Cursos (2026-09-26, pedido explícito: "iguala el
+// estilo a cursos, no el formato que es diferente en sí, solo el
+// estilo: pesos de los totales con respecto a conceptos, fondo a la
+// cabecera") — el FORMATO sigue siendo genuinamente distinto (4 columnas
+// tabulares: fecha/compañero/concepto/importe, no el título+detalle
+// apilado de Cursos), pero los PESOS relativos ahora son los mismos:
+// "Concepto" (lo más parecido a la actividad) pasa a 10.5pt en negrita
+// y casi negro, igual que el título de una fila de Cursos; "Importe"
+// baja de 11pt a 10.5pt para quedar al mismo tamaño que "Concepto" (ya
+// era negrita); "Fecha"/"Compañero" pasan a un tono secundario (9.5pt,
+// MUTED_LIGHT, sin negrita), el mismo tratamiento que la línea de
+// detalle de Cursos. El color por signo de "Importe" (verde/rojo) se
+// mantiene — es una señal real (cobro a favor o en contra), no solo
+// decorativa, así que no se sustituye por el NAVY plano de Cursos.
 function adjustmentsTable({ entries, t, rowDate }) {
   const header = [
     { text: t("export.colDate"), style: "th" },
@@ -275,12 +296,12 @@ function adjustmentsTable({ entries, t, rowDate }) {
     { text: t("export.colAmount"), style: "th", alignment: "right" },
   ];
   const body = entries.map((e) => [
-    { text: rowDate(e.date), color: MUTED, fontSize: 11, noWrap: true },
-    { text: e.colleague_name, fontSize: 11 },
-    { text: e.notes || "—", fontSize: 11, color: MUTED },
-    { text: formatMoneyPdf(e.total, e.currency), alignment: "right", bold: true, color: e.total < 0 ? DANGER : SUCCESS, fontSize: 11 },
+    { text: rowDate(e.date), fontSize: 9.5, color: MUTED_LIGHT, noWrap: true },
+    { text: e.colleague_name, fontSize: 9.5, color: MUTED_LIGHT },
+    { text: e.notes || "—", bold: true, fontSize: 10.5, color: "#1E2A33" },
+    { text: formatMoneyPdf(e.total, e.currency), alignment: "right", bold: true, color: e.total < 0 ? DANGER : SUCCESS, fontSize: 10.5 },
   ]);
-  return { table: { headerRows: 1, widths: [55, 150, "*", AMOUNT_COL], body: [header, ...body] }, layout: hairlineLayout };
+  return { table: { headerRows: 1, widths: [55, 150, "*", AMOUNT_COL], body: [header, ...body] }, layout: headerBandLayout };
 }
 
 // fontSize por defecto (9.5) para Comisiones/Ajustes; Cursos pide el
@@ -370,7 +391,7 @@ export async function generateExportReportPdf({
   if (data.courses.length > 0) {
     pushGroup(
       t("export.coursesGroup"), TEAL,
-      groupedActivityTable({ dayGroups: courseDayGroups, showCollected, paymentStatusRows, t, rowDate, quantityFormat: true }),
+      groupedActivityTable({ dayGroups: courseDayGroups, showCollected, paymentStatusRows, t, rowDate }),
       t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal, 12.5
     );
   }

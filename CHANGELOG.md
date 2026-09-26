@@ -219,6 +219,32 @@ Registro de cambios relevantes de Ocean Flow.
   instalado que `paddingLeft`/`paddingRight` son por columna, no por
   fila, así que no se puede dar un hueco lateral solo a la cabecera sin
   romper la alineación común con el resto del documento.
+- **Tabla de "Exportar informe" (PDF), sexta vuelta**: cuatro ajustes
+  más, tras usar la quinta versión. (1) La tabla de Ajustes de curso
+  iguala su ESTILO al de Cursos, no su formato (que sigue siendo
+  genuinamente distinto — 4 columnas fecha/compañero/concepto/importe,
+  no título+detalle apilado): cabecera de columnas con el mismo fondo
+  `SKY_50` que la cabecera de día (nuevo `headerBandLayout`, sustituye
+  a `hairlineLayout`), "Concepto" sube a 10.5pt en negrita y casi negro
+  como el título de una fila de Cursos, "Importe" baja de 11 a 10.5pt
+  para quedar al mismo tamaño (ya era negrita, color por signo
+  verde/rojo intacto — es una señal real, no decorativa), "Fecha"/
+  "Compañero" bajan a un tono secundario (9.5pt, `MUTED_LIGHT`, sin
+  negrita), igual que la línea de detalle de Cursos. (2) "Clases
+  impartidas" pasa a "Cursos impartidos" (`export.coursesGroup`, solo
+  locale es) — cambia también "Subtotal clases impartidas" a "Subtotal
+  cursos impartidos" sin tocar nada más, ya que ambos textos se derivan
+  de la misma clave. (3) Comisiones adopta el mismo formato "N ×
+  Actividad" que Cursos (pedido explícito: "ajusta también los estilos
+  de las comisiones para ser igual a cursos impartidos") —
+  `groupedActivityTable` pierde el flag `quantityFormat` por completo,
+  ya no hace falta: las dos tablas comparten siempre el mismo formato.
+  (4) Se retira "N sesiones" de la línea de detalle en ambas tablas
+  (pedido explícito: "ya está indicado en el número que va por delante
+  del nombre del curso") — el conteo de personas ya vive en el título,
+  así que repetir las sesiones aparte sería redundante; con
+  `showCollected` desactivado (el caso por defecto), la mayoría de
+  filas ya no llevan ninguna línea de detalle.
 
 ## [1.3.1] - 2026-09-09
 
