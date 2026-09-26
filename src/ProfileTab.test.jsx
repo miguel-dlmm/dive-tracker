@@ -130,7 +130,7 @@ describe("datos personales", () => {
     await user.type(nickname, "adalovelace");
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null, birth_date: null, country_of_residence: null, instructor_initials: "AL" }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", birth_date: null, country_of_residence: null, instructor_initials: "AL" }));
     expect(eq).toHaveBeenCalledWith("user_id", "u1");
     expect(onProfileUpdated).toHaveBeenCalled();
   });
@@ -146,20 +146,7 @@ describe("datos personales", () => {
     await user.type(nickname, "adalovelace");
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", professional_level: null, birth_date: null, country_of_residence: null }));
-  });
-
-  it("permite elegir el nivel profesional (Divemaster/Instructor) y lo guarda junto al resto de datos personales", async () => {
-    const user = userEvent.setup();
-    const { update } = mockUpdate();
-    renderProfile();
-
-    await user.click(within(personalDataSection()).getByRole("button", { name: "Editar" }));
-    await user.click(within(personalDataSection()).getByRole("button", { name: "Sin elegir" }));
-    await user.click(screen.getByRole("option", { name: "Divemaster" }));
-    await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
-
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "ada", professional_level: "divemaster", birth_date: null, country_of_residence: null, instructor_initials: "AL" }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ first_name: "Ada", last_name: "Lovelace", nickname: "adalovelace", birth_date: null, country_of_residence: null }));
   });
 
   it("muestra fecha de nacimiento y país de residencia en modo lectura, y '—' si no hay ninguno guardado", () => {
@@ -191,7 +178,7 @@ describe("datos personales", () => {
     await user.click(within(personalDataSection()).getByRole("button", { name: "Guardar" }));
 
     await waitFor(() => expect(update).toHaveBeenCalledWith({
-      first_name: "Ada", last_name: "Lovelace", nickname: "ada", professional_level: null,
+      first_name: "Ada", last_name: "Lovelace", nickname: "ada",
       birth_date: null, country_of_residence: "MX", instructor_initials: "AL",
     }));
   });
@@ -301,9 +288,26 @@ describe("datos de instructor", () => {
     await user.type(within(instructorSection()).getByRole("textbox", { name: "Número SSI Pro" }), "98765");
     await user.click(within(instructorSection()).getByRole("button", { name: "Guardar" }));
 
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ instructor_initials: "AL", ssi_pro_number: "98765", instructor_signature: null }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ instructor_initials: "AL", ssi_pro_number: "98765", professional_level: null, instructor_signature: null }));
     expect(eq).toHaveBeenCalledWith("user_id", "u1");
     expect(onProfileUpdated).toHaveBeenCalled();
+  });
+
+  // Trasladado desde "datos personales" (2026-09-26, auditoría UX de Mi
+  // perfil): el nivel profesional alimenta directamente el carnet de esta
+  // misma sección (roleText), así que ahora se edita y se guarda aquí, no
+  // en un formulario distinto de la pantalla.
+  it("permite elegir el nivel profesional (Divemaster/Instructor) y lo guarda junto al resto de datos de instructor", async () => {
+    const user = userEvent.setup();
+    const { update } = mockUpdate();
+    renderProfile();
+
+    await user.click(within(instructorSection()).getByRole("button", { name: "Editar" }));
+    await user.click(within(instructorSection()).getByRole("button", { name: "Sin elegir" }));
+    await user.click(screen.getByRole("option", { name: "Divemaster" }));
+    await user.click(within(instructorSection()).getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ instructor_initials: null, ssi_pro_number: null, professional_level: "divemaster", instructor_signature: null }));
   });
 });
 
@@ -502,9 +506,10 @@ describe("idioma", () => {
 // extremo a extremo (icono ya no en la cabecera + sí en Mi perfil). Aquí
 // solo se prueba el componente en aislamiento.
 describe("cerrar sesión", () => {
-  it("sin onSignOut, no muestra el botón (uso fuera de App.jsx, p. ej. en otros tests)", () => {
+  it("sin onSignOut, no muestra el botón ni la sección (uso fuera de App.jsx, p. ej. en otros tests)", () => {
     renderProfile();
     expect(screen.queryByRole("button", { name: "Cerrar sesión" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Sesión")).not.toBeInTheDocument();
   });
 
   it("con onSignOut, el botón lo llama al pulsarlo", async () => {
@@ -515,5 +520,13 @@ describe("cerrar sesión", () => {
     await user.click(screen.getByRole("button", { name: "Cerrar sesión" }));
 
     expect(onSignOut).toHaveBeenCalledTimes(1);
+  });
+
+  // Auditoría UX 2026-09-26 (feedback real: "me cuesta encontrar Cerrar
+  // sesión"): con título propio, es scanneable igual que el resto de
+  // secciones de la pantalla en vez de un botón suelto sin cabecera.
+  it("con onSignOut, la sección tiene su propio título 'Sesión'", () => {
+    renderProfile({ onSignOut: vi.fn() });
+    expect(screen.getByText("Sesión")).toBeInTheDocument();
   });
 });

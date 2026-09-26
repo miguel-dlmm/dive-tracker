@@ -5,6 +5,7 @@
     "favoriteCurrency": "Tiền tệ yêu thích",
     "language": "Ngôn ngữ",
     "security": "Bảo mật",
+    "session": "Phiên đăng nhập",
     "privacy": "Quyền riêng tư"
   },
   "signOut": {
@@ -26,15 +27,12 @@
   "personalData": {
     "nameLine": "Tên:",
     "nicknameLine": "Biệt danh:",
-    "professionalLine": "Chuyên môn:",
     "birthDateLine": "Ngày sinh:",
     "countryLine": "Quốc gia cư trú:",
     "edit": "Sửa",
     "nameLabel": "Tên",
     "lastNameLabel": "Họ",
     "nicknameLabel": "Biệt danh",
-    "professionalLabel": "Chuyên môn",
-    "professionalPlaceholder": "Chưa chọn",
     "birthDateLabel": "Ngày sinh",
     "countryLabel": "Quốc gia cư trú",
     "countryPlaceholder": "Chọn một quốc gia",
@@ -50,6 +48,8 @@
   },
   "instructor": {
     "hint": "Dùng để tự động điền vào Training Records của bạn — chỉ lưu một lần ở đây, không theo từng thiết bị.",
+    "professionalLabel": "Chuyên môn",
+    "professionalPlaceholder": "Chưa chọn",
     "card": {
       "role": "Chuyên gia SSI",
       "roleWithLevel": "SSI {{level}}",

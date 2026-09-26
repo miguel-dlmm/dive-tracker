@@ -5,6 +5,7 @@
     "favoriteCurrency": "Любимая валюта",
     "language": "Язык",
     "security": "Безопасность",
+    "session": "Сессия",
     "privacy": "Конфиденциальность"
   },
   "signOut": {
@@ -26,15 +27,12 @@
   "personalData": {
     "nameLine": "Имя:",
     "nicknameLine": "Никнейм:",
-    "professionalLine": "Профессия:",
     "birthDateLine": "Дата рождения:",
     "countryLine": "Страна проживания:",
     "edit": "Редактировать",
     "nameLabel": "Имя",
     "lastNameLabel": "Фамилия",
     "nicknameLabel": "Никнейм",
-    "professionalLabel": "Профессия",
-    "professionalPlaceholder": "Не выбрано",
     "birthDateLabel": "Дата рождения",
     "countryLabel": "Страна проживания",
     "countryPlaceholder": "Выбери страну",
@@ -50,6 +48,8 @@
   },
   "instructor": {
     "hint": "Используются для автоматического заполнения твоих Training Records — сохраняются здесь один раз, а не на каждом устройстве отдельно.",
+    "professionalLabel": "Профессия",
+    "professionalPlaceholder": "Не выбрано",
     "card": {
       "role": "Профессионал SSI",
       "roleWithLevel": "SSI {{level}}",
