@@ -58,3 +58,7 @@ usuarios de prueba.md
 # financieros reales, nunca al repo (ver docs/ADR/0017-politica-de-backups-mvp.md).
 backups/
 .env*
+
+# Salida de `vitest run --coverage` — resultado de una ejecución local,
+# no un artefacto versionable.
+coverage/
