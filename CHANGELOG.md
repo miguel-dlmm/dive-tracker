@@ -4,6 +4,8 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.4.0] - 2026-09-26
+
 ### Added
 - **Ficha de admin (Config → Usuarios) reorganizada en "Datos de
   actividad" y "Datos personales"**: antes era una sola lista plana
