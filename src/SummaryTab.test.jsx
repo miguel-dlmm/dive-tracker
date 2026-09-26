@@ -18,6 +18,8 @@ const LAST_MONTH = new Date(NOW.getFullYear(), NOW.getMonth() - 1, 10).toISOStri
 
 const CURRENCIES = rowsHook([{ code: "EUR", symbol: "€", is_default: true }]);
 const RATES = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 50, currency: "EUR" }];
+const PAYMENT_STATUSES = rowsHook([{ name: "Pending", is_default: true }, { name: "Paid", is_default: false }]);
+const PROFILE = { first_name: "Nerea", last_name: "Lizarraga", nickname: "nerea.dive" };
 
 function renderSummary({ worklog = [], comisiones = [], colleaguePayments = [], rates = RATES, schools } = {}) {
   render(
@@ -30,6 +32,8 @@ function renderSummary({ worklog = [], comisiones = [], colleaguePayments = [], 
       schools={schools || rowsHook([{ name: "PADI Cozumel" }, { name: "Ihasia" }])}
       currencies={CURRENCIES}
       colleaguePayments={rowsHook(colleaguePayments)}
+      paymentStatuses={PAYMENT_STATUSES}
+      profile={PROFILE}
     />
   );
 }
@@ -397,5 +401,82 @@ describe("SummaryTab — suma correcta en los límites del periodo (bug real de 
     // el movimiento quedaría fuera del periodo y "50,00" no aparecería en
     // ningún sitio de la pantalla.
     expect(screen.getAllByText("50,00", { exact: false }).length).toBeGreaterThan(0);
+  });
+});
+
+// Exportar informe (Cuadre mensual) — la hoja completa vive en
+// ExportReportSheet.jsx, pero se monta siempre dentro de SummaryTab, así
+// que probarla aquí (con la pantalla real, no aislada) es lo que de verdad
+// confirma el cableado de props (schools/paymentStatuses/profile...) que
+// un test aislado del componente no vería. No se llega a pulsar "Generar
+// PDF" — eso dispara un import() dinámico de pdfmake real, fuera de
+// alcance de este test de interacción de UI (ver el porqué en el informe
+// de diseño de la sesión que encargó esta pantalla).
+describe("SummaryTab — Exportar informe", () => {
+  it("el botón abre la hoja con Escuela (2 escuelas activas) y el selector de rango de fechas", async () => {
+    const user = userEvent.setup();
+    renderSummary({});
+
+    await user.click(screen.getByRole("button", { name: "Exportar informe" }));
+
+    expect(screen.getByText("Escuela")).toBeInTheDocument();
+    expect(screen.getByText("Rango de fechas")).toBeInTheDocument();
+    expect(screen.getByText("Incluir ajustes de curso")).toBeInTheDocument();
+    expect(screen.getByText("Mostrar lo ya cobrado")).toBeInTheDocument();
+  });
+
+  it("con una sola escuela activa, el campo Escuela se oculta (mismo criterio que el resto de la app)", async () => {
+    const user = userEvent.setup();
+    renderSummary({ schools: rowsHook([{ name: "PADI Cozumel" }]) });
+
+    await user.click(screen.getByRole("button", { name: "Exportar informe" }));
+
+    expect(screen.queryByText("Escuela")).not.toBeInTheDocument();
+  });
+
+  it('activar "Incluir ajustes de curso" despliega "Cuáles" y "Cómo cuentan"', async () => {
+    const user = userEvent.setup();
+    renderSummary({});
+
+    await user.click(screen.getByRole("button", { name: "Exportar informe" }));
+    await user.click(screen.getByRole("switch", { name: "Incluir ajustes de curso" }));
+
+    expect(screen.getByText("Cuáles")).toBeInTheDocument();
+    expect(screen.getByText("Cómo cuentan")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Sumar al total" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Aparte" })).toBeInTheDocument();
+  });
+
+  it('modo "Elegir" lista los ajustes de la escuela+rango como checkboxes', async () => {
+    const user = userEvent.setup();
+    renderSummary({
+      colleaguePayments: [{ id: "a1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", colleague_name: "Jon", amount: 45, status: "Pending", notes: "" }],
+    });
+
+    await user.click(screen.getByRole("button", { name: "Exportar informe" }));
+    await user.click(screen.getByRole("switch", { name: "Incluir ajustes de curso" }));
+    await user.click(screen.getByRole("radio", { name: "Elegir" }));
+
+    expect(screen.getByText("Jon")).toBeInTheDocument();
+  });
+
+  it("sin ningún movimiento en el rango, «Generar PDF» queda deshabilitado", async () => {
+    const user = userEvent.setup();
+    renderSummary({});
+
+    await user.click(screen.getByRole("button", { name: "Exportar informe" }));
+
+    expect(screen.getByRole("button", { name: /Generar PDF/ })).toBeDisabled();
+  });
+
+  it("con movimientos en el rango, «Generar PDF» queda habilitado", async () => {
+    const user = userEvent.setup();
+    renderSummary({
+      worklog: [{ id: "w1", date: THIS_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }],
+    });
+
+    await user.click(screen.getByRole("button", { name: "Exportar informe" }));
+
+    expect(screen.getByRole("button", { name: /Generar PDF/ })).toBeEnabled();
   });
 });

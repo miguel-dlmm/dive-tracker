@@ -218,7 +218,11 @@ function AvatarPicker({ profile, onProfileUpdated }) {
 // Escuelas/Cursos). "Divemaster"/"Instructor" son términos de uso
 // internacional en buceo, sin traducción real en contexto — mismo motivo
 // por el que LANGUAGE_OPTIONS tampoco pasa "Español"/"English" por t().
-const PROFESSIONAL_LEVEL_OPTIONS = [
+// export (Config -> Usuarios, ficha de admin): misma fuente única de
+// verdad que ya usa countryOptionsFor más abajo — la ficha de admin
+// reutiliza literalmente estas mismas opciones en vez de mantener una
+// segunda copia que pudiera desincronizarse.
+export const PROFESSIONAL_LEVEL_OPTIONS = [
   { code: "divemaster", label: "Divemaster" },
   { code: "instructor", label: "Instructor" },
 ];
@@ -685,7 +689,9 @@ function CurrencySection({ profile, currencies }) {
 // cambia el idioma de la interfaz al instante (i18n.changeLanguage) y
 // actualiza el respaldo de localStorage que usan las pantallas sin
 // sesión — no hace falta recargar para ver el cambio.
-const LANGUAGE_OPTIONS = [
+// export (Config -> Usuarios, ficha de admin): mismo criterio que
+// PROFESSIONAL_LEVEL_OPTIONS más arriba.
+export const LANGUAGE_OPTIONS = [
   { code: "es", label: "Español" },
   { code: "en", label: "English" },
   { code: "fr", label: "Français" },

@@ -8,7 +8,10 @@
   "noActivityThisMonth": "Sin actividad este mes",
   "kpis": {
     "sectionTitle": "Tu impacto este mes",
-    "studentsThisMonth": "Alumnos",
+    "dailyAverageThisMonth": "Media diaria",
+    "dailyAverageTooltip": "Lo que ganas de media al día este mes, contando solo hasta hoy.",
+    "dailyAverageTooltipShow": "Info: Media diaria",
+    "dailyAverageTooltipHide": "Ocultar info: Media diaria",
     "coursesTotal": "Cursos",
     "referredThisMonth": "Captados"
   },

@@ -8,7 +8,10 @@
   "noActivityThisMonth": "Ez dago jarduerarik hilabete honetan",
   "kpis": {
     "sectionTitle": "Zure eragina hilabete honetan",
-    "studentsThisMonth": "Ikasleak",
+    "dailyAverageThisMonth": "Eguneko batez bestekoa",
+    "dailyAverageTooltip": "Hilabete honetan egunean batez beste irabazten duzuna, gaurrera arte bakarrik zenbatuta.",
+    "dailyAverageTooltipShow": "Info: Eguneko batez bestekoa",
+    "dailyAverageTooltipHide": "Ezkutatu info: Eguneko batez bestekoa",
     "coursesTotal": "Ikastaroak",
     "referredThisMonth": "Erakarritakoak"
   },

@@ -8,7 +8,10 @@
   "noActivityThisMonth": "Belum ada aktivitas bulan ini",
   "kpis": {
     "sectionTitle": "Dampakmu bulan ini",
-    "studentsThisMonth": "Siswa",
+    "dailyAverageThisMonth": "Rata-rata harian",
+    "dailyAverageTooltip": "Penghasilan rata-rata per hari bulan ini, dihitung hanya sampai hari ini.",
+    "dailyAverageTooltipShow": "Info: Rata-rata harian",
+    "dailyAverageTooltipHide": "Sembunyikan info: Rata-rata harian",
     "coursesTotal": "Kursus",
     "referredThisMonth": "Dirujuk"
   },

@@ -4,6 +4,259 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.4.0] - 2026-09-26
+
+### Added
+- **Ficha de admin (Config → Usuarios) reorganizada en "Datos de
+  actividad" y "Datos personales"**: antes era una sola lista plana
+  mezclando lo que se observa de la cuenta (accesos, movimientos,
+  Training Records generados) con lo que se puede editar (avatar, datos
+  de instructor...) — ahora son dos secciones aparte, con el botón
+  "Editar datos" junto a la de datos personales para acceso rápido, en
+  vez de al final de toda la ficha.
+- **Loading en el listado de Usuarios mientras carga la última
+  actividad**: esa fecha llega en una llamada aparte del propio listado
+  — sin esto, toda fila mostraba "Nunca" un instante antes de que la
+  respuesta real llegara, indistinguible de una cuenta sin actividad de
+  verdad.
+- **Nº de Training Records generados en la ficha de admin (Config →
+  Usuarios)**: contador + fecha del último, guardados ahora en
+  `profiles` (antes solo en `localStorage` del dispositivo del
+  instructor) — migración aditiva `0021-training-records-count.sql`,
+  aplicada a TEST, **pendiente de aplicar a producción en el despliegue
+  de esta release** (ver `docs/LOTE-2026-09-17-PROGRESS.md`). Se
+  incrementa de forma atómica vía una función `security definer`
+  (`increment_training_records_count`), nunca con un update directo del
+  cliente — solo un entero y una fecha, la garantía de privacidad de
+  Training Records (nunca se guardan datos de alumnos) no cambia.
+- **Branding real en el PDF de "Exportar informe"**: la cabecera pasa de
+  solo texto ("Ocean Flow") al isotipo real de la app junto al nombre; el
+  pie de cada página suma una línea de marca con el eslogan ya usado en
+  Login ("Bucea más. Gestiona menos.") y un enlace real (clicable) a
+  oceanflow-web.vercel.app — pensado para cuando el PDF sale de la app y
+  llega a alguien de la escuela que no la conoce todavía.
+- **`FieldSkeleton` (shared.jsx)**: barra gris que pulsa para el valor de
+  un campo aislado que aún está cargando — sustituye al "…" estático que
+  usaba la ficha de detalle de Config → Usuarios (Movimientos, Última
+  actividad y el resto de campos de `fullProfile`) mientras llegan sus
+  datos, para que se note a simple vista que está cargando.
+- **Exportar informe (cuadre mensual en PDF)**: botón nuevo en Resumen
+  que abre una hoja de configuración (escuela, rango de fechas propio,
+  ajustes de curso opcionales y seleccionables uno a uno con opción de
+  sumarlos al total o mostrarlos aparte, cobrado/pendiente con "mostrar
+  cobrados" apagado por defecto) y genera un PDF con `pdfmake` — pensado
+  para mandárselo a la escuela y cuadrar cuentas con ella a fin de mes.
+  Esquinas redondeadas en la caja de total y el aviso "solo pendiente",
+  mismo lenguaje visual que el resto de la app. Los importes del PDF
+  usan siempre el código de moneda (EUR, THB...), nunca el símbolo —
+  la fuente embebida no cubre todos los símbolos posibles. Clases y
+  Comisiones se agrupan por día y actividad, con subtotal por día —
+  sesiones idénticas del mismo curso el mismo día se agregan en una
+  sola línea en vez de repetirse fila a fila.
+- **Ficha de usuario del admin (Config → Usuarios) editable por completo**:
+  la hoja de detalle ahora enseña y permite editar todos los campos del
+  perfil (icono/color de avatar, fecha de nacimiento, país de residencia,
+  nivel profesional, idioma, iniciales de instructor, número SSI PRO),
+  no solo email/rol/dataset — pensada como panel de administración, no
+  como la tarjeta "bonita" del propio usuario. El estado de la firma se
+  enseña de solo lectura (solo el propio usuario puede firmar).
+- **"Última actividad" en el listado de Usuarios**: sustituye a "último
+  acceso" — refleja el último movimiento (Mi trabajo, Comisiones o pagos
+  de compañeros) dado de alta, editado o eliminado, un dato más útil que
+  el último login para saber si una cuenta sigue en uso real.
+- **Home: KPI "Media diaria"**: sustituye al KPI "Alumnos", que sumaba
+  `people` de cada Curso y contaba dos veces al mismo alumno si repetía
+  curso en el mes — una cifra inexacta sin una forma barata de
+  deduplicar hoy. La nueva tarjeta muestra cuánto ganas de media cada
+  día del mes en curso (solo Cursos, dividido entre el día de hoy), con
+  un tooltip ⓘ que aclara el alcance ("hasta hoy").
+- **Editar un movimiento desde el calendario de Home**: tocar un apunte
+  del desglose del día abre la misma hoja de edición que en Mi trabajo,
+  sin cambiar de pestaña — al guardar, el desglose se actualiza en el
+  sitio (Home ya no navega a Mi trabajo tras editar, solo tras crear).
+- **"Exportar informe" abre con el rango de fechas de Resumen ya
+  puesto**: antes siempre arrancaba en el mes en curso, sin relación con
+  el periodo que se estuviera viendo en Resumen al pulsar el botón —
+  ahora hereda ese rango como valor inicial (personalizado incluido),
+  editable libremente después sin quedar "atado" a Resumen.
+
+### Fixed
+- **`ConfigTab.jsx` colisionaba con `LANGUAGE_OPTIONS`**: el nuevo
+  `import` desde `ProfileTab.jsx` chocaba con una constante local ya
+  existente del mismo nombre usada por el selector de idioma de alta de
+  usuario — resuelto con un alias de importación
+  (`PROFILE_LANGUAGE_OPTIONS`), sin tocar el selector existente.
+- **KPI "Media diaria" (Home) se recortaba en móvil**: con las 3
+  tarjetas de KPI a ancho igual, un importe de 4+ dígitos ("2.106,33 ฿")
+  no cabía y se cortaba con "…", ilegible — encontrado con mobile-check
+  (iPhone 14 Pro Max). En vez de encoger la fuente (quedaría más pequeña
+  que sus vecinas, la única tarjeta de dinero del grupo), rediseñado el
+  grid: "Media diaria" pasa a ocupar 2/3 del ancho, "Cursos"/"Captados"
+  se apilan compactos en el 1/3 restante.
+- **Las tarjetas apiladas "Cursos"/"Captados" quedaban demasiado
+  estrechas de altura**: feedback en vivo tras el cambio anterior — no
+  llevaban padding vertical, así que se ajustaban al alto exacto de su
+  contenido, sin nada de aire alrededor. Con padding real, "Media
+  diaria" vuelve a crecer un poco para igualar la altura del par; el
+  primer intento de repartir ese aire de más (`justify-between`, cifra y
+  etiqueta a los dos extremos) dejaba un hueco vacío feo en medio —
+  sustituido por `justify-center` (cifra+etiqueta como un bloque único).
+- **KPIs de Home, tercera vuelta — icono a un lado, cifra+etiqueta
+  apiladas y centradas al otro**: pedido explícito tras ver "Media
+  diaria" ya ensanchada a 2/3 del grid — su contenido seguía anclado al
+  borde izquierdo, con un hueco vacío grande a la derecha. Un primer
+  intento probó insignia arriba y cifra+etiqueta debajo (ambas
+  centradas) — no era lo pedido; corregido a insignia a la izquierda,
+  cifra+etiqueta apiladas y centradas a la derecha, mismo patrón
+  horizontal que ya usan "Cursos"/"Captados" (MiniKpiTile) a menor
+  escala, con el conjunto icono+texto centrado dentro de la tarjeta en
+  vez de anclado al borde izquierdo.
+- **El selector de color de la ficha de admin (avatar) se veía roto**:
+  `ColorSwatchPicker` pinta 12 círculos fijos de 36px en una cuadrícula
+  de 6 columnas — vivía metido en una celda de un grid de 2 columnas
+  (mitad del ancho de la hoja), donde no cabían ni de lejos. Ya existía
+  esta misma lección documentada en otro punto del propio archivo
+  ("no cabía a su lado sin apretarlo... a todo el ancho, en su propia
+  fila") — no se aplicó al construir la ficha de admin. Corregido para
+  ocupar la fila entera, como en el resto de sitios donde ya se usa.
+- **"Cursos"/"Captados" (Home), alineación final**: tres pedidos a la
+  vez — iconos alineados entre las dos tarjetas, mismo aire a los dos
+  lados, icono y texto sin separarse — no podían cumplirse juntos con
+  ancho de texto libre: "Cursos" y "Captados" tienen longitudes reales
+  distintas, así que cualquier reparto flexible (`flex-1`, `justify-
+  between`, `justify-center` sueltos, probados uno tras otro) arreglaba
+  un pedido rompiendo otro. Solución de raíz: columna de texto a ancho
+  FIJO (`w-14`) en vez de ajustado a su contenido — con eso, icono+texto
+  ya es un bloque de ancho idéntico en las dos tarjetas, y `justify-
+  center` + `gap-2` cumplen los tres pedidos a la vez sin más
+  compromiso. Verificado con una captura recortada de las dos tarjetas
+  juntas, no solo la pantalla completa. De paso, ajustado el reparto de
+  ancho del grid de 2/3+1/3 a 3/5+2/5 (pedido explícito: "media diaria"
+  un poco más estrecho, los dos apilados un poco más anchos).
+- **Ficha de admin, reubicación de Nombre/Email/Alta**: "Alta" es una
+  fecha observada de la cuenta, no un dato personal editable — pasa a
+  ser la primera fila de "Datos de actividad" (antes vivía suelta,
+  fuera de las dos secciones). Nombre y Email pasan a "Datos
+  personales" — Nombre ya era editable desde ahí (nickname/nombre/
+  apellidos sí están en el formulario), Email se enseña junto a ellos
+  de solo lectura por ser el mismo tipo de dato (identidad de la
+  persona), aunque cambiarlo no se pidió aquí.
+- **Tabla de "Exportar informe" (PDF) demasiado ancha y con letra
+  pequeña**: pedido explícito tras generar un informe real — ocupaba
+  todo el ancho de la página, difícil de leer ampliando en el móvil.
+  Rediseñada: columna de actividad a un ancho fijo calculado sobre el
+  nombre más largo de todo el informe (mínimo 150pt para que no quede
+  apretada, máximo 260pt para que un nombre desproporcionado envuelva en
+  vez de seguir ensanchando la tabla), tipografía subida de paso en toda
+  la tabla (actividad, detalle, importe y cabecera de día), y la tabla
+  ya no ocupa todo el ancho de la página sino solo lo que necesita,
+  centrada. Al construir el centrado se detectó que el primer mecanismo
+  probado (`alignment: "center"` sobre una tabla de pdfmake) no hace
+  nada en la versión instalada (0.3.11) — confirmado leyendo el propio
+  paquete, `DocMeasure.measureTable()` guarda ese valor pero nunca lo
+  usa para desplazar la tabla; sustituido por un margen izquierdo
+  calculado, que sí es el mecanismo que pdfmake respeta.
+- **Tabla de "Exportar informe" (PDF), segunda vuelta**: la tabla
+  centrada y más estrecha de la corrección anterior generaba la queja
+  siguiente — "ahora es todo demasiado estrecho y los totales y
+  cabeceras son a todo lo ancho... queda ridículo". Antes de tocar el
+  código, se acordó un mockup HTML con datos reales de un informe
+  generado, inspirado en el lenguaje visual de extractos/facturas de
+  apps modernas (Stripe, Linear...) y aprobado en vivo. Aplicado: un
+  único ancho para todo el documento (la tabla vuelve a CONTENT_WIDTH
+  completo, columna de actividad a `"*"` en vez de un ancho estimado
+  por caracteres — se retira esa heurística, ya no hace falta); la
+  cabecera de cada día deja de ser una banda de color sólido tipo hoja
+  de cálculo y pasa a una fecha + total en gris con una regla fina
+  debajo, y — pedido explícito en la misma revisión — su tamaño sube
+  para leerse más grande que la línea de detalle ("2 personas...") de
+  cada actividad, aunque siempre por debajo del nombre de la actividad.
+  Se retira también el aviso "este informe muestra solo lo pendiente de
+  cobro": con cobrados ocultos por defecto, todo el informe ya son
+  importes pendientes sin necesidad de decirlo aparte.
+- **Tabla de "Exportar informe" (PDF), tercera vuelta**: tres ajustes
+  finos tras usar la segunda versión, probados en TEST y corregidos en
+  la misma sesión. (1) Márgenes laterales de página subidos de 40 a
+  72pt (constante `MARGIN_X`, fuente única para `pageMargins`, cabecera
+  y pie) — con la tabla a ancho completo, el nombre de cada actividad y
+  su importe quedaban demasiado separados para leerse cómodo; un primer
+  intento a 60pt se quedó corto ("los márgenes... un poco más grandes")
+  y se subió a 72pt. (2) Pesos de la cabecera de día corregidos — un
+  primer intento le dio más peso solo con color (cabecera más oscura,
+  detalle más claro), pero el pedido real era de tamaño: la cabecera de
+  día pasa a ser el texto más grande de la fila (12.5pt, el que antes
+  tenía la actividad) y la actividad baja al tamaño que antes tenía la
+  cabecera de día (10.5pt), intercambiados — así domina igual que el
+  encabezado de grupo en el resto de listados de la app. (3) Formato
+  "N × Actividad" en Cursos (p. ej. "2 × Refresh" en vez de "Refresh" +
+  "2 personas" en el detalle, como una línea de factura) — solo en
+  Cursos, Comisiones conserva el formato anterior.
+- **Tabla de "Exportar informe" (PDF), cuarta vuelta**: tres ajustes
+  más, tras usar la tercera versión. (1) El subtotal de Cursos
+  ("Subtotal clases impartidas") sube a 12.5pt — el mismo tamaño que la
+  cabecera de día — para tener el mismo peso; Comisiones/Ajustes siguen
+  a 9.5pt, no pedido para ellos en esta sesión. (2) Separador visual
+  entre días: la línea justo encima de cada cabecera de día (salvo la
+  primera del informe) pasa de 0.75pt en `HAIRLINE` a 1.5pt en un gris
+  más marcado (`dayGroupedLayout`, capa de layout dedicada que sustituye
+  a `hairlineLayout` en esta tabla) — antes todas las líneas tenían el
+  mismo grosor y no había forma de distinguir a golpe de vista dónde
+  terminaba un día y empezaba el siguiente. (3) "Total del rango
+  elegido" pasa a "Total del periodo elegido" (`export.totalLabel`) —
+  cambiado también en los otros locales que usaban la misma idea de
+  "rango/intervalo" (ca, en, eu, id, it, ms, nl, pt); el resto (de, fr,
+  ru, th, vi, my) ya usaban su equivalente de "periodo", sin cambios.
+- **Tabla de "Exportar informe" (PDF), quinta vuelta**: fondo tenue en
+  la cabecera de cada día — pedido explícito: "añade un color de fondo
+  tenue a la cabecera, dale un formato tabla bonito y elegante... la
+  línea ocean flow". Usa `SKY_50` (`#F1F6FA`), el mismo token de fondo
+  "chip/pill info muy suave" ya documentado en
+  `docs/DESIGN-SYSTEM.md` §4 — reutilizado en vez de inventar un tono
+  nuevo solo para el PDF. `dayGroupedLayout` gana un `fillColor` de
+  capa (pdfmake sí soporta `fillColor` como función `(rowIndex, node)`,
+  igual que `hLineWidth`/`hLineColor`) más un pelín de aire vertical
+  extra (9pt vs 7pt) solo en esas filas, para que la banda de color no
+  quede apretada. El padding horizontal sigue a ras del margen de
+  página en toda la tabla — confirmado en el código fuente de pdfmake
+  instalado que `paddingLeft`/`paddingRight` son por columna, no por
+  fila, así que no se puede dar un hueco lateral solo a la cabecera sin
+  romper la alineación común con el resto del documento.
+- **Tabla de "Exportar informe" (PDF), sexta vuelta**: cuatro ajustes
+  más, tras usar la quinta versión. (1) La tabla de Ajustes de curso
+  iguala su ESTILO al de Cursos, no su formato (que sigue siendo
+  genuinamente distinto — 4 columnas fecha/compañero/concepto/importe,
+  no título+detalle apilado): cabecera de columnas con el mismo fondo
+  `SKY_50` que la cabecera de día (nuevo `headerBandLayout`, sustituye
+  a `hairlineLayout`), "Concepto" sube a 10.5pt en negrita y casi negro
+  como el título de una fila de Cursos, "Importe" baja de 11 a 10.5pt
+  para quedar al mismo tamaño (ya era negrita, color por signo
+  verde/rojo intacto — es una señal real, no decorativa), "Fecha"/
+  "Compañero" bajan a un tono secundario (9.5pt, `MUTED_LIGHT`, sin
+  negrita), igual que la línea de detalle de Cursos. (2) "Clases
+  impartidas" pasa a "Cursos impartidos" (`export.coursesGroup`, solo
+  locale es) — cambia también "Subtotal clases impartidas" a "Subtotal
+  cursos impartidos" sin tocar nada más, ya que ambos textos se derivan
+  de la misma clave. (3) Comisiones adopta el mismo formato "N ×
+  Actividad" que Cursos (pedido explícito: "ajusta también los estilos
+  de las comisiones para ser igual a cursos impartidos") —
+  `groupedActivityTable` pierde el flag `quantityFormat` por completo,
+  ya no hace falta: las dos tablas comparten siempre el mismo formato.
+  (4) Se retira "N sesiones" de la línea de detalle en ambas tablas
+  (pedido explícito: "ya está indicado en el número que va por delante
+  del nombre del curso") — el conteo de personas ya vive en el título,
+  así que repetir las sesiones aparte sería redundante; con
+  `showCollected` desactivado (el caso por defecto), la mayoría de
+  filas ya no llevan ninguna línea de detalle.
+- **Tabla de "Exportar informe" (PDF), séptima vuelta**: "Subtotal
+  comisiones" sube a 12.5pt, el mismo tamaño que "Subtotal cursos
+  impartidos" (que ya lo llevaba desde una vuelta anterior) — extendido
+  también a "Subtotal ajustes" para que los tres grupos del informe
+  compartan siempre el mismo tamaño de subtotal; `subtotalLine` pierde
+  el parámetro de tamaño por grupo, ya no hace falta. Pedido explícito
+  con una regla nueva para el resto de esta iniciativa: "cuando te pido
+  algo de una tabla será a aplicar a todas siempre" — guardada como
+  lección permanente para futuras sesiones (ver memoria de la sesión).
+
 ## [1.3.1] - 2026-09-09
 
 ### Fixed

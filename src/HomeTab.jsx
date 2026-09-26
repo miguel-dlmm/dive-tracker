@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { GraduationCap, Award, Handshake, ChevronRight, Building2 } from "lucide-react";
+import { CalendarDays, Award, Handshake, ChevronRight, Building2, HelpCircle } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
-import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META } from "./shared";
+import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, useFloatingDropdown, FloatingPanel } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import PendingCollectionCard from "./PendingCollectionCard";
@@ -56,41 +56,167 @@ function useTranslatedMovementTypeMeta(t) {
 // de retraso entre las tres) y la cifra hace un conteo ascendente
 // (useCountUp, motion.js) — mismo vocabulario EASE.enter/DURATION.md que
 // usa el resto de la app para lo que ENTRA en pantalla, no un cuarto
-// sistema de animación aparte.
-// Compactada (rediseño estructural 2026-09-06, pedido explícito: "los KPI
-// ocupan 3 filas, ¿más compacta?") — icono+cifra pasan a una sola fila en
-// vez de icono/cifra/etiqueta apiladas y centradas; la etiqueta se queda
-// en su propia fila, a todo el ancho, para no perder espacio de lectura
-// frente a etiquetas más largas (mismo motivo que en MoneyKpiTile,
-// MiTrabajoTab.jsx — las dos comparten ahora este mismo patrón).
-// Segunda vuelta de diseño (2026-09-07, feedback explícito: "no acaban de
-// gustarme, dales otra vuelta" tras la primera compactación) — mismo
-// patrón de 2 filas (icono+cifra / etiqueta), pero con más presencia:
-// insignia de 32px (antes 24px) e icono de 18px (antes 13px), cifra en
-// text-xl (antes text-lg) y algo más de aire interno (px-3 py-3 en vez de
-// px-2.5). Pedido explícito de mantener la altura a raya ("que no robe
-// mucho espacio") — sigue siendo 2 filas, no 3; solo crecen los elementos
-// dentro de esas 2 filas, no el número de filas.
-function KpiTile({ icon: Icon, color, value, label, index, reduced }) {
+// sistema de animación aparte. Dos variantes viven en este archivo:
+// MoneyKpiTile (cifra de dinero, Media diaria) y MiniKpiTile (conteo
+// entero compacto, Cursos/Captados) — ver el grid de KPIs más abajo para
+// el porqué del reparto de ancho 2/3+1/3 entre ambas.
+//
+// La tarjeta de conteo entero pasó antes por su propio componente
+// (`KpiTile`, ya retirado 2026-09-18 al dejar de usarse) con su propio
+// historial de rediseños — icono+cifra en una sola fila, etiqueta debajo
+// (2026-09-06, "los KPI ocupan 3 filas, ¿más compacta?"), después más
+// presencia visual (2026-09-07, "no acaban de gustarme, dales otra
+// vuelta": insignia 32px, icono 18px, cifra text-xl). MiniKpiTile
+// (abajo) es su sucesora directa, comprimida a una sola fila para caber
+// apilada junto a otra igual.
+//
+// Variante de dinero (Media diaria) — mismo envoltorio visual (insignia +
+// cifra en una fila, etiqueta debajo) que la de conteo entero, pero la
+// cifra se formatea con <Money> y admite un
+// tooltip opcional (mismo patrón que MoneyKpiTile en MiTrabajoTab.jsx:
+// botón "?" con aria-label propio y objetivo táctil de 44px vía
+// -inset-[15px], en vez del genérico "Ayuda"/"Ocultar ayuda" de Field —
+// MovementSheet puede estar abierto encima de Home a la vez, ver
+// onQuickCreate más abajo, así que ambos tooltips conviven en el DOM y
+// necesitan aria-labels que no choquen).
+// h-full + justify-center (2026-09-18, ajustado el mismo día tras verlo
+// en mobile-check real): esta tarjeta vive junto a un par de MiniKpiTile
+// más compactas (ver el grid de abajo) — si su columna resulta más alta
+// que esta, `h-full` la estira para igualar esa altura. Primer intento,
+// `justify-between`: separaba la fila de cifra y la etiqueta a los dos
+// extremos de la tarjeta ya crecida, dejando un hueco vacío enorme en
+// medio — se veía como un bug de layout, no como aire deliberado.
+// `justify-center` mantiene cifra+etiqueta como un único bloque, centrado
+// verticalmente en el espacio de más.
+// Sin la maquinaria de icono/texto-que-se-encoge de MiTrabajoTab: aquí
+// solo hay UNA cifra de dinero en el grupo (Cursos/Captados son enteros
+// cortos), así que el problema real no era "todas las cifras deben
+// encogerse juntas" (eso sí lo necesita MiTrabajoTab, con 3 cifras de
+// dinero a la vez) sino "esta cifra necesita más ancho que sus vecinas"
+// — resuelto dándole 2/3 del grid en vez de encogiendo su fuente. Bug
+// real encontrado en mobile-check (iPhone 14 Pro Max) el 2026-09-18: con
+// las 3 tarjetas a ancho igual, un importe de 4+ dígitos ("2.106,33 ฿")
+// se recortaba con "…" a media cifra — ilegible para un dato de dinero,
+// muy distinto de truncar una etiqueta de texto.
+// Icono a la izquierda, cifra+etiqueta apiladas y centradas a la derecha
+// (2026-09-18, corregido tras un primer intento que malinterpretó el
+// pedido: "el kpi más ancho tendrá icono a la izquierda y texto y número
+// apilados a la derecha, estos últimos centrados" — no icono arriba y
+// texto debajo, como se probó primero. Mismo patrón horizontal que
+// MiniKpiTile más abajo (icono a un lado, bloque de texto centrado al
+// otro), a mayor escala; `justify-center` en la fila centra el conjunto
+// icono+texto dentro de la tarjeta ya ancha (2/3 del grid), en vez de
+// dejarlo anclado al borde izquierdo con un hueco vacío a la derecha.
+function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel }) {
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
+  const entries = Object.entries(totals || {});
+  const single = entries.length === 1 ? entries[0] : null;
+  const animatedCents = useCountUp(single ? Math.round(single[1] * 100) : 0, { reduced });
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
+      className="flex h-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3"
+    >
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+        <Icon size={18} style={{ color }} aria-hidden="true" />
+      </span>
+      <span className="flex flex-col items-center gap-0.5 text-center">
+        <span className="min-w-0 truncate text-xl font-bold leading-none tabular-nums" style={{ color: BRAND_NAVY }}>
+          {entries.length === 0 ? (
+            "—"
+          ) : single ? (
+            <Money amount={animatedCents / 100} code={single[0]} currencyRows={currencyRows} />
+          ) : (
+            entries.map(([code, amt], i) => (
+              <span key={code}>
+                {i > 0 && " + "}
+                <Money amount={amt} code={code} currencyRows={currencyRows} />
+              </span>
+            ))
+          )}
+        </span>
+        <span className="flex items-center gap-1 text-[11px] font-medium leading-tight text-gray-500">
+          {label}
+          {tooltip && (
+            <span className="relative inline-flex h-3 w-3 shrink-0">
+              <button
+                ref={anchorRef}
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                aria-expanded={open}
+                aria-label={open ? tooltipHideLabel : tooltipShowLabel}
+                className="absolute -inset-[15px] flex items-center justify-center text-gray-400"
+              >
+                <HelpCircle size={11} aria-hidden="true" />
+              </button>
+            </span>
+          )}
+        </span>
+      </span>
+      {tooltip && (
+        <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} className="w-48 max-w-[75vw] px-2.5 py-1.5">
+          <span className="block text-[11px] font-normal italic normal-case text-gray-500">{tooltip}</span>
+        </FloatingPanel>
+      )}
+    </motion.div>
+  );
+}
+
+// Tarjeta de KPI compacta — icono+cifra+etiqueta en una sola fila en
+// vez de dos, pensada para vivir apilada junto a otra igual en la columna
+// estrecha que deja MoneyKpiTile al ocupar 2/3 del grid (ver el grid de
+// KPIs más abajo). flex-1 + el `flex flex-col` del contenedor que las
+// envuelve: las dos se reparten a partes iguales la altura total de la
+// columna, que a su vez iguala la de MoneyKpiTile vía `items-stretch`
+// (comportamiento por defecto del grid).
+// py-2 (2026-09-18, feedback en vivo sobre mobile-check real: "quedan
+// demasiado estrechos de altura"): la primera versión no llevaba ningún
+// padding vertical (solo `px-2.5`), así que la tarjeta se ajustaba al
+// alto exacto de su contenido (icono+texto, ~33px) sin ningún aire
+// alrededor — se leía como una tira plana, no como una tarjeta con el
+// mismo peso visual que sus vecinas. Con el padding, el par de
+// MiniKpiTile ya no cabe en la mitad exacta de la altura "compacta" de
+// antes — el grid entero crece un poco a cambio de que las 3 tarjetas
+// del grupo tengan una proporción consistente entre sí.
+// Columna de texto a ANCHO FIJO (2026-09-18, cuarto ajuste el mismo
+// día — los tres anteriores cada uno arreglaba una cosa rompiendo otra:
+// `flex-1` alineaba iconos pero dejaba un hueco vacío grande tras el
+// texto; `justify-between` igualaba el aire a los lados pero mandaba
+// todo ese aire a un único hueco central; `justify-center` con ancho
+// libre volvía a juntar icono+texto pero desalineaba los iconos entre
+// "Cursos" y "Captados" (etiquetas de distinta longitud). Los tres
+// pedidos (iconos alineados entre las dos tarjetas + mismo aire a los
+// dos lados + icono y texto pegados) solo pueden cumplirse los tres a
+// la vez si el ANCHO TOTAL del contenido (icono+gap+texto) es idéntico
+// en ambas tarjetas — y con etiquetas de longitud real distinta, la
+// única forma de garantizarlo es reservar un ancho fijo para la columna
+// de texto (`w-14`, cubre "Captados" de sobra a este tamaño de fuente)
+// en vez de dejar que se ajuste a su propio contenido. Con eso, icono +
+// columna de texto ya son un bloque de ancho constante en las dos
+// tarjetas: `justify-center` los centra igual en ambas (iconos
+// alineados), `gap-2` los mantiene pegados (sin hueco central) y el aire
+// sobrante se reparte igual a los dos lados por construcción.
+function MiniKpiTile({ icon: Icon, color, value, label, index, reduced }) {
   const count = useCountUp(value, { reduced });
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-3"
+      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-2.5 py-2"
     >
-      <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
-          <Icon size={18} style={{ color }} aria-hidden="true" />
-        </span>
-        <span className="text-xl font-bold leading-none tabular-nums" style={{ color: BRAND_NAVY }}>{count}</span>
-      </div>
-      <span className="text-[11px] font-medium leading-tight text-gray-500">{label}</span>
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
+        <Icon size={13} style={{ color }} aria-hidden="true" />
+      </span>
+      <span className="flex w-14 shrink-0 flex-col items-center text-center leading-none">
+        <span className="text-base font-bold tabular-nums" style={{ color: BRAND_NAVY }}>{count}</span>
+        <span className="mt-0.5 w-full truncate text-[10px] font-medium text-gray-500">{label}</span>
+      </span>
     </motion.div>
   );
 }
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
   const { t } = useTranslation("home");
   // Oculta el punto de entrada de "Instalar la app" si la propia app ya
   // corre instalada (display-mode: standalone en Chromium/Android,
@@ -155,27 +281,40 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const calendarEntries = useMemo(() => [...ganadoEntries, ...comisionEntries, ...companerosEntries],
     [ganadoEntries, comisionEntries, companerosEntries]);
 
-  // Dato secundario de "Generado este mes" — personas formadas, no comisión
-  // ni ajustes: son clientes que TÚ has impartido este mes, un dato humano y
-  // sin ambigüedad de alcance (no cuenta clientes referidos que forma otro
-  // instructor, ni ajustes económicos, que no representan formación). Da a
-  // la tarjeta un segundo dato con el mismo peso visual que "N pagos
-  // pendientes" en la tarjeta de al lado.
-  const peopleTrainedThisMonth = useMemo(() => ganadoEntries
-    .filter((e) => e.date.slice(0, 7) === currentMonthKey)
-    .reduce((sum, e) => sum + (e.people || 0), 0), [ganadoEntries, currentMonthKey]);
+  // Media diaria ganada este mes, hasta hoy (Bloque Home, lote 2026-09-17,
+  // pedido explícito del usuario) — sustituye al KPI "Alumnos" que vivía
+  // aquí antes. Motivo del cambio, no cosmético: "Alumnos" sumaba
+  // `people` de cada apunte de Curso, así que un mismo alumno que repite
+  // varios cursos en el mes contaba varias veces — una cifra que "no es
+  // real" (palabras del propio usuario), sin una forma barata de
+  // deduplicar por alumno hoy (no hay ninguna identidad de alumno en el
+  // modelo de datos, solo nombre libre por movimiento). En vez de forzar
+  // una deduplicación imprecisa, se sustituye por un ángulo que SÍ es
+  // exacto con los datos que ya existen: cuánto ganas de media cada día
+  // del mes en curso, contando solo cursos (ganadoEntries, no comisiones
+  // ni ajustes — "ganada" es el término que usó el propio usuario, y
+  // coincide con el tipo de movimiento "Curso" del resto de la app).
+  // Se divide entre el día del mes de HOY (now.getDate(), 1-31), no entre
+  // los días transcurridos con actividad real ni entre los días totales
+  // del mes — así la cifra sube de forma predecible según avanza el mes,
+  // en vez de dar saltos bruscos cada vez que se registra un curso nuevo.
+  const dayOfMonth = now.getDate();
+  const dailyAverageTotals = useMemo(() => {
+    const totals = {};
+    ganadoEntries
+      .filter((e) => e.date.slice(0, 7) === currentMonthKey)
+      .forEach((e) => { totals[e.currency] = (totals[e.currency] || 0) + e.total; });
+    Object.keys(totals).forEach((code) => { totals[code] = totals[code] / dayOfMonth; });
+    return totals;
+  }, [ganadoEntries, currentMonthKey, dayOfMonth]);
 
-  // KPIs de Fase 3 (Release V1) — tres ángulos distintos de "cómo me está
-  // yendo", deliberadamente no financieros (eso ya lo cubren "Pendiente de
-  // cobrar" y "Generado este mes" arriba): alumnos este mes ya se calculaba
-  // (peopleTrainedThisMonth, se reutiliza tal cual). Cursos impartidos era
-  // al principio un total histórico (sensación de trayectoria) — cambiado
-  // a mensual (pedido explícito del usuario 2026-09-03: "TU IMPACTO ESTE
-  // MES" como título único, los 3 KPIs deben ser del mes, no mezclar un
-  // total de siempre con dos del mes actual). Personas captadas: mismo
-  // criterio que people trained pero sobre comisionEntries (aclaración
-  // explícita del usuario: "personas por las que he comisionado" —
-  // clientes referidos, no formados por ti).
+  // KPIs de Fase 3 (Release V1) — Cursos impartidos era al principio un
+  // total histórico (sensación de trayectoria) — cambiado a mensual
+  // (pedido explícito del usuario 2026-09-03: "TU IMPACTO ESTE MES" como
+  // título único, los 3 KPIs deben ser del mes, no mezclar un total de
+  // siempre con dos del mes actual). Personas captadas: sobre
+  // comisionEntries (aclaración explícita del usuario: "personas por las
+  // que he comisionado" — clientes referidos, no formados por ti).
   const coursesTotal = useMemo(() => worklog.rows
     .filter((e) => e.date.slice(0, 7) === currentMonthKey).length, [worklog.rows, currentMonthKey]);
   const referredThisMonth = useMemo(() => comisionEntries
@@ -212,7 +351,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // convención #1 de CLAUDE.md) en vez de una fuente de datos nueva.
   // Se cuentan MOVIMIENTOS (cuántas veces aparece esa escuela este mes),
   // no personas — "más activa" se lee mejor como frecuencia de trabajo
-  // que como volumen de alumnos, que ya cubre el KPI "Alumnos" de arriba.
+  // que como volumen de alumnos.
   const schoolActivityThisMonth = useMemo(() => {
     const counts = {};
     incomeEntries
@@ -230,7 +369,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           Bloque 9, pedido explícito del usuario) — antes cerraba la
           pantalla; tres ángulos no financieros de "cómo me está yendo"
           (financiero lo cubren las dos tarjetas de más abajo). Conteo
-          ascendente + entrada escalonada (KpiTile, arriba) en vez de
+          ascendente + entrada escalonada (MoneyKpiTile/MiniKpiTile, arriba) en vez de
           aparecer estáticas de golpe. */}
       <div>
         <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
@@ -261,10 +400,35 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             </button>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <KpiTile icon={GraduationCap} color={TEAL} value={peopleTrainedThisMonth} label={t("kpis.studentsThisMonth")} index={0} reduced={reducedMotion} />
-          <KpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
-          <KpiTile icon={Handshake} color={GREEN} value={referredThisMonth} label={t("kpis.referredThisMonth")} index={2} reduced={reducedMotion} />
+        {/* 3/5 + 2/5 (2026-09-18, ajustado el mismo día — "haz un poco más
+            pequeño de ancho el kpi principal, haciendo los dos apilados un
+            pelín más anchos": antes era 2/3+1/3, exactamente igual de
+            ancho pero desplazando un poco el reparto). Origen del reparto
+            asimétrico (corrige un bug real encontrado en mobile-check
+            iPhone 14 Pro Max): antes las 3 tarjetas se repartían el ancho
+            a partes iguales — bien para dos enteros cortos ("37", "20"),
+            pero una cifra de dinero de 4+ dígitos ("2.106,33 ฿") no cabía
+            y se recortaba con "…", ilegible. En vez de encoger la fuente
+            de esa cifra (quedaría más pequeña que sus vecinas sin motivo
+            aparente, la única tarjeta de dinero del grupo, a diferencia de
+            MiTrabajoTab donde las 3 SÍ son dinero y se encogen juntas), se
+            le da más ancho de verdad: Media diaria ocupa la mayoría del
+            grid, Cursos/Captados se apilan en el resto como tarjetas
+            compactas (MiniKpiTile) — misma altura total de fila que
+            antes. */}
+        <div className="grid grid-cols-5 gap-2">
+          <div className="col-span-3">
+            <MoneyKpiTile
+              icon={CalendarDays} color={TEAL} totals={dailyAverageTotals} currencyRows={currencies.rows}
+              label={t("kpis.dailyAverageThisMonth")} tooltip={t("kpis.dailyAverageTooltip")}
+              tooltipShowLabel={t("kpis.dailyAverageTooltipShow")} tooltipHideLabel={t("kpis.dailyAverageTooltipHide")}
+              index={0} reduced={reducedMotion}
+            />
+          </div>
+          <div className="col-span-2 flex flex-col gap-2">
+            <MiniKpiTile icon={Award} color={SUN} value={coursesTotal} label={t("kpis.coursesTotal")} index={1} reduced={reducedMotion} />
+            <MiniKpiTile icon={Handshake} color={GREEN} value={referredThisMonth} label={t("kpis.referredThisMonth")} index={2} reduced={reducedMotion} />
+          </div>
         </div>
       </div>
 
@@ -278,7 +442,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           pidiendo "dinamismo, texto, call to action, Generados" — elegida
           la combinación de dos ideas:
           (1) "Generados" como cuarta palabra del mismo vocabulario que ya
-              usan los KPI de arriba (Alumnos/Cursos/Captados) — mismo
+              usan los KPI de arriba (Media diaria/Cursos/Captados) — mismo
               patrón número-en-grande + etiqueta-pequeña, no un contador
               inventado aparte.
           (2) el texto CAMBIA según haya actividad real: sin ningún
@@ -415,6 +579,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           groupBySource
           sourceMeta={translatedTypeMeta}
           onCreateForDay={(dateStr) => onQuickCreate("ganado", dateStr)}
+          onEditEntry={onEditEntry}
           onPrevMonth={goToPrevMonth}
           onNextMonth={goToNextMonth}
           onGoToday={goToCurrentMonth}

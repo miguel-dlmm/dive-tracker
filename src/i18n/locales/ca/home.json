@@ -8,7 +8,10 @@
   "noActivityThisMonth": "Sense activitat aquest mes",
   "kpis": {
     "sectionTitle": "El teu impacte aquest mes",
-    "studentsThisMonth": "Alumnes",
+    "dailyAverageThisMonth": "Mitjana diària",
+    "dailyAverageTooltip": "El que guanyes de mitjana cada dia aquest mes, comptant només fins avui.",
+    "dailyAverageTooltipShow": "Info: Mitjana diària",
+    "dailyAverageTooltipHide": "Amaga info: Mitjana diària",
     "coursesTotal": "Cursos",
     "referredThisMonth": "Captats"
   },

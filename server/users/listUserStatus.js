@@ -55,6 +55,29 @@ function isBanned(user) {
 // por usuario viva como una rama más de `handleListUserStatus` (activada
 // por `user_id` en el cuerpo) en vez de un fichero propio.
 const ACTIVITY_TABLES = ["worklog", "comisiones", "colleague_payments"];
+
+// Última fecha de actividad de UN usuario en UNA tabla — orden desc +
+// limit 1, no MAX(updated_at) en SQL (más simple desde el cliente JS de
+// Supabase, el índice ya existente por user_id la hace barata). INCLUYE
+// filas borradas lógicamente (deleted_at no se filtra): set_updated_at()
+// se dispara en cualquier UPDATE, y la baja lógica es una UPDATE como
+// otra cualquiera, así que este único valor ya cubre "creó, editó o
+// eliminó", sin tres consultas separadas por tipo de acción. Extraído
+// aparte de activitySummaryFor (2026-09-17) para poder reutilizarla en
+// el listado masivo de abajo sin repetir también su consulta de `count`
+// (el listado solo necesita la fecha, no el número de movimientos).
+async function latestActivityAt(admin, table, userId) {
+  const { data, error } = await admin
+    .from(table)
+    .select("updated_at")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return { error };
+  return { updatedAt: data?.updated_at || null };
+}
+
 async function activitySummaryFor(admin, userId) {
   let count = 0;
   let lastActivityAt = null;
@@ -67,27 +90,33 @@ async function activitySummaryFor(admin, userId) {
     if (countError) return { error: countError };
     count += tableCount || 0;
 
-    // orden desc + limit 1, no MAX(updated_at) en SQL — más simple desde
-    // el cliente JS de Supabase, y el índice ya existente (user_id) hace
-    // esta consulta barata sin necesitar uno nuevo. INCLUYE filas
-    // borradas lógicamente (deleted_at no se filtra aquí): el trigger
-    // set_updated_at() se dispara en cualquier UPDATE, y la baja lógica es
-    // una UPDATE como otra cualquiera, así que este único valor ya cubre
-    // "creó, editó o eliminó", sin tres consultas separadas por tipo de
-    // acción.
-    const { data: latestRow, error: latestError } = await admin
-      .from(table)
-      .select("updated_at")
-      .eq("user_id", userId)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const { updatedAt, error: latestError } = await latestActivityAt(admin, table, userId);
     if (latestError) return { error: latestError };
-    if (latestRow?.updated_at && (!lastActivityAt || latestRow.updated_at > lastActivityAt)) {
-      lastActivityAt = latestRow.updated_at;
-    }
+    if (updatedAt && (!lastActivityAt || updatedAt > lastActivityAt)) lastActivityAt = updatedAt;
   }
   return { count, lastActivityAt };
+}
+
+// Última actividad de TODOS los usuarios a la vez, para el listado
+// (Config -> Usuarios) — pedido explícito: mostrar ahí "última actividad"
+// en vez de "último acceso". Una consulta por (usuario, tabla) en
+// paralelo (Promise.all): con la escala real de este proyecto (una
+// decena de usuarios, ver docs/BACKLOG.md) son como mucho unas pocas
+// decenas de consultas concurrentes, muy lejos de necesitar una función
+// SQL agregada — se reevalúa solo si el número de cuentas creciera de
+// verdad (mismo criterio que perPage=200 más abajo, sin paginar).
+async function lastActivityForAllUsers(admin, userIds) {
+  const lastActivityAt = {};
+  const results = await Promise.all(
+    userIds.flatMap((userId) => ACTIVITY_TABLES.map(async (table) => ({ userId, ...(await latestActivityAt(admin, table, userId)) })))
+  );
+  for (const r of results) {
+    if (r.error) return { error: r.error };
+    if (r.updatedAt && (!lastActivityAt[r.userId] || r.updatedAt > lastActivityAt[r.userId])) {
+      lastActivityAt[r.userId] = r.updatedAt;
+    }
+  }
+  return { lastActivityAt };
 }
 
 export async function handleListUserStatus({ method, headers, body }) {
@@ -153,5 +182,15 @@ export async function handleListUserStatus({ method, headers, body }) {
     lastSignInAt[u.id] = u.last_sign_in_at || null;
   });
 
-  return { status: 200, payload: { active, lastSignInAt } };
+  // Última actividad de todos a la vez (pedido explícito: sustituye a
+  // "último acceso" en el listado, ver lastActivityForAllUsers arriba) —
+  // se calcula siempre junto al resto, una sola llamada desde el cliente
+  // sigue bastando para pintar el directorio completo.
+  const activity = await lastActivityForAllUsers(getServiceRoleClient(), data.users.map((u) => u.id));
+  if (activity.error) {
+    console.error(activity.error);
+    return { status: 500, payload: { error: "No se pudo consultar la actividad de las cuentas." } };
+  }
+
+  return { status: 200, payload: { active, lastSignInAt, lastActivityAt: activity.lastActivityAt } };
 }

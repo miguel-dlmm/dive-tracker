@@ -8,7 +8,10 @@
   "noActivityThisMonth": "Geen activiteit deze maand",
   "kpis": {
     "sectionTitle": "Jouw impact deze maand",
-    "studentsThisMonth": "Cursisten",
+    "dailyAverageThisMonth": "Daggemiddelde",
+    "dailyAverageTooltip": "Wat je deze maand gemiddeld per dag verdient, alleen geteld tot vandaag.",
+    "dailyAverageTooltipShow": "Info: Daggemiddelde",
+    "dailyAverageTooltipHide": "Info verbergen: Daggemiddelde",
     "coursesTotal": "Cursussen",
     "referredThisMonth": "Aangebracht"
   },

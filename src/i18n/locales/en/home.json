@@ -8,7 +8,10 @@
   "noActivityThisMonth": "No activity this month",
   "kpis": {
     "sectionTitle": "Your impact this month",
-    "studentsThisMonth": "Students",
+    "dailyAverageThisMonth": "Daily average",
+    "dailyAverageTooltip": "What you earn on average per day this month, counting only up to today.",
+    "dailyAverageTooltipShow": "Info: Daily average",
+    "dailyAverageTooltipHide": "Hide info: Daily average",
     "coursesTotal": "Courses",
     "referredThisMonth": "Referred"
   },

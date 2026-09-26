@@ -19,9 +19,27 @@ function request(overrides = {}) {
   };
 }
 
-function makeClient(listUsersResult) {
+// activityTables (opcional): { worklog: { latest: { updated_at } | null, latestError }, ... }
+// — mismo mapa de configuración que makeActivityClient más abajo, pero sin
+// `.is()` ni la rama de `count` (el listado masivo solo pide la fecha más
+// reciente por tabla, nunca un recuento — ver lastActivityForAllUsers).
+// Sin este mock, cualquier test de la rama de listado que no pasara
+// activityTables rompía en cuanto listUserStatus.js empezó a llamar
+// también a `.from(...)` para la actividad masiva (2026-09-17).
+function makeClient(listUsersResult, activityTables = {}) {
   const listUsers = vi.fn().mockResolvedValue(listUsersResult);
-  return { auth: { admin: { listUsers } } };
+  const from = vi.fn((table) => {
+    const cfg = activityTables[table] || {};
+    const chain = {
+      select: () => chain,
+      eq: () => chain,
+      order: () => chain,
+      limit: () => chain,
+      maybeSingle: () => Promise.resolve({ data: cfg.latest ?? null, error: cfg.latestError ?? null }),
+    };
+    return chain;
+  });
+  return { auth: { admin: { listUsers } }, from };
 }
 
 beforeEach(() => {
@@ -101,7 +119,7 @@ it("marca como activo (true) a quien no tiene banned_until", async () => {
 
   const result = await handleListUserStatus(request());
 
-  expect(result).toEqual({ status: 200, payload: { active: { u1: true }, lastSignInAt: { u1: null } } });
+  expect(result).toEqual({ status: 200, payload: { active: { u1: true }, lastSignInAt: { u1: null }, lastActivityAt: {} } });
 });
 
 it("marca como inactivo (false) a quien tiene banned_until en el futuro", async () => {
@@ -112,7 +130,7 @@ it("marca como inactivo (false) a quien tiene banned_until en el futuro", async 
 
   const result = await handleListUserStatus(request());
 
-  expect(result).toEqual({ status: 200, payload: { active: { u1: false }, lastSignInAt: { u1: null } } });
+  expect(result).toEqual({ status: 200, payload: { active: { u1: false }, lastSignInAt: { u1: null }, lastActivityAt: {} } });
 });
 
 it("marca como activo (true) a quien tiene banned_until ya expirado en el pasado", async () => {
@@ -123,7 +141,7 @@ it("marca como activo (true) a quien tiene banned_until ya expirado en el pasado
 
   const result = await handleListUserStatus(request());
 
-  expect(result).toEqual({ status: 200, payload: { active: { u1: true }, lastSignInAt: { u1: null } } });
+  expect(result).toEqual({ status: 200, payload: { active: { u1: true }, lastSignInAt: { u1: null }, lastActivityAt: {} } });
 });
 
 // last_sign_in_at es la fuente correcta de "último login real" (auth.users,
@@ -149,6 +167,60 @@ it("devuelve null en lastSignInAt para quien nunca ha iniciado sesión", async (
   const result = await handleListUserStatus(request());
 
   expect(result.payload.lastSignInAt).toEqual({ u1: null });
+});
+
+// Última actividad de TODOS los usuarios del listado (2026-09-17, pedido
+// explícito: sustituye a "último acceso" en el listado de Config ->
+// Usuarios) — ver lastActivityForAllUsers en listUserStatus.js.
+describe("última actividad de todos los usuarios (listado masivo)", () => {
+  it("toma, por usuario, la fecha más reciente entre sus 3 tablas de actividad", async () => {
+    getServiceRoleClient.mockReturnValue(makeClient(
+      { data: { users: [{ id: "u1", banned_until: null, last_sign_in_at: null }] }, error: null },
+      {
+        worklog: { latest: { updated_at: "2026-09-01T10:00:00.000Z" } },
+        comisiones: { latest: { updated_at: "2026-09-05T08:00:00.000Z" } },
+        colleague_payments: { latest: { updated_at: "2026-08-20T12:00:00.000Z" } },
+      }
+    ));
+
+    const result = await handleListUserStatus(request());
+
+    expect(result.payload.lastActivityAt).toEqual({ u1: "2026-09-05T08:00:00.000Z" });
+  });
+
+  it("un usuario sin ningún movimiento no aparece en el mapa (no null, ausente)", async () => {
+    getServiceRoleClient.mockReturnValue(makeClient({
+      data: { users: [{ id: "u1", banned_until: null, last_sign_in_at: null }] },
+      error: null,
+    }));
+
+    const result = await handleListUserStatus(request());
+
+    expect(result.payload.lastActivityAt).toEqual({});
+    expect("u1" in result.payload.lastActivityAt).toBe(false);
+  });
+
+  it("calcula la actividad de varios usuarios en paralelo, cada uno con la suya propia", async () => {
+    getServiceRoleClient.mockReturnValue(makeClient(
+      { data: { users: [{ id: "u1", banned_until: null }, { id: "u2", banned_until: null }] }, error: null },
+      { worklog: { latest: { updated_at: "2026-09-10T00:00:00.000Z" } } }
+    ));
+
+    const result = await handleListUserStatus(request());
+
+    expect(result.payload.lastActivityAt).toEqual({ u1: "2026-09-10T00:00:00.000Z", u2: "2026-09-10T00:00:00.000Z" });
+  });
+
+  it("devuelve 500 si falla alguna de las consultas de actividad", async () => {
+    getServiceRoleClient.mockReturnValue(makeClient(
+      { data: { users: [{ id: "u1", banned_until: null }] }, error: null },
+      { worklog: { latestError: { message: "boom" } } }
+    ));
+
+    const result = await handleListUserStatus(request());
+
+    expect(result).toEqual({ status: 500, payload: { error: "No se pudo consultar la actividad de las cuentas." } });
+  });
 });
 
 // Resumen de actividad de UN usuario (rama activada por user_id en el

@@ -8,7 +8,10 @@
   "noActivityThisMonth": "ဤလအတွင်း လှုပ်ရှားမှုမရှိပါ",
   "kpis": {
     "sectionTitle": "ဤလ သင့်ရလဒ်",
-    "studentsThisMonth": "ကျောင်းသားများ",
+    "dailyAverageThisMonth": "နေ့စဉ်ပျမ်းမျှ",
+    "dailyAverageTooltip": "ဒီလအတွက် ယနေ့အထိသာ တွက်ချက်ထားသော နေ့စဉ်ပျမ်းမျှ ဝင်ငွေ။",
+    "dailyAverageTooltipShow": "အချက်အလက်: နေ့စဉ်ပျမ်းမျှ",
+    "dailyAverageTooltipHide": "အချက်အလက် ဖျောက်ရန်: နေ့စဉ်ပျမ်းမျှ",
     "coursesTotal": "သင်တန်းများ",
     "referredThisMonth": "ညွှန်းပို့ခဲ့သူများ"
   },

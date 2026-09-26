@@ -129,6 +129,19 @@ create table if not exists public.profiles (
   -- ISO 3166-1 alpha-2 ('ES', 'MX'...) — taxonomía universal fija,
   -- mismo criterio que `language`, no una tabla catálogo aparte.
   country_of_residence text,
+  -- Contador de Training Records generados + fecha del último (lote
+  -- 2026-09-17/18, pedido explícito: verlo desde la ficha de admin de
+  -- Config → Usuarios, no solo desde el propio dispositivo del
+  -- instructor). Solo un entero y una fecha — nunca datos de alumnos ni
+  -- contenido del documento, la garantía de privacidad existente ("nada
+  -- de lo que rellenes en un Training Record se guarda, solo se
+  -- descarga", ver src/trainingRecords/generatedCounter.js) no cambia.
+  -- Se incrementa solo vía increment_training_records_count() (más
+  -- abajo), nunca con un UPDATE directo del cliente — evita una
+  -- condición de carrera si se generan varios TR seguidos y evita que
+  -- cualquier cliente pueda escribir un valor arbitrario.
+  training_records_generated_count integer not null default 0,
+  training_records_last_generated_at timestamptz,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
@@ -176,6 +189,19 @@ create table if not exists public.profiles (
 -- Configuración → Perfil pasa a ser la UI que faltaba para ese mecanismo
 -- ya existente, no un mecanismo nuevo en paralelo.
 
+-- Migración aditiva lote 2026-09-17/18 (contador de Training Records
+-- generados + fecha del último) para instalaciones existentes —
+-- scripts/migrations/0021-training-records-count.sql tiene el mismo DDL,
+-- aplicarlo con scripts/apply-migration.mjs:
+--
+--   alter table public.profiles
+--     add column if not exists training_records_generated_count integer not null default 0,
+--     add column if not exists training_records_last_generated_at timestamptz;
+--
+-- Más increment_training_records_count() (ver más abajo, junto a
+-- is_admin()/is_superadmin()) — sin ella, esta migración por sí sola no
+-- habilita nada nuevo en el cliente.
+
 create unique index if not exists profiles_nickname_lower_key on public.profiles (lower(nickname));
 
 -- Helper para políticas de otras tablas ("¿es admin quien llama?"). security
@@ -194,6 +220,21 @@ $$;
 create or replace function public.is_superadmin(uid uuid)
 returns boolean language sql security definer set search_path = public stable as $$
   select coalesce((select is_superadmin from public.profiles where user_id = uid), false);
+$$;
+
+-- Incrementa el contador de Training Records generados de QUIEN LLAMA, de
+-- forma atómica (evita una condición de carrera si se generan varios TR
+-- seguidos, más fiable que un select-luego-update desde el cliente).
+-- auth.uid() decide sobre qué fila escribe, nunca un parámetro user_id —
+-- nadie puede incrementar el contador de otra cuenta, ni siquiera un
+-- admin. Ver la migración aditiva de arriba (junto a profiles) y
+-- src/trainingRecords/generatedCounter.js (cliente que la llama).
+create or replace function public.increment_training_records_count(by_amount integer)
+returns void language sql security definer set search_path = public as $$
+  update public.profiles
+  set training_records_generated_count = training_records_generated_count + by_amount,
+      training_records_last_generated_at = now()
+  where user_id = auth.uid();
 $$;
 
 -- ---------- Catálogos de configuración ----------

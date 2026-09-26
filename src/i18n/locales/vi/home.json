@@ -8,7 +8,10 @@
   "noActivityThisMonth": "Chưa có hoạt động tháng này",
   "kpis": {
     "sectionTitle": "Thành quả tháng này",
-    "studentsThisMonth": "Học viên",
+    "dailyAverageThisMonth": "Trung bình mỗi ngày",
+    "dailyAverageTooltip": "Số tiền bạn kiếm được trung bình mỗi ngày trong tháng này, tính đến hôm nay.",
+    "dailyAverageTooltipShow": "Thông tin: Trung bình mỗi ngày",
+    "dailyAverageTooltipHide": "Ẩn thông tin: Trung bình mỗi ngày",
     "coursesTotal": "Khóa học",
     "referredThisMonth": "Khách giới thiệu"
   },

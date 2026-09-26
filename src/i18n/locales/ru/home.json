@@ -8,7 +8,10 @@
   "noActivityThisMonth": "В этом месяце нет активности",
   "kpis": {
     "sectionTitle": "Твои результаты за месяц",
-    "studentsThisMonth": "Ученики",
+    "dailyAverageThisMonth": "Среднее в день",
+    "dailyAverageTooltip": "Сколько ты в среднем зарабатываешь в день в этом месяце — учтено только до сегодняшнего дня.",
+    "dailyAverageTooltipShow": "Инфо: Среднее в день",
+    "dailyAverageTooltipHide": "Скрыть инфо: Среднее в день",
     "coursesTotal": "Курсы",
     "referredThisMonth": "Привлечено"
   },
