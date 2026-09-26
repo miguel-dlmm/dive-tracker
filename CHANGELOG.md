@@ -245,6 +245,15 @@ Registro de cambios relevantes de Ocean Flow.
   así que repetir las sesiones aparte sería redundante; con
   `showCollected` desactivado (el caso por defecto), la mayoría de
   filas ya no llevan ninguna línea de detalle.
+- **Tabla de "Exportar informe" (PDF), séptima vuelta**: "Subtotal
+  comisiones" sube a 12.5pt, el mismo tamaño que "Subtotal cursos
+  impartidos" (que ya lo llevaba desde una vuelta anterior) — extendido
+  también a "Subtotal ajustes" para que los tres grupos del informe
+  compartan siempre el mismo tamaño de subtotal; `subtotalLine` pierde
+  el parámetro de tamaño por grupo, ya no hace falta. Pedido explícito
+  con una regla nueva para el resto de esta iniciativa: "cuando te pido
+  algo de una tabla será a aplicar a todas siempre" — guardada como
+  lección permanente para futuras sesiones (ver memoria de la sesión).
 
 ## [1.3.1] - 2026-09-09
 

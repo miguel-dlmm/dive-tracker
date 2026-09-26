@@ -304,18 +304,20 @@ function adjustmentsTable({ entries, t, rowDate }) {
   return { table: { headerRows: 1, widths: [55, 150, "*", AMOUNT_COL], body: [header, ...body] }, layout: headerBandLayout };
 }
 
-// fontSize por defecto (9.5) para Comisiones/Ajustes; Cursos pide el
-// mismo tamaño que la cabecera de día (2026-09-26, pedido explícito:
-// "quiero el subtotal por cursos... igual de grande que el día (la
-// cabecera de día)") — 12.5pt, igual que `groupedActivityTable` arriba.
-// Solo Cursos por ahora, Comisiones/Ajustes no lo pidieron.
-function subtotalLine(label, totals, fontSize = 9.5) {
+// 12.5pt para los tres grupos (Cursos, Comisiones, Ajustes) — igual que
+// la cabecera de día de `groupedActivityTable`. Empezó pedido solo para
+// Cursos ("quiero el subtotal por cursos... igual de grande que el
+// día"), extendido a Comisiones y Ajustes la sesión siguiente (pedido
+// explícito: "cuando te pido algo de una tabla será a aplicar a todas
+// siempre") — ya no hace falta un parámetro de tamaño por grupo, los
+// tres subtotales del informe comparten siempre el mismo.
+function subtotalLine(label, totals) {
   const lines = Object.entries(totals).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ");
   return {
     margin: [0, 6, 0, 0],
     columns: [
-      { width: "*", text: label, fontSize, bold: true, color: MUTED },
-      { width: AMOUNT_COL, text: lines, fontSize, bold: true, color: NAVY, alignment: "right" },
+      { width: "*", text: label, fontSize: 12.5, bold: true, color: MUTED },
+      { width: AMOUNT_COL, text: lines, fontSize: 12.5, bold: true, color: NAVY, alignment: "right" },
     ],
   };
 }
@@ -384,15 +386,15 @@ export async function generateExportReportPdf({
   // CONTENT_WIDTH — ya no hace falta envolverlos en ningún bloque
   // centrado (ver AMOUNT_COL arriba): todo el documento comparte un
   // único ancho.
-  const pushGroup = (label, color, table, subtotalLabel, totals, subtotalFontSize) => {
-    content.push(groupLabel(label, color), table, subtotalLine(subtotalLabel, totals, subtotalFontSize));
+  const pushGroup = (label, color, table, subtotalLabel, totals) => {
+    content.push(groupLabel(label, color), table, subtotalLine(subtotalLabel, totals));
   };
 
   if (data.courses.length > 0) {
     pushGroup(
       t("export.coursesGroup"), TEAL,
       groupedActivityTable({ dayGroups: courseDayGroups, showCollected, paymentStatusRows, t, rowDate }),
-      t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal, 12.5
+      t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal
     );
   }
   if (data.commissions.length > 0) {
