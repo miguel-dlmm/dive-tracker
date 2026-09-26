@@ -10,13 +10,6 @@
     "comision": "Commission",
     "companeros": "Ajustement"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "En attente d'encaissement",
-    "empty": "Rien en attente",
-    "count_one": "{{count}} paiement en attente",
-    "count_other": "{{count}} paiements en attente",
-    "addMovement": "Ajouter un mouvement"
-  },
   "confirmDialog": { "cancel": "Annuler", "defaultConfirmLabel": "Supprimer" },
   "editActions": { "defaultSaveLabel": "Enregistrer", "cancel": "Annuler" },
   "deleteButton": {

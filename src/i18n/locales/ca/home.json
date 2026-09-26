@@ -1,10 +1,8 @@
 {
   "calendarCaption": "Toca un dia per veure'n el detall, o un de buit per afegir un moviment",
-  "activeSchoolThisMonth": "Escola més activa",
-  "activeSchoolCount_one": "{{count}} moviment aquest mes",
-  "activeSchoolCount_other": "{{count}} moviments aquest mes",
-  "activeSchoolCountAndOthers_one": "{{count}} moviment · {{schools}} escoles aquest mes",
-  "activeSchoolCountAndOthers_other": "{{count}} moviments · {{schools}} escoles aquest mes",
+  "activeSchoolThisMonth": "Escola preferida aquest mes",
+  "activeSchoolCount_one": "{{count}} curs",
+  "activeSchoolCount_other": "{{count}} cursos",
   "noActivityThisMonth": "Sense activitat aquest mes",
   "kpis": {
     "sectionTitle": "El teu impacte aquest mes",
@@ -20,5 +18,14 @@
     "ctaFirstTime": "Genera el teu primer Training Record",
     "generatedLabel": "Generats"
   },
-  "installApp": "Descarrega l'app"
+  "installApp": "Descarrega l'app",
+  "pendingCard": {
+    "pendingLabel": "Per cobrar",
+    "empty": "Res pendent",
+    "count_one": "{{count}} pagament pendent",
+    "count_other": "{{count}} pagaments pendents"
+  },
+  "quickCreate": {
+    "label": "Moviment nou"
+  }
 }

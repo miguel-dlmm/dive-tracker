@@ -10,13 +10,6 @@
     "comision": "Comissió",
     "companeros": "Ajust"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "Per cobrar",
-    "empty": "Res pendent",
-    "count_one": "{{count}} pagament pendent",
-    "count_other": "{{count}} pagaments pendents",
-    "addMovement": "Afegeix moviment"
-  },
   "confirmDialog": { "cancel": "Cancel·la", "defaultConfirmLabel": "Elimina" },
   "editActions": { "defaultSaveLabel": "Desa", "cancel": "Cancel·la" },
   "deleteButton": {

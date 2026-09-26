@@ -10,13 +10,6 @@
     "comision": "Provision",
     "companeros": "Ausgleich"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "Ausstehend",
-    "empty": "Nichts offen",
-    "count_one": "{{count}} ausstehende Zahlung",
-    "count_other": "{{count}} ausstehende Zahlungen",
-    "addMovement": "Buchung hinzufügen"
-  },
   "confirmDialog": { "cancel": "Abbrechen", "defaultConfirmLabel": "Löschen" },
   "editActions": { "defaultSaveLabel": "Speichern", "cancel": "Abbrechen" },
   "deleteButton": {

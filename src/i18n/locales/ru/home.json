@@ -1,10 +1,8 @@
 {
   "calendarCaption": "Нажми на день, чтобы увидеть детали, или на пустой день, чтобы добавить операцию",
-  "activeSchoolThisMonth": "Самая активная школа",
-  "activeSchoolCount_one": "{{count}} операция в этом месяце",
-  "activeSchoolCount_other": "{{count}} операций в этом месяце",
-  "activeSchoolCountAndOthers_one": "{{count}} операция · {{schools}} школ в этом месяце",
-  "activeSchoolCountAndOthers_other": "{{count}} операций · {{schools}} школ в этом месяце",
+  "activeSchoolThisMonth": "Любимая школа в этом месяце",
+  "activeSchoolCount_one": "{{count}} курс",
+  "activeSchoolCount_other": "{{count}} курсов",
   "noActivityThisMonth": "В этом месяце нет активности",
   "kpis": {
     "sectionTitle": "Твои результаты за месяц",
@@ -20,5 +18,14 @@
     "ctaFirstTime": "Создай свой первый Training Record",
     "generatedLabel": "Создано"
   },
-  "installApp": "Скачать приложение"
+  "installApp": "Скачать приложение",
+  "pendingCard": {
+    "pendingLabel": "Ожидает оплаты",
+    "empty": "Ничего не ожидает оплаты",
+    "count_one": "{{count}} платёж в ожидании",
+    "count_other": "{{count}} платежей в ожидании"
+  },
+  "quickCreate": {
+    "label": "Новая операция"
+  }
 }

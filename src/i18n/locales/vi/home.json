@@ -1,10 +1,8 @@
 {
   "calendarCaption": "Chạm vào một ngày để xem chi tiết, hoặc ngày trống để thêm giao dịch",
-  "activeSchoolThisMonth": "Trung tâm hoạt động nhiều nhất",
-  "activeSchoolCount_one": "{{count}} giao dịch tháng này",
-  "activeSchoolCount_other": "{{count}} giao dịch tháng này",
-  "activeSchoolCountAndOthers_one": "{{count}} giao dịch · {{schools}} trung tâm tháng này",
-  "activeSchoolCountAndOthers_other": "{{count}} giao dịch · {{schools}} trung tâm tháng này",
+  "activeSchoolThisMonth": "Trung tâm yêu thích tháng này",
+  "activeSchoolCount_one": "{{count}} khóa học",
+  "activeSchoolCount_other": "{{count}} khóa học",
   "noActivityThisMonth": "Chưa có hoạt động tháng này",
   "kpis": {
     "sectionTitle": "Thành quả tháng này",
@@ -20,5 +18,14 @@
     "ctaFirstTime": "Tạo Training Record đầu tiên",
     "generatedLabel": "Đã tạo"
   },
-  "installApp": "Tải ứng dụng"
+  "installApp": "Tải ứng dụng",
+  "pendingCard": {
+    "pendingLabel": "Chờ thu tiền",
+    "empty": "Không có khoản nào chờ",
+    "count_one": "{{count}} khoản chờ thanh toán",
+    "count_other": "{{count}} khoản chờ thanh toán"
+  },
+  "quickCreate": {
+    "label": "Giao dịch mới"
+  }
 }

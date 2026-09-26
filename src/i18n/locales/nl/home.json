@@ -1,10 +1,8 @@
 {
   "calendarCaption": "Tik op een dag voor het detail, of op een lege dag om een boeking toe te voegen",
-  "activeSchoolThisMonth": "Actiefste school",
-  "activeSchoolCount_one": "{{count}} boeking deze maand",
-  "activeSchoolCount_other": "{{count}} boekingen deze maand",
-  "activeSchoolCountAndOthers_one": "{{count}} boeking · {{schools}} scholen deze maand",
-  "activeSchoolCountAndOthers_other": "{{count}} boekingen · {{schools}} scholen deze maand",
+  "activeSchoolThisMonth": "Favoriete school deze maand",
+  "activeSchoolCount_one": "{{count}} cursus",
+  "activeSchoolCount_other": "{{count}} cursussen",
   "noActivityThisMonth": "Geen activiteit deze maand",
   "kpis": {
     "sectionTitle": "Jouw impact deze maand",
@@ -20,5 +18,14 @@
     "ctaFirstTime": "Maak je eerste Training Record",
     "generatedLabel": "Gegenereerd"
   },
-  "installApp": "App downloaden"
+  "installApp": "App downloaden",
+  "pendingCard": {
+    "pendingLabel": "Nog te innen",
+    "empty": "Niets openstaand",
+    "count_one": "{{count}} openstaande betaling",
+    "count_other": "{{count}} openstaande betalingen"
+  },
+  "quickCreate": {
+    "label": "Nieuwe boeking"
+  }
 }

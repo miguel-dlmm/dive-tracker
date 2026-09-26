@@ -1,10 +1,8 @@
 {
   "calendarCaption": "Tippe auf einen Tag für Details, oder auf einen leeren Tag, um eine Buchung hinzuzufügen",
-  "activeSchoolThisMonth": "Aktivste Schule",
-  "activeSchoolCount_one": "{{count}} Buchung diesen Monat",
-  "activeSchoolCount_other": "{{count}} Buchungen diesen Monat",
-  "activeSchoolCountAndOthers_one": "{{count}} Buchung · {{schools}} Schulen diesen Monat",
-  "activeSchoolCountAndOthers_other": "{{count}} Buchungen · {{schools}} Schulen diesen Monat",
+  "activeSchoolThisMonth": "Beliebteste Schule diesen Monat",
+  "activeSchoolCount_one": "{{count}} Kurs",
+  "activeSchoolCount_other": "{{count}} Kurse",
   "noActivityThisMonth": "Keine Aktivität diesen Monat",
   "kpis": {
     "sectionTitle": "Deine Bilanz diesen Monat",
@@ -20,5 +18,14 @@
     "ctaFirstTime": "Erstelle deinen ersten Training Record",
     "generatedLabel": "Erstellt"
   },
-  "installApp": "App herunterladen"
+  "installApp": "App herunterladen",
+  "pendingCard": {
+    "pendingLabel": "Ausstehend",
+    "empty": "Nichts offen",
+    "count_one": "{{count}} ausstehende Zahlung",
+    "count_other": "{{count}} ausstehende Zahlungen"
+  },
+  "quickCreate": {
+    "label": "Neue Buchung"
+  }
 }

@@ -4,6 +4,22 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Portada rediseñada: bento de accesos entre KPIs y calendario**: la
+  fila de Training Records y la tarjeta de "Pendiente de cobrar" (antes
+  encima del calendario) y la tarjeta de "Escuela más activa" (antes
+  después) se compactan en un bento de dos filas — Pendiente de cobrar +
+  "Nuevo movimiento" (antes un "+" incrustado dentro de la propia
+  tarjeta) arriba; Training Records + "Escuela favorita este mes" (nuevo
+  nombre, ahora con "N cursos" en vez de "N movimientos este mes")
+  abajo. Mismo presupuesto de alto que antes — el calendario no cae más
+  abajo.
+- **Nuevo indicador de pestaña activa en el menú inferior**: sustituye
+  al óvalo fijo por una línea superior que se desliza entre pestañas
+  (animada con `motion/react`) y el icono activo "iluminado" con un
+  círculo de fondo — de paso, corregido que el icono no quedaba
+  centrado dentro de ese círculo.
+
 ### Fixed
 - **Informe PDF: la cabecera de un día podía quedar sola al final de una
   página, con sus movimientos ya en la siguiente**: la tabla de Clases

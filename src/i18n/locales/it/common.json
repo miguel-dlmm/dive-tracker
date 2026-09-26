@@ -10,13 +10,6 @@
     "comision": "Commissione",
     "companeros": "Rettifica"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "Da incassare",
-    "empty": "Niente in sospeso",
-    "count_one": "{{count}} pagamento in sospeso",
-    "count_other": "{{count}} pagamenti in sospeso",
-    "addMovement": "Aggiungi movimento"
-  },
   "confirmDialog": { "cancel": "Annulla", "defaultConfirmLabel": "Elimina" },
   "editActions": { "defaultSaveLabel": "Salva", "cancel": "Annulla" },
   "deleteButton": {

@@ -2,11 +2,13 @@ import { render, screen, within, waitFor, fireEvent } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import HomeTab from "./HomeTab";
 
-// Cubre "Pendiente de cobrar" (ADR-0004) y "Escuela más activa este mes"
-// (2026-09-07, sustituye a la antigua tarjeta "Generado este mes" —
-// duplicaba el KPI "Generado este mes" que ya muestra Mi trabajo). El
-// resto de la pantalla (accesos rápidos, calendario) ya existía y no
-// cambia.
+// Cubre "Pendiente de cobrar" (ADR-0004) y "Escuela favorita este mes"
+// (renombrada de "Escuela más activa" en el rediseño de portada,
+// 2026-09-26 — sustituye a la antigua tarjeta "Generado este mes", que
+// duplicaba el KPI del mismo nombre que ya muestra Mi trabajo). Ambas
+// tiles viven hoy en el bento de accesos, junto a Training Records y
+// "Nuevo movimiento" — el resto de la pantalla (KPIs, calendario) ya
+// existía y no cambia.
 //
 // Las aserciones de importe se acotan con data-testid a cada tarjeta (no al
 // documento entero): el calendario de abajo también muestra dinero en su
@@ -148,13 +150,14 @@ describe("HomeTab — Pendiente de cobrar", () => {
   });
 });
 
-// El acceso "Añadir movimiento" vive integrado en la tarjeta "Pendiente de
-// cobrar" (botón "+", ver PendingCollectionCard) en vez de como fila propia
-// debajo — cubre que Home sigue llamando a onQuickCreate("ganado") con el
-// mismo contrato de siempre (entra directo al caso dominante, sin id de
-// pestaña antiguo), solo que ahora a través de ese botón integrado.
-describe("HomeTab — acceso rápido integrado en Pendiente de cobrar", () => {
-  it("el botón «+» de la tarjeta llama a onQuickCreate(\"ganado\")", async () => {
+// "Nuevo movimiento" — tile propia del bento de accesos (rediseño de
+// portada, lote 2026-09-26), antes un botón "+" incrustado dentro de la
+// propia tarjeta de "Pendiente de cobrar" (PendingCollectionCard, ya
+// retirado). Cubre que Home sigue llamando a onQuickCreate("ganado") con
+// el mismo contrato de siempre (entra directo al caso dominante, sin id
+// de pestaña antiguo), solo que ahora a través de esta tile dedicada.
+describe("HomeTab — acceso rápido 'Nuevo movimiento'", () => {
+  it("pulsar la tile llama a onQuickCreate(\"ganado\")", async () => {
     const onQuickCreate = vi.fn();
     render(
       <HomeTab
@@ -172,18 +175,20 @@ describe("HomeTab — acceso rápido integrado en Pendiente de cobrar", () => {
       />
     );
 
-    await userEvent.click(screen.getByLabelText("Añadir movimiento"));
+    await userEvent.click(screen.getByText("Nuevo movimiento"));
 
     expect(onQuickCreate).toHaveBeenCalledWith("ganado");
   });
 });
 
-// "Escuela más activa" como puente hacia Resumen (2026-09-07) — sustituye
-// a "Generado este mes", que duplicaba el KPI del mismo nombre ya visible
-// en la cabecera de Mi trabajo. La tarjeta nueva aporta información de
-// menor "peso" (qué escuela ha dado más movimientos este mes, no una
-// cifra de dinero) pero conserva el mismo rol de puente táctil a Resumen.
-describe("HomeTab — 'Escuela más activa' como puente hacia Resumen", () => {
+// "Escuela favorita este mes" (renombrada de "Escuela más activa" en el
+// rediseño de portada, 2026-09-26) como puente hacia Resumen — nació el
+// 2026-09-07 sustituyendo a "Generado este mes", que duplicaba el KPI del
+// mismo nombre ya visible en la cabecera de Mi trabajo. La tile aporta
+// información de menor "peso" (qué escuela ha dado más cursos este mes,
+// no una cifra de dinero) pero conserva el mismo rol de puente táctil a
+// Resumen.
+describe("HomeTab — 'Escuela favorita este mes' como puente hacia Resumen", () => {
   it("pulsar la tarjeta llama a onOpenSummary", async () => {
     const onOpenSummary = vi.fn();
     render(
@@ -207,16 +212,16 @@ describe("HomeTab — 'Escuela más activa' como puente hacia Resumen", () => {
     expect(onOpenSummary).toHaveBeenCalledTimes(1);
   });
 
-  it("muestra el nombre de la única escuela con movimientos este mes, en singular", () => {
+  it("muestra el nombre de la única escuela con movimientos este mes, en singular, junto a la etiqueta 'Escuela favorita este mes'", () => {
     const { activeSchool } = renderHome({
       worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }],
       rates: RATES,
     });
-    expect(activeSchool.getByText("PADI Cozumel")).toBeInTheDocument();
-    expect(activeSchool.getByText("1 movimiento este mes")).toBeInTheDocument();
+    expect(activeSchool.getByText("Escuela favorita este mes")).toBeInTheDocument();
+    expect(activeSchool.getByText("PADI Cozumel · 1 curso")).toBeInTheDocument();
   });
 
-  it("cuando hay varias escuelas, muestra la de más movimientos y cuenta cuántas escuelas hay en total", () => {
+  it("cuando hay varias escuelas, muestra la de más movimientos con su número de cursos, sin desglosar el resto", () => {
     const { activeSchool } = renderHome({
       worklog: [
         { id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" },
@@ -225,8 +230,7 @@ describe("HomeTab — 'Escuela más activa' como puente hacia Resumen", () => {
       ],
       rates: RATES,
     });
-    expect(activeSchool.getByText("PADI Cozumel")).toBeInTheDocument();
-    expect(activeSchool.getByText("2 movimientos · 2 escuelas este mes")).toBeInTheDocument();
+    expect(activeSchool.getByText("PADI Cozumel · 2 cursos")).toBeInTheDocument();
   });
 
   it("sin movimientos este mes, muestra el estado vacío en vez de una escuela", () => {

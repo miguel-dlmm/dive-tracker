@@ -1,10 +1,8 @@
 {
   "calendarCaption": "Sakatu egun bat xehetasunak ikusteko, edo egun huts bat mugimendu bat gehitzeko",
-  "activeSchoolThisMonth": "Eskolarik aktiboena",
-  "activeSchoolCount_one": "Mugimendu {{count}} hilabete honetan",
-  "activeSchoolCount_other": "{{count}} mugimendu hilabete honetan",
-  "activeSchoolCountAndOthers_one": "Mugimendu {{count}} · {{schools}} eskola hilabete honetan",
-  "activeSchoolCountAndOthers_other": "{{count}} mugimendu · {{schools}} eskola hilabete honetan",
+  "activeSchoolThisMonth": "Hilabete honetako eskola gogokoena",
+  "activeSchoolCount_one": "Ikastaro {{count}}",
+  "activeSchoolCount_other": "{{count}} ikastaro",
   "noActivityThisMonth": "Ez dago jarduerarik hilabete honetan",
   "kpis": {
     "sectionTitle": "Zure eragina hilabete honetan",
@@ -20,5 +18,14 @@
     "ctaFirstTime": "Sortu zure lehen Training Record",
     "generatedLabel": "Sortutakoak"
   },
-  "installApp": "Deskargatu aplikazioa"
+  "installApp": "Deskargatu aplikazioa",
+  "pendingCard": {
+    "pendingLabel": "Kobratzeke",
+    "empty": "Ez dago ezer zain",
+    "count_one": "Ordainketa {{count}} zain",
+    "count_other": "{{count}} ordainketa zain"
+  },
+  "quickCreate": {
+    "label": "Mugimendu berria"
+  }
 }

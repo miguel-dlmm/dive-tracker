@@ -10,13 +10,6 @@
     "comision": "ကော်မရှင်",
     "companeros": "ချိန်ညှိမှု"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "ကောက်ခံရန် ကျန်ရှိသည်",
-    "empty": "ဆိုင်းငံ့ထားစရာ မရှိပါ",
-    "count_one": "ငွေပေးချေမှု {{count}} ခု ဆိုင်းငံ့နေသည်",
-    "count_other": "ငွေပေးချေမှု {{count}} ခု ဆိုင်းငံ့နေသည်",
-    "addMovement": "မှတ်တမ်း ထည့်ရန်"
-  },
   "confirmDialog": { "cancel": "ပယ်ဖျက်ရန်", "defaultConfirmLabel": "ဖျက်ရန်" },
   "editActions": { "defaultSaveLabel": "သိမ်းဆည်းရန်", "cancel": "ပယ်ဖျက်ရန်" },
   "deleteButton": {

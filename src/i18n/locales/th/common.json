@@ -10,13 +10,6 @@
     "comision": "ค่าคอมมิชชัน",
     "companeros": "รายการปรับปรุง"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "รอเก็บเงิน",
-    "empty": "ไม่มีรายการค้าง",
-    "count_one": "{{count}} รายการรอเก็บเงิน",
-    "count_other": "{{count}} รายการรอเก็บเงิน",
-    "addMovement": "เพิ่มรายการ"
-  },
   "confirmDialog": { "cancel": "ยกเลิก", "defaultConfirmLabel": "ลบ" },
   "editActions": { "defaultSaveLabel": "บันทึก", "cancel": "ยกเลิก" },
   "deleteButton": {

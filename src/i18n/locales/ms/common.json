@@ -10,13 +10,6 @@
     "comision": "Komisen",
     "companeros": "Pelarasan"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "Belum dikutip",
-    "empty": "Tiada yang belum selesai",
-    "count_one": "{{count}} bayaran belum selesai",
-    "count_other": "{{count}} bayaran belum selesai",
-    "addMovement": "Tambah transaksi"
-  },
   "confirmDialog": { "cancel": "Batal", "defaultConfirmLabel": "Padam" },
   "editActions": { "defaultSaveLabel": "Simpan", "cancel": "Batal" },
   "deleteButton": {

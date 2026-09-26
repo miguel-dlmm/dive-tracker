@@ -1,10 +1,8 @@
 {
   "calendarCaption": "Tap a day to see the detail, or an empty one to add an entry",
-  "activeSchoolThisMonth": "Most active school",
-  "activeSchoolCount_one": "{{count}} entry this month",
-  "activeSchoolCount_other": "{{count}} entries this month",
-  "activeSchoolCountAndOthers_one": "{{count}} entry · {{schools}} schools this month",
-  "activeSchoolCountAndOthers_other": "{{count}} entries · {{schools}} schools this month",
+  "activeSchoolThisMonth": "Favorite school this month",
+  "activeSchoolCount_one": "{{count}} course",
+  "activeSchoolCount_other": "{{count}} courses",
   "noActivityThisMonth": "No activity this month",
   "kpis": {
     "sectionTitle": "Your impact this month",
@@ -20,5 +18,14 @@
     "ctaFirstTime": "Generate your first Training Record",
     "generatedLabel": "Generated"
   },
-  "installApp": "Download app"
+  "installApp": "Download app",
+  "pendingCard": {
+    "pendingLabel": "Pending to collect",
+    "empty": "Nothing pending",
+    "count_one": "{{count}} pending payment",
+    "count_other": "{{count}} pending payments"
+  },
+  "quickCreate": {
+    "label": "New entry"
+  }
 }

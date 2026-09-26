@@ -10,13 +10,6 @@
     "comision": "Komisioa",
     "companeros": "Doikuntza"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "Kobratzeke",
-    "empty": "Ez dago ezer zain",
-    "count_one": "Ordainketa {{count}} zain",
-    "count_other": "{{count}} ordainketa zain",
-    "addMovement": "Gehitu mugimendua"
-  },
   "confirmDialog": { "cancel": "Utzi", "defaultConfirmLabel": "Ezabatu" },
   "editActions": { "defaultSaveLabel": "Gorde", "cancel": "Utzi" },
   "deleteButton": {

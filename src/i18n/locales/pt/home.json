@@ -1,10 +1,8 @@
 {
   "calendarCaption": "Toque em um dia para ver o detalhe, ou em um dia vazio para adicionar um movimento",
-  "activeSchoolThisMonth": "Escola mais ativa",
-  "activeSchoolCount_one": "{{count}} movimento este mês",
-  "activeSchoolCount_other": "{{count}} movimentos este mês",
-  "activeSchoolCountAndOthers_one": "{{count}} movimento · {{schools}} escolas este mês",
-  "activeSchoolCountAndOthers_other": "{{count}} movimentos · {{schools}} escolas este mês",
+  "activeSchoolThisMonth": "Escola favorita este mês",
+  "activeSchoolCount_one": "{{count}} curso",
+  "activeSchoolCount_other": "{{count}} cursos",
   "noActivityThisMonth": "Sem atividade este mês",
   "kpis": {
     "sectionTitle": "Seu impacto este mês",
@@ -20,5 +18,14 @@
     "ctaFirstTime": "Gere seu primeiro Training Record",
     "generatedLabel": "Gerados"
   },
-  "installApp": "Baixar app"
+  "installApp": "Baixar app",
+  "pendingCard": {
+    "pendingLabel": "Pendente de receber",
+    "empty": "Nada pendente",
+    "count_one": "{{count}} pagamento pendente",
+    "count_other": "{{count}} pagamentos pendentes"
+  },
+  "quickCreate": {
+    "label": "Novo movimento"
+  }
 }

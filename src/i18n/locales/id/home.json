@@ -1,10 +1,8 @@
 {
   "calendarCaption": "Ketuk satu hari untuk melihat detailnya, atau hari kosong untuk menambah transaksi",
-  "activeSchoolThisMonth": "Sekolah paling aktif",
-  "activeSchoolCount_one": "{{count}} transaksi bulan ini",
-  "activeSchoolCount_other": "{{count}} transaksi bulan ini",
-  "activeSchoolCountAndOthers_one": "{{count}} transaksi · {{schools}} sekolah bulan ini",
-  "activeSchoolCountAndOthers_other": "{{count}} transaksi · {{schools}} sekolah bulan ini",
+  "activeSchoolThisMonth": "Sekolah favorit bulan ini",
+  "activeSchoolCount_one": "{{count}} kursus",
+  "activeSchoolCount_other": "{{count}} kursus",
   "noActivityThisMonth": "Belum ada aktivitas bulan ini",
   "kpis": {
     "sectionTitle": "Dampakmu bulan ini",
@@ -20,5 +18,14 @@
     "ctaFirstTime": "Buat Training Record pertamamu",
     "generatedLabel": "Dibuat"
   },
-  "installApp": "Unduh aplikasi"
+  "installApp": "Unduh aplikasi",
+  "pendingCard": {
+    "pendingLabel": "Menunggu dibayar",
+    "empty": "Tidak ada yang tertunda",
+    "count_one": "{{count}} pembayaran tertunda",
+    "count_other": "{{count}} pembayaran tertunda"
+  },
+  "quickCreate": {
+    "label": "Transaksi baru"
+  }
 }
