@@ -204,6 +204,21 @@ Registro de cambios relevantes de Ocean Flow.
   cambiado también en los otros locales que usaban la misma idea de
   "rango/intervalo" (ca, en, eu, id, it, ms, nl, pt); el resto (de, fr,
   ru, th, vi, my) ya usaban su equivalente de "periodo", sin cambios.
+- **Tabla de "Exportar informe" (PDF), quinta vuelta**: fondo tenue en
+  la cabecera de cada día — pedido explícito: "añade un color de fondo
+  tenue a la cabecera, dale un formato tabla bonito y elegante... la
+  línea ocean flow". Usa `SKY_50` (`#F1F6FA`), el mismo token de fondo
+  "chip/pill info muy suave" ya documentado en
+  `docs/DESIGN-SYSTEM.md` §4 — reutilizado en vez de inventar un tono
+  nuevo solo para el PDF. `dayGroupedLayout` gana un `fillColor` de
+  capa (pdfmake sí soporta `fillColor` como función `(rowIndex, node)`,
+  igual que `hLineWidth`/`hLineColor`) más un pelín de aire vertical
+  extra (9pt vs 7pt) solo en esas filas, para que la banda de color no
+  quede apretada. El padding horizontal sigue a ras del margen de
+  página en toda la tabla — confirmado en el código fuente de pdfmake
+  instalado que `paddingLeft`/`paddingRight` son por columna, no por
+  fila, así que no se puede dar un hueco lateral solo a la cabecera sin
+  romper la alineación común con el resto del documento.
 
 ## [1.3.1] - 2026-09-09
 

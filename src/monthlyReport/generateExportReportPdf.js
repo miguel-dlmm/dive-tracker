@@ -34,6 +34,12 @@ const DANGER = "#C2542F";
 const MUTED = "#3D5C73";
 const MUTED_LIGHT = "#7C93A3";
 const HAIRLINE = "#D7E0E8";
+// sky-50 — mismo token de fondo "chip/pill info muy suave" documentado en
+// docs/DESIGN-SYSTEM.md §4, reutilizado aquí (2026-09-26, pedido
+// explícito: "un color de fondo tenue... siguiendo la línea ocean flow")
+// como fondo de la cabecera de cada día, en vez de inventar un tono
+// nuevo solo para el PDF.
+const SKY_50 = "#F1F6FA";
 
 // Enlace real a la app (canónico desde 2026-09-08, ver CLAUDE.md —
 // dive-tracker-exgg.vercel.app redirige aquí, este es el que se
@@ -152,15 +158,30 @@ const hairlineLayout = {
 // el índice de línea `i` (la línea `i` va inmediatamente ENCIMA de la
 // fila `i`), así que hace falta ese índice precalculado para decidir cuál
 // engrosar.
-function dayGroupedLayout(dayStartRows) {
+// Fondo de la cabecera de día (2026-09-26, pedido explícito: "un color de
+// fondo tenue... formato tabla bonito y elegante") — `dayHeaderRows`
+// recibe TODAS las filas de cabecera de día (incluida la primera, a
+// diferencia de `dayStartRows`, que la excluye porque esa no necesita
+// separador). pdfmake sí soporta `fillColor` como función de layout
+// `(rowIndex, node, colIndex)` — igual que `hLineWidth`/`hLineColor`, no
+// hace falta fijarlo celda a celda. Más aire vertical (9pt) solo en esas
+// filas para que la banda de color no quede apretada — el resto de la
+// tabla sigue a 7pt. `paddingLeft`/`paddingRight` de pdfmake son por
+// COLUMNA, no por fila (confirmado en el código fuente instalado), así
+// que el texto de la cabecera sigue a ras del margen de página, igual
+// que el resto del documento (cabecera, aviso, total) — insertar un
+// hueco lateral solo aquí rompería esa alineación común en vez de
+// mejorarla.
+function dayGroupedLayout(dayStartRows, dayHeaderRows) {
   return {
     hLineWidth: (i) => (i === 0 ? 0 : dayStartRows.has(i) ? 1.5 : 0.75),
     vLineWidth: () => 0,
     hLineColor: (i) => (dayStartRows.has(i) ? MUTED_LIGHT : HAIRLINE),
+    fillColor: (i) => (dayHeaderRows.has(i) ? SKY_50 : null),
     paddingLeft: () => 0,
     paddingRight: () => 8,
-    paddingTop: () => 7,
-    paddingBottom: () => 7,
+    paddingTop: (i) => (dayHeaderRows.has(i) ? 9 : 7),
+    paddingBottom: (i) => (dayHeaderRows.has(i) ? 9 : 7),
   };
 }
 
@@ -213,8 +234,10 @@ const AMOUNT_COL = 96;
 function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate, quantityFormat }) {
   const body = [];
   const dayStartRows = new Set();
+  const dayHeaderRows = new Set();
   dayGroups.forEach((day, dayIndex) => {
     if (dayIndex > 0) dayStartRows.add(body.length);
+    dayHeaderRows.add(body.length);
     const dayTotalText = Object.entries(day.dayTotal).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ");
     body.push([
       { text: rowDate(day.date), bold: true, fontSize: 12.5, color: MUTED, characterSpacing: 0.3 },
@@ -237,7 +260,7 @@ function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, 
       ]);
     });
   });
-  return { table: { widths: ["*", AMOUNT_COL], body }, layout: dayGroupedLayout(dayStartRows) };
+  return { table: { widths: ["*", AMOUNT_COL], body }, layout: dayGroupedLayout(dayStartRows, dayHeaderRows) };
 }
 
 // Ancho a juego con `groupedActivityTable`/`subtotalLine` — mismo AMOUNT_COL
