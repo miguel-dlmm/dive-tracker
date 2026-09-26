@@ -1,5 +1,13 @@
 # Lote 2026-09-26 (nocturno) — progreso
 
+> **Cerrado 2026-09-27.** Ítems 1, 2, 3, 6 y 7 en `develop` (aviso de
+> despliegue consolidado enviado, `notice_id`
+> `abb7607d-af1c-4cb5-8749-e1d6e411b59a`, verificado en navegador real
+> contra `https://dive-tracker-three.vercel.app`). Ítem 4
+> (`fix/perfil-orden-y-cerrar-sesion`) sin fusionar a propósito, a la
+> espera de revisión del usuario — preview verificado y funcionando:
+> `https://dive-tracker-git-fix-perfil-orden-y-cerrar-sesion-ocean-pulse1.vercel.app`.
+
 > Documento de progreso de una iniciativa por lotes (`CLAUDE.md`, sección
 > 9 de "Reglas de trabajo obligatorias"). Encargada de golpe la noche del
 > 2026-09-26, justo después de cerrar la release v1.4.0 y el rediseño de
@@ -110,10 +118,32 @@ la pantalla ya sigue un patrón coherente y no pedía revisión estructural):
   usuario pidió explícitamente dejarla "preparada en una rama con su url
   de preview" para revisarla él antes de fusionar.
 
+## Ítem 5 — Cierre del lote (detalle)
+
+- Aviso de despliegue consolidado enviado (email real + slide in-app,
+  `scripts/send-deployment-notice.mjs`) cubriendo los 3 cambios
+  mergeados a `develop` esta noche (cabeceras de PDF, insignia +/- de
+  Ajuste, peso de Training Records) y mencionando explícitamente las dos
+  ramas de revisión sin fusionar y sus URLs de preview.
+- `https://dive-tracker-three.vercel.app` (alias estable de TEST/develop)
+  verificado en navegador real tras el último push: sirve 200, título
+  `[TEST] Ocean Flow...`, sin errores de consola — no solo `vercel
+  inspect` en Ready.
+- `https://dive-tracker-git-fix-perfil-orden-y-cerrar-sesion-ocean-pulse1.vercel.app`
+  verificado igual: sirve, sin errores de consola.
+- No se localizó una preview activa reciente de
+  `feature/home-redesign-nav-indicator` en los últimos 100 deployments
+  del proyecto — es una rama anterior a este lote nocturno, probablemente
+  fuera de la ventana de despliegues recientes por la actividad de esta
+  noche. Su URL ya se le compartió al usuario en vivo antes de empezar
+  este lote; si hiciera falta reconfirmarla, un nuevo push a esa rama
+  (sin fusionar) regenera el preview.
+- `coverage/` añadido a `.gitignore` (quick win del propio informe de
+  deuda técnica, ítem de coste cero): quedaba como carpeta suelta sin
+  versionar tras la medición de cobertura del ítem 3.
+
 ## Próximo paso
 
-Ítem 5: cierre del lote — aviso de despliegue consolidado (branches
-mergeadas a `develop`: PDF header-orphan, negativos en Ajuste, peso de
-TR) + resumen final. Las dos ramas de revisión sin fusionar
-(`feature/home-redesign-nav-indicator`, `fix/perfil-orden-y-cerrar-sesion`)
-quedan fuera del aviso de despliegue — no han llegado a `develop`.
+Lote cerrado. Pendiente de decisión del usuario: revisar y fusionar (o
+no) las dos ramas de revisión — rediseño de portada y "Mi perfil" — y
+priorizar las tareas de seguimiento de los dos informes nuevos.
