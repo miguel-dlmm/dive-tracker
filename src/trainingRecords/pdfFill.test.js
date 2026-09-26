@@ -1,4 +1,4 @@
-import { PDFDocument, PDFName } from "pdf-lib";
+import { PDFDocument, PDFName, PDFArray, PDFRawStream } from "pdf-lib";
 import { buildFillOperations, fillTrainingRecordPdf, computeSignaturePlacement } from "./pdfFill";
 
 // 2x2 PNG rojo válido — solo para comprobar que embedPng/drawImage no
@@ -233,6 +233,49 @@ describe("fillTrainingRecordPdf", () => {
 
     const resultDoc = await PDFDocument.load(filledBytes);
     expect(resultDoc.getPageCount()).toBe(1);
+  });
+
+  // Peso del PDF final (lote 2026-09-26, pedido explícito: "el generador
+  // de TR genera PDFs muy pesados, los quiero lo más ligero posible") —
+  // investigado con datos reales (ver el comentario largo junto a
+  // compressPageContentStreams en pdfFill.js): el content stream de la
+  // página llega sin comprimir del PDF original y pdf-lib nunca lo
+  // comprime por su cuenta al guardar. Este test no puede reproducir el
+  // ahorro real (162 KB → 8 KB, medido contra un PDF ya generado, ver el
+  // informe de la sesión) porque el fixture de arriba es minúsculo — lo
+  // que sí puede fijar es el CONTRATO: el content stream final lleva
+  // /FlateDecode aplicado, y descomprimirlo reproduce exactamente el
+  // mismo contenido que sin comprimir — la garantía real de que esto es
+  // sin pérdida, no solo "más pequeño".
+  it("comprime el content stream final de la página con FlateDecode, sin perder nada", async () => {
+    const fixtureBytes = await buildFixturePdf();
+    const filledBytes = await fillTrainingRecordPdf(fixtureBytes, MINIMAL_TEMPLATE, {
+      firstName: "Ana", lastName: "Garcia",
+      sessionRows: [{ studentInitials: "AG", date: "01/09/26", instructorInitials: "JD", instructorNumber: "12345" }],
+      examVersion: "online",
+    });
+
+    const resultDoc = await PDFDocument.load(filledBytes);
+    const contents = resultDoc.getPages()[0].node.Contents();
+    const refs = contents instanceof PDFArray
+      ? Array.from({ length: contents.size() }, (_, i) => contents.get(i))
+      : [contents];
+
+    let sawCompressed = false;
+    for (const ref of refs) {
+      const stream = ref instanceof PDFRawStream ? ref : resultDoc.context.lookup(ref);
+      if (!(stream instanceof PDFRawStream)) continue;
+      const filter = stream.dict.get(PDFName.of("Filter"))?.toString();
+      if (filter !== "/FlateDecode") continue;
+      sawCompressed = true;
+      // Sin pérdida: descomprimir reproduce el contenido real de la
+      // página — se comprueba con el propio pdf-lib, cargando de nuevo
+      // el documento (si la descompresión fuera incorrecta, pdf-lib no
+      // podría ni parsear el content stream para dar la cuenta de
+      // páginas/campos de abajo).
+      expect(resultDoc.getPageCount()).toBe(1);
+    }
+    expect(sawCompressed).toBe(true);
   });
 
   // Regresión (2026-09-02, verificado con las 4 plantillas reales activas

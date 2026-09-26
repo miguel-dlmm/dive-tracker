@@ -4,6 +4,24 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Performance
+- **PDF de Training Record hasta un 81% más ligero**: investigando el
+  peso (hasta 454 KB en plantillas de varias páginas como OWD) se
+  encontraron dos causas reales, verificadas byte a byte sobre PDFs de
+  ejemplo reales. (1) `removePage()` dejaba en el archivo final recursos
+  (imágenes, fuentes) de las páginas descartadas de la plantilla
+  original, sin usar pero sin eliminar — sustituido por
+  `PDFDocument.copyPages()`, que solo copia lo que la página final
+  realmente referencia (–39% en plantillas multipágina). (2) `pdf-lib`
+  no comprime nunca el content stream de la página al guardar — un
+  content stream de ejemplo de 163 KB viajaba sin comprimir, siendo el
+  68% del peso total del archivo. Se añade una compresión FlateDecode
+  del content stream final vía `CompressionStream` nativo (Web Streams
+  API, sin dependencia nueva) — sin pérdida alguna, verificado
+  descomprimiendo y comparando el resultado (–65% adicional). Efecto
+  combinado sobre los dos PDF de ejemplo usados en la investigación:
+  239,0 KB → 81,7 KB y 454,3 KB → 84,2 KB.
+
 ### Changed
 - **Botón +/- del importe de Ajuste de curso, más visible**: investigando
   un bug reportado ("no sé qué pasa" al intentar meter un negativo) no
