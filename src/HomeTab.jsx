@@ -552,7 +552,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
               <Building2 size={14} style={{ color: TEAL }} aria-hidden="true" />
             </span>
-            <span className="min-w-0">
+            <span className="min-w-0 text-center">
               <div className="truncate text-[11px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>
                 {schoolActivityThisMonth
                   ? `${schoolActivityThisMonth.school} · ${t("activeSchoolCount", { count: schoolActivityThisMonth.count })}`
