@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useMemo, useCallback, createContext, useCo
 import { useTranslation, withTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, GraduationCap, Handshake, Users } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, Minus, MoreVertical, Pencil, HelpCircle, LifeBuoy, GraduationCap, Handshake, Users } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
@@ -1158,13 +1158,35 @@ export function MoneyInput({ value, onChange, className = "", placeholder, "aria
 
   return (
     <div className="relative">
+      {/* Insignia de color en vez de un simple carácter "+"/"−" en gris
+          (bug reportado: "no sé qué pasa" al intentar meter un negativo
+          en Ajuste de curso) — no encontré ningún fallo real de
+          guardado ni de lectura (probado a fondo: escribir "-" a mano y
+          usar este botón, en creación y en edición, ambos caminos
+          funcionan y persisten bien), así que el problema más probable
+          es de descubribilidad: un carácter de texto suelto, sin fondo
+          ni color, se confunde fácilmente con un simple prefijo
+          decorativo del campo en vez de leerse como un control
+          pulsable — sobre todo en el teclado numérico de iOS, que es
+          precisamente donde hace falta (sin tecla de signo menos).
+          Mismo patrón de insignia+icono que el resto de la app (KPIs,
+          tarjetas del bento de Home) en vez de inventar uno nuevo —
+          CORAL/GREEN son los mismos colores que ya usa
+          formAccentColor (MovementSheet.jsx) para negativo/positivo,
+          así que el propio color ya adelanta el signo antes de leer la
+          cifra. */}
       <button
         type="button"
         onClick={toggleSign}
         aria-label={isNegative ? "Cambiar a positivo" : "Cambiar a negativo"}
-        className="absolute inset-y-0 left-0 flex min-h-11 w-11 items-center justify-center text-base font-semibold text-gray-500"
+        className="absolute inset-y-0 left-0 flex min-h-11 w-11 items-center justify-center"
       >
-        {isNegative ? "−" : "+"}
+        <span
+          className="flex h-6 w-6 items-center justify-center rounded-full"
+          style={{ backgroundColor: isNegative ? `${CORAL}1A` : `${GREEN}1A`, color: isNegative ? CORAL : GREEN }}
+        >
+          {isNegative ? <Minus size={14} aria-hidden="true" /> : <Plus size={14} aria-hidden="true" />}
+        </span>
       </button>
       {input}
     </div>

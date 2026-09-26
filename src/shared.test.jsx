@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { colorFor, applyListFilters, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect, DatePicker } from "./shared";
+import { colorFor, applyListFilters, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect, DatePicker, MoneyInput } from "./shared";
 
 // Estos tests documentan el comportamiento ACTUAL de las funciones puras de
 // shared.jsx, como red de seguridad antes de dividir/refactorizar el
@@ -435,5 +436,53 @@ describe("DatePicker — navegación por década/año/mes/día", () => {
     await user.click(screen.getByRole("button", { name: "Elegir fecha" }));
     expect(screen.getByRole("button", { name: "Elegir mes" })).toBeInTheDocument();
     expect(screen.queryByText("2020–2029")).not.toBeInTheDocument();
+  });
+});
+
+// Red de seguridad real tras investigar un bug reportado ("no sé qué pasa"
+// al intentar meter un negativo en Ajuste de curso, lote 2026-09-26): no se
+// encontró ningún fallo — escribir "-" a mano y usar el botón +/- (única
+// vía en el teclado numérico de iOS, que no tiene tecla de signo menos)
+// funcionan los dos. Lo único que cambió es la insignia del botón +/-, de
+// un carácter de texto suelto a un icono con fondo de color (más fácil de
+// ver como control pulsable) — estos tests fijan que el comportamiento
+// real (cambiar el signo, propagarlo a onChange) sigue intacto tras ese
+// cambio puramente visual.
+function ControlledMoneyInput({ initial = "", allowNegative = true }) {
+  const [value, setValue] = useState(initial);
+  return <MoneyInput value={value} onChange={setValue} allowNegative={allowNegative} aria-label="Importe" />;
+}
+
+describe("MoneyInput — allowNegative", () => {
+  it("escribir '-' a mano funciona: el valor negativo llega a onChange", async () => {
+    const user = userEvent.setup();
+    render(<ControlledMoneyInput />);
+    const input = screen.getByLabelText("Importe");
+    await user.click(input);
+    await user.type(input, "-30");
+    expect(input).toHaveValue("-30");
+  });
+
+  it("el botón +/- invierte el signo del valor actual", async () => {
+    const user = userEvent.setup();
+    render(<ControlledMoneyInput initial="30" />);
+    expect(screen.getByRole("button", { name: "Cambiar a negativo" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cambiar a negativo" }));
+
+    // Formateado (2 decimales, es-ES) porque el propio click no deja el
+    // campo en modo edición — mismo comportamiento que perder el foco.
+    expect(screen.getByLabelText("Importe")).toHaveValue("-30,00");
+    // El aria-label del propio botón se actualiza con el nuevo estado —
+    // sigue siendo pulsable para volver a invertir el signo.
+    expect(screen.getByRole("button", { name: "Cambiar a positivo" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cambiar a positivo" }));
+    expect(screen.getByLabelText("Importe")).toHaveValue("30,00");
+  });
+
+  it("sin allowNegative, no se renderiza ningún botón de signo", () => {
+    render(<ControlledMoneyInput initial="30" allowNegative={false} />);
+    expect(screen.queryByRole("button", { name: /Cambiar a/ })).not.toBeInTheDocument();
   });
 });
