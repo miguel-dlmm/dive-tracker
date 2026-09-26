@@ -4,6 +4,17 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Changed
+- **Botón +/- del importe de Ajuste de curso, más visible**: investigando
+  un bug reportado ("no sé qué pasa" al intentar meter un negativo) no
+  se encontró ningún fallo real — escribir "-" a mano y usar el botón
+  funcionan y persisten bien, tanto al crear como al editar. El carácter
+  suelto en gris se sustituye por una insignia de color (verde/coral,
+  mismos colores que ya usa el resto de la app para positivo/negativo)
+  con icono, para que se lea claramente como un control pulsable — sobre
+  todo en el teclado numérico de iOS, que es donde de verdad hace falta
+  (no tiene tecla de signo menos).
+
 ### Fixed
 - **Informe PDF: la cabecera de un día podía quedar sola al final de una
   página, con sus movimientos ya en la siguiente**: la tabla de Clases
