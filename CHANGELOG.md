@@ -19,9 +19,8 @@ Registro de cambios relevantes de Ocean Flow.
   con el número de pagos pendientes. Mismo presupuesto de alto que
   antes — el calendario no cae más abajo. El título de la sección de
   KPIs pasa de "Tu impacto este mes" a "Tu impacto en {mes actual}".
-  Training Records y Escuela del mes alinean su texto al principio de
-  la tarjeta (no centrado dentro de la fila) para que ambas arranquen a
-  la misma altura pese a tener distinto número de líneas.
+  Training Records y Escuela del mes centran su icono respecto al
+  bloque título+subtítulo de cada tarjeta.
 - **Nuevo indicador de pestaña activa en el menú inferior**: sustituye
   al óvalo fijo por una línea superior fina (centrada sobre el icono,
   no todo el ancho de la pestaña) que se desliza entre pestañas
