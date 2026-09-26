@@ -518,11 +518,11 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
               >
                 <Award size={14} style={{ color: generatedCount > 0 ? "#fff" : BRAND_OCEAN }} aria-hidden="true" />
               </motion.span>
-              <span className="min-w-0">
+              <span className="min-w-0 text-center">
                 {generatedCount > 0 ? (
                   <>
                     <div className="truncate text-[11px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</div>
-                    <div className="flex items-baseline gap-1">
+                    <div className="flex items-baseline justify-center gap-1">
                       <span className="text-[11px] font-extrabold tabular-nums" style={{ color: BRAND_OCEAN }}>{animatedGeneratedCount}</span>
                       <span className="truncate text-[9.5px] font-semibold uppercase text-gray-400">{t("trainingRecordsCard.generatedLabel")}</span>
                     </div>
