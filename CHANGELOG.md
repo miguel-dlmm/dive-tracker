@@ -5,6 +5,14 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Fixed
+- **Informe PDF: la cabecera de un día podía quedar sola al final de una
+  página, con sus movimientos ya en la siguiente**: la tabla de Clases
+  impartidas/Comisiones mezclaba todas las cabeceras de día como filas
+  sueltas de una única tabla larga — pdfmake corta una tabla larga entre
+  cualquier par de filas sin saber que una fila "pertenece" a las que
+  la siguen. Ahora cada día es su propio bloque `unbreakable` (cabecera +
+  sus movimientos, siempre juntos): si no caben enteros en lo que queda
+  de página, pdfmake los mueve enteros a la siguiente.
 - **Parpadeo al iniciar sesión: un icono de carga antiguo se veía un
   instante antes del logo real**: Configuración → Ajustes conservaba un
   selector que dejaba elegir un icono de lucide-react (Waves, Anchor...)

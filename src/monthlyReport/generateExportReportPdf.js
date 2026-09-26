@@ -157,38 +157,43 @@ const headerBandLayout = {
 // la línea algo más gruesa o algún separador visual para identificar
 // donde empieza cada día". Sin esto, la misma línea fina (0.75pt) entre
 // TODAS las filas —incluida la que separa un día del siguiente— no
-// distinguía dónde empezaba cada grupo. `dayStartRows` recibe el índice
-// de fila (dentro de `body`, no de `dayGroups`) de cada cabecera de día
-// salvo la primera del todo (esa línea ya es el borde superior de la
-// tabla, sin nada que separar antes) — hace falta un layout dedicado, no
-// uno compartido como `headerBandLayout`, porque `hLineWidth`/
-// `hLineColor` en pdfmake no reciben más contexto que el índice de línea
-// `i` (la línea `i` va inmediatamente ENCIMA de la fila `i`), así que
-// hace falta ese índice precalculado para decidir cuál engrosar.
+// distinguía dónde empezaba cada grupo.
 // Fondo de la cabecera de día (2026-09-26, pedido explícito: "un color de
-// fondo tenue... formato tabla bonito y elegante") — `dayHeaderRows`
-// recibe TODAS las filas de cabecera de día (incluida la primera, a
-// diferencia de `dayStartRows`, que la excluye porque esa no necesita
-// separador). pdfmake sí soporta `fillColor` como función de layout
-// `(rowIndex, node, colIndex)` — igual que `hLineWidth`/`hLineColor`, no
-// hace falta fijarlo celda a celda. Más aire vertical (9pt) solo en esas
-// filas para que la banda de color no quede apretada — el resto de la
-// tabla sigue a 7pt. `paddingLeft`/`paddingRight` de pdfmake son por
-// COLUMNA, no por fila (confirmado en el código fuente instalado), así
-// que el texto de la cabecera sigue a ras del margen de página, igual
-// que el resto del documento (cabecera, aviso, total) — insertar un
-// hueco lateral solo aquí rompería esa alineación común en vez de
-// mejorarla.
-function dayGroupedLayout(dayStartRows, dayHeaderRows) {
+// fondo tenue... formato tabla bonito y elegante"). Más aire vertical
+// (9pt) solo en esa fila para que la banda de color no quede apretada —
+// el resto de la tabla sigue a 7pt. `paddingLeft`/`paddingRight` de
+// pdfmake son por COLUMNA, no por fila (confirmado en el código fuente
+// instalado), así que el texto de la cabecera sigue a ras del margen de
+// página, igual que el resto del documento (cabecera, aviso, total) —
+// insertar un hueco lateral solo aquí rompería esa alineación común en
+// vez de mejorarla.
+//
+// Una mini-tabla POR DÍA, no un único `dayStartRows`/`dayHeaderRows`
+// precalculado sobre una tabla larga (versión anterior, ver historial de
+// git) — motivo real, no cosmético: pdfmake corta una tabla larga entre
+// CUALQUIER par de filas cuando se acaba el alto de página, sin saber
+// que la fila 0 de cada día es su cabecera y "pertenece" a las filas
+// que la siguen. Bug real reportado en TEST (dev-bypass, informe de
+// septiembre): la cabecera del 29/09 quedaba sola al final de una
+// página, con sus movimientos ya en la siguiente — huérfana. Con una
+// tabla por día en vez de una tabla larga, cada una puede envolverse en
+// `unbreakable: true` (más abajo, en `dayBlocks`): si el día completo no
+// cabe en lo que queda de página, pdfmake lo mueve entero a la
+// siguiente, cabecera y filas juntas, sin que haga falta calcular nada
+// de posiciones a mano. Ningún día real de un instructor va a superar
+// una página entera de sesiones, así que este es el límite práctico
+// donde para de aplicar (y no compensa complicar más la solución por un
+// caso que no ocurre).
+function dayBlockLayout(isFirstDay) {
   return {
-    hLineWidth: (i) => (i === 0 ? 0 : dayStartRows.has(i) ? 1.5 : 0.75),
+    hLineWidth: (i) => (i === 0 ? (isFirstDay ? 0 : 1.5) : 0.75),
     vLineWidth: () => 0,
-    hLineColor: (i) => (dayStartRows.has(i) ? MUTED_LIGHT : HAIRLINE),
-    fillColor: (i) => (dayHeaderRows.has(i) ? SKY_50 : null),
+    hLineColor: (i) => (i === 0 && !isFirstDay ? MUTED_LIGHT : HAIRLINE),
+    fillColor: (i) => (i === 0 ? SKY_50 : null),
     paddingLeft: () => 0,
     paddingRight: () => 8,
-    paddingTop: (i) => (dayHeaderRows.has(i) ? 9 : 7),
-    paddingBottom: (i) => (dayHeaderRows.has(i) ? 9 : 7),
+    paddingTop: (i) => (i === 0 ? 9 : 7),
+    paddingBottom: (i) => (i === 0 ? 9 : 7),
   };
 }
 
@@ -240,18 +245,13 @@ const AMOUNT_COL = 96;
 // personas ya vive en el título, así que la línea de detalle solo le
 // queda el estado (Cobrado/Pendiente) cuando `showCollected` está
 // activo; sin eso, la mayoría de filas no llevan segunda línea.
-function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate }) {
-  const body = [];
-  const dayStartRows = new Set();
-  const dayHeaderRows = new Set();
-  dayGroups.forEach((day, dayIndex) => {
-    if (dayIndex > 0) dayStartRows.add(body.length);
-    dayHeaderRows.add(body.length);
+export function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate }) {
+  return dayGroups.map((day, dayIndex) => {
     const dayTotalText = Object.entries(day.dayTotal).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ");
-    body.push([
+    const body = [[
       { text: rowDate(day.date), bold: true, fontSize: 12.5, color: MUTED, characterSpacing: 0.3 },
       { text: dayTotalText, bold: true, fontSize: 12.5, color: MUTED, alignment: "right" },
-    ]);
+    ]];
     day.groups.forEach((g) => {
       const captionParts = [];
       if (showCollected) captionParts.push(isPendingStatus(g.status, paymentStatusRows) ? t("export.pendingLabel") : t("export.paidLabel"));
@@ -266,8 +266,10 @@ function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, 
         { text: formatMoneyPdf(g.total, g.currency), alignment: "right", bold: true, color: NAVY, fontSize: 10.5 },
       ]);
     });
+    // unbreakable: la pieza real del fix — ver el porqué en el comentario
+    // junto a dayBlockLayout, arriba.
+    return { unbreakable: true, table: { widths: ["*", AMOUNT_COL], body }, layout: dayBlockLayout(dayIndex === 0) };
   });
-  return { table: { widths: ["*", AMOUNT_COL], body }, layout: dayGroupedLayout(dayStartRows, dayHeaderRows) };
 }
 
 // Ancho a juego con `groupedActivityTable`/`subtotalLine` — mismo AMOUNT_COL
@@ -382,12 +384,15 @@ export async function generateExportReportPdf({
   const courseDayGroups = groupByDayAndActivity(data.courses);
   const commissionDayGroups = groupByDayAndActivity(data.commissions);
 
-  // pushGroup empuja etiqueta+tabla+subtotal seguidos, todos a
+  // pushGroup empuja etiqueta+tabla(s)+subtotal seguidos, todos a
   // CONTENT_WIDTH — ya no hace falta envolverlos en ningún bloque
   // centrado (ver AMOUNT_COL arriba): todo el documento comparte un
-  // único ancho.
-  const pushGroup = (label, color, table, subtotalLabel, totals) => {
-    content.push(groupLabel(label, color), table, subtotalLine(subtotalLabel, totals));
+  // único ancho. `tableOrBlocks` admite tanto una única tabla (Ajustes,
+  // ver adjustmentsTable) como un array de bloques, uno por día (Cursos/
+  // Comisiones, ver groupedActivityTable) — `[].concat(...)` los trata
+  // igual sin necesitar una rama aparte para cada caso.
+  const pushGroup = (label, color, tableOrBlocks, subtotalLabel, totals) => {
+    content.push(groupLabel(label, color), ...[].concat(tableOrBlocks), subtotalLine(subtotalLabel, totals));
   };
 
   if (data.courses.length > 0) {
