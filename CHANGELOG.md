@@ -172,18 +172,23 @@ Registro de cambios relevantes de Ocean Flow.
   Se retira también el aviso "este informe muestra solo lo pendiente de
   cobro": con cobrados ocultos por defecto, todo el informe ya son
   importes pendientes sin necesidad de decirlo aparte.
-- **Tabla de "Exportar informe" (PDF), tercera vuelta**: dos ajustes
-  finos tras usar la segunda versión. (1) Márgenes laterales de página
-  subidos de 40 a 60pt (constante `MARGIN_X`, fuente única para
-  `pageMargins`, cabecera y pie): con la tabla a ancho completo, el
-  nombre de cada actividad y su importe quedaban demasiado separados
-  para leerse cómodo — más margen alrededor acerca ambos extremos. (2)
-  Pesos de la cabecera de día corregidos: el tamaño ya cumplía (10.5pt
-  cabecera de día vs 9.5pt línea de detalle), pero el color no —
-  cabecera de día en gris muy claro y detalle en gris más oscuro hacía
-  que el detalle ("2 personas"...) ganara en peso visual pese a ser más
-  pequeño. Colores intercambiados: cabecera de día ahora en el gris más
-  oscuro (más presencia), detalle en el más claro (retrocede).
+- **Tabla de "Exportar informe" (PDF), tercera vuelta**: tres ajustes
+  finos tras usar la segunda versión, probados en TEST y corregidos en
+  la misma sesión. (1) Márgenes laterales de página subidos de 40 a
+  72pt (constante `MARGIN_X`, fuente única para `pageMargins`, cabecera
+  y pie) — con la tabla a ancho completo, el nombre de cada actividad y
+  su importe quedaban demasiado separados para leerse cómodo; un primer
+  intento a 60pt se quedó corto ("los márgenes... un poco más grandes")
+  y se subió a 72pt. (2) Pesos de la cabecera de día corregidos — un
+  primer intento le dio más peso solo con color (cabecera más oscura,
+  detalle más claro), pero el pedido real era de tamaño: la cabecera de
+  día pasa a ser el texto más grande de la fila (12.5pt, el que antes
+  tenía la actividad) y la actividad baja al tamaño que antes tenía la
+  cabecera de día (10.5pt), intercambiados — así domina igual que el
+  encabezado de grupo en el resto de listados de la app. (3) Formato
+  "N × Actividad" en Cursos (p. ej. "2 × Refresh" en vez de "Refresh" +
+  "2 personas" en el detalle, como una línea de factura) — solo en
+  Cursos, Comisiones conserva el formato anterior.
 
 ## [1.3.1] - 2026-09-09
 

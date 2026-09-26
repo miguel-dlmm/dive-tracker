@@ -56,11 +56,13 @@ const LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="345 152 256 2
 // explícito: "más margen a los lados... para q los textos y las
 // cantidades queden algo más juntos") tras el rediseño a ancho completo:
 // con la tabla ocupando todo CONTENT_WIDTH, el nombre de la actividad y
-// su importe quedaban demasiado separados para leerse cómodo. Fuente
-// única para pageMargins, la cabecera y el pie (los tres deben coincidir
-// o el logo/CTA quedarían desalineados con el resto del contenido) y
-// para CONTENT_WIDTH.
-const MARGIN_X = 60;
+// su importe quedaban demasiado separados para leerse cómodo. Subido de
+// nuevo a 72pt la misma sesión, pedido explícito tras ver el resultado en
+// TEST ("los márgenes del documento un poco más grandes, los laterales").
+// Fuente única para pageMargins, la cabecera y el pie (los tres deben
+// coincidir o el logo/CTA quedarían desalineados con el resto del
+// contenido) y para CONTENT_WIDTH.
+const MARGIN_X = 72;
 // A4 (595.28pt) menos los márgenes laterales de arriba.
 const CONTENT_WIDTH = 595.28 - MARGIN_X * 2;
 
@@ -155,49 +157,51 @@ const AMOUNT_COL = 96;
 // generar un informe real: muchas sesiones idénticas del mismo curso el
 // mismo día se imprimían como filas repetidas, y la tabla de 5 columnas se
 // leía muy ancha y desperdigada en un PDF que se abre sobre todo en el
-// móvil). Cada fila de actividad es un bloque de 2 líneas (nombre arriba,
-// "N sesiones · M personas [· Estado]" abajo, en gris) + el importe a la
-// derecha — el mismo patrón visual que ya usa `EntryTitle`/`EntryRow` en
-// el resto de la app (curso arriba, detalle abajo, importe a la derecha),
-// no una tabla de hoja de cálculo. El estado solo se imprime en la línea
-// de detalle cuando showCollected está activo: con cobrados ocultos TODA
-// fila es pendiente por definición, así que repetirlo en cada línea sería
-// ruido, no información.
+// móvil).
 // Cabecera de día (2026-09-18, aprobado por mockup): ya no es una banda
 // de color sólido tipo hoja de cálculo — es una fecha + total del día,
 // con una regla fina por debajo (el propio hairline de la tabla, que ya
 // dibuja una línea entre cada fila).
-// Pesos corregidos (2026-09-26, pedido explícito: "ahora mismo es más
-// grande el detalle que el texto y la cantidad resumen del día") — el
-// tamaño ya cumplía (10.5pt cabecera de día vs 9.5pt detalle), pero el
-// color no: la cabecera de día usaba MUTED_LIGHT (gris muy claro) y el
-// detalle MUTED (más oscuro), así que el contraste de color ganaba al
-// tamaño y el detalle acababa leyéndose con más peso visual que la
-// cabecera de día que debía dominarlo. Colores intercambiados: cabecera
-// de día a MUTED (más oscuro, más presencia), detalle a MUTED_LIGHT (más
-// claro, retrocede) — la actividad (12.5pt, casi negro) sigue siempre
-// por encima de las dos.
-function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate }) {
+// Pesos, segunda corrección (2026-09-26, pedido explícito: "no era en un
+// tono más oscuro, es alterar el tamaño... para darle más peso a la
+// cabecera, como en todos los listados") — el primer intento (2026-09-26,
+// ya revertido) le dio más peso a la cabecera de día solo con color; el
+// pedido real era de TAMAÑO: la cabecera de día pasa a ser el texto más
+// grande de la fila (12.5pt, el que antes tenía la actividad) y la
+// actividad baja al tamaño que antes tenía la cabecera de día (10.5pt) —
+// intercambiados sin más, para que la cabecera de día domine igual que el
+// encabezado de grupo en el resto de listados de la app.
+// Formato "N × Actividad" en Cursos (2026-09-26, pedido explícito: "en
+// los cursos quiero el formato [1,2,3,4..] x [Nombre curso]") — el número
+// de personas pasa de la línea de detalle al título de la fila, como en
+// una línea de factura ("2 × Refresh") en vez de "Refresh" + "2 personas"
+// aparte. Solo en Cursos (`quantityFormat=true`) — Comisiones sigue con
+// el formato anterior (nombre + "N personas" en el detalle), que es el
+// pedido explícito de esta sesión. La línea de detalle bajo el título
+// conserva "N sesiones" (si hay más de una) y el estado (si
+// showCollected está activo) — el conteo de personas ya no se repite ahí.
+function groupedActivityTable({ dayGroups, showCollected, paymentStatusRows, t, rowDate, quantityFormat }) {
   const body = [];
   dayGroups.forEach((day) => {
     const dayTotalText = Object.entries(day.dayTotal).map(([code, amount]) => formatMoneyPdf(amount, code)).join("  ·  ");
     body.push([
-      { text: rowDate(day.date), bold: true, fontSize: 10.5, color: MUTED, characterSpacing: 0.3 },
-      { text: dayTotalText, bold: true, fontSize: 10.5, color: MUTED, alignment: "right" },
+      { text: rowDate(day.date), bold: true, fontSize: 12.5, color: MUTED, characterSpacing: 0.3 },
+      { text: dayTotalText, bold: true, fontSize: 12.5, color: MUTED, alignment: "right" },
     ]);
     day.groups.forEach((g) => {
       const captionParts = [];
       if (g.sessions > 1) captionParts.push(t("export.sessionsCount", { count: g.sessions }));
-      captionParts.push(t("export.peopleCount", { count: g.people }));
+      if (!quantityFormat) captionParts.push(t("export.peopleCount", { count: g.people }));
       if (showCollected) captionParts.push(isPendingStatus(g.status, paymentStatusRows) ? t("export.pendingLabel") : t("export.paidLabel"));
+      const titleText = quantityFormat ? `${g.people} × ${g.activity}` : g.activity;
       body.push([
         {
           stack: [
-            { text: g.activity, bold: true, fontSize: 12.5, color: "#1E2A33" },
-            { text: captionParts.join("  ·  "), fontSize: 9.5, color: MUTED_LIGHT, margin: [0, 2, 0, 0] },
+            { text: titleText, bold: true, fontSize: 10.5, color: "#1E2A33" },
+            ...(captionParts.length > 0 ? [{ text: captionParts.join("  ·  "), fontSize: 9.5, color: MUTED_LIGHT, margin: [0, 2, 0, 0] }] : []),
           ],
         },
-        { text: formatMoneyPdf(g.total, g.currency), alignment: "right", bold: true, color: NAVY, fontSize: 12.5 },
+        { text: formatMoneyPdf(g.total, g.currency), alignment: "right", bold: true, color: NAVY, fontSize: 10.5 },
       ]);
     });
   });
@@ -306,7 +310,7 @@ export async function generateExportReportPdf({
   if (data.courses.length > 0) {
     pushGroup(
       t("export.coursesGroup"), TEAL,
-      groupedActivityTable({ dayGroups: courseDayGroups, showCollected, paymentStatusRows, t, rowDate }),
+      groupedActivityTable({ dayGroups: courseDayGroups, showCollected, paymentStatusRows, t, rowDate, quantityFormat: true }),
       t("export.subtotal", { group: t("export.coursesGroup").toLowerCase() }), data.coursesSubtotal
     );
   }
