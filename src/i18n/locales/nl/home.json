@@ -1,11 +1,11 @@
 {
   "calendarCaption": "Tik op een dag voor het detail, of op een lege dag om een boeking toe te voegen",
-  "activeSchoolThisMonth": "Favoriete school deze maand",
+  "activeSchoolThisMonth": "School van de maand",
   "activeSchoolCount_one": "{{count}} cursus",
   "activeSchoolCount_other": "{{count}} cursussen",
   "noActivityThisMonth": "Geen activiteit deze maand",
   "kpis": {
-    "sectionTitle": "Jouw impact deze maand",
+    "sectionTitle": "Jouw impact in {{month}}",
     "dailyAverageThisMonth": "Daggemiddelde",
     "dailyAverageTooltip": "Wat je deze maand gemiddeld per dag verdient, alleen geteld tot vandaag.",
     "dailyAverageTooltipShow": "Info: Daggemiddelde",

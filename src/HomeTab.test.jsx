@@ -2,13 +2,12 @@ import { render, screen, within, waitFor, fireEvent } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import HomeTab from "./HomeTab";
 
-// Cubre "Pendiente de cobrar" (ADR-0004) y "Escuela favorita este mes"
-// (renombrada de "Escuela más activa" en el rediseño de portada,
-// 2026-09-26 — sustituye a la antigua tarjeta "Generado este mes", que
-// duplicaba el KPI del mismo nombre que ya muestra Mi trabajo). Ambas
-// tiles viven hoy en el bento de accesos, junto a Training Records y
-// "Nuevo movimiento" — el resto de la pantalla (KPIs, calendario) ya
-// existía y no cambia.
+// Cubre "Pendiente de cobrar" (ADR-0004) y "Escuela del mes" (etiqueta
+// corta — pasó antes por "Escuela más activa" y por "Escuela favorita
+// este mes", acortada de nuevo 2026-09-26 porque ese texto se cortaba en
+// móvil real). Ambas tiles viven hoy en el bento de accesos, junto a
+// Training Records y "Nuevo movimiento" — el resto de la pantalla (KPIs,
+// calendario) ya existía y no cambia.
 //
 // Las aserciones de importe se acotan con data-testid a cada tarjeta (no al
 // documento entero): el calendario de abajo también muestra dinero en su
@@ -36,6 +35,12 @@ function localDateStr(d) {
 }
 const NOW = new Date();
 const TODAY = localDateStr(NOW);
+// Mismo array que common:calendar.months (es/common.json) — el título de
+// KPIs interpola el nombre del mes actual (rediseño de portada,
+// 2026-09-26: "sustituye 'tu impacto este mes' por 'tu impacto en
+// [mes]'"), así que el test necesita el nombre real, no un texto fijo.
+const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+const CURRENT_MONTH_NAME = MONTH_NAMES[NOW.getMonth()];
 const LAST_MONTH = localDateStr(new Date(NOW.getFullYear(), NOW.getMonth() - 1, 15));
 
 const PAYMENT_STATUSES = rowsHook([
@@ -181,14 +186,15 @@ describe("HomeTab — acceso rápido 'Nuevo movimiento'", () => {
   });
 });
 
-// "Escuela favorita este mes" (renombrada de "Escuela más activa" en el
-// rediseño de portada, 2026-09-26) como puente hacia Resumen — nació el
-// 2026-09-07 sustituyendo a "Generado este mes", que duplicaba el KPI del
-// mismo nombre ya visible en la cabecera de Mi trabajo. La tile aporta
+// "Escuela del mes" (pasó antes por "Escuela más activa" y "Escuela
+// favorita este mes", acortada 2026-09-26 — el texto largo se cortaba en
+// móvil real) como puente hacia Resumen — nació el 2026-09-07
+// sustituyendo a "Generado este mes", que duplicaba el KPI del mismo
+// nombre ya visible en la cabecera de Mi trabajo. La tile aporta
 // información de menor "peso" (qué escuela ha dado más cursos este mes,
 // no una cifra de dinero) pero conserva el mismo rol de puente táctil a
 // Resumen.
-describe("HomeTab — 'Escuela favorita este mes' como puente hacia Resumen", () => {
+describe("HomeTab — 'Escuela del mes' como puente hacia Resumen", () => {
   it("pulsar la tarjeta llama a onOpenSummary", async () => {
     const onOpenSummary = vi.fn();
     render(
@@ -212,12 +218,12 @@ describe("HomeTab — 'Escuela favorita este mes' como puente hacia Resumen", ()
     expect(onOpenSummary).toHaveBeenCalledTimes(1);
   });
 
-  it("muestra el nombre de la única escuela con movimientos este mes, en singular, junto a la etiqueta 'Escuela favorita este mes'", () => {
+  it("muestra el nombre de la única escuela con movimientos este mes, en singular, junto a la etiqueta 'Escuela del mes'", () => {
     const { activeSchool } = renderHome({
       worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }],
       rates: RATES,
     });
-    expect(activeSchool.getByText("Escuela favorita este mes")).toBeInTheDocument();
+    expect(activeSchool.getByText("Escuela del mes")).toBeInTheDocument();
     expect(activeSchool.getByText("PADI Cozumel · 1 curso")).toBeInTheDocument();
   });
 
@@ -446,7 +452,7 @@ describe("HomeTab — KPIs (media diaria, cursos, captados, todos del mes actual
       commissionRates: COMMISSION_RATES,
     });
 
-    expect(screen.getByText("Tu impacto este mes")).toBeInTheDocument();
+    expect(screen.getByText(`Tu impacto en ${CURRENT_MONTH_NAME}`)).toBeInTheDocument();
     expect(screen.getByText("Media diaria")).toBeInTheDocument();
     expect(screen.getByText("Cursos")).toBeInTheDocument();
     expect(screen.getByText("Captados")).toBeInTheDocument();

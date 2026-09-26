@@ -373,7 +373,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
       <div>
         <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-            {t("kpis.sectionTitle")}
+            {t("kpis.sectionTitle", { month: t("common:calendar.months", { returnObjects: true })[now.getMonth()] })}
           </h2>
           {/* Instalar la app (2026-09-08, tercera vuelta): el banner
               descartable de antes "no convencía" — pedido explícito de
@@ -454,21 +454,21 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           lo que ayuda, con manos mojadas y poca paciencia para ambigüedad.
 
           Fila inferior: Training Records (compactada a la misma altura
-          que su vecina) + Escuela favorita este mes (antes vivía sola,
-          después del calendario — sube aquí para caber en el mismo
-          presupuesto de alto; "Escuela favorita este mes" ahora como
-          etiqueta explícita de la tile, no solo un texto de apoyo, y su
-          cifra pasa de "N movimientos este mes" a "N cursos", más
-          directo). */}
+          que su vecina) + Escuela del mes (antes vivía sola, después del
+          calendario — sube aquí para caber en el mismo presupuesto de
+          alto; pasó por "Escuela favorita este mes" como etiqueta
+          explícita de la tile, acortada de nuevo el mismo lote porque
+          ese texto se cortaba en móvil real — y su cifra pasa de "N
+          movimientos este mes" a "N cursos", más directo). */}
       <div className="mb-4 flex flex-col gap-2">
         <div className="grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={onOpenPending}
             data-testid="pending-collection-card"
-            className="col-span-2 rounded-xl border border-gray-200 bg-white p-3 text-left transition-transform active:scale-[0.98]"
+            className="col-span-2 flex flex-col items-center rounded-xl border border-gray-200 bg-white p-3 text-center transition-transform active:scale-[0.98]"
           >
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center justify-center gap-1.5">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${SUN}1A` }}>
                 <Wallet size={13} style={{ color: SUN }} aria-hidden="true" />
               </span>

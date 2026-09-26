@@ -1,11 +1,11 @@
 {
   "calendarCaption": "Toca un día para ver el detalle, o uno vacío para añadir un movimiento",
-  "activeSchoolThisMonth": "Escuela favorita este mes",
+  "activeSchoolThisMonth": "Escuela del mes",
   "activeSchoolCount_one": "{{count}} curso",
   "activeSchoolCount_other": "{{count}} cursos",
   "noActivityThisMonth": "Sin actividad este mes",
   "kpis": {
-    "sectionTitle": "Tu impacto este mes",
+    "sectionTitle": "Tu impacto en {{month}}",
     "dailyAverageThisMonth": "Media diaria",
     "dailyAverageTooltip": "Lo que ganas de media al día este mes, contando solo hasta hoy.",
     "dailyAverageTooltipShow": "Info: Media diaria",

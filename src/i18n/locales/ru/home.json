@@ -1,11 +1,11 @@
 {
   "calendarCaption": "Нажми на день, чтобы увидеть детали, или на пустой день, чтобы добавить операцию",
-  "activeSchoolThisMonth": "Любимая школа в этом месяце",
+  "activeSchoolThisMonth": "Школа месяца",
   "activeSchoolCount_one": "{{count}} курс",
   "activeSchoolCount_other": "{{count}} курсов",
   "noActivityThisMonth": "В этом месяце нет активности",
   "kpis": {
-    "sectionTitle": "Твои результаты за месяц",
+    "sectionTitle": "Твои результаты — {{month}}",
     "dailyAverageThisMonth": "Среднее в день",
     "dailyAverageTooltip": "Сколько ты в среднем зарабатываешь в день в этом месяце — учтено только до сегодняшнего дня.",
     "dailyAverageTooltipShow": "Инфо: Среднее в день",

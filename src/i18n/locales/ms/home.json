@@ -1,11 +1,11 @@
 {
   "calendarCaption": "Ketik satu hari untuk lihat butiran, atau hari kosong untuk tambah transaksi",
-  "activeSchoolThisMonth": "Sekolah kegemaran bulan ini",
+  "activeSchoolThisMonth": "Sekolah bulan ini",
   "activeSchoolCount_one": "{{count}} kursus",
   "activeSchoolCount_other": "{{count}} kursus",
   "noActivityThisMonth": "Tiada aktiviti bulan ini",
   "kpis": {
-    "sectionTitle": "Impak anda bulan ini",
+    "sectionTitle": "Impak anda pada {{month}}",
     "dailyAverageThisMonth": "Purata harian",
     "dailyAverageTooltip": "Pendapatan purata sehari bulan ini, dikira setakat hari ini sahaja.",
     "dailyAverageTooltipShow": "Info: Purata harian",

@@ -1,11 +1,11 @@
 {
   "calendarCaption": "Tippe auf einen Tag für Details, oder auf einen leeren Tag, um eine Buchung hinzuzufügen",
-  "activeSchoolThisMonth": "Beliebteste Schule diesen Monat",
+  "activeSchoolThisMonth": "Schule des Monats",
   "activeSchoolCount_one": "{{count}} Kurs",
   "activeSchoolCount_other": "{{count}} Kurse",
   "noActivityThisMonth": "Keine Aktivität diesen Monat",
   "kpis": {
-    "sectionTitle": "Deine Bilanz diesen Monat",
+    "sectionTitle": "Deine Bilanz im {{month}}",
     "dailyAverageThisMonth": "Tagesdurchschnitt",
     "dailyAverageTooltip": "Was du diesen Monat im Schnitt pro Tag verdienst, gezählt nur bis heute.",
     "dailyAverageTooltipShow": "Info: Tagesdurchschnitt",

@@ -8,17 +8,19 @@ Registro de cambios relevantes de Ocean Flow.
 - **Portada rediseñada: bento de accesos entre KPIs y calendario**: la
   fila de Training Records y la tarjeta de "Pendiente de cobrar" (antes
   encima del calendario) y la tarjeta de "Escuela más activa" (antes
-  después) se compactan en un bento de dos filas — Pendiente de cobrar +
-  "Nuevo movimiento" (antes un "+" incrustado dentro de la propia
-  tarjeta) arriba; Training Records + "Escuela favorita este mes" (nuevo
-  nombre, ahora con "N cursos" en vez de "N movimientos este mes")
-  abajo. Mismo presupuesto de alto que antes — el calendario no cae más
-  abajo.
+  después) se compactan en un bento de dos filas — Pendiente de cobrar
+  (contenido centrado) + "Nuevo movimiento" (antes un "+" incrustado
+  dentro de la propia tarjeta) arriba; Training Records + "Escuela del
+  mes" (nombre corto — pasó por "Escuela favorita este mes", pero ese
+  texto se cortaba en móvil; ahora con "N cursos" en vez de "N
+  movimientos este mes") abajo. Mismo presupuesto de alto que antes — el
+  calendario no cae más abajo. El título de la sección de KPIs pasa de
+  "Tu impacto este mes" a "Tu impacto en {mes actual}".
 - **Nuevo indicador de pestaña activa en el menú inferior**: sustituye
   al óvalo fijo por una línea superior que se desliza entre pestañas
-  (animada con `motion/react`) y el icono activo "iluminado" con un
-  círculo de fondo — de paso, corregido que el icono no quedaba
-  centrado dentro de ese círculo.
+  (animada con `motion/react`, patrón `layoutId` de shared layout) — el
+  icono activo pasa de tenue/apagado a encendido/oscuro, sin ningún
+  círculo ni halo de fondo.
 
 ### Fixed
 - **Informe PDF: la cabecera de un día podía quedar sola al final de una

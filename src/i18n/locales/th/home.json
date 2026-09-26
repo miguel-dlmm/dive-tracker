@@ -1,11 +1,11 @@
 {
   "calendarCaption": "แตะวันที่เพื่อดูรายละเอียด หรือแตะวันว่างเพื่อเพิ่มรายการ",
-  "activeSchoolThisMonth": "โรงเรียนโปรดประจำเดือนนี้",
+  "activeSchoolThisMonth": "โรงเรียนประจำเดือน",
   "activeSchoolCount_one": "{{count}} คอร์ส",
   "activeSchoolCount_other": "{{count}} คอร์ส",
   "noActivityThisMonth": "ไม่มีกิจกรรมเดือนนี้",
   "kpis": {
-    "sectionTitle": "ผลงานของคุณเดือนนี้",
+    "sectionTitle": "ผลงานของคุณเดือน{{month}}",
     "dailyAverageThisMonth": "เฉลี่ยต่อวัน",
     "dailyAverageTooltip": "รายได้เฉลี่ยต่อวันของเดือนนี้ นับถึงวันนี้เท่านั้น",
     "dailyAverageTooltipShow": "ข้อมูล: เฉลี่ยต่อวัน",

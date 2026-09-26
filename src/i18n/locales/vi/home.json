@@ -1,11 +1,11 @@
 {
   "calendarCaption": "Chạm vào một ngày để xem chi tiết, hoặc ngày trống để thêm giao dịch",
-  "activeSchoolThisMonth": "Trung tâm yêu thích tháng này",
+  "activeSchoolThisMonth": "Trung tâm của tháng",
   "activeSchoolCount_one": "{{count}} khóa học",
   "activeSchoolCount_other": "{{count}} khóa học",
   "noActivityThisMonth": "Chưa có hoạt động tháng này",
   "kpis": {
-    "sectionTitle": "Thành quả tháng này",
+    "sectionTitle": "Thành quả trong {{month}}",
     "dailyAverageThisMonth": "Trung bình mỗi ngày",
     "dailyAverageTooltip": "Số tiền bạn kiếm được trung bình mỗi ngày trong tháng này, tính đến hôm nay.",
     "dailyAverageTooltipShow": "Thông tin: Trung bình mỗi ngày",

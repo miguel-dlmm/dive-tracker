@@ -1,11 +1,11 @@
 {
   "calendarCaption": "Toca un dia per veure'n el detall, o un de buit per afegir un moviment",
-  "activeSchoolThisMonth": "Escola preferida aquest mes",
+  "activeSchoolThisMonth": "Escola del mes",
   "activeSchoolCount_one": "{{count}} curs",
   "activeSchoolCount_other": "{{count}} cursos",
   "noActivityThisMonth": "Sense activitat aquest mes",
   "kpis": {
-    "sectionTitle": "El teu impacte aquest mes",
+    "sectionTitle": "El teu impacte a {{month}}",
     "dailyAverageThisMonth": "Mitjana diària",
     "dailyAverageTooltip": "El que guanyes de mitjana cada dia aquest mes, comptant només fins avui.",
     "dailyAverageTooltipShow": "Info: Mitjana diària",

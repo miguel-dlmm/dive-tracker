@@ -1,11 +1,11 @@
 {
   "calendarCaption": "Sakatu egun bat xehetasunak ikusteko, edo egun huts bat mugimendu bat gehitzeko",
-  "activeSchoolThisMonth": "Hilabete honetako eskola gogokoena",
+  "activeSchoolThisMonth": "Hileko eskola",
   "activeSchoolCount_one": "Ikastaro {{count}}",
   "activeSchoolCount_other": "{{count}} ikastaro",
   "noActivityThisMonth": "Ez dago jarduerarik hilabete honetan",
   "kpis": {
-    "sectionTitle": "Zure eragina hilabete honetan",
+    "sectionTitle": "Zure eragina: {{month}}",
     "dailyAverageThisMonth": "Eguneko batez bestekoa",
     "dailyAverageTooltip": "Hilabete honetan egunean batez beste irabazten duzuna, gaurrera arte bakarrik zenbatuta.",
     "dailyAverageTooltipShow": "Info: Eguneko batez bestekoa",

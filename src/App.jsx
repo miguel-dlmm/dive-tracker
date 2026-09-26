@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { Home as HomeIcon, Briefcase, BarChart3, X, Settings, HelpCircle, ChevronLeft } from "lucide-react";
@@ -331,35 +331,6 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
   const sectionColor = (key) => navSections.rows.find((s) => s.key === key)?.color || BRAND_NAVY;
   const avatar = resolveAvatar(profile);
   const bottomTabActive = PRIMARY_TABS.some((tabItem) => tabItem.id === tab) ? tab : null;
-  // Indicador de pestaña activa del nav inferior (rediseño 2026-09-26,
-  // docs/DESIGN-SYSTEM.md §7.1 — sustituye al óvalo fijo anterior, pedido
-  // explícito del usuario tras ver mockups: "me convence halo, pero sin
-  // el halo en sí, iluminar el icono y añadir la línea superior
-  // marcándolo"). Dos piezas independientes:
-  // (1) una línea fina que se DESLIZA hasta la pestaña activa — medida en
-  //     cada cambio de pestaña (posición/ancho real del botón, vía refs)
-  //     y animada con motion, mismo mecanismo de layout animado que ya
-  //     usan los KPI de Home (motion/react, sin librería nueva);
-  // (2) el icono de la pestaña activa se "ilumina" con un fondo circular
-  //     sólido tenue (mismo patrón que las insignias de KPI en toda la
-  //     app, `${color}1A`) — una simple transición de color, no un halo
-  //     difuminado (descartado explícitamente por el usuario).
-  // Medir con getBoundingClientRect() en vez de calcular por índice/ancho
-  // fijo: los 3 destinos no tienen el mismo ancho de etiqueta ("Mi
-  // trabajo" es más larga que "Inicio"/"Resumen") y el layout usa
-  // `justify-around`, así que la única posición fiable es la real del
-  // DOM en cada momento.
-  const navRowRef = useRef(null);
-  const navBtnRefs = useRef({});
-  const [navIndicator, setNavIndicator] = useState(null);
-  useLayoutEffect(() => {
-    const rowEl = navRowRef.current;
-    const activeEl = bottomTabActive ? navBtnRefs.current[bottomTabActive] : null;
-    if (!rowEl || !activeEl) { setNavIndicator(null); return; }
-    const rowRect = rowEl.getBoundingClientRect();
-    const btnRect = activeEl.getBoundingClientRect();
-    setNavIndicator({ left: btnRect.left - rowRect.left, width: btnRect.width });
-  }, [bottomTabActive]);
   const isSecondary = SECONDARY_TABS.includes(tab);
   // Rediseño de navegación 2026-09-06 — antes Configuración dibujaba su
   // propia miga de pan interna ("‹ Configuración") ADEMÁS de esta cabecera
@@ -622,19 +593,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
         className="fixed inset-x-0 bottom-0 z-20 border-t border-black/5 bg-white"
         style={{ paddingBottom: "env(safe-area-inset-bottom)", transform: "translateZ(0)" }}
       >
-        <div ref={navRowRef} className="relative mx-auto flex max-w-3xl items-stretch justify-around px-2 py-1">
-          {/* Línea deslizante — ver comentario junto a navIndicator, más
-              arriba en este mismo archivo. pointer-events-none: es un
-              indicador puramente visual, nunca debe interceptar el tap
-              del botón que tiene debajo. */}
-          {navIndicator && (
-            <motion.span
-              className="pointer-events-none absolute top-0 h-[3px] rounded-b-full"
-              style={{ backgroundColor: BRAND_SKY }}
-              animate={{ x: navIndicator.left, width: navIndicator.width }}
-              transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 32 }}
-            />
-          )}
+        <div className="mx-auto flex max-w-3xl items-stretch justify-around px-2 py-1">
           {PRIMARY_TABS.map((tabItem) => {
             const Icon = tabItem.icon;
             const active = bottomTabActive === tabItem.id;
@@ -642,27 +601,40 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             return (
               <button
                 key={tabItem.id}
-                ref={(el) => { navBtnRefs.current[tabItem.id] = el; }}
                 onClick={() => changeTab(tabItem.id)}
                 aria-current={active ? "page" : undefined}
-                className="flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-2 transition-colors"
+                className="relative flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-2 transition-colors"
                 style={{ color: active ? c : "#9CA3AF" }}
               >
-                {/* Icono "iluminado" (rediseño 2026-09-26) — fondo circular
-                    sólido tenue tras el icono activo, siempre sky-tintado
-                    (BRAND_SKY), independiente del color de sección: es un
-                    "estás aquí" genérico, no una repintada del acento de
-                    la sección (mismo criterio que la píldora que
-                    sustituye). `flex items-center justify-center` aquí es
-                    lo que centra de verdad el icono dentro del círculo —
-                    sin esto el icono queda pegado a una esquina en vez de
-                    centrado (bug real reportado sobre el primer mockup). */}
-                <span
-                  className="flex h-[30px] w-[30px] items-center justify-center rounded-full transition-colors"
-                  style={{ backgroundColor: active ? `${BRAND_SKY}33` : "transparent" }}
-                >
-                  <Icon size={19} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-                </span>
+                {/* Sin halo ni fondo circular (rediseño 2026-09-26,
+                    segunda vuelta — pedido explícito tras ver el primer
+                    resultado: "no quiero nada de halo, quiero que los
+                    iconos estén tenues y cuando haga click se pongan más
+                    oscuros y le sale la línea encima"): el propio icono
+                    pasa de tenue/apagado (gris, inactivo) a
+                    encendido/oscuro (color de sección, activo) — la
+                    línea de arriba es la única marca extra.
+                    `layoutId` compartido (rediseño de la línea, misma
+                    fecha): un único elemento con este id vive dentro del
+                    botón activo en cada momento — al cambiar de pestaña,
+                    Motion anima la transición de posición/ancho entre el
+                    botón viejo y el nuevo automáticamente (FLIP), sin
+                    medir nada a mano. El intento anterior (un solo
+                    elemento posicionado con x/width vía refs) tenía un
+                    bug real: la animación `x`/`width` del `animate` no
+                    llegaba a aplicarse (verificado en el DOM:
+                    `transform: none`, `width: 0`) — `layoutId` es el
+                    patrón documentado de Motion para justo este caso
+                    (indicador de tabs) y no depende de medir nada. */}
+                {active && (
+                  <motion.span
+                    layoutId="nav-active-line"
+                    className="pointer-events-none absolute left-2 right-2 top-0 h-[3px] rounded-b-full"
+                    style={{ backgroundColor: BRAND_SKY }}
+                    transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                )}
+                <Icon size={19} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
                 <span className="text-[10.5px] font-medium">{t(`tabs.${tabItem.id}`)}</span>
               </button>
             );

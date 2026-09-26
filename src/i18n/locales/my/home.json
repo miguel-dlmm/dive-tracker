@@ -1,11 +1,11 @@
 {
   "calendarCaption": "အသေးစိတ်ကြည့်ရန် နေ့ရက်ကို နှိပ်ပါ၊ သို့မဟုတ် လုပ်ဆောင်ချက်ထည့်ရန် အလွတ်နေ့တစ်ခုကို နှိပ်ပါ",
-  "activeSchoolThisMonth": "ဤလအတွက် အကြိုက်ဆုံးကျောင်း",
+  "activeSchoolThisMonth": "ဤလ၏ ကျောင်း",
   "activeSchoolCount_one": "သင်တန်း {{count}} ခု",
   "activeSchoolCount_other": "သင်တန်း {{count}} ခု",
   "noActivityThisMonth": "ဤလအတွင်း လှုပ်ရှားမှုမရှိပါ",
   "kpis": {
-    "sectionTitle": "ဤလ သင့်ရလဒ်",
+    "sectionTitle": "သင့်ရလဒ် — {{month}}",
     "dailyAverageThisMonth": "နေ့စဉ်ပျမ်းမျှ",
     "dailyAverageTooltip": "ဒီလအတွက် ယနေ့အထိသာ တွက်ချက်ထားသော နေ့စဉ်ပျမ်းမျှ ဝင်ငွေ။",
     "dailyAverageTooltipShow": "အချက်အလက်: နေ့စဉ်ပျမ်းမျှ",
