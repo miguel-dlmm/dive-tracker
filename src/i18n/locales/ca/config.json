@@ -48,13 +48,6 @@
   "sectionColors": {
     "descripcion": "S'utilitzen a la barra de navegació i als botons de crear registre de cada àrea."
   },
-  "generalSettings": {
-    "iconoCarga": "Icona de càrrega",
-    "descripcion": "S'utilitza a l'animació de \"carregant\" de tota l'app. Quan tingueu el logo oficial d'Ocean Flow, aviseu-me i el substitueixo per la icona real en comptes d'aquesta llista.",
-    "iconoActualizado": "Icona actualitzada",
-    "noSePudoGuardar": "No s'ha pogut desar. Torna-ho a provar.",
-    "vistaPrevia": "Vista prèvia"
-  },
   "externalRegistration": {
     "titulo": "Permet el registre extern",
     "descripcion": "Mostra \"Registra't\" al login perquè qualsevol pugui crear el seu propi compte.",

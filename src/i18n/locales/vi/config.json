@@ -48,13 +48,6 @@
   "sectionColors": {
     "descripcion": "Được dùng trong thanh điều hướng và các nút tạo bản ghi của từng khu vực."
   },
-  "generalSettings": {
-    "iconoCarga": "Biểu tượng đang tải",
-    "descripcion": "Dùng trong hoạt ảnh \"đang tải\" của toàn bộ ứng dụng. Khi có logo chính thức của Ocean Flow, hãy báo tôi và tôi sẽ thay thế bằng biểu tượng thật thay vì danh sách này.",
-    "iconoActualizado": "Đã cập nhật biểu tượng",
-    "noSePudoGuardar": "Không thể lưu. Vui lòng thử lại.",
-    "vistaPrevia": "Xem trước"
-  },
   "externalRegistration": {
     "titulo": "Cho phép đăng ký bên ngoài",
     "descripcion": "Hiện nút \"Đăng ký\" ở màn hình đăng nhập để bất kỳ ai cũng có thể tạo tài khoản riêng.",

@@ -8,10 +8,11 @@ import { HELP_CATEGORIES } from "./help/content";
 import HelpArticleBody from "./help/HelpArticleBody";
 
 // Catálogo cerrado de iconos de categoría (help/content.js, campo `icon`)
-// — imports nombrados en vez de `import * as Icons from "lucide-react"`,
-// mismo hallazgo de bundle que en shared.jsx (ver LOADING_ICONS ahí). Si
-// se añade una categoría con un icono nuevo en content.js, se añade aquí
-// también.
+// — imports nombrados en vez de `import * as Icons from "lucide-react"`
+// (ese wildcard obligaría a incluir la librería de iconos entera en el
+// bundle de producción, mismo criterio que AVATAR_ICON_MAP en
+// avatarCatalog.js). Si se añade una categoría con un icono nuevo en
+// content.js, se añade aquí también.
 const CATEGORY_ICONS = { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Award };
 
 // Combina el texto traducido (namespace "help", claves `articles.<id>.*`)

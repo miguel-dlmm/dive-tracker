@@ -48,13 +48,6 @@
   "sectionColors": {
     "descripcion": "Verwendet in der Navigationsleiste und in den Buttons zum Erstellen von Einträgen in jedem Bereich."
   },
-  "generalSettings": {
-    "iconoCarga": "Ladesymbol",
-    "descripcion": "Wird in der \"Lädt\"-Animation der gesamten App verwendet. Sobald ihr das offizielle Ocean-Flow-Logo habt, sagt mir Bescheid und ich ersetze es durch das echte Symbol statt dieser Liste.",
-    "iconoActualizado": "Symbol aktualisiert",
-    "noSePudoGuardar": "Konnte nicht gespeichert werden. Versuch es erneut.",
-    "vistaPrevia": "Vorschau"
-  },
   "externalRegistration": {
     "titulo": "Externe Registrierung erlauben",
     "descripcion": "Zeigt \"Registrieren\" im Login an, damit jeder sein eigenes Konto erstellen kann.",

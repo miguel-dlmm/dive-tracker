@@ -4,6 +4,15 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Fixed
+- **Parpadeo al iniciar sesión: un icono de carga antiguo se veía un
+  instante antes del logo real**: Configuración → Ajustes conservaba un
+  selector que dejaba elegir un icono de lucide-react (Waves, Anchor...)
+  como icono de carga, pensado como alternativa temporal de antes de que
+  existiera el logo oficial — nunca se retiró tras el rebrand
+  (2026-09-06). Eliminado por completo: la pantalla de carga siempre
+  muestra el logo real, sin ninguna rama alternativa.
+
 ## [1.4.0] - 2026-09-26
 
 ### Added
