@@ -981,4 +981,342 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
       expect(screen.queryByLabelText("Administrador")).not.toBeInTheDocument();
     });
   });
+
+  // Informe de robustez 2026-09 (tarea de seguimiento #2, Alta): cambiar el
+  // rol de admin desde la casilla de la ficha de detalle no tenía ningún
+  // test — ni el camino feliz (confirmar) ni cancelar la confirmación.
+  describe("cambiar el rol de admin desde la ficha de detalle", () => {
+    it("marcar la casilla 'Admin' pide confirmación y, al confirmar, llama a /api/update-admin-status", async () => {
+      const user = userEvent.setup();
+      mockFetchByUrl({
+        "/api/list-user-status": [
+          { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+          { ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) },
+        ],
+        "/api/update-admin-status": [{ ok: true, json: async () => ({ user_id: "target-1", is_admin: true }) }],
+      });
+
+      await openUsuarios(user);
+      await user.click(screen.getByRole("button", { name: /ana/ }));
+      await waitFor(() => expect(screen.getByRole("checkbox", { name: "Admin: no" })).toBeInTheDocument());
+
+      await user.click(screen.getByRole("checkbox", { name: "Admin: no" }));
+      expect(screen.getByText("Cambiar rol de admin", { selector: "h3" })).toBeInTheDocument();
+      expect(screen.getByText(/Admin: no → sí/)).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Confirmar" }));
+
+      await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/update-admin-status", expect.objectContaining({
+        body: JSON.stringify({ target_user_id: "target-1", is_admin: true }),
+      })));
+    });
+
+    it("cancelar la confirmación de rol no llama a la API ni cambia la casilla", async () => {
+      const user = userEvent.setup();
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+
+      await openUsuarios(user);
+      await user.click(screen.getByRole("button", { name: /ana/ }));
+      await waitFor(() => expect(screen.getByRole("checkbox", { name: "Admin: no" })).toBeInTheDocument());
+
+      await user.click(screen.getByRole("checkbox", { name: "Admin: no" }));
+      const fetchCallsBefore = globalThis.fetch.mock.calls.length;
+      await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+      expect(screen.queryByText("Cambiar rol de admin", { selector: "h3" })).not.toBeInTheDocument();
+      expect(screen.getByRole("checkbox", { name: "Admin: no" })).toBeInTheDocument();
+      expect(globalThis.fetch.mock.calls.length).toBe(fetchCallsBefore);
+    });
+  });
+
+  // Informe de robustez 2026-09 (tarea #2): cancelar cualquiera de las
+  // otras 4 confirmaciones (desactivar/eliminar/regenerar enlace/regenerar
+  // contraseña) tampoco tenía test — sin esto, un futuro cambio podría
+  // romper "Cancelar" (p. ej. disparando la acción por error) sin que nada
+  // lo detectara.
+  describe("cancelar las confirmaciones de desactivar/eliminar/regenerar no ejecuta la acción", () => {
+    it("cancelar 'Desactivar usuario' no llama a /api/set-user-active", async () => {
+      const user = userEvent.setup();
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+      await openUsuarios(user);
+      await user.click(screen.getByRole("button", { name: /ana/ }));
+      await waitFor(() => expect(screen.getByRole("switch", { name: "Desactivar usuario" })).toBeInTheDocument());
+
+      await user.click(screen.getByRole("switch", { name: "Desactivar usuario" }));
+      await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+      expect(globalThis.fetch).not.toHaveBeenCalledWith("/api/set-user-active", expect.anything());
+      expect(screen.getByRole("switch", { name: "Desactivar usuario" })).toBeInTheDocument();
+    });
+
+    it("cancelar 'Eliminar usuario' no llama a /api/delete-user", async () => {
+      const user = userEvent.setup();
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+      await openUsuarios(user);
+      await user.click(screen.getByRole("button", { name: /ana/ }));
+      await user.click(screen.getByRole("button", { name: "Eliminar usuario" }));
+      await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+      expect(globalThis.fetch).not.toHaveBeenCalledWith("/api/delete-user", expect.anything());
+      expect(screen.getByRole("button", { name: /ana/ })).toBeInTheDocument();
+    });
+
+    it("cancelar 'Regenerar enlace' no llama a /api/regenerate-activation-link", async () => {
+      const user = userEvent.setup();
+      mockProfilesFrom(null);
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+      await openUsuarios(user);
+      await user.click(screen.getByRole("button", { name: /ana/ }));
+      await waitFor(() => expect(screen.getByRole("button", { name: "Regenerar enlace" })).toBeInTheDocument());
+
+      await user.click(screen.getByRole("button", { name: "Regenerar enlace" }));
+      await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+      expect(globalThis.fetch).not.toHaveBeenCalledWith("/api/regenerate-activation-link", expect.anything());
+    });
+
+    it("cancelar 'Regenerar contraseña' no llama a /api/regenerate-password", async () => {
+      const user = userEvent.setup();
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+      await openUsuarios(user);
+      await user.click(screen.getByRole("button", { name: /ana/ }));
+      await user.click(screen.getByRole("button", { name: "Regenerar contraseña" }));
+      await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+      expect(globalThis.fetch).not.toHaveBeenCalledWith("/api/regenerate-password", expect.anything());
+    });
+  });
+
+  // Informe de robustez 2026-09 (tarea #2): los 4 catch/403 de estas
+  // acciones (actionErrorMessage) nunca se ejercitaban — todos los tests
+  // anteriores asumían res.ok:true. Un fallo real de red/permisos debe
+  // dejar el diálogo abierto (para poder reintentar), no cerrarlo como si
+  // hubiera funcionado.
+  describe("un fallo del servidor deja el diálogo de confirmación abierto para reintentar", () => {
+    it("eliminar con 403 (no soy superadmin) no cierra el diálogo ni quita la fila", async () => {
+      const user = userEvent.setup();
+      mockFetchByUrl({
+        "/api/list-user-status": [{ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }],
+        "/api/delete-user": [{ ok: false, status: 403, json: async () => ({ error: "forbidden" }) }],
+      });
+      await openUsuarios(user);
+      await user.click(screen.getByRole("button", { name: /ana/ }));
+      await user.click(screen.getByRole("button", { name: "Eliminar usuario" }));
+      await user.click(screen.getByRole("button", { name: "Eliminar", exact: true }));
+
+      await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/delete-user", expect.anything()));
+      expect(screen.getByRole("button", { name: "Eliminar", exact: true })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "ana" })).toBeInTheDocument();
+    });
+
+    it("desactivar con un error 500 sin cuerpo reconocible mantiene el switch y el diálogo", async () => {
+      const user = userEvent.setup();
+      mockFetchByUrl({
+        "/api/list-user-status": [{ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) }],
+        "/api/set-user-active": [{ ok: false, status: 500, json: async () => ({ error: "Fallo interno" }) }],
+      });
+      await openUsuarios(user);
+      await user.click(screen.getByRole("button", { name: /ana/ }));
+      await waitFor(() => expect(screen.getByRole("switch", { name: "Desactivar usuario" })).toBeInTheDocument());
+
+      await user.click(screen.getByRole("switch", { name: "Desactivar usuario" }));
+      await user.click(screen.getByRole("button", { name: "Desactivar", exact: true }));
+
+      await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/set-user-active", expect.anything()));
+      expect(screen.getByRole("switch", { name: "Desactivar usuario" })).toBeInTheDocument();
+    });
+  });
+
+  // Informe de robustez 2026-09 (tarea de seguimiento #4, Media): el
+  // servidor ya rechaza estas peticiones si quien llama no es superadmin
+  // (defensa en profundidad ya existente), pero nada probaba que la UI de
+  // un admin normal (sin superadmin) oculte/deshabilite de verdad las
+  // acciones de gestión — un botón que aparenta funcionar y en realidad
+  // falla sería mala experiencia sin que ningún test lo detectara.
+  describe("un admin normal (no superadmin) no ve ni puede activar las acciones de superadmin", () => {
+    const NORMAL_ADMIN_PROFILE = { user_id: "admin-2", is_admin: true, is_superadmin: false };
+
+    it("no ve 'Crear usuario' ni 'Generar enlace de invitación' en el directorio", async () => {
+      const user = userEvent.setup();
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+
+      render(<ConfigTab {...baseProps({ profile: NORMAL_ADMIN_PROFILE })} />);
+      await user.click(screen.getByText("Usuarios"));
+      await waitFor(() => expect(screen.getByText("ana")).toBeInTheDocument());
+
+      expect(screen.queryByRole("button", { name: "Crear usuario" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Generar enlace de invitación" })).not.toBeInTheDocument();
+    });
+
+    it("no puede arrastrar una fila para eliminarla", async () => {
+      const user = userEvent.setup();
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+
+      render(<ConfigTab {...baseProps({ profile: NORMAL_ADMIN_PROFILE })} />);
+      await user.click(screen.getByText("Usuarios"));
+      await waitFor(() => expect(screen.getByText("ana")).toBeInTheDocument());
+
+      expect(document.querySelector('[aria-label="Eliminar a ana"]')).toBeNull();
+    });
+
+    it("en la ficha de detalle, la casilla 'Admin' queda deshabilitada y no hay botones de regenerar contraseña / eliminar", async () => {
+      const user = userEvent.setup();
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": true }, lastSignInAt: {} }) });
+
+      render(<ConfigTab {...baseProps({ profile: NORMAL_ADMIN_PROFILE })} />);
+      await user.click(screen.getByText("Usuarios"));
+      await waitFor(() => expect(screen.getByText("ana")).toBeInTheDocument());
+      await user.click(screen.getByRole("button", { name: /ana/ }));
+
+      await waitFor(() => expect(screen.getByRole("checkbox", { name: "Admin: no" })).toBeInTheDocument());
+      expect(screen.getByRole("checkbox", { name: "Admin: no" })).toBeDisabled();
+      expect(screen.getByRole("switch", { name: "Desactivar usuario" })).toBeDisabled();
+      expect(screen.queryByRole("button", { name: "Regenerar contraseña" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Eliminar usuario" })).not.toBeInTheDocument();
+    });
+
+    it("en contraste, un superadmin sí ve la casilla 'Admin' habilitada y las acciones completas", async () => {
+      const user = userEvent.setup();
+      await openUsuarios(user);
+      await user.click(screen.getByRole("button", { name: /ana/ }));
+
+      await waitFor(() => expect(screen.getByRole("checkbox", { name: "Admin: no" })).toBeInTheDocument());
+      expect(screen.getByRole("checkbox", { name: "Admin: no" })).toBeEnabled();
+      expect(screen.getByRole("switch", { name: "Desactivar usuario" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Regenerar contraseña" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Eliminar usuario" })).toBeInTheDocument();
+    });
+  });
+
+  // Informe de robustez 2026-09 (tarea #2): "Baja: <fecha y hora>" en la
+  // propia ficha de detalle (a diferencia de la fila del listado, que ya
+  // tenía test) usa shortDateTime (con hora, no solo fecha) — nunca se
+  // había ejercitado.
+  it("la ficha de detalle muestra fecha y hora de baja para una cuenta desactivada", async () => {
+    const user = userEvent.setup();
+    mockProfilesFrom("2026-08-02T00:00:00Z", "2026-08-15T10:30:00Z");
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: { "target-1": false }, lastSignInAt: {} }) });
+
+    await openUsuarios(user);
+    await user.click(screen.getByRole("button", { name: /ana/ }));
+
+    await waitFor(() => expect(screen.getByText("Baja", { selector: "span" })).toBeInTheDocument());
+    // shortDateTime combina fecha+hora (año a 2 dígitos, a diferencia de
+    // shortDate) — solo se comprueba la fecha, no la hora exacta, porque
+    // la hora depende de la zona horaria del entorno donde corran los tests.
+    expect(screen.getByText("Baja", { selector: "span" }).nextElementSibling).toHaveTextContent(/15\/8\/26/);
+  });
+
+  // Informe de robustez 2026-09 (tarea #2): CreateUserSheet.submit() estaba
+  // al 0% de cobertura — ni la validación de campos obligatorios, ni el
+  // alta correcta con dataset, ni el 403 (no soy superadmin) tenían test.
+  describe("Crear usuario: validación, alta correcta y 403", () => {
+    function mockDatasetsAndProfiles(datasets = [{ key: "ihasia", label: "Ihasia" }]) {
+      supabase.from.mockImplementation((table) => {
+        if (table === "setup_datasets") return { select: () => ({ order: () => Promise.resolve({ data: datasets, error: null }) }) };
+        if (table === "profiles") return { select: () => Promise.resolve({ data: [], error: null }) };
+        throw new Error(`tabla inesperada en el mock: ${table}`);
+      });
+    }
+
+    it("sin dataset seleccionado, pulsar 'Crear usuario' no llama a la API (campos obligatorios)", async () => {
+      const user = userEvent.setup();
+      mockDatasetsAndProfiles();
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) });
+
+      render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
+      await user.click(screen.getByText("Usuarios"));
+      await user.click(screen.getByRole("button", { name: "Crear usuario" }));
+      await user.type(screen.getByRole("textbox", { name: "Email" }), "nueva@example.com");
+      await user.type(screen.getByRole("textbox", { name: "Nickname" }), "nueva");
+
+      const [, submitButton] = screen.getAllByRole("button", { name: "Crear usuario" });
+      await user.click(submitButton);
+
+      expect(globalThis.fetch).not.toHaveBeenCalledWith("/api/create-user", expect.anything());
+      expect(screen.getAllByRole("button", { name: "Crear usuario" })).toHaveLength(2); // la hoja sigue abierta
+    });
+
+    it("con todos los campos y un dataset, crea el usuario y cierra la hoja al terminar", async () => {
+      const user = userEvent.setup();
+      mockDatasetsAndProfiles();
+      mockFetchByUrl({
+        "/api/list-user-status": [{ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) }],
+        "/api/create-user": [{ ok: true, json: async () => ({ user_id: "new-1" }) }],
+      });
+
+      render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
+      await user.click(screen.getByText("Usuarios"));
+      await user.click(screen.getByRole("button", { name: "Crear usuario" }));
+      await user.type(screen.getByRole("textbox", { name: "Email" }), "nueva@example.com");
+      await user.type(screen.getByRole("textbox", { name: "Nickname" }), "nueva");
+      await user.click(await screen.findByRole("button", { name: "Selecciona un dataset" }));
+      await user.click(screen.getByRole("option", { name: "Ihasia" }));
+
+      const [, submitButton] = screen.getAllByRole("button", { name: "Crear usuario" });
+      await user.click(submitButton);
+
+      await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/create-user", expect.objectContaining({
+        body: expect.stringContaining('"dataset_key":"ihasia"'),
+      })));
+      await waitFor(() => expect(screen.getAllByRole("button", { name: "Crear usuario" })).toHaveLength(1));
+    });
+
+    it("con un 403 (no soy superadmin) la hoja se queda abierta, sin llamar a onCreated", async () => {
+      const user = userEvent.setup();
+      mockDatasetsAndProfiles();
+      mockFetchByUrl({
+        "/api/list-user-status": [{ ok: true, json: async () => ({ active: {}, lastSignInAt: {} }) }],
+        "/api/create-user": [{ ok: false, status: 403, json: async () => ({ error: "forbidden" }) }],
+      });
+
+      render(<ConfigTab {...baseProps({ profile: SUPERADMIN_PROFILE })} />);
+      await user.click(screen.getByText("Usuarios"));
+      await user.click(screen.getByRole("button", { name: "Crear usuario" }));
+      await user.type(screen.getByRole("textbox", { name: "Email" }), "nueva@example.com");
+      await user.type(screen.getByRole("textbox", { name: "Nickname" }), "nueva");
+      await user.click(await screen.findByRole("button", { name: "Selecciona un dataset" }));
+      await user.click(screen.getByRole("option", { name: "Ihasia" }));
+
+      const [, submitButton] = screen.getAllByRole("button", { name: "Crear usuario" });
+      await user.click(submitButton);
+
+      await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledWith("/api/create-user", expect.anything()));
+      expect(screen.getAllByRole("button", { name: "Crear usuario" })).toHaveLength(2);
+    });
+  });
+});
+
+// Informe de robustez 2026-09 (tarea #2): SectionColors (sección
+// "Navegación") no tenía ningún test — 0% de este bloque.
+describe("ConfigTab — Navegación: colores por área (SectionColors)", () => {
+  it("cambiar el color de una fila llama a navSections.updateRow con el nuevo hex", async () => {
+    const user = userEvent.setup();
+    const navSections = rowsHook([{ key: "worklog", label: "Mi trabajo", color: "#0E7C7B" }]);
+    render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: true, is_superadmin: false }, navSections })} />);
+
+    await user.click(screen.getByText("Colores de navegación"));
+    const colorInput = screen.getByDisplayValue("#0e7c7b");
+    fireEvent.change(colorInput, { target: { value: "#112233" } });
+
+    expect(navSections.updateRow).toHaveBeenCalledWith("worklog", { color: "#112233" });
+  });
+});
+
+// Informe de robustez 2026-09 (tarea #2): el camino de error del switch de
+// registro externo (updateRow rechazado) nunca se ejercitaba.
+describe("ConfigTab — Ajustes generales: el switch no queda marcado si falla el guardado", () => {
+  it("un fallo al guardar deja el switch en su valor anterior", async () => {
+    const user = userEvent.setup();
+    const updateRow = vi.fn().mockRejectedValue(new Error("network"));
+    const appConfig = { ...rowsHook([{ allow_external_registration: false }]), updateRow };
+    render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: true, is_superadmin: true }, appConfig })} />);
+
+    await user.click(screen.getByText("Ajustes generales"));
+    const toggle = screen.getByRole("switch", { name: "Permitir registro externo" });
+    await user.click(toggle);
+
+    await waitFor(() => expect(updateRow).toHaveBeenCalled());
+    expect(toggle).not.toBeChecked();
+  });
 });
