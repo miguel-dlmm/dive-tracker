@@ -9,9 +9,10 @@ Registro de cambios relevantes de Ocean Flow.
   para enseñar la guía al cliente durante el briefing, a pantalla
   completa y con zoom (pellizcar o doble toque). Organizada en 3
   secciones navegables (Puntos de buceo, Vida marina, Información
-  extra), con portada propia de Ocean Flow — la portada del libro físico
-  original llevaba un anuncio pegado que no se podía separar del
-  contenido.
+  extra) con un buscador de los 37 puntos de buceo catalogados, y
+  portada propia de Ocean Flow — la portada del libro físico original
+  llevaba un anuncio pegado que no se podía separar del contenido.
+  Incluye modo oscuro para leer con poca luz.
 
 ## [1.6.0] - 2026-09-27
 
