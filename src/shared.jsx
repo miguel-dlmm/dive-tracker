@@ -411,6 +411,23 @@ export function formatMoney(amount, code, currencyRows) {
   return `${n} ${symbol}`;
 }
 
+// "Valor por defecto de una tabla de catálogo" (is_default) — mismo
+// one-liner que se repetía a mano en 6 sitios (MovementSheet.jsx,
+// MiTrabajoTab.jsx, HomeTab.jsx, RatesTab.jsx, ProfileTab.jsx) para
+// currencies/paymentStatuses/schools/activities. Ver informe de
+// refactorización 2026-09, sección 1.2.
+export function getDefaultOf(rows, key = "name") {
+  return rows.find((r) => r.is_default)?.[key] ?? rows[0]?.[key] ?? "";
+}
+
+// Caso currency del helper genérico de arriba, con un respaldo que nunca
+// queda en blanco (convención 9 de CLAUDE.md: "nunca dejar el símbolo en
+// blanco") — antes esto variaba entre "EUR" y "" según el sitio, misma
+// expresión con un fallback distinto por descuido.
+export function getDefaultCurrency(currencies) {
+  return getDefaultOf(currencies, "code") || "EUR";
+}
+
 // Moneda favorita — preferencia personal del instructor, no dato de
 // negocio (localStorage, no Supabase, ver docs/ADR/0007). Única fuente de
 // verdad de esta clave: antes vivía duplicada en MovementSheet.jsx (solo

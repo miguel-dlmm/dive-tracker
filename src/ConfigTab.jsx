@@ -9,6 +9,7 @@ import {
 import { GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
 import { ENTITY_COLOR_PALETTE } from "./colors";
 import { useToast, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle, ColorSwatchPicker, DatePicker, useFloatingDropdown, FloatingPanel, FieldSkeleton } from "./shared";
+import { callAdminApi } from "./adminApi";
 import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
 import i18n from "./i18n";
@@ -45,19 +46,12 @@ function useRetained(value) {
   return ref.current;
 }
 
-// Mensaje determinista para las 4 acciones de gestión de usuarios: cada
-// handler (server/users/*.js) usa 403 EXCLUSIVAMENTE para "quien llama no
-// es superadmin" (verificado leyendo los 4 archivos — cualquier otro
-// rechazo usa 400/401/404/500) — así que basta con el código HTTP para
-// decidir el mensaje sin depender de que el cuerpo de la respuesta llegue
-// bien formado. Antes se confiaba en `payload.error`, y un fallo de red o
-// de parseo de JSON (poco probable pero posible) habría mostrado el
-// mensaje genérico de "no se pudo..." en vez de este, exactamente la
-// inconsistencia que no se quiere.
-function actionErrorMessage(res, payload, { forbidden, fallback }) {
-  if (res.status === 403) return forbidden;
-  return payload.error || fallback;
-}
+// callAdminApi (adminApi.js) resuelve el token de sesión, hace el fetch a
+// /api/* y mapea el error 403 EXCLUSIVAMENTE a "quien llama no es
+// superadmin" (verificado leyendo los 4 handlers server/users/*.js que lo
+// usan — cualquier otro rechazo usa 400/401/404/500) — ver informe de
+// refactorización 2026-09, sección 1.1: el mismo esqueleto se escribía a
+// mano 9 veces solo en este fichero.
 
 // Botón de color inline de cada fila (Escuelas/Cursos) — antes era un
 // `<input type="color">` nativo (rueda de color sin restricción), ahora
@@ -1262,15 +1256,9 @@ function CreateUserSheet({ open, onClose, onCreated }) {
     const languageCode = LANGUAGE_OPTIONS.find((l) => l.label === languageLabel)?.code;
     setSubmitting(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      const res = await fetch("/api/create-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...form, dataset_key: dataset.key, language: languageCode }),
+      const payload = await callAdminApi("/api/create-user", { ...form, dataset_key: dataset.key, language: languageCode }, {
+        forbidden: t("createUserSheet.soloSuperadminCrear"), fallback: t("createUserSheet.noSePudoCrear"),
       });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("createUserSheet.soloSuperadminCrear"), fallback: t("createUserSheet.noSePudoCrear") }));
       if (payload.action_link) {
         toast?.success(t("createUserSheet.usuarioCreadoSinEmail"));
         setEmailFailure(payload);
@@ -1446,15 +1434,8 @@ function UsersDirectory({ profile }) {
     setActivitySummary(null);
     (async () => {
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData?.session?.access_token;
-        const res = await fetch("/api/list-user-status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ user_id: openUserId }),
-        });
-        const payload = await res.json().catch(() => ({}));
-        if (!cancelled && res.ok) setActivitySummary(payload);
+        const payload = await callAdminApi("/api/list-user-status", { user_id: openUserId });
+        if (!cancelled) setActivitySummary(payload);
       } catch {
         // silencioso a propósito, mismo criterio que loadActiveStatus — un
         // fallo aquí no debe impedir ver el resto de la hoja de detalle
@@ -1515,19 +1496,10 @@ function UsersDirectory({ profile }) {
   // aquí no debe impedir ver el resto del directorio.
   const loadActiveStatus = async () => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      const res = await fetch("/api/list-user-status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: "{}",
-      });
-      const payload = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setActiveByUser(payload.active || {});
-        setLastSignInByUser(payload.lastSignInAt || {});
-        setLastActivityByUser(payload.lastActivityAt || {});
-      }
+      const payload = await callAdminApi("/api/list-user-status", {});
+      setActiveByUser(payload.active || {});
+      setLastSignInByUser(payload.lastSignInAt || {});
+      setLastActivityByUser(payload.lastActivityAt || {});
     } catch {
       // silencioso a propósito — ver comentario de arriba
     } finally {
@@ -1604,18 +1576,11 @@ function UsersDirectory({ profile }) {
     if (!pendingToggle) return;
     setSubmitting(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      // Mismo patrón exacto que CreateUserSheet.submit(): ruta única
-      // independiente del proveedor, cuerpo estrecho — nunca is_superadmin
-      // ni datos del usuario que llama, ese siempre sale del token.
-      const res = await fetch("/api/update-admin-status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ target_user_id: pendingToggle.user_id, is_admin: pendingToggle.nextValue }),
+      // Cuerpo estrecho — nunca is_superadmin ni datos del usuario que
+      // llama, ese siempre sale del token.
+      await callAdminApi("/api/update-admin-status", { target_user_id: pendingToggle.user_id, is_admin: pendingToggle.nextValue }, {
+        forbidden: t("usersDirectory.soloSuperadminRol"), fallback: t("usersDirectory.noSePudoActualizarRol"),
       });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminRol"), fallback: t("usersDirectory.noSePudoActualizarRol") }));
       toast?.success(t("usersDirectory.rolActualizado"));
       setPendingToggle(null);
       reload();
@@ -1640,15 +1605,10 @@ function UsersDirectory({ profile }) {
     if (!pendingDelete) return;
     setSubmitting(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      const res = await fetch("/api/delete-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ target_user_id: pendingDelete.user_id }),
+      await callAdminApi("/api/delete-user", { target_user_id: pendingDelete.user_id }, {
+        forbidden: t("usersDirectory.soloSuperadminEliminar"),
+        fallback: t("usersDirectory.noSePudoEliminar"),
       });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminEliminar"), fallback: t("usersDirectory.noSePudoEliminar") }));
       toast?.success(t("usersDirectory.usuarioEliminado"));
       setPendingDelete(null);
       setOpenUserId(null); // la cuenta ya no existe — no queda nada que mostrar en la hoja de detalle
@@ -1681,15 +1641,10 @@ function UsersDirectory({ profile }) {
     if (!pendingToggleActive) return;
     setSubmitting(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      const res = await fetch("/api/set-user-active", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ target_user_id: pendingToggleActive.user_id, active: false }),
+      await callAdminApi("/api/set-user-active", { target_user_id: pendingToggleActive.user_id, active: false }, {
+        forbidden: t("usersDirectory.soloSuperadminActivar"),
+        fallback: t("usersDirectory.noSePudoActualizarEstado"),
       });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminActivar"), fallback: t("usersDirectory.noSePudoActualizarEstado") }));
       toast?.success(t("usersDirectory.usuarioDesactivado"));
       setPendingToggleActive(null);
       loadActiveStatus();
@@ -1716,15 +1671,10 @@ function UsersDirectory({ profile }) {
     if (!pendingRegenerateLink) return;
     setSubmitting(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      const res = await fetch("/api/regenerate-activation-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ target_user_id: pendingRegenerateLink.user_id }),
+      const payload = await callAdminApi("/api/regenerate-activation-link", { target_user_id: pendingRegenerateLink.user_id }, {
+        forbidden: t("usersDirectory.soloSuperadminEnlace"),
+        fallback: t("usersDirectory.noSePudoGenerarEnlace"),
       });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminEnlace"), fallback: t("usersDirectory.noSePudoGenerarEnlace") }));
       // El backend ya intenta enviar el email automáticamente — el panel con
       // el enlace para copiar solo aparece si el envío falla (mismo patrón
       // que CreateUserSheet más abajo).
@@ -1763,15 +1713,10 @@ function UsersDirectory({ profile }) {
     if (!pendingRegeneratePassword) return;
     setSubmitting(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      const res = await fetch("/api/regenerate-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ target_user_id: pendingRegeneratePassword.user_id }),
+      const payload = await callAdminApi("/api/regenerate-password", { target_user_id: pendingRegeneratePassword.user_id }, {
+        forbidden: t("usersDirectory.soloSuperadminContrasena"),
+        fallback: t("usersDirectory.noSePudoRegenerarContrasena"),
       });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminContrasena"), fallback: t("usersDirectory.noSePudoRegenerarContrasena") }));
       // El backend ya intenta enviar el email automáticamente — el panel con
       // el enlace para copiar solo aparece si el envío falla (mismo patrón
       // que CreateUserSheet más abajo).
@@ -1803,14 +1748,10 @@ function UsersDirectory({ profile }) {
   const generateInvitationLink = async () => {
     setGeneratingInvitation(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      const res = await fetch("/api/generate-invitation-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      const payload = await callAdminApi("/api/generate-invitation-link", {}, {
+        forbidden: t("usersDirectory.soloSuperadminInvitacion"),
+        fallback: t("usersDirectory.noSePudoGenerarInvitacion"),
       });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(actionErrorMessage(res, payload, { forbidden: t("usersDirectory.soloSuperadminInvitacion"), fallback: t("usersDirectory.noSePudoGenerarInvitacion") }));
       setLinkPanel({
         title: t("usersDirectory.enlaceInvitacionTitulo"),
         description: t("usersDirectory.enlaceInvitacionDescripcion"),

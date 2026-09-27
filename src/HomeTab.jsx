@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
 import { CalendarDays, Award, Handshake, Building2, HelpCircle, Wallet, Plus } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
-import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, useFloatingDropdown, FloatingPanel } from "./shared";
+import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, useFloatingDropdown, FloatingPanel, getDefaultCurrency } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import { getGeneratedCount } from "./trainingRecords/generatedCounter";
@@ -256,7 +256,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const goToNextMonth = () => setCalendarCursor(({ year, month }) => (month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 }));
   const goToCurrentMonth = () => setCalendarCursor({ year: now.getFullYear(), month: now.getMonth() });
 
-  const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
+  const fallbackCurrency = getDefaultCurrency(currencies.rows);
 
   // ganado/comision/companeros: se mantienen separadas porque el calendario
   // de abajo necesita distinguir la fuente de cada apunte del día (incluye
