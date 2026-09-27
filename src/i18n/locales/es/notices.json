@@ -9,7 +9,7 @@
     "slides": [
       {
         "title": "Exporta tu informe en PDF",
-        "body": "Ya puedes generar el PDF con todos tus movimientos para enviarlo a quien lo necesite — exporta tus datos fácilmente."
+        "body": "Genera el PDF con todos tus movimientos y envíalo a quien lo necesite."
       },
       {
         "title": "Training Records más ligeros",
@@ -26,6 +26,40 @@
       {
         "title": "Repásalo cuando quieras",
         "body": "Vuelve a estas novedades desde Ayuda → \"Ver qué hay de nuevo\", sin esperar al próximo cambio."
+      }
+    ]
+  },
+  "onboarding": {
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "start": "Empezar",
+    "slideTablist": "Diapositiva",
+    "eyebrow": "Bienvenida a Ocean Flow",
+    "slides": [
+      {
+        "title": "Tu Home, de un vistazo",
+        "body": "KPIs del mes, calendario y lo que tienes pendiente de cobrar. Todo en la pantalla con la que abres la app."
+      },
+      {
+        "title": "Mi trabajo: registra cada movimiento",
+        "body": "Clases, comisiones y ajustes con compañeros, todos desde el mismo botón. Sin complicarte buscando el formulario que toca cada vez."
+      },
+      {
+        "title": "Resumen, con tu informe en PDF",
+        "body": "Consulta lo generado por periodo y descarga tu informe completo en PDF cuando lo necesites."
+      },
+      {
+        "title": "Genera tus Training Records",
+        "body": "El documento oficial de progreso SSI de cada alumno, con tu firma y la suya, listo para descargar."
+      },
+      {
+        "title": "¿Dudas? Ahí está la Ayuda",
+        "body": "Guías paso a paso de cada pantalla. La encuentras tocando el icono de arriba a la derecha, cuando la necesites."
+      },
+      {
+        "title": "Empieza por aquí",
+        "body": "Crea tu primera escuela y da de alta sus tarifas. Con eso ya puedes registrar tu primer movimiento en Ocean Flow."
       }
     ]
   },

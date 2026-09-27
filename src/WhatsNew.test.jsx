@@ -11,8 +11,13 @@ import WhatsNew from "./WhatsNew";
 // el swipe con page.mouse y por eso nunca lo había estado probando de
 // verdad desde que se reintrodujo, ver 12.5/12.17 de
 // docs/REDISENO-V2-PROGRESS.md).
-function swipe(container, dx) {
-  const el = container.querySelector(".touch-pan-y");
+function swipe(dx) {
+  // data-testid en vez de un selector de clase Tailwind (CLAUDE.md prohíbe
+  // selectores frágiles basados en clase/estructura): el contenedor
+  // deslizable no tiene rol ni texto propio con el que localizarlo de forma
+  // accesible, así que es el único punto de anclaje estable frente a un
+  // refactor visual futuro.
+  const el = screen.getByTestId("whatsnew-slide");
   fireEvent.touchStart(el, { touches: [{ clientX: 200, clientY: 100 }] });
   fireEvent.touchEnd(el, { changedTouches: [{ clientX: 200 + dx, clientY: 100 }] });
 }
@@ -40,21 +45,21 @@ describe("WhatsNew", () => {
   // un test dedicado — ni aquí ni en mobile-check, que lo simulaba con
   // eventos de ratón, invisibles para el handler de touch real.
   it("deslizar hacia la izquierda avanza a la siguiente diapositiva (gesto táctil real)", async () => {
-    const { container } = render(<WhatsNew onClose={vi.fn()} />);
+    render(<WhatsNew onClose={vi.fn()} />);
     const firstTitle = screen.getByRole("heading").textContent;
 
-    swipe(container, -150);
+    swipe(-150);
 
     await waitFor(() => expect(screen.getByRole("heading").textContent).not.toBe(firstTitle));
   });
 
   it("deslizar hacia la derecha vuelve a la diapositiva anterior (gesto táctil real)", async () => {
-    const { container } = render(<WhatsNew onClose={vi.fn()} />);
+    render(<WhatsNew onClose={vi.fn()} />);
     const firstTitle = screen.getByRole("heading").textContent;
-    swipe(container, -150);
+    swipe(-150);
     await waitFor(() => expect(screen.getByRole("heading").textContent).not.toBe(firstTitle));
 
-    swipe(container, 150);
+    swipe(150);
 
     await waitFor(() => expect(screen.getByRole("heading").textContent).toBe(firstTitle));
   });

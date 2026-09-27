@@ -69,15 +69,6 @@
   "multiSelect": { "placeholder": "Alle", "clearSelection": "Auswahl löschen", "selectedCount": "{{count}} ausgewählt" },
   "searchSelect": { "placeholder": "Suchen...", "ariaLabel": "Suchen", "noResults": "Keine Ergebnisse" },
   "currencySearchSelect": { "placeholder": "Währung suchen..." },
-  "listFilterBar": {
-    "from": "Von",
-    "to": "Bis",
-    "school": "Schule",
-    "activity": "Aktivität",
-    "noLimit": "Kein Limit",
-    "all": "Alle",
-    "clearFilters": "Filter löschen"
-  },
   "rowMenu": { "moreActions": "Weitere Aktionen", "edit": "Bearbeiten", "delete": "Löschen" },
   "statusSwitch": { "ariaLabel": "Status: {{value}}. Tippen, um zu {{next}} zu wechseln", "title": "{{value}} — klicken, um zu \"{{next}}\" zu wechseln" },
   "signature": {

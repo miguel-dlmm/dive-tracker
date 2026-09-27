@@ -29,6 +29,40 @@
       }
     ]
   },
+  "onboarding": {
+    "close": "Tutup",
+    "back": "Kembali",
+    "next": "Lanjut",
+    "start": "Mulai",
+    "slideTablist": "Slide",
+    "eyebrow": "Selamat datang di Ocean Flow",
+    "slides": [
+      {
+        "title": "Home-mu, sekali lihat",
+        "body": "Angka bulan ini, kalender, dan yang masih perlu ditagih. Semua ada di layar yang muncul saat kamu membuka aplikasi."
+      },
+      {
+        "title": "Aktivitasku: catat setiap transaksi",
+        "body": "Kelas, komisi dan penyesuaian dengan rekan, semua lewat tombol yang sama. Tidak perlu mencari formulir yang tepat setiap kali."
+      },
+      {
+        "title": "Ringkasan, dengan laporan PDF-mu",
+        "body": "Lihat penghasilanmu per periode dan unduh laporan lengkapmu dalam PDF kapan pun kamu butuh."
+      },
+      {
+        "title": "Buat Training Record-mu",
+        "body": "Dokumen resmi kemajuan SSI setiap siswa, dengan tanda tanganmu dan tanda tangannya, siap diunduh."
+      },
+      {
+        "title": "Ada pertanyaan? Bantuan ada di sana",
+        "body": "Panduan langkah demi langkah untuk setiap layar. Kamu bisa menemukannya dengan mengetuk ikon di kanan atas, kapan pun kamu butuh."
+      },
+      {
+        "title": "Mulai dari sini",
+        "body": "Buat sekolahmu yang pertama dan atur tarifnya. Dengan itu, kamu sudah bisa mencatat transaksi pertamamu di Ocean Flow."
+      }
+    ]
+  },
   "deploymentNotice": {
     "close": "Tutup",
     "eyebrow": "Rilis baru",

@@ -69,15 +69,6 @@
   "multiSelect": { "placeholder": "Semua", "clearSelection": "Hapus pilihan", "selectedCount": "{{count}} dipilih" },
   "searchSelect": { "placeholder": "Cari...", "ariaLabel": "Cari", "noResults": "Tidak ada hasil" },
   "currencySearchSelect": { "placeholder": "Cari mata uang..." },
-  "listFilterBar": {
-    "from": "Dari",
-    "to": "Sampai",
-    "school": "Sekolah",
-    "activity": "Aktivitas",
-    "noLimit": "Tanpa batas",
-    "all": "Semua",
-    "clearFilters": "Hapus filter"
-  },
   "rowMenu": { "moreActions": "Aksi lainnya", "edit": "Ubah", "delete": "Hapus" },
   "statusSwitch": { "ariaLabel": "Status: {{value}}. Ketuk untuk mengubah ke {{next}}", "title": "{{value}} — klik untuk mengubah ke \"{{next}}\"" },
   "signature": {

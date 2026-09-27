@@ -23,6 +23,7 @@ import TrainingRecordsTab from "./trainingRecords/TrainingRecordsTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
 import WhatsNew from "./WhatsNew";
+import OnboardingTour from "./OnboardingTour";
 import DeploymentNotice from "./DeploymentNotice";
 import { APP_VERSION } from "./version";
 import SummaryTab from "./SummaryTab";
@@ -302,15 +303,40 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
   // de `request`).
   const startHomeEdit = (entry) => setHomeSheetRequest({ type: entry._source, editingEntry: entry, date: null });
 
-  // "Qué hay de nuevo" — se decide en el primer render tras conocer al
-  // usuario (profile.user_id), no en un efecto con dependencia vacía: con
-  // el bypass de desarrollo, AppShell puede remontarse con un profile
-  // distinto sin recargar la página completa. Este mismo mecanismo es
-  // también lo que hace que se abra solo justo tras activar una cuenta
-  // (ver el comentario junto al useState de `tab`, más arriba): una
-  // cuenta recién activada nunca tiene la versión actual marcada como
-  // vista, sin necesitar ningún caso especial aparte.
-  const [whatsNewOpen, setWhatsNewOpen] = useState(() => !hasSeenWhatsNew(profile?.user_id));
+  // Tour de bienvenida de cuenta nueva (2026-09-27, pedido explícito:
+  // "que salga como el whats new, con la portada cargándose debajo") —
+  // igual que WhatsNew, se abre como overlay sobre AppShell ya montada
+  // (Home visible debajo, cargando), no como una pantalla propia antes de
+  // llegar aquí. profiles.onboarding_tour_seen_at (escritura real en
+  // Supabase, no localStorage) es lo que decide: a diferencia de "Qué hay
+  // de nuevo" (por versión, por dispositivo), esto debe valer una sola
+  // vez en la vida de la cuenta, sea cual sea el dispositivo por el que
+  // entre después.
+  const [onboardingOpen, setOnboardingOpen] = useState(() => !profile?.onboarding_tour_seen_at);
+  const closeOnboardingTour = async () => {
+    const seenAt = new Date().toISOString();
+    await supabase.from("profiles").update({ onboarding_tour_seen_at: seenAt }).eq("user_id", profile.user_id);
+    onProfileUpdated({ onboarding_tour_seen_at: seenAt });
+    // Marca también como vista la versión actual de WhatsNew para esta
+    // cuenta: sin esto, cerrar el tour dejaría paso de inmediato a "Qué
+    // hay de nuevo" — dos avisos de golpe en el primer acceso, cuando el
+    // propio tour ya cumple ese papel de "esto es lo que hay" para
+    // alguien que nunca ha usado la app.
+    markWhatsNewSeen(profile.user_id);
+    setOnboardingOpen(false);
+  };
+
+  // "Qué hay de nuevo" — apertura automática desactivada a propósito para
+  // v1.6.0 (pedido explícito del usuario: "no muestres whats new"), sin
+  // quitar el mecanismo entero: showWhatsNewAgain (abrirlo a mano desde
+  // Ayuda) sigue funcionando igual, más abajo. Ver
+  // docs/BACKLOG.md ("Migrar 'Qué hay de nuevo' al mismo modelo que el
+  // tour de bienvenida") para la migración pendiente que sustituirá este
+  // `localStorage` por una columna real en `profiles`, con la que sí se
+  // podrá reiniciar a todas las cuentas de golpe cuando se quiera reabrir
+  // un aviso — hasta entonces, se deja fijo en `false` en vez de volver a
+  // depender de `hasSeenWhatsNew`.
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const closeWhatsNew = () => {
     markWhatsNewSeen(profile?.user_id);
     setWhatsNewOpen(false);
@@ -667,6 +693,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
         accentColor={sectionColor("trabajo")} userId={profile?.user_id}
       />
 
+      {onboardingOpen && <OnboardingTour onClose={closeOnboardingTour} />}
       {whatsNewOpen && <WhatsNew onClose={closeWhatsNew} />}
       {/* Fase 6, Release V1 (2026-09-02): generalizado a cualquier cuenta,
           ya no solo superadmin — el gate real de qué fila puede ver cada
@@ -878,31 +905,12 @@ function AuthGate() {
     }
   };
 
-  if (loading || (DEV_AUTH_BYPASS && bypassPending && !session)) {
-    return (
-      <div className="flex h-dvh items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
-        <AppLoading size={64} />
-      </div>
-    );
-  }
+  const renderActivationScreen = () => (isRecoveryFlow
+    ? <ResetPasswordScreen onSubmit={handleResetPassword} />
+    : <CreatePasswordScreen onSubmit={handleActivate} />);
 
-  // accountBanned se comprueba ANTES que la sesión o el enlace de la URL a
-  // propósito: debe prevalecer sobre cualquier otra cosa que esté pasando
-  // (una sesión persistida que useSession ya cerró, o un enlace de
-  // activación todavía en la URL) — nunca debe dejar entrar a crear
-  // contraseña, activar una cuenta ni ningún flujo de recuperación mientras
-  // la cuenta esté realmente desactivada. Ver ACCOUNT_DEACTIVATED_MESSAGE y
-  // resolveSessionState en useSession.js.
-  if (accountBanned) {
-    return <LoginScreen signIn={signIn} accountBanned />;
-  }
-
-  if (!session && !activating) {
-    if (hasActivationLink) {
-      return isRecoveryFlow
-        ? <ResetPasswordScreen onSubmit={handleResetPassword} />
-        : <CreatePasswordScreen onSubmit={handleActivate} />;
-    }
+  const renderNoSessionScreen = () => {
+    if (hasActivationLink) return renderActivationScreen();
     if (showForgotPassword) return <ForgotPasswordScreen onBack={() => setShowForgotPassword(false)} />;
     if (showRegister || hasInviteLink) return <RegisterScreen onBack={handleBackFromRegister} inviteToken={inviteToken} />;
     return (
@@ -912,26 +920,65 @@ function AuthGate() {
         onRegister={externalRegistrationEnabled ? () => setShowRegister(true) : undefined}
       />
     );
-  }
+  };
 
-  if (activating || !profile || !profile.activated_at) {
-    return isRecoveryFlow
-      ? <ResetPasswordScreen onSubmit={handleResetPassword} />
-      : <CreatePasswordScreen onSubmit={handleActivate} />;
-  }
+  // Cadena de puertas de acceso, en orden de prioridad — cada entrada es
+  // autocontenida (qué la activa, qué pantalla muestra) y el orden en el
+  // array ES la prioridad real, en vez de quedar implícito en la posición
+  // de un `if` dentro de una función larga (informe de refactorización
+  // 2026-09, hallazgo #4). Añadir una puerta nueva es añadir una entrada
+  // más, no reordenar `if`s existentes ni arriesgarse a que una condición
+  // nueva se cuele antes de otra que debía seguir teniendo prioridad.
+  const gates = [
+    {
+      // Bypass de desarrollo o sesión de Supabase todavía resolviéndose.
+      when: loading || (DEV_AUTH_BYPASS && bypassPending && !session),
+      render: () => (
+        <div className="flex h-dvh items-center justify-center" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+          <AppLoading size={64} />
+        </div>
+      ),
+    },
+    {
+      // ANTES que la sesión o el enlace de la URL a propósito: debe
+      // prevalecer sobre cualquier otra cosa que esté pasando (una sesión
+      // persistida que useSession ya cerró, o un enlace de activación
+      // todavía en la URL) — nunca debe dejar entrar a crear contraseña,
+      // activar una cuenta ni ningún flujo de recuperación mientras la
+      // cuenta esté realmente desactivada. Ver ACCOUNT_DEACTIVATED_MESSAGE
+      // y resolveSessionState en useSession.js.
+      when: accountBanned,
+      render: () => <LoginScreen signIn={signIn} accountBanned />,
+    },
+    {
+      // Sin sesión: login, registro, recuperación o activación según qué
+      // traiga la URL/el estado local — ver renderNoSessionScreen.
+      when: !session && !activating,
+      render: renderNoSessionScreen,
+    },
+    {
+      // Sesión válida pero cuenta sin activar (o activación en curso).
+      when: activating || !profile || !profile.activated_at,
+      render: renderActivationScreen,
+    },
+    {
+      // Cuenta ya activada, con sesión válida, pero cuya contraseña
+      // actual no cumple la política reforzada (ver
+      // passwordPolicy.js/useSession.js) — ANTES que los consentimientos
+      // legales a propósito: es la condición más urgente ("se ha
+      // reforzado la seguridad de la app"), y no depende de si hay o no
+      // un documento legal nuevo pendiente.
+      when: forcedPasswordUpdate,
+      render: () => <ForcedPasswordUpdateScreen onSubmit={updateForcedPassword} />,
+    },
+    {
+      when: pendingLegalConsents.length > 0,
+      render: () => <AcceptLegalScreen onSubmit={acceptLegalConsents} />,
+    },
+  ];
 
-  // Cuenta ya activada, con sesión válida, pero cuya contraseña actual no
-  // cumple la política reforzada (ver passwordPolicy.js/useSession.js) —
-  // se comprueba ANTES que los consentimientos legales a propósito: es la
-  // condición más urgente ("se ha reforzado la seguridad de la app"), y no
-  // depende de si hay o no un documento legal nuevo pendiente.
-  if (forcedPasswordUpdate) {
-    return <ForcedPasswordUpdateScreen onSubmit={updateForcedPassword} />;
-  }
-
-  if (pendingLegalConsents.length > 0) {
-    return <AcceptLegalScreen onSubmit={acceptLegalConsents} />;
-  }
+  const activeGate = gates.find((gate) => gate.when);
+  if (activeGate) return activeGate.render();
 
   return <AppShell onSignOut={signOut} profile={profile} onProfileUpdated={updateProfile} />;
 }

@@ -29,6 +29,40 @@
       }
     ]
   },
+  "onboarding": {
+    "close": "Itxi",
+    "back": "Atzera",
+    "next": "Hurrengoa",
+    "start": "Hasi",
+    "slideTablist": "Diapositiba",
+    "eyebrow": "Ongi etorri Ocean Flow-ra",
+    "slides": [
+      {
+        "title": "Zure Home, begirada batean",
+        "body": "Hilabeteko datuak, egutegia eta kobratzeko duzuna. Dena app-a irekitzean ikusten duzun pantailan."
+      },
+      {
+        "title": "Nire lana: mugimendu bakoitza erregistratu",
+        "body": "Ikastaroak, komisioak eta lankideekiko doikuntzak, guztiak botoi beretik. Aldiro formulario egokia bilatu gabe."
+      },
+      {
+        "title": "Laburpena, PDF txostenarekin",
+        "body": "Aldiaren araberako sorkuntza kontsultatu eta zure txosten osoa PDF gisa deskargatu behar duzun bakoitzean."
+      },
+      {
+        "title": "Sortu zure Training Recordak",
+        "body": "Ikasle bakoitzaren SSI aurrerapen dokumentu ofiziala, zure sinadurarekin eta berearekin, deskargatzeko prest."
+      },
+      {
+        "title": "Zalantzak? Hor duzu Laguntza",
+        "body": "Pantaila bakoitzeko urratzez urrateko gidak. Behar duzun bakoitzean, goian eskuinean dagoen ikonoa sakatuz aurkituko duzu."
+      },
+      {
+        "title": "Hasi hemendik",
+        "body": "Sortu zure lehen eskola eta konfiguratu bere tarifak. Horrekin jada erregistratu ahal izango duzu zure lehen mugimendua Ocean Flow-n."
+      }
+    ]
+  },
   "deploymentNotice": {
     "close": "Itxi",
     "eyebrow": "Hedapen berria",

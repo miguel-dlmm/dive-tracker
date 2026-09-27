@@ -29,6 +29,40 @@
       }
     ]
   },
+  "onboarding": {
+    "close": "Sluiten",
+    "back": "Terug",
+    "next": "Volgende",
+    "start": "Beginnen",
+    "slideTablist": "Dia",
+    "eyebrow": "Welkom bij Ocean Flow",
+    "slides": [
+      {
+        "title": "Je Home, in één oogopslag",
+        "body": "De cijfers van deze maand, je kalender en wat je nog moet innen. Allemaal op het scherm waarmee je de app opent."
+      },
+      {
+        "title": "Mijn werk: leg elke boeking vast",
+        "body": "Cursussen, commissies en afrekeningen met collega's, allemaal via dezelfde knop. Geen gezoek naar het juiste formulier telkens weer."
+      },
+      {
+        "title": "Overzicht, met je pdf-rapport",
+        "body": "Bekijk wat je per periode hebt verdiend en download je volledige rapport als pdf wanneer je het nodig hebt."
+      },
+      {
+        "title": "Genereer je Training Records",
+        "body": "Het officiële SSI-voortgangsdocument van elke leerling, met jouw handtekening en die van hem of haar, klaar om te downloaden."
+      },
+      {
+        "title": "Vragen? De Hulp staat er",
+        "body": "Stap-voor-stap uitleg voor elk scherm. Je vindt het via het icoon rechtsboven, wanneer je het nodig hebt."
+      },
+      {
+        "title": "Begin hier",
+        "body": "Maak je eerste school aan en stel de tarieven in. Daarmee kun je je eerste boeking in Ocean Flow al vastleggen."
+      }
+    ]
+  },
   "deploymentNotice": {
     "close": "Sluiten",
     "eyebrow": "Nieuwe release",

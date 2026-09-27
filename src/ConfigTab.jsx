@@ -100,7 +100,7 @@ function ColorFieldButton({ value, onChange, ariaLabel }) {
  * la sección en sí lo muestra ya la cabecera del menú de Configuración,
  * no hace falta repetirlo aquí dentro.
  */
-function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false, description, defaultLabel }) {
+function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasDefault = false, searchable = false, pullDefaultOut = false, colorizeText = false, protectDefaultFromDelete = false, isInUse, inUseReason, description, defaultLabel }) {
   const { t } = useTranslation("config");
   const emptyForm = Object.fromEntries(fields.map((f) => [f.key, f.type === "color" ? ENTITY_COLOR_PALETTE[7] : ""]));
   const [form, setForm] = useState(emptyForm);
@@ -121,6 +121,17 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
     }
     return list;
   }, [table.rows, query, searchable, pullDefaultOut, fields]);
+
+  // Botón "Crear X" dentro de la propia tabla, además del FAB (pedido
+  // explícito 2026-09-27) — un catálogo con pocos elementos (0 a 5, el
+  // caso típico de una cuenta recién empezada) se beneficia de un punto
+  // de creación visible sin depender solo del FAB flotante. Se basa en
+  // table.rows.length (el catálogo real), no en filteredRows.length, para
+  // que una búsqueda sin resultados no lo dispare (no tiene sentido
+  // ofrecer "crear" cuando lo que pasa es que el filtro no encuentra algo
+  // que sí existe) — por eso también se apaga mientras haya una búsqueda
+  // activa.
+  const showInlineCreate = table.rows.length <= 5 && !(searchable && query.trim());
 
   const closeSheet = () => { setSheetOpen(false); setEditingRow(null); };
   const openCreateSheet = () => { setForm(emptyForm); setEditingRow(null); setSheetOpen(true); };
@@ -195,7 +206,19 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
       <ul className="divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-200 bg-white">
         {filteredRows.map((row) => {
           const pk = row[pkField];
-          const isProtected = protectDefaultFromDelete && row.is_default;
+          // Bug real (2026-09-27): borrar una escuela/curso con
+          // tarifas/movimientos asociados (referenciados por nombre, no
+          // por id — ver rates.school en schema.sql) no rompía nada
+          // visiblemente en el momento, pero dejaba esas filas
+          // "huérfanas" — su escuela/curso ya no existe en el catálogo,
+          // aunque sus datos (importes, movimientos reales) siguen ahí.
+          // isInUse (pasado desde ConfigTab, que sí tiene rates/
+          // commissionRates/worklog/comisiones) bloquea el borrado en
+          // vez de dejarlo huérfano — mismo patrón de UI que
+          // protectDefaultFromDelete, no un mecanismo nuevo.
+          const protectedByDefault = protectDefaultFromDelete && row.is_default;
+          const protectedByUse = Boolean(isInUse?.(row));
+          const isProtected = protectedByDefault || protectedByUse;
           return (
             <li key={pk} className="flex items-center gap-2 px-4 py-2.5 text-sm">
               {fields.map((f) => {
@@ -224,12 +247,37 @@ function CrudTable({ createLabel, editLabel, table, pkField = "id", fields, hasD
                 // isPendingStatus, shared.jsx), así que perderlo rompe el
                 // bucket de pendientes/cobrados de toda la app, no solo el
                 // valor por defecto de un formulario.
-                deleteDisabledReason={isProtected ? t("crudTable.estadoPredeterminadoRazon") : undefined}
+                deleteDisabledReason={protectedByDefault ? t("crudTable.estadoPredeterminadoRazon") : protectedByUse ? inUseReason : undefined}
               />
             </li>
           );
         })}
-        {filteredRows.length === 0 && <li className="px-4 py-6 text-center text-sm text-gray-400">{t("crudTable.sinResultados")}</li>}
+        {filteredRows.length === 0 && (
+          <li className="flex flex-col items-center gap-3 px-4 py-6 text-center">
+            <span className="text-sm text-gray-400">{t("crudTable.sinResultados")}</span>
+            {showInlineCreate && (
+              <button
+                onClick={openCreateSheet}
+                className="flex min-h-11 items-center gap-1.5 rounded-md px-4 text-sm font-semibold text-white"
+                style={{ backgroundColor: BRAND_NAVY }}
+              >
+                <Plus size={15} aria-hidden="true" />
+                {createLabel}
+              </button>
+            )}
+          </li>
+        )}
+        {filteredRows.length > 0 && showInlineCreate && (
+          <li className="px-4 py-3">
+            <button
+              onClick={openCreateSheet}
+              className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-gray-300 text-sm font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+            >
+              <Plus size={15} aria-hidden="true" />
+              {createLabel}
+            </button>
+          </li>
+        )}
       </ul>
 
       <Fab onClick={openCreateSheet} label={createLabel} color={BRAND_NAVY} />
@@ -2187,6 +2235,14 @@ export default function ConfigTab({ schools, activities, currencies, paymentStat
     );
   }
 
+  // Bug real (2026-09-27): escuela/curso referenciados por NOMBRE, no por
+  // id, en rates/commissionRates/worklog/comisiones (ver schema.sql) —
+  // borrar una escuela o un curso con filas que lo referencian las dejaba
+  // huérfanas, sin ningún aviso. schoolInUse/activityInUse se pasan como
+  // isInUse a CrudTable para bloquear ese borrado en vez de permitirlo.
+  const schoolInUse = (row) => [rates, commissionRates, worklog, comisiones].some((t) => t.rows.some((r) => r.school === row.name));
+  const activityInUse = (row) => [rates, commissionRates, worklog, comisiones].some((t) => t.rows.some((r) => r.activity === row.name));
+
   // Sin miga de pan ni título propios aquí — la cabecera global (App.jsx)
   // ya los muestra ("‹ [Sección]"), ver el efecto de onSectionChange más
   // arriba. Una sola barra de navegación, no dos a la vez.
@@ -2202,10 +2258,12 @@ export default function ConfigTab({ schools, activities, currencies, paymentStat
         // "estaba bien", porque las dos ya eran igual de válidas por
         // separado — la inconsistencia estaba en que difirieran entre sí.
         <CrudTable createLabel={t("crud.nuevaEscuela")} editLabel={t("crud.editarEscuela")} table={schools} hasDefault colorizeText
+          isInUse={schoolInUse} inUseReason={t("crud.escuelaEnUsoRazon")}
           fields={[{ key: "name", label: t("crud.nombreCampo") }, { key: "color", label: t("crud.colorCampo"), type: "color", required: false }]} />
       )}
       {section === "cursos" && (
         <CrudTable createLabel={t("crud.nuevoCurso")} editLabel={t("crud.editarCurso")} table={activities} hasDefault searchable pullDefaultOut colorizeText
+          isInUse={activityInUse} inUseReason={t("crud.cursoEnUsoRazon")}
           fields={[{ key: "name", label: t("crud.nombreCampo") }, { key: "color", label: t("crud.colorCampo"), type: "color", required: false }]} />
       )}
       {section === "tarifas" && (
