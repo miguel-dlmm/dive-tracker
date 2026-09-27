@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Languages, LayoutGrid, IdCard, GraduationCap, Palette, Sparkles } from "lucide-react";
-import { TEAL, SUN, GREEN, CORAL, BRAND_NAVY, BRAND_OCEAN } from "./App";
+import { X, FileDown, LayoutGrid, IdCard, GraduationCap, Sparkles } from "lucide-react";
+import { TEAL, SUN, CORAL, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { usePrefersReducedMotion, carouselSlideVariants, useSwipeHorizontal } from "./motion";
 
@@ -36,22 +36,23 @@ import { usePrefersReducedMotion, carouselSlideVariants, useSwipeHorizontal } fr
 // coherente con el resto de la app cumple igual el objetivo ("muy
 // visual") sin ese riesgo.
 //
-// Contenido reescrito 2026-09-08 (cierre de la cola de Release V1,
-// pedido explícito del usuario) para reflejar el alcance real de este
-// rediseño completo: 6 diapositivas, una por bloque grande de la
-// iniciativa. icon/color no son traducibles — título/cuerpo de cada
+// Contenido reescrito 2026-09-27 (release v1.5.0/v1.5.1, texto aprobado
+// explícitamente por el usuario en el chat antes de comitearse — ver
+// docs/ADR/0010-proceso-de-release.md, addendum 2026-09-09): 4
+// diapositivas de funcionalidad nueva + la meta-diapositiva final de
+// siempre. icon/color no son traducibles — título/cuerpo de cada
 // diapositiva viven en notices.json (whatsNew.slides, mismo orden por
 // índice) y se combinan con este array en el componente. La última
 // diapositiva se queda última a propósito, como siempre: es un
 // meta-mensaje sobre el propio WhatsNew ("consúltalo de nuevo en
-// Ayuda"), no una funcionalidad más.
+// Ayuda"), no una funcionalidad más — su texto no cambia de release a
+// release, así que no necesita nueva aprobación cada vez.
 const SLIDE_ICONS = [
-  { icon: Palette, color: BRAND_OCEAN }, // 1. Rediseño completo, logo y look&feel nuevos
-  { icon: IdCard, color: TEAL }, // 2. Mi perfil — carnet de instructor
-  { icon: GraduationCap, color: SUN }, // 3. Training Records
-  { icon: Languages, color: GREEN }, // 4. Multi idioma
-  { icon: LayoutGrid, color: CORAL }, // 5. Home y Mi trabajo, más claros y estructurados
-  { icon: Sparkles, color: BRAND_NAVY }, // 6. Repásalo cuando quieras, desde Ayuda
+  { icon: FileDown, color: BRAND_OCEAN }, // 1. Exporta tu informe en PDF
+  { icon: GraduationCap, color: SUN }, // 2. Training Records más ligeros
+  { icon: LayoutGrid, color: CORAL }, // 3. Portada renovada
+  { icon: IdCard, color: TEAL }, // 4. Mi perfil, reestructurado
+  { icon: Sparkles, color: BRAND_NAVY }, // 5. Repásalo cuando quieras, desde Ayuda
 ];
 
 export default function WhatsNew({ onClose }) {

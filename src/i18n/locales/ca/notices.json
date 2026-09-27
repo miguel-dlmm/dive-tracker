@@ -8,24 +8,20 @@
     "start": "Comença",
     "slides": [
       {
-        "title": "Redisseny complet, cara nova",
-        "body": "Logo, colors i imatge renovats de dalt a baix — el mateix Ocean Flow, amb una identitat pròpia."
+        "title": "Exporta el teu informe en PDF",
+        "body": "Ja pots generar el PDF amb tots els teus moviments per enviar-lo a qui el necessiti — exporta les teves dades fàcilment."
       },
       {
-        "title": "El teu carnet d'instructor",
-        "body": "El meu perfil ara té el teu propi carnet: nivell professional, dades personals i moneda preferida, tot en un mateix lloc."
+        "title": "Training Records més lleugers",
+        "body": "El generador de Training Records s'optimitza per crear fitxers més lleugers."
       },
       {
-        "title": "Training Records, des de l'app",
-        "body": "Genera el registre de progrés SSI de cada alumne, signat i llest per lliurar — sense sortir d'Ocean Flow."
+        "title": "Home, renovada",
+        "body": "Més dinàmica, amb dades interessants per veure d'una ullada."
       },
       {
-        "title": "L'app ja parla el teu idioma",
-        "body": "Espanyol, anglès, francès, italià, alemany, català o euskera — canvia quan vulguis, des del teu perfil."
-      },
-      {
-        "title": "Home i La meva feina, més clars",
-        "body": "Tot millor organitzat, per trobar el que busques d'una ullada: els teus KPI, els teus moviments, el teu dia a dia."
+        "title": "El meu perfil, reestructurat",
+        "body": "Seccions reorganitzades perquè tot sigui més fàcil i ràpid de trobar."
       },
       {
         "title": "Repassa-ho quan vulguis",
