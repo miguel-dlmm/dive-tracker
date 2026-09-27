@@ -11,13 +11,17 @@ import SlideDeck from "./SlideDeck";
 // verse como máximo una vez sea cual sea el dispositivo por el que la
 // cuenta entre después — de ahí que la puerta viva en
 // `profile.onboarding_tour_seen_at` (columna real en Supabase, ver
-// AuthGate en App.jsx y scripts/migrations/0022-onboarding-tour-visto.sql),
-// no en localStorage.
+// scripts/migrations/0022-onboarding-tour-visto.sql), no en localStorage.
+//
+// Se muestra como overlay sobre AppShell ya montada (Home visible detrás,
+// cargando) — mismo patrón que WhatsNew, pedido explícito 2026-09-27 ("que
+// salga como el whats new, con la portada cargándose debajo"). Ver
+// onboardingOpen/closeOnboardingTour en AppShell, App.jsx.
 //
 // Para que una cuenta nueva no reciba dos avisos de golpe (este tour +
-// "Qué hay de nuevo" justo después, al montar la app por primera vez), al
-// cerrar este tour AuthGate también marca como vista la versión actual de
-// WhatsNew para esa cuenta — ver closeOnboardingTour en App.jsx.
+// "Qué hay de nuevo" justo después), al cerrar este tour AppShell también
+// marca como vista la versión actual de WhatsNew para esa cuenta — ver
+// closeOnboardingTour en App.jsx.
 //
 // icon/color no son traducibles, viven aquí; título/cuerpo de cada
 // diapositiva viven en notices.json (onboarding.slides, mismo orden por

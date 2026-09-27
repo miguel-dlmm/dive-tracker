@@ -144,7 +144,7 @@ create table if not exists public.profiles (
   training_records_last_generated_at timestamptz,
   -- Bienvenida real para cuentas nuevas (2026-09-27) — nulo hasta que la
   -- cuenta cierra el tour de 6 diapositivas una primera vez, sea cual sea
-  -- el dispositivo por el que entre después. Ver AuthGate en App.jsx y
+  -- el dispositivo por el que entre después. Ver AppShell en App.jsx y
   -- scripts/migrations/0022-onboarding-tour-visto.sql.
   onboarding_tour_seen_at timestamptz,
   created_at timestamptz not null default now(),

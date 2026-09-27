@@ -326,6 +326,10 @@ describe("AuthGate", () => {
     const user = userEvent.setup();
     render(<App />);
 
+    // Pedido explícito (2026-09-27): el tour se ve como WhatsNew, con la
+    // portada (Home) ya montada y visible detrás, no como una pantalla
+    // propia previa a AppShell.
+    await screen.findByText("Ocean Flow");
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("Tu Home, de un vistazo")).toBeInTheDocument();
     expect(screen.queryByText("Exporta tu informe en PDF")).not.toBeInTheDocument();
@@ -338,6 +342,8 @@ describe("AuthGate", () => {
     await waitFor(() => expect(supabase.from).toHaveBeenCalledWith("profiles"));
     expect(updateSpy).toHaveBeenCalledWith(expect.objectContaining({ onboarding_tour_seen_at: expect.any(String) }));
     expect(localStorage.getItem("oceanpulse:whatsNewSeen:brand-new-user")).toBe(APP_VERSION);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText(`Tu impacto en ${CURRENT_MONTH_NAME}`)).toBeInTheDocument();
   });
 
   it("activated_at fijado pero con consentimiento legal pendiente, muestra la pantalla de aceptación legal en vez de la app", () => {

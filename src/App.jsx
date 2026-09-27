@@ -303,6 +303,29 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
   // de `request`).
   const startHomeEdit = (entry) => setHomeSheetRequest({ type: entry._source, editingEntry: entry, date: null });
 
+  // Tour de bienvenida de cuenta nueva (2026-09-27, pedido explícito:
+  // "que salga como el whats new, con la portada cargándose debajo") —
+  // igual que WhatsNew, se abre como overlay sobre AppShell ya montada
+  // (Home visible debajo, cargando), no como una pantalla propia antes de
+  // llegar aquí. profiles.onboarding_tour_seen_at (escritura real en
+  // Supabase, no localStorage) es lo que decide: a diferencia de "Qué hay
+  // de nuevo" (por versión, por dispositivo), esto debe valer una sola
+  // vez en la vida de la cuenta, sea cual sea el dispositivo por el que
+  // entre después.
+  const [onboardingOpen, setOnboardingOpen] = useState(() => !profile?.onboarding_tour_seen_at);
+  const closeOnboardingTour = async () => {
+    const seenAt = new Date().toISOString();
+    await supabase.from("profiles").update({ onboarding_tour_seen_at: seenAt }).eq("user_id", profile.user_id);
+    onProfileUpdated({ onboarding_tour_seen_at: seenAt });
+    // Marca también como vista la versión actual de WhatsNew para esta
+    // cuenta: sin esto, cerrar el tour dejaría paso de inmediato a "Qué
+    // hay de nuevo" — dos avisos de golpe en el primer acceso, cuando el
+    // propio tour ya cumple ese papel de "esto es lo que hay" para
+    // alguien que nunca ha usado la app.
+    markWhatsNewSeen(profile.user_id);
+    setOnboardingOpen(false);
+  };
+
   // "Qué hay de nuevo" — se decide en el primer render tras conocer al
   // usuario (profile.user_id), no en un efecto con dependencia vacía: con
   // el bypass de desarrollo, AppShell puede remontarse con un profile
@@ -310,8 +333,10 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
   // también lo que hace que se abra solo justo tras activar una cuenta
   // (ver el comentario junto al useState de `tab`, más arriba): una
   // cuenta recién activada nunca tiene la versión actual marcada como
-  // vista, sin necesitar ningún caso especial aparte.
-  const [whatsNewOpen, setWhatsNewOpen] = useState(() => !hasSeenWhatsNew(profile?.user_id));
+  // vista, sin necesitar ningún caso especial aparte. onboardingOpen
+  // suprime esto en el primer render de una cuenta nueva de verdad — ver
+  // closeOnboardingTour, que marca WhatsNew como vista al cerrar el tour.
+  const [whatsNewOpen, setWhatsNewOpen] = useState(() => !onboardingOpen && !hasSeenWhatsNew(profile?.user_id));
   const closeWhatsNew = () => {
     markWhatsNewSeen(profile?.user_id);
     setWhatsNewOpen(false);
@@ -668,6 +693,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
         accentColor={sectionColor("trabajo")} userId={profile?.user_id}
       />
 
+      {onboardingOpen && <OnboardingTour onClose={closeOnboardingTour} />}
       {whatsNewOpen && <WhatsNew onClose={closeWhatsNew} />}
       {/* Fase 6, Release V1 (2026-09-02): generalizado a cualquier cuenta,
           ya no solo superadmin — el gate real de qué fila puede ver cada
@@ -896,22 +922,6 @@ function AuthGate() {
     );
   };
 
-  // Marca profiles.onboarding_tour_seen_at (escritura real en Supabase,
-  // no localStorage — a diferencia de "Qué hay de nuevo", esto tiene que
-  // valer para la cuenta, no por dispositivo) y, en el mismo cierre,
-  // marca también como vista la versión actual de WhatsNew para esta
-  // cuenta: sin esto, una cuenta recién activada vería el tour de
-  // bienvenida y, un instante después al montar AppShell, "Qué hay de
-  // nuevo" también — dos avisos de golpe en el primer acceso, cuando el
-  // propio tour ya cumple ese papel de "esto es lo que hay" para alguien
-  // que nunca ha usado la app.
-  const closeOnboardingTour = async () => {
-    const seenAt = new Date().toISOString();
-    await supabase.from("profiles").update({ onboarding_tour_seen_at: seenAt }).eq("user_id", profile.user_id);
-    updateProfile({ onboarding_tour_seen_at: seenAt });
-    markWhatsNewSeen(profile.user_id);
-  };
-
   // Cadena de puertas de acceso, en orden de prioridad — cada entrada es
   // autocontenida (qué la activa, qué pantalla muestra) y el orden en el
   // array ES la prioridad real, en vez de quedar implícito en la posición
@@ -964,14 +974,6 @@ function AuthGate() {
     {
       when: pendingLegalConsents.length > 0,
       render: () => <AcceptLegalScreen onSubmit={acceptLegalConsents} />,
-    },
-    {
-      // Bienvenida real de cuenta nueva — después de legal (nadie ve el
-      // tour con un consentimiento pendiente) y antes de montar AppShell
-      // (así no espera a que carguen todas las tablas de Supabase para
-      // ver la bienvenida). Ver profiles.onboarding_tour_seen_at.
-      when: Boolean(profile) && !profile.onboarding_tour_seen_at,
-      render: () => <OnboardingTour onClose={closeOnboardingTour} />,
     },
   ];
 
