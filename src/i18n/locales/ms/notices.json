@@ -29,6 +29,40 @@
       }
     ]
   },
+  "onboarding": {
+    "close": "Tutup",
+    "back": "Kembali",
+    "next": "Seterusnya",
+    "start": "Mula",
+    "slideTablist": "Slaid",
+    "eyebrow": "Selamat datang ke Ocean Flow",
+    "slides": [
+      {
+        "title": "Home anda, sekali pandang",
+        "body": "Angka bulan ini, kalendar dan apa yang masih perlu dikutip. Semuanya di skrin yang anda lihat sebaik membuka aplikasi."
+      },
+      {
+        "title": "Kerja saya: rekod setiap urusan",
+        "body": "Kelas, komisen dan pelarasan dengan rakan sekerja, semuanya melalui butang yang sama. Tidak perlu cari borang yang betul setiap kali."
+      },
+      {
+        "title": "Ringkasan, dengan laporan PDF anda",
+        "body": "Semak jana pendapatan mengikut tempoh dan muat turun laporan penuh anda dalam PDF apabila diperlukan."
+      },
+      {
+        "title": "Jana Training Record anda",
+        "body": "Dokumen kemajuan SSI rasmi setiap pelajar, dengan tandatangan anda dan tandatangannya, sedia dimuat turun."
+      },
+      {
+        "title": "Ada soalan? Bantuan ada di sana",
+        "body": "Panduan langkah demi langkah untuk setiap skrin. Anda boleh menemuinya dengan mengetik ikon di kanan atas, apabila diperlukan."
+      },
+      {
+        "title": "Mulakan di sini",
+        "body": "Cipta sekolah pertama anda dan sediakan kadar bayarannya. Dengan itu anda sudah boleh merekod urusan pertama anda dalam Ocean Flow."
+      }
+    ]
+  },
   "deploymentNotice": {
     "close": "Tutup",
     "eyebrow": "Pelancaran baharu",

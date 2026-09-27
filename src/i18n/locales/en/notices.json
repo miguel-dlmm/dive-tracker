@@ -29,6 +29,40 @@
       }
     ]
   },
+  "onboarding": {
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "start": "Let's go",
+    "slideTablist": "Slide",
+    "eyebrow": "Welcome to Ocean Flow",
+    "slides": [
+      {
+        "title": "Your Home, at a glance",
+        "body": "This month's numbers, your calendar and what you have pending to collect. All on the screen you open the app to."
+      },
+      {
+        "title": "My work: log every entry",
+        "body": "Classes, commissions and adjustments with colleagues, all from the same button. No hunting for the right form each time."
+      },
+      {
+        "title": "Summary, with your PDF report",
+        "body": "Check what you've earned by period and download your full report as a PDF whenever you need it."
+      },
+      {
+        "title": "Generate your Training Records",
+        "body": "Each student's official SSI progress document, with your signature and theirs, ready to download."
+      },
+      {
+        "title": "Questions? Help is right there",
+        "body": "Step-by-step guides for every screen. Find it by tapping the icon at the top right, whenever you need it."
+      },
+      {
+        "title": "Start here",
+        "body": "Create your first school and set up its rates. That's all you need to log your first entry in Ocean Flow."
+      }
+    ]
+  },
   "deploymentNotice": {
     "close": "Close",
     "eyebrow": "New deployment",

@@ -29,6 +29,40 @@
       }
     ]
   },
+  "onboarding": {
+    "close": "Chiudi",
+    "back": "Indietro",
+    "next": "Avanti",
+    "start": "Inizia",
+    "slideTablist": "Diapositiva",
+    "eyebrow": "Benvenuto in Ocean Flow",
+    "slides": [
+      {
+        "title": "La tua Home, in un colpo d'occhio",
+        "body": "I numeri del mese, il calendario e quello che hai ancora da incassare. Tutto nella schermata con cui apri l'app."
+      },
+      {
+        "title": "La mia attività: registra ogni movimento",
+        "body": "Corsi, commissioni e conguagli con i colleghi, tutto dallo stesso pulsante. Senza cercare il modulo giusto ogni volta."
+      },
+      {
+        "title": "Riepilogo, con il tuo report in PDF",
+        "body": "Consulta quanto generato per periodo e scarica il tuo report completo in PDF quando ti serve."
+      },
+      {
+        "title": "Genera i tuoi Training Record",
+        "body": "Il documento ufficiale di progresso SSI di ogni allievo, con la tua firma e la sua, pronto da scaricare."
+      },
+      {
+        "title": "Domande? L'aiuto è lì",
+        "body": "Guide passo passo per ogni schermata. La trovi toccando l'icona in alto a destra, quando ti serve."
+      },
+      {
+        "title": "Inizia da qui",
+        "body": "Crea la tua prima scuola e configura le sue tariffe. Con questo puoi già registrare il tuo primo movimento in Ocean Flow."
+      }
+    ]
+  },
   "deploymentNotice": {
     "close": "Chiudi",
     "eyebrow": "Nuovo rilascio",

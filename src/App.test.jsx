@@ -10,9 +10,16 @@ vi.mock("./useSupabaseTable", () => ({ useSupabaseTable: vi.fn() }));
 // test que llegue a AppShell (rechazo no gestionado, ver vitest
 // "Unhandled Errors"). Encadenable mínimo que siempre resuelve vacío: a
 // estos tests de AuthGate no les importa el contenido de ese modal.
+// Espía compartido de .update() entre todas las queries devueltas por
+// supabase.from(...) — supabase.from en sí no se resetea entre tests (a
+// diferencia de supabase.rpc/useSession, ver beforeEach), así que
+// comprobar el argumento con toHaveBeenCalledWith (no el último valor)
+// es lo robusto frente a llamadas acumuladas de tests anteriores.
+const updateSpy = vi.fn();
 function emptyQuery() {
   const query = {
     select: vi.fn(() => query),
+    update: vi.fn((...args) => { updateSpy(...args); return query; }),
     eq: vi.fn(() => query),
     gte: vi.fn(() => query),
     order: vi.fn(() => query),
@@ -54,6 +61,7 @@ function mockUseSession(overrides) {
     acceptLegalConsents: vi.fn(),
     forcedPasswordUpdate: false,
     updateForcedPassword: vi.fn(),
+    updateProfile: vi.fn(),
     ...overrides,
   });
 }
@@ -197,7 +205,7 @@ describe("AuthGate", () => {
   it("Caso D — activated_at ya fijado y sin consentimientos pendientes, entra directo a la app sin mostrar activación", async () => {
     mockUseSession({
       session: SESSION,
-      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
+      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", onboarding_tour_seen_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
       pendingLegalConsents: [],
     });
 
@@ -217,7 +225,7 @@ describe("AuthGate", () => {
     const signOut = vi.fn();
     mockUseSession({
       session: SESSION,
-      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
+      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", onboarding_tour_seen_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
       pendingLegalConsents: [],
       signOut,
     });
@@ -251,7 +259,7 @@ describe("AuthGate", () => {
     localStorage.setItem("oceanpulse:whatsNewSeen:u1", APP_VERSION);
     mockUseSession({
       session: SESSION,
-      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
+      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", onboarding_tour_seen_at: "2026-01-01T00:00:00.000Z", nickname: "ada" },
       pendingLegalConsents: [],
     });
 
@@ -279,7 +287,7 @@ describe("AuthGate", () => {
     mockUseSession({
       session: SESSION,
       profile: {
-        user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", nickname: "ada",
+        user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", onboarding_tour_seen_at: "2026-01-01T00:00:00.000Z", nickname: "ada",
         first_name: "Ada", last_name: "Lovelace", instructor_initials: "AL",
         ssi_pro_number: "12345", instructor_signature: "data:image/png;base64,AA==",
       },
@@ -299,22 +307,15 @@ describe("AuthGate", () => {
     expect(await screen.findByText(/Genera un Training Record oficial/)).toBeInTheDocument();
   });
 
-  // 2026-09-07, pedido explícito: "cuando el usuario accede después del
-  // enlace de activación, le llevará a la home con el WhatsNew abierto.
-  // Una vez que lo cierre, no volverá a verlo hasta la próxima release."
-  // Antes de este cambio, justo tras activar la cuenta la app abría
-  // directamente en Ayuda (initialTab, ya retirado de App.jsx) — se
-  // sustituye por depender solo del mecanismo general de WhatsNew: una
-  // cuenta sin ninguna versión marcada como vista en este navegador
-  // (localStorage limpio, como cualquier usuario recién activado) lo
-  // abre solo, sin ningún caso especial para "recién activado".
-  it("una cuenta que nunca ha visto la versión actual cae en Home con WhatsNew abierto solo; al cerrarlo, Home queda debajo (no Ayuda)", async () => {
-    // sessionStorage limpio: una activación real ocurre siempre en una
-    // sesión nueva (ver "Bypass de login en desarrollo"/nav storage,
-    // App.jsx — sessionStorage nunca sobrevive a cerrar la pestaña), sin
-    // esto un test anterior que navegó a otra pestaña dejaría esa
-    // posición guardada y este test heredaría esa pestaña en vez de
-    // arrancar en Home de verdad.
+  // 2026-09-27, pedido explícito: cualquier cuenta nueva (alta normal o
+  // por enlace de invitación) ve un tour de bienvenida de 6 diapositivas
+  // una sola vez en la vida de la cuenta — profiles.onboarding_tour_seen_at
+  // (no localStorage, a diferencia de WhatsNew) es lo que decide. Sin
+  // ese campo fijado (como cualquier cuenta recién activada), AuthGate
+  // muestra OnboardingTour ANTES de montar AppShell, no WhatsNew — ver
+  // el mecanismo "cuenta nueva" que antes describía este mismo test
+  // (2026-09-07), sustituido por este.
+  it("una cuenta sin onboarding_tour_seen_at ve el tour de bienvenida, no 'Qué hay de nuevo'", async () => {
     sessionStorage.clear();
     mockUseSession({
       session: SESSION,
@@ -324,20 +325,25 @@ describe("AuthGate", () => {
 
     const user = userEvent.setup();
     render(<App />);
-    await screen.findByText("Ocean Flow");
 
     const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("Tu Home, de un vistazo")).toBeInTheDocument();
+    expect(screen.queryByText("Exporta tu informe en PDF")).not.toBeInTheDocument();
+
     await user.click(within(dialog).getByRole("button", { name: "Cerrar" }));
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByText(`Tu impacto en ${CURRENT_MONTH_NAME}`)).toBeInTheDocument();
-    expect(screen.queryByText("Primeros pasos")).not.toBeInTheDocument();
+    // Al cerrar: se marca la cuenta como "ya visto" en Supabase (no
+    // localStorage) y se marca también la versión actual de WhatsNew
+    // como vista para esta cuenta, para no encadenar un segundo aviso.
+    await waitFor(() => expect(supabase.from).toHaveBeenCalledWith("profiles"));
+    expect(updateSpy).toHaveBeenCalledWith(expect.objectContaining({ onboarding_tour_seen_at: expect.any(String) }));
+    expect(localStorage.getItem("oceanpulse:whatsNewSeen:brand-new-user")).toBe(APP_VERSION);
   });
 
   it("activated_at fijado pero con consentimiento legal pendiente, muestra la pantalla de aceptación legal en vez de la app", () => {
     mockUseSession({
       session: SESSION,
-      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z" },
+      profile: { user_id: "u1", activated_at: "2026-01-01T00:00:00.000Z", onboarding_tour_seen_at: "2026-01-01T00:00:00.000Z" },
       pendingLegalConsents: [{ document_type: "privacy_policy", document_version: "v1" }],
     });
 
@@ -461,7 +467,7 @@ describe("AuthGate", () => {
 // importa que AuthGate lo anteponga a la app normal y a los
 // consentimientos legales pendientes.
 describe("AuthGate — forcedPasswordUpdate", () => {
-  const ACTIVATED_PROFILE = { user_id: "u1", activated_at: "2026-01-01T00:00:00Z", nickname: "ada" };
+  const ACTIVATED_PROFILE = { user_id: "u1", activated_at: "2026-01-01T00:00:00Z", onboarding_tour_seen_at: "2026-01-01T00:00:00Z", nickname: "ada" };
 
   it("con forcedPasswordUpdate, muestra la pantalla de actualizar contraseña en vez de la app normal", () => {
     mockUseSession({ session: SESSION, profile: ACTIVATED_PROFILE, forcedPasswordUpdate: true });
@@ -512,7 +518,7 @@ describe("AuthGate — forcedPasswordUpdate", () => {
 // (INSERT normal vía el cliente, ya permitido por la RLS "own rows" que
 // la tabla ya tiene).
 describe("AppShell — siembra de estados de pago por defecto", () => {
-  const ACTIVATED_PROFILE = { user_id: "u1", activated_at: "2026-01-01T00:00:00Z", nickname: "ada" };
+  const ACTIVATED_PROFILE = { user_id: "u1", activated_at: "2026-01-01T00:00:00Z", onboarding_tour_seen_at: "2026-01-01T00:00:00Z", nickname: "ada" };
 
   function tableHook(rows = [], overrides = {}) {
     return { rows, loaded: true, insertRow: vi.fn(), updateRow: vi.fn(), deleteRow: vi.fn(), bulkUpdateWhere: vi.fn(), setDefault: vi.fn(), ...overrides };
@@ -550,7 +556,7 @@ describe("AppShell — siembra de estados de pago por defecto", () => {
 // (INSERT normal vía el cliente, ya permitido por la RLS "own rows" que
 // la tabla ya tiene).
 describe("AppShell — siembra de estados de pago por defecto", () => {
-  const ACTIVATED_PROFILE = { user_id: "u1", activated_at: "2026-01-01T00:00:00Z", nickname: "ada" };
+  const ACTIVATED_PROFILE = { user_id: "u1", activated_at: "2026-01-01T00:00:00Z", onboarding_tour_seen_at: "2026-01-01T00:00:00Z", nickname: "ada" };
 
   function tableHook(rows = [], overrides = {}) {
     return { rows, loaded: true, insertRow: vi.fn(), updateRow: vi.fn(), deleteRow: vi.fn(), bulkUpdateWhere: vi.fn(), setDefault: vi.fn(), ...overrides };

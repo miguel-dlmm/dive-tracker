@@ -29,6 +29,40 @@
       }
     ]
   },
+  "onboarding": {
+    "close": "Fermer",
+    "back": "Précédent",
+    "next": "Suivant",
+    "start": "Commencer",
+    "slideTablist": "Diapositive",
+    "eyebrow": "Bienvenue sur Ocean Flow",
+    "slides": [
+      {
+        "title": "Votre accueil, en un coup d'œil",
+        "body": "Les chiffres du mois, le calendrier et ce que vous avez en attente d'encaissement. Tout sur l'écran que vous ouvrez en premier."
+      },
+      {
+        "title": "Mon activité : enregistrez chaque mouvement",
+        "body": "Cours, commissions et ajustements avec vos collègues, tout depuis le même bouton. Sans chercher le bon formulaire chaque fois."
+      },
+      {
+        "title": "Résumé, avec votre rapport PDF",
+        "body": "Consultez ce que vous avez généré par période et téléchargez votre rapport complet en PDF quand vous en avez besoin."
+      },
+      {
+        "title": "Générez vos Training Records",
+        "body": "Le document officiel de progression SSI de chaque élève, avec votre signature et la sienne, prêt à télécharger."
+      },
+      {
+        "title": "Des questions ? L'aide est juste là",
+        "body": "Des guides pas à pas pour chaque écran. Vous la trouvez en touchant l'icône en haut à droite, quand vous en avez besoin."
+      },
+      {
+        "title": "Commencez par ici",
+        "body": "Créez votre première école et paramétrez ses tarifs. C'est tout ce qu'il vous faut pour enregistrer votre premier mouvement dans Ocean Flow."
+      }
+    ]
+  },
   "deploymentNotice": {
     "close": "Fermer",
     "eyebrow": "Nouveau déploiement",

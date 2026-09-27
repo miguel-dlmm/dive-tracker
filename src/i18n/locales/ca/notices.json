@@ -29,6 +29,40 @@
       }
     ]
   },
+  "onboarding": {
+    "close": "Tanca",
+    "back": "Enrere",
+    "next": "Següent",
+    "start": "Comença",
+    "slideTablist": "Diapositiva",
+    "eyebrow": "Benvingut a Ocean Flow",
+    "slides": [
+      {
+        "title": "El teu Home, d'una ullada",
+        "body": "Les xifres del mes, el calendari i el que tens pendent de cobrar. Tot a la pantalla amb què obres l'app."
+      },
+      {
+        "title": "La meva feina: registra cada moviment",
+        "body": "Classes, comissions i ajustos amb companys, tot des del mateix botó. Sense complicar-te buscant el formulari que toca cada vegada."
+      },
+      {
+        "title": "Resum, amb el teu informe en PDF",
+        "body": "Consulta el que has generat per període i descarrega el teu informe complet en PDF quan el necessitis."
+      },
+      {
+        "title": "Genera els teus Training Records",
+        "body": "El document oficial de progrés SSI de cada alumne, amb la teva signatura i la seva, llest per descarregar."
+      },
+      {
+        "title": "Dubtes? Aquí tens l'Ajuda",
+        "body": "Guies pas a pas de cada pantalla. La trobes tocant la icona de dalt a la dreta, quan la necessitis."
+      },
+      {
+        "title": "Comença per aquí",
+        "body": "Crea la teva primera escola i dona d'alta les seves tarifes. Amb això ja pots registrar el teu primer moviment a Ocean Flow."
+      }
+    ]
+  },
   "deploymentNotice": {
     "close": "Tanca",
     "eyebrow": "Nou desplegament",

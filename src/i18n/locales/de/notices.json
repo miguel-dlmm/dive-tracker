@@ -29,6 +29,40 @@
       }
     ]
   },
+  "onboarding": {
+    "close": "Schließen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "start": "Los geht's",
+    "slideTablist": "Folie",
+    "eyebrow": "Willkommen bei Ocean Flow",
+    "slides": [
+      {
+        "title": "Deine Startseite auf einen Blick",
+        "body": "Zahlen des Monats, Kalender und was du noch abrechnen musst. Alles auf dem Bildschirm, den du beim Öffnen der App siehst."
+      },
+      {
+        "title": "Meine Arbeit: jede Buchung erfassen",
+        "body": "Kurse, Provisionen und Ausgleiche mit Kollegen, alles über denselben Button. Kein Suchen nach dem richtigen Formular jedes Mal."
+      },
+      {
+        "title": "Übersicht, mit deinem PDF-Bericht",
+        "body": "Sieh dir das Erzielte nach Zeitraum an und lade deinen vollständigen Bericht als PDF herunter, wann immer du ihn brauchst."
+      },
+      {
+        "title": "Erstelle deine Training Records",
+        "body": "Das offizielle SSI-Fortschrittsdokument jedes Schülers, mit deiner Unterschrift und seiner, fertig zum Herunterladen."
+      },
+      {
+        "title": "Fragen? Die Hilfe ist gleich da",
+        "body": "Schritt-für-Schritt-Anleitungen für jeden Bildschirm. Du findest sie über das Symbol oben rechts, wann immer du sie brauchst."
+      },
+      {
+        "title": "Hier geht's los",
+        "body": "Lege deine erste Schule an und richte ihre Tarife ein. Damit kannst du deine erste Buchung in Ocean Flow erfassen."
+      }
+    ]
+  },
   "deploymentNotice": {
     "close": "Schließen",
     "eyebrow": "Neues Release",
