@@ -4,6 +4,8 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.5.0] - 2026-09-27
+
 ### Added
 - **Portada rediseñada: bento de accesos entre KPIs y calendario**: la
   fila de Training Records y la tarjeta de "Pendiente de cobrar" (antes
