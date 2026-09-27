@@ -69,15 +69,6 @@
   "multiSelect": { "placeholder": "Alle", "clearSelection": "Selectie wissen", "selectedCount": "{{count}} geselecteerd" },
   "searchSelect": { "placeholder": "Zoeken...", "ariaLabel": "Zoeken", "noResults": "Geen resultaten" },
   "currencySearchSelect": { "placeholder": "Munteenheid zoeken..." },
-  "listFilterBar": {
-    "from": "Van",
-    "to": "Tot",
-    "school": "School",
-    "activity": "Activiteit",
-    "noLimit": "Geen limiet",
-    "all": "Alle",
-    "clearFilters": "Filters wissen"
-  },
   "rowMenu": { "moreActions": "Meer acties", "edit": "Bewerken", "delete": "Verwijderen" },
   "statusSwitch": { "ariaLabel": "Status: {{value}}. Tik om naar {{next}} te wisselen", "title": "{{value}} — klik om naar \"{{next}}\" te wisselen" },
   "signature": {

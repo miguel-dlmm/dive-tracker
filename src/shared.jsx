@@ -2516,51 +2516,6 @@ export function CurrencySearchSelect({ value, onChange, currencyRows, placeholde
   return <SearchSelect value={value} onChange={onChange} options={choices} placeholder={placeholder || t("currencySearchSelect.placeholder")} />;
 }
 
-// Barra de filtros reutilizable: fecha desde/hasta, escuela, y actividad
-// (opcional, selección múltiple). Grid fijo en móvil para que nunca
-// desborde ni empuje scroll lateral — nada de flex-wrap suelto.
-export function ListFilterBar({ filters, setFilters, schoolOptions, activityOptions }) {
-  const { t } = useTranslation("common");
-  const hasFilters = filters.from || filters.to || filters.school || (filters.activity && filters.activity.length > 0);
-  return (
-    <div className="border-t border-gray-100 bg-gray-50/60 px-4 py-3">
-      <div className="grid grid-cols-2 gap-2">
-        <Field label={t("listFilterBar.from")}>
-          <DatePicker value={filters.from} onChange={(v) => setFilters({ ...filters, from: v })} placeholder={t("listFilterBar.noLimit")} />
-        </Field>
-        <Field label={t("listFilterBar.to")}>
-          <DatePicker value={filters.to} onChange={(v) => setFilters({ ...filters, to: v })} placeholder={t("listFilterBar.noLimit")} />
-        </Field>
-        <Field label={t("listFilterBar.school")}>
-          <Select value={filters.school} onChange={(v) => setFilters({ ...filters, school: v })} options={schoolOptions} placeholder={t("listFilterBar.all")} />
-        </Field>
-        {activityOptions && (
-          <Field label={t("listFilterBar.activity")}>
-            <MultiSelect value={filters.activity || []} onChange={(v) => setFilters({ ...filters, activity: v })} options={activityOptions} placeholder={t("listFilterBar.all")} />
-          </Field>
-        )}
-      </div>
-      {hasFilters && (
-        <button onClick={() => setFilters({ ...filters, from: "", to: "", school: "", activity: [] })} className="mt-2 min-h-9 text-xs font-medium text-gray-400 hover:text-gray-600">
-          {t("listFilterBar.clearFilters")}
-        </button>
-      )}
-    </div>
-  );
-}
-
-// Dado a un listado con `date`/`school`/`activity`, aplica un objeto de
-// filtros { from, to, school, activity: [] } (todos opcionales).
-export function applyListFilters(rows, filters) {
-  return rows.filter((r) => {
-    if (filters.from && r.date < filters.from) return false;
-    if (filters.to && r.date > filters.to) return false;
-    if (filters.school && r.school !== filters.school) return false;
-    if (filters.activity && filters.activity.length > 0 && !filters.activity.includes(r.activity)) return false;
-    return true;
-  });
-}
-
 // Busca el color configurado de una fila por nombre, en cualquier tabla
 // que tenga columna `color` (Actividades, Escuelas, Estados de pago...).
 export function colorFor(rows, name, fallback = "#6B7280") {

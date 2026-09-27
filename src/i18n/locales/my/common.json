@@ -69,15 +69,6 @@
   "multiSelect": { "placeholder": "အားလုံး", "clearSelection": "ရွေးချယ်မှု ရှင်းရန်", "selectedCount": "{{count}} ခု ရွေးထားသည်" },
   "searchSelect": { "placeholder": "ရှာဖွေပါ...", "ariaLabel": "ရှာဖွေရန်", "noResults": "ရလဒ် မရှိပါ" },
   "currencySearchSelect": { "placeholder": "ငွေကြေး ရှာဖွေပါ..." },
-  "listFilterBar": {
-    "from": "မှ",
-    "to": "အထိ",
-    "school": "ကျောင်း",
-    "activity": "လှုပ်ရှားမှု",
-    "noLimit": "ကန့်သတ်မထား",
-    "all": "အားလုံး",
-    "clearFilters": "စစ်ထုတ်မှုများ ရှင်းရန်"
-  },
   "rowMenu": { "moreActions": "နောက်ထပ်လုပ်ဆောင်ချက်များ", "edit": "ပြင်ဆင်ရန်", "delete": "ဖျက်ရန်" },
   "statusSwitch": { "ariaLabel": "အခြေအနေ − {{value}}။ {{next}} သို့ပြောင်းရန် နှိပ်ပါ", "title": "{{value}} — \"{{next}}\" သို့ပြောင်းရန် နှိပ်ပါ" },
   "signature": {

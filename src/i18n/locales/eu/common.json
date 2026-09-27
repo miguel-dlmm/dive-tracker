@@ -69,15 +69,6 @@
   "multiSelect": { "placeholder": "Denak", "clearSelection": "Garbitu hautaketa", "selectedCount": "{{count}} hautatuta" },
   "searchSelect": { "placeholder": "Bilatu...", "ariaLabel": "Bilatu", "noResults": "Emaitzarik ez" },
   "currencySearchSelect": { "placeholder": "Bilatu dibisa..." },
-  "listFilterBar": {
-    "from": "Hemendik",
-    "to": "Hona arte",
-    "school": "Eskola",
-    "activity": "Jarduera",
-    "noLimit": "Mugarik gabe",
-    "all": "Denak",
-    "clearFilters": "Garbitu iragazkiak"
-  },
   "rowMenu": { "moreActions": "Ekintza gehiago", "edit": "Editatu", "delete": "Ezabatu" },
   "statusSwitch": { "ariaLabel": "Egoera: {{value}}. Sakatu {{next}} egoerara aldatzeko", "title": "{{value}} — klikatu \"{{next}}\" egoerara aldatzeko" },
   "signature": {

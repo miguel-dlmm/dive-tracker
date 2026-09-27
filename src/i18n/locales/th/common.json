@@ -69,15 +69,6 @@
   "multiSelect": { "placeholder": "ทั้งหมด", "clearSelection": "ล้างการเลือก", "selectedCount": "เลือกแล้ว {{count}}" },
   "searchSelect": { "placeholder": "ค้นหา...", "ariaLabel": "ค้นหา", "noResults": "ไม่พบผลลัพธ์" },
   "currencySearchSelect": { "placeholder": "ค้นหาสกุลเงิน..." },
-  "listFilterBar": {
-    "from": "จาก",
-    "to": "ถึง",
-    "school": "โรงเรียน",
-    "activity": "กิจกรรม",
-    "noLimit": "ไม่จำกัด",
-    "all": "ทั้งหมด",
-    "clearFilters": "ล้างตัวกรอง"
-  },
   "rowMenu": { "moreActions": "ตัวเลือกเพิ่มเติม", "edit": "แก้ไข", "delete": "ลบ" },
   "statusSwitch": { "ariaLabel": "สถานะ: {{value}} แตะเพื่อเปลี่ยนเป็น {{next}}", "title": "{{value}} — คลิกเพื่อเปลี่ยนเป็น \"{{next}}\"" },
   "signature": {

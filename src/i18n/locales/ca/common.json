@@ -69,15 +69,6 @@
   "multiSelect": { "placeholder": "Totes", "clearSelection": "Esborra la selecció", "selectedCount": "{{count}} seleccionades" },
   "searchSelect": { "placeholder": "Cerca...", "ariaLabel": "Cerca", "noResults": "Sense resultats" },
   "currencySearchSelect": { "placeholder": "Cerca moneda..." },
-  "listFilterBar": {
-    "from": "Des de",
-    "to": "Fins a",
-    "school": "Escola",
-    "activity": "Activitat",
-    "noLimit": "Sense límit",
-    "all": "Totes",
-    "clearFilters": "Neteja els filtres"
-  },
   "rowMenu": { "moreActions": "Més accions", "edit": "Edita", "delete": "Elimina" },
   "statusSwitch": { "ariaLabel": "Estat: {{value}}. Toca per canviar a {{next}}", "title": "{{value}} — clica per canviar a \"{{next}}\"" },
   "signature": {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { colorFor, applyListFilters, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect, DatePicker, MoneyInput } from "./shared";
+import { colorFor, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect, DatePicker, MoneyInput } from "./shared";
 
 // Estos tests documentan el comportamiento ACTUAL de las funciones puras de
 // shared.jsx, como red de seguridad antes de dividir/refactorizar el
@@ -33,62 +33,6 @@ describe("colorFor", () => {
   it("devuelve el fallback si la fila coincide pero su color es una cadena vacía", () => {
     const withEmptyColor = [{ name: "Buceo", color: "" }];
     expect(colorFor(withEmptyColor, "Buceo")).toBe("#6B7280");
-  });
-});
-
-describe("applyListFilters", () => {
-  const rows = [
-    { date: "2026-01-05", school: "Escuela A", activity: "Buceo" },
-    { date: "2026-01-15", school: "Escuela B", activity: "Snorkel" },
-    { date: "2026-02-01", school: "Escuela A", activity: "Curso" },
-  ];
-
-  it("sin filtros, devuelve todas las filas", () => {
-    expect(applyListFilters(rows, {})).toEqual(rows);
-  });
-
-  it("filtra por fecha desde (from)", () => {
-    const result = applyListFilters(rows, { from: "2026-01-10" });
-    expect(result.map((r) => r.activity)).toEqual(["Snorkel", "Curso"]);
-  });
-
-  it("filtra por fecha hasta (to)", () => {
-    const result = applyListFilters(rows, { to: "2026-01-10" });
-    expect(result.map((r) => r.activity)).toEqual(["Buceo"]);
-  });
-
-  it("filtra por rango from + to combinados", () => {
-    const result = applyListFilters(rows, { from: "2026-01-06", to: "2026-01-31" });
-    expect(result.map((r) => r.activity)).toEqual(["Snorkel"]);
-  });
-
-  it("filtra por escuela exacta", () => {
-    const result = applyListFilters(rows, { school: "Escuela A" });
-    expect(result.map((r) => r.activity)).toEqual(["Buceo", "Curso"]);
-  });
-
-  it("con activity como array vacío, no filtra por actividad (todas)", () => {
-    const result = applyListFilters(rows, { activity: [] });
-    expect(result).toEqual(rows);
-  });
-
-  it("filtra por una o varias actividades seleccionadas", () => {
-    const result = applyListFilters(rows, { activity: ["Buceo", "Curso"] });
-    expect(result.map((r) => r.activity)).toEqual(["Buceo", "Curso"]);
-  });
-
-  it("combina todos los filtros a la vez", () => {
-    const result = applyListFilters(rows, {
-      from: "2026-01-01",
-      to: "2026-01-31",
-      school: "Escuela A",
-      activity: ["Buceo"],
-    });
-    expect(result.map((r) => r.activity)).toEqual(["Buceo"]);
-  });
-
-  it("devuelve una lista vacía si no hay filas", () => {
-    expect(applyListFilters([], { school: "Escuela A" })).toEqual([]);
   });
 });
 
