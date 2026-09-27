@@ -10,13 +10,6 @@
     "comision": "Commissie",
     "companeros": "Aanpassing"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "Nog te innen",
-    "empty": "Niets openstaand",
-    "count_one": "{{count}} openstaande betaling",
-    "count_other": "{{count}} openstaande betalingen",
-    "addMovement": "Boeking toevoegen"
-  },
   "confirmDialog": { "cancel": "Annuleren", "defaultConfirmLabel": "Verwijderen" },
   "editActions": { "defaultSaveLabel": "Opslaan", "cancel": "Annuleren" },
   "deleteButton": {

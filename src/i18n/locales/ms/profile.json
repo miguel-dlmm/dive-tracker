@@ -5,6 +5,7 @@
     "favoriteCurrency": "Mata wang kegemaran",
     "language": "Bahasa",
     "security": "Keselamatan",
+    "session": "Sesi",
     "privacy": "Privasi"
   },
   "signOut": {
@@ -26,15 +27,12 @@
   "personalData": {
     "nameLine": "Nama:",
     "nicknameLine": "Nama pengguna:",
-    "professionalLine": "Profesional:",
     "birthDateLine": "Tarikh lahir:",
     "countryLine": "Negara kediaman:",
     "edit": "Sunting",
     "nameLabel": "Nama",
     "lastNameLabel": "Nama keluarga",
     "nicknameLabel": "Nama pengguna",
-    "professionalLabel": "Profesional",
-    "professionalPlaceholder": "Belum dipilih",
     "birthDateLabel": "Tarikh lahir",
     "countryLabel": "Negara kediaman",
     "countryPlaceholder": "Pilih negara",
@@ -50,6 +48,8 @@
   },
   "instructor": {
     "hint": "Digunakan untuk mengisi Training Records anda secara automatik — disimpan di sini sekali sahaja, bukan mengikut peranti.",
+    "professionalLabel": "Profesional",
+    "professionalPlaceholder": "Belum dipilih",
     "card": {
       "role": "Profesional SSI",
       "roleWithLevel": "SSI {{level}}",

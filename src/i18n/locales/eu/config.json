@@ -48,13 +48,6 @@
   "sectionColors": {
     "descripcion": "Nabigazio-barran eta area bakoitzeko erregistroa sortzeko botoietan erabiltzen dira."
   },
-  "generalSettings": {
-    "iconoCarga": "Kargatze-ikonoa",
-    "descripcion": "Aplikazio osoaren \"kargatzen\" animazioan erabiltzen da. Ocean Flow-en logo ofiziala izatean, esan iezadazu eta zerrenda honen ordez ikono erreala jarriko dut.",
-    "iconoActualizado": "Ikonoa eguneratuta",
-    "noSePudoGuardar": "Ezin izan da gorde. Saiatu berriro.",
-    "vistaPrevia": "Aurrebista"
-  },
   "externalRegistration": {
     "titulo": "Baimendu kanpo-erregistroa",
     "descripcion": "\"Erregistratu\" erakusten du saioa hasteko pantailan, edozeinek bere kontua sortu ahal izateko.",

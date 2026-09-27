@@ -5,6 +5,7 @@
     "favoriteCurrency": "Moneda preferida",
     "language": "Idioma",
     "security": "Seguretat",
+    "session": "Sessió",
     "privacy": "Privacitat"
   },
   "signOut": {
@@ -26,15 +27,12 @@
   "personalData": {
     "nameLine": "Nom:",
     "nicknameLine": "Nickname:",
-    "professionalLine": "Professional:",
     "birthDateLine": "Data de naixement:",
     "countryLine": "País de residència:",
     "edit": "Edita",
     "nameLabel": "Nom",
     "lastNameLabel": "Cognoms",
     "nicknameLabel": "Nickname",
-    "professionalLabel": "Professional",
-    "professionalPlaceholder": "Sense triar",
     "birthDateLabel": "Data de naixement",
     "countryLabel": "País de residència",
     "countryPlaceholder": "Tria un país",
@@ -50,6 +48,8 @@
   },
   "instructor": {
     "hint": "S'utilitzen per emplenar els teus Training Records automàticament — es desen aquí una sola vegada, no per dispositiu.",
+    "professionalLabel": "Professional",
+    "professionalPlaceholder": "Sense triar",
     "card": {
       "role": "Professional SSI",
       "roleWithLevel": "SSI {{level}}",

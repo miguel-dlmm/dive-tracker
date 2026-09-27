@@ -1,24 +1,33 @@
 {
   "calendarCaption": "Tik op een dag voor het detail, of op een lege dag om een boeking toe te voegen",
-  "activeSchoolThisMonth": "Actiefste school",
-  "activeSchoolCount_one": "{{count}} boeking deze maand",
-  "activeSchoolCount_other": "{{count}} boekingen deze maand",
-  "activeSchoolCountAndOthers_one": "{{count}} boeking · {{schools}} scholen deze maand",
-  "activeSchoolCountAndOthers_other": "{{count}} boekingen · {{schools}} scholen deze maand",
+  "activeSchoolThisMonth": "School van de maand",
+  "activeSchoolCount_one": "{{count}} cursus",
+  "activeSchoolCount_other": "{{count}} cursussen",
   "noActivityThisMonth": "Geen activiteit deze maand",
   "kpis": {
-    "sectionTitle": "Jouw impact deze maand",
+    "sectionTitle": "Jouw impact in {{month}}",
     "dailyAverageThisMonth": "Daggemiddelde",
     "dailyAverageTooltip": "Wat je deze maand gemiddeld per dag verdient, alleen geteld tot vandaag.",
     "dailyAverageTooltipShow": "Info: Daggemiddelde",
     "dailyAverageTooltipHide": "Info verbergen: Daggemiddelde",
     "coursesTotal": "Cursussen",
-    "referredThisMonth": "Aangebracht"
+    "referredThisMonth": "Aangebracht",
+    "pendingTooltipShow": "Info: Nog te innen",
+    "pendingTooltipHide": "Info verbergen: Nog te innen"
   },
   "trainingRecordsCard": {
     "title": "Training Records",
     "ctaFirstTime": "Maak je eerste Training Record",
     "generatedLabel": "Gegenereerd"
   },
-  "installApp": "App downloaden"
+  "installApp": "App downloaden",
+  "pendingCard": {
+    "pendingLabel": "Nog te innen",
+    "empty": "Niets openstaand",
+    "count_one": "{{count}} openstaande betaling",
+    "count_other": "{{count}} openstaande betalingen"
+  },
+  "quickCreate": {
+    "label": "Nieuwe boeking"
+  }
 }

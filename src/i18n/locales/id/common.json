@@ -10,13 +10,6 @@
     "comision": "Komisi",
     "companeros": "Penyesuaian"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "Menunggu dibayar",
-    "empty": "Tidak ada yang tertunda",
-    "count_one": "{{count}} pembayaran tertunda",
-    "count_other": "{{count}} pembayaran tertunda",
-    "addMovement": "Tambah transaksi"
-  },
   "confirmDialog": { "cancel": "Batal", "defaultConfirmLabel": "Hapus" },
   "editActions": { "defaultSaveLabel": "Simpan", "cancel": "Batal" },
   "deleteButton": {

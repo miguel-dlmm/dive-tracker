@@ -45,7 +45,7 @@ function baseProps(overrides = {}) {
     worklog: emptyHook,
     comisiones: emptyHook,
     navSections: rowsHook([]),
-    appConfig: rowsHook([{ logo_icon: "Waves" }]),
+    appConfig: rowsHook([{}]),
     profile: { user_id: "u1", is_admin: false, is_superadmin: false },
     ...overrides,
   };
@@ -185,7 +185,7 @@ describe("ConfigTab — gesto de deslizar hacia la derecha = atrás, recursivo",
 describe("ConfigTab — Ajustes generales: permitir registro externo (ADR-0023)", () => {
   it("refleja el valor actual y lo invierte al pulsar el switch", async () => {
     const updateRow = vi.fn().mockResolvedValue({});
-    const appConfig = { ...rowsHook([{ logo_icon: "Waves", allow_external_registration: false }]), updateRow };
+    const appConfig = { ...rowsHook([{ allow_external_registration: false }]), updateRow };
     const user = userEvent.setup();
     render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: true, is_superadmin: true }, appConfig })} />);
 
@@ -199,7 +199,7 @@ describe("ConfigTab — Ajustes generales: permitir registro externo (ADR-0023)"
   });
 
   it("con el flag ya activado, el switch aparece marcado", async () => {
-    const appConfig = rowsHook([{ logo_icon: "Waves", allow_external_registration: true }]);
+    const appConfig = rowsHook([{ allow_external_registration: true }]);
     const user = userEvent.setup();
     render(<ConfigTab {...baseProps({ profile: { user_id: "u1", is_admin: true, is_superadmin: true }, appConfig })} />);
 

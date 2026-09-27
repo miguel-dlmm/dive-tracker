@@ -10,13 +10,6 @@
     "comision": "Hoa hồng",
     "companeros": "Điều chỉnh"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "Chờ thu tiền",
-    "empty": "Không có khoản nào chờ",
-    "count_one": "{{count}} khoản chờ thanh toán",
-    "count_other": "{{count}} khoản chờ thanh toán",
-    "addMovement": "Thêm giao dịch"
-  },
   "confirmDialog": { "cancel": "Hủy", "defaultConfirmLabel": "Xóa" },
   "editActions": { "defaultSaveLabel": "Lưu", "cancel": "Hủy" },
   "deleteButton": {

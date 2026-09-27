@@ -145,3 +145,21 @@ nuevo el análisis completo:
   propio usuario, no algo que se pueda decidir en su ausencia) — queda
   como recomendación explícita para la próxima vez que se toque este
   script.
+
+## Addendum 2026-09-26 — tercer uso real, release v1.4.0
+
+Tercer backup real generado con `npm run backup:db`, esta vez antes de
+aplicar `scripts/migrations/0021-training-records-count.sql` contra
+producción (release v1.4.0): `backups/ocean-flow-2026-09-26.dump`, 494 KB
+— tamaño creciendo de forma consistente con los dos anteriores (297 KB
+2026-09-03, 368 KB 2026-09-08), como cabía esperar con más datos reales
+acumulados. Detalle nuevo encontrado esta vez: el `pg_dump` del sistema
+(Homebrew, versión 16) era más antiguo que el Postgres real de Supabase
+(17.6) — `pg_dump` se niega por diseño a volcar un servidor más nuevo que
+él mismo. Resuelto instalando `postgresql@17` vía Homebrew (ya disponible
+en el sistema, solo hacía falta anteponerlo al `PATH` para esa
+ejecución) — sin tocar `scripts/backup-db.mjs`, que ya usa el `pg_dump`
+que encuentre en el `PATH`. Si esto vuelve a pasar en el futuro (Supabase
+sube de versión mayor otra vez), la solución es la misma: mantener
+instalada la versión de `postgresql@NN` de Homebrew que iguale o supere
+la del servidor, sin necesidad de cambiar el script.

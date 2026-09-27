@@ -1,12 +1,11 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { CalendarDays, Award, Handshake, ChevronRight, Building2, HelpCircle } from "lucide-react";
+import { CalendarDays, Award, Handshake, Building2, HelpCircle, Wallet, Plus } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, useFloatingDropdown, FloatingPanel } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
-import PendingCollectionCard from "./PendingCollectionCard";
 import { getGeneratedCount } from "./trainingRecords/generatedCounter";
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
@@ -17,9 +16,6 @@ import { getGeneratedCount } from "./trainingRecords/generatedCounter";
 // preselecciona esa fecha en vez de la de hoy (la usa el calendario de
 // abajo). type es directamente "ganado"/"comision"/"companeros" — ya no
 // hace falta el id de pestaña antiguo ("log"), ver docs/ADR/0005 addendum.
-// onOpenPending: () => navega a Mi trabajo (tarjeta "Pendiente de cobrar")
-// — Mi trabajo abre ya en su pestaña "Pendientes" por defecto, así que no
-// hace falta pasarle ningún filtro explícito.
 // onOpenSummary: () => navega a Resumen — puente táctil desde "Generado
 // este mes" (ver comentario junto a esa tarjeta más abajo). Resumen se
 // monta de cero al entrar (no queda en el DOM mientras se ve otra pestaña,
@@ -216,7 +212,7 @@ function MiniKpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenPending, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
   const { t } = useTranslation("home");
   // Oculta el punto de entrada de "Instalar la app" si la propia app ya
   // corre instalada (display-mode: standalone en Chromium/Android,
@@ -359,7 +355,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
       .forEach((e) => { counts[e.school] = (counts[e.school] || 0) + 1; });
     const bySchool = Object.entries(counts).sort((a, b) => b[1] - a[1]);
     if (bySchool.length === 0) return null;
-    return { school: bySchool[0][0], count: bySchool[0][1], schoolCount: bySchool.length };
+    return { school: bySchool[0][0], count: bySchool[0][1] };
   }, [incomeEntries, currentMonthKey]);
 
   return (
@@ -374,7 +370,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
       <div>
         <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-            {t("kpis.sectionTitle")}
+            {t("kpis.sectionTitle", { month: t("common:calendar.months", { returnObjects: true })[now.getMonth()] })}
           </h2>
           {/* Instalar la app (2026-09-08, tercera vuelta): el banner
               descartable de antes "no convencía" — pedido explícito de
@@ -417,11 +413,24 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             compactas (MiniKpiTile) — misma altura total de fila que
             antes. */}
         <div className="grid grid-cols-5 gap-2">
-          <div className="col-span-3">
+          {/* Pendiente de cobrar ocupa ahora el hueco principal de KPIs
+              (antes Media diaria) — pedido explícito del usuario:
+              "cambia el sitio de media diaria por pendiente de cobrar...
+              me refiero a todo el contenido de esas dos pastillas". Sin
+              onClick propio a Mi trabajo (a diferencia de cuando vivía en
+              el bento): MoneyKpiTile ya trae su propio botón real
+              (el "?" del tooltip) — envolverlo en otro `<button>` es HTML
+              inválido (`<button>` dentro de `<button>`, error real de
+              hidratación detectado por los tests) y el resto de esta
+              fila (Cursos/Captados) tampoco es interactiva, así que
+              queda como el resto de KPIs: informativa, no un acceso
+              directo. */}
+          <div data-testid="pending-collection-card" className="col-span-3">
             <MoneyKpiTile
-              icon={CalendarDays} color={TEAL} totals={dailyAverageTotals} currencyRows={currencies.rows}
-              label={t("kpis.dailyAverageThisMonth")} tooltip={t("kpis.dailyAverageTooltip")}
-              tooltipShowLabel={t("kpis.dailyAverageTooltipShow")} tooltipHideLabel={t("kpis.dailyAverageTooltipHide")}
+              icon={Wallet} color={SUN} totals={pendingSummary.totals} currencyRows={currencies.rows}
+              label={t("pendingCard.pendingLabel")}
+              tooltip={pendingSummary.count === 0 ? t("pendingCard.empty") : t("pendingCard.count", { count: pendingSummary.count })}
+              tooltipShowLabel={t("kpis.pendingTooltipShow")} tooltipHideLabel={t("kpis.pendingTooltipHide")}
               index={0} reduced={reducedMotion}
             />
           </div>
@@ -432,118 +441,130 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
         </div>
       </div>
 
-      {/* 2. Training Records — tercera vuelta de diseño (2026-09-08).
-          Historial: nació como tarjeta grande con borde y degradado
-          (2026-09-04); feedback directo "es muy grande y queda como
-          pegada, no lo veo muy integrado" llevó a explorar mockups
-          (Artifact, 3 direcciones) — elegida "Opción A" (fila fina, sin
-          tarjeta propia, mismo espíritu que el enlace "Descargar app" de
-          arriba). Segunda vuelta de mockups sobre esa misma opción,
-          pidiendo "dinamismo, texto, call to action, Generados" — elegida
-          la combinación de dos ideas:
-          (1) "Generados" como cuarta palabra del mismo vocabulario que ya
-              usan los KPI de arriba (Media diaria/Cursos/Captados) — mismo
-              patrón número-en-grande + etiqueta-pequeña, no un contador
-              inventado aparte.
-          (2) el texto CAMBIA según haya actividad real: sin ningún
-              documento generado todavía, es una invitación de verdad
-              ("Genera tu primer Training Record", en azul océano — nunca
-              un "0 Generados" desangelado); en cuanto hay alguno, pasa a
-              contar lo ya hecho.
-          Insignia rounded-lg (no circular, para no confundirse con los
-          badges redondos de los KPI) con la misma respiración sutil en
-          bucle que ya tenía, apagada con prefers-reduced-motion.
-          `px-3` (2026-09-08, bug real reportado: "queda todo muy en el
-          lado izquierdo") — el `px-1` original dejaba el icono/texto de
-          esta fila varios píxeles más a la izquierda que el resto de
-          elementos de Home (las KPI tiles tienen su propio `p-[9px]`
-          interno, la tarjeta "Pendiente de cobrar" `p-4`): sin ningún
-          borde/fondo propio que lo compense, el contenido se veía pegado
-          al borde en vez de guardar el mismo ritmo horizontal que sus
-          vecinos.
+      {/* 2. Bento de accesos — rediseño de portada (lote 2026-09-26,
+          pedido explícito del usuario). Sustituye a la fila fina de
+          Training Records + la tarjeta completa de "Pendiente de
+          cobrar" + la tarjeta de "Escuela más activa" que antes cerraba
+          la pantalla, tras el calendario (ver comentario histórico más
+          abajo, en el bloque del calendario, para el porqué de aquel
+          orden). Mismo presupuesto de alto que la versión anterior — el
+          calendario no debe caer más abajo en el móvil, restricción
+          explícita del usuario, verificada con mobile-check.
 
-          Cuarta vuelta (2026-09-08, con captura real del móvil delante):
-          el `px-3` de arriba resultó ser un parche sobre un problema más
-          de fondo, medido en píxeles reales sobre la captura — el propio
-          `<button>` no llegaba a `w-full`, así que se encogía al ancho de
-          su contenido (línea divisoria incluida) en vez de estirarse
-          como el resto de Home; por eso cambiaba de ancho entre el
-          estado vacío y el estado con actividad, y por eso a la derecha
-          "no había aire de más", literalmente no había fila ahí. Se
-          añade `w-full` y el contenido pasa a ir CENTRADO (no pegado a
-          la izquierda) — pedido explícito tras ver la fila ya
-          implementada: "queda todo muy a la izquierda y demasiado aire a
-          la derecha... plantea más mockups centrando la info". Con
-          actividad, la insignia lleva además un halo sutil detrás
-          (mismo tono que ya usa `${BRAND_OCEAN}1A` en otras insignias
-          del archivo) para reforzar la respiración ya existente — solo
-          en ese estado: en el estado vacío un halo difuminado detrás de
-          una insignia clara se veía sucio en vez de vistoso, así que ahí
-          se queda sin ningún efecto extra. */}
-      {onOpenTrainingRecords && (
-        <button
-          type="button"
-          onClick={onOpenTrainingRecords}
-          className="flex w-full items-center justify-center gap-2.5 border-b border-t border-gray-100 px-3 py-2.5 text-center"
-        >
-          <span className="relative flex shrink-0 items-center justify-center">
-            {generatedCount > 0 && (
-              <span
-                className="absolute h-11 w-11 rounded-full"
-                style={{ background: `radial-gradient(circle, ${BRAND_OCEAN}66 0%, ${BRAND_OCEAN}1A 55%, transparent 78%)` }}
-                aria-hidden="true"
-              />
-            )}
-            <motion.span
-              className="relative flex h-[26px] w-[26px] items-center justify-center rounded-lg"
-              style={{ backgroundColor: generatedCount > 0 ? BRAND_NAVY : `${BRAND_OCEAN}1A` }}
-              animate={reducedMotion ? undefined : { scale: [1, 1.06, 1] }}
-              transition={reducedMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+          Fila superior: Pendiente de cobrar (protagonista, 2/3 del
+          ancho — sigue siendo la cifra financiera más consultada de
+          Home) + "Nuevo movimiento" como tile propia (antes un botón
+          "+" incrustado dentro de la propia tarjeta de Pendiente; ahora
+          tiene hueco dedicado, más visible, pedido explícito: "crear una
+          nueva actividad vía + o un botón"). Etiqueta "Nuevo movimiento"
+          y no "Nueva actividad" a propósito: "Actividad" ya es un
+          término de negocio establecido en la app (el tipo de curso,
+          tabla `activities`, usado en Tarifas/filtros) — reutilizarlo
+          aquí para "registra una clase que has dado" confundiría más de
+          lo que ayuda, con manos mojadas y poca paciencia para ambigüedad.
+
+          Fila inferior: Training Records (compactada a la misma altura
+          que su vecina) + Escuela del mes (antes vivía sola, después del
+          calendario — sube aquí para caber en el mismo presupuesto de
+          alto; pasó por "Escuela favorita este mes" como etiqueta
+          explícita de la tile, acortada de nuevo el mismo lote porque
+          ese texto se cortaba en móvil real — y su cifra pasa de "N
+          movimientos este mes" a "N cursos", más directo). */}
+      <div className="mb-4 flex flex-col gap-2">
+        <div className="grid grid-cols-3 gap-2">
+          {/* Media diaria ocupa ahora este hueco (antes Pendiente de
+              cobrar) — mismo intercambio de contenido descrito arriba,
+              junto al KPI de arriba. Reutiliza MoneyKpiTile tal cual
+              (mismo componente que antes, solo cambia dónde vive) en vez
+              de un bloque a medida: trae de fábrica el tooltip real
+              (botón "?" que abre/cierra un panel, no un texto siempre
+              visible — pedido explícito: "deja el tooltip de media
+              diaria como tooltip") y la animación de conteo ascendente,
+              sin duplicar nada. Sin `onClick` propio: "Media diaria" no
+              tiene una pantalla a la que navegar, igual que Cursos/
+              Captados en la fila de arriba. */}
+          <div data-testid="daily-average-card" className="col-span-2">
+            <MoneyKpiTile
+              icon={CalendarDays} color={TEAL} totals={dailyAverageTotals} currencyRows={currencies.rows}
+              label={t("kpis.dailyAverageThisMonth")} tooltip={t("kpis.dailyAverageTooltip")}
+              tooltipShowLabel={t("kpis.dailyAverageTooltipShow")} tooltipHideLabel={t("kpis.dailyAverageTooltipHide")}
+              index={0} reduced={reducedMotion}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => onQuickCreate("ganado")}
+            className="flex flex-col items-center justify-center gap-1.5 rounded-xl p-2 text-center transition-transform active:scale-[0.98]"
+            style={{ backgroundColor: BRAND_OCEAN }}
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.18)" }}>
+              <Plus size={18} className="text-white" aria-hidden="true" />
+            </span>
+            <span className="text-[10.5px] font-semibold leading-tight text-white">{t("quickCreate.label")}</span>
+          </button>
+        </div>
+        {/* items-center (pedido explícito, segunda vuelta: "el título y
+            el subtítulo de la pastilla estarán centrados verticalmente
+            entre ellos") — el icono se centra respecto al bloque de
+            texto de cada tarjeta (título+subtítulo), no respecto al
+            principio de la fila. Ambas tarjetas comparten el mismo
+            padding (`p-2.5`) y, con datos, las mismas dos líneas de
+            texto, así que quedan alineadas entre sí sin necesitar nada
+            más — el único caso con una sola línea (Training Records sin
+            generar ninguno todavía) es transitorio, de un usuario
+            recién llegado. */}
+        <div className="grid grid-cols-2 gap-2">
+          {onOpenTrainingRecords && (
+            <button
+              type="button"
+              onClick={onOpenTrainingRecords}
+              className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
             >
-              <Award size={13} style={{ color: generatedCount > 0 ? "#fff" : BRAND_OCEAN }} aria-hidden="true" />
-            </motion.span>
-          </span>
-          <span className="flex flex-col">
-            {generatedCount > 0 ? (
-              <>
-                <span className="text-[11.5px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</span>
-                <span className="flex items-baseline gap-1">
-                  <span className="text-xs font-extrabold leading-none tabular-nums" style={{ color: BRAND_OCEAN }}>{animatedGeneratedCount}</span>
-                  <span className="text-[9.5px] font-semibold uppercase leading-none tracking-wide text-gray-400">{t("trainingRecordsCard.generatedLabel")}</span>
-                </span>
-              </>
-            ) : (
-              <span className="text-[11.5px] font-bold leading-tight" style={{ color: BRAND_OCEAN }}>{t("trainingRecordsCard.ctaFirstTime")}</span>
-            )}
-          </span>
-          <ChevronRight size={16} className="shrink-0" style={{ color: generatedCount > 0 ? "#CBD5E1" : BRAND_OCEAN }} aria-hidden="true" />
-        </button>
-      )}
+              <motion.span
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: generatedCount > 0 ? BRAND_NAVY : `${BRAND_OCEAN}1A` }}
+                animate={reducedMotion ? undefined : { scale: [1, 1.06, 1] }}
+                transition={reducedMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Award size={14} style={{ color: generatedCount > 0 ? "#fff" : BRAND_OCEAN }} aria-hidden="true" />
+              </motion.span>
+              <span className="min-w-0 text-center">
+                {generatedCount > 0 ? (
+                  <>
+                    <div className="truncate text-[11px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</div>
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-[11px] font-extrabold tabular-nums" style={{ color: BRAND_OCEAN }}>{animatedGeneratedCount}</span>
+                      <span className="truncate text-[9.5px] font-semibold uppercase text-gray-400">{t("trainingRecordsCard.generatedLabel")}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-[11px] font-bold leading-tight" style={{ color: BRAND_OCEAN }}>{t("trainingRecordsCard.ctaFirstTime")}</div>
+                )}
+              </span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onOpenSummary}
+            data-testid="active-school-this-month-card"
+            className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
+              <Building2 size={14} style={{ color: TEAL }} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 text-center">
+              <div className="truncate text-[11px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>
+                {schoolActivityThisMonth
+                  ? `${schoolActivityThisMonth.school} · ${t("activeSchoolCount", { count: schoolActivityThisMonth.count })}`
+                  : t("noActivityThisMonth")}
+              </div>
+              <div className="truncate text-[10px] text-gray-400">{t("activeSchoolThisMonth")}</div>
+            </span>
+          </button>
+        </div>
+      </div>
 
-
-      {/* 3. Pendiente de cobrar — información financiera principal, la más
-          visible de la pantalla. Integra también el acceso rápido de
-          creación (botón "+" a la derecha, onQuickAdd): antes era una fila
-          aparte debajo de esta tarjeta, con el mismo ancho y casi el mismo
-          peso visual, compitiendo por atención con la propia cifra
-          pendiente. Vive aquí en vez de eso porque un único acceso
-          "Añadir movimiento" (no un botón por tipo — el propio formulario
-          resuelve el tipo con su selector, mismo criterio ya validado en
-          Mi trabajo, ADR-0005) no necesita una fila propia si cabe, claro
-          y con buen tamaño táctil, en el espacio libre de la tarjeta más
-          consultada de Home. onQuickAdd usa e.stopPropagation() dentro de
-          PendingCollectionCard para no interferir con onPress (ahora
-          navega a Mi trabajo, ver comentario de onOpenPending arriba). */}
-      <PendingCollectionCard
-        totals={pendingSummary.totals}
-        count={pendingSummary.count}
-        currencyRows={currencies.rows}
-        color={SUN}
-        onPress={onOpenPending}
-        onQuickAdd={() => onQuickCreate("ganado")}
-      />
-
-      {/* 4. Calendario del mes — revisión de jerarquía 2026-08-29 (ver
+      {/* 3. Calendario del mes — revisión de jerarquía 2026-08-29 (ver
           docs/ADR/0004, addendum): antes iba en tercer y último lugar,
           después de "Generado este mes", cuando en la práctica un día
           normal no acumula demasiados movimientos distintos (el propio
@@ -586,47 +607,6 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           isCurrentMonth={isCurrentCalendarMonth}
         />
       </div>
-
-      {/* 5. Escuela más activa este mes — información secundaria de cierre,
-          no la protagonista (2026-09-07, pedido explícito: "el módulo
-          'generado este mes' duplica información ya disponible en la
-          cabecera de movimientos [el KPI "Generado este mes" de Mi
-          trabajo] — piensa algo de menos valor que combine con el diseño
-          de la home"). Antes esta tarjeta mostraba la misma cifra
-          financiera que ya se ve al entrar en Mi trabajo — sustituida por
-          un ángulo distinto y deliberadamente de menor peso informativo:
-          CON QUIÉN trabajas este mes, no CUÁNTO generas (eso ya lo cubren
-          los KPIs financieros de Mi trabajo). Mismo patrón visual que
-          antes (tarjeta táctil, icono+etiqueta / cifra grande / caption),
-          así que sigue combinando con el resto de la pantalla sin
-          introducir un cuarto lenguaje visual — solo cambia el contenido.
-          Sigue navegando a Resumen (onOpenSummary) — "Por escuela" ya
-          vive ahí como desglose completo, así que el puente sigue
-          teniendo sentido: esta tarjeta es el adelanto, Resumen es el
-          detalle. */}
-      <button
-        type="button"
-        onClick={onOpenSummary}
-        data-testid="active-school-this-month-card"
-        className="w-full rounded-xl border border-gray-200 bg-white p-4 text-left transition-transform active:scale-[0.98]"
-      >
-        <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-          <Building2 size={14} style={{ color: TEAL }} aria-hidden="true" />
-          {t("activeSchoolThisMonth")}
-        </div>
-        <div className="mt-1 truncate text-2xl font-bold" style={{ color: BRAND_NAVY }}>
-          {schoolActivityThisMonth ? schoolActivityThisMonth.school : "—"}
-        </div>
-        <div className="mt-0.5 text-xs text-gray-400">
-          {schoolActivityThisMonth ? (
-            schoolActivityThisMonth.schoolCount > 1
-              ? t("activeSchoolCountAndOthers", { count: schoolActivityThisMonth.count, schools: schoolActivityThisMonth.schoolCount })
-              : t("activeSchoolCount", { count: schoolActivityThisMonth.count })
-          ) : (
-            t("noActivityThisMonth")
-          )}
-        </div>
-      </button>
     </div>
   );
 }

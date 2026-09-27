@@ -219,8 +219,7 @@ function HeroTotal({ label, period, color, total, previousTotal, canCompare, cur
 
   return (
     // rounded-xl, sin sombra (auditoría de estilo 2026-09-04) — misma
-    // familia de "tarjeta con la cifra protagonista, fondo de color sólido"
-    // que PendingCollectionCard (Home/Mi trabajo) y los KpiTile de
+    // familia de "tarjeta con la cifra protagonista" que los KpiTile de
     // Home/Mi trabajo: esta tarjeta era la única con rounded-lg+shadow-sm,
     // un desvío accidental de ese lenguaje visual (radio distinto, y la
     // única sombra de un elemento no elevado — el resto de "shadow-*" de la

@@ -10,13 +10,6 @@
     "comision": "Комиссия",
     "companeros": "Корректировка"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "Ожидает оплаты",
-    "empty": "Ничего не ожидает оплаты",
-    "count_one": "{{count}} платёж в ожидании",
-    "count_other": "{{count}} платежей в ожидании",
-    "addMovement": "Добавить операцию"
-  },
   "confirmDialog": { "cancel": "Отмена", "defaultConfirmLabel": "Удалить" },
   "editActions": { "defaultSaveLabel": "Сохранить", "cancel": "Отмена" },
   "deleteButton": {

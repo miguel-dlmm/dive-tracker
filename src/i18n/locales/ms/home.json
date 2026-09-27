@@ -1,24 +1,33 @@
 {
   "calendarCaption": "Ketik satu hari untuk lihat butiran, atau hari kosong untuk tambah transaksi",
-  "activeSchoolThisMonth": "Sekolah paling aktif",
-  "activeSchoolCount_one": "{{count}} transaksi bulan ini",
-  "activeSchoolCount_other": "{{count}} transaksi bulan ini",
-  "activeSchoolCountAndOthers_one": "{{count}} transaksi · {{schools}} sekolah bulan ini",
-  "activeSchoolCountAndOthers_other": "{{count}} transaksi · {{schools}} sekolah bulan ini",
+  "activeSchoolThisMonth": "Sekolah bulan ini",
+  "activeSchoolCount_one": "{{count}} kursus",
+  "activeSchoolCount_other": "{{count}} kursus",
   "noActivityThisMonth": "Tiada aktiviti bulan ini",
   "kpis": {
-    "sectionTitle": "Impak anda bulan ini",
+    "sectionTitle": "Impak anda pada {{month}}",
     "dailyAverageThisMonth": "Purata harian",
     "dailyAverageTooltip": "Pendapatan purata sehari bulan ini, dikira setakat hari ini sahaja.",
     "dailyAverageTooltipShow": "Info: Purata harian",
     "dailyAverageTooltipHide": "Sembunyikan info: Purata harian",
     "coursesTotal": "Kursus",
-    "referredThisMonth": "Dirujuk"
+    "referredThisMonth": "Dirujuk",
+    "pendingTooltipShow": "Info: Belum dikutip",
+    "pendingTooltipHide": "Sembunyikan info: Belum dikutip"
   },
   "trainingRecordsCard": {
     "title": "Training Records",
     "ctaFirstTime": "Jana Training Record pertama anda",
     "generatedLabel": "Dijana"
   },
-  "installApp": "Muat turun aplikasi"
+  "installApp": "Muat turun aplikasi",
+  "pendingCard": {
+    "pendingLabel": "Belum dikutip",
+    "empty": "Tiada yang belum selesai",
+    "count_one": "{{count}} bayaran belum selesai",
+    "count_other": "{{count}} bayaran belum selesai"
+  },
+  "quickCreate": {
+    "label": "Transaksi baharu"
+  }
 }

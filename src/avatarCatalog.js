@@ -2,9 +2,8 @@ import { Fish, FishSymbol, Turtle, Shrimp, Snail, Shell, Anchor, Compass, LifeBu
 import { ENTITY_COLOR_PALETTE } from "./colors";
 
 // Catálogo cerrado de avatares (Bloque 5, ampliado 2026-09-06 dentro del
-// rediseño — ver docs/DESIGN-SYSTEM.md §7) — mismo criterio que el icono de
-// carga de la app (GeneralSettings, ConfigTab.jsx): iconos de lucide-react
-// + colores de marca, nunca una imagen subida por el usuario. Evita
+// rediseño — ver docs/DESIGN-SYSTEM.md §7) — iconos de lucide-react +
+// colores de marca, nunca una imagen subida por el usuario. Evita
 // moderación de contenido y almacenamiento de ficheros para algo que, en
 // una app de un único instructor por cuenta, no necesita ser una foto real.
 //
@@ -17,14 +16,11 @@ import { ENTITY_COLOR_PALETTE } from "./colors";
 // amplía a "iconografía real de mar/buceo", no solo fauna — cada icono
 // representa lo que su nombre dice, ninguno finge ser un animal que no es.
 // Los 6 animales se quedan (representándose a sí mismos, no a la lista
-// original de 2026-09-04) y se añaden 8 iconos de mar/buceo genuinos, 4 de
-// ellos ya usados y aceptados como iconografía de marca en otro sitio de la
-// app (ICON_OPTIONS del icono de carga, ConfigTab.jsx: Anchor, Compass,
-// LifeBuoy, Sailboat) — mismo lenguaje visual, no uno nuevo.
-// Waves sigue sin estar aquí: sigue siendo una opción del icono de carga
-// configurable (ICON_OPTIONS, ConfigTab.jsx), no un avatar. El favicon/
-// login/spinner ya no son Waves de todos modos — son el logo real desde
-// el rediseño 2026-09-06 (ver docs/DESIGN-SYSTEM.md §1.1).
+// original de 2026-09-04) y se añaden 8 iconos de mar/buceo genuinos
+// (Anchor, Compass, LifeBuoy, Sailboat, ShipWheel, Bubbles, TreePalm,
+// Droplets). El favicon/login/spinner son el logo real desde el rediseño
+// 2026-09-06 (ver docs/DESIGN-SYSTEM.md §1.1), no un icono de este
+// catálogo ni de ningún otro.
 export const AVATAR_ICONS = [
   { name: "Fish", Icon: Fish },
   { name: "FishSymbol", Icon: FishSymbol },
@@ -60,8 +56,8 @@ export const AVATAR_COLORS = ENTITY_COLOR_PALETTE.map((value, i) => ({ name: AVA
 // marca como error asignar a una variable usada como etiqueta JSX el
 // resultado de LLAMAR a una función (aunque sea pura y determinista, como
 // esta) durante el render; un acceso a objeto plano sí lo acepta — mismo
-// motivo por el que LOADING_ICONS (shared.jsx) y CATEGORY_ICONS
-// (HelpTab.jsx) son objetos, no funciones. Cualquier `<Icon />` que
+// motivo por el que CATEGORY_ICONS (HelpTab.jsx) es un objeto, no una
+// función. Cualquier `<Icon />` que
 // dependa de un nombre de icono del catálogo de avatares debe usar este
 // mapa directamente (`AVATAR_ICON_MAP[name] || AVATAR_ICON_MAP.Fish`),
 // nunca `iconByName(name)` (se mantiene solo para código no-JSX).

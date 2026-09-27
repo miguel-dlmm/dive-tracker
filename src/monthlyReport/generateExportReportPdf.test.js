@@ -8,8 +8,8 @@
 // aquí antes que en el navegador del usuario. `file-saver` se mockea:
 // no hay descarga real que verificar en un test, solo que el PDF se
 // generó (tamaño de buffer > 0).
-import { generateExportReportPdf, formatMoneyPdf } from "./generateExportReportPdf";
-import { buildExportReportData } from "./buildExportReportData";
+import { generateExportReportPdf, formatMoneyPdf, groupedActivityTable } from "./generateExportReportPdf";
+import { buildExportReportData, groupByDayAndActivity } from "./buildExportReportData";
 
 vi.mock("file-saver", () => ({ saveAs: vi.fn() }));
 
@@ -72,6 +72,55 @@ describe("formatMoneyPdf", () => {
 
   it("un importe negativo (ajuste en contra) conserva el signo", () => {
     expect(formatMoneyPdf(-250, "EUR")).toBe("-250,00 EUR");
+  });
+});
+
+// Bug real reportado en TEST (dev-bypass, informe de septiembre
+// generado de verdad): la cabecera del día 29/09 quedaba sola al final
+// de una página, con sus movimientos ya empezando en la siguiente, sin
+// cabecera — pdfmake corta una tabla larga entre cualquier par de filas
+// sin saber que una fila "pertenece" a las que la siguen. El fix: una
+// mini-tabla `unbreakable: true` POR DÍA (cabecera + sus filas juntas en
+// el mismo bloque) en vez de una única tabla larga con todas las
+// cabeceras de día mezcladas entre las filas — ver el comentario junto a
+// dayBlockLayout en generateExportReportPdf.js para el porqué completo.
+// Estos tests comprueban la garantía real del fix (cada día es un bloque
+// atómico), no solo que pdfmake no lance.
+const rowDate = (d) => d;
+describe("groupedActivityTable — cabecera de día pegada a sus filas, nunca huérfana", () => {
+  it("cada día es su propio bloque unbreakable, con la cabecera como fila 0 de su propia tabla", () => {
+    const dayGroups = groupByDayAndActivity([
+      { date: "2026-09-03", activity: "Bautismo", status: "Pending", currency: "EUR", people: 2, total: 90 },
+      { date: "2026-09-29", activity: "Open Water Diver", status: "Pending", currency: "EUR", people: 1, total: 45 },
+      { date: "2026-09-29", activity: "Advanced", status: "Pending", currency: "EUR", people: 1, total: 60 },
+    ]);
+    const blocks = groupedActivityTable({ dayGroups, showCollected: false, paymentStatusRows: paymentStatuses, t, rowDate });
+
+    expect(blocks).toHaveLength(2); // un bloque por día (03/09 y 29/09), no una tabla única
+    blocks.forEach((block) => {
+      // La pieza real del fix: si esto no está presente, pdfmake puede
+      // volver a cortar el bloque entre la cabecera y sus filas.
+      expect(block.unbreakable).toBe(true);
+    });
+
+    // Día 29/09: 2 movimientos ese día — la cabecera (fila 0) y AMBAS
+    // filas de movimiento viven en la MISMA tabla/bloque, nunca repartidas.
+    const day29 = blocks[1];
+    expect(day29.table.body).toHaveLength(3); // 1 cabecera + 2 movimientos
+    expect(day29.table.body[0][0].text).toBe("2026-09-29"); // fila 0 = cabecera del día
+    expect(day29.table.body[1][0].stack[0].text).toBe("1 × Open Water Diver");
+    expect(day29.table.body[2][0].stack[0].text).toBe("1 × Advanced");
+  });
+
+  it("solo el primer día del informe no lleva línea separadora superior gruesa", () => {
+    const dayGroups = groupByDayAndActivity([
+      { date: "2026-09-03", activity: "Bautismo", status: "Pending", currency: "EUR", people: 2, total: 90 },
+      { date: "2026-09-10", activity: "Bautismo", status: "Pending", currency: "EUR", people: 1, total: 45 },
+    ]);
+    const [firstDay, secondDay] = groupedActivityTable({ dayGroups, showCollected: false, paymentStatusRows: paymentStatuses, t, rowDate });
+
+    expect(firstDay.layout.hLineWidth(0)).toBe(0); // primer día: sin línea encima (ya es el borde superior del grupo)
+    expect(secondDay.layout.hLineWidth(0)).toBe(1.5); // resto de días: separador grueso
   });
 });
 

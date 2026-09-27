@@ -5,6 +5,7 @@
     "favoriteCurrency": "Mata uang favorit",
     "language": "Bahasa",
     "security": "Keamanan",
+    "session": "Sesi",
     "privacy": "Privasi"
   },
   "signOut": {
@@ -26,15 +27,12 @@
   "personalData": {
     "nameLine": "Nama:",
     "nicknameLine": "Nickname:",
-    "professionalLine": "Profesional:",
     "birthDateLine": "Tanggal lahir:",
     "countryLine": "Negara tempat tinggal:",
     "edit": "Edit",
     "nameLabel": "Nama",
     "lastNameLabel": "Nama belakang",
     "nicknameLabel": "Nickname",
-    "professionalLabel": "Profesional",
-    "professionalPlaceholder": "Belum dipilih",
     "birthDateLabel": "Tanggal lahir",
     "countryLabel": "Negara tempat tinggal",
     "countryPlaceholder": "Pilih negara",
@@ -50,6 +48,8 @@
   },
   "instructor": {
     "hint": "Digunakan untuk mengisi Training Records-mu secara otomatis — disimpan di sini sekali saja, tidak per perangkat.",
+    "professionalLabel": "Profesional",
+    "professionalPlaceholder": "Belum dipilih",
     "card": {
       "role": "Profesional SSI",
       "roleWithLevel": "SSI {{level}}",

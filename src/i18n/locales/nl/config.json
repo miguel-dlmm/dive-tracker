@@ -48,13 +48,6 @@
   "sectionColors": {
     "descripcion": "Gebruikt in de navigatiebalk en in de knoppen om een registratie aan te maken in elk gebied."
   },
-  "generalSettings": {
-    "iconoCarga": "Laadicoon",
-    "descripcion": "Wordt gebruikt in de \"laden\"-animatie van de hele app. Zodra het officiële Ocean Flow-logo klaar is, laat het weten en dan vervang ik deze lijst door het echte icoon.",
-    "iconoActualizado": "Icoon bijgewerkt",
-    "noSePudoGuardar": "Opslaan is niet gelukt. Probeer het opnieuw.",
-    "vistaPrevia": "Voorbeeld"
-  },
   "externalRegistration": {
     "titulo": "Externe registratie toestaan",
     "descripcion": "Toont \"Registreren\" op het inlogscherm, zodat iedereen zelf een account kan aanmaken.",

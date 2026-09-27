@@ -2,24 +2,13 @@ import { useState, useRef, useEffect, useMemo, useCallback, createContext, useCo
 import { useTranslation, withTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useDragControls } from "motion/react";
-import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, MoreVertical, Pencil, HelpCircle, LifeBuoy, Waves, Anchor, Sailboat, Compass, Fish, GraduationCap, Handshake, Users } from "lucide-react";
+import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, ArrowRight, X, Loader2, Plus, Minus, MoreVertical, Pencil, HelpCircle, LifeBuoy, GraduationCap, Handshake, Users } from "lucide-react";
 // Desde colors.js, no desde "./App" — ver colors.js para el porqué (ciclo
 // de imports con App.jsx, real y ya provocaba un ReferenceError en
 // desarrollo, no solo una fragilidad teórica).
 import { TEAL, CORAL, GREEN, BRAND_NAVY, BRAND_GOLD, BRAND_SLATE, ENTITY_COLOR_PALETTE } from "./colors";
 import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, monthSlideVariants, usePrefersReducedMotion, useSwipeHorizontal, animateScrollBy } from "./motion";
 import { AVATAR_ICON_MAP } from "./avatarCatalog";
-
-// Catálogo cerrado del icono de carga configurable (GeneralSettings,
-// ConfigTab.jsx, ICON_OPTIONS) — imports nombrados en vez de `import * as
-// Icons from "lucide-react"` (hallazgo de bundle, rediseño 2026-09-06,
-// docs/REDISENO-V2-PROGRESS.md): ese wildcard obligaba a incluir la
-// librería de iconos entera en el bundle de producción (36% del peso
-// final) para poder resolver un icono por nombre en runtime, aunque la
-// app solo usa un puñado de nombres reales. Debe tener exactamente las
-// mismas claves que ICON_OPTIONS — si se añade un icono nuevo ahí, se
-// añade aquí también.
-const LOADING_ICONS = { Waves, Anchor, Sailboat, LifeBuoy, Fish, Compass };
 
 // focus: borde navy de marca + halo sky suave (docs/DESIGN-SYSTEM.md §6.3)
 // — antes un gris genérico sin relación con la marca nueva.
@@ -114,55 +103,38 @@ export function useToast() {
 }
 
 // =================================================================
-// Loading genérico de la app — un icono que "se rellena" en bucle.
-// El icono es configurable desde Configuración (tabla app_config),
-// para poder cambiarlo por el logo oficial cuando esté listo, sin
-// tocar código. Rediseño 2026-09-06: "Logo" ya es esa opción — el logo
-// real, no un icono de lucide-react. Es un <img> apuntando a un SVG en
-// public/brand/ (vectorial desde Fase 7, 2026-09-07 — antes un PNG
-// rasterizado), pero sigue sin poder recolorearse con `color` como los
-// iconos de stroke: un SVG cargado por src, a diferencia de uno inline,
-// no hereda `currentColor` de fuera. El mismo efecto de "relleno" se
-// consigue superponiendo dos copias de la imagen (una atenuada de
-// fondo, otra a opacidad completa recortada por la animación), en vez
-// de dos copias coloreadas distinto del mismo icono.
+// Loading genérico de la app — el logo real "se rellena" en bucle. Es
+// un <img> apuntando a un SVG en public/brand/ (vectorial), que sigue
+// sin poder recolorearse con `color` como los iconos de stroke: un SVG
+// cargado por src, a diferencia de uno inline, no hereda `currentColor`
+// de fuera. El mismo efecto de "relleno" se consigue superponiendo dos
+// copias de la imagen (una atenuada de fondo, otra a opacidad completa
+// recortada por la animación), en vez de dos copias coloreadas distinto
+// del mismo icono.
 // =================================================================
-export function AppLoading({ iconName = "Logo", color = BRAND_NAVY, size = 40, label }) {
+export function AppLoading({ size = 40, label }) {
   const { t } = useTranslation("common");
   const statusProps = { role: "status", "aria-label": label || t("loading.defaultLabel") };
-  if (iconName === "Logo") {
-    // Feedback explícito (2026-09-07: "podrías animar la parte q parece
-    // una ola para q vaya apareciendo esa parte del logo hacia arriba en
-    // lugar de solo rellenarse el color como ahora?") — antes `oceanFill`
-    // recortaba el logo ENTERO de golpe (los dos trazos del SVG a la vez,
-    // ver logo-mark-navy.svg), sin distinguir la ola del aro que la
-    // envuelve. El propio SVG se separó en dos ficheros (mismo viewBox,
-    // para que sigan encajando exactamente al superponerse):
-    // logo-mark-navy-ring.svg (el aro/media luna, siempre visible, sin
-    // animar) y logo-mark-navy-wave.svg (solo el trazo que de verdad
-    // parece una ola rompiendo). Solo la ola anima con `oceanFill`
-    // (mismo keyframe que ya existía, sin duplicar) — sube y baja dentro
-    // del aro fijo, en vez de todo el icono apareciendo/desapareciendo a
-    // la vez.
-    return (
-      <div className="flex flex-col items-center gap-3" {...statusProps}>
-        <div className="relative" style={{ width: size, height: size }}>
-          <img src="/brand/logo-mark-navy.svg" width={size} height={size} alt="" aria-hidden="true" style={{ opacity: 0.2 }} />
-          <img className="absolute inset-0" src="/brand/logo-mark-navy-ring.svg" width={size} height={size} alt="" aria-hidden="true" />
-          <div className="absolute inset-0" style={{ animation: "oceanFill 1.6s ease-in-out infinite" }}>
-            <img src="/brand/logo-mark-navy-wave.svg" width={size} height={size} alt="" aria-hidden="true" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-  const Icon = LOADING_ICONS[iconName] || Waves;
+  // Feedback explícito (2026-09-07: "podrías animar la parte q parece
+  // una ola para q vaya apareciendo esa parte del logo hacia arriba en
+  // lugar de solo rellenarse el color como ahora?") — antes `oceanFill`
+  // recortaba el logo ENTERO de golpe (los dos trazos del SVG a la vez,
+  // ver logo-mark-navy.svg), sin distinguir la ola del aro que la
+  // envuelve. El propio SVG se separó en dos ficheros (mismo viewBox,
+  // para que sigan encajando exactamente al superponerse):
+  // logo-mark-navy-ring.svg (el aro/media luna, siempre visible, sin
+  // animar) y logo-mark-navy-wave.svg (solo el trazo que de verdad
+  // parece una ola rompiendo). Solo la ola anima con `oceanFill`
+  // (mismo keyframe que ya existía, sin duplicar) — sube y baja dentro
+  // del aro fijo, en vez de todo el icono apareciendo/desapareciendo a
+  // la vez.
   return (
     <div className="flex flex-col items-center gap-3" {...statusProps}>
       <div className="relative" style={{ width: size, height: size }}>
-        <Icon size={size} style={{ color: "#E5E7EB" }} strokeWidth={2} aria-hidden="true" />
+        <img src="/brand/logo-mark-navy.svg" width={size} height={size} alt="" aria-hidden="true" style={{ opacity: 0.2 }} />
+        <img className="absolute inset-0" src="/brand/logo-mark-navy-ring.svg" width={size} height={size} alt="" aria-hidden="true" />
         <div className="absolute inset-0" style={{ animation: "oceanFill 1.6s ease-in-out infinite" }}>
-          <Icon size={size} style={{ color }} strokeWidth={2} aria-hidden="true" />
+          <img src="/brand/logo-mark-navy-wave.svg" width={size} height={size} alt="" aria-hidden="true" />
         </div>
       </div>
     </div>
@@ -237,8 +209,9 @@ export const ErrorBoundary = withTranslation("common")(ErrorBoundaryBase);
 // resueltos por avatarCatalog.js (resolveAvatar), este componente solo
 // dibuja. iconByName() (avatarCatalog.js) resuelve el nombre — mismo
 // helper que usa el resto de la app, nunca un lookup propio (antes
-// duplicaba la resolución con `import * as Icons`, ver LOADING_ICONS
-// más arriba para el porqué de quitarlo).
+// duplicaba la resolución con `import * as Icons` — hallazgo de bundle:
+// ese wildcard obligaba a incluir la librería de iconos entera en el
+// bundle de producción, ver AVATAR_ICON_MAP en avatarCatalog.js).
 // Blanco necesita su propio tratamiento (2026-09-07, "blanco también" en
 // la paleta de avatar): el fondo tintado (`${color}1A`) es prácticamente
 // invisible en blanco sobre el fondo casi-blanco de la app, y un icono
@@ -1185,13 +1158,35 @@ export function MoneyInput({ value, onChange, className = "", placeholder, "aria
 
   return (
     <div className="relative">
+      {/* Insignia de color en vez de un simple carácter "+"/"−" en gris
+          (bug reportado: "no sé qué pasa" al intentar meter un negativo
+          en Ajuste de curso) — no encontré ningún fallo real de
+          guardado ni de lectura (probado a fondo: escribir "-" a mano y
+          usar este botón, en creación y en edición, ambos caminos
+          funcionan y persisten bien), así que el problema más probable
+          es de descubribilidad: un carácter de texto suelto, sin fondo
+          ni color, se confunde fácilmente con un simple prefijo
+          decorativo del campo en vez de leerse como un control
+          pulsable — sobre todo en el teclado numérico de iOS, que es
+          precisamente donde hace falta (sin tecla de signo menos).
+          Mismo patrón de insignia+icono que el resto de la app (KPIs,
+          tarjetas del bento de Home) en vez de inventar uno nuevo —
+          CORAL/GREEN son los mismos colores que ya usa
+          formAccentColor (MovementSheet.jsx) para negativo/positivo,
+          así que el propio color ya adelanta el signo antes de leer la
+          cifra. */}
       <button
         type="button"
         onClick={toggleSign}
         aria-label={isNegative ? "Cambiar a positivo" : "Cambiar a negativo"}
-        className="absolute inset-y-0 left-0 flex min-h-11 w-11 items-center justify-center text-base font-semibold text-gray-500"
+        className="absolute inset-y-0 left-0 flex min-h-11 w-11 items-center justify-center"
       >
-        {isNegative ? "−" : "+"}
+        <span
+          className="flex h-6 w-6 items-center justify-center rounded-full"
+          style={{ backgroundColor: isNegative ? `${CORAL}1A` : `${GREEN}1A`, color: isNegative ? CORAL : GREEN }}
+        >
+          {isNegative ? <Minus size={14} aria-hidden="true" /> : <Plus size={14} aria-hidden="true" />}
+        </span>
       </button>
       {input}
     </div>

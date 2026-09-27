@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { GREEN, SUN, CORAL, BRAND_NAVY } from "./App";
 import { ENTITY_COLOR_PALETTE } from "./colors";
-import { useToast, AppLoading, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle, ColorSwatchPicker, DatePicker, useFloatingDropdown, FloatingPanel, FieldSkeleton } from "./shared";
+import { useToast, Field, ConfirmDialog, EditActions, Select, RowMenu, Sheet, Fab, shortDate, BooleanToggle, ColorSwatchPicker, DatePicker, useFloatingDropdown, FloatingPanel, FieldSkeleton } from "./shared";
 import { usePrefersReducedMotion, useSwipeBack } from "./motion";
 import { supabase } from "./supabaseClient";
 import i18n from "./i18n";
@@ -301,51 +301,12 @@ function SectionColors({ navSections }) {
   );
 }
 
-// Ajustes generales — hoy solo el icono del loading. "Logo" (rediseño
-// 2026-09-06) es ya el logo real de Ocean Flow, no un icono de
-// lucide-react — el resto de opciones siguen disponibles como
-// alternativa deliberada (mismo criterio de siempre: configurable sin
-// tocar código, ver AppLoading en shared.jsx).
-const ICON_OPTIONS = ["Logo", "Waves", "Anchor", "Sailboat", "LifeBuoy", "Fish", "Compass"];
-
 function GeneralSettings({ appConfig }) {
-  const { t } = useTranslation("config");
   const row = appConfig.rows[0];
-  const toast = useToast();
   if (!row) return null;
-
-  const setIcon = async (name) => {
-    try {
-      await appConfig.updateRow(true, { logo_icon: name });
-      toast?.success(t("generalSettings.iconoActualizado"));
-    } catch {
-      toast?.error(t("generalSettings.noSePudoGuardar"));
-    }
-  };
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <h3 className="mb-1 text-sm font-semibold text-gray-800">{t("generalSettings.iconoCarga")}</h3>
-      <p className="mb-3 text-xs text-gray-400">{t("generalSettings.descripcion")}</p>
-      <div className="mb-4 flex flex-wrap gap-2">
-        {ICON_OPTIONS.map((name) => (
-          <button
-            key={name}
-            onClick={() => setIcon(name)}
-            className="flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-sm font-medium"
-            style={row.logo_icon === name ? { borderColor: BRAND_NAVY, backgroundColor: `${BRAND_NAVY}1A`, color: BRAND_NAVY } : { borderColor: "#E5E7EB", color: "#4B5563" }}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
-      <div className="flex items-center gap-3 rounded-md bg-gray-50 p-4">
-        <AppLoading iconName={row.logo_icon} color={BRAND_NAVY} size={32} />
-        <span className="text-xs text-gray-400">{t("generalSettings.vistaPrevia")}</span>
-      </div>
-
-      <hr className="my-4 border-gray-100" />
-
       <ExternalRegistrationSetting appConfig={appConfig} row={row} />
     </div>
   );

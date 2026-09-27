@@ -1,24 +1,33 @@
 {
   "calendarCaption": "Toca un dia per veure'n el detall, o un de buit per afegir un moviment",
-  "activeSchoolThisMonth": "Escola més activa",
-  "activeSchoolCount_one": "{{count}} moviment aquest mes",
-  "activeSchoolCount_other": "{{count}} moviments aquest mes",
-  "activeSchoolCountAndOthers_one": "{{count}} moviment · {{schools}} escoles aquest mes",
-  "activeSchoolCountAndOthers_other": "{{count}} moviments · {{schools}} escoles aquest mes",
+  "activeSchoolThisMonth": "Escola del mes",
+  "activeSchoolCount_one": "{{count}} curs",
+  "activeSchoolCount_other": "{{count}} cursos",
   "noActivityThisMonth": "Sense activitat aquest mes",
   "kpis": {
-    "sectionTitle": "El teu impacte aquest mes",
+    "sectionTitle": "El teu impacte a {{month}}",
     "dailyAverageThisMonth": "Mitjana diària",
     "dailyAverageTooltip": "El que guanyes de mitjana cada dia aquest mes, comptant només fins avui.",
     "dailyAverageTooltipShow": "Info: Mitjana diària",
     "dailyAverageTooltipHide": "Amaga info: Mitjana diària",
     "coursesTotal": "Cursos",
-    "referredThisMonth": "Captats"
+    "referredThisMonth": "Captats",
+    "pendingTooltipShow": "Info: Per cobrar",
+    "pendingTooltipHide": "Amaga info: Per cobrar"
   },
   "trainingRecordsCard": {
     "title": "Training Records",
     "ctaFirstTime": "Genera el teu primer Training Record",
     "generatedLabel": "Generats"
   },
-  "installApp": "Descarrega l'app"
+  "installApp": "Descarrega l'app",
+  "pendingCard": {
+    "pendingLabel": "Per cobrar",
+    "empty": "Res pendent",
+    "count_one": "{{count}} pagament pendent",
+    "count_other": "{{count}} pagaments pendents"
+  },
+  "quickCreate": {
+    "label": "Moviment nou"
+  }
 }

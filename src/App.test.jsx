@@ -34,6 +34,11 @@ import { supabase } from "./supabaseClient";
 import { APP_VERSION } from "./version";
 
 const SESSION = { user: { id: "u1", email: "diver@example.com" } };
+// Mismo array que common:calendar.months (es/common.json) — el título de
+// KPIs de Home interpola el nombre del mes actual (rediseño de portada,
+// 2026-09-26), así que el test que comprueba que Home queda debajo del
+// modal necesita el nombre real del mes, no el texto fijo de antes.
+const CURRENT_MONTH_NAME = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"][new Date().getMonth()];
 
 function mockUseSession(overrides) {
   useSession.mockReturnValue({
@@ -325,7 +330,7 @@ describe("AuthGate", () => {
     await user.click(within(dialog).getByRole("button", { name: "Cerrar" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByText("Tu impacto este mes")).toBeInTheDocument();
+    expect(screen.getByText(`Tu impacto en ${CURRENT_MONTH_NAME}`)).toBeInTheDocument();
     expect(screen.queryByText("Primeros pasos")).not.toBeInTheDocument();
   });
 
