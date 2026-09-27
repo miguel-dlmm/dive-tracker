@@ -146,7 +146,7 @@ export default function WhatsNew({ onClose }) {
             entra se ve entrar del todo. Depende de `overflow-hidden`
             en el contenedor de abajo para no desbordar el diálogo
             mientras la diapositiva saliente atraviesa el 100%. */}
-        <div className="min-h-[220px] touch-pan-y overflow-hidden px-6 pb-2 text-center" {...swipeProps}>
+        <div data-testid="whatsnew-slide" className="min-h-[220px] touch-pan-y overflow-hidden px-6 pb-2 text-center" {...swipeProps}>
           <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             <motion.div
               key={step}
