@@ -4,6 +4,15 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Libro digital: Guía de Buceo de Koh Tao**: nuevo acceso desde Home
+  para enseñar la guía al cliente durante el briefing, a pantalla
+  completa y con zoom (pellizcar o doble toque). Organizada en 3
+  secciones navegables (Puntos de buceo, Vida marina, Información
+  extra), con portada propia de Ocean Flow — la portada del libro físico
+  original llevaba un anuncio pegado que no se podía separar del
+  contenido.
+
 ## [1.6.0] - 2026-09-27
 
 ### Added
