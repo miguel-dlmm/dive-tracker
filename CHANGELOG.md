@@ -4,6 +4,16 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.5.1] - 2026-09-27
+
+### Added
+- **"Qué hay de nuevo" de v1.5.0**: 4 diapositivas nuevas (generador de
+  informe PDF, Training Records más ligeros, portada renovada, Mi perfil
+  reestructurado) — texto aprobado explícitamente antes de comitearse
+  (docs/ADR/0010-proceso-de-release.md, addendum 2026-09-09).
+  `APP_VERSION` se sincroniza con la versión real del changelog por
+  primera vez desde v1.3.1.
+
 ## [1.5.0] - 2026-09-27
 
 ### Added

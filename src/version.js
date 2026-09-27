@@ -14,10 +14,10 @@
 // el tag de git sí avancen a v1.4.0. Sincronizar de nuevo con la versión
 // real del changelog en la próxima release que sí traiga WhatsNew nuevo.
 //
-// Misma excepción en v1.5.0 (2026-09-27): tampoco hay texto de
-// diapositivas aprobado para el rediseño de portada de esta release
-// (regla del proyecto: el copy exacto de WhatsNew necesita aprobación
-// explícita antes de comitearse, no basta una descripción en abstracto
-// del cambio — ver docs/ADR/0010-proceso-de-release.md, addendum
-// 2026-09-09). `APP_VERSION` se queda otra vez en "1.3.1" a propósito.
-export const APP_VERSION = "1.3.1";
+// v1.5.1 (2026-09-27, hotfix directo a producción): sí trae WhatsNew
+// nuevo — el usuario aprobó el texto exacto de las 4 diapositivas en el
+// chat antes de comitearlas (generador de informe PDF, Training Records
+// más ligeros, portada renovada, Mi perfil reestructurado), cumpliendo
+// la regla del addendum 2026-09-09 de arriba. `APP_VERSION` se sincroniza
+// con la versión real por primera vez desde v1.3.1.
+export const APP_VERSION = "1.5.1";
