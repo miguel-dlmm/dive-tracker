@@ -30,6 +30,48 @@ Registro de cambios relevantes de Ocean Flow.
   icono activo pasa de tenue/apagado a encendido/oscuro, sin ningún
   círculo ni halo de fondo.
 
+### Performance
+- **PDF de Training Record hasta un 81% más ligero**: investigando el
+  peso (hasta 454 KB en plantillas de varias páginas como OWD) se
+  encontraron dos causas reales, verificadas byte a byte sobre PDFs de
+  ejemplo reales. (1) `removePage()` dejaba en el archivo final recursos
+  (imágenes, fuentes) de las páginas descartadas de la plantilla
+  original, sin usar pero sin eliminar — sustituido por
+  `PDFDocument.copyPages()`, que solo copia lo que la página final
+  realmente referencia (–39% en plantillas multipágina). (2) `pdf-lib`
+  no comprime nunca el content stream de la página al guardar — un
+  content stream de ejemplo de 163 KB viajaba sin comprimir, siendo el
+  68% del peso total del archivo. Se añade una compresión FlateDecode
+  del content stream final vía `CompressionStream` nativo (Web Streams
+  API, sin dependencia nueva) — sin pérdida alguna, verificado
+  descomprimiendo y comparando el resultado (–65% adicional). Efecto
+  combinado sobre los dos PDF de ejemplo usados en la investigación:
+  239,0 KB → 81,7 KB y 454,3 KB → 84,2 KB.
+
+### Changed
+- **Botón +/- del importe de Ajuste de curso, más visible**: investigando
+  un bug reportado ("no sé qué pasa" al intentar meter un negativo) no
+  se encontró ningún fallo real — escribir "-" a mano y usar el botón
+  funcionan y persisten bien, tanto al crear como al editar. El carácter
+  suelto en gris se sustituye por una insignia de color (verde/coral,
+  mismos colores que ya usa el resto de la app para positivo/negativo)
+  con icono, para que se lea claramente como un control pulsable — sobre
+  todo en el teclado numérico de iOS, que es donde de verdad hace falta
+  (no tiene tecla de signo menos).
+- **Mi perfil: "Cerrar sesión" ahora tiene su propia sección con título
+  ("Sesión")**: auditoría de usabilidad tras un reporte real ("me cuesta
+  encontrar Cerrar sesión") — era el único bloque de toda la pantalla sin
+  cabecera ni tarjeta propia, la única pieza que rompía el patrón "una
+  SectionCard con título por bloque" que usa el resto (Datos personales,
+  Instructor, Moneda, Idioma, Seguridad...), así que no había ningún
+  título al que enganchar la vista al recorrer la pantalla en busca de él.
+- **Mi perfil: el nivel profesional (Divemaster/Instructor) se edita junto
+  al resto de datos del carnet, en "Datos de instructor"**: antes vivía en
+  "Datos personales", lejos de donde se ve su efecto real — el propio
+  carnet ya muestra ese dato (p. ej. "SSI Divemaster"), así que el control
+  de edición y su resultado visible quedaban en dos secciones distintas de
+  la pantalla.
+
 ### Fixed
 - **Informe PDF: la cabecera de un día podía quedar sola al final de una
   página, con sus movimientos ya en la siguiente**: la tabla de Clases

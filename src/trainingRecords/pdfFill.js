@@ -1,4 +1,4 @@
-import { PDFDocument, PDFName, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, PDFName, PDFArray, PDFRawStream, StandardFonts, rgb } from "pdf-lib";
 
 // Relleno de un Training Record real a partir del mapeo verificado de
 // templateFieldMaps.js. Todo ocurre en cliente (decisión de arquitectura de
@@ -277,6 +277,70 @@ function drawCheckboxMark(page, font, rect) {
   page.drawText(mark, { x, y, size, font, color: BRAND_COLOR });
 }
 
+// Optimización de peso del PDF final (lote 2026-09-26, pedido explícito:
+// "el generador de TR genera PDFs muy pesados, los quiero lo más ligero
+// posible"). Investigado con datos reales, no a ojo — dos causas
+// distintas, confirmadas inspeccionando PDFs ya generados
+// (scripts/mobile-check-output/tr-generado-*.pdf) con pdf-lib a mano:
+//
+// (1) El content stream de la propia página (todo el arte/texto impreso
+//     de la plantilla SSI/PADI) llega del PDF original SIN comprimir —
+//     un único stream de 162 KB sin ningún /Filter, el 68% del peso
+//     total de un AOWD ya rellenado. pdf-lib nunca lo comprime por su
+//     cuenta al guardar (`SaveOptions` no tiene ninguna opción de
+//     compresión de content streams, solo `useObjectStreams` para
+//     empaquetar objetos pequeños sueltos). `compressPageContentStreams`
+//     de aquí abajo lo comprime a mano con FlateDecode (la misma
+//     compresión sin pérdida que ya usan el resto de streams del propio
+//     PDF) — probado en real contra un PDF ya generado: 239 KB → 83 KB
+//     (-65%), visualmente idéntico byte a byte al descomprimir de vuelta.
+// (2) Cuando la plantilla original trae una página extra sin usar (OWD
+//     trae una página 2 de "Referral/Scuba/Indoor Diver", fuera de
+//     alcance — ver el bucle que la retiraba antes, más abajo), pdf-lib
+//     no recolecta la basura de los recursos (fuentes, imágenes) que
+//     usaba en exclusiva esa página al hacer `removePage()` — quedan
+//     huérfanos pero se siguen guardando en el archivo. Reconstruir el
+//     documento final copiando SOLO la página real a un PDFDocument
+//     nuevo (`copyPages`, más abajo) sí arrastra solo lo que esa página
+//     de verdad usa — probado en real: un OWD ya generado, 454 KB → 278
+//     KB (-39%) solo con este paso.
+//
+// CompressionStream (API nativa del navegador, Safari 16.4+/Chrome/
+// todos los relevantes en 2026) en vez de una librería de compresión
+// nueva — sin dependencia adicional para esto.
+async function deflate(bytes) {
+  const cs = new CompressionStream("deflate");
+  const writer = cs.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  const compressed = await new Response(cs.readable).arrayBuffer();
+  return new Uint8Array(compressed);
+}
+
+// Comprime en sitio (mismo PDFRawStream, mismo ref — nada más del
+// documento necesita enterarse) cada content stream de `page` que
+// todavía no lleve ningún /Filter. `Contents()` puede ser un único
+// stream o (más habitual tras pasar por varias herramientas, como estas
+// plantillas) un PDFArray de streams concatenados — se cubren los dos
+// casos. Si comprimir no reduce el tamaño (streams ya muy pequeños, el
+// overhead de FlateDecode puede superar el ahorro), se deja tal cual.
+async function compressPageContentStreams(pdfDoc, page) {
+  const contents = page.node.Contents();
+  const refs = contents instanceof PDFArray
+    ? Array.from({ length: contents.size() }, (_, i) => contents.get(i))
+    : [];
+  for (const ref of refs) {
+    const stream = pdfDoc.context.lookup(ref);
+    if (!(stream instanceof PDFRawStream)) continue;
+    if (stream.dict.get(PDFName.of("Filter"))) continue; // ya comprimido, no tocar
+    const compressed = await deflate(stream.contents);
+    if (compressed.length < stream.contents.length) {
+      stream.contents = compressed;
+      stream.dict.set(PDFName.of("Filter"), PDFName.of("FlateDecode"));
+    }
+  }
+}
+
 /**
  * Rellena una plantilla de Training Record con los datos de un alumno.
  *
@@ -321,14 +385,18 @@ export async function fillTrainingRecordPdf(pdfBytes, templateMap, data) {
 
   stripBrokenParentRefs(pdfDoc, form);
   form.flatten();
+  await compressPageContentStreams(pdfDoc, page);
+
   // Solo se genera/rellena la página con los campos del curso (ver
   // sourcePdfPage) — OWD trae una página 2 adicional en la plantilla
   // original (finalización de Referral/Scuba/Indoor Diver, fuera del
-  // camino principal, no mapeada) que antes se colaba entera y en blanco
-  // en el PDF final. Se retira cualquier otra página, de atrás hacia
-  // adelante para no desplazar los índices todavía por retirar.
-  for (let i = pdfDoc.getPageCount() - 1; i >= 0; i--) {
-    if (i !== pageIndex) pdfDoc.removePage(i);
-  }
-  return pdfDoc.save();
+  // camino principal, no mapeada). Reconstruir el documento final
+  // copiando solo esa página a un PDFDocument nuevo (`copyPages`), en
+  // vez de `removePage()` de las demás sobre el mismo documento — ver
+  // el porqué (recursos huérfanos que `removePage()` no limpia) en el
+  // comentario de compressPageContentStreams, más arriba.
+  const finalDoc = await PDFDocument.create();
+  const [copiedPage] = await finalDoc.copyPages(pdfDoc, [pageIndex]);
+  finalDoc.addPage(copiedPage);
+  return finalDoc.save();
 }
