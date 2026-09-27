@@ -326,17 +326,17 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
     setOnboardingOpen(false);
   };
 
-  // "Qué hay de nuevo" — se decide en el primer render tras conocer al
-  // usuario (profile.user_id), no en un efecto con dependencia vacía: con
-  // el bypass de desarrollo, AppShell puede remontarse con un profile
-  // distinto sin recargar la página completa. Este mismo mecanismo es
-  // también lo que hace que se abra solo justo tras activar una cuenta
-  // (ver el comentario junto al useState de `tab`, más arriba): una
-  // cuenta recién activada nunca tiene la versión actual marcada como
-  // vista, sin necesitar ningún caso especial aparte. onboardingOpen
-  // suprime esto en el primer render de una cuenta nueva de verdad — ver
-  // closeOnboardingTour, que marca WhatsNew como vista al cerrar el tour.
-  const [whatsNewOpen, setWhatsNewOpen] = useState(() => !onboardingOpen && !hasSeenWhatsNew(profile?.user_id));
+  // "Qué hay de nuevo" — apertura automática desactivada a propósito para
+  // v1.6.0 (pedido explícito del usuario: "no muestres whats new"), sin
+  // quitar el mecanismo entero: showWhatsNewAgain (abrirlo a mano desde
+  // Ayuda) sigue funcionando igual, más abajo. Ver
+  // docs/BACKLOG.md ("Migrar 'Qué hay de nuevo' al mismo modelo que el
+  // tour de bienvenida") para la migración pendiente que sustituirá este
+  // `localStorage` por una columna real en `profiles`, con la que sí se
+  // podrá reiniciar a todas las cuentas de golpe cuando se quiera reabrir
+  // un aviso — hasta entonces, se deja fijo en `false` en vez de volver a
+  // depender de `hasSeenWhatsNew`.
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const closeWhatsNew = () => {
     markWhatsNewSeen(profile?.user_id);
     setWhatsNewOpen(false);

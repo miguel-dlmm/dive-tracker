@@ -4,6 +4,8 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.6.0] - 2026-09-27
+
 ### Added
 - **Tour de bienvenida para cuentas nuevas**: cualquier cuenta nueva (alta
   normal o por enlace de invitación) ve un tour de 6 diapositivas la
@@ -14,6 +16,12 @@ Registro de cambios relevantes de Ocean Flow.
 - **Botón "Crear" dentro de la tabla en Escuelas, Cursos y Tarifas**:
   visible mientras el catálogo tenga 5 elementos o menos (0 incluido),
   además del FAB flotante.
+
+### Changed
+- **"Qué hay de nuevo" ya no se abre solo al entrar**: sigue disponible
+  bajo demanda desde Ayuda → "Ver qué hay de nuevo". Se retomará su
+  apertura automática en la próxima release que traiga contenido nuevo
+  de verdad para anunciar.
 
 ### Fixed
 - **Traducciones que faltaban en la ficha de detalle de usuario (Config →

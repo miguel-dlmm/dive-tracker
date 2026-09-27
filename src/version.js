@@ -20,4 +20,13 @@
 // más ligeros, portada renovada, Mi perfil reestructurado), cumpliendo
 // la regla del addendum 2026-09-09 de arriba. `APP_VERSION` se sincroniza
 // con la versión real por primera vez desde v1.3.1.
+//
+// v1.6.0 (2026-09-27): mismo criterio que v1.4.0 — esta release no trae
+// diapositivas nuevas de WhatsNew (solo una corrección de redacción en
+// una diapositiva ya existente de v1.5.1, y una funcionalidad nueva, el
+// tour de bienvenida, que ya tiene su propio mecanismo de "una vez" y no
+// es contenido para usuarios existentes). `APP_VERSION` se queda en
+// "1.5.1" a propósito, para no volver a mostrarles "Qué hay de nuevo" a
+// quienes ya lo vieron. Sincronizar de nuevo con la versión real en la
+// próxima release que sí traiga diapositivas nuevas.
 export const APP_VERSION = "1.5.1";
