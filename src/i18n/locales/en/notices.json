@@ -8,24 +8,20 @@
     "start": "Let's go",
     "slides": [
       {
-        "title": "A full redesign, a new face",
-        "body": "New logo, new colors, a refreshed look from top to bottom — the same Ocean Flow, with an identity of its own."
+        "title": "Export your report as PDF",
+        "body": "Generate a PDF with all your entries to send to anyone who needs it — export your data with ease."
       },
       {
-        "title": "Your instructor card",
-        "body": "My profile now has its own card: professional level, personal data and favorite currency, all in one place."
+        "title": "Lighter Training Records",
+        "body": "The Training Records generator is optimized to create lighter files."
       },
       {
-        "title": "Training Records, right from the app",
-        "body": "Generate each student's SSI progress record, signed and ready to hand over — without leaving Ocean Flow."
+        "title": "Home, reimagined",
+        "body": "More dynamic, with interesting data to take in at a glance."
       },
       {
-        "title": "The app now speaks your language",
-        "body": "Spanish, English, French, Italian, German, Catalan or Basque — switch whenever you want, from your profile."
-      },
-      {
-        "title": "Home and My work, clearer than ever",
-        "body": "Everything better organized, so you can find what you need at a glance: your KPIs, your entries, your day to day."
+        "title": "My profile, restructured",
+        "body": "Sections reorganized so everything is easier and faster to find."
       },
       {
         "title": "Revisit it whenever you want",

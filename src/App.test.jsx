@@ -258,12 +258,12 @@ describe("AuthGate", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText("Ocean Flow");
-    expect(screen.queryByText("Rediseño completo, cara nueva")).not.toBeInTheDocument();
+    expect(screen.queryByText("Exporta tu informe en PDF")).not.toBeInTheDocument();
 
     await user.click(screen.getByLabelText("Ayuda"));
     await user.click(await screen.findByText("Ver qué hay de nuevo en esta versión"));
 
-    expect(await screen.findByText("Rediseño completo, cara nueva")).toBeInTheDocument();
+    expect(await screen.findByText("Exporta tu informe en PDF")).toBeInTheDocument();
   });
 
   // Bug real reportado 2026-09-09: cerrar la Ayuda abierta desde Training
