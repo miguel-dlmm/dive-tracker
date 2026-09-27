@@ -34,6 +34,10 @@
       "label": "Consultar quant has generat",
       "description": "D'una ullada, o en detall per període"
     },
+    "quiero-guia-buceo": {
+      "label": "Ensenyar la Guia de Busseig",
+      "description": "Punts d'immersió i vida marina de Koh Tao, per al brífing"
+    },
     "quiero-generar-tr": {
       "label": "Generar un Training Record",
       "description": "El document oficial de progrés de cada alumne"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "Ocean Flow t'ajuda a portar el control dels teus ingressos com a instructor freelance. Sota un mateix concepte, \"moviment\", agrupa les classes que imparteixes, les comissions per clients referits i els ajustos econòmics amb altres instructors.",
       "whenToUseIt": "La primera vegada que obres l'app, o quan vulguis recordar per a què serveix cada pantalla.",
       "steps": [
-        "Home: els teus alumnes, cursos i clients captats d'una ullada, l'accés a Training Records, quant tens pendent de cobrar, el calendari del mes i un accés directe per crear un moviment.",
+        "Home: els teus cursos i clients captats d'una ullada, quant tens pendent de cobrar i la teva mitjana diària, accessos directes a Training Records, la teva escola del mes i la Guia de Busseig, el calendari del mes i un botó per crear un moviment.",
         "La meva feina: la llista completa dels teus moviments (cursos, comissions i ajustos), per crear-los, editar-los, cobrar-los o eliminar-los.",
         "Resum: el teu balanç pel període que triïs, amb la possibilitat d'aprofundir per escola, per curs o per comissions."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "Tens el Training Record de cada alumne llest per descarregar o compartir, amb la seva signatura i la teva ja incloses."
     },
+    "guia-buceo": {
+      "title": "Ensenyar la Guia de Busseig al client",
+      "summary": "El llibre digital de Koh Tao, a pantalla completa i amb zoom, llest per al brífing en qualsevol moment.",
+      "whatYouCanDo": "La Guia de Busseig és un llibre digital amb els punts d'immersió, la vida marina i la info de seguretat de Koh Tao, pensat per ensenyar-lo al client durant el brífing sense sortir de l'app.",
+      "whenToUseIt": "Abans d'una immersió, per repassar el punt amb el client, o per identificar un peix o un corall que acabeu de veure.",
+      "steps": [
+        "Entra a la Guia de busseig des de l'accés a Home.",
+        "Tria una secció (Punts d'immersió, Vida marina o Informació extra), o cerca directament un punt des de la portada.",
+        "Llisca per canviar de pàgina, o fes servir les fletxes. Pessigant o tocant dues vegades fas zoom en un mapa o una foto.",
+        "La icona de lluna/sol canvia entre mode clar i fosc; la de les fletxes activa la pantalla completa.",
+        "La fletxa de dalt a l'esquerra torna a la portada; la \"✕\" de la portada tanca la guia."
+      ],
+      "tips": [
+        "El cercador de la portada filtra els 37 punts mentre escrius — no cal saber en quina secció és.",
+        "La pantalla completa i el mode fosc ajuden amb poca llum, per exemple en un vaixell."
+      ],
+      "expectedResult": "Tens el mapa o la fitxa que necessites davant del client en segons, sense sortir d'Ocean Flow."
+    },
     "mi-trabajo-referencia": {
       "title": "La meva feina, d'una ullada",
       "summary": "La llista completa dels teus moviments — cursos, comissions i ajustos — amb les seves accions.",
@@ -208,6 +230,9 @@
         "Toca qualsevol fila del menú per entrar a aquella secció; \"‹ Configuració\" torna al menú.",
         "Escoles i Cursos es creen mitjançant el botó \"+\" flotant, igual que a La meva feina.",
         "Tarifes mostra Curs i Comissió en una única llista (el tipus es tria com a filtre, o en crear, dins del mateix full) — el mateix patró visual que La meva feina."
+      ],
+      "tips": [
+        "Eliminar una escola o un curs amb tarifes o moviments associats es bloqueja amb un avís, per no deixar dades soltes."
       ],
       "expectedResult": "Trobes qualsevol catàleg o ajust sense haver de recordar en quina pestanya vivia abans."
     },

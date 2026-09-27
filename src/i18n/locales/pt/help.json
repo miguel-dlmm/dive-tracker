@@ -34,6 +34,10 @@
       "label": "Consultar quanto você gerou",
       "description": "De relance, ou em detalhe por período"
     },
+    "quiero-guia-buceo": {
+      "label": "Mostrar o Guia de Mergulho",
+      "description": "Pontos de mergulho e vida marinha de Koh Tao, para o briefing"
+    },
     "quiero-generar-tr": {
       "label": "Gerar um Training Record",
       "description": "O documento oficial de progresso de cada aluno"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "O Ocean Flow ajuda você a controlar seus ganhos como instrutor freelancer. Sob um mesmo conceito, \"movimento\", ele agrupa as aulas que você ministra, as comissões por clientes indicados e os ajustes financeiros com outros instrutores.",
       "whenToUseIt": "Na primeira vez que você abre o app, ou quando quiser relembrar para que serve cada tela.",
       "steps": [
-        "Home: seus alunos, cursos e clientes captados de relance, o acesso ao Training Records, quanto você tem pendente de receber, o calendário do mês e um atalho para criar um movimento.",
+        "Home: seus cursos e clientes captados de relance, quanto você tem pendente de receber e a sua média diária, atalhos para Training Records, a sua escola do mês e o Guia de Mergulho, o calendário do mês e um botão para criar um movimento.",
         "Meu trabalho: a lista completa dos seus movimentos (cursos, comissões e ajustes), para criá-los, editá-los, recebê-los ou excluí-los.",
         "Resumo: seu balanço no período que você escolher, com a possibilidade de detalhar por escola, por curso ou por comissões."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "Você tem o Training Record de cada aluno pronto para baixar ou compartilhar, já com a assinatura dele e a sua."
     },
+    "guia-buceo": {
+      "title": "Mostrar o Guia de Mergulho ao cliente",
+      "summary": "O livro digital de Koh Tao, em ecrã inteiro e com zoom, pronto para o briefing a qualquer momento.",
+      "whatYouCanDo": "O Guia de Mergulho é um livro digital com os pontos de mergulho, a vida marinha e a informação de segurança de Koh Tao, pensado para mostrar ao cliente durante o briefing sem sair da app.",
+      "whenToUseIt": "Antes de um mergulho, para rever o ponto com o cliente, ou para identificar um peixe ou coral que acabaram de ver.",
+      "steps": [
+        "Abra o Guia de Mergulho a partir do acesso em Home.",
+        "Escolha uma secção (Pontos de mergulho, Vida marinha ou Informação extra), ou procure um ponto diretamente na capa.",
+        "Deslize para mudar de página, ou use as setas. Belisque ou toque duas vezes para dar zoom num mapa ou foto.",
+        "O ícone lua/sol alterna entre modo claro e escuro; o ícone das setas ativa o ecrã inteiro.",
+        "A seta em cima à esquerda volta à capa; o \"✕\" da capa fecha o guia."
+      ],
+      "tips": [
+        "A pesquisa da capa filtra os 37 pontos de mergulho enquanto escreve — não precisa de saber a secção.",
+        "O ecrã inteiro e o modo escuro ajudam com pouca luz, por exemplo num barco."
+      ],
+      "expectedResult": "Tem o mapa ou a ficha que precisa à frente do cliente em segundos, sem sair do Ocean Flow."
+    },
     "mi-trabajo-referencia": {
       "title": "Meu trabalho, de relance",
       "summary": "A lista completa dos seus movimentos — cursos, comissões e ajustes — com suas ações.",
@@ -208,6 +230,9 @@
         "Toque em qualquer linha do menu para entrar nessa seção; \"‹ Configurações\" volta ao menu.",
         "Escolas e Cursos são criados pelo botão \"+\" flutuante, igual em Meu trabalho.",
         "Tarifas mostra Curso e Comissão em uma única lista (o tipo é escolhido como filtro, ou ao criar, dentro da própria tela) — mesmo padrão visual de Meu trabalho."
+      ],
+      "tips": [
+        "Eliminar uma escola ou um curso com tarifas ou movimentos associados é bloqueado com um aviso, para não deixar dados órfãos."
       ],
       "expectedResult": "Você encontra qualquer catálogo ou ajuste sem precisar lembrar em qual aba ele vivia antes."
     },

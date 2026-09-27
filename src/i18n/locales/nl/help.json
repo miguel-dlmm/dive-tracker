@@ -34,6 +34,10 @@
       "label": "Bekijken hoeveel je hebt verdiend",
       "description": "In één oogopslag, of in detail per periode"
     },
+    "quiero-guia-buceo": {
+      "label": "Duikgids laten zien",
+      "description": "Duikplekken en zeeleven van Koh Tao, voor de briefing"
+    },
     "quiero-generar-tr": {
       "label": "Een Training Record maken",
       "description": "Het officiële voortgangsdocument van elke leerling"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "Ocean Flow helpt je je inkomsten als freelance instructeur bij te houden. Onder één begrip, \"boeking\", groepeert het de lessen die je geeft, commissies voor doorverwezen klanten en financiële correcties met andere instructeurs.",
       "whenToUseIt": "De eerste keer dat je de app opent, of wanneer je wilt onthouden waar elk scherm voor dient.",
       "steps": [
-        "Home: je leerlingen, cursussen en aangebrachte klanten in één oogopslag, toegang tot Training Records, hoeveel je nog moet innen, de kalender van de maand en een snelkoppeling om een boeking te maken.",
+        "Home: je cursussen en aangebrachte klanten in één oogopslag, hoeveel je nog moet innen en je dagelijkse gemiddelde, snelkoppelingen naar Training Records, je school van de maand en de Duikgids, de kalender van de maand en een knop om een boeking te maken.",
         "Mijn werk: de volledige lijst van je boekingen (cursussen, commissies en correcties), om ze te maken, bewerken, innen of verwijderen.",
         "Overzicht: je saldo over de periode die je kiest, met de mogelijkheid om verder in te zoomen per school, per cursus of per commissies."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "Je hebt het Training Record van elke leerling klaar om te downloaden of te delen, met zijn/haar handtekening en die van jou al erin verwerkt."
     },
+    "guia-buceo": {
+      "title": "De Duikgids aan de klant laten zien",
+      "summary": "Het digitale boek van Koh Tao, op volledig scherm en met zoom, altijd klaar voor de briefing.",
+      "whatYouCanDo": "De Duikgids is een digitaal boek met de duikplekken, het zeeleven en de veiligheidsinfo van Koh Tao, gemaakt om aan de klant te laten zien tijdens de briefing zonder de app te verlaten.",
+      "whenToUseIt": "Voor een duik, om de plek met de klant door te nemen, of om een vis of koraal te herkennen die je net hebt gezien.",
+      "steps": [
+        "Open de Duikgids via de snelkoppeling op Home.",
+        "Kies een sectie (Duikplekken, Zeeleven of Extra info), of zoek een duikplek direct vanaf de cover.",
+        "Swipe om te bladeren, of gebruik de pijlen. Knijp of dubbeltik om in te zoomen op een kaart of foto.",
+        "Het maan/zon-icoon wisselt tussen lichte en donkere modus; het pijlen-icoon zet volledig scherm aan.",
+        "De pijl linksboven gaat terug naar de cover; de \"✕\" op de cover sluit de gids."
+      ],
+      "tips": [
+        "De zoekbalk op de cover filtert alle 37 duikplekken terwijl je typt — je hoeft de sectie niet te kennen.",
+        "Volledig scherm en donkere modus helpen bij weinig licht, zoals op een boot."
+      ],
+      "expectedResult": "Je hebt de kaart of het infoblad binnen enkele seconden voor de klant, zonder Ocean Flow te verlaten."
+    },
     "mi-trabajo-referencia": {
       "title": "Mijn werk, in één oogopslag",
       "summary": "De volledige lijst van je boekingen — cursussen, commissies en correcties — met hun acties.",
@@ -208,6 +230,9 @@
         "Tik op een menurij om die sectie te openen; \"‹ Instellingen\" gaat terug naar het menu.",
         "Scholen en Cursussen maak je aan via de zwevende \"+\"-knop, net als in Mijn werk.",
         "Tarieven toont Cursus en Commissie in één lijst (het type kies je als filter, of bij het aanmaken, binnen het formulier zelf) — hetzelfde visuele patroon als Mijn werk."
+      ],
+      "tips": [
+        "Een school of cursus met gekoppelde tarieven of boekingen verwijderen wordt geblokkeerd met een waarschuwing, zodat er geen losse data overblijft."
       ],
       "expectedResult": "Je vindt elke catalogus of instelling zonder te hoeven onthouden op welk tabblad die vroeger stond."
     },

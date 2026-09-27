@@ -34,6 +34,10 @@
       "label": "Check how much you've earned",
       "description": "At a glance, or in detail by period"
     },
+    "quiero-guia-buceo": {
+      "label": "Show the Dive Guide",
+      "description": "Koh Tao dive sites and marine life, for the briefing"
+    },
     "quiero-generar-tr": {
       "label": "Generate a Training Record",
       "description": "Each student's official progress document"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "Ocean Flow helps you keep track of your income as a freelance instructor. Under one concept, \"entry\", it groups the classes you teach, the commissions you earn from referred clients, and the money adjustments with other instructors.",
       "whenToUseIt": "The first time you open the app, or whenever you want a reminder of what each screen is for.",
       "steps": [
-        "Home: your students, courses and referrals at a glance, the Training Records shortcut, how much you have pending to collect, the month's calendar, and a shortcut to create an entry.",
+        "Home: your courses and referred clients at a glance, how much you have pending to collect and your daily average, shortcuts to Training Records, your school of the month and the Dive Guide, the month's calendar, and a button to create an entry.",
         "My work: the full list of your entries (courses, commissions and adjustments) — create, edit, collect or delete them.",
         "Summary: your balance for whichever period you pick, with the option to drill down by school, by course, or by commissions."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "You have every student's Training Record ready to download or share, with their signature and yours already included."
     },
+    "guia-buceo": {
+      "title": "Show the Dive Guide to a client",
+      "summary": "Koh Tao's digital dive guide, full screen and zoomable, ready for the briefing any time.",
+      "whatYouCanDo": "The Dive Guide is a digital book with Koh Tao's dive sites, marine life and safety info, made to show your client during the briefing without leaving the app.",
+      "whenToUseIt": "Before a dive, to go over the site with the client, or to identify a fish or coral you just saw.",
+      "steps": [
+        "Open the Dive Guide from the Home shortcut.",
+        "Pick a section (Dive sites, Marine life or Extra info), or search a dive site by name right from the cover.",
+        "Swipe to turn the page, or use the arrows. Pinch or double-tap to zoom into a map or photo.",
+        "The moon/sun icon switches between light and dark mode; the arrows icon goes full screen.",
+        "The top-left arrow goes back to the cover; the cover's \"✕\" closes the guide."
+      ],
+      "tips": [
+        "The cover's search filters all 37 dive sites as you type — no need to know which section it's in.",
+        "Full screen and dark mode help in low light, like on a boat."
+      ],
+      "expectedResult": "You have the map or fact sheet in front of the client in seconds, without leaving Ocean Flow."
+    },
     "mi-trabajo-referencia": {
       "title": "My work, at a glance",
       "summary": "The full list of your entries — courses, commissions and adjustments — with their actions.",
@@ -208,6 +230,9 @@
         "Tap any row in the menu to enter that section; \"‹ Settings\" takes you back to the menu.",
         "Schools and Courses are created with the floating \"+\" button, same as in My work.",
         "Rates shows Course and Commission in a single list (the type is chosen as a filter, or when creating one, right inside the sheet) — same visual pattern as My work."
+      ],
+      "tips": [
+        "Deleting a school or course with rates or entries attached is blocked with a warning, so you don't end up with orphaned data."
       ],
       "expectedResult": "You can find any catalogue or setting without having to remember which tab it used to live in."
     },

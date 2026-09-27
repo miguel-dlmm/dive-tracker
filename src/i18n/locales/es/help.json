@@ -38,6 +38,10 @@
       "label": "Generar un Training Record",
       "description": "El documento oficial de progreso de cada alumno"
     },
+    "quiero-guia-buceo": {
+      "label": "Enseñar la Guía de Buceo",
+      "description": "Puntos de buceo y vida marina de Koh Tao, para el briefing"
+    },
     "func-mi-trabajo": {
       "label": "Mi trabajo",
       "description": "Crear, editar, cobrar y eliminar movimientos"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "Ocean Flow te ayuda a llevar el control de tus ingresos como instructor freelance. Bajo un mismo concepto, \"movimiento\", agrupa las clases que impartes, las comisiones por clientes referidos y los ajustes económicos con otros instructores.",
       "whenToUseIt": "La primera vez que abres la app, o cuando quieras recordar para qué sirve cada pantalla.",
       "steps": [
-        "Home: tus alumnos, cursos y clientes captados de un vistazo, el acceso a Training Records, cuánto tienes pendiente de cobrar, el calendario del mes y un acceso directo para crear un movimiento.",
+        "Home: tus cursos y clientes captados de un vistazo, cuánto tienes pendiente de cobrar y tu media diaria, accesos directos a Training Records, tu escuela del mes y la Guía de Buceo, el calendario del mes y un botón para crear un movimiento.",
         "Mi trabajo: la lista completa de tus movimientos (cursos, comisiones y ajustes), para crearlos, editarlos, cobrarlos o eliminarlos.",
         "Resumen: tu balance por el periodo que elijas, con la posibilidad de profundizar por escuela, por curso o por comisiones."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "Tienes el Training Record de cada alumno listo para descargar o compartir, con su firma y la tuya ya incluidas."
     },
+    "guia-buceo": {
+      "title": "Enseñar la Guía de Buceo al cliente",
+      "summary": "El libro digital de Koh Tao, a pantalla completa y con zoom, listo para el briefing en cualquier momento.",
+      "whatYouCanDo": "La Guía de Buceo es un libro digital con los puntos de buceo, la vida marina y la info de seguridad de Koh Tao, pensado para enseñárselo al cliente durante el briefing sin salir de la app.",
+      "whenToUseIt": "Antes de una inmersión, para repasar el punto de buceo con el cliente, o para identificar un pez o un coral que os habéis encontrado.",
+      "steps": [
+        "Entra en la Guía de buceo desde el acceso en Home.",
+        "Elige una sección (Puntos de buceo, Vida marina o Información extra), o busca directamente el nombre de un punto de buceo desde la propia portada.",
+        "Desliza para pasar de página, o usa las flechas. Pellizca o toca dos veces para hacer zoom en un mapa o una foto.",
+        "El icono de la luna/sol cambia entre modo claro y oscuro; el de las flechas cruzadas pone la pantalla completa.",
+        "La flecha de arriba a la izquierda vuelve a la portada; la \"✕\" de la portada cierra la guía."
+      ],
+      "tips": [
+        "El buscador de la portada filtra los 37 puntos de buceo mientras escribes — no hace falta saber en qué sección está.",
+        "Pantalla completa y modo oscuro son útiles con poca luz, por ejemplo en un barco."
+      ],
+      "expectedResult": "Tienes el mapa o la ficha que necesitas delante del cliente, en segundos y sin salir de Ocean Flow."
+    },
     "mi-trabajo-referencia": {
       "title": "Mi trabajo, de un vistazo",
       "summary": "La lista completa de tus movimientos (cursos, comisiones y ajustes) con sus acciones.",
@@ -208,6 +230,9 @@
         "Toca cualquier fila del menú para entrar en esa sección; \"‹ Configuración\" vuelve al menú.",
         "Escuelas y Cursos se crean mediante el botón \"+\" flotante, igual que en Mi trabajo.",
         "Tarifas muestra Curso y Comisión en una única lista (el tipo se elige como filtro, o al crear, dentro de la propia hoja), mismo patrón visual que Mi trabajo."
+      ],
+      "tips": [
+        "Eliminar una escuela o un curso con tarifas o movimientos asociados se bloquea con un aviso, para no dejar datos sueltos."
       ],
       "expectedResult": "Encuentras cualquier catálogo o ajuste sin tener que recordar en qué pestaña vivía antes."
     },

@@ -34,6 +34,10 @@
       "label": "Melihat berapa yang telah kamu hasilkan",
       "description": "Sekilas, atau rinci per periode"
     },
+    "quiero-guia-buceo": {
+      "label": "Tunjukkan Panduan Selam",
+      "description": "Titik selam dan kehidupan laut Koh Tao, untuk briefing"
+    },
     "quiero-generar-tr": {
       "label": "Membuat Training Record",
       "description": "Dokumen resmi kemajuan setiap murid"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "Ocean Flow membantumu mengontrol penghasilan sebagai instruktur lepas. Di bawah satu konsep, \"transaksi\", ia mengelompokkan kelas yang kamu ajarkan, komisi dari klien yang kamu referensikan, dan penyesuaian keuangan dengan instruktur lain.",
       "whenToUseIt": "Saat pertama kali membuka aplikasi, atau saat kamu ingin mengingat kegunaan setiap layar.",
       "steps": [
-        "Beranda: murid, kursus, dan klien yang kamu dapatkan sekilas, akses ke Training Records, berapa yang masih harus ditagih, kalender bulan ini, dan akses cepat untuk membuat transaksi.",
+        "Home: kursus dan klien yang kamu dapatkan sekilas, berapa yang masih harus ditagih dan rata-rata harianmu, akses cepat ke Training Records, sekolah bulan ini, dan Panduan Selam, kalender bulan ini, dan tombol untuk membuat transaksi.",
         "Pekerjaanku: daftar lengkap transaksimu (kursus, komisi, dan penyesuaian) untuk dibuat, diedit, ditagih, atau dihapus.",
         "Ringkasan: saldomu untuk periode yang kamu pilih, dengan kemungkinan melihat lebih dalam per sekolah, per kursus, atau per komisi."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "Kamu memiliki Training Record setiap murid siap diunduh atau dibagikan, dengan tanda tangannya dan tanda tanganmu sudah disertakan."
     },
+    "guia-buceo": {
+      "title": "Menunjukkan Panduan Selam ke klien",
+      "summary": "Buku digital Koh Tao, layar penuh dan bisa di-zoom, siap untuk briefing kapan saja.",
+      "whatYouCanDo": "Panduan Selam adalah buku digital berisi titik selam, kehidupan laut, dan info keselamatan Koh Tao, dibuat untuk ditunjukkan ke klien saat briefing tanpa keluar dari aplikasi.",
+      "whenToUseIt": "Sebelum menyelam, untuk meninjau titik selam bersama klien, atau mengidentifikasi ikan atau karang yang baru dilihat.",
+      "steps": [
+        "Buka Panduan Selam dari akses di Home.",
+        "Pilih bagian (Titik selam, Kehidupan laut, atau Info tambahan), atau cari titik selam langsung dari sampul.",
+        "Geser untuk membalik halaman, atau gunakan panah. Cubit atau ketuk dua kali untuk memperbesar peta atau foto.",
+        "Ikon bulan/matahari mengganti mode terang/gelap; ikon panah mengaktifkan layar penuh.",
+        "Panah kiri atas kembali ke sampul; \"✕\" di sampul menutup panduan."
+      ],
+      "tips": [
+        "Pencarian di sampul menyaring 37 titik selam saat kamu mengetik — tidak perlu tahu bagiannya.",
+        "Layar penuh dan mode gelap membantu saat cahaya minim, misalnya di kapal."
+      ],
+      "expectedResult": "Kamu punya peta atau lembar info yang dibutuhkan di depan klien dalam hitungan detik, tanpa keluar dari Ocean Flow."
+    },
     "mi-trabajo-referencia": {
       "title": "Pekerjaanku, sekilas",
       "summary": "Daftar lengkap transaksimu — kursus, komisi, dan penyesuaian — beserta aksinya.",
@@ -208,6 +230,9 @@
         "Ketuk baris mana pun di menu untuk masuk ke bagian itu; \"‹ Pengaturan\" kembali ke menu.",
         "Sekolah dan Kursus dibuat melalui tombol \"+\" mengambang, sama seperti di Pekerjaanku.",
         "Tarif menampilkan Kursus dan Komisi dalam satu daftar (jenisnya dipilih sebagai filter, atau saat membuat, di dalam formulir itu sendiri) — pola visual yang sama dengan Pekerjaanku."
+      ],
+      "tips": [
+        "Menghapus sekolah atau kursus yang punya tarif atau transaksi terkait akan diblokir dengan peringatan, supaya tidak ada data yang tertinggal."
       ],
       "expectedResult": "Kamu menemukan katalog atau pengaturan apa pun tanpa harus mengingat di tab mana itu berada sebelumnya."
     },
