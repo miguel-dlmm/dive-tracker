@@ -27,6 +27,9 @@ Registro de cambios relevantes de Ocean Flow.
 - **Eliminar una escuela o un curso con tarifas o movimientos asociados
   dejaba esas filas huérfanas**: ahora el borrado se bloquea con un
   aviso claro en vez de permitirlo.
+- **El botón +/- del importe en Ajuste de curso no hacía nada visible con
+  el campo vacío**, y el tooltip de ese mismo campo se salía de la
+  pantalla en móvil. Ambos corregidos.
 
 ## [1.5.1] - 2026-09-27
 
