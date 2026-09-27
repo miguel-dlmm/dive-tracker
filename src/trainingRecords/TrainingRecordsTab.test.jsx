@@ -49,10 +49,19 @@ const supabaseFrom = vi.fn((table) => {
   if (table === "training_record_adventures") return { select: adventuresSelect };
   throw new Error(`tabla no mockeada: ${table}`);
 });
+// increment_training_records_count (réplica server-side, ver el comentario
+// en generateAll/regenerateStudent de TrainingRecordsTab.jsx) faltaba en
+// este mock — sin él, `supabase.rpc(...)` no existía como función y la
+// llamada real lanzaba "supabase.rpc is not a function" dentro del propio
+// try/catch de generar, sin que ningún test lo notara (el toast de éxito ya
+// se había disparado antes de esa línea). Se mockea para poder probar de
+// verdad el camino feliz Y el de error de esa réplica.
+const rpc = vi.fn();
 vi.mock("../supabaseClient", () => ({
   supabase: {
     from: (...args) => supabaseFrom(...args),
     storage: { from: () => ({ download: (...args) => storageDownload(...args) }) },
+    rpc: (...args) => rpc(...args),
   },
 }));
 
@@ -83,6 +92,7 @@ beforeEach(() => {
   storageDownload.mockResolvedValue({ data: { arrayBuffer: async () => new Uint8Array([9, 9, 9]).buffer }, error: null });
   fillTrainingRecordPdf.mockClear();
   renderPdfToJpgBytes.mockClear();
+  rpc.mockReset().mockResolvedValue({ error: null });
   globalThis.URL.createObjectURL = vi.fn(() => "blob:mock-url");
   globalThis.URL.revokeObjectURL = vi.fn();
 });
@@ -441,3 +451,257 @@ it("pide confirmación antes de cambiar de plantilla solo si ya hay progreso rel
   await user.click(screen.getByRole("button", { name: "Cancelar" }));
   expect(screen.getByRole("button", { name: "Cambiar plantilla" })).toBeInTheDocument();
 }, 15000);
+
+it("confirmar el cambio de plantilla (no solo cancelar) descarta la configuración y el roster sobrevive para la siguiente plantilla elegida", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+
+  await user.click(screen.getByRole("button", { name: "Cambiar plantilla" }));
+  await user.click(await screen.findByRole("button", { name: "Sí, cambiar de plantilla" }));
+  expect(screen.queryByText("¿Cambiar de plantilla?")).not.toBeInTheDocument();
+
+  await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
+  expect(screen.getByText("Ana Garcia")).toBeInTheDocument();
+}, 15000);
+
+it("ordena las plantillas por el orden fijo (OWD antes que AOWD) cuando llegan más de una desde Supabase", async () => {
+  templatesQuery.order.mockResolvedValue({
+    data: [
+      { code: "AOWD", name: "Advanced Open Water Diver", storage_path: "AOWD/AOWD_Spanish_Record.pdf" },
+      TEMPLATE_ROW,
+    ],
+    error: null,
+  });
+  renderTab();
+  const buttons = await screen.findAllByRole("button", { name: /Open Water Diver|Advanced Open Water Diver/ });
+  expect(buttons.map((b) => b.textContent)).toEqual(["Open Water Diver", "Advanced Open Water Diver"]);
+});
+
+it("una fila de progreso opcional (no obligatoria) se puede marcar y desmarcar, y su fecha aparece/desaparece con ella", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
+
+  const optionalRowLabel = "Inmersión de Formación en Aguas Abiertas 5";
+  const checkbox = screen.getByRole("checkbox", { name: optionalRowLabel });
+  expect(checkbox.checked).toBe(false);
+  expect(screen.queryByRole("button", { name: `Fecha: ${optionalRowLabel}`, exact: true })).not.toBeInTheDocument();
+
+  await user.click(checkbox);
+  expect(checkbox.checked).toBe(true);
+  expect(await screen.findByRole("button", { name: `Fecha: ${optionalRowLabel}`, exact: true })).toBeInTheDocument();
+
+  await user.click(checkbox);
+  expect(checkbox.checked).toBe(false);
+  expect(screen.queryByRole("button", { name: `Fecha: ${optionalRowLabel}`, exact: true })).not.toBeInTheDocument();
+});
+
+// RadioChoice (versión de examen/variante de curso) alterna: pulsar la
+// opción YA marcada la deja sin ninguna seleccionada, en vez de quedarse
+// clavada — comportamiento explícito de TrainingRecordsTab.jsx
+// (`onChange(value === opt.value ? null : opt.value)`), sin test dedicado.
+it("pulsar la opción de examen ya marcada la deselecciona, no se queda clavada", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await user.click(await screen.findByRole("button", { name: "Open Water Diver" }));
+
+  const onlineButton = await screen.findByRole("button", { name: "Online" });
+  expect(onlineButton.style.borderColor).not.toBe("");
+
+  await user.click(onlineButton);
+  expect(onlineButton.style.borderColor).toBe("rgb(229, 231, 235)");
+});
+
+it("la variante de curso (EAN32/EAN40) se puede cambiar con RadioChoice", async () => {
+  const user = userEvent.setup();
+  templatesQuery.order.mockResolvedValue({
+    data: [{ code: "SC-EAN", name: "Enriched Air Nitrox", storage_path: "SC-EAN/SC-EAN_Spanish_Record.pdf" }],
+    error: null,
+  });
+  renderTab();
+  await user.click(await screen.findByRole("button", { name: "Enriched Air Nitrox" }));
+
+  const ean32 = await screen.findByRole("button", { name: "EAN32" });
+  const ean40 = screen.getByRole("button", { name: "EAN40" });
+  expect(ean32.style.borderColor).not.toBe("");
+
+  await user.click(ean40);
+  expect(ean40.style.borderColor).not.toBe("");
+  expect(ean32.style.borderColor).toBe("rgb(229, 231, 235)");
+});
+
+// Aventuras electivas de AOWD (combo + fecha propia) — hasta ahora solo
+// probado que muestran la etiqueta "Obligatorio", nunca que elegir una de
+// verdad guarda el nombre/id y desbloquea su campo de fecha, ni que eso
+// cuenta como "progreso rellenado" al pedir cambiar de plantilla.
+it("elegir una 'Aventura' de AOWD guarda el nombre y desbloquea su fecha; cambiar de plantilla después pide confirmación", async () => {
+  const user = userEvent.setup();
+  templatesQuery.order.mockResolvedValue({
+    data: [{ code: "AOWD", name: "Advanced Open Water Diver", storage_path: "AOWD/AOWD_Spanish_Record.pdf" }],
+    error: null,
+  });
+  renderTab();
+  await user.click(await screen.findByRole("button", { name: "Advanced Open Water Diver" }));
+
+  await user.click((await screen.findAllByRole("button", { name: "Elige una aventura" }))[0]);
+  await user.click(await screen.findByRole("option", { name: "Buceo nocturno" }));
+
+  await pickToday(user, "Fecha: Aventura 1");
+
+  await user.click(screen.getByRole("button", { name: "Cambiar plantilla" }));
+  expect(await screen.findByText("¿Cambiar de plantilla?")).toBeInTheDocument();
+});
+
+it("editar un alumno ya guardado actualiza su fila en el listado sin duplicarlo", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+
+  await user.click(screen.getByText("Ana Garcia"));
+  expect(await screen.findByText("Editar alumno")).toBeInTheDocument();
+  const lastNameInput = screen.getByRole("textbox", { name: "Apellidos" });
+  await user.clear(lastNameInput);
+  await user.type(lastNameInput, "Garcia Lopez");
+  await user.click(screen.getByRole("button", { name: "Guardar alumno" }));
+
+  expect(await screen.findByText("Ana Garcia Lopez")).toBeInTheDocument();
+  expect(screen.queryByText("Ana Garcia")).not.toBeInTheDocument();
+  expect(screen.getAllByRole("listitem").filter((li) => li.textContent.includes("Ana"))).toHaveLength(1);
+});
+
+it("cerrar la hoja de alta sin guardar no añade ningún alumno", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+
+  await openAddStudentSheet(user);
+  await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ana");
+  await user.click(screen.getByRole("button", { name: "Cerrar" }));
+
+  await waitFor(() => expect(screen.queryByText("Nuevo alumno")).not.toBeInTheDocument());
+  expect(screen.getByText(/Añade tu primer alumno/)).toBeInTheDocument();
+});
+
+it("'Editar' desde el menú '⋯' abre la misma hoja de edición que pulsar la fila", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+
+  await user.click(screen.getAllByLabelText("Más acciones")[0]);
+  await user.click(screen.getByRole("menuitem", { name: "Editar" }));
+  expect(await screen.findByText("Editar alumno")).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Nombre" })).toHaveValue("Ana");
+});
+
+it("eliminar un alumno desde el menú '⋯' lo quita del listado sin tocar a los demás", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  await addStudent(user, { firstName: "Luis", lastName: "Perez" });
+
+  await user.click(screen.getAllByLabelText("Más acciones")[0]);
+  await user.click(screen.getByRole("menuitem", { name: "Eliminar" }));
+  await user.click(screen.getByRole("button", { name: "Eliminar", exact: true }));
+
+  expect(screen.queryByText("Ana Garcia")).not.toBeInTheDocument();
+  expect(screen.getByText("Luis Perez")).toBeInTheDocument();
+});
+
+// Hasta ahora los tests de descarga/compartir solo comprobaban que el
+// BOTÓN existía tras generar, nunca que pulsarlo dispara de verdad la
+// descarga/el share nativo con el fichero correcto.
+it("pulsar 'Descargar PDF' de un alumno genera de verdad un Blob PDF y lo descarga", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+
+  await user.click(screen.getByRole("button", { name: "Descargar PDF" }));
+
+  expect(globalThis.URL.createObjectURL).toHaveBeenCalledTimes(1);
+  const [blob] = globalThis.URL.createObjectURL.mock.calls[0];
+  expect(blob.type).toBe("application/pdf");
+}, 15000);
+
+it("compartir un alumno generado usa navigator.share con el PDF correcto; compartir todos comparte los de todos", async () => {
+  const user = userEvent.setup();
+  const share = vi.fn().mockResolvedValue(undefined);
+  globalThis.navigator.share = share;
+  globalThis.navigator.canShare = vi.fn().mockReturnValue(true);
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+  await addStudent(user, { firstName: "Luis", lastName: "Perez" });
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(2));
+
+  await user.click(screen.getAllByRole("button", { name: "Compartir" })[0]);
+  await waitFor(() => expect(share).toHaveBeenCalledTimes(1));
+  expect(share.mock.calls[0][0].files).toHaveLength(1);
+
+  await user.click(screen.getByRole("button", { name: "Compartir todo" }));
+  await waitFor(() => expect(share).toHaveBeenCalledTimes(2));
+  expect(share.mock.calls[1][0].files).toHaveLength(2);
+
+  delete globalThis.navigator.share;
+  delete globalThis.navigator.canShare;
+}, 15000);
+
+// Réplica server-side del contador (increment_training_records_count) —
+// hasta ahora el propio mock de Supabase no tenía `rpc`, así que esta rama
+// nunca se ejecutaba de verdad (ver comentario en el mock, arriba). Un
+// fallo de esa réplica es solo informativo para el admin: no debe generar
+// ningún aviso de error visible ni bloquear el PDF ya generado.
+it("si la réplica server-side del contador falla, se registra en consola pero el usuario sigue viendo éxito", async () => {
+  const user = userEvent.setup();
+  rpc.mockResolvedValue({ error: new Error("RPC no disponible") });
+  const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+
+  await user.click(screen.getByRole("button", { name: "Generar para todos los alumnos" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(rpc).toHaveBeenCalledWith("increment_training_records_count", { by_amount: 1 }));
+
+  expect(await screen.findByText("Registros generados correctamente.")).toBeInTheDocument();
+  await waitFor(() => expect(consoleError).toHaveBeenCalledWith("No se pudo sincronizar el contador de Training Records", expect.any(Error)));
+  consoleError.mockRestore();
+}, 15000);
+
+it("regenerar un alumno también llama a la réplica server-side del contador con by_amount:1", async () => {
+  const user = userEvent.setup();
+  renderTab();
+  await selectTemplateAndFillSharedConfig(user);
+  await addStudent(user, { firstName: "Ana", lastName: "Garcia" });
+
+  await user.click(screen.getByRole("button", { name: "Regenerar TR" }));
+  await waitFor(() => expect(fillTrainingRecordPdf).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(rpc).toHaveBeenCalledWith("increment_training_records_count", { by_amount: 1 }));
+}, 15000);
+
+// Antes del fix del 2026-09-08 (ver persistSession en TrainingRecordsTab.jsx),
+// sessionStorage podía contener un roster con pdfBytes en base64 de una
+// sesión de un navegador con más cuota disponible — loadStoredSession debe
+// poder reconstruir esos bytes sin romperse, no solo el caso (mayoritario
+// hoy) en que pdfBytes siempre llega null.
+it("reconstruye pdfBytes en base64 si sessionStorage aún trae un roster con documentos ya generados (formato previo al fix de cuota)", async () => {
+  sessionStorage.setItem(
+    "oceanpulse:trainingRecordsSession",
+    JSON.stringify({
+      templateCode: "OWD",
+      config: { includedRows: [true, true, true, true, true, true], rowDates: {}, specialtyDives: [], examVersion: "online" },
+      students: [{ id: "s1", firstName: "Ana", lastName: "Garcia", initials: "AG", pdfBytes: btoa("abc"), generatedAt: Date.now() }],
+    })
+  );
+  renderTab();
+  expect(await screen.findByText("Ana Garcia")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Descargar PDF" })).toBeInTheDocument();
+});
