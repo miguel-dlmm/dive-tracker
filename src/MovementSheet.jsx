@@ -208,7 +208,12 @@ export default function MovementSheet({
   }, [creating, form, rates.rows, commissionRates.rows]);
 
   const disableSaveCurso = creating !== "companeros" && (!form?.date || !form?.school || !form?.activity || !preview);
-  const disableSaveAjuste = creating === "companeros" && (!form?.date || !form?.school || !form?.activity || !form?.colleague_name || form?.amount === "");
+  // form.amount === "" no bastaba: tras el fix del botón de signo con el
+  // campo vacío (MoneyInput, shared.jsx), el importe puede quedar en el
+  // string "-" (un signo sin cifra todavía) — Number("-") es NaN, no "",
+  // así que sin este segundo control el botón "Guardar" no se
+  // deshabilitaba y guardaba un importe NaN de verdad en Supabase.
+  const disableSaveAjuste = creating === "companeros" && (!form?.date || !form?.school || !form?.activity || !form?.colleague_name || form?.amount === "" || !Number.isFinite(Number(form?.amount)));
   const disableSave = creating === "companeros" ? disableSaveAjuste : disableSaveCurso;
 
   const saveEntry = async () => {

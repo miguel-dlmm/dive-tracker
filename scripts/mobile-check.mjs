@@ -516,7 +516,11 @@ async function main() {
     await page.waitForTimeout(200);
   }
 
-  await page.getByRole("button", { name: "Nueva escuela", exact: true }).tap();
+  // .first() — pedido explícito 2026-09-27: con 5 escuelas o menos hay un
+  // segundo botón "Nueva escuela" dentro de la propia tabla, además del
+  // FAB (ConfigTab.jsx, CrudTable) — ambos abren la misma hoja, da igual
+  // cuál se pulse aquí.
+  await page.getByRole("button", { name: "Nueva escuela", exact: true }).first().tap();
   await page.waitForTimeout(200);
   await shot(page, "configuracion-escuelas-nueva-hoja");
   // Dos botones "Cerrar" en pantalla a la vez aquí: el "✕ Cerrar" de la
@@ -610,7 +614,9 @@ async function main() {
   }
 
   console.log("→ Configuración: Tarifas — 'Nueva tarifa' con selector de tipo integrado (rediseño 2026-08-30)");
-  await page.getByRole("button", { name: "Nueva tarifa" }).tap();
+  // .first() — mismo motivo que "Nueva escuela" más arriba: con pocas
+  // tarifas hay un segundo botón dentro de la propia tabla, además del FAB.
+  await page.getByRole("button", { name: "Nueva tarifa" }).first().tap();
   await page.waitForTimeout(250);
   await shot(page, "configuracion-tarifas-nueva-hoja");
   const cursoTabVisible = await page.getByRole("tab", { name: "Curso" }).isVisible().catch(() => false);

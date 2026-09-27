@@ -263,10 +263,12 @@
   "crud": {
     "nuevaEscuela": "Nova escola",
     "editarEscuela": "Edita l'escola",
+    "escuelaEnUsoRazon": "Té tarifes o moviments associats. Elimina'ls o desactiva'ls abans de suprimir aquesta escola.",
     "nombreCampo": "Nom",
     "colorCampo": "Color",
     "nuevoCurso": "Nou curs",
     "editarCurso": "Edita el curs",
+    "cursoEnUsoRazon": "Té tarifes o moviments associats. Elimina'ls o desactiva'ls abans de suprimir aquest curs.",
     "nuevoEstadoPago": "Nou estat de pagament",
     "editarEstadoPago": "Edita l'estat de pagament",
     "nuevaMoneda": "Nova moneda",

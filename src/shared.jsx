@@ -468,7 +468,14 @@ export function Field({ label, hint, required = false, children }) {
   // esto correctamente en Select/DatePicker/RowMenu (maxWidth se calcula
   // contra el espacio real hasta el borde del viewport) — reutilizarlo aquí
   // en vez de reinventar el cálculo de posición (convención #7, CLAUDE.md).
-  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
+  //
+  // align="auto" (2ª vuelta del mismo bug, 2026-09-27: seguía cortado en
+  // móvil pese a lo anterior): con align="left" fijo, el suelo de ancho
+  // mínimo (160px, useFloatingPosition) no cabía entre un icono ya cerca
+  // del borde derecho (la columna derecha de ese mismo grid) y el propio
+  // borde del viewport. align="auto" elige el lado con más espacio real
+  // en vez de asumir siempre "hacia la derecha".
+  const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown("auto");
   return (
     <label className="flex flex-col gap-1 text-sm">
       <span className="flex items-center gap-0.5 text-xs font-medium text-gray-500">
@@ -502,7 +509,7 @@ export function Field({ label, hint, required = false, children }) {
         )}
       </span>
       {hint && (
-        <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} className="w-56 max-w-[75vw] px-2.5 py-1.5">
+        <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} align={pos?.align || "left"} className="w-56 max-w-[75vw] px-2.5 py-1.5">
           <span className="block text-[11px] font-normal italic normal-case text-gray-500">{hint}</span>
         </FloatingPanel>
       )}
@@ -1125,15 +1132,35 @@ export function MoneyInput({ value, onChange, className = "", placeholder, "aria
   }, [value, editing]);
 
   // useGrouping: "always" — ver comentario largo de formatMoney más arriba.
+  // Number.isFinite, no solo "value !== \"\"" — bug real (2026-09-27): tras
+  // alternar el signo con el campo vacío, value podía quedar en el string
+  // "-" (un signo sin cifra todavía, ver toggleSign) y, sin esta guarda,
+  // Number("-").toLocaleString() se mostraba como "NaN" en el campo.
   const display = editing
     ? raw
-    : (value !== "" && value != null ? Number(value).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" }) : "");
-  const isNegative = Number(value) < 0;
+    : (value !== "" && value != null && Number.isFinite(Number(value))
+      ? Number(value).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" })
+      : (value ?? ""));
+  // String(value), no Number(value) < 0 — con el campo vacío, Number("")
+  // es 0, ni negativo ni positivo, así que el icono nunca reflejaba que
+  // ya se había pulsado "cambiar a negativo" antes de escribir ninguna
+  // cifra (mismo bug de fondo que toggleSign, ver abajo).
+  const isNegative = String(value ?? "").trim().startsWith("-");
 
+  // Bug real reportado (2026-09-27, "cuando no hay cantidad metida no
+  // funciona el botón del signo"): con el campo vacío, -Number(value ||
+  // 0) da -0 — y String(-0) es "0", no "-0" (comportamiento de
+  // JavaScript, no un error de tipeo) — así que pulsar el botón con el
+  // campo vacío no cambiaba nada visible ni dejaba ningún rastro del
+  // signo para cuando se empezara a escribir. Alternar sobre el propio
+  // string en vez de la magnitud numérica evita depender de que haya ya
+  // una cifra: anteponer o quitar un "-" funciona igual con el campo
+  // vacío, con "0", o con cualquier importe ya escrito.
   const toggleSign = () => {
-    const flipped = -Number(value || 0);
-    setRaw(String(flipped));
-    onChange(String(flipped));
+    const current = value != null ? String(value) : "";
+    const flipped = current.startsWith("-") ? current.slice(1) : `-${current}`;
+    setRaw(flipped);
+    onChange(flipped);
   };
 
   const input = (
@@ -1975,6 +2002,28 @@ function useFloatingPosition(open, anchorRef, align = "left") {
   // ver el comentario de `maxHeight` más abajo) — solo la elección
   // arriba/abajo queda fija mientras el panel siga abierto.
   const openUpRef = useRef(false);
+  // align="auto" (Field/hint — bug real reportado 2026-09-27, "el
+  // tooltip de Importe en Ajuste de curso sale cortado en móvil"): a
+  // diferencia de RowMenu (siempre arriba a la derecha de su fila) o de
+  // un Select (siempre el ancho de su propio campo), el icono de ayuda
+  // de un `Field` puede caer en cualquier columna de un grid — con
+  // align="left" fijo, un anchor ya cerca del borde derecho (p. ej. la
+  // columna DERECHA de un grid de 2 columnas) seguía desbordando: el
+  // suelo de `Math.max(160, ...)` de más abajo garantiza un ancho
+  // mínimo de 160px que no cabía entre el propio icono y el borde
+  // derecho real del viewport. decideAlign elige el lado con más
+  // espacio, una sola vez al abrir (mismo criterio que decideOpenUp,
+  // justo arriba: congelado mientras el panel esté abierto, para que no
+  // salte solo si el viewport se mueve).
+  const alignRef = useRef(align);
+  const decideAlign = useCallback(() => {
+    if (align !== "auto") { alignRef.current = align; return; }
+    const el = anchorRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const vw = window.visualViewport?.width || window.innerWidth;
+    alignRef.current = rect.left > vw / 2 ? "right" : "left";
+  }, [align, anchorRef]);
   const decideOpenUp = useCallback(() => {
     const el = anchorRef.current;
     if (!el) return;
@@ -1985,7 +2034,8 @@ function useFloatingPosition(open, anchorRef, align = "left") {
   useEffect(() => {
     if (!open) return;
     decideOpenUp();
-  }, [open, decideOpenUp]);
+    decideAlign();
+  }, [open, decideOpenUp, decideAlign]);
   const recalc = useCallback(() => {
     const el = anchorRef.current;
     if (!open || !el) return;
@@ -1995,11 +2045,13 @@ function useFloatingPosition(open, anchorRef, align = "left") {
     const spaceBelow = vh - rect.bottom;
     const spaceAbove = rect.top;
     const openUp = openUpRef.current;
+    const effectiveAlign = alignRef.current;
     setPos({
+      align: effectiveAlign,
       left: rect.left,
       right: vw - rect.right, // alineación por la derecha (p. ej. RowMenu) — evita salirse por el borde derecho en vez de calcular un ancho que no se conoce de antemano
       width: rect.width,
-      maxWidth: align === "right" ? Math.max(160, rect.right - 8) : Math.max(160, vw - rect.left - 8),
+      maxWidth: effectiveAlign === "right" ? Math.max(160, rect.right - 8) : Math.max(160, vw - rect.left - 8),
       // Bug real reportado (Fase 7, 2026-09-07): el calendario de rango de
       // fechas (Periodo, en el filtro de Mi trabajo) se salía por debajo
       // del viewport sin ninguna forma de hacer scroll para ver el resto

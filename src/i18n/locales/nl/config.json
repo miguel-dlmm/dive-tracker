@@ -263,10 +263,12 @@
   "crud": {
     "nuevaEscuela": "Nieuwe school",
     "editarEscuela": "School bewerken",
+    "escuelaEnUsoRazon": "Heeft tarieven of boekingen die ermee verbonden zijn. Verwijder of deactiveer die eerst voordat je deze school verwijdert.",
     "nombreCampo": "Naam",
     "colorCampo": "Kleur",
     "nuevoCurso": "Nieuwe cursus",
     "editarCurso": "Cursus bewerken",
+    "cursoEnUsoRazon": "Heeft tarieven of boekingen die ermee verbonden zijn. Verwijder of deactiveer die eerst voordat je deze cursus verwijdert.",
     "nuevoEstadoPago": "Nieuwe betaalstatus",
     "editarEstadoPago": "Betaalstatus bewerken",
     "nuevaMoneda": "Nieuwe munteenheid",

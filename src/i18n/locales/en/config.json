@@ -263,10 +263,12 @@
   "crud": {
     "nuevaEscuela": "New school",
     "editarEscuela": "Edit school",
+    "escuelaEnUsoRazon": "It has rates or entries linked to it. Delete or deactivate them before deleting this school.",
     "nombreCampo": "Name",
     "colorCampo": "Color",
     "nuevoCurso": "New course",
     "editarCurso": "Edit course",
+    "cursoEnUsoRazon": "It has rates or entries linked to it. Delete or deactivate them before deleting this course.",
     "nuevoEstadoPago": "New payment status",
     "editarEstadoPago": "Edit payment status",
     "nuevaMoneda": "New currency",

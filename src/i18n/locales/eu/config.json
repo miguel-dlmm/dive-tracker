@@ -263,10 +263,12 @@
   "crud": {
     "nuevaEscuela": "Eskola berria",
     "editarEscuela": "Editatu eskola",
+    "escuelaEnUsoRazon": "Lotutako tarifak edo mugimenduak ditu. Ezabatu edo desgaitu eskola hau ezabatu aurretik.",
     "nombreCampo": "Izena",
     "colorCampo": "Kolorea",
     "nuevoCurso": "Ikastaro berria",
     "editarCurso": "Editatu ikastaroa",
+    "cursoEnUsoRazon": "Lotutako tarifak edo mugimenduak ditu. Ezabatu edo desgaitu ikastaro hau ezabatu aurretik.",
     "nuevoEstadoPago": "Ordainketa-egoera berria",
     "editarEstadoPago": "Editatu ordainketa-egoera",
     "nuevaMoneda": "Dibisa berria",

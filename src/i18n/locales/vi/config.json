@@ -263,10 +263,12 @@
   "crud": {
     "nuevaEscuela": "Trung tâm mới",
     "editarEscuela": "Sửa trung tâm",
+    "escuelaEnUsoRazon": "Có bảng giá hoặc giao dịch liên quan. Hãy xóa hoặc tắt chúng trước khi xóa trường này.",
     "nombreCampo": "Tên",
     "colorCampo": "Màu",
     "nuevoCurso": "Khóa học mới",
     "editarCurso": "Sửa khóa học",
+    "cursoEnUsoRazon": "Có bảng giá hoặc giao dịch liên quan. Hãy xóa hoặc tắt chúng trước khi xóa lớp học này.",
     "nuevoEstadoPago": "Trạng thái thanh toán mới",
     "editarEstadoPago": "Sửa trạng thái thanh toán",
     "nuevaMoneda": "Tiền tệ mới",

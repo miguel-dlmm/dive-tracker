@@ -239,7 +239,7 @@ describe("ConfigTab — CrudTable crea vía FAB + hoja (ver Escuelas)", () => {
 
     expect(screen.queryByRole("textbox", { name: "Nombre" })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Nueva escuela" }));
+    await user.click(screen.getAllByRole("button", { name: "Nueva escuela" })[0]);
     expect(screen.getByRole("heading", { name: "Nueva escuela" })).toBeInTheDocument();
 
     await user.type(screen.getByRole("textbox", { name: "Nombre" }), "Ihasia");
@@ -250,6 +250,66 @@ describe("ConfigTab — CrudTable crea vía FAB + hoja (ver Escuelas)", () => {
     // gestos 2026-08-30): el heading deja de estar en el DOM al terminar
     // la animación, no en el mismo tick que cerrarla.
     await waitFor(() => expect(screen.queryByRole("heading", { name: "Nueva escuela" })).not.toBeInTheDocument());
+  });
+
+  // Bug real (2026-09-27): rates.school/commissionRates.school/
+  // worklog.school/comisiones.school referencian el nombre de la
+  // escuela, no su id (schema.sql) — sin este bloqueo, borrar la escuela
+  // dejaba esas filas huérfanas sin ningún aviso.
+  it("no deja eliminar una escuela con tarifas asociadas (isInUse)", async () => {
+    const user = userEvent.setup();
+    const schools = rowsHook([{ id: "s1", name: "PADI Cozumel" }]);
+    const rates = rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water" }]);
+    render(<ConfigTab {...baseProps({ schools, rates })} />);
+    await user.click(screen.getByText("Escuelas"));
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    const deleteItem = screen.getByText("Eliminar").closest('[role="menuitem"]');
+    expect(deleteItem).toHaveAttribute("aria-disabled", "true");
+    expect(deleteItem).toHaveAttribute("title", expect.stringContaining("tarifas"));
+  });
+
+  it("sí deja eliminar una escuela sin ninguna tarifa/movimiento asociado", async () => {
+    const user = userEvent.setup();
+    const schools = rowsHook([{ id: "s1", name: "PADI Cozumel" }]);
+    render(<ConfigTab {...baseProps({ schools })} />);
+    await user.click(screen.getByText("Escuelas"));
+
+    await user.click(screen.getByRole("button", { name: "Más acciones" }));
+    const deleteItem = screen.getByText("Eliminar").closest('[role="menuitem"]');
+    expect(deleteItem).not.toHaveAttribute("aria-disabled");
+  });
+
+  // Pedido explícito (2026-09-27): un botón de creación dentro de la
+  // propia tabla, no solo el FAB flotante, mientras el catálogo tenga 5
+  // elementos o menos (0 incluido) — el caso típico de una cuenta recién
+  // empezada.
+  it("muestra un botón 'Crear' dentro de la tabla con 5 escuelas o menos", async () => {
+    const user = userEvent.setup();
+    const fiveSchools = rowsHook(Array.from({ length: 5 }, (_, i) => ({ id: `s${i}`, name: `Escuela ${i}` })));
+    render(<ConfigTab {...baseProps({ schools: fiveSchools })} />);
+    await user.click(screen.getByText("Escuelas"));
+
+    expect(screen.getAllByRole("button", { name: "Nueva escuela" })).toHaveLength(2);
+  });
+
+  it("el botón 'Crear' de dentro de la tabla desaparece con más de 5 escuelas (solo queda el FAB)", async () => {
+    const user = userEvent.setup();
+    const sixSchools = rowsHook(Array.from({ length: 6 }, (_, i) => ({ id: `s${i}`, name: `Escuela ${i}` })));
+    render(<ConfigTab {...baseProps({ schools: sixSchools })} />);
+    await user.click(screen.getByText("Escuelas"));
+
+    expect(screen.getAllByRole("button", { name: "Nueva escuela" })).toHaveLength(1);
+  });
+
+  it("con el catálogo vacío, el botón 'Crear' de dentro de la tabla también abre la hoja de alta", async () => {
+    const user = userEvent.setup();
+    render(<ConfigTab {...baseProps({ schools: emptyHook })} />);
+    await user.click(screen.getByText("Escuelas"));
+
+    await user.click(screen.getAllByRole("button", { name: "Nueva escuela" })[0]);
+
+    expect(screen.getByRole("heading", { name: "Nueva escuela" })).toBeInTheDocument();
   });
 
   it("'Editar' (menú '⋯') abre la misma hoja precargada, y Guardar llama a updateRow", async () => {

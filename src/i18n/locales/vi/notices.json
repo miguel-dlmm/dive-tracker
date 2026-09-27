@@ -29,6 +29,40 @@
       }
     ]
   },
+  "onboarding": {
+    "close": "Đóng",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "start": "Bắt đầu",
+    "slideTablist": "Slide",
+    "eyebrow": "Chào mừng bạn đến với Ocean Flow",
+    "slides": [
+      {
+        "title": "Home của bạn, nhìn một lần là thấy hết",
+        "body": "Số liệu tháng này, lịch và những khoản còn chờ thu. Tất cả nằm ngay trên màn hình bạn thấy khi mở ứng dụng."
+      },
+      {
+        "title": "Công việc của tôi: ghi lại mọi giao dịch",
+        "body": "Lớp học, hoa hồng và các khoản điều chỉnh với đồng nghiệp, tất cả từ cùng một nút. Không cần tìm đúng biểu mẫu mỗi lần."
+      },
+      {
+        "title": "Tổng hợp, kèm báo cáo PDF",
+        "body": "Xem số liệu theo từng giai đoạn và tải báo cáo đầy đủ dạng PDF khi bạn cần."
+      },
+      {
+        "title": "Tạo Training Record của bạn",
+        "body": "Tài liệu tiến độ SSI chính thức của mỗi học viên, có chữ ký của bạn và của họ, sẵn sàng để tải xuống."
+      },
+      {
+        "title": "Có thắc mắc? Trợ giúp ở ngay đó",
+        "body": "Bạn sẽ tìm thấy bằng cách chạm vào biểu tượng ở góc trên bên phải, khi bạn cần."
+      },
+      {
+        "title": "Bắt đầu từ đây",
+        "body": "Tạo trường đầu tiên của bạn và thiết lập bảng giá. Vậy là bạn đã có thể ghi lại giao dịch đầu tiên trong Ocean Flow."
+      }
+    ]
+  },
   "deploymentNotice": {
     "close": "Đóng",
     "eyebrow": "Bản cập nhật mới",

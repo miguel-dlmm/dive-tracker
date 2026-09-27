@@ -263,10 +263,12 @@
   "crud": {
     "nuevaEscuela": "Nuova scuola",
     "editarEscuela": "Modifica scuola",
+    "escuelaEnUsoRazon": "Ha tariffe o movimenti associati. Eliminali o disattivali prima di eliminare questa scuola.",
     "nombreCampo": "Nome",
     "colorCampo": "Colore",
     "nuevoCurso": "Nuovo corso",
     "editarCurso": "Modifica corso",
+    "cursoEnUsoRazon": "Ha tariffe o movimenti associati. Eliminali o disattivali prima di eliminare questo corso.",
     "nuevoEstadoPago": "Nuovo stato di pagamento",
     "editarEstadoPago": "Modifica stato di pagamento",
     "nuevaMoneda": "Nuova valuta",

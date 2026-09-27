@@ -47,7 +47,7 @@
     }
   },
   "instructor": {
-    "hint": "Se usan para rellenar tus Training Records automáticamente — se guardan aquí una sola vez, no por dispositivo.",
+    "hint": "Se usan para rellenar tus Training Records automáticamente. Se guardan aquí una sola vez, no por dispositivo.",
     "professionalLabel": "Profesional",
     "professionalPlaceholder": "Sin elegir",
     "card": {
@@ -69,7 +69,7 @@
   },
   "currency": {
     "hint": "Se usa como moneda por defecto en Ajuste de curso, cuando no hay una tarifa que la determine. El resto de movimientos siempre usan la moneda de su tarifa.",
-    "placeholder": "Sin elegir — usa la moneda por defecto de la app",
+    "placeholder": "Sin elegir: usa la moneda por defecto de la app",
     "toastSuccess": "Moneda favorita actualizada"
   },
   "language": {

@@ -142,9 +142,18 @@ create table if not exists public.profiles (
   -- cualquier cliente pueda escribir un valor arbitrario.
   training_records_generated_count integer not null default 0,
   training_records_last_generated_at timestamptz,
+  -- Bienvenida real para cuentas nuevas (2026-09-27) — nulo hasta que la
+  -- cuenta cierra el tour de 6 diapositivas una primera vez, sea cual sea
+  -- el dispositivo por el que entre después. Ver AppShell en App.jsx y
+  -- scripts/migrations/0022-onboarding-tour-visto.sql.
+  onboarding_tour_seen_at timestamptz,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
+
+-- Migración aditiva (2026-09-27, bienvenida real para cuentas nuevas)
+-- para instalaciones existentes — scripts/migrations/0022-onboarding-tour-visto.sql
+-- tiene el mismo DDL, aplicarlo con scripts/apply-migration.mjs.
 
 -- Migración aditiva Fase 9 (2026-09-07, fecha de nacimiento + país de
 -- residencia) para instalaciones existentes —

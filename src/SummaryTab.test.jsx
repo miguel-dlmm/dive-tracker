@@ -133,7 +133,7 @@ describe("SummaryTab — franja de tendencia", () => {
     await user.click(screen.getByRole("button", { name: "Granularidad del periodo" }));
     await user.click(screen.getByRole("option", { name: "Rango" }));
 
-    expect(screen.queryByText(/Tendencia — toca un periodo/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Tendencia: toca un periodo/)).not.toBeInTheDocument();
   });
 
   it("sin flechas ‹ › de periodo — la franja de tendencia es el único mecanismo de navegación (feedback 2026-08-30)", () => {

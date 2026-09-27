@@ -4,6 +4,17 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Tour de bienvenida para cuentas nuevas**: cualquier cuenta nueva (alta
+  normal o por enlace de invitación) ve un tour de 6 diapositivas la
+  primera vez que entra a la app, una sola vez en la vida de la cuenta
+  (Home, Mi trabajo, Resumen, Training Records, Ayuda y cómo empezar).
+  Sustituye a "Qué hay de nuevo" solo en ese primer acceso, para no
+  mostrar dos avisos de golpe.
+- **Botón "Crear" dentro de la tabla en Escuelas, Cursos y Tarifas**:
+  visible mientras el catálogo tenga 5 elementos o menos (0 incluido),
+  además del FAB flotante.
+
 ### Fixed
 - **Traducciones que faltaban en la ficha de detalle de usuario (Config →
   Usuarios) y en un artículo de la Ayuda**: la sección con avatar, fecha
@@ -13,6 +24,12 @@ Registro de cambios relevantes de Ocean Flow.
   en blanco. Detectado por un test nuevo de paridad de claves i18n
   (docs/INFORME-DEUDA-TECNICA-2026-09.md). El artículo "Generar un
   Training Record" tampoco existía en francés.
+- **Eliminar una escuela o un curso con tarifas o movimientos asociados
+  dejaba esas filas huérfanas**: ahora el borrado se bloquea con un
+  aviso claro en vez de permitirlo.
+- **El botón +/- del importe en Ajuste de curso no hacía nada visible con
+  el campo vacío**, y el tooltip de ese mismo campo se salía de la
+  pantalla en móvil. Ambos corregidos.
 
 ## [1.5.1] - 2026-09-27
 

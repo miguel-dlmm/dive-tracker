@@ -151,6 +151,13 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
 
   const presentValues = (key) => [...new Set(allRows.map((r) => r[key]).filter(Boolean))].sort();
   const hasFilters = filters.type || filters.school || (filters.activity && filters.activity.length > 0);
+  // Botón "Crear tarifa" dentro de la propia tabla, además del FAB
+  // (pedido explícito 2026-09-27, mismo criterio aplicado también en
+  // CrudTable de ConfigTab.jsx para Escuelas/Cursos) — basado en el
+  // catálogo real (allRows, antes de filtrar), no en `filtered`, y
+  // apagado con filtros activos: una búsqueda/filtro sin resultados no
+  // significa que el catálogo esté vacío.
+  const showInlineCreate = allRows.length <= 5 && !hasFilters;
   const activeFilterCount = [Boolean(filters.type), Boolean(filters.school), filters.activity.length > 0].filter(Boolean).length;
 
   const filtered = useMemo(() => {
@@ -359,6 +366,16 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
           {filtered.length === 0 && (
             <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
               <p className="text-sm text-gray-400">{t("list.empty")}</p>
+              {showInlineCreate && (
+                <button
+                  onClick={openCreateSheet}
+                  className="mt-1 flex min-h-11 items-center gap-1.5 rounded-md px-4 text-sm font-semibold text-white"
+                  style={{ backgroundColor: accentColor }}
+                >
+                  <Plus size={15} aria-hidden="true" />
+                  {t("fab")}
+                </button>
+              )}
             </div>
           )}
           {/* AnimatePresence + listItemVariants (motion.js) — mismo
@@ -431,6 +448,17 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
               </motion.div>
             ))}
           </AnimatePresence>
+          {filtered.length > 0 && showInlineCreate && (
+            <div className="border-t border-gray-100 px-4 py-3">
+              <button
+                onClick={openCreateSheet}
+                className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-gray-300 text-sm font-medium text-gray-500 hover:border-gray-400 hover:text-gray-700"
+              >
+                <Plus size={15} aria-hidden="true" />
+                {t("fab")}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
