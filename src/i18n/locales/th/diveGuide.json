@@ -15,9 +15,11 @@
     "pageCounter": "{{current}} จาก {{total}}",
     "sectionsAria": "เปลี่ยนหมวด",
     "closeAria": "ปิดคู่มือ",
+    "backToCoverAria": "กลับไปหน้าปก",
     "fullscreenEnterAria": "เต็มจอ",
     "fullscreenExitAria": "ออกจากเต็มจอ",
     "jumpTo": "ไปที่…",
+    "siteIndexHeading": "ไปที่จุดดำน้ำ",
     "prevPageAria": "หน้าก่อนหน้า",
     "nextPageAria": "หน้าถัดไป"
   }

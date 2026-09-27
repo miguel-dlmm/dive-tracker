@@ -15,9 +15,11 @@
     "pageCounter": "{{current}} dari {{total}}",
     "sectionsAria": "Ganti bagian",
     "closeAria": "Tutup panduan",
+    "backToCoverAria": "Kembali ke sampul",
     "fullscreenEnterAria": "Layar penuh",
     "fullscreenExitAria": "Keluar layar penuh",
     "jumpTo": "Lompat ke…",
+    "siteIndexHeading": "Lompat ke titik selam",
     "prevPageAria": "Halaman sebelumnya",
     "nextPageAria": "Halaman berikutnya"
   }

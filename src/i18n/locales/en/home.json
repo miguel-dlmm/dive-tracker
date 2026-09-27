@@ -17,7 +17,7 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "ctaFirstTime": "Generate your first Training Record",
+    "ctaFirstTime": "Generate your first",
     "generatedLabel": "Generated"
   },
   "installApp": "Download app",
@@ -32,6 +32,6 @@
   },
   "diveGuideCard": {
     "title": "Dive guide",
-    "subtitle": "Koh Tao · for the briefing"
+    "subtitle": "Koh Tao"
   }
 }

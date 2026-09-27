@@ -17,7 +17,7 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "ctaFirstTime": "Tạo Training Record đầu tiên",
+    "ctaFirstTime": "Tạo cái đầu tiên",
     "generatedLabel": "Đã tạo"
   },
   "installApp": "Tải ứng dụng",
@@ -32,6 +32,6 @@
   },
   "diveGuideCard": {
     "title": "Cẩm nang lặn",
-    "subtitle": "Koh Tao · cho buổi briefing"
+    "subtitle": "Koh Tao"
   }
 }

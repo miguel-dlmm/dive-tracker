@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { X, Maximize2, Minimize2, MapPin, Fish, Info, ChevronLeft, ChevronRight, Layers } from "lucide-react";
+import { X, ArrowLeft, Maximize2, Minimize2, MapPin, Fish, Info, ChevronLeft, ChevronRight, Layers, Search } from "lucide-react";
 import { BRAND_NAVY, BRAND_OCEAN, NAVY, GREEN, CORAL } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { carouselSlideVariants, usePrefersReducedMotion, useSwipeHorizontal } from "./motion";
@@ -44,10 +44,61 @@ function firstIndexOfSection(key) {
   return PAGES.findIndex((p) => p.sectionKey === key);
 }
 
+// Índice de puntos de buceo — nombre tal como aparece impreso en cada
+// página y el número de página (del PDF/imágenes originales) al que salta.
+// Catalogado a mano, página a página (pg 4-31 del propio libro, sección
+// "Puntos de buceo"), no derivado del índice impreso de la página 4 (que
+// lista los mismos 27 puntos pero en un orden ligeramente distinto al de
+// las páginas reales — ver ese índice como referencia, no como fuente de
+// la numeración). Varios nombres comparten página cuando el propio libro
+// agrupa varios puntos en un mismo spread (p.ej. página 28: Sairee Reef,
+// Samran Pinnacle, Tao Tong, Shark Bay, Buddha Point y Jansom Bay).
+const SITE_INDEX = [
+  { name: "Ang Thong · Koh Wao", page: 30 },
+  { name: "Ang Thong · Koh Yippon", page: 30 },
+  { name: "Aow Leuk", page: 23 },
+  { name: "Aow Mao", page: 31 },
+  { name: "Buddha Point", page: 28 },
+  { name: "Buoyancy World", page: 11 },
+  { name: "Chumphon Pinnacle", page: 16 },
+  { name: "Green Rock", page: 12 },
+  { name: "Hin Fai (Biorock)", page: 15 },
+  { name: "Hin Ngam", page: 23 },
+  { name: "Hin Pee Wee", page: 7 },
+  { name: "Hin Wong Pinnacle", page: 19 },
+  { name: "HTMS Sattakut", page: 29 },
+  { name: "Jansom Bay", page: 28 },
+  { name: "Japanese Gardens", page: 14 },
+  { name: "Junkyard Reef", page: 6 },
+  { name: "King Kong", page: 22 },
+  { name: "Laem Thian", page: 21 },
+  { name: "Lighthouse", page: 18 },
+  { name: "Mango Bay", page: 17 },
+  { name: "MV Trident", page: 29 },
+  { name: "No Name Pinnacle", page: 9 },
+  { name: "Pottery", page: 5 },
+  { name: "Red Rock", page: 13 },
+  { name: "Sail Rock", page: 27 },
+  { name: "Sairee Reef", page: 28 },
+  { name: "Samran Pinnacle", page: 28 },
+  { name: "Shark Bay", page: 28 },
+  { name: "Shark Island", page: 25 },
+  { name: "Southwest Pinnacle", page: 26 },
+  { name: "Suan Olan", page: 24 },
+  { name: "Tanote Bay", page: 20 },
+  { name: "Tao Tong", page: 28 },
+  { name: "The Unicorn", page: 29 },
+  { name: "Twins", page: 10 },
+  { name: "White Rock", page: 8 },
+  { name: "3 Rocks", page: 5 },
+].sort((a, b) => a.name.localeCompare(b.name));
+
 // Mismo Supabase por entorno que el resto de la app (VITE_SUPABASE_URL) —
 // así TEST y producción sirven cada uno su propio bucket sin tocar código
 // cuando el libro se suba también a producción (scripts/
-// upload-dive-guide-assets.mjs --prod).
+// upload-dive-guide-assets.mjs --prod). WebP, no JPEG (2026-09-27, pedido
+// explícito de aligerar la carga sin perder calidad) — ver el comentario
+// del script de subida para la comparación de peso.
 // iOS Safari no expone requestFullscreen en iPhone (sí en iPad) — ahí el
 // botón simplemente no hace nada, sin romper nada (una app instalada como
 // PWA ya corre sin barra de navegador). Un contexto sin el permiso de
@@ -65,7 +116,7 @@ function safeExitFullscreen() {
 
 function pageUrl(n) {
   const base = String(import.meta.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
-  return `${base}/storage/v1/object/public/dive-guide/koh-tao/page-${String(n).padStart(2, "0")}.jpg`;
+  return `${base}/storage/v1/object/public/dive-guide/koh-tao/page-${String(n).padStart(2, "0")}.webp`;
 }
 
 export default function DiveGuideTab({ onClose }) {
@@ -90,6 +141,21 @@ export default function DiveGuideTab({ onClose }) {
 
   const current = PAGES[pageIdx];
   const currentSection = SECTION_DEFS.find((s) => s.key === current.sectionKey);
+
+  // Precarga la página anterior y la siguiente (pedido explícito 2026-09-27:
+  // "las imágenes tardan mucho en cargar") — el peso ya se redujo pasando a
+  // WebP (ver pageUrl), pero la sensación de lentitud real está en pasar de
+  // página y ESPERAR a que la siguiente cargue. new Image().src cachea en
+  // el navegador sin montar nada visible; cuando el <img> real de esa
+  // página se monte al navegar, ya la tiene en caché.
+  useEffect(() => {
+    [pageIdx - 1, pageIdx + 1].forEach((i) => {
+      const neighbor = PAGES[i];
+      if (!neighbor) return;
+      const img = new Image();
+      img.src = pageUrl(neighbor.n);
+    });
+  }, [pageIdx]);
 
   const goNext = () => {
     setDirection(1);
@@ -127,6 +193,16 @@ export default function DiveGuideTab({ onClose }) {
     setPageIdx(0);
     setScreen("reader");
   };
+  // Selector de puntos de buceo (pedido explícito 2026-09-27: "un selector
+  // para ir directamente a la página del site") — salta a la página exacta
+  // sin pasar por el resto de páginas intermedias de la sección.
+  const jumpToPage = (pageNumber) => {
+    setDirection(1);
+    setIsZoomed(false);
+    setPageIdx(PAGES.findIndex((p) => p.n === pageNumber));
+    setScreen("reader");
+    setSheetOpen(false);
+  };
 
   const swipeProps = useSwipeHorizontal({
     onSwipeLeft: () => { if (pageIdx < PAGES.length - 1) goNext(); },
@@ -144,17 +220,33 @@ export default function DiveGuideTab({ onClose }) {
     onClose();
   };
 
+  // La "X" del lector (dentro de una página) vuelve a la portada del
+  // libro, no a Home — pedido explícito 2026-09-27: "cuando cierro el
+  // visor vuelvo a la home de la app, debería volver a la portada del
+  // libro". Salir de la app entera sigue siendo la "X" de la propia
+  // portada (CoverScreen, más abajo), que sí llama a handleClose.
+  const backToCover = () => {
+    if (document.fullscreenElement) safeExitFullscreen();
+    setScreen("cover");
+  };
+
   return (
     <div ref={rootRef} className="fixed inset-0 z-50 flex flex-col bg-black" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
       {screen === "cover" ? (
-        <CoverScreen t={t} onStart={startFromBeginning} onOpenSection={openSection} onClose={handleClose} />
+        <CoverScreen
+          t={t}
+          onStart={startFromBeginning}
+          onOpenSection={openSection}
+          onOpenSiteIndex={() => setSheetOpen(true)}
+          onClose={handleClose}
+        />
       ) : (
         <>
           <ReaderTopBar
             t={t}
             section={currentSection}
             current={current}
-            onClose={handleClose}
+            onClose={backToCover}
             onOpenSections={() => setSheetOpen(true)}
             isFullscreen={isFullscreen}
             onToggleFullscreen={toggleFullscreen}
@@ -234,12 +326,14 @@ export default function DiveGuideTab({ onClose }) {
         </>
       )}
 
-      {sheetOpen && <SectionSheet t={t} onSelect={openSection} onClose={() => setSheetOpen(false)} />}
+      {sheetOpen && (
+        <SectionSheet t={t} onSelect={openSection} onSelectPage={jumpToPage} onClose={() => setSheetOpen(false)} />
+      )}
     </div>
   );
 }
 
-function CoverScreen({ t, onStart, onOpenSection, onClose }) {
+function CoverScreen({ t, onStart, onOpenSection, onOpenSiteIndex, onClose }) {
   return (
     <div
       className="flex h-full flex-col overflow-y-auto px-6 pb-10 text-center"
@@ -286,6 +380,15 @@ function CoverScreen({ t, onStart, onOpenSection, onClose }) {
 
         <button
           type="button"
+          onClick={onOpenSiteIndex}
+          className="flex w-full max-w-xs items-center justify-center gap-1.5 text-[12px] font-semibold text-white/80"
+        >
+          <Search size={13} aria-hidden="true" />
+          {t("viewer.siteIndexHeading")}
+        </button>
+
+        <button
+          type="button"
           onClick={onStart}
           className="mt-2 min-h-11 w-full max-w-xs rounded-xl bg-white px-4 py-3 text-sm font-bold"
           style={{ color: BRAND_NAVY }}
@@ -305,8 +408,8 @@ function ReaderTopBar({ t, section, current, onClose, onOpenSections, isFullscre
       className="z-10 flex items-center justify-between gap-2 px-3 py-2"
       style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.5rem)", background: "linear-gradient(to bottom, rgba(0,0,0,0.55), transparent)" }}
     >
-      <button type="button" onClick={onClose} aria-label={t("viewer.closeAria")} className="flex h-11 w-11 items-center justify-center text-white">
-        <X size={20} aria-hidden="true" />
+      <button type="button" onClick={onClose} aria-label={t("viewer.backToCoverAria")} className="flex h-11 w-11 items-center justify-center text-white">
+        <ArrowLeft size={20} aria-hidden="true" />
       </button>
 
       <button
@@ -335,33 +438,61 @@ function ReaderTopBar({ t, section, current, onClose, onOpenSections, isFullscre
   );
 }
 
-function SectionSheet({ t, onSelect, onClose }) {
+function SectionSheet({ t, onSelect, onSelectPage, onClose }) {
   useEscapeClose(true, onClose);
   return (
     <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/50" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-lg rounded-t-xl bg-white p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]"
+        className="flex max-h-[80dvh] w-full max-w-lg flex-col rounded-t-xl bg-white"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mx-auto mb-2 h-1 w-9 rounded-full bg-gray-200" aria-hidden="true" />
-        {SECTION_DEFS.map((section) => (
-          <button
-            key={section.key}
-            type="button"
-            onClick={() => onSelect(section.key)}
-            className="flex min-h-14 w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left active:bg-gray-50"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${section.color}1A` }}>
-              <section.Icon size={16} style={{ color: section.color }} aria-hidden="true" />
-            </span>
-            <span className="min-w-0">
-              <div className="truncate text-sm font-bold" style={{ color: BRAND_NAVY }}>{t(`sections.${section.key}.label`)}</div>
-              <div className="truncate text-[11px] text-gray-400">{t(`sections.${section.key}.hint`)}</div>
-            </span>
-          </button>
-        ))}
+        <div className="shrink-0 p-3 pb-1">
+          <div className="mx-auto mb-2 h-1 w-9 rounded-full bg-gray-200" aria-hidden="true" />
+          {SECTION_DEFS.map((section) => (
+            <button
+              key={section.key}
+              type="button"
+              onClick={() => onSelect(section.key)}
+              className="flex min-h-14 w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left active:bg-gray-50"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${section.color}1A` }}>
+                <section.Icon size={16} style={{ color: section.color }} aria-hidden="true" />
+              </span>
+              <span className="min-w-0">
+                <div className="truncate text-sm font-bold" style={{ color: BRAND_NAVY }}>{t(`sections.${section.key}.label`)}</div>
+                <div className="truncate text-[11px] text-gray-400">{t(`sections.${section.key}.hint`)}</div>
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Índice A-Z de puntos de buceo — pedido explícito 2026-09-27:
+            "escanea los nombres de los dive sites y haz un selector para
+            ir directamente a la página del site". Grid de 2 columnas
+            (no una lista de una columna): 37 nombres caben en bastante
+            menos scroll así, y cada botón sigue siendo un objetivo
+            táctil cómodo (min-h-11). */}
+        <div className="min-h-0 flex-1 overflow-y-auto border-t border-gray-100 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+          <div className="mb-2 flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">
+            <Search size={12} aria-hidden="true" />
+            {t("viewer.siteIndexHeading")}
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {SITE_INDEX.map((site) => (
+              <button
+                key={site.name}
+                type="button"
+                onClick={() => onSelectPage(site.page)}
+                className="min-h-11 truncate rounded-lg bg-gray-50 px-3 py-2 text-left text-[12.5px] font-medium active:bg-gray-100"
+                style={{ color: BRAND_NAVY }}
+              >
+                {site.name}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

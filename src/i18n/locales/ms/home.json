@@ -17,7 +17,7 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "ctaFirstTime": "Jana Training Record pertama anda",
+    "ctaFirstTime": "Cipta yang pertama",
     "generatedLabel": "Dijana"
   },
   "installApp": "Muat turun aplikasi",
@@ -32,6 +32,6 @@
   },
   "diveGuideCard": {
     "title": "Panduan menyelam",
-    "subtitle": "Koh Tao · untuk taklimat"
+    "subtitle": "Koh Tao"
   }
 }

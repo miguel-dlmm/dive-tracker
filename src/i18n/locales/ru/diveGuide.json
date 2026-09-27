@@ -15,9 +15,11 @@
     "pageCounter": "{{current}} из {{total}}",
     "sectionsAria": "Сменить раздел",
     "closeAria": "Закрыть гид",
+    "backToCoverAria": "Назад к обложке",
     "fullscreenEnterAria": "Полный экран",
     "fullscreenExitAria": "Выйти из полноэкранного режима",
     "jumpTo": "Перейти к…",
+    "siteIndexHeading": "Перейти к месту погружения",
     "prevPageAria": "Предыдущая страница",
     "nextPageAria": "Следующая страница"
   }

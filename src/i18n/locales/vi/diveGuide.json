@@ -15,9 +15,11 @@
     "pageCounter": "{{current}} / {{total}}",
     "sectionsAria": "Đổi phần",
     "closeAria": "Đóng cẩm nang",
+    "backToCoverAria": "Quay lại trang bìa",
     "fullscreenEnterAria": "Toàn màn hình",
     "fullscreenExitAria": "Thoát toàn màn hình",
     "jumpTo": "Đi tới…",
+    "siteIndexHeading": "Đi đến một điểm lặn",
     "prevPageAria": "Trang trước",
     "nextPageAria": "Trang sau"
   }

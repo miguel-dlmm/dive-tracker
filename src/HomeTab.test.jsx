@@ -605,8 +605,15 @@ describe("HomeTab — tarjeta de Training Records", () => {
 
   it("sin ningún Training Record generado todavía, es una invitación de verdad, no un contador en cero", () => {
     renderHomeWithTR();
-    expect(screen.getByText("Genera tu primer Training Record")).toBeInTheDocument();
-    expect(screen.queryByText("Training Records")).not.toBeInTheDocument();
+    // "Training Records" (título) sí se muestra desde el lote de 3
+    // columnas (2026-09-27, acceso a la Guía de Buceo en Home): las tres
+    // pastillas de esa fila comparten ahora la misma forma de 2 líneas
+    // (título + subtítulo corto) para que ninguna truncase su texto en
+    // móvil. Lo que sigue sin verse — y es lo que este test protege de
+    // verdad — es cualquier "0 Generados", que sí volvería a sentirse
+    // como un contador vacío en vez de una invitación.
+    expect(screen.getByText("Training Records")).toBeInTheDocument();
+    expect(screen.getByText("Genera el primero")).toBeInTheDocument();
     expect(screen.queryByText("Generados")).not.toBeInTheDocument();
   });
 
@@ -618,7 +625,7 @@ describe("HomeTab — tarjeta de Training Records", () => {
       expect(screen.getByText("7")).toBeInTheDocument();
     }, { timeout: 4000 });
     expect(screen.getByText("Generados")).toBeInTheDocument();
-    expect(screen.queryByText("Genera tu primer Training Record")).not.toBeInTheDocument();
+    expect(screen.queryByText("Genera el primero")).not.toBeInTheDocument();
   });
 
   // Bug real (2026-09-08): "he creado un TR con el admin y cuando entro
@@ -629,19 +636,21 @@ describe("HomeTab — tarjeta de Training Records", () => {
     localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount:admin-1", "12");
     renderHomeWithTR(vi.fn(), "demo-2");
     // Si el bug se reprodujera, esta cuenta ("demo-2") vería el estado
-    // "con actividad" (título + cifra) heredado de "admin-1" en vez de la
-    // invitación real — comprobar la invitación ya es suficiente, sin
-    // buscar "12" suelto en el documento (coincide por casualidad con el
-    // día 12 del calendario de abajo).
-    expect(screen.getByText("Genera tu primer Training Record")).toBeInTheDocument();
-    expect(screen.queryByText("Training Records")).not.toBeInTheDocument();
+    // "con actividad" (cifra + "Generados") heredado de "admin-1" en vez
+    // de la invitación real. "Training Records" (el título) ya no sirve
+    // para distinguir los dos estados — se muestra en ambos desde el lote
+    // de 3 columnas — así que la comprobación real es "Generados" ausente,
+    // sin buscar "12" suelto en el documento (coincide por casualidad con
+    // el día 12 del calendario de abajo).
+    expect(screen.getByText("Genera el primero")).toBeInTheDocument();
+    expect(screen.queryByText("Generados")).not.toBeInTheDocument();
   });
 
   it("pulsar la fila llama a onOpenTrainingRecords", async () => {
     const user = userEvent.setup();
     const onOpenTrainingRecords = vi.fn();
     renderHomeWithTR(onOpenTrainingRecords);
-    await user.click(screen.getByText("Genera tu primer Training Record"));
+    await user.click(screen.getByText("Genera el primero"));
     expect(onOpenTrainingRecords).toHaveBeenCalledTimes(1);
   });
 });

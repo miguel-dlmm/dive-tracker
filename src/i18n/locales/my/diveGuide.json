@@ -15,9 +15,11 @@
     "pageCounter": "{{current}} / {{total}}",
     "sectionsAria": "အပိုင်းပြောင်းရန်",
     "closeAria": "လမ်းညွှန်ကိုပိတ်ရန်",
+    "backToCoverAria": "မျက်နှာဖုံးသို့ ပြန်သွားရန်",
     "fullscreenEnterAria": "မျက်နှာပြင်အပြည့်",
     "fullscreenExitAria": "မျက်နှာပြင်အပြည့်မှထွက်ရန်",
     "jumpTo": "သွားရန်…",
+    "siteIndexHeading": "ရေငုပ်ဆိုက်တစ်ခုသို့ သွားရန်",
     "prevPageAria": "ယခင်စာမျက်နှာ",
     "nextPageAria": "နောက်စာမျက်နှာ"
   }

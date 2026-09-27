@@ -5,9 +5,15 @@
 // Uso:
 //   node --env-file=.env.local scripts/upload-dive-guide-assets.mjs --dir=/ruta/a/las/imagenes
 //
-// Sube todo lo que encuentre en --dir con el patrón page-NN.jpg bajo el
-// prefijo koh-tao/ del bucket. Pensado para ejecutarse una vez en TEST y,
-// cuando el "libro digital" se apruebe para producción, una vez más contra
+// Sube todo lo que encuentre en --dir con el patrón page-NN.webp bajo el
+// prefijo koh-tao/ del bucket. WebP en vez de JPEG (2026-09-27, pedido
+// explícito: "optimízalo a tope de ligero sin perder calidad") — mismo
+// render a 200dpi desde el PDF original, pero WebP calidad 82 pesa ~40%
+// menos que el JPEG equivalente a ojo desnudo (~330KB vs ~550KB de media
+// por página) sin pérdida perceptible, ni siquiera haciendo zoom a 4x
+// sobre mapas con texto pequeño — probado página a página antes de
+// regenerar las 55. Pensado para ejecutarse una vez en TEST y, cuando el
+// "libro digital" se apruebe para producción, una vez más contra
 // PROD_SUPABASE_URL/PROD_SUPABASE_SERVICE_ROLE_KEY.
 
 import { readdirSync, readFileSync } from "node:fs";
@@ -58,9 +64,9 @@ async function main() {
   const client = resolveClient(args);
   await ensureBucket(client);
 
-  const files = readdirSync(args.dir).filter((f) => /^page-\d+\.jpg$/.test(f)).sort();
+  const files = readdirSync(args.dir).filter((f) => /^page-\d+\.webp$/.test(f)).sort();
   if (files.length === 0) {
-    console.error(`No se encontró ningún page-NN.jpg en ${args.dir}`);
+    console.error(`No se encontró ningún page-NN.webp en ${args.dir}`);
     process.exit(1);
   }
 
@@ -69,7 +75,7 @@ async function main() {
   for (const file of files) {
     const body = readFileSync(join(args.dir, file));
     const { error } = await client.storage.from(BUCKET).upload(`${PREFIX}/${file}`, body, {
-      contentType: "image/jpeg",
+      contentType: "image/webp",
       upsert: true,
       cacheControl: "31536000",
     });
@@ -85,6 +91,18 @@ async function main() {
 
   const { data: pub } = client.storage.from(BUCKET).getPublicUrl(`${PREFIX}/${files[0]}`);
   console.log("Listo. Ejemplo de URL pública:", pub.publicUrl);
+
+  // Migración JPEG -> WebP (2026-09-27): borra del bucket cualquier
+  // page-NN.jpg que quedara de la subida anterior, para no dejar bytes
+  // muertos pagando almacenamiento sin que nada los referencie ya.
+  const { data: existing, error: listError } = await client.storage.from(BUCKET).list(PREFIX, { limit: 200 });
+  if (listError) throw listError;
+  const staleJpgs = existing.filter((f) => f.name.endsWith(".jpg")).map((f) => `${PREFIX}/${f.name}`);
+  if (staleJpgs.length > 0) {
+    console.log(`Borrando ${staleJpgs.length} .jpg antiguos...`);
+    const { error: removeError } = await client.storage.from(BUCKET).remove(staleJpgs);
+    if (removeError) throw removeError;
+  }
 }
 
 main().catch((err) => {

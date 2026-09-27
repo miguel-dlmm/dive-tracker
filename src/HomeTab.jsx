@@ -546,7 +546,10 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
                     </div>
                   </>
                 ) : (
-                  <div className="text-[11px] font-bold leading-tight" style={{ color: BRAND_OCEAN }}>{t("trainingRecordsCard.ctaFirstTime")}</div>
+                  <>
+                    <div className="truncate text-[11px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</div>
+                    <div className="truncate text-[10px] font-semibold" style={{ color: BRAND_OCEAN }}>{t("trainingRecordsCard.ctaFirstTime")}</div>
+                  </>
                 )}
               </span>
             </button>

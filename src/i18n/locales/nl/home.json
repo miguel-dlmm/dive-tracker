@@ -17,7 +17,7 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "ctaFirstTime": "Maak je eerste Training Record",
+    "ctaFirstTime": "Maak de eerste",
     "generatedLabel": "Gegenereerd"
   },
   "installApp": "App downloaden",
@@ -32,6 +32,6 @@
   },
   "diveGuideCard": {
     "title": "Duikgids",
-    "subtitle": "Koh Tao · voor de briefing"
+    "subtitle": "Koh Tao"
   }
 }

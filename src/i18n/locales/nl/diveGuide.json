@@ -15,9 +15,11 @@
     "pageCounter": "{{current}} van {{total}}",
     "sectionsAria": "Sectie wisselen",
     "closeAria": "Gids sluiten",
+    "backToCoverAria": "Terug naar de cover",
     "fullscreenEnterAria": "Volledig scherm",
     "fullscreenExitAria": "Volledig scherm sluiten",
     "jumpTo": "Ga naar…",
+    "siteIndexHeading": "Ga naar een duikplek",
     "prevPageAria": "Vorige pagina",
     "nextPageAria": "Volgende pagina"
   }

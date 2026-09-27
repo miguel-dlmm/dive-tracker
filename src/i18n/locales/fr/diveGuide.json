@@ -15,9 +15,11 @@
     "pageCounter": "{{current}} sur {{total}}",
     "sectionsAria": "Changer de section",
     "closeAria": "Fermer le guide",
+    "backToCoverAria": "Retour à la couverture",
     "fullscreenEnterAria": "Plein écran",
     "fullscreenExitAria": "Quitter le plein écran",
     "jumpTo": "Aller à…",
+    "siteIndexHeading": "Aller à un site de plongée",
     "prevPageAria": "Page précédente",
     "nextPageAria": "Page suivante"
   }

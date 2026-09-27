@@ -15,9 +15,11 @@
     "pageCounter": "{{current}} di {{total}}",
     "sectionsAria": "Cambia sezione",
     "closeAria": "Chiudi la guida",
+    "backToCoverAria": "Torna alla copertina",
     "fullscreenEnterAria": "Schermo intero",
     "fullscreenExitAria": "Esci da schermo intero",
     "jumpTo": "Vai a…",
+    "siteIndexHeading": "Vai a un punto di immersione",
     "prevPageAria": "Pagina precedente",
     "nextPageAria": "Pagina successiva"
   }

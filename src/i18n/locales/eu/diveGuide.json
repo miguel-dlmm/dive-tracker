@@ -15,9 +15,11 @@
     "pageCounter": "{{current}} / {{total}}",
     "sectionsAria": "Atala aldatu",
     "closeAria": "Gida itxi",
+    "backToCoverAria": "Itzuli azalera",
     "fullscreenEnterAria": "Pantaila osoa",
     "fullscreenExitAria": "Irten pantaila osotik",
     "jumpTo": "Joan hona…",
+    "siteIndexHeading": "Joan urpekaritza-gune batera",
     "prevPageAria": "Aurreko orria",
     "nextPageAria": "Hurrengo orria"
   }
