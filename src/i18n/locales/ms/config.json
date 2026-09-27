@@ -263,10 +263,12 @@
   "crud": {
     "nuevaEscuela": "Sekolah baharu",
     "editarEscuela": "Sunting sekolah",
+    "escuelaEnUsoRazon": "Mempunyai kadar atau urusan yang berkaitan. Padam atau nyahaktifkan dahulu sebelum memadam sekolah ini.",
     "nombreCampo": "Nama",
     "colorCampo": "Warna",
     "nuevoCurso": "Kursus baharu",
     "editarCurso": "Sunting kursus",
+    "cursoEnUsoRazon": "Mempunyai kadar atau urusan yang berkaitan. Padam atau nyahaktifkan dahulu sebelum memadam kelas ini.",
     "nuevoEstadoPago": "Status bayaran baharu",
     "editarEstadoPago": "Sunting status bayaran",
     "nuevaMoneda": "Mata wang baharu",

@@ -35,12 +35,30 @@ function renderRatesTab({ rates = rowsHook([]), commissionRates = emptyHook, act
   return { rates, commissionRates };
 }
 
+// Pedido explícito (2026-09-27): un botón de creación dentro de la propia
+// tabla (además del FAB) mientras el catálogo combinado (rates +
+// commissionRates) tenga 5 elementos o menos, incluido el catálogo vacío.
+describe("RatesTab — botón 'Crear' dentro de la tabla con pocas tarifas", () => {
+  it("con el catálogo vacío, muestra el botón dentro de la tabla además del FAB", () => {
+    renderRatesTab();
+
+    expect(screen.getAllByRole("button", { name: "Nueva tarifa" })).toHaveLength(2);
+  });
+
+  it("con más de 5 tarifas, solo queda el FAB", () => {
+    const rates = rowsHook(Array.from({ length: 6 }, (_, i) => ({ id: `r${i}`, school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 20, currency: "EUR", is_active: true, created_at: "2026-01-01T00:00:00Z" })));
+    renderRatesTab({ rates });
+
+    expect(screen.getAllByRole("button", { name: "Nueva tarifa" })).toHaveLength(1);
+  });
+});
+
 describe("RatesTab — alta de tarifa sin ningún selector de tipo de pago", () => {
   it("crea la tarifa con payment_type fijo 'Per Person', sin que el formulario lo pida", async () => {
     const user = userEvent.setup();
     const { rates } = renderRatesTab();
 
-    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
 
     // El filtro "Escuela"/"Curso" de la lista vive detrás de "Filtrar",
     // colapsado por defecto (ver filtersOpen) — con la hoja abierta y los
@@ -137,7 +155,7 @@ describe("RatesTab — lista combinada de Curso y Comisión", () => {
       activities: rowsHook([{ name: "Open Water" }]),
     });
 
-    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
     await user.click(screen.getByRole("tab", { name: /Comisión/ }));
     await user.click(screen.getByRole("button", { name: "Escuela" }));
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
@@ -206,7 +224,7 @@ describe("RatesTab — card de dos líneas (estilo Mi trabajo), sin 'per person'
   it("la subcabecera de Comisión, al crear, dice solo 'Lo que cobras por traer a un cliente.'", async () => {
     const user = userEvent.setup();
     renderRatesTab({});
-    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
     await user.click(screen.getByRole("tab", { name: /Comisión/ }));
     expect(screen.getByText("Lo que cobras por traer a un cliente.")).toBeInTheDocument();
   });
@@ -228,14 +246,14 @@ describe("RatesTab — moneda visible-no-editable en el formulario", () => {
   it("no existe ningún campo 'Moneda' en la hoja de creación", async () => {
     const user = userEvent.setup();
     renderRatesTab({});
-    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
     expect(screen.queryByText("Moneda")).not.toBeInTheDocument();
   });
 
   it("sin tarifas previas para la escuela, 'Tarifa' muestra la moneda por defecto de la app", async () => {
     const user = userEvent.setup();
     renderRatesTab({});
-    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
     await user.click(screen.getByRole("button", { name: "Escuela" }));
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
     expect(screen.getByRole("textbox", { name: "Tarifa · EUR" })).toBeInTheDocument();
@@ -246,7 +264,7 @@ describe("RatesTab — moneda visible-no-editable en el formulario", () => {
     renderRatesTab({
       rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "THB", rate: 1500 }]),
     });
-    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
     await user.click(screen.getByRole("button", { name: "Escuela" }));
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
     expect(screen.getByRole("textbox", { name: "Tarifa · THB" })).toBeInTheDocument();
@@ -264,7 +282,7 @@ describe("RatesTab — no permite dos tarifas activas para la misma escuela+curs
       rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: true }]),
     });
 
-    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
     await user.click(screen.getByRole("button", { name: "Escuela" }));
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
     await user.click(screen.getByRole("button", { name: "Curso" }));
@@ -282,7 +300,7 @@ describe("RatesTab — no permite dos tarifas activas para la misma escuela+curs
       rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: false }]),
     });
 
-    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
     await user.click(screen.getByRole("button", { name: "Escuela" }));
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
     await user.click(screen.getByRole("button", { name: "Curso" }));
@@ -315,7 +333,7 @@ describe("RatesTab — no permite dos tarifas activas para la misma escuela+curs
     rates.insertRow = vi.fn().mockRejectedValue({ code: "23505", message: "duplicate key value violates unique constraint \"rates_active_school_activity_unique\"" });
     renderRatesTab({ rates });
 
-    await user.click(screen.getByRole("button", { name: "Nueva tarifa" }));
+    await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
     await user.click(screen.getByRole("button", { name: "Escuela" }));
     await user.click(screen.getByRole("option", { name: "PADI Cozumel" }));
     await user.click(screen.getByRole("button", { name: "Curso" }));
