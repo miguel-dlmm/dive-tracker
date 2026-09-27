@@ -49,15 +49,6 @@ Registro de cambios relevantes de Ocean Flow.
   239,0 KB → 81,7 KB y 454,3 KB → 84,2 KB.
 
 ### Changed
-- **Botón +/- del importe de Ajuste de curso, más visible**: investigando
-  un bug reportado ("no sé qué pasa" al intentar meter un negativo) no
-  se encontró ningún fallo real — escribir "-" a mano y usar el botón
-  funcionan y persisten bien, tanto al crear como al editar. El carácter
-  suelto en gris se sustituye por una insignia de color (verde/coral,
-  mismos colores que ya usa el resto de la app para positivo/negativo)
-  con icono, para que se lea claramente como un control pulsable — sobre
-  todo en el teclado numérico de iOS, que es donde de verdad hace falta
-  (no tiene tecla de signo menos).
 - **Mi perfil: "Cerrar sesión" ahora tiene su propia sección con título
   ("Sesión")**: auditoría de usabilidad tras un reporte real ("me cuesta
   encontrar Cerrar sesión") — era el único bloque de toda la pantalla sin
@@ -71,6 +62,15 @@ Registro de cambios relevantes de Ocean Flow.
   carnet ya muestra ese dato (p. ej. "SSI Divemaster"), así que el control
   de edición y su resultado visible quedaban en dos secciones distintas de
   la pantalla.
+- **Botón +/- del importe de Ajuste de curso, más visible**: investigando
+  un bug reportado ("no sé qué pasa" al intentar meter un negativo) no
+  se encontró ningún fallo real — escribir "-" a mano y usar el botón
+  funcionan y persisten bien, tanto al crear como al editar. El carácter
+  suelto en gris se sustituye por una insignia de color (verde/coral,
+  mismos colores que ya usa el resto de la app para positivo/negativo)
+  con icono, para que se lea claramente como un control pulsable — sobre
+  todo en el teclado numérico de iOS, que es donde de verdad hace falta
+  (no tiene tecla de signo menos).
 
 ### Fixed
 - **Informe PDF: la cabecera de un día podía quedar sola al final de una

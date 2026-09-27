@@ -5,6 +5,7 @@
     "favoriteCurrency": "สกุลเงินโปรด",
     "language": "ภาษา",
     "security": "ความปลอดภัย",
+    "session": "เซสชัน",
     "privacy": "ความเป็นส่วนตัว"
   },
   "signOut": {
@@ -26,15 +27,12 @@
   "personalData": {
     "nameLine": "ชื่อ:",
     "nicknameLine": "ชื่อเล่น:",
-    "professionalLine": "ระดับวิชาชีพ:",
     "birthDateLine": "วันเกิด:",
     "countryLine": "ประเทศที่พำนัก:",
     "edit": "แก้ไข",
     "nameLabel": "ชื่อ",
     "lastNameLabel": "นามสกุล",
     "nicknameLabel": "ชื่อเล่น",
-    "professionalLabel": "ระดับวิชาชีพ",
-    "professionalPlaceholder": "ยังไม่ได้เลือก",
     "birthDateLabel": "วันเกิด",
     "countryLabel": "ประเทศที่พำนัก",
     "countryPlaceholder": "เลือกประเทศ",
@@ -50,6 +48,8 @@
   },
   "instructor": {
     "hint": "ใช้สำหรับกรอกข้อมูลใน Training Records ของคุณโดยอัตโนมัติ — บันทึกไว้ที่นี่เพียงครั้งเดียว ไม่ใช่ตามอุปกรณ์",
+    "professionalLabel": "ระดับวิชาชีพ",
+    "professionalPlaceholder": "ยังไม่ได้เลือก",
     "card": {
       "role": "ผู้สอน SSI",
       "roleWithLevel": "SSI {{level}}",

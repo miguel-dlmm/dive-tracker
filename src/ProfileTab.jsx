@@ -254,7 +254,6 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
   const [firstName, setFirstName] = useState(profile.first_name || "");
   const [lastName, setLastName] = useState(profile.last_name || "");
   const [nickname, setNickname] = useState(profile.nickname || "");
-  const [professionalLevel, setProfessionalLevel] = useState(profile.professional_level || "");
   const [birthDate, setBirthDate] = useState(profile.birth_date || "");
   const [countryOfResidence, setCountryOfResidence] = useState(profile.country_of_residence || "");
   const countryOptions = countryOptionsFor(i18n.language);
@@ -264,7 +263,6 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
     setFirstName(profile.first_name || "");
     setLastName(profile.last_name || "");
     setNickname(profile.nickname || "");
-    setProfessionalLevel(profile.professional_level || "");
     setBirthDate(profile.birth_date || "");
     setCountryOfResidence(profile.country_of_residence || "");
     setEditing(true);
@@ -275,7 +273,7 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
     setSaving(true);
     try {
       const patch = {
-        first_name: firstName.trim() || null, last_name: lastName.trim() || null, nickname: nickname.trim(), professional_level: professionalLevel || null,
+        first_name: firstName.trim() || null, last_name: lastName.trim() || null, nickname: nickname.trim(),
         birth_date: birthDate || null, country_of_residence: countryOfResidence || null,
       };
       // Iniciales de instructor autogeneradas desde nombre/apellidos al
@@ -306,7 +304,6 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
           <p><span className="text-gray-400">{t("personalData.nicknameLine")}</span> {profile.nickname}</p>
           <p><span className="text-gray-400">{t("personalData.birthDateLine")}</span> {profile.birth_date ? shortDate(profile.birth_date) : "—"}</p>
           <p><span className="text-gray-400">{t("personalData.countryLine")}</span> {profile.country_of_residence ? countryLabel(profile.country_of_residence) : "—"}</p>
-          <p><span className="text-gray-400">{t("personalData.professionalLine")}</span> {PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === profile.professional_level)?.label || "—"}</p>
         </div>
         <button onClick={startEdit} className="mt-3 flex min-h-11 items-center gap-1.5 text-sm font-medium" style={{ color: BRAND_NAVY }}>
           <Pencil size={14} aria-hidden="true" /> {t("personalData.edit")}
@@ -337,7 +334,12 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
             solo para mostrar en el perfil, ambos opcionales (confirmado
             con el usuario), sin validación ni uso en ningún otro flujo.
             Misma línea que nombre/apellidos (pedido explícito del usuario,
-            2026-09-07) y antes de Profesional, que pasa al final. */}
+            2026-09-07). El nivel profesional se edita junto al resto del
+            carnet en "Instructor" (2026-09-26, auditoría UX de Mi perfil):
+            antes vivía aquí, lejos de donde se ve su efecto real (el
+            propio carnet, que ya muestra roleText derivado de
+            professional_level) — un mismo dato con el control de edición y
+            su resultado visible en dos sitios distintos de la pantalla. */}
         <div className="grid grid-cols-2 gap-2">
           <Field label={t("personalData.birthDateLabel")}>
             {/* quickAccess desactivado (feedback 2026-09-07): "hoy/ayer/
@@ -364,14 +366,6 @@ function PersonalDataSection({ profile, onProfileUpdated }) {
             />
           </Field>
         </div>
-        <Field label={t("personalData.professionalLabel")}>
-          <Select
-            value={PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === professionalLevel)?.label || ""}
-            onChange={(label) => setProfessionalLevel(PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.label === label)?.code || "")}
-            options={PROFESSIONAL_LEVEL_OPTIONS.map((o) => o.label)}
-            placeholder={t("personalData.professionalPlaceholder")}
-          />
-        </Field>
       </div>
       <div className="mt-3">
         <EditActions onSave={save} onCancel={() => setEditing(false)} saveLabel={saving ? t("personalData.saving") : t("personalData.save")} />
@@ -560,11 +554,13 @@ export function InstructorCardEditable({ profile, onProfileUpdated }) {
   const [saving, setSaving] = useState(false);
   const [initials, setInitials] = useState(profile.instructor_initials || "");
   const [ssiProNumber, setSsiProNumber] = useState(profile.ssi_pro_number || "");
+  const [professionalLevel, setProfessionalLevel] = useState(profile.professional_level || "");
   const [signature, setSignature] = useState(profile.instructor_signature || null);
 
   const startEdit = () => {
     setInitials(profile.instructor_initials || "");
     setSsiProNumber(profile.ssi_pro_number || "");
+    setProfessionalLevel(profile.professional_level || "");
     setSignature(profile.instructor_signature || null);
     setEditing(true);
   };
@@ -572,7 +568,10 @@ export function InstructorCardEditable({ profile, onProfileUpdated }) {
   const save = async () => {
     setSaving(true);
     try {
-      const patch = { instructor_initials: initials.trim() || null, ssi_pro_number: ssiProNumber.trim() || null, instructor_signature: signature };
+      const patch = {
+        instructor_initials: initials.trim() || null, ssi_pro_number: ssiProNumber.trim() || null,
+        professional_level: professionalLevel || null, instructor_signature: signature,
+      };
       const { error } = await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
       if (error) throw error;
       onProfileUpdated?.(patch);
@@ -605,6 +604,21 @@ export function InstructorCardEditable({ profile, onProfileUpdated }) {
         </Field>
         <Field label={t("instructor.numberLabel")}>
           <input value={ssiProNumber} onChange={(e) => setSsiProNumber(e.target.value)} className={`${inputCls} w-full`} />
+        </Field>
+      </div>
+      {/* Nivel profesional (2026-09-26, auditoría UX de Mi perfil) —
+          trasladado desde "Datos personales": es el dato que alimenta
+          directamente roleText en el carnet de abajo (InstructorCard), así
+          que edita junto al resto de campos del carnet, no en una sección
+          distinta de la pantalla. */}
+      <div className="mt-2">
+        <Field label={t("instructor.professionalLabel")}>
+          <Select
+            value={PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.code === professionalLevel)?.label || ""}
+            onChange={(label) => setProfessionalLevel(PROFESSIONAL_LEVEL_OPTIONS.find((o) => o.label === label)?.code || "")}
+            options={PROFESSIONAL_LEVEL_OPTIONS.map((o) => o.label)}
+            placeholder={t("instructor.professionalPlaceholder")}
+          />
         </Field>
       </div>
       <div className="mt-2">
@@ -958,19 +972,29 @@ function PrivacySection({ profile, onAccountDeleted }) {
 // tarea infrecuente (como mucho una vez por sesión), justo el tipo de
 // acción que la investigación de UX recomienda sacar del nivel superior de
 // navegación en vez de competir por espacio con tareas frecuentes como
-// Ayuda/Configuración. Mismo patrón visual que "Eliminar mi cuenta" (botón
-// con borde, no una tarjeta llena) pero en gris neutro, no en rojo — no es
-// una acción destructiva, así que no debe leerse como una.
+// Ayuda/Configuración.
+//
+// Envuelto en SectionCard con título propio (2026-09-26, auditoría UX de
+// Mi perfil — feedback real: "me cuesta encontrar Cerrar sesión"): antes
+// era un botón suelto sin cabecera, la única pieza de toda la pantalla que
+// rompía el patrón "una SectionCard con título por bloque" que usa el
+// resto (Datos personales, Instructor, Moneda, Idioma, Seguridad...).
+// Alguien recorriendo la pantalla en busca de títulos de sección no tenía
+// ningún "Sesión" al que enganchar la vista — tenía que leer el texto de
+// cada botón suelto uno a uno. Mismo color gris neutro de antes: no es una
+// acción destructiva, no debe leerse como una.
 function SignOutSection({ onSignOut }) {
   const { t } = useTranslation("profile");
   if (!onSignOut) return null;
   return (
-    <button
-      onClick={onSignOut}
-      className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 text-sm font-medium text-gray-600"
-    >
-      <LogOut size={15} aria-hidden="true" /> {t("signOut.button")}
-    </button>
+    <SectionCard title={t("sections.session")}>
+      <button
+        onClick={onSignOut}
+        className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 text-sm font-medium text-gray-600"
+      >
+        <LogOut size={15} aria-hidden="true" /> {t("signOut.button")}
+      </button>
+    </SectionCard>
   );
 }
 

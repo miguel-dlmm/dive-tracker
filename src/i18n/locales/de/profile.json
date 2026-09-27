@@ -5,6 +5,7 @@
     "favoriteCurrency": "Bevorzugte Währung",
     "language": "Sprache",
     "security": "Sicherheit",
+    "session": "Sitzung",
     "privacy": "Datenschutz"
   },
   "signOut": {
@@ -26,15 +27,12 @@
   "personalData": {
     "nameLine": "Name:",
     "nicknameLine": "Nickname:",
-    "professionalLine": "Professionell:",
     "birthDateLine": "Geburtsdatum:",
     "countryLine": "Wohnsitzland:",
     "edit": "Bearbeiten",
     "nameLabel": "Vorname",
     "lastNameLabel": "Nachname",
     "nicknameLabel": "Nickname",
-    "professionalLabel": "Professionell",
-    "professionalPlaceholder": "Nicht gewählt",
     "birthDateLabel": "Geburtsdatum",
     "countryLabel": "Wohnsitzland",
     "countryPlaceholder": "Land wählen",
@@ -50,6 +48,8 @@
   },
   "instructor": {
     "hint": "Werden verwendet, um deine Training Records automatisch auszufüllen — sie werden hier einmalig gespeichert, nicht pro Gerät.",
+    "professionalLabel": "Professionell",
+    "professionalPlaceholder": "Nicht gewählt",
     "card": {
       "role": "SSI-Professional",
       "roleWithLevel": "SSI {{level}}",

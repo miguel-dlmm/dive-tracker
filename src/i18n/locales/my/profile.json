@@ -5,6 +5,7 @@
     "favoriteCurrency": "အနှစ်သက်ဆုံးငွေကြေး",
     "language": "ဘာသာစကား",
     "security": "လုံခြုံရေး",
+    "session": "စက်ရှင်",
     "privacy": "ကိုယ်ရေးကိုယ်တာ"
   },
   "signOut": {
@@ -26,15 +27,12 @@
   "personalData": {
     "nameLine": "အမည်:",
     "nicknameLine": "အမည်ခေါ်:",
-    "professionalLine": "အသက်မွေးဝမ်းကျောင်း:",
     "birthDateLine": "မွေးနေ့:",
     "countryLine": "နေထိုင်ရာနိုင်ငံ:",
     "edit": "ပြင်ဆင်ရန်",
     "nameLabel": "အမည်",
     "lastNameLabel": "မျိုးနွယ်အမည်",
     "nicknameLabel": "အမည်ခေါ်",
-    "professionalLabel": "အသက်မွေးဝမ်းကျောင်း",
-    "professionalPlaceholder": "မရွေးရသေးပါ",
     "birthDateLabel": "မွေးနေ့",
     "countryLabel": "နေထိုင်ရာနိုင်ငံ",
     "countryPlaceholder": "နိုင်ငံတစ်ခု ရွေးပါ",
@@ -50,6 +48,8 @@
   },
   "instructor": {
     "hint": "သင့် Training Records များကို အလိုအလျောက် ဖြည့်ရန် အသုံးပြုသည် — ဤနေရာတွင် တစ်ကြိမ်တည်းသိမ်းဆည်းသည်၊ ကိရိယာအလိုက် မဟုတ်ပါ။",
+    "professionalLabel": "အသက်မွေးဝမ်းကျောင်း",
+    "professionalPlaceholder": "မရွေးရသေးပါ",
     "card": {
       "role": "SSI ကျွမ်းကျင်သူ",
       "roleWithLevel": "SSI {{level}}",
