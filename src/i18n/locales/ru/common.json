@@ -69,15 +69,6 @@
   "multiSelect": { "placeholder": "Все", "clearSelection": "Очистить выбор", "selectedCount": "Выбрано: {{count}}" },
   "searchSelect": { "placeholder": "Поиск...", "ariaLabel": "Поиск", "noResults": "Ничего не найдено" },
   "currencySearchSelect": { "placeholder": "Найти валюту..." },
-  "listFilterBar": {
-    "from": "С",
-    "to": "По",
-    "school": "Школа",
-    "activity": "Активность",
-    "noLimit": "Без ограничения",
-    "all": "Все",
-    "clearFilters": "Сбросить фильтры"
-  },
   "rowMenu": { "moreActions": "Другие действия", "edit": "Редактировать", "delete": "Удалить" },
   "statusSwitch": { "ariaLabel": "Статус: {{value}}. Нажми, чтобы изменить на {{next}}", "title": "{{value}} — нажми, чтобы изменить на «{{next}}»" },
   "signature": {

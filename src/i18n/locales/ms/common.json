@@ -69,15 +69,6 @@
   "multiSelect": { "placeholder": "Semua", "clearSelection": "Kosongkan pilihan", "selectedCount": "{{count}} dipilih" },
   "searchSelect": { "placeholder": "Cari...", "ariaLabel": "Cari", "noResults": "Tiada hasil" },
   "currencySearchSelect": { "placeholder": "Cari mata wang..." },
-  "listFilterBar": {
-    "from": "Dari",
-    "to": "Hingga",
-    "school": "Sekolah",
-    "activity": "Aktiviti",
-    "noLimit": "Tiada had",
-    "all": "Semua",
-    "clearFilters": "Kosongkan penapis"
-  },
   "rowMenu": { "moreActions": "Tindakan lain", "edit": "Sunting", "delete": "Padam" },
   "statusSwitch": { "ariaLabel": "Status: {{value}}. Ketik untuk tukar kepada {{next}}", "title": "{{value}} — klik untuk tukar kepada \"{{next}}\"" },
   "signature": {

@@ -69,15 +69,6 @@
   "multiSelect": { "placeholder": "Tất cả", "clearSelection": "Bỏ chọn tất cả", "selectedCount": "Đã chọn {{count}}" },
   "searchSelect": { "placeholder": "Tìm kiếm...", "ariaLabel": "Tìm kiếm", "noResults": "Không có kết quả" },
   "currencySearchSelect": { "placeholder": "Tìm tiền tệ..." },
-  "listFilterBar": {
-    "from": "Từ",
-    "to": "Đến",
-    "school": "Trung tâm",
-    "activity": "Hoạt động",
-    "noLimit": "Không giới hạn",
-    "all": "Tất cả",
-    "clearFilters": "Xóa bộ lọc"
-  },
   "rowMenu": { "moreActions": "Thêm hành động", "edit": "Sửa", "delete": "Xóa" },
   "statusSwitch": { "ariaLabel": "Trạng thái: {{value}}. Nhấn để chuyển sang {{next}}", "title": "{{value}} — nhấn để chuyển sang \"{{next}}\"" },
   "signature": {

@@ -69,15 +69,6 @@
   "multiSelect": { "placeholder": "Todas", "clearSelection": "Limpar seleção", "selectedCount": "{{count}} selecionadas" },
   "searchSelect": { "placeholder": "Buscar...", "ariaLabel": "Buscar", "noResults": "Nenhum resultado" },
   "currencySearchSelect": { "placeholder": "Buscar moeda..." },
-  "listFilterBar": {
-    "from": "De",
-    "to": "Até",
-    "school": "Escola",
-    "activity": "Atividade",
-    "noLimit": "Sem limite",
-    "all": "Todas",
-    "clearFilters": "Limpar filtros"
-  },
   "rowMenu": { "moreActions": "Mais ações", "edit": "Editar", "delete": "Excluir" },
   "statusSwitch": { "ariaLabel": "Status: {{value}}. Toque para mudar para {{next}}", "title": "{{value}} — clique para mudar para \"{{next}}\"" },
   "signature": {
