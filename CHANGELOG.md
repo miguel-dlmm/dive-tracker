@@ -4,6 +4,16 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Fixed
+- **Traducciones que faltaban en la ficha de detalle de usuario (Config →
+  Usuarios) y en un artículo de la Ayuda**: la sección con avatar, fecha
+  de nacimiento, país, nivel profesional, firma y Training Records
+  generados llevaba sin traducir en 14 de los 15 idiomas desde que se
+  creó esa función — quien no tuviera la app en español veía esos campos
+  en blanco. Detectado por un test nuevo de paridad de claves i18n
+  (docs/INFORME-DEUDA-TECNICA-2026-09.md). El artículo "Generar un
+  Training Record" tampoco existía en francés.
+
 ## [1.5.1] - 2026-09-27
 
 ### Added
