@@ -1,24 +1,33 @@
 {
   "calendarCaption": "အသေးစိတ်ကြည့်ရန် နေ့ရက်ကို နှိပ်ပါ၊ သို့မဟုတ် လုပ်ဆောင်ချက်ထည့်ရန် အလွတ်နေ့တစ်ခုကို နှိပ်ပါ",
-  "activeSchoolThisMonth": "အသက်ဝင်ဆုံးကျောင်း",
-  "activeSchoolCount_one": "ဤလအတွင်း လုပ်ဆောင်ချက် {{count}} ခု",
-  "activeSchoolCount_other": "ဤလအတွင်း လုပ်ဆောင်ချက် {{count}} ခု",
-  "activeSchoolCountAndOthers_one": "ဤလအတွင်း လုပ်ဆောင်ချက် {{count}} ခု · ကျောင်း {{schools}} ခု",
-  "activeSchoolCountAndOthers_other": "ဤလအတွင်း လုပ်ဆောင်ချက် {{count}} ခု · ကျောင်း {{schools}} ခု",
+  "activeSchoolThisMonth": "ဤလ၏ ကျောင်း",
+  "activeSchoolCount_one": "သင်တန်း {{count}} ခု",
+  "activeSchoolCount_other": "သင်တန်း {{count}} ခု",
   "noActivityThisMonth": "ဤလအတွင်း လှုပ်ရှားမှုမရှိပါ",
   "kpis": {
-    "sectionTitle": "ဤလ သင့်ရလဒ်",
+    "sectionTitle": "သင့်ရလဒ် — {{month}}",
     "dailyAverageThisMonth": "နေ့စဉ်ပျမ်းမျှ",
     "dailyAverageTooltip": "ဒီလအတွက် ယနေ့အထိသာ တွက်ချက်ထားသော နေ့စဉ်ပျမ်းမျှ ဝင်ငွေ။",
     "dailyAverageTooltipShow": "အချက်အလက်: နေ့စဉ်ပျမ်းမျှ",
     "dailyAverageTooltipHide": "အချက်အလက် ဖျောက်ရန်: နေ့စဉ်ပျမ်းမျှ",
     "coursesTotal": "သင်တန်းများ",
-    "referredThisMonth": "ညွှန်းပို့ခဲ့သူများ"
+    "referredThisMonth": "ညွှန်းပို့ခဲ့သူများ",
+    "pendingTooltipShow": "အချက်အလက်: ကောက်ခံရန် ကျန်ရှိသည်",
+    "pendingTooltipHide": "အချက်အလက် ဖျောက်ရန်: ကောက်ခံရန် ကျန်ရှိသည်"
   },
   "trainingRecordsCard": {
     "title": "Training Records",
     "ctaFirstTime": "သင်၏ ပထမဆုံး Training Record ကို ဖန်တီးပါ",
     "generatedLabel": "ဖန်တီးပြီး"
   },
-  "installApp": "အက်ပ်ဒေါင်းလုဒ်လုပ်ရန်"
+  "installApp": "အက်ပ်ဒေါင်းလုဒ်လုပ်ရန်",
+  "pendingCard": {
+    "pendingLabel": "ကောက်ခံရန် ကျန်ရှိသည်",
+    "empty": "ဆိုင်းငံ့ထားစရာ မရှိပါ",
+    "count_one": "ငွေပေးချေမှု {{count}} ခု ဆိုင်းငံ့နေသည်",
+    "count_other": "ငွေပေးချေမှု {{count}} ခု ဆိုင်းငံ့နေသည်"
+  },
+  "quickCreate": {
+    "label": "မှတ်တမ်းအသစ်"
+  }
 }

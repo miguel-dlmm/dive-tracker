@@ -1,24 +1,33 @@
 {
   "calendarCaption": "แตะวันที่เพื่อดูรายละเอียด หรือแตะวันว่างเพื่อเพิ่มรายการ",
-  "activeSchoolThisMonth": "โรงเรียนที่มีกิจกรรมมากที่สุด",
-  "activeSchoolCount_one": "{{count}} รายการเดือนนี้",
-  "activeSchoolCount_other": "{{count}} รายการเดือนนี้",
-  "activeSchoolCountAndOthers_one": "{{count}} รายการ · {{schools}} โรงเรียนเดือนนี้",
-  "activeSchoolCountAndOthers_other": "{{count}} รายการ · {{schools}} โรงเรียนเดือนนี้",
+  "activeSchoolThisMonth": "โรงเรียนประจำเดือน",
+  "activeSchoolCount_one": "{{count}} คอร์ส",
+  "activeSchoolCount_other": "{{count}} คอร์ส",
   "noActivityThisMonth": "ไม่มีกิจกรรมเดือนนี้",
   "kpis": {
-    "sectionTitle": "ผลงานของคุณเดือนนี้",
+    "sectionTitle": "ผลงานของคุณเดือน{{month}}",
     "dailyAverageThisMonth": "เฉลี่ยต่อวัน",
     "dailyAverageTooltip": "รายได้เฉลี่ยต่อวันของเดือนนี้ นับถึงวันนี้เท่านั้น",
     "dailyAverageTooltipShow": "ข้อมูล: เฉลี่ยต่อวัน",
     "dailyAverageTooltipHide": "ซ่อนข้อมูล: เฉลี่ยต่อวัน",
     "coursesTotal": "คอร์สทั้งหมด",
-    "referredThisMonth": "ลูกค้าที่แนะนำ"
+    "referredThisMonth": "ลูกค้าที่แนะนำ",
+    "pendingTooltipShow": "ข้อมูล: รอเก็บเงิน",
+    "pendingTooltipHide": "ซ่อนข้อมูล: รอเก็บเงิน"
   },
   "trainingRecordsCard": {
     "title": "Training Records",
     "ctaFirstTime": "สร้าง Training Record แรกของคุณ",
     "generatedLabel": "สร้างแล้ว"
   },
-  "installApp": "ดาวน์โหลดแอป"
+  "installApp": "ดาวน์โหลดแอป",
+  "pendingCard": {
+    "pendingLabel": "รอเก็บเงิน",
+    "empty": "ไม่มีรายการค้าง",
+    "count_one": "{{count}} รายการรอเก็บเงิน",
+    "count_other": "{{count}} รายการรอเก็บเงิน"
+  },
+  "quickCreate": {
+    "label": "รายการใหม่"
+  }
 }

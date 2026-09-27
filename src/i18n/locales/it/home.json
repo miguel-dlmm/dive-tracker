@@ -1,24 +1,33 @@
 {
   "calendarCaption": "Tocca un giorno per vedere il dettaglio, o uno vuoto per aggiungere un movimento",
-  "activeSchoolThisMonth": "Scuola più attiva",
-  "activeSchoolCount_one": "{{count}} movimento questo mese",
-  "activeSchoolCount_other": "{{count}} movimenti questo mese",
-  "activeSchoolCountAndOthers_one": "{{count}} movimento · {{schools}} scuole questo mese",
-  "activeSchoolCountAndOthers_other": "{{count}} movimenti · {{schools}} scuole questo mese",
+  "activeSchoolThisMonth": "Scuola del mese",
+  "activeSchoolCount_one": "{{count}} corso",
+  "activeSchoolCount_other": "{{count}} corsi",
   "noActivityThisMonth": "Nessuna attività questo mese",
   "kpis": {
-    "sectionTitle": "Il tuo impatto questo mese",
+    "sectionTitle": "Il tuo impatto a {{month}}",
     "dailyAverageThisMonth": "Media giornaliera",
     "dailyAverageTooltip": "Quanto guadagni in media al giorno questo mese, contando solo fino a oggi.",
     "dailyAverageTooltipShow": "Info: Media giornaliera",
     "dailyAverageTooltipHide": "Nascondi info: Media giornaliera",
     "coursesTotal": "Corsi",
-    "referredThisMonth": "Portati"
+    "referredThisMonth": "Portati",
+    "pendingTooltipShow": "Info: Da incassare",
+    "pendingTooltipHide": "Nascondi info: Da incassare"
   },
   "trainingRecordsCard": {
     "title": "Training Records",
     "ctaFirstTime": "Genera il tuo primo Training Record",
     "generatedLabel": "Generati"
   },
-  "installApp": "Scarica l'app"
+  "installApp": "Scarica l'app",
+  "pendingCard": {
+    "pendingLabel": "Da incassare",
+    "empty": "Niente in sospeso",
+    "count_one": "{{count}} pagamento in sospeso",
+    "count_other": "{{count}} pagamenti in sospeso"
+  },
+  "quickCreate": {
+    "label": "Nuovo movimento"
+  }
 }

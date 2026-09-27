@@ -1,24 +1,33 @@
 {
   "calendarCaption": "Tippe auf einen Tag für Details, oder auf einen leeren Tag, um eine Buchung hinzuzufügen",
-  "activeSchoolThisMonth": "Aktivste Schule",
-  "activeSchoolCount_one": "{{count}} Buchung diesen Monat",
-  "activeSchoolCount_other": "{{count}} Buchungen diesen Monat",
-  "activeSchoolCountAndOthers_one": "{{count}} Buchung · {{schools}} Schulen diesen Monat",
-  "activeSchoolCountAndOthers_other": "{{count}} Buchungen · {{schools}} Schulen diesen Monat",
+  "activeSchoolThisMonth": "Schule des Monats",
+  "activeSchoolCount_one": "{{count}} Kurs",
+  "activeSchoolCount_other": "{{count}} Kurse",
   "noActivityThisMonth": "Keine Aktivität diesen Monat",
   "kpis": {
-    "sectionTitle": "Deine Bilanz diesen Monat",
+    "sectionTitle": "Deine Bilanz im {{month}}",
     "dailyAverageThisMonth": "Tagesdurchschnitt",
     "dailyAverageTooltip": "Was du diesen Monat im Schnitt pro Tag verdienst, gezählt nur bis heute.",
     "dailyAverageTooltipShow": "Info: Tagesdurchschnitt",
     "dailyAverageTooltipHide": "Info ausblenden: Tagesdurchschnitt",
     "coursesTotal": "Kurse",
-    "referredThisMonth": "Geworben"
+    "referredThisMonth": "Geworben",
+    "pendingTooltipShow": "Info: Ausstehend",
+    "pendingTooltipHide": "Info ausblenden: Ausstehend"
   },
   "trainingRecordsCard": {
     "title": "Training Records",
     "ctaFirstTime": "Erstelle deinen ersten Training Record",
     "generatedLabel": "Erstellt"
   },
-  "installApp": "App herunterladen"
+  "installApp": "App herunterladen",
+  "pendingCard": {
+    "pendingLabel": "Ausstehend",
+    "empty": "Nichts offen",
+    "count_one": "{{count}} ausstehende Zahlung",
+    "count_other": "{{count}} ausstehende Zahlungen"
+  },
+  "quickCreate": {
+    "label": "Neue Buchung"
+  }
 }

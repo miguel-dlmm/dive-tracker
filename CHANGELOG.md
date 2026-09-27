@@ -4,6 +4,32 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Portada rediseñada: bento de accesos entre KPIs y calendario**: la
+  fila de Training Records y la tarjeta de "Pendiente de cobrar" (antes
+  encima del calendario) y la tarjeta de "Escuela más activa" (antes
+  después) se compactan en un bento de dos filas — "Nuevo movimiento"
+  (antes un "+" incrustado dentro de la propia tarjeta de Pendiente) +
+  Media diaria arriba; Training Records + "Escuela del mes" (nombre
+  corto — pasó por "Escuela favorita este mes", pero ese texto se
+  cortaba en móvil; ahora con "N cursos" en vez de "N movimientos este
+  mes") abajo. Pendiente de cobrar sube al hueco principal de la fila de
+  KPIs (antes Media diaria) — la cifra financiera más accionable pasa a
+  ser lo primero que se ve, con su propio conteo ascendente y tooltip
+  con el número de pagos pendientes. Mismo presupuesto de alto que
+  antes — el calendario no cae más abajo. El título de la sección de
+  KPIs pasa de "Tu impacto este mes" a "Tu impacto en {mes actual}".
+  Training Records y Escuela del mes centran su icono respecto al
+  bloque título+subtítulo de cada tarjeta, y el texto de ambas líneas
+  dentro de ese bloque también queda centrado, no alineado a la
+  izquierda.
+- **Nuevo indicador de pestaña activa en el menú inferior**: sustituye
+  al óvalo fijo por una línea superior fina (centrada sobre el icono,
+  no todo el ancho de la pestaña) que se desliza entre pestañas
+  (animada con `motion/react`, patrón `layoutId` de shared layout) — el
+  icono activo pasa de tenue/apagado a encendido/oscuro, sin ningún
+  círculo ni halo de fondo.
+
 ### Performance
 - **PDF de Training Record hasta un 81% más ligero**: investigando el
   peso (hasta 454 KB en plantillas de varias páginas como OWD) se
@@ -23,6 +49,19 @@ Registro de cambios relevantes de Ocean Flow.
   239,0 KB → 81,7 KB y 454,3 KB → 84,2 KB.
 
 ### Changed
+- **Mi perfil: "Cerrar sesión" ahora tiene su propia sección con título
+  ("Sesión")**: auditoría de usabilidad tras un reporte real ("me cuesta
+  encontrar Cerrar sesión") — era el único bloque de toda la pantalla sin
+  cabecera ni tarjeta propia, la única pieza que rompía el patrón "una
+  SectionCard con título por bloque" que usa el resto (Datos personales,
+  Instructor, Moneda, Idioma, Seguridad...), así que no había ningún
+  título al que enganchar la vista al recorrer la pantalla en busca de él.
+- **Mi perfil: el nivel profesional (Divemaster/Instructor) se edita junto
+  al resto de datos del carnet, en "Datos de instructor"**: antes vivía en
+  "Datos personales", lejos de donde se ve su efecto real — el propio
+  carnet ya muestra ese dato (p. ej. "SSI Divemaster"), así que el control
+  de edición y su resultado visible quedaban en dos secciones distintas de
+  la pantalla.
 - **Botón +/- del importe de Ajuste de curso, más visible**: investigando
   un bug reportado ("no sé qué pasa" al intentar meter un negativo) no
   se encontró ningún fallo real — escribir "-" a mano y usar el botón

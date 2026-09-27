@@ -10,13 +10,6 @@
     "comision": "Comissão",
     "companeros": "Ajuste"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "Pendente de receber",
-    "empty": "Nada pendente",
-    "count_one": "{{count}} pagamento pendente",
-    "count_other": "{{count}} pagamentos pendentes",
-    "addMovement": "Adicionar movimento"
-  },
   "confirmDialog": { "cancel": "Cancelar", "defaultConfirmLabel": "Excluir" },
   "editActions": { "defaultSaveLabel": "Salvar", "cancel": "Cancelar" },
   "deleteButton": {

@@ -525,7 +525,6 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             activities={activities} currencies={currencies} paymentStatuses={paymentStatuses}
             onQuickCreate={startHomeCreate}
             onEditEntry={startHomeEdit}
-            onOpenPending={() => changeTab("trabajo")}
             onOpenSummary={() => changeTab("summary")}
             onOpenTrainingRecords={() => changeTab("training-records")}
             onOpenInstallApp={() => changeTab("install-app")}
@@ -583,7 +582,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
       </AnimatePresence>
       </main>
 
-      {/* Barra inferior — 5 destinos de uso diario.
+      {/* Barra inferior — 3 destinos de uso diario.
           translateZ(0) fuerza una capa de composición propia en iOS Safari:
           evita el parpadeo/"desaparece un instante" que puede darse en
           elementos fixed cuando la barra de direcciones se oculta al hacer
@@ -603,22 +602,39 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
                 key={tabItem.id}
                 onClick={() => changeTab(tabItem.id)}
                 aria-current={active ? "page" : undefined}
-                className="flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-2 transition-colors"
+                className="relative flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-2 transition-colors"
                 style={{ color: active ? c : "#9CA3AF" }}
               >
-                {/* Indicador de pestaña activa (rediseño 2026-09-06,
-                    docs/DESIGN-SYSTEM.md §7.1) — píldora de fondo tras el
-                    icono+etiqueta activos, patrón del Navigation Bar de
-                    Material 3. Fondo siempre sky-tintado (BRAND_SKY),
-                    independiente del color de sección: es un "estás aquí"
-                    genérico, no una repintada del acento de la sección. */}
-                <span
-                  className="flex flex-col items-center gap-0.5 rounded-full px-3 py-1 transition-colors"
-                  style={{ backgroundColor: active ? `${BRAND_SKY}26` : "transparent" }}
-                >
-                  <Icon size={19} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-                  <span className="text-[10.5px] font-medium">{t(`tabs.${tabItem.id}`)}</span>
-                </span>
+                {/* Sin halo ni fondo circular (rediseño 2026-09-26,
+                    segunda vuelta — pedido explícito tras ver el primer
+                    resultado: "no quiero nada de halo, quiero que los
+                    iconos estén tenues y cuando haga click se pongan más
+                    oscuros y le sale la línea encima"): el propio icono
+                    pasa de tenue/apagado (gris, inactivo) a
+                    encendido/oscuro (color de sección, activo) — la
+                    línea de arriba es la única marca extra.
+                    `layoutId` compartido (rediseño de la línea, misma
+                    fecha): un único elemento con este id vive dentro del
+                    botón activo en cada momento — al cambiar de pestaña,
+                    Motion anima la transición de posición/ancho entre el
+                    botón viejo y el nuevo automáticamente (FLIP), sin
+                    medir nada a mano. El intento anterior (un solo
+                    elemento posicionado con x/width vía refs) tenía un
+                    bug real: la animación `x`/`width` del `animate` no
+                    llegaba a aplicarse (verificado en el DOM:
+                    `transform: none`, `width: 0`) — `layoutId` es el
+                    patrón documentado de Motion para justo este caso
+                    (indicador de tabs) y no depende de medir nada. */}
+                {active && (
+                  <motion.span
+                    layoutId="nav-active-line"
+                    className="pointer-events-none absolute left-[42%] right-[42%] top-0 h-[3px] rounded-b-full"
+                    style={{ backgroundColor: BRAND_SKY }}
+                    transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                )}
+                <Icon size={19} strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
+                <span className="text-[10.5px] font-medium">{t(`tabs.${tabItem.id}`)}</span>
               </button>
             );
           })}

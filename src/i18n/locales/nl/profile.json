@@ -5,6 +5,7 @@
     "favoriteCurrency": "Favoriete munteenheid",
     "language": "Taal",
     "security": "Beveiliging",
+    "session": "Sessie",
     "privacy": "Privacy"
   },
   "signOut": {
@@ -26,15 +27,12 @@
   "personalData": {
     "nameLine": "Naam:",
     "nicknameLine": "Nickname:",
-    "professionalLine": "Beroep:",
     "birthDateLine": "Geboortedatum:",
     "countryLine": "Land van verblijf:",
     "edit": "Bewerken",
     "nameLabel": "Naam",
     "lastNameLabel": "Achternaam",
     "nicknameLabel": "Nickname",
-    "professionalLabel": "Beroep",
-    "professionalPlaceholder": "Niet gekozen",
     "birthDateLabel": "Geboortedatum",
     "countryLabel": "Land van verblijf",
     "countryPlaceholder": "Kies een land",
@@ -50,6 +48,8 @@
   },
   "instructor": {
     "hint": "Wordt gebruikt om je Training Records automatisch in te vullen — dit wordt hier eenmalig opgeslagen, niet per apparaat.",
+    "professionalLabel": "Beroep",
+    "professionalPlaceholder": "Niet gekozen",
     "card": {
       "role": "SSI-professional",
       "roleWithLevel": "SSI {{level}}",

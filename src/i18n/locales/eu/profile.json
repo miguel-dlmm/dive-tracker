@@ -5,6 +5,7 @@
     "favoriteCurrency": "Dibisa gogokoena",
     "language": "Hizkuntza",
     "security": "Segurtasuna",
+    "session": "Saioa",
     "privacy": "Pribatutasuna"
   },
   "signOut": {
@@ -26,15 +27,12 @@
   "personalData": {
     "nameLine": "Izena:",
     "nicknameLine": "Ezizena:",
-    "professionalLine": "Profesionala:",
     "birthDateLine": "Jaiotze-data:",
     "countryLine": "Bizileku herrialdea:",
     "edit": "Editatu",
     "nameLabel": "Izena",
     "lastNameLabel": "Abizenak",
     "nicknameLabel": "Ezizena",
-    "professionalLabel": "Profesionala",
-    "professionalPlaceholder": "Aukeratu gabe",
     "birthDateLabel": "Jaiotze-data",
     "countryLabel": "Bizileku herrialdea",
     "countryPlaceholder": "Aukeratu herrialde bat",
@@ -50,6 +48,8 @@
   },
   "instructor": {
     "hint": "Zure Training Recordak automatikoki betetzeko erabiltzen dira — hemen behin bakarrik gordetzen dira, ez gailuka.",
+    "professionalLabel": "Profesionala",
+    "professionalPlaceholder": "Aukeratu gabe",
     "card": {
       "role": "SSI profesionala",
       "roleWithLevel": "SSI {{level}}",

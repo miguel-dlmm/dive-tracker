@@ -10,13 +10,6 @@
     "comision": "Commission",
     "companeros": "Adjustment"
   },
-  "pendingCollectionCard": {
-    "pendingLabel": "Pending to collect",
-    "empty": "Nothing pending",
-    "count_one": "{{count}} pending payment",
-    "count_other": "{{count}} pending payments",
-    "addMovement": "Add entry"
-  },
   "confirmDialog": { "cancel": "Cancel", "defaultConfirmLabel": "Delete" },
   "editActions": { "defaultSaveLabel": "Save", "cancel": "Cancel" },
   "deleteButton": {
