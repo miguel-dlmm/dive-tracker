@@ -1,5 +1,18 @@
 # Informe de oportunidades de refactorización — Ocean Flow (2026-09)
 
+> **Estado (2026-09-27): los 4 puntos accionables ya están implementados.**
+> #1 (`callAdminApi`) y #2 (`getDefaultCurrency`/`getDefaultOf`) se
+> hicieron en su disparador natural ("ya existe hoy"), rama
+> `refactor/informe-2026-09`. #3 (descomponer `UsersDirectory`) y #5
+> (`entriesArgsFromTables`) se adelantaron por petición explícita del
+> usuario antes de que llegara el disparador que este informe
+> recomendaba esperar (ver punto 3 más abajo), rama
+> `refactor/informe-2026-09-fase2` — ambas ya fusionadas en `develop`.
+> #4 (`AuthGate`) se resolvió aparte, junto con la implementación del
+> tour de bienvenida (rama `feat/onboarding-tour`). Este documento se
+> conserva tal cual como registro del análisis original; los cambios
+> reales quedan en el código y en los mensajes de commit de esas ramas.
+
 > Auditoría de solo lectura, sin cambios de código, sobre arquitectura y
 > diseño de código. No repite los hallazgos ya cubiertos en
 > `docs/INFORME-DEUDA-TECNICA-2026-09.md` (tamaño de ficheros a alto nivel,
@@ -310,7 +323,7 @@ motivo.
 
 ## Priorización final
 
-1. **Extraer `callAdminApi(endpoint, body)` para las 10 llamadas
+1. **✅ Hecho (2026-09-27, `refactor/informe-2026-09`).** Extraer `callAdminApi(endpoint, body)` para las 10 llamadas
    autenticadas a `/api/*` repetidas en `ConfigTab.jsx`/`ProfileTab.jsx`
    (sección 1.1).** Prioridad más alta del informe: es duplicación real
    ya hoy (10 sitios, no una proyección), toca código sensible
@@ -319,16 +332,17 @@ motivo.
    sin cambiar comportamiento observable, `actionErrorMessage` ya sienta
    el precedente de centralizar la mitad de este mismo patrón). Coste:
    bajo. Disparador: ya existe hoy.
-2. **Añadir `getDefaultCurrency(currencies)` (y, si compensa, un
+2. **✅ Hecho (2026-09-27, `refactor/informe-2026-09`).** Añadir `getDefaultCurrency(currencies)` (y, si compensa, un
    equivalente genérico para `paymentStatuses`/`schools`/`activities`) en
    `shared.jsx`, junto a `getFavoriteCurrency`/`setFavoriteCurrency`, y
    sustituir las 6 copias del one-liner `is_default` (sección 1.2).**
    Prioridad alta: coste trivial, resuelve además la inconsistencia real
    ya presente (`"EUR"` vs `""` de fallback según el sitio) antes de que
    llegue a importar. Coste: bajo. Disparador: ya existe hoy.
-3. **Cuando llegue el disparador ya identificado por el informe de deuda
-   técnica para mover la administración de usuarios a su propio módulo,
-   descomponer también `UsersDirectory` en ese momento** — separar la
+3. **✅ Hecho (2026-09-27, `refactor/informe-2026-09-fase2`) — adelantado
+   por petición explícita del usuario, sin esperar al disparador que
+   este mismo punto describía a continuación.** Descomponer
+   `UsersDirectory` — separar la
    carga del listado, las dos cargas bajo demanda, y las 5
    mini-máquinas de confirmación (apoyándose en el `callAdminApi` del
    punto 1) en piezas independientes en vez de trasladar el bloque de
@@ -339,19 +353,23 @@ motivo.
    extracción; alto si se hace por separado. Disparador: el mismo que ya
    señaló el informe de deuda técnica — el próximo cambio real en
    administración de usuarios — todavía no ha llegado.
-4. **Vigilar `AuthGate` (`App.jsx`) como riesgo latente, sin actuar
-   todavía.** Es un if-chain real con dos precedentes de bug documentados
+4. **✅ Hecho (2026-09-27, `feat/onboarding-tour`) — resuelto junto con la
+   implementación del tour de bienvenida, a petición explícita del
+   usuario ("resuelve el punto 4"), sin esperar al disparador descrito
+   originalmente aquí abajo.** Es un if-chain real con dos precedentes de bug documentados
    en el propio código, pero hoy está razonablemente cubierto por tests
    de integración. Extraer `resolveAuthScreen(state)` como función pura
    testable en tabla sería la vía natural si aparece una pantalla o
    condición de autenticación nueva (p. ej. MFA) — no antes. Coste:
    medio. Disparador: no existe todavía.
-5. **(Muy baja, informativo) Unificar el empaquetado de argumentos de
-   `buildActivityEntries`/`buildIncomeEntries`** repetido 4 veces entre
-   `MiTrabajoTab.jsx`, `HomeTab.jsx` y `MovementSheet.jsx` (sección 4) —
-   solo si se toca alguno de esos ficheros por otro motivo; el beneficio
-   aislado no compensa el coste de otra abstracción. Coste: bajo.
-   Disparador: no existe (duplicación de forma, no de lógica).
+5. **✅ Hecho (2026-09-27, `refactor/informe-2026-09-fase2`) — adelantado
+   por petición explícita del usuario, sin disparador real (el propio
+   punto lo marcaba como "no existe").** (Muy baja, informativo)
+   Unificar el empaquetado de argumentos de
+   `buildActivityEntries`/`buildIncomeEntries`, repetido en la práctica
+   en 6 sitios (no 4: también en `SummaryTab.jsx`, no detectado en el
+   análisis original) entre `MiTrabajoTab.jsx`, `HomeTab.jsx`,
+   `MovementSheet.jsx` y `SummaryTab.jsx` (sección 4). Coste: bajo.
 
 ---
 
