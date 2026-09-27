@@ -2,10 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { X, ArrowLeft, Maximize2, Minimize2, MapPin, Fish, Info, ChevronLeft, ChevronRight, Layers, Search } from "lucide-react";
-import { BRAND_NAVY, BRAND_OCEAN, NAVY, GREEN, CORAL } from "./App";
+import {
+  X, ArrowLeft, Expand, Shrink, MapPin, Fish, Info, ChevronLeft, ChevronRight,
+  LayoutGrid, Search, Moon, Sun, BookOpen,
+} from "lucide-react";
+import { BRAND_NAVY, BRAND_OCEAN, BRAND_SKY, NAVY, GREEN, CORAL, BG } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
-import { carouselSlideVariants, usePrefersReducedMotion, useSwipeHorizontal } from "./motion";
+import { DURATION, EASE, carouselSlideVariants, usePrefersReducedMotion, useSwipeHorizontal } from "./motion";
 
 // Guía de Buceo (Koh Tao) — "libro digital" pensado para que el instructor
 // se lo enseñe al cliente durante el briefing (pedido explícito
@@ -93,6 +96,23 @@ const SITE_INDEX = [
   { name: "3 Rocks", page: 5 },
 ].sort((a, b) => a.name.localeCompare(b.name));
 
+// Modo oscuro del VISOR (solo el lector de páginas, no la portada — la
+// portada mantiene siempre su degradado de marca, es una pantalla de
+// "título", no de lectura). Pedido explícito 2026-09-27: "ofrecer por
+// supuesto en el visor tener modo oscuro". Persistido en localStorage
+// (mismo patrón que otras preferencias sueltas de la app, p.ej. la moneda
+// favorita, ADR-0007) — una preferencia de ESTE dispositivo/navegador, no
+// de la cuenta, así que no necesita ir a Supabase. DARK_BG es un azul casi
+// negro de marca, no negro puro — "toda la experiencia tiene que sentirse
+// dentro de la app", y un negro neutro rompería esa continuidad con el
+// resto de la identidad visual (BRAND_NAVY/BRAND_OCEAN).
+const DIVE_GUIDE_DARK_KEY = "oceanflow:diveGuideDark";
+const DARK_BG = "#0A1B2E";
+
+function readStoredDarkMode() {
+  try { return localStorage.getItem(DIVE_GUIDE_DARK_KEY) === "true"; } catch { return false; }
+}
+
 // Mismo Supabase por entorno que el resto de la app (VITE_SUPABASE_URL) —
 // así TEST y producción sirven cada uno su propio bucket sin tocar código
 // cuando el libro se suba también a producción (scripts/
@@ -128,6 +148,7 @@ export default function DiveGuideTab({ onClose }) {
   const [isZoomed, setIsZoomed] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [dark, setDark] = useState(readStoredDarkMode);
   const rootRef = useRef(null);
 
   useEscapeClose(true, onClose);
@@ -215,6 +236,14 @@ export default function DiveGuideTab({ onClose }) {
     else safeRequestFullscreen(rootRef.current);
   };
 
+  const toggleDark = () => {
+    setDark((v) => {
+      const next = !v;
+      try { localStorage.setItem(DIVE_GUIDE_DARK_KEY, String(next)); } catch { /* no-op */ }
+      return next;
+    });
+  };
+
   const handleClose = () => {
     if (document.fullscreenElement) safeExitFullscreen();
     onClose();
@@ -231,10 +260,15 @@ export default function DiveGuideTab({ onClose }) {
   };
 
   return (
-    <div ref={rootRef} className="fixed inset-0 z-50 flex flex-col bg-black" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+    <div
+      ref={rootRef}
+      className="fixed inset-0 z-50 flex flex-col"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)", backgroundColor: screen === "reader" ? (dark ? DARK_BG : BG) : BRAND_NAVY }}
+    >
       {screen === "cover" ? (
         <CoverScreen
           t={t}
+          reduced={reduced}
           onStart={startFromBeginning}
           onOpenSection={openSection}
           onSelectSitePage={jumpToPage}
@@ -244,12 +278,14 @@ export default function DiveGuideTab({ onClose }) {
         <>
           <ReaderTopBar
             t={t}
+            dark={dark}
             section={currentSection}
             current={current}
             onClose={backToCover}
             onOpenSections={() => setSheetOpen(true)}
             isFullscreen={isFullscreen}
             onToggleFullscreen={toggleFullscreen}
+            onToggleDark={toggleDark}
           />
           {/* touch-none (no touch-pan-y, a diferencia del carrusel de
               SlideDeck/motion.js): aquí no hace falta scroll vertical
@@ -296,31 +332,35 @@ export default function DiveGuideTab({ onClose }) {
             </AnimatePresence>
 
             {!isZoomed && pageIdx > 0 && (
-              <button
+              <motion.button
                 type="button"
                 onClick={goPrev}
+                whileTap={reduced ? undefined : { scale: 0.85 }}
                 aria-label={t("viewer.prevPageAria")}
-                className="absolute left-1 top-1/2 -mt-[22px] flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-white"
+                className="absolute left-2 top-1/2 -mt-[22px] flex h-11 w-11 items-center justify-center rounded-full shadow-lg"
+                style={{ backgroundColor: dark ? "rgba(255,255,255,0.14)" : "#fff", color: dark ? "#fff" : BRAND_NAVY }}
               >
                 <ChevronLeft size={22} aria-hidden="true" />
-              </button>
+              </motion.button>
             )}
             {!isZoomed && pageIdx < PAGES.length - 1 && (
-              <button
+              <motion.button
                 type="button"
                 onClick={goNext}
+                whileTap={reduced ? undefined : { scale: 0.85 }}
                 aria-label={t("viewer.nextPageAria")}
-                className="absolute right-1 top-1/2 -mt-[22px] flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-white"
+                className="absolute right-2 top-1/2 -mt-[22px] flex h-11 w-11 items-center justify-center rounded-full shadow-lg"
+                style={{ backgroundColor: dark ? "rgba(255,255,255,0.14)" : "#fff", color: dark ? "#fff" : BRAND_NAVY }}
               >
                 <ChevronRight size={22} aria-hidden="true" />
-              </button>
+              </motion.button>
             )}
           </div>
 
-          <div className="h-1 w-full bg-white/10">
+          <div className="h-1 w-full" style={{ backgroundColor: dark ? "rgba(255,255,255,0.12)" : "#E5E7EB" }}>
             <div
-              className="h-full bg-white/70 transition-all duration-200"
-              style={{ width: `${((pageIdx + 1) / PAGES.length) * 100}%` }}
+              className="h-full transition-all duration-200"
+              style={{ width: `${((pageIdx + 1) / PAGES.length) * 100}%`, backgroundColor: dark ? BRAND_SKY : BRAND_OCEAN }}
             />
           </div>
         </>
@@ -333,127 +373,216 @@ export default function DiveGuideTab({ onClose }) {
   );
 }
 
-function CoverScreen({ t, onStart, onOpenSection, onSelectSitePage, onClose }) {
+// Entrada escalonada de la portada (pedido explícito 2026-09-27: "dale un
+// aspecto más guay a la portada... anima cosas guay") — mismo vocabulario
+// de movimiento que el resto de la app (DURATION/EASE de motion.js,
+// idéntico patrón de delay por índice que ya usan MoneyKpiTile/MiniKpiTile
+// en HomeTab.jsx), no una animación inventada aparte solo para esto.
+function fadeUpVariant(reduced, index) {
+  return {
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.06 } },
+  };
+}
+
+// Burbujas decorativas de fondo — pura ambientación temática ("somos una
+// marca completa", pedido explícito de innovar en la portada sin
+// sobrecargar los controles): grandes, muy tenues, y SIN interactuar con
+// nada (pointer-events-none, aria-hidden) — el movimiento vive solo aquí,
+// nunca en un botón o tarjeta real, para que la portada se sienta viva sin
+// que ningún control parezca "temblar" o distraiga de tocarlo. Se
+// desactiva con prefers-reduced-motion (queda como decoración estática).
+function FloatingBubbles({ reduced }) {
+  const bubbles = [
+    { size: 90, left: "8%", top: "6%", duration: 9, delay: 0 },
+    { size: 50, left: "78%", top: "14%", duration: 7, delay: 0.6 },
+    { size: 130, left: "62%", top: "58%", duration: 11, delay: 1.1 },
+    { size: 40, left: "18%", top: "72%", duration: 8, delay: 0.3 },
+  ];
   return (
-    <div
-      className="flex h-full flex-col overflow-y-auto px-6 pb-10 text-center"
-      style={{
-        paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)",
-        background: `linear-gradient(165deg, ${BRAND_NAVY} 0%, ${BRAND_OCEAN} 100%)`,
-      }}
-    >
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label={t("viewer.closeAria")}
-        className="-mr-2 mb-2 flex h-11 w-11 shrink-0 items-center justify-center self-end rounded-full text-white/80"
-      >
-        <X size={20} aria-hidden="true" />
-      </button>
-
-      <div className="flex flex-1 flex-col items-center justify-center gap-5">
-        <img src="/brand/logo-mark-white.svg" width={40} height={40} alt="" aria-hidden="true" className="opacity-90" />
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white">{t("cover.title")}</h1>
-          <p className="mt-1 text-sm font-medium text-white/70">{t("cover.subtitle")}</p>
-        </div>
-        <p className="max-w-xs text-[13px] leading-relaxed text-white/80">{t("cover.tagline")}</p>
-
-        <div className="mt-2 flex w-full max-w-xs flex-col gap-2">
-          {/* "Puntos de buceo" lleva el buscador de sites EMBEBIDO dentro
-              de su propia tarjeta (pedido explícito 2026-09-27: "quiero
-              que el buscador... esté dentro de la pastilla de puntos de
-              buceo en la home del libro digital"), no detrás de un enlace
-              aparte que abriera una hoja — de ahí que ya no sea un único
-              <button>: la fila superior (icono+nombre) sigue abriendo la
-              sección desde el principio, y debajo va el buscador con
-              scroll propio de 2-3 filas. Vida marina/Info extra siguen
-              siendo tarjetas simples, sin buscador — solo Puntos de buceo
-              tiene 37 nombres que buscar. */}
-          <div className="overflow-hidden rounded-xl bg-white/10 backdrop-blur-sm">
-            <button
-              type="button"
-              onClick={() => onOpenSection("sites")}
-              className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left active:bg-white/5"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${SECTION_DEFS[0].color}33` }}>
-                <MapPin size={17} style={{ color: "#fff" }} aria-hidden="true" />
-              </span>
-              <span className="min-w-0">
-                <div className="truncate text-sm font-bold text-white">{t("sections.sites.label")}</div>
-                <div className="truncate text-[11px] text-white/60">{t("sections.sites.hint")}</div>
-              </span>
-            </button>
-            <div className="border-t border-white/10 px-3 pb-3 pt-2">
-              <SiteSearch t={t} onSelectPage={onSelectSitePage} variant="dark" />
-            </div>
-          </div>
-
-          {SECTION_DEFS.slice(1).map((section) => (
-            <button
-              key={section.key}
-              type="button"
-              onClick={() => onOpenSection(section.key)}
-              className="flex min-h-14 items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-left backdrop-blur-sm active:scale-[0.98]"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${section.color}33` }}>
-                <section.Icon size={17} style={{ color: "#fff" }} aria-hidden="true" />
-              </span>
-              <span className="min-w-0">
-                <div className="truncate text-sm font-bold text-white">{t(`sections.${section.key}.label`)}</div>
-                <div className="truncate text-[11px] text-white/60">{t(`sections.${section.key}.hint`)}</div>
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={onStart}
-          className="mt-2 min-h-11 w-full max-w-xs rounded-xl bg-white px-4 py-3 text-sm font-bold"
-          style={{ color: BRAND_NAVY }}
-        >
-          {t("cover.start")}
-        </button>
-      </div>
-
-      <p className="mt-4 text-[10px] leading-relaxed text-white/40">{t("cover.credit")}</p>
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      {bubbles.map((b, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full"
+          style={{ width: b.size, height: b.size, left: b.left, top: b.top, backgroundColor: "rgba(255,255,255,0.05)" }}
+          animate={reduced ? undefined : { y: [0, -18, 0] }}
+          transition={reduced ? undefined : { duration: b.duration, delay: b.delay, repeat: Infinity, ease: "easeInOut" }}
+        />
+      ))}
     </div>
   );
 }
 
-function ReaderTopBar({ t, section, current, onClose, onOpenSections, isFullscreen, onToggleFullscreen }) {
+function CoverScreen({ t, reduced, onStart, onOpenSection, onSelectSitePage, onClose }) {
+  const smallSections = SECTION_DEFS.slice(1); // Vida marina, Información extra
   return (
     <div
-      className="z-10 flex items-center justify-between gap-2 px-3 py-2"
-      style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.5rem)", background: "linear-gradient(to bottom, rgba(0,0,0,0.55), transparent)" }}
+      className="relative flex h-full flex-col overflow-y-auto px-5 pb-4 text-center"
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top) + 0.6rem)",
+        background: `linear-gradient(165deg, ${BRAND_NAVY} 0%, ${BRAND_OCEAN} 100%)`,
+      }}
     >
-      <button type="button" onClick={onClose} aria-label={t("viewer.backToCoverAria")} className="flex h-11 w-11 items-center justify-center text-white">
-        <ArrowLeft size={20} aria-hidden="true" />
+      <FloatingBubbles reduced={reduced} />
+
+      {/* self-start + -ml-2 (2026-09-27, pedido explícito: "el libro
+          digital se cierra con la X en el lado contrario que el resto de
+          páginas, estandariza eso") — la cabecera global de la app y el
+          propio lector (ReaderTopBar, la flecha "‹") ponen SIEMPRE el
+          control de cierre/atrás a la izquierda; esta portada era la
+          única excepción, con la X a la derecha (self-end). */}
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label={t("viewer.closeAria")}
+        className="relative -ml-2 mb-1 flex h-11 w-11 shrink-0 items-center justify-center self-start rounded-full text-white/80"
+      >
+        <X size={20} aria-hidden="true" />
       </button>
 
-      <button
+      <div className="relative flex flex-1 flex-col items-center justify-center gap-3">
+        <motion.img
+          {...fadeUpVariant(reduced, 0)}
+          src="/brand/logo-mark-white.svg"
+          width={30}
+          height={30}
+          alt=""
+          aria-hidden="true"
+          className="opacity-90"
+        />
+        <motion.div {...fadeUpVariant(reduced, 1)}>
+          <h1 className="text-xl font-extrabold tracking-tight text-white">{t("cover.title")}</h1>
+          <p className="mt-0.5 text-sm font-medium text-white/70">{t("cover.subtitle")}</p>
+          {/* El tagline sigue existiendo para quien usa lector de pantalla
+              (contexto real de qué es esto) pero deja de ocupar sitio en
+              pantalla — la información ya está, más compacta, en las
+              propias tarjetas de sección de abajo (pedido explícito:
+              "sube todo el contenido un poco más arriba... quitamos el
+              scroll vertical siempre que quepa"). */}
+          <p className="sr-only">{t("cover.tagline")}</p>
+        </motion.div>
+
+        <motion.div {...fadeUpVariant(reduced, 2)} className="grid w-full max-w-xs grid-cols-2 gap-2">
+          {smallSections.map((section) => (
+            <button
+              key={section.key}
+              type="button"
+              onClick={() => onOpenSection(section.key)}
+              className="flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-xl bg-white/10 px-2 py-2.5 text-center active:scale-[0.97]"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${section.color}40` }}>
+                <section.Icon size={16} style={{ color: "#fff" }} aria-hidden="true" />
+              </span>
+              <span className="min-w-0">
+                <div className="truncate text-[12.5px] font-bold text-white">{t(`sections.${section.key}.label`)}</div>
+                <div className="truncate text-[10px] text-white/60">{t(`sections.${section.key}.hint`)}</div>
+              </span>
+            </button>
+          ))}
+        </motion.div>
+
+        {/* "Puntos de buceo" lleva el buscador de sites EMBEBIDO dentro de
+            su propia tarjeta (pedido explícito 2026-09-27: "quiero que el
+            buscador... esté dentro de la pastilla de puntos de buceo en la
+            home del libro digital"), no detrás de un enlace aparte que
+            abriera una hoja. maxResultsHeight más bajo que en la hoja del
+            lector (2 filas en vez de ~2,5) — aquí compite por sitio con el
+            resto de la portada; en el lector tiene toda la pantalla para
+            él. */}
+        <motion.div {...fadeUpVariant(reduced, 3)} className="w-full max-w-xs overflow-hidden rounded-xl bg-white/10">
+          <button
+            type="button"
+            onClick={() => onOpenSection("sites")}
+            className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left active:bg-white/5"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${SECTION_DEFS[0].color}40` }}>
+              <MapPin size={17} style={{ color: "#fff" }} aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <div className="truncate text-sm font-bold text-white">{t("sections.sites.label")}</div>
+              <div className="truncate text-[11px] text-white/60">{t("sections.sites.hint")}</div>
+            </span>
+          </button>
+          <div className="border-t border-white/10 px-3 pb-3 pt-2">
+            <SiteSearch t={t} onSelectPage={onSelectSitePage} variant="dark" maxResultsHeight={100} />
+          </div>
+        </motion.div>
+
+        <motion.button
+          {...fadeUpVariant(reduced, 4)}
+          whileTap={reduced ? undefined : { scale: 0.97 }}
+          type="button"
+          onClick={onStart}
+          className="mt-1 flex min-h-11 w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold"
+          style={{ color: BRAND_NAVY }}
+        >
+          <BookOpen size={16} aria-hidden="true" />
+          {t("cover.start")}
+        </motion.button>
+      </div>
+
+      <p className="relative mt-2 text-[9.5px] leading-relaxed text-white/40">{t("cover.credit")}</p>
+    </div>
+  );
+}
+
+function ReaderTopBar({ t, dark, section, current, onClose, onOpenSections, isFullscreen, onToggleFullscreen, onToggleDark }) {
+  const iconColor = dark ? "#fff" : BRAND_NAVY;
+  return (
+    <div
+      className="z-10 flex items-center justify-between gap-1 border-b px-2 py-2"
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top) + 0.5rem)",
+        backgroundColor: dark ? DARK_BG : "#fff",
+        borderColor: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+      }}
+    >
+      <motion.button
+        type="button"
+        onClick={onClose}
+        whileTap={{ scale: 0.85 }}
+        aria-label={t("viewer.backToCoverAria")}
+        className="flex h-11 w-11 shrink-0 items-center justify-center"
+      >
+        <ArrowLeft size={20} style={{ color: iconColor }} aria-hidden="true" />
+      </motion.button>
+
+      <motion.button
         type="button"
         onClick={onOpenSections}
+        whileTap={{ scale: 0.96 }}
         aria-label={t("viewer.sectionsAria")}
-        className="flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full bg-black/35 px-3 py-1.5 text-white"
+        className="flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-1.5"
+        style={{ backgroundColor: dark ? "rgba(255,255,255,0.1)" : "#F3F4F6" }}
       >
-        <section.Icon size={13} aria-hidden="true" />
-        <span className="truncate text-[12px] font-semibold">{t(`sections.${section.key}.label`)}</span>
-        <span className="shrink-0 text-[11px] text-white/60 tabular-nums">
+        <section.Icon size={13} style={{ color: iconColor }} aria-hidden="true" />
+        <span className="truncate text-[12px] font-semibold" style={{ color: iconColor }}>{t(`sections.${section.key}.label`)}</span>
+        <span className="shrink-0 text-[11px] tabular-nums" style={{ color: dark ? "rgba(255,255,255,0.55)" : "#9CA3AF" }}>
           · {t("viewer.pageCounter", { current: current.indexInSection + 1, total: current.totalInSection })}
         </span>
-        <Layers size={12} className="shrink-0 text-white/60" aria-hidden="true" />
-      </button>
+        <LayoutGrid size={12} className="shrink-0" style={{ color: dark ? "rgba(255,255,255,0.55)" : "#9CA3AF" }} aria-hidden="true" />
+      </motion.button>
 
-      <button
+      <motion.button
+        type="button"
+        onClick={onToggleDark}
+        whileTap={{ scale: 0.85 }}
+        aria-label={dark ? t("viewer.lightModeAria") : t("viewer.darkModeAria")}
+        className="flex h-11 w-11 shrink-0 items-center justify-center"
+      >
+        {dark ? <Sun size={18} style={{ color: iconColor }} aria-hidden="true" /> : <Moon size={18} style={{ color: iconColor }} aria-hidden="true" />}
+      </motion.button>
+
+      <motion.button
         type="button"
         onClick={onToggleFullscreen}
+        whileTap={{ scale: 0.85 }}
         aria-label={isFullscreen ? t("viewer.fullscreenExitAria") : t("viewer.fullscreenEnterAria")}
-        className="flex h-11 w-11 items-center justify-center text-white"
+        className="flex h-11 w-11 shrink-0 items-center justify-center"
       >
-        {isFullscreen ? <Minimize2 size={18} aria-hidden="true" /> : <Maximize2 size={18} aria-hidden="true" />}
-      </button>
+        {isFullscreen ? <Shrink size={18} style={{ color: iconColor }} aria-hidden="true" /> : <Expand size={18} style={{ color: iconColor }} aria-hidden="true" />}
+      </motion.button>
     </div>
   );
 }
@@ -463,13 +592,12 @@ function ReaderTopBar({ t, section, current, onClose, onOpenSections, isFullscre
 // dos-tres filas... q se vayan filtrando los resultados conforme
 // escribas". Un solo componente, dos sitios donde vive: embebido dentro
 // de la propia tarjeta "Puntos de buceo" de la portada (variant="dark",
-// sobre el degradado navy) y dentro de la hoja de secciones del lector
-// (variant="light", sobre blanco) — mismo comportamiento de filtrado en
-// vivo en los dos, solo cambian los colores. Solo la rejilla de
-// resultados tiene scroll propio, con una altura fija de ~2,5 filas (no
-// el buscador ni el resto de lo que lo rodea), para no obligar a
-// desplazar todo lo demás solo por ver más nombres.
-function SiteSearch({ t, onSelectPage, variant = "light" }) {
+// sobre el degradado navy, maxResultsHeight más bajo por sitio limitado) y
+// dentro de la hoja de secciones del lector (variant="light", sobre
+// blanco, con más aire disponible) — mismo comportamiento de filtrado en
+// vivo en los dos. Solo la rejilla de resultados tiene scroll propio, no
+// el buscador ni el resto de lo que lo rodea.
+function SiteSearch({ t, onSelectPage, variant = "light", maxResultsHeight = 148 }) {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
   const filteredSites = normalizedQuery
@@ -499,7 +627,7 @@ function SiteSearch({ t, onSelectPage, variant = "light" }) {
           style={dark ? undefined : { color: BRAND_NAVY }}
         />
       </div>
-      <div className="mt-2 overflow-y-auto" style={{ maxHeight: 148 }}>
+      <div className="mt-2 overflow-y-auto" style={{ maxHeight: maxResultsHeight }}>
         {filteredSites.length === 0 ? (
           <p className={`py-4 text-center text-[12.5px] ${dark ? "text-white/50" : "text-gray-400"}`}>{t("viewer.siteIndexEmpty")}</p>
         ) : (

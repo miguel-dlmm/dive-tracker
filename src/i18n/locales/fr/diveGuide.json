@@ -18,6 +18,8 @@
     "backToCoverAria": "Retour à la couverture",
     "fullscreenEnterAria": "Plein écran",
     "fullscreenExitAria": "Quitter le plein écran",
+    "darkModeAria": "Mode sombre",
+    "lightModeAria": "Mode clair",
     "jumpTo": "Aller à…",
     "siteIndexHeading": "Aller à un site de plongée",
     "siteIndexEmpty": "Aucun résultat",

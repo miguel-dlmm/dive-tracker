@@ -18,6 +18,8 @@
     "backToCoverAria": "Torna alla copertina",
     "fullscreenEnterAria": "Schermo intero",
     "fullscreenExitAria": "Esci da schermo intero",
+    "darkModeAria": "Modalità scura",
+    "lightModeAria": "Modalità chiara",
     "jumpTo": "Vai a…",
     "siteIndexHeading": "Vai a un punto di immersione",
     "siteIndexEmpty": "Nessun risultato",

@@ -18,6 +18,8 @@
     "backToCoverAria": "กลับไปหน้าปก",
     "fullscreenEnterAria": "เต็มจอ",
     "fullscreenExitAria": "ออกจากเต็มจอ",
+    "darkModeAria": "โหมดมืด",
+    "lightModeAria": "โหมดสว่าง",
     "jumpTo": "ไปที่…",
     "siteIndexHeading": "ไปที่จุดดำน้ำ",
     "siteIndexEmpty": "ไม่พบผลลัพธ์",

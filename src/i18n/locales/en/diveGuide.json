@@ -18,6 +18,8 @@
     "backToCoverAria": "Back to cover",
     "fullscreenEnterAria": "Full screen",
     "fullscreenExitAria": "Exit full screen",
+    "darkModeAria": "Dark mode",
+    "lightModeAria": "Light mode",
     "jumpTo": "Jump to…",
     "siteIndexHeading": "Jump to a dive site",
     "siteIndexEmpty": "No results",

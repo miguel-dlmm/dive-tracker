@@ -64,7 +64,7 @@ function money(expected) {
   };
 }
 
-function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rates = [], commissionRates = [], currencies = [{ code: "EUR", symbol: "€", is_default: true }], onEditEntry } = {}) {
+function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rates = [], commissionRates = [], currencies = [{ code: "EUR", symbol: "€", is_default: true }], onEditEntry, onOpenSummary } = {}) {
   render(
     <HomeTab
       worklog={rowsHook(worklog)}
@@ -79,6 +79,7 @@ function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rat
       paymentStatuses={PAYMENT_STATUSES}
       onQuickCreate={vi.fn()}
       onEditEntry={onEditEntry}
+      onOpenSummary={onOpenSummary}
     />
   );
   return {
@@ -235,10 +236,11 @@ describe("HomeTab — acceso rápido 'Nuevo movimiento'", () => {
 // nombre ya visible en la cabecera de Mi trabajo. La tile aporta
 // información de menor "peso" (qué escuela ha dado más cursos este mes,
 // no una cifra de dinero) pero conserva el mismo rol de puente táctil a
-// Resumen.
-describe("HomeTab — 'Escuela del mes' como puente hacia Resumen", () => {
-  it("pulsar la tarjeta llama a onOpenSummary", async () => {
-    const onOpenSummary = vi.fn();
+// Mi Trabajo (2026-09-27, pedido explícito: "enlaza la pastilla escuela
+// del mes a Mi Trabajo" — antes iba a Resumen).
+describe("HomeTab — 'Escuela del mes' como puente hacia Mi Trabajo", () => {
+  it("pulsar la tarjeta llama a onOpenTrabajo", async () => {
+    const onOpenTrabajo = vi.fn();
     render(
       <HomeTab
         worklog={rowsHook([{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }])}
@@ -252,12 +254,12 @@ describe("HomeTab — 'Escuela del mes' como puente hacia Resumen", () => {
         navSections={rowsHook([])}
         paymentStatuses={PAYMENT_STATUSES}
         onQuickCreate={vi.fn()}
-        onOpenSummary={onOpenSummary}
+        onOpenTrabajo={onOpenTrabajo}
       />
     );
 
     await userEvent.click(screen.getByTestId("active-school-this-month-card"));
-    expect(onOpenSummary).toHaveBeenCalledTimes(1);
+    expect(onOpenTrabajo).toHaveBeenCalledTimes(1);
   });
 
   it("muestra el nombre de la única escuela con movimientos este mes, en singular, junto a la etiqueta 'Escuela del mes'", () => {
@@ -539,6 +541,31 @@ describe("HomeTab — KPIs (media diaria, cursos, captados, todos del mes actual
     // margen real. Mismo mecanismo que los 3 tests de "Pendiente de
     // cobrar" más arriba en este archivo.
   }, 15000);
+});
+
+// "Media diaria" como puente hacia Resumen (2026-09-27, pedido explícito:
+// "enlaza la pastilla media diaria a Resumen, mantén por encima el click
+// del tooltip de esta pastilla").
+describe("HomeTab — 'Media diaria' como puente hacia Resumen", () => {
+  it("pulsar la tarjeta llama a onOpenSummary", async () => {
+    const onOpenSummary = vi.fn();
+    renderHome({ onOpenSummary });
+    // El testid "daily-average-card" vive en el <div> contenedor del grid
+    // (col-span-2), un nivel POR ENCIMA del propio <motion.div> clicable
+    // de MoneyKpiTile — un click ahí no llega al onClick real (los
+    // eventos burbujean hacia arriba, nunca hacia abajo). Se pulsa el
+    // texto de la propia tarjeta en su lugar.
+    await userEvent.click(screen.getByText("Media diaria"));
+    expect(onOpenSummary).toHaveBeenCalledTimes(1);
+  });
+
+  it("pulsar el '?' del tooltip abre el tooltip sin navegar a Resumen", async () => {
+    const onOpenSummary = vi.fn();
+    renderHome({ onOpenSummary });
+    await userEvent.click(screen.getByRole("button", { name: "Info: Media diaria" }));
+    expect(await screen.findByText(/Lo que ganas de media al día/)).toBeInTheDocument();
+    expect(onOpenSummary).not.toHaveBeenCalled();
+  });
 });
 
 // "Instalar la app" (2026-09-08, tercera vuelta): el banner descartable

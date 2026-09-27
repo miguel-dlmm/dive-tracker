@@ -18,6 +18,8 @@
     "backToCoverAria": "Itzuli azalera",
     "fullscreenEnterAria": "Pantaila osoa",
     "fullscreenExitAria": "Irten pantaila osotik",
+    "darkModeAria": "Modu iluna",
+    "lightModeAria": "Modu argia",
     "jumpTo": "Joan hona…",
     "siteIndexHeading": "Joan urpekaritza-gune batera",
     "siteIndexEmpty": "Emaitzarik ez",

@@ -103,16 +103,35 @@ function useTranslatedMovementTypeMeta(t) {
 // otro), a mayor escala; `justify-center` en la fila centra el conjunto
 // icono+texto dentro de la tarjeta ya ancha (2/3 del grid), en vez de
 // dejarlo anclado al borde izquierdo con un hueco vacío a la derecha.
-function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel }) {
+function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel, onClick }) {
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const entries = Object.entries(totals || {});
   const single = entries.length === 1 ? entries[0] : null;
   const animatedCents = useCountUp(single ? Math.round(single[1] * 100) : 0, { reduced });
+  // onClick opcional (pedido explícito 2026-09-27: "enlaza la pastilla
+  // media diaria a Resumen, mantén por encima el click del tooltip") —
+  // "Pendiente de cobrar" (KPI de arriba) sigue sin pasarlo, se queda
+  // como antes. No es un <button> envolvente (el "?" del tooltip YA es
+  // un <button> real — anidar <button> dentro de <button> es HTML
+  // inválido, bug de hidratación real ya detectado antes, ver el
+  // comentario junto a "Pendiente de cobrar" más abajo): es la propia
+  // tarjeta la que se vuelve clicable, con role="button" + teclado para
+  // no perder accesibilidad. stopPropagation en el "?" para que abrir el
+  // tooltip nunca dispare también la navegación de la tarjeta.
+  const clickableProps = onClick
+    ? {
+        role: "button",
+        tabIndex: 0,
+        onClick,
+        onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } },
+      }
+    : {};
   return (
     <motion.div
+      {...clickableProps}
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex h-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3"
+      className={`flex h-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3 ${onClick ? "cursor-pointer" : ""}`}
     >
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
         <Icon size={18} style={{ color }} aria-hidden="true" />
@@ -139,7 +158,7 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
               <button
                 ref={anchorRef}
                 type="button"
-                onClick={() => setOpen((v) => !v)}
+                onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
                 aria-expanded={open}
                 aria-label={open ? tooltipHideLabel : tooltipShowLabel}
                 className="absolute -inset-[15px] flex items-center justify-center text-gray-400"
@@ -152,7 +171,12 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
       </span>
       {tooltip && (
         <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} className="w-48 max-w-[75vw] px-2.5 py-1.5">
-          <span className="block text-[11px] font-normal italic normal-case text-gray-500">{tooltip}</span>
+          {/* stopPropagation: aunque FloatingPanel se porta a document.body
+              (createPortal), los eventos sintéticos de React siguen
+              burbujeando por el árbol de componentes, no por el DOM físico
+              — sin esto, tocar el propio tooltip para leerlo navegaría
+              también a Resumen en cuanto la tarjeta se hizo clicable. */}
+          <span onClick={(e) => e.stopPropagation()} className="block text-[11px] font-normal italic normal-case text-gray-500">{tooltip}</span>
         </FloatingPanel>
       )}
     </motion.div>
@@ -212,7 +236,7 @@ function MiniKpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, onOpenDiveGuide, userId }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenSummary, onOpenTrabajo, onOpenTrainingRecords, onOpenInstallApp, onOpenDiveGuide, userId }) {
   const { t } = useTranslation("home");
   // Oculta el punto de entrada de "Instalar la app" si la propia app ya
   // corre instalada (display-mode: standalone en Chromium/Android,
@@ -480,15 +504,19 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
               (botón "?" que abre/cierra un panel, no un texto siempre
               visible — pedido explícito: "deja el tooltip de media
               diaria como tooltip") y la animación de conteo ascendente,
-              sin duplicar nada. Sin `onClick` propio: "Media diaria" no
-              tiene una pantalla a la que navegar, igual que Cursos/
-              Captados en la fila de arriba. */}
+              sin duplicar nada. `onClick={onOpenSummary}` (2026-09-27,
+              pedido explícito: "enlaza la pastilla media diaria a
+              Resumen, mantén por encima el click del tooltip") — a
+              diferencia de "Pendiente de cobrar" arriba, esta SÍ tiene
+              una pantalla natural a la que ir. MoneyKpiTile hace el
+              tooltip inmune a este click nuevo (stopPropagation en el
+              "?" y en el panel), ver su propio comentario. */}
           <div data-testid="daily-average-card" className="col-span-2">
             <MoneyKpiTile
               icon={CalendarDays} color={TEAL} totals={dailyAverageTotals} currencyRows={currencies.rows}
               label={t("kpis.dailyAverageThisMonth")} tooltip={t("kpis.dailyAverageTooltip")}
               tooltipShowLabel={t("kpis.dailyAverageTooltipShow")} tooltipHideLabel={t("kpis.dailyAverageTooltipHide")}
-              index={0} reduced={reducedMotion}
+              index={0} reduced={reducedMotion} onClick={onOpenSummary}
             />
           </div>
           <button
@@ -548,9 +576,13 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
               </span>
             </button>
           )}
+          {/* onOpenTrabajo, no onOpenSummary (2026-09-27, pedido explícito:
+              "enlaza la pastilla escuela del mes a Mi Trabajo") — antes
+              llevaba a Resumen; "Mi trabajo" es donde de verdad se ven y
+              filtran los movimientos de esa escuela concreta. */}
           <button
             type="button"
-            onClick={onOpenSummary}
+            onClick={onOpenTrabajo}
             data-testid="active-school-this-month-card"
             className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white text-center"
           >

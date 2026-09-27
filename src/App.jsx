@@ -570,6 +570,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             onQuickCreate={startHomeCreate}
             onEditEntry={startHomeEdit}
             onOpenSummary={() => changeTab("summary")}
+            onOpenTrabajo={() => changeTab("trabajo")}
             onOpenTrainingRecords={() => changeTab("training-records")}
             onOpenInstallApp={() => changeTab("install-app")}
             onOpenDiveGuide={() => changeTab("dive-guide")}

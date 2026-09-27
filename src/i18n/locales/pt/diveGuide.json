@@ -18,6 +18,8 @@
     "backToCoverAria": "Voltar à capa",
     "fullscreenEnterAria": "Ecrã inteiro",
     "fullscreenExitAria": "Sair do ecrã inteiro",
+    "darkModeAria": "Modo escuro",
+    "lightModeAria": "Modo claro",
     "jumpTo": "Ir para…",
     "siteIndexHeading": "Ir para um ponto de mergulho",
     "siteIndexEmpty": "Sem resultados",

@@ -18,6 +18,8 @@
     "backToCoverAria": "Назад к обложке",
     "fullscreenEnterAria": "Полный экран",
     "fullscreenExitAria": "Выйти из полноэкранного режима",
+    "darkModeAria": "Тёмный режим",
+    "lightModeAria": "Светлый режим",
     "jumpTo": "Перейти к…",
     "siteIndexHeading": "Перейти к месту погружения",
     "siteIndexEmpty": "Ничего не найдено",

@@ -18,6 +18,8 @@
     "backToCoverAria": "Terug naar de cover",
     "fullscreenEnterAria": "Volledig scherm",
     "fullscreenExitAria": "Volledig scherm sluiten",
+    "darkModeAria": "Donkere modus",
+    "lightModeAria": "Lichte modus",
     "jumpTo": "Ga naar…",
     "siteIndexHeading": "Ga naar een duikplek",
     "siteIndexEmpty": "Geen resultaten",

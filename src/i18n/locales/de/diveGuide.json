@@ -18,6 +18,8 @@
     "backToCoverAria": "Zurück zum Cover",
     "fullscreenEnterAria": "Vollbild",
     "fullscreenExitAria": "Vollbild beenden",
+    "darkModeAria": "Dunkler Modus",
+    "lightModeAria": "Heller Modus",
     "jumpTo": "Springe zu…",
     "siteIndexHeading": "Zu einem Tauchplatz springen",
     "siteIndexEmpty": "Keine Treffer",
