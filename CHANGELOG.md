@@ -4,6 +4,14 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Tour de bienvenida para cuentas nuevas**: cualquier cuenta nueva (alta
+  normal o por enlace de invitación) ve un tour de 6 diapositivas la
+  primera vez que entra a la app, una sola vez en la vida de la cuenta
+  (Home, Mi trabajo, Resumen, Training Records, Ayuda y cómo empezar).
+  Sustituye a "Qué hay de nuevo" solo en ese primer acceso, para no
+  mostrar dos avisos de golpe.
+
 ### Fixed
 - **Traducciones que faltaban en la ficha de detalle de usuario (Config →
   Usuarios) y en un artículo de la Ayuda**: la sección con avatar, fecha
