@@ -310,11 +310,10 @@ describe("AuthGate", () => {
   // 2026-09-27, pedido explícito: cualquier cuenta nueva (alta normal o
   // por enlace de invitación) ve un tour de bienvenida de 6 diapositivas
   // una sola vez en la vida de la cuenta — profiles.onboarding_tour_seen_at
-  // (no localStorage, a diferencia de WhatsNew) es lo que decide. Sin
-  // ese campo fijado (como cualquier cuenta recién activada), AuthGate
-  // muestra OnboardingTour ANTES de montar AppShell, no WhatsNew — ver
-  // el mecanismo "cuenta nueva" que antes describía este mismo test
-  // (2026-09-07), sustituido por este.
+  // es lo que decide. Sin ese campo fijado (como cualquier cuenta recién
+  // activada), AuthGate muestra OnboardingTour ANTES de montar AppShell,
+  // no WhatsNew — ver el mecanismo "cuenta nueva" que antes describía
+  // este mismo test (2026-09-07), sustituido por este.
   it("una cuenta sin onboarding_tour_seen_at ve el tour de bienvenida, no 'Qué hay de nuevo'", async () => {
     sessionStorage.clear();
     mockUseSession({
@@ -336,12 +335,14 @@ describe("AuthGate", () => {
 
     await user.click(within(dialog).getByRole("button", { name: "Cerrar" }));
 
-    // Al cerrar: se marca la cuenta como "ya visto" en Supabase (no
-    // localStorage) y se marca también la versión actual de WhatsNew
-    // como vista para esta cuenta, para no encadenar un segundo aviso.
+    // Al cerrar: se marca la cuenta como "ya visto" en Supabase, y de
+    // paso también la versión actual de WhatsNew como vista para esta
+    // cuenta (mismo UPDATE), para no encadenar un segundo aviso.
     await waitFor(() => expect(supabase.from).toHaveBeenCalledWith("profiles"));
-    expect(updateSpy).toHaveBeenCalledWith(expect.objectContaining({ onboarding_tour_seen_at: expect.any(String) }));
-    expect(localStorage.getItem("oceanpulse:whatsNewSeen:brand-new-user")).toBe(APP_VERSION);
+    expect(updateSpy).toHaveBeenCalledWith(expect.objectContaining({
+      onboarding_tour_seen_at: expect.any(String),
+      whats_new_seen_version: APP_VERSION,
+    }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByText(`Tu impacto en ${CURRENT_MONTH_NAME}`)).toBeInTheDocument();
   });
