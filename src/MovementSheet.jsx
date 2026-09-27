@@ -5,7 +5,7 @@ import { Plus, Minus, X, Check, Loader2, StickyNote } from "lucide-react";
 import { TEAL, CORAL, GREEN, BRAND_NAVY, BRAND_GOLD } from "./App";
 import {
   inputCls, formatMoney, Field, Select, MoneyInput,
-  DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency, MOVEMENT_TYPE_META,
+  DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency, getDefaultOf, getDefaultCurrency, MOVEMENT_TYPE_META,
 } from "./shared";
 import { DURATION, sheetVariants, usePrefersReducedMotion } from "./motion";
 import { computeRateTotal, buildActivityEntries, isRateActive } from "./rateCalc";
@@ -72,11 +72,10 @@ export default function MovementSheet({
 }) {
   const { t } = useTranslation("trabajo");
   const toast = useToast();
-  const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
-  const defaultStatus = paymentStatuses.rows.find((s) => s.is_default)?.name || paymentStatuses.rows[0]?.name || "Pending";
-  const defaultSchool = schools.rows.find((s) => s.is_default)?.name || "";
-  const defaultActivity = activities.rows.find((a) => a.is_default)?.name || "";
-  const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
+  const defaultCurrency = getDefaultCurrency(currencies.rows);
+  const defaultStatus = getDefaultOf(paymentStatuses.rows) || "Pending";
+  const defaultSchool = getDefaultOf(schools.rows);
+  const defaultActivity = getDefaultOf(activities.rows);
 
   // 2026-08-30: la moneda deja de elegirse por movimiento — pasa a ser una
   // configuración global. Se sigue leyendo la misma preferencia de
@@ -90,8 +89,8 @@ export default function MovementSheet({
   const activityNames = activities.rows.map((a) => a.name);
 
   const activityEntries = useMemo(
-    () => buildActivityEntries({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
-    [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
+    () => buildActivityEntries({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency: defaultCurrency }),
+    [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, defaultCurrency]
   );
 
   const tableFor = (source) => (source === "ganado" ? worklog : source === "comision" ? comisiones : colleaguePayments);

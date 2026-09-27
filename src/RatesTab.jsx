@@ -5,7 +5,7 @@ import { Plus, Check, X, Search, SlidersHorizontal, Eye, EyeOff } from "lucide-r
 import { BRAND_NAVY, TEAL } from "./App";
 import {
   inputCls, Select, MultiSelect, Field, colorFor, RowMenu, Money, MoneyInput,
-  EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate, BooleanToggle,
+  EntryTitle, useToast, Sheet, MOVEMENT_TYPE_META, lighten, Fab, shortDate, BooleanToggle, getDefaultCurrency,
 } from "./shared";
 import { listItemVariants, usePrefersReducedMotion } from "./motion";
 import { isRateActive } from "./rateCalc";
@@ -76,7 +76,7 @@ function RateTypeIconChip({ source }) {
 // accentColor: color de sección (nav_sections), para el botón flotante de crear
 export default function RatesTab({ schools, activities, currencies, rates, commissionRates, worklog, comisiones, accentColor = TEAL }) {
   const { t } = useTranslation("rates");
-  const defaultCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "";
+  const defaultCurrency = getDefaultCurrency(currencies.rows);
   const toast = useToast();
   const reducedMotion = usePrefersReducedMotion();
 

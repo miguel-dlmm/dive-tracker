@@ -6,7 +6,7 @@ import { TEAL, SUN, CORAL, GREEN, BRAND_NAVY, BRAND_GOLD } from "./App";
 import {
   Money, formatMoney, Field, Select, MultiSelect, DateRangePicker, ConfirmDialog, colorFor,
   isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab, EntryTitle,
-  useFloatingDropdown, FloatingPanel,
+  useFloatingDropdown, FloatingPanel, getDefaultCurrency,
 } from "./shared";
 import { buildActivityEntries, buildIncomeEntries } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
@@ -505,7 +505,7 @@ export default function MiTrabajoTab({
   const { t } = useTranslation("trabajo");
   const toast = useToast();
   const reducedMotion = usePrefersReducedMotion();
-  const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
+  const fallbackCurrency = getDefaultCurrency(currencies.rows);
 
   const activityColor = (name) => colorFor(activities.rows, name, "#374151");
   const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
