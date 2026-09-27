@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "Новая операция"
+  },
+  "diveGuideCard": {
+    "title": "Гид по дайвингу",
+    "subtitle": "Ко Тао · для брифинга"
   }
 }

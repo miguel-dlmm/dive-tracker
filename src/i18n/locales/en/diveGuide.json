@@ -1,0 +1,24 @@
+{
+  "cover": {
+    "title": "Dive Guide",
+    "subtitle": "Koh Tao, Gulf of Thailand",
+    "tagline": "Dive sites, marine life and everything you need for the briefing, right in your pocket.",
+    "start": "Start browsing",
+    "credit": "Original content: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Dive sites", "hint": "Maps and details for every site" },
+    "marine": { "label": "Marine life", "hint": "Identify fish and coral" },
+    "extra": { "label": "Extra info", "hint": "Signals, safety and fun facts" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} of {{total}}",
+    "sectionsAria": "Switch section",
+    "closeAria": "Close the guide",
+    "fullscreenEnterAria": "Full screen",
+    "fullscreenExitAria": "Exit full screen",
+    "jumpTo": "Jump to…",
+    "prevPageAria": "Previous page",
+    "nextPageAria": "Next page"
+  }
+}

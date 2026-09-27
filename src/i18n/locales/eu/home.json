@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "Mugimendu berria"
+  },
+  "diveGuideCard": {
+    "title": "Urpekaritza gida",
+    "subtitle": "Koh Tao · briefing-erako"
   }
 }

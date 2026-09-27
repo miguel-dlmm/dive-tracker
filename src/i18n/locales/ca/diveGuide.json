@@ -1,0 +1,24 @@
+{
+  "cover": {
+    "title": "Guia de Busseig",
+    "subtitle": "Koh Tao, Golf de Tailàndia",
+    "tagline": "Punts d'immersió, vida marina i tota la info per al brífing, sempre a mà.",
+    "start": "Començar a mirar",
+    "credit": "Contingut original: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Punts d'immersió", "hint": "Mapes i dades de cada punt" },
+    "marine": { "label": "Vida marina", "hint": "Identifica peixos i corall" },
+    "extra": { "label": "Informació extra", "hint": "Senyals, seguretat i curiositats" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} de {{total}}",
+    "sectionsAria": "Canviar de secció",
+    "closeAria": "Tancar la guia",
+    "fullscreenEnterAria": "Pantalla completa",
+    "fullscreenExitAria": "Sortir de pantalla completa",
+    "jumpTo": "Anar a…",
+    "prevPageAria": "Pàgina anterior",
+    "nextPageAria": "Pàgina següent"
+  }
+}

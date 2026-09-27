@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "Transaksi baru"
+  },
+  "diveGuideCard": {
+    "title": "Panduan selam",
+    "subtitle": "Koh Tao · untuk briefing"
   }
 }

@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "Neue Buchung"
+  },
+  "diveGuideCard": {
+    "title": "Tauchführer",
+    "subtitle": "Koh Tao · fürs Briefing"
   }
 }

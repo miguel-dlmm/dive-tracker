@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "Novo movimento"
+  },
+  "diveGuideCard": {
+    "title": "Guia de mergulho",
+    "subtitle": "Koh Tao · para o briefing"
   }
 }

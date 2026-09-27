@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { CalendarDays, Award, Handshake, Building2, HelpCircle, Wallet, Plus } from "lucide-react";
+import { CalendarDays, Award, Handshake, Building2, HelpCircle, Wallet, Plus, BookOpen } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, useFloatingDropdown, FloatingPanel, getDefaultCurrency } from "./shared";
 import { buildEntriesBySource, buildIncomeEntries, entriesArgsFromTables } from "./rateCalc";
@@ -212,7 +212,7 @@ function MiniKpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, onOpenDiveGuide, userId }) {
   const { t } = useTranslation("home");
   // Oculta el punto de entrada de "Instalar la app" si la propia app ya
   // corre instalada (display-mode: standalone en Chromium/Android,
@@ -512,8 +512,16 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             texto, así que quedan alineadas entre sí sin necesitar nada
             más — el único caso con una sola línea (Training Records sin
             generar ninguno todavía) es transitorio, de un usuario
-            recién llegado. */}
-        <div className="grid grid-cols-2 gap-2">
+            recién llegado.
+
+            Tercera columna (2026-09-27, pedido explícito: acceso directo
+            en Home a la Guía de Buceo de Koh Tao, "rediseñando las
+            pastillas actuales... manten el estilo") — Training Records y
+            Escuela del mes pasan de la mitad de la fila a un tercio, sin
+            tocar tamaño de fuente ni padding, para que quepan las tres a
+            la misma altura que antes (mismo criterio de "no bajar el
+            calendario" del resto de este bento). */}
+        <div className="grid grid-cols-3 gap-2">
           {onOpenTrainingRecords && (
             <button
               type="button"
@@ -561,6 +569,21 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
               <div className="truncate text-[10px] text-gray-400">{t("activeSchoolThisMonth")}</div>
             </span>
           </button>
+          {onOpenDiveGuide && (
+            <button
+              type="button"
+              onClick={onOpenDiveGuide}
+              className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${GREEN}1A` }}>
+                <BookOpen size={14} style={{ color: GREEN }} aria-hidden="true" />
+              </span>
+              <span className="min-w-0 text-center">
+                <div className="truncate text-[11px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>{t("diveGuideCard.title")}</div>
+                <div className="truncate text-[10px] text-gray-400">{t("diveGuideCard.subtitle")}</div>
+              </span>
+            </button>
+          )}
         </div>
       </div>
 

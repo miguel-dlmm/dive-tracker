@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "Nieuwe boeking"
+  },
+  "diveGuideCard": {
+    "title": "Duikgids",
+    "subtitle": "Koh Tao · voor de briefing"
   }
 }

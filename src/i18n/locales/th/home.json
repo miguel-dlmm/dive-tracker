@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "รายการใหม่"
+  },
+  "diveGuideCard": {
+    "title": "คู่มือดำน้ำ",
+    "subtitle": "เกาะเต่า · สำหรับบรีฟฟิ่ง"
   }
 }

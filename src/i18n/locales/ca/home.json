@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "Moviment nou"
+  },
+  "diveGuideCard": {
+    "title": "Guia de busseig",
+    "subtitle": "Koh Tao · per al brífing"
   }
 }

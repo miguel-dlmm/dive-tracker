@@ -1,0 +1,24 @@
+{
+  "cover": {
+    "title": "Panduan Menyelam",
+    "subtitle": "Koh Tao, Teluk Thailand",
+    "tagline": "Tapak menyelam, hidupan laut dan semua maklumat untuk taklimat, sentiasa di hujung jari.",
+    "start": "Mula lihat",
+    "credit": "Kandungan asal: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Tapak menyelam", "hint": "Peta dan butiran setiap tapak" },
+    "marine": { "label": "Hidupan laut", "hint": "Kenal pasti ikan dan karang" },
+    "extra": { "label": "Maklumat tambahan", "hint": "Isyarat, keselamatan dan fakta menarik" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} daripada {{total}}",
+    "sectionsAria": "Tukar bahagian",
+    "closeAria": "Tutup panduan",
+    "fullscreenEnterAria": "Skrin penuh",
+    "fullscreenExitAria": "Keluar skrin penuh",
+    "jumpTo": "Pergi ke…",
+    "prevPageAria": "Halaman sebelumnya",
+    "nextPageAria": "Halaman seterusnya"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "cover": {
+    "title": "Guida alle Immersioni",
+    "subtitle": "Koh Tao, Golfo di Thailandia",
+    "tagline": "Punti di immersione, vita marina e tutte le info per il briefing, sempre a portata di mano.",
+    "start": "Inizia a sfogliare",
+    "credit": "Contenuto originale: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Punti di immersione", "hint": "Mappe e dettagli di ogni punto" },
+    "marine": { "label": "Vita marina", "hint": "Identifica pesci e coralli" },
+    "extra": { "label": "Info extra", "hint": "Segnali, sicurezza e curiosità" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} di {{total}}",
+    "sectionsAria": "Cambia sezione",
+    "closeAria": "Chiudi la guida",
+    "fullscreenEnterAria": "Schermo intero",
+    "fullscreenExitAria": "Esci da schermo intero",
+    "jumpTo": "Vai a…",
+    "prevPageAria": "Pagina precedente",
+    "nextPageAria": "Pagina successiva"
+  }
+}

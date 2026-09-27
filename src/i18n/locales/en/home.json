@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "New entry"
+  },
+  "diveGuideCard": {
+    "title": "Dive guide",
+    "subtitle": "Koh Tao · for the briefing"
   }
 }

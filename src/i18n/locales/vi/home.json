@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "Giao dịch mới"
+  },
+  "diveGuideCard": {
+    "title": "Cẩm nang lặn",
+    "subtitle": "Koh Tao · cho buổi briefing"
   }
 }
