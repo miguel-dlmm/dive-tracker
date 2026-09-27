@@ -95,6 +95,16 @@ function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rat
 // (mismo motivo que ya tenían los KPIs animados más abajo en este
 // archivo).
 describe("HomeTab — Pendiente de cobrar", () => {
+  // testTimeout explícito (15000, 2026-09-27, hallazgo de robustez): el
+  // waitFor de más abajo ya tenía margen hasta 12000ms para el
+  // requestAnimationFrame de useCountUp bajo contención real, pero el
+  // propio test seguía con el testTimeout por defecto de Vitest (5000ms)
+  // — así que Vitest mataba el test a los 5s antes de que el waitFor
+  // llegara a agotar su propio margen de 12s. Reproducido en vivo con
+  // `npx vitest run --coverage` (suite completa): pasa siempre en
+  // aislamiento, falla con la suite completa bajo cobertura por la CPU
+  // extra de la instrumentación. No es un problema de aislamiento entre
+  // tests, es un timeout exterior más corto que el interior.
   it("suma pendientes de Registro, Comisiones y Compañeros, de cualquier mes (ejemplo de referencia)", async () => {
     const { pending } = renderHome({
       worklog: [
@@ -116,8 +126,10 @@ describe("HomeTab — Pendiente de cobrar", () => {
     await waitFor(() => {
       expect(pending.getByText(money("125,00 €"))).toBeInTheDocument();
     }, { timeout: 12000 });
-  });
+  }, 15000);
 
+  // testTimeout explícito: mismo motivo que el test anterior (waitFor a
+  // 12000ms bajo un testTimeout de Vitest de 5000ms por defecto).
   it("Pendiente de cobrar SÍ cuenta entradas de meses anteriores (a diferencia de los KPIs financieros del mes en curso)", async () => {
     const { pending } = renderHome({
       worklog: [{ id: "w1", date: LAST_MONTH, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Pending" }], // 20€, mes anterior
@@ -126,7 +138,7 @@ describe("HomeTab — Pendiente de cobrar", () => {
     await waitFor(() => {
       expect(pending.getByText(money("20,00 €"))).toBeInTheDocument();
     }, { timeout: 12000 });
-  });
+  }, 15000);
 
   it("excluye pagos de compañeros con importe negativo (es lo que tú debes, no lo que te deben)", async () => {
     const { pending } = renderHome({
@@ -145,6 +157,9 @@ describe("HomeTab — Pendiente de cobrar", () => {
     expect(screen.getByText("Nada pendiente")).toBeInTheDocument();
   });
 
+  // testTimeout explícito: mismo motivo que los tests anteriores del
+  // describe (waitFor a 12000ms bajo un testTimeout de Vitest de 5000ms
+  // por defecto).
   it("agrupa Pendiente de cobrar por moneda cuando hay más de una", async () => {
     const { pending } = renderHome({
       currencies: [
@@ -167,7 +182,7 @@ describe("HomeTab — Pendiente de cobrar", () => {
       expect(pending.getByText(money("20,00 €"))).toBeInTheDocument();
       expect(pending.getByText(money("12,00 $"))).toBeInTheDocument();
     }, { timeout: 12000 });
-  });
+  }, 15000);
 
   it("muestra el número correcto de pagos pendientes (cuenta entradas, no escuelas)", async () => {
     const { pending } = renderHome({
@@ -517,7 +532,13 @@ describe("HomeTab — KPIs (media diaria, cursos, captados, todos del mes actual
       expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("2"); // w1 + w2, solo este mes (w3 es del mes pasado)
       expect(screen.getByText("Captados").previousSibling).toHaveTextContent("4"); // solo c1, este mes
     }, { timeout: 12000 });
-  });
+    // testTimeout explícito 15000 (2026-09-27, hallazgo de robustez): el
+    // waitFor de arriba ya llegaba a 12000ms de margen, pero el propio
+    // test seguía con el testTimeout por defecto de Vitest (5000ms) —
+    // Vitest lo mataba a los 5s antes de que el waitFor agotara su
+    // margen real. Mismo mecanismo que los 3 tests de "Pendiente de
+    // cobrar" más arriba en este archivo.
+  }, 15000);
 });
 
 // "Instalar la app" (2026-09-08, tercera vuelta): el banner descartable
