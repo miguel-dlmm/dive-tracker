@@ -605,13 +605,13 @@ describe("HomeTab — tarjeta de Training Records", () => {
 
   it("sin ningún Training Record generado todavía, es una invitación de verdad, no un contador en cero", () => {
     renderHomeWithTR();
-    // "Training Records" (título) sí se muestra desde el lote de 3
-    // columnas (2026-09-27, acceso a la Guía de Buceo en Home): las tres
-    // pastillas de esa fila comparten ahora la misma forma de 2 líneas
-    // (título + subtítulo corto) para que ninguna truncase su texto en
-    // móvil. Lo que sigue sin verse — y es lo que este test protege de
-    // verdad — es cualquier "0 Generados", que sí volvería a sentirse
-    // como un contador vacío en vez de una invitación.
+    // "Training Records" (título) sí se muestra siempre desde el
+    // rediseño de tarjeta "stat" (2026-09-27, acceso a la Guía de Buceo
+    // en Home): las tres tarjetas de esa fila comparten ahora una banda
+    // de color con el nombre fijo arriba, icono, y una única línea de
+    // contenido específico debajo. Lo que sigue sin verse — y es lo que
+    // este test protege de verdad — es cualquier "0 Generados", que sí
+    // volvería a sentirse como un contador vacío en vez de una invitación.
     expect(screen.getByText("Training Records")).toBeInTheDocument();
     expect(screen.getByText("Genera el primero")).toBeInTheDocument();
     expect(screen.queryByText("Generados")).not.toBeInTheDocument();
@@ -621,10 +621,12 @@ describe("HomeTab — tarjeta de Training Records", () => {
     localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount:u1", "7");
     renderHomeWithTR();
     expect(screen.getByText("Training Records")).toBeInTheDocument();
+    // "7 Generados" vive en un único nodo de texto desde el rediseño de
+    // tarjeta "stat" (2026-09-27, banda de color + una sola línea de
+    // contenido) — antes eran dos <span> separados ("7" y "Generados").
     await waitFor(() => {
-      expect(screen.getByText("7")).toBeInTheDocument();
+      expect(screen.getByText("7 Generados")).toBeInTheDocument();
     }, { timeout: 4000 });
-    expect(screen.getByText("Generados")).toBeInTheDocument();
     expect(screen.queryByText("Genera el primero")).not.toBeInTheDocument();
   });
 

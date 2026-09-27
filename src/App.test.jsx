@@ -299,7 +299,7 @@ describe("AuthGate", () => {
     render(<App />);
     await screen.findByText("Ocean Flow");
 
-    await user.click(await screen.findByRole("button", { name: "Training Records Genera el primero" }));
+    await user.click(await screen.findByTestId("training-records-card"));
     await user.click(await screen.findByRole("button", { name: "Ver ayuda" }));
     expect(await screen.findByText(/Generar un Training Record/)).toBeInTheDocument();
 

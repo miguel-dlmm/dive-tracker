@@ -20,6 +20,7 @@
     "fullscreenExitAria": "မျက်နှာပြင်အပြည့်မှထွက်ရန်",
     "jumpTo": "သွားရန်…",
     "siteIndexHeading": "ရေငုပ်ဆိုက်တစ်ခုသို့ သွားရန်",
+    "siteIndexEmpty": "ရလဒ်မရှိပါ",
     "prevPageAria": "ယခင်စာမျက်နှာ",
     "nextPageAria": "နောက်စာမျက်နှာ"
   }

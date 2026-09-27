@@ -237,7 +237,7 @@ export default function DiveGuideTab({ onClose }) {
           t={t}
           onStart={startFromBeginning}
           onOpenSection={openSection}
-          onOpenSiteIndex={() => setSheetOpen(true)}
+          onSelectSitePage={jumpToPage}
           onClose={handleClose}
         />
       ) : (
@@ -333,7 +333,7 @@ export default function DiveGuideTab({ onClose }) {
   );
 }
 
-function CoverScreen({ t, onStart, onOpenSection, onOpenSiteIndex, onClose }) {
+function CoverScreen({ t, onStart, onOpenSection, onSelectSitePage, onClose }) {
   return (
     <div
       className="flex h-full flex-col overflow-y-auto px-6 pb-10 text-center"
@@ -360,7 +360,36 @@ function CoverScreen({ t, onStart, onOpenSection, onOpenSiteIndex, onClose }) {
         <p className="max-w-xs text-[13px] leading-relaxed text-white/80">{t("cover.tagline")}</p>
 
         <div className="mt-2 flex w-full max-w-xs flex-col gap-2">
-          {SECTION_DEFS.map((section) => (
+          {/* "Puntos de buceo" lleva el buscador de sites EMBEBIDO dentro
+              de su propia tarjeta (pedido explícito 2026-09-27: "quiero
+              que el buscador... esté dentro de la pastilla de puntos de
+              buceo en la home del libro digital"), no detrás de un enlace
+              aparte que abriera una hoja — de ahí que ya no sea un único
+              <button>: la fila superior (icono+nombre) sigue abriendo la
+              sección desde el principio, y debajo va el buscador con
+              scroll propio de 2-3 filas. Vida marina/Info extra siguen
+              siendo tarjetas simples, sin buscador — solo Puntos de buceo
+              tiene 37 nombres que buscar. */}
+          <div className="overflow-hidden rounded-xl bg-white/10 backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={() => onOpenSection("sites")}
+              className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left active:bg-white/5"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${SECTION_DEFS[0].color}33` }}>
+                <MapPin size={17} style={{ color: "#fff" }} aria-hidden="true" />
+              </span>
+              <span className="min-w-0">
+                <div className="truncate text-sm font-bold text-white">{t("sections.sites.label")}</div>
+                <div className="truncate text-[11px] text-white/60">{t("sections.sites.hint")}</div>
+              </span>
+            </button>
+            <div className="border-t border-white/10 px-3 pb-3 pt-2">
+              <SiteSearch t={t} onSelectPage={onSelectSitePage} variant="dark" />
+            </div>
+          </div>
+
+          {SECTION_DEFS.slice(1).map((section) => (
             <button
               key={section.key}
               type="button"
@@ -377,15 +406,6 @@ function CoverScreen({ t, onStart, onOpenSection, onOpenSiteIndex, onClose }) {
             </button>
           ))}
         </div>
-
-        <button
-          type="button"
-          onClick={onOpenSiteIndex}
-          className="flex w-full max-w-xs items-center justify-center gap-1.5 text-[12px] font-semibold text-white/80"
-        >
-          <Search size={13} aria-hidden="true" />
-          {t("viewer.siteIndexHeading")}
-        </button>
 
         <button
           type="button"
@@ -438,6 +458,74 @@ function ReaderTopBar({ t, section, current, onClose, onOpenSections, isFullscre
   );
 }
 
+// Buscador de puntos de buceo — pedido explícito 2026-09-27: "integraría
+// en la pastilla de puntos de buceo el buscador de texto y un alto de
+// dos-tres filas... q se vayan filtrando los resultados conforme
+// escribas". Un solo componente, dos sitios donde vive: embebido dentro
+// de la propia tarjeta "Puntos de buceo" de la portada (variant="dark",
+// sobre el degradado navy) y dentro de la hoja de secciones del lector
+// (variant="light", sobre blanco) — mismo comportamiento de filtrado en
+// vivo en los dos, solo cambian los colores. Solo la rejilla de
+// resultados tiene scroll propio, con una altura fija de ~2,5 filas (no
+// el buscador ni el resto de lo que lo rodea), para no obligar a
+// desplazar todo lo demás solo por ver más nombres.
+function SiteSearch({ t, onSelectPage, variant = "light" }) {
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredSites = normalizedQuery
+    ? SITE_INDEX.filter((site) => site.name.toLowerCase().includes(normalizedQuery))
+    : SITE_INDEX;
+  const dark = variant === "dark";
+
+  return (
+    <div>
+      <div className="relative">
+        <Search
+          size={14}
+          className={`pointer-events-none absolute left-3 top-1/2 -mt-[7px] ${dark ? "text-white/50" : "text-gray-400"}`}
+          aria-hidden="true"
+        />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t("viewer.siteIndexHeading")}
+          aria-label={t("viewer.siteIndexHeading")}
+          className={
+            dark
+              ? "min-h-11 w-full rounded-lg border border-white/15 bg-white/10 py-2 pl-9 pr-3 text-[13px] text-white outline-none placeholder:text-white/50 focus:border-white/30"
+              : "min-h-11 w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-[13px] outline-none focus:border-gray-300"
+          }
+          style={dark ? undefined : { color: BRAND_NAVY }}
+        />
+      </div>
+      <div className="mt-2 overflow-y-auto" style={{ maxHeight: 148 }}>
+        {filteredSites.length === 0 ? (
+          <p className={`py-4 text-center text-[12.5px] ${dark ? "text-white/50" : "text-gray-400"}`}>{t("viewer.siteIndexEmpty")}</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-1.5">
+            {filteredSites.map((site) => (
+              <button
+                key={site.name}
+                type="button"
+                onClick={() => onSelectPage(site.page)}
+                className={
+                  dark
+                    ? "min-h-11 truncate rounded-lg bg-white/10 px-3 py-2 text-left text-[12.5px] font-medium text-white active:bg-white/20"
+                    : "min-h-11 truncate rounded-lg bg-gray-50 px-3 py-2 text-left text-[12.5px] font-medium active:bg-gray-100"
+                }
+                style={dark ? undefined : { color: BRAND_NAVY }}
+              >
+                {site.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SectionSheet({ t, onSelect, onSelectPage, onClose }) {
   useEscapeClose(true, onClose);
   return (
@@ -468,30 +556,8 @@ function SectionSheet({ t, onSelect, onSelectPage, onClose }) {
           ))}
         </div>
 
-        {/* Índice A-Z de puntos de buceo — pedido explícito 2026-09-27:
-            "escanea los nombres de los dive sites y haz un selector para
-            ir directamente a la página del site". Grid de 2 columnas
-            (no una lista de una columna): 37 nombres caben en bastante
-            menos scroll así, y cada botón sigue siendo un objetivo
-            táctil cómodo (min-h-11). */}
-        <div className="min-h-0 flex-1 overflow-y-auto border-t border-gray-100 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-          <div className="mb-2 flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">
-            <Search size={12} aria-hidden="true" />
-            {t("viewer.siteIndexHeading")}
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {SITE_INDEX.map((site) => (
-              <button
-                key={site.name}
-                type="button"
-                onClick={() => onSelectPage(site.page)}
-                className="min-h-11 truncate rounded-lg bg-gray-50 px-3 py-2 text-left text-[12.5px] font-medium active:bg-gray-100"
-                style={{ color: BRAND_NAVY }}
-              >
-                {site.name}
-              </button>
-            ))}
-          </div>
+        <div className="shrink-0 border-t border-gray-100 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-2">
+          <SiteSearch t={t} onSelectPage={onSelectPage} variant="light" />
         </div>
       </div>
     </div>
