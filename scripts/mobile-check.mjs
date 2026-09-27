@@ -182,13 +182,13 @@ async function main() {
   await page.locator("text=Home").first().tap();
   await page.waitForTimeout(300);
 
-  console.log("→ Home: 'Añadir movimiento' (integrado en la tarjeta Pendiente de cobrar) abre el formulario SIN salir de Home");
-  await page.getByRole("button", { name: "Añadir movimiento", exact: true }).tap();
+  console.log("→ Home: 'Nuevo movimiento' (tarjeta propia del bento, junto a Media diaria) abre el formulario SIN salir de Home");
+  await page.getByRole("button", { name: "Nuevo movimiento", exact: true }).tap();
   await page.waitForTimeout(250);
-  await shot(page, "home-anadir-movimiento");
+  await shot(page, "home-nuevo-movimiento");
   const activeTabWithSheetOpen = await page.locator('nav button[aria-current="page"]').textContent();
   if (activeTabWithSheetOpen?.trim() !== "Home") {
-    consoleIssues.push(`[nav] Al abrir 'Añadir movimiento' desde Home, la pestaña activa pasó a ser "${activeTabWithSheetOpen?.trim()}" — debe seguir en Home mientras se rellena`);
+    consoleIssues.push(`[nav] Al abrir 'Nuevo movimiento' desde Home, la pestaña activa pasó a ser "${activeTabWithSheetOpen?.trim()}" — debe seguir en Home mientras se rellena`);
   }
 
   console.log("→ Cerrar el formulario sin guardar: debe quedarse en Home, no navegar a Mi trabajo");
@@ -196,12 +196,12 @@ async function main() {
   await page.waitForTimeout(200);
   const activeTabAfterCancel = await page.locator('nav button[aria-current="page"]').textContent();
   if (activeTabAfterCancel?.trim() !== "Home") {
-    consoleIssues.push(`[nav] Tras cerrar 'Añadir movimiento' sin guardar, la pestaña activa es "${activeTabAfterCancel?.trim()}", no "Home"`);
+    consoleIssues.push(`[nav] Tras cerrar 'Nuevo movimiento' sin guardar, la pestaña activa es "${activeTabAfterCancel?.trim()}", no "Home"`);
   }
   await shot(page, "home-tras-cerrar-sin-guardar");
 
   console.log("→ Guardar desde el acceso rápido de Home: debe navegar a Mi trabajo solo tras el guardado, y el movimiento debe verse allí");
-  await page.getByRole("button", { name: "Añadir movimiento", exact: true }).tap();
+  await page.getByRole("button", { name: "Nuevo movimiento", exact: true }).tap();
   await page.waitForTimeout(200);
   await page.getByRole("button", { name: "Guardar", exact: false }).tap();
   await page.waitForTimeout(600);
