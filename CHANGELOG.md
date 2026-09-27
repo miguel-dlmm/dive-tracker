@@ -11,6 +11,9 @@ Registro de cambios relevantes de Ocean Flow.
   (Home, Mi trabajo, Resumen, Training Records, Ayuda y cómo empezar).
   Sustituye a "Qué hay de nuevo" solo en ese primer acceso, para no
   mostrar dos avisos de golpe.
+- **Botón "Crear" dentro de la tabla en Escuelas, Cursos y Tarifas**:
+  visible mientras el catálogo tenga 5 elementos o menos (0 incluido),
+  además del FAB flotante.
 
 ### Fixed
 - **Traducciones que faltaban en la ficha de detalle de usuario (Config →
@@ -21,6 +24,9 @@ Registro de cambios relevantes de Ocean Flow.
   en blanco. Detectado por un test nuevo de paridad de claves i18n
   (docs/INFORME-DEUDA-TECNICA-2026-09.md). El artículo "Generar un
   Training Record" tampoco existía en francés.
+- **Eliminar una escuela o un curso con tarifas o movimientos asociados
+  dejaba esas filas huérfanas**: ahora el borrado se bloquea con un
+  aviso claro en vez de permitirlo.
 
 ## [1.5.1] - 2026-09-27
 
