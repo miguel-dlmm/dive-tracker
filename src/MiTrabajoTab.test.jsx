@@ -652,6 +652,33 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     expect(importeInput.value).not.toMatch(/^-/);
   });
 
+  // Bug real reportado (2026-09-27): con el Importe vacío, pulsar +/- no
+  // cambiaba nada visible (MoneyInput calculaba -0, y String(-0) es "0",
+  // ver shared.jsx) — y, sin la guarda añadida en disableSaveAjuste
+  // (MovementSheet.jsx), el valor intermedio "-" (un signo sin cifra)
+  // no deshabilitaba "Guardar" y habría guardado un importe NaN de
+  // verdad en Supabase.
+  it("con el Importe vaciado y el signo puesto en negativo, sin cifra todavía, 'Guardar' queda deshabilitado", async () => {
+    const user = userEvent.setup();
+    const { colleaguePayments } = renderMiTrabajo(mixedDataset());
+
+    // Pendientes se ordena de más reciente a más antiguo: ajuste,
+    // comisión, curso (ver test de "elimina la fila correcta" más
+    // arriba) — el ajuste es el índice 0, no el 2.
+    await user.click(screen.getAllByLabelText("Más acciones")[0]);
+    await user.click(screen.getByRole("menuitem", { name: "Editar" }));
+    expect(screen.getByRole("heading", { name: "Editar ajuste de curso" })).toBeInTheDocument();
+
+    const importeInput = screen.getByPlaceholderText("90 ó -30");
+    await user.clear(importeInput);
+    await user.click(screen.getByRole("button", { name: "Cambiar a negativo" }));
+
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(colleaguePayments.updateRow).not.toHaveBeenCalled();
+  });
+
   it("añadir tarifa se expande dentro de la misma hoja (no abre un segundo modal) y guarda la tarifa nueva", async () => {
     const user = userEvent.setup();
     const { rates } = renderMiTrabajo({});

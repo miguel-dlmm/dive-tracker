@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { colorFor, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect, DatePicker, MoneyInput } from "./shared";
+import { colorFor, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect, DatePicker, MoneyInput, Field } from "./shared";
 
 // Estos tests documentan el comportamiento ACTUAL de las funciones puras de
 // shared.jsx, como red de seguridad antes de dividir/refactorizar el
@@ -177,6 +177,51 @@ describe("lighten", () => {
 // saltando de un lado a otro sin que el usuario tocara nada relacionado
 // con la posición ("si lo toco salta"). Arreglado congelando esa
 // decisión en el instante de abrir (useFloatingPosition, shared.jsx).
+// Bug real reportado (2026-09-27): el hint de Field (p. ej. "Importe" en
+// Ajuste de curso, MovementSheet.jsx, en la columna DERECHA de un grid de
+// 2 columnas) seguía saliéndose del viewport en móvil con align="left"
+// fijo — el suelo de ancho mínimo de useFloatingPosition (160px) no cabía
+// entre un icono ya cerca del borde derecho y el propio borde real de la
+// pantalla. align="auto" elige el lado con más espacio en vez de asumir
+// siempre "hacia la derecha".
+describe("Field — el hint flotante elige el lado con más espacio (align=\"auto\")", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("con el icono cerca del borde IZQUIERDO, el panel se ancla por la izquierda", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
+      { top: 100, bottom: 114, left: 10, right: 24, width: 14, height: 14 }
+    );
+    render(<Field label="Importe" hint="Positivo si te paga a ti"><input aria-label="Importe" /></Field>);
+
+    await user.click(screen.getByRole("button", { name: "Ayuda" }));
+
+    const panel = screen.getByText("Positivo si te paga a ti").parentElement;
+    expect(panel.style.left).not.toBe("");
+    expect(panel.style.right).toBe("");
+  });
+
+  it("con el icono cerca del borde DERECHO (p. ej. la columna derecha de un grid de 2 columnas), el panel se ancla por la derecha, no por la izquierda", async () => {
+    const user = userEvent.setup();
+    // Viewport de 375px (iPhone de referencia) — icono a 350px, a solo
+    // 25px del borde derecho: con align="left" fijo, ni el suelo mínimo
+    // de 160px cabría ahí sin desbordar.
+    window.innerWidth = 375;
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
+      { top: 100, bottom: 114, left: 350, right: 364, width: 14, height: 14 }
+    );
+    render(<Field label="Importe" hint="Positivo si te paga a ti"><input aria-label="Importe" /></Field>);
+
+    await user.click(screen.getByRole("button", { name: "Ayuda" }));
+
+    const panel = screen.getByText("Positivo si te paga a ti").parentElement;
+    expect(panel.style.right).not.toBe("");
+    expect(panel.style.left).toBe("");
+  });
+});
+
 describe("useFloatingPosition (vía SearchSelect) — la dirección arriba/abajo no cambia mientras el panel está abierto", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -423,6 +468,23 @@ describe("MoneyInput — allowNegative", () => {
 
     await user.click(screen.getByRole("button", { name: "Cambiar a positivo" }));
     expect(screen.getByLabelText("Importe")).toHaveValue("30,00");
+  });
+
+  // Bug real reportado (2026-09-27): con el campo vacío, -Number(0) da
+  // -0, y String(-0) es "0" (no "-0") — pulsar el botón no cambiaba nada
+  // visible ni dejaba ningún rastro del signo.
+  it("el botón +/- funciona también con el campo vacío, sin cantidad metida todavía", async () => {
+    const user = userEvent.setup();
+    render(<ControlledMoneyInput initial="" />);
+    expect(screen.getByRole("button", { name: "Cambiar a negativo" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cambiar a negativo" }));
+
+    expect(screen.getByRole("button", { name: "Cambiar a positivo" })).toBeInTheDocument();
+    const input = screen.getByLabelText("Importe");
+    await user.click(input);
+    await user.type(input, "20");
+    expect(input).toHaveValue("-20");
   });
 
   it("sin allowNegative, no se renderiza ningún botón de signo", () => {
