@@ -8,7 +8,7 @@ import {
   isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab, EntryTitle,
   useFloatingDropdown, FloatingPanel, getDefaultCurrency,
 } from "./shared";
-import { buildActivityEntries, buildIncomeEntries } from "./rateCalc";
+import { buildActivityEntries, buildIncomeEntries, entriesArgsFromTables } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import MovementSheet from "./MovementSheet";
 
@@ -511,14 +511,14 @@ export default function MiTrabajoTab({
   const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
 
   const activityEntries = useMemo(
-    () => buildActivityEntries({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    () => buildActivityEntries(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
   // La cabecera "Pendiente de cobrar" es una cifra más estrecha que la
   // lista de abajo: solo lo que te deben a ti, igual que en Home/Pagos —
   // un ajuste negativo pendiente aparece en la lista pero no aquí.
   const incomeEntries = useMemo(
-    () => buildIncomeEntries({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    () => buildIncomeEntries(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
 

@@ -8,7 +8,7 @@ import {
   DatePicker, lighten, useToast, useBodyScrollLock, todayStr, getFavoriteCurrency, getDefaultOf, getDefaultCurrency, MOVEMENT_TYPE_META,
 } from "./shared";
 import { DURATION, sheetVariants, usePrefersReducedMotion } from "./motion";
-import { computeRateTotal, buildActivityEntries, isRateActive } from "./rateCalc";
+import { computeRateTotal, buildActivityEntries, isRateActive, entriesArgsFromTables } from "./rateCalc";
 
 // Única fuente de verdad para crear/editar un movimiento (Curso/Comisión/
 // Ajuste) — extraído de MiTrabajoTab.jsx para que Home pueda abrir esta
@@ -89,7 +89,7 @@ export default function MovementSheet({
   const activityNames = activities.rows.map((a) => a.name);
 
   const activityEntries = useMemo(
-    () => buildActivityEntries({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency: defaultCurrency }),
+    () => buildActivityEntries(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, defaultCurrency)),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, defaultCurrency]
   );
 

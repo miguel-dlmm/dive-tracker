@@ -1387,8 +1387,16 @@ function CreateUserSheet({ open, onClose, onCreated }) {
   );
 }
 
-function UsersDirectory({ profile }) {
+// Carga del listado + estados asociados (activo/desactivado, último
+// acceso, última actividad, fechas de alta/baja) — extraído de
+// UsersDirectory (informe de refactorización 2026-09, sección 2.1):
+// antes eran 8 useState + 1 efecto de montaje + reload() mezclados
+// dentro de una única función de 700+ líneas junto al resto del
+// directorio (las 2 cargas bajo demanda y las 5 confirmaciones de
+// administración, extraídas también más abajo).
+function useUsersDirectoryList() {
   const { t } = useTranslation("config");
+  const toast = useToast();
   const [rows, setRows] = useState([]);
   const [activeByUser, setActiveByUser] = useState({});
   const [lastSignInByUser, setLastSignInByUser] = useState({});
@@ -1412,67 +1420,6 @@ function UsersDirectory({ profile }) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [query, setQuery] = useState("");
-  const [sheetOpen, setSheetOpen] = useState(false);
-  // openUserId (no un snapshot del objeto): se deriva de `rows` en cada
-  // render, así la hoja de detalle siempre muestra datos frescos tras un
-  // reload() (cambiar de rol, activar/desactivar) sin tener que sincronizar
-  // manualmente un segundo estado.
-  const [openUserId, setOpenUserId] = useState(null);
-  // Resumen de actividad (recuento de movimientos + fecha de la última
-  // actividad) — bajo demanda al abrir la hoja de detalle de un usuario
-  // concreto — fusionado en /api/list-user-status (ver activitySummaryFor()
-  // en listUserStatus.js, 2026-09-07): un endpoint propio era la 13ª
-  // Serverless Function y tumbaba todos los deployments del plan Hobby de
-  // Vercel (límite de 12). Objeto { count, lastActivityAt } o null
-  // mientras carga/antes de abrir ninguna hoja; se limpia al cerrar para
-  // no mostrar el dato del usuario anterior un instante al abrir el
-  // siguiente.
-  const [activitySummary, setActivitySummary] = useState(null);
-  useEffect(() => {
-    if (!openUserId) { setActivitySummary(null); return; }
-    let cancelled = false;
-    setActivitySummary(null);
-    (async () => {
-      try {
-        const payload = await callAdminApi("/api/list-user-status", { user_id: openUserId });
-        if (!cancelled) setActivitySummary(payload);
-      } catch {
-        // silencioso a propósito, mismo criterio que loadActiveStatus — un
-        // fallo aquí no debe impedir ver el resto de la hoja de detalle
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [openUserId]);
-  // Fila completa de `profiles` para la hoja de detalle (2026-09-17, pedido
-  // explícito: "ver y editar todos los campos del usuario, incluidos los
-  // campos de la card") — bajo demanda al abrir la hoja, mismo patrón que
-  // activitySummary justo arriba. admin_list_profiles() (usada por `rows`
-  // más abajo, el listado) solo expone lo mínimo para pintar el directorio
-  // a propósito; el resto de columnas (avatar, datos personales, datos de
-  // instructor, idioma) se piden aparte, solo para el usuario que se está
-  // mirando. Consulta de cliente normal, no un RPC nuevo: la política RLS
-  // "select own or admin sees all" de profiles ya deja a un admin leer
-  // cualquier fila completa — sin cambio de esquema ni de función.
-  const [fullProfile, setFullProfile] = useState(null);
-  useEffect(() => {
-    if (!openUserId) { setFullProfile(null); return; }
-    let cancelled = false;
-    setFullProfile(null);
-    (async () => {
-      const { data, error } = await supabase.from("profiles").select("*").eq("user_id", openUserId).maybeSingle();
-      if (!cancelled && !error && data) setFullProfile(data);
-    })();
-    return () => { cancelled = true; };
-  }, [openUserId]);
-  const [pendingToggle, setPendingToggle] = useState(null);
-  const [pendingToggleActive, setPendingToggleActive] = useState(null);
-  const [pendingRegenerateLink, setPendingRegenerateLink] = useState(null);
-  const [pendingRegeneratePassword, setPendingRegeneratePassword] = useState(null);
-  const [pendingDelete, setPendingDelete] = useState(null);
-  const [linkPanel, setLinkPanel] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [generatingInvitation, setGeneratingInvitation] = useState(false);
-  const toast = useToast();
 
   const applyResult = ({ data, error }) => {
     if (error) {
@@ -1527,24 +1474,39 @@ function UsersDirectory({ profile }) {
     }
   };
 
+  // Refresco parcial (activo/desactivado + fechas), sin recargar el
+  // listado completo — lo usan las acciones que no cambian qué filas
+  // existen (activar/desactivar, regenerar enlace/contraseña).
+  const refreshStatuses = () => {
+    loadActiveStatus();
+    loadAccountDates();
+  };
+
   useEffect(() => {
     let active = true;
     supabase.rpc("admin_list_profiles").then((result) => { if (active) applyResult(result); });
-    loadActiveStatus();
-    loadAccountDates();
+    refreshStatuses();
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Igual que el fetch de montaje, pero invocable a demanda (tras crear un
-  // usuario) — fuera de un useEffect, así que no aplica la regla que exige
-  // que un setState dentro de un efecto quede envuelto en un callback.
+  // usuario o cambiar de rol) — fuera de un useEffect, así que no aplica
+  // la regla que exige que un setState dentro de un efecto quede envuelto
+  // en un callback.
   const reload = () => {
     setLoading(true);
     supabase.rpc("admin_list_profiles").then(applyResult);
-    loadActiveStatus();
-    loadAccountDates();
+    refreshStatuses();
   };
+
+  // Quita una fila del estado local sin recargar todo el listado (usado
+  // al eliminar un usuario) — un reload() muestra "Cargando usuarios…"
+  // en el sitio de la lista mientras llega la respuesta, sustituyendo de
+  // golpe todo el contenido scrollable por ese único párrafo y perdiendo
+  // la posición de scroll en el proceso. Ya se sabe qué fila desapareció;
+  // no hace falta otro viaje de red para confirmarlo.
+  const removeRow = (userId) => setRows((prev) => prev.filter((r) => r.user_id !== userId));
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -1559,192 +1521,230 @@ function UsersDirectory({ profile }) {
     return [...base].sort((a, b) => (a.nickname || "").localeCompare(b.nickname || "", "es", { sensitivity: "base" }));
   }, [rows, query]);
 
+  return {
+    rows, filteredRows, query, setQuery, loading, loadError,
+    activeByUser, lastSignInByUser, lastActivityByUser, activityLoaded,
+    activatedAtByUser, deactivatedAtByUser,
+    reload, refreshStatuses, removeRow,
+  };
+}
+
+// Las dos cargas "bajo demanda" al abrir la ficha de detalle de un
+// usuario concreto — extraídas de UsersDirectory por el mismo motivo que
+// el hook de arriba (informe de refactorización 2026-09, sección 2.1).
+function useUserDetailData(openUserId) {
+  // Resumen de actividad (recuento de movimientos + fecha de la última
+  // actividad) — fusionado en /api/list-user-status (ver
+  // activitySummaryFor() en listUserStatus.js, 2026-09-07): un endpoint
+  // propio era la 13ª Serverless Function y tumbaba todos los deployments
+  // del plan Hobby de Vercel (límite de 12). Objeto { count,
+  // lastActivityAt } o null mientras carga/antes de abrir ninguna hoja;
+  // se limpia al cerrar para no mostrar el dato del usuario anterior un
+  // instante al abrir el siguiente.
+  const [activitySummary, setActivitySummary] = useState(null);
+  useEffect(() => {
+    if (!openUserId) { setActivitySummary(null); return; }
+    let cancelled = false;
+    setActivitySummary(null);
+    (async () => {
+      try {
+        const payload = await callAdminApi("/api/list-user-status", { user_id: openUserId });
+        if (!cancelled) setActivitySummary(payload);
+      } catch {
+        // silencioso a propósito, mismo criterio que loadActiveStatus — un
+        // fallo aquí no debe impedir ver el resto de la hoja de detalle
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [openUserId]);
+
+  // Fila completa de `profiles` para la hoja de detalle (2026-09-17, pedido
+  // explícito: "ver y editar todos los campos del usuario, incluidos los
+  // campos de la card") — bajo demanda al abrir la hoja, mismo patrón que
+  // activitySummary justo arriba. admin_list_profiles() (usada por el
+  // listado, useUsersDirectoryList) solo expone lo mínimo para pintar el
+  // directorio a propósito; el resto de columnas (avatar, datos
+  // personales, datos de instructor, idioma) se piden aparte, solo para
+  // el usuario que se está mirando. Consulta de cliente normal, no un RPC
+  // nuevo: la política RLS "select own or admin sees all" de profiles ya
+  // deja a un admin leer cualquier fila completa — sin cambio de esquema
+  // ni de función.
+  const [fullProfile, setFullProfile] = useState(null);
+  useEffect(() => {
+    if (!openUserId) { setFullProfile(null); return; }
+    let cancelled = false;
+    setFullProfile(null);
+    (async () => {
+      const { data, error } = await supabase.from("profiles").select("*").eq("user_id", openUserId).maybeSingle();
+      if (!cancelled && !error && data) setFullProfile(data);
+    })();
+    return () => { cancelled = true; };
+  }, [openUserId]);
+
+  return { activitySummary, fullProfile, setFullProfile };
+}
+
+// Las 5 mini-máquinas de confirmación de administración (rol, borrar,
+// activar/desactivar, regenerar enlace, regenerar contraseña) escribían a
+// mano el mismo trío pendingX/cancelX/confirmX + llamada de red (informe
+// de refactorización 2026-09, sección 2.1) — un único hook parametrizado
+// por endpoint/mensajes/efecto de éxito sustituye las 5 copias.
+// `submitting` es independiente por acción a propósito: en la práctica
+// solo un ConfirmDialog puede estar abierto a la vez (se abren desde un
+// único menú de fila), así que no cambia nada visible frente al booleano
+// compartido que había antes.
+function useAdminAction({ endpoint, forbidden, fallback, onSuccess }) {
+  const toast = useToast();
+  const [pending, setPending] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const cancel = () => {
+    if (submitting) return;
+    setPending(null);
+  };
+
+  const confirm = async () => {
+    if (!pending) return;
+    setSubmitting(true);
+    try {
+      const payload = await callAdminApi(endpoint, pending.body, { forbidden, fallback });
+      await onSuccess(payload, pending);
+      setPending(null);
+    } catch (err) {
+      toast?.error(err.message || fallback);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return { pending, request: setPending, cancel, confirm, submitting };
+}
+
+function UsersDirectory({ profile }) {
+  const { t } = useTranslation("config");
+  const toast = useToast();
+  const {
+    rows, filteredRows, query, setQuery, loading, loadError,
+    activeByUser, lastSignInByUser, lastActivityByUser, activityLoaded,
+    activatedAtByUser, deactivatedAtByUser,
+    reload, refreshStatuses, removeRow,
+  } = useUsersDirectoryList();
+
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // openUserId (no un snapshot del objeto): se deriva de `rows` en cada
+  // render, así la hoja de detalle siempre muestra datos frescos tras un
+  // reload() (cambiar de rol, activar/desactivar) sin tener que sincronizar
+  // manualmente un segundo estado.
+  const [openUserId, setOpenUserId] = useState(null);
+  const { activitySummary, fullProfile, setFullProfile } = useUserDetailData(openUserId);
+  const [linkPanel, setLinkPanel] = useState(null);
+  const [generatingInvitation, setGeneratingInvitation] = useState(false);
+
   const openUser = rows.find((p) => p.user_id === openUserId) || null;
 
   // No cambia nada por sí solo — solo abre la confirmación. El checkbox
   // sigue mostrando el valor real hasta que la mutación se confirma.
-  const requestAdminToggle = (row) => {
-    setPendingToggle({ user_id: row.user_id, nickname: row.nickname, currentValue: row.is_admin, nextValue: !row.is_admin });
-  };
-
-  const cancelAdminToggle = () => {
-    if (submitting) return;
-    setPendingToggle(null);
-  };
-
-  const confirmAdminToggle = async () => {
-    if (!pendingToggle) return;
-    setSubmitting(true);
-    try {
-      // Cuerpo estrecho — nunca is_superadmin ni datos del usuario que
-      // llama, ese siempre sale del token.
-      await callAdminApi("/api/update-admin-status", { target_user_id: pendingToggle.user_id, is_admin: pendingToggle.nextValue }, {
-        forbidden: t("usersDirectory.soloSuperadminRol"), fallback: t("usersDirectory.noSePudoActualizarRol"),
-      });
-      toast?.success(t("usersDirectory.rolActualizado"));
-      setPendingToggle(null);
-      reload();
-    } catch (err) {
-      toast?.error(err.message || t("usersDirectory.noSePudoActualizarRol"));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const adminToggle = useAdminAction({
+    endpoint: "/api/update-admin-status",
+    forbidden: t("usersDirectory.soloSuperadminRol"),
+    fallback: t("usersDirectory.noSePudoActualizarRol"),
+    onSuccess: () => { toast?.success(t("usersDirectory.rolActualizado")); reload(); },
+  });
+  const requestAdminToggle = (row) => adminToggle.request({
+    user_id: row.user_id, nickname: row.nickname, currentValue: row.is_admin, nextValue: !row.is_admin,
+    // Cuerpo estrecho — nunca is_superadmin ni datos del usuario que
+    // llama, ese siempre sale del token.
+    body: { target_user_id: row.user_id, is_admin: !row.is_admin },
+  });
 
   // Irreversible a propósito (ver deleteUser.js): la confirmación reutiliza
   // ConfirmDialog en modo "danger" (mismo componente que DeleteButton usa en
   // el resto de la app), no un segundo patrón de diálogo distinto.
-  const requestDelete = (row) => setPendingDelete({ user_id: row.user_id, nickname: row.nickname });
-
-  const cancelDelete = () => {
-    if (submitting) return;
-    setPendingDelete(null);
-  };
-
-  const confirmDelete = async () => {
-    if (!pendingDelete) return;
-    setSubmitting(true);
-    try {
-      await callAdminApi("/api/delete-user", { target_user_id: pendingDelete.user_id }, {
-        forbidden: t("usersDirectory.soloSuperadminEliminar"),
-        fallback: t("usersDirectory.noSePudoEliminar"),
-      });
+  const deleteAction = useAdminAction({
+    endpoint: "/api/delete-user",
+    forbidden: t("usersDirectory.soloSuperadminEliminar"),
+    fallback: t("usersDirectory.noSePudoEliminar"),
+    onSuccess: (_, pending) => {
       toast?.success(t("usersDirectory.usuarioEliminado"));
-      setPendingDelete(null);
       setOpenUserId(null); // la cuenta ya no existe — no queda nada que mostrar en la hoja de detalle
-      // Quita la fila del estado local en vez de recargar todo el listado
-      // (reload() antes) — un reload muestra "Cargando usuarios…" en el
-      // sitio de la lista mientras llega la respuesta, sustituyendo de
-      // golpe todo el contenido scrollable por ese único párrafo y
-      // perdiendo la posición de scroll en el proceso. Ya sabemos qué fila
-      // desapareció; no hace falta otro viaje de red para confirmarlo.
-      setRows((prev) => prev.filter((r) => r.user_id !== pendingDelete.user_id));
-    } catch (err) {
-      toast?.error(err.message || t("usersDirectory.noSePudoEliminar"));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      removeRow(pending.user_id);
+    },
+  });
+  const requestDelete = (row) => deleteAction.request({ user_id: row.user_id, nickname: row.nickname, body: { target_user_id: row.user_id } });
 
   // Reversible a propósito, a diferencia de eliminar: los datos nunca se
   // tocan. Ya no admite dirección "reactivar" — reactivar siempre pasa por
   // un enlace de activación nuevo (ver requestRegenerateLink), nunca por un
   // simple des-baneo, así que esta acción es exclusivamente "desactivar".
-  const requestToggleActive = (row) => setPendingToggleActive({ user_id: row.user_id, nickname: row.nickname });
-
-  const cancelToggleActive = () => {
-    if (submitting) return;
-    setPendingToggleActive(null);
-  };
-
-  const confirmToggleActive = async () => {
-    if (!pendingToggleActive) return;
-    setSubmitting(true);
-    try {
-      await callAdminApi("/api/set-user-active", { target_user_id: pendingToggleActive.user_id, active: false }, {
-        forbidden: t("usersDirectory.soloSuperadminActivar"),
-        fallback: t("usersDirectory.noSePudoActualizarEstado"),
-      });
-      toast?.success(t("usersDirectory.usuarioDesactivado"));
-      setPendingToggleActive(null);
-      loadActiveStatus();
-      loadAccountDates();
-    } catch (err) {
-      toast?.error(err.message || t("usersDirectory.noSePudoActualizarEstado"));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const toggleActiveAction = useAdminAction({
+    endpoint: "/api/set-user-active",
+    forbidden: t("usersDirectory.soloSuperadminActivar"),
+    fallback: t("usersDirectory.noSePudoActualizarEstado"),
+    onSuccess: () => { toast?.success(t("usersDirectory.usuarioDesactivado")); refreshStatuses(); },
+  });
+  const requestToggleActive = (row) => toggleActiveAction.request({ user_id: row.user_id, nickname: row.nickname, body: { target_user_id: row.user_id, active: false } });
 
   // Activar una cuenta desactivada / regenerar el enlace de una pendiente:
   // misma acción de servidor en los dos casos (quita el baneo si lo hay y
   // genera un enlace nuevo) — nunca concede acceso al instante, por eso el
   // resultado se muestra en ActivationLinkPanel en vez de cerrarse solo.
-  const requestRegenerateLink = (row) => setPendingRegenerateLink({ user_id: row.user_id, nickname: row.nickname });
-
-  const cancelRegenerateLink = () => {
-    if (submitting) return;
-    setPendingRegenerateLink(null);
-  };
-
-  const confirmRegenerateLink = async () => {
-    if (!pendingRegenerateLink) return;
-    setSubmitting(true);
-    try {
-      const payload = await callAdminApi("/api/regenerate-activation-link", { target_user_id: pendingRegenerateLink.user_id }, {
-        forbidden: t("usersDirectory.soloSuperadminEnlace"),
-        fallback: t("usersDirectory.noSePudoGenerarEnlace"),
-      });
+  const regenerateLinkAction = useAdminAction({
+    endpoint: "/api/regenerate-activation-link",
+    forbidden: t("usersDirectory.soloSuperadminEnlace"),
+    fallback: t("usersDirectory.noSePudoGenerarEnlace"),
+    onSuccess: (payload, pending) => {
       // El backend ya intenta enviar el email automáticamente — el panel con
       // el enlace para copiar solo aparece si el envío falla (mismo patrón
       // que CreateUserSheet más abajo).
       if (payload.action_link) {
-        toast?.success(t("usersDirectory.enlaceGeneradoSinEmail", { nickname: pendingRegenerateLink.nickname }));
+        toast?.success(t("usersDirectory.enlaceGeneradoSinEmail", { nickname: pending.nickname }));
         setLinkPanel({
           title: t("usersDirectory.enlaceActivacionTitulo"),
-          description: t("usersDirectory.enlaceActivacionDescripcion", { nickname: pendingRegenerateLink.nickname }),
+          description: t("usersDirectory.enlaceActivacionDescripcion", { nickname: pending.nickname }),
           link: payload.action_link,
         });
       } else {
-        toast?.success(t("usersDirectory.emailActivacionEnviado", { nickname: pendingRegenerateLink.nickname }));
+        toast?.success(t("usersDirectory.emailActivacionEnviado", { nickname: pending.nickname }));
       }
-      setPendingRegenerateLink(null);
-      loadActiveStatus();
-      loadAccountDates();
-    } catch (err) {
-      toast?.error(err.message || t("usersDirectory.noSePudoGenerarEnlace"));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      refreshStatuses();
+    },
+  });
+  const requestRegenerateLink = (row) => regenerateLinkAction.request({ user_id: row.user_id, nickname: row.nickname, body: { target_user_id: row.user_id } });
 
   // Invalida la contraseña actual (se sobrescribe por una aleatoria que
   // nunca se muestra ni se guarda) y fuerza el mismo flujo de activación
   // que una cuenta nueva — nunca reutiliza la aceptación legal ya dada
   // (legal_consents es una tabla independiente de activated_at).
-  const requestRegeneratePassword = (row) => setPendingRegeneratePassword({ user_id: row.user_id, nickname: row.nickname });
-
-  const cancelRegeneratePassword = () => {
-    if (submitting) return;
-    setPendingRegeneratePassword(null);
-  };
-
-  const confirmRegeneratePassword = async () => {
-    if (!pendingRegeneratePassword) return;
-    setSubmitting(true);
-    try {
-      const payload = await callAdminApi("/api/regenerate-password", { target_user_id: pendingRegeneratePassword.user_id }, {
-        forbidden: t("usersDirectory.soloSuperadminContrasena"),
-        fallback: t("usersDirectory.noSePudoRegenerarContrasena"),
-      });
+  const regeneratePasswordAction = useAdminAction({
+    endpoint: "/api/regenerate-password",
+    forbidden: t("usersDirectory.soloSuperadminContrasena"),
+    fallback: t("usersDirectory.noSePudoRegenerarContrasena"),
+    onSuccess: (payload, pending) => {
       // El backend ya intenta enviar el email automáticamente — el panel con
       // el enlace para copiar solo aparece si el envío falla (mismo patrón
       // que CreateUserSheet más abajo).
       if (payload.action_link) {
-        toast?.success(t("usersDirectory.contrasenaRegeneradaSinEmail", { nickname: pendingRegeneratePassword.nickname }));
+        toast?.success(t("usersDirectory.contrasenaRegeneradaSinEmail", { nickname: pending.nickname }));
         setLinkPanel({
           title: t("usersDirectory.contrasenaRegeneradaTitulo"),
-          description: t("usersDirectory.contrasenaRegeneradaDescripcion", { nickname: pendingRegeneratePassword.nickname }),
+          description: t("usersDirectory.contrasenaRegeneradaDescripcion", { nickname: pending.nickname }),
           link: payload.action_link,
         });
       } else {
-        toast?.success(t("usersDirectory.contrasenaRegeneradaEmailEnviado", { nickname: pendingRegeneratePassword.nickname }));
+        toast?.success(t("usersDirectory.contrasenaRegeneradaEmailEnviado", { nickname: pending.nickname }));
       }
-      setPendingRegeneratePassword(null);
-      loadActiveStatus();
-      loadAccountDates();
-    } catch (err) {
-      toast?.error(err.message || t("usersDirectory.noSePudoRegenerarContrasena"));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      refreshStatuses();
+    },
+  });
+  const requestRegeneratePassword = (row) => regeneratePasswordAction.request({ user_id: row.user_id, nickname: row.nickname, body: { target_user_id: row.user_id } });
 
   // Enlace de invitación (Release V1, 2026-09-02) — permite autoregistrarse
   // aunque app_config.allow_external_registration esté desactivado, sin
   // dar de alta la cuenta directamente (a diferencia de "Crear usuario", el
   // superadmin no elige nombre/email/dataset aquí; el resultado se muestra
   // en el mismo ActivationLinkPanel que ya usan regenerar enlace/contraseña).
+  // No es una de las 5 mini-máquinas de arriba (sin confirmación previa, un
+  // solo botón), así que se queda fuera de useAdminAction.
   const generateInvitationLink = async () => {
     setGeneratingInvitation(true);
     try {
@@ -1898,7 +1898,7 @@ function UsersDirectory({ profile }) {
         fullProfile={fullProfile}
         currentUserId={profile?.user_id}
         viewerIsSuperadmin={!!profile?.is_superadmin}
-        actionBusy={submitting}
+        actionBusy={adminToggle.submitting || deleteAction.submitting || toggleActiveAction.submitting || regenerateLinkAction.submitting || regeneratePasswordAction.submitting}
         onClose={() => setOpenUserId(null)}
         onRequestToggleAdmin={requestAdminToggle}
         onRequestToggleActive={requestToggleActive}
@@ -1918,91 +1918,91 @@ function UsersDirectory({ profile }) {
       />
 
       <ConfirmDialog
-        open={!!pendingToggle}
+        open={!!adminToggle.pending}
         title={t("usersDirectory.cambiarRolAdminTitulo")}
-        message={pendingToggle && (
+        message={adminToggle.pending && (
           <>
-            {t("usersDirectory.usuarioLabel", { nickname: pendingToggle.nickname })}
+            {t("usersDirectory.usuarioLabel", { nickname: adminToggle.pending.nickname })}
             <br />
             {t("usersDirectory.adminLabel", {
-              from: pendingToggle.currentValue ? t("roleCheckbox.si") : t("roleCheckbox.no"),
-              to: pendingToggle.nextValue ? t("roleCheckbox.si") : t("roleCheckbox.no"),
+              from: adminToggle.pending.currentValue ? t("roleCheckbox.si") : t("roleCheckbox.no"),
+              to: adminToggle.pending.nextValue ? t("roleCheckbox.si") : t("roleCheckbox.no"),
             })}
           </>
         )}
-        onConfirm={confirmAdminToggle}
-        onCancel={cancelAdminToggle}
-        loading={submitting}
+        onConfirm={adminToggle.confirm}
+        onCancel={adminToggle.cancel}
+        loading={adminToggle.submitting}
         confirmLabel={t("usersDirectory.confirmar")}
         danger={false}
       />
 
       <ConfirmDialog
-        open={!!pendingDelete}
+        open={!!deleteAction.pending}
         title={t("usersDirectory.eliminarUsuarioTitulo")}
-        message={pendingDelete && (
+        message={deleteAction.pending && (
           <>
-            {t("usersDirectory.eliminarUsuarioMensaje", { nickname: pendingDelete.nickname }).split(pendingDelete.nickname).map((part, i, arr) => (
-              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingDelete.nickname}</strong>}</Fragment>
+            {t("usersDirectory.eliminarUsuarioMensaje", { nickname: deleteAction.pending.nickname }).split(deleteAction.pending.nickname).map((part, i, arr) => (
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{deleteAction.pending.nickname}</strong>}</Fragment>
             ))}
             <br />
             {t("usersDirectory.eliminarUsuarioAlternativa")}
           </>
         )}
-        onConfirm={confirmDelete}
-        onCancel={cancelDelete}
-        loading={submitting}
+        onConfirm={deleteAction.confirm}
+        onCancel={deleteAction.cancel}
+        loading={deleteAction.submitting}
         confirmLabel={t("usersDirectory.eliminar")}
         danger
       />
 
       <ConfirmDialog
-        open={!!pendingToggleActive}
+        open={!!toggleActiveAction.pending}
         title={t("usersDirectory.desactivarUsuarioTitulo")}
-        message={pendingToggleActive && (
+        message={toggleActiveAction.pending && (
           <>
-            {t("usersDirectory.desactivarUsuarioMensaje", { nickname: pendingToggleActive.nickname }).split(pendingToggleActive.nickname).map((part, i, arr) => (
-              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingToggleActive.nickname}</strong>}</Fragment>
+            {t("usersDirectory.desactivarUsuarioMensaje", { nickname: toggleActiveAction.pending.nickname }).split(toggleActiveAction.pending.nickname).map((part, i, arr) => (
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{toggleActiveAction.pending.nickname}</strong>}</Fragment>
             ))}
           </>
         )}
-        onConfirm={confirmToggleActive}
-        onCancel={cancelToggleActive}
-        loading={submitting}
+        onConfirm={toggleActiveAction.confirm}
+        onCancel={toggleActiveAction.cancel}
+        loading={toggleActiveAction.submitting}
         confirmLabel={t("usersDirectory.desactivar")}
         danger={false}
       />
 
       <ConfirmDialog
-        open={!!pendingRegenerateLink}
+        open={!!regenerateLinkAction.pending}
         title={t("usersDirectory.generarEnlaceTitulo")}
-        message={pendingRegenerateLink && (
+        message={regenerateLinkAction.pending && (
           <>
-            {t("usersDirectory.generarEnlaceMensaje", { nickname: pendingRegenerateLink.nickname }).split(pendingRegenerateLink.nickname).map((part, i, arr) => (
-              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingRegenerateLink.nickname}</strong>}</Fragment>
+            {t("usersDirectory.generarEnlaceMensaje", { nickname: regenerateLinkAction.pending.nickname }).split(regenerateLinkAction.pending.nickname).map((part, i, arr) => (
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{regenerateLinkAction.pending.nickname}</strong>}</Fragment>
             ))}
           </>
         )}
-        onConfirm={confirmRegenerateLink}
-        onCancel={cancelRegenerateLink}
-        loading={submitting}
+        onConfirm={regenerateLinkAction.confirm}
+        onCancel={regenerateLinkAction.cancel}
+        loading={regenerateLinkAction.submitting}
         confirmLabel={t("usersDirectory.generarEnlace")}
         danger={false}
       />
 
       <ConfirmDialog
-        open={!!pendingRegeneratePassword}
+        open={!!regeneratePasswordAction.pending}
         title={t("usersDirectory.regenerarContrasenaTitulo")}
-        message={pendingRegeneratePassword && (
+        message={regeneratePasswordAction.pending && (
           <>
-            {t("usersDirectory.regenerarContrasenaMensaje", { nickname: pendingRegeneratePassword.nickname }).split(pendingRegeneratePassword.nickname).map((part, i, arr) => (
-              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{pendingRegeneratePassword.nickname}</strong>}</Fragment>
+            {t("usersDirectory.regenerarContrasenaMensaje", { nickname: regeneratePasswordAction.pending.nickname }).split(regeneratePasswordAction.pending.nickname).map((part, i, arr) => (
+              <Fragment key={i}>{part}{i < arr.length - 1 && <strong>{regeneratePasswordAction.pending.nickname}</strong>}</Fragment>
             ))}
           </>
         )}
-        onConfirm={confirmRegeneratePassword}
-        onCancel={cancelRegeneratePassword}
-        loading={submitting}
+        onConfirm={regeneratePasswordAction.confirm}
+        onCancel={regeneratePasswordAction.cancel}
+        loading={regeneratePasswordAction.submitting}
         confirmLabel={t("usersDirectory.regenerar")}
         danger={false}
       />

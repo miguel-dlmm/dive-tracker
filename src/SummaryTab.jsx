@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus, FileDown } from "lucide-react";
 import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr, ExpandableCard, getDefaultCurrency } from "./shared";
 import { listItemVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
-import { buildEntriesBySource, comparePeriods } from "./rateCalc";
+import { buildEntriesBySource, comparePeriods, entriesArgsFromTables } from "./rateCalc";
 import { BRAND_NAVY, CORAL, GREEN, BRAND_SLATE_FILL } from "./App";
 import ExportReportSheet from "./monthlyReport/ExportReportSheet";
 
@@ -440,7 +440,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   // en HomeTab.jsx — ver docs/BACKLOG.md, "Reutilizar componente entre
   // Home y Resumen".
   const entriesBySource = useMemo(
-    () => buildEntriesBySource({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    () => buildEntriesBySource(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
   const { ganado: ganadoEntries, comision: comisionEntries, companeros: companerosEntries } = entriesBySource;

@@ -42,6 +42,21 @@ export function isRateActive(r) {
 // docs/BACKLOG.md, "Reutilizar componente entre Home y Resumen"
 // (extraído aquí 2026-09-02, sin cambiar ningún cálculo, solo el sitio
 // donde vive).
+// Empaqueta las tablas de useSupabaseTable (cada una con `.rows`) en la
+// forma plana que esperan buildEntriesBySource/buildActivityEntries/
+// buildIncomeEntries — se repetía literalmente igual en 5 sitios entre
+// MiTrabajoTab.jsx, HomeTab.jsx y MovementSheet.jsx (informe de
+// refactorización 2026-09, sección 4). buildExportReportData.js no lo usa
+// a propósito: ya recibe los arrays directamente, sin pasar por tablas de
+// useSupabaseTable.
+export function entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency) {
+  return {
+    worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows,
+    commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows,
+    fallbackCurrency,
+  };
+}
+
 export function buildEntriesBySource({ worklog, rates, comisiones, commissionRates, colleaguePayments, fallbackCurrency }) {
   const rateTotal = (e, ratesTable) => {
     const r = ratesTable.find((r) => r.school === e.school && r.activity === e.activity && isRateActive(r));

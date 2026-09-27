@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { CalendarDays, Award, Handshake, Building2, HelpCircle, Wallet, Plus } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, useFloatingDropdown, FloatingPanel, getDefaultCurrency } from "./shared";
-import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
+import { buildEntriesBySource, buildIncomeEntries, entriesArgsFromTables } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import { getGeneratedCount } from "./trainingRecords/generatedCounter";
 
@@ -265,7 +265,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // en SummaryTab.jsx — ver docs/BACKLOG.md, "Reutilizar componente entre
   // Home y Resumen".
   const entriesBySource = useMemo(
-    () => buildEntriesBySource({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    () => buildEntriesBySource(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
   const { ganado: ganadoEntries, comision: comisionEntries, companeros: companerosEntries } = entriesBySource;
@@ -322,7 +322,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // "Generado este mes" y "Pendiente de cobrar" parten de este mismo array,
   // solo cambia el filtro que le aplican.
   const incomeEntries = useMemo(
-    () => buildIncomeEntries({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    () => buildIncomeEntries(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
 
