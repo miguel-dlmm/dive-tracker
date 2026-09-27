@@ -159,7 +159,16 @@ export default function DiveGuideTab({ onClose }) {
             isFullscreen={isFullscreen}
             onToggleFullscreen={toggleFullscreen}
           />
-          <div className="relative min-h-0 flex-1 touch-pan-y overflow-hidden" {...swipeProps}>
+          {/* touch-none (no touch-pan-y, a diferencia del carrusel de
+              SlideDeck/motion.js): aquí no hace falta scroll vertical
+              nativo, y CUALQUIER touch-action que no sea "none" deja a
+              Safari con margen para interpretar el pellizco como su
+              propio zoom nativo de página en vez de entregárselo entero a
+              react-zoom-pan-pinch — bug real confirmado (pedido explícito
+              del usuario: "arregla que funcione el zoom en Safari"), no
+              reproducible en Chrome (que es más permisivo con
+              preventDefault en touchmove incluso sin este ajuste). */}
+          <div className="relative min-h-0 flex-1 touch-none overflow-hidden" {...swipeProps}>
             <AnimatePresence mode="popLayout" initial={false} custom={direction}>
               <motion.div
                 key={current.n}
@@ -179,7 +188,10 @@ export default function DiveGuideTab({ onClose }) {
                   wheel={{ step: 0.2 }}
                   onTransform={(_, state) => setIsZoomed(state.scale > 1.01)}
                 >
-                  <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }} contentStyle={{ width: "100%", height: "100%" }}>
+                  <TransformComponent
+                    wrapperStyle={{ width: "100%", height: "100%", touchAction: "none" }}
+                    contentStyle={{ width: "100%", height: "100%" }}
+                  >
                     <img
                       src={pageUrl(current.n)}
                       alt=""
