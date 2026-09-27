@@ -14,7 +14,7 @@
   "quarterAbbr": "T",
   "halfYearAbbr": "S",
   "trend": {
-    "heading": "Tendencia — toca un periodo para navegar",
+    "heading": "Tendencia: toca un periodo para navegar",
     "goTo": "Ir a {{period}}",
     "currentSuffix": " (periodo actual)"
   },
@@ -64,7 +64,7 @@
     "previewAdjustments_other": "{{count}} ajustes",
     "previewPending": "{{amount}} pendiente",
     "emptyError": "No hay movimientos que exportar con estos filtros",
-    "genericError": "No hemos podido generar el PDF — inténtalo de nuevo",
+    "genericError": "No hemos podido generar el PDF. Inténtalo de nuevo",
     "success": "PDF descargado",
     "onlyPendingNote": "Este informe muestra solo lo pendiente de cobro",
     "totalLabel": "Total del periodo elegido",

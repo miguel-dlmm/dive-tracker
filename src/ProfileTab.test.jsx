@@ -340,7 +340,7 @@ describe("moneda favorita", () => {
     renderProfile();
     await screen.findByText("EUR — Euro (€)");
 
-    await user.click(screen.getByRole("button", { name: "Sin elegir — usa la moneda por defecto de la app" }));
+    await user.click(screen.getByRole("button", { name: "Sin elegir: usa la moneda por defecto de la app" }));
     await user.click(screen.getByText("USD — Dólar ($)"));
 
     expect(localStorage.getItem("oceanpulse:favoriteCurrency:u1")).toBe("USD");
