@@ -147,6 +147,24 @@
       ],
       "expectedResult": "Vous avez un montant de bilan pour la période choisie, avec le détail de la provenance de chaque revenu si besoin."
     },
+    "generar-training-record": {
+      "title": "Générer un Training Record",
+      "summary": "Le document officiel de progression SSI de chaque élève, avec sa signature et la vôtre — rien n'est stocké dans le cloud, seulement téléchargé.",
+      "whatYouCanDo": "Depuis Training Records, vous générez le document de progression officiel pour n'importe laquelle des 10 plantillas SSI, avec les données de chaque élève et votre signature d'instructeur déjà incluses. Vous pouvez les générer un par un ou tous à la fois, et les télécharger en PDF, en image, ou les partager directement.",
+      "whenToUseIt": "À la fin d'un cours, quand un élève a besoin de son Training Record sur papier ou pour l'envoyer à SSI.",
+      "steps": [
+        "Ouvrez Training Records depuis le raccourci sur l'accueil.",
+        "Choisissez le modèle SSI du cours et remplissez la configuration partagée (version de l'examen, certification, progression du cours...) — remplie une seule fois pour toute la classe.",
+        "\"Ajouter un élève\" pour chaque élève : ne demande que son nom, ses initiales et sa signature — s'il est mineur, aussi le nom et la signature de son tuteur.",
+        "\"Générer pour tous les élèves\" crée le document de toute la liste en une fois ; \"Régénérer le TR\" sur la ligne d'un élève précis régénère seulement le sien, sans refaire le reste.",
+        "Par élève : \"Télécharger le PDF\", \"Télécharger l'image (JPG)\" ou \"Partager\". Pour tous à la fois : \"Tout télécharger en PDF/JPG\" ou \"Tout partager\", dans un seul fichier compressé."
+      ],
+      "tips": [
+        "Vous devez avoir votre carte d'instructeur complète dans Mon profil (initiales, numéro SSI Pro et signature) avant de pouvoir générer quoi que ce soit — c'est ce qui est imprimé sur chaque Training Record.",
+        "Rien de ce que vous remplissez ici n'est stocké dans Ocean Flow : chaque document est généré à l'instant et seulement téléchargé."
+      ],
+      "expectedResult": "Vous avez le Training Record de chaque élève prêt à télécharger ou partager, avec sa signature et la vôtre déjà incluses."
+    },
     "mi-trabajo-referencia": {
       "title": "Mon activité, en un coup d'œil",
       "summary": "La liste complète de vos mouvements — cours, commissions et ajustements — avec leurs actions.",
