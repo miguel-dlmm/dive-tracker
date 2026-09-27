@@ -124,18 +124,20 @@ function clearStoredNav() {
   clearStoredHelpOpen(); // categoría desplegada en Ayuda — misma vida que el resto
 }
 
-// "Qué hay de nuevo" — se muestra una vez por versión y por cuenta (no por
-// dispositivo/navegador): localStorage, no sessionStorage, para que
-// sobreviva a cerrar la pestaña, igual que la moneda favorita (ver
-// docs/ADR/0007-preferencias-personales-en-localstorage.md). Guarda la
-// versión vista, no un booleano — así una futura versión nueva vuelve a
-// mostrarlo automáticamente sin tener que "resetear" nada.
-const whatsNewSeenKey = (userId) => `oceanpulse:whatsNewSeen:${userId || "anon"}`;
-function hasSeenWhatsNew(userId) {
-  try { return localStorage.getItem(whatsNewSeenKey(userId)) === APP_VERSION; } catch { return true; }
-}
-function markWhatsNewSeen(userId) {
-  try { localStorage.setItem(whatsNewSeenKey(userId), APP_VERSION); } catch { /* no-op */ }
+// "Qué hay de nuevo" — se muestra una vez por versión y por cuenta, sea
+// cual sea el dispositivo por el que entre (2026-09-27: migrado de
+// localStorage a profiles.whats_new_seen_version, mismo criterio que
+// profiles.onboarding_tour_seen_at — ver scripts/migrations/
+// 0023-whatsnew-seen-version.sql). Guarda la versión vista, no un
+// booleano — así una futura versión nueva vuelve a mostrarlo
+// automáticamente sin tener que "resetear" nada, y reiniciarlo para
+// todas las cuentas de golpe es un solo UPDATE.
+// Respaldo de lectura única: cuentas que ya lo habían visto bajo el
+// localStorage anterior no deben ver reaparecer el aviso solo por haber
+// migrado dónde se guarda.
+function hasSeenWhatsNew(profile) {
+  if (profile?.whats_new_seen_version === APP_VERSION) return true;
+  try { return localStorage.getItem(`oceanpulse:whatsNewSeen:${profile?.user_id || "anon"}`) === APP_VERSION; } catch { return true; }
 }
 
 function AppShell({ onSignOut, profile, onProfileUpdated }) {
@@ -315,30 +317,31 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
   const [onboardingOpen, setOnboardingOpen] = useState(() => !profile?.onboarding_tour_seen_at);
   const closeOnboardingTour = async () => {
     const seenAt = new Date().toISOString();
-    await supabase.from("profiles").update({ onboarding_tour_seen_at: seenAt }).eq("user_id", profile.user_id);
-    onProfileUpdated({ onboarding_tour_seen_at: seenAt });
     // Marca también como vista la versión actual de WhatsNew para esta
-    // cuenta: sin esto, cerrar el tour dejaría paso de inmediato a "Qué
-    // hay de nuevo" — dos avisos de golpe en el primer acceso, cuando el
-    // propio tour ya cumple ese papel de "esto es lo que hay" para
-    // alguien que nunca ha usado la app.
-    markWhatsNewSeen(profile.user_id);
+    // cuenta en el mismo UPDATE: sin esto, cerrar el tour dejaría paso de
+    // inmediato a "Qué hay de nuevo" — dos avisos de golpe en el primer
+    // acceso, cuando el propio tour ya cumple ese papel de "esto es lo
+    // que hay" para alguien que nunca ha usado la app.
+    const patch = { onboarding_tour_seen_at: seenAt, whats_new_seen_version: APP_VERSION };
+    await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
+    onProfileUpdated(patch);
     setOnboardingOpen(false);
   };
 
   // "Qué hay de nuevo" — apertura automática desactivada a propósito para
   // v1.6.0 (pedido explícito del usuario: "no muestres whats new"), sin
   // quitar el mecanismo entero: showWhatsNewAgain (abrirlo a mano desde
-  // Ayuda) sigue funcionando igual, más abajo. Ver
-  // docs/BACKLOG.md ("Migrar 'Qué hay de nuevo' al mismo modelo que el
-  // tour de bienvenida") para la migración pendiente que sustituirá este
-  // `localStorage` por una columna real en `profiles`, con la que sí se
-  // podrá reiniciar a todas las cuentas de golpe cuando se quiera reabrir
-  // un aviso — hasta entonces, se deja fijo en `false` en vez de volver a
-  // depender de `hasSeenWhatsNew`.
+  // Ayuda) sigue funcionando igual, más abajo. Esto es una decisión de
+  // contenido de esta release (no hay nada nuevo que anunciar), no
+  // depende de dónde se guarde "visto" — profiles.whats_new_seen_version
+  // ya está listo (ver hasSeenWhatsNew arriba) para cuando una release
+  // futura quiera volver a depender de él en vez de dejarlo fijo en
+  // `false`.
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
-  const closeWhatsNew = () => {
-    markWhatsNewSeen(profile?.user_id);
+  const closeWhatsNew = async () => {
+    const patch = { whats_new_seen_version: APP_VERSION };
+    await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
+    onProfileUpdated(patch);
     setWhatsNewOpen(false);
   };
   // Fase 4, Release V1 (rediseño de notificaciones — investigación de

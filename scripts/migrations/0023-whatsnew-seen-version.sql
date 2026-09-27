@@ -1,0 +1,22 @@
+-- "Qué hay de nuevo" pasa de localStorage a la propia cuenta (2026-09-27,
+-- pedido explícito del usuario) — mismo motivo que el onboarding
+-- (0022-onboarding-tour-visto.sql): poder reiniciarlo para todas las
+-- cuentas de golpe cuando se quiera relanzar un aviso, sin depender del
+-- navegador/dispositivo de cada usuario.
+--
+-- A diferencia del onboarding, aquí se guarda la VERSIÓN vista, no un
+-- timestamp: es exactamente el mismo criterio que ya usaba la clave de
+-- localStorage (oceanpulse:whatsNewSeen:<userId>, guardaba APP_VERSION) —
+-- así una versión nueva de la app vuelve a mostrar el aviso sola, sin
+-- necesidad de resetear nada a mano.
+--
+-- Sin backfill a "visto": se deja en NULL para todas las cuentas
+-- existentes hoy (a diferencia de 0022, que si marcaba todo como visto).
+-- El motivo del cambio es justo poder reiniciarlo a NULL para todo el
+-- mundo cuando se quiera — backfillear ahora mismo a la versión actual
+-- iría en contra de ese propósito. La app sigue leyendo localStorage como
+-- respaldo de solo lectura la primera vez que carga cada cuenta (ver
+-- App.jsx), para no hacer reaparecer el aviso a quien ya lo había visto
+-- bajo el sistema anterior.
+alter table public.profiles
+  add column if not exists whats_new_seen_version text;
