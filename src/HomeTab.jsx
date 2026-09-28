@@ -531,48 +531,44 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             <span className="text-[10.5px] font-semibold leading-tight text-white">{t("quickCreate.label")}</span>
           </button>
         </div>
-        {/* Rediseño 2026-09-27 (segunda vuelta, pedido explícito: "banda
-            de color arriba con el nombre, el resto fondo blanco, segunda
-            fila el icono, tercera fila el valor... innovador, usable,
-            visualmente atractivo"). Estructura idéntica en las tres
-            tarjetas — banda superior con el nombre fijo de la tarjeta
-            (uno de los azules de marca, poca opacidad), icono en su
-            propia fila, y una única línea de contenido específico debajo
-            (el valor real: cifra generada o CTA, escuela + cursos, Koh
-            Tao) — como una mini "stat card" de panel, no dos líneas de
-            texto compitiendo por el mismo ancho. Ese contenido ya no
-            comparte fila con el icono (motivo original del corte de
-            texto en el rediseño anterior, verificado con Playwright en
-            un iPhone 14 Pro Max real: sigue resuelto aquí, con aún más
-            margen). BRAND_OCEAN/BRAND_NAVY/TEAL — tres tonos fríos de
-            marca distintos por tarjeta, texto siempre en BRAND_NAVY
-            (contraste garantizado pase lo que pase con el tono de
-            acento). */}
+        {/* Rediseño 2026-09-28 (tercera vuelta, pedido explícito: "me
+            siguen saliendo las tres pastillas sin centrar en el mv") —
+            medido con Playwright sobre el rediseño anterior (banda de
+            color a todo el ancho + cuerpo centrado por separado): el
+            icono+texto SÍ quedaba centrado dentro de su propio hueco
+            (8px arriba, 8px abajo, comprobado), pero la banda ocupaba
+            ~21,5px fijos arriba sin nada equivalente abajo — así que el
+            conjunto quedaba centrado respecto a "su hueco", no respecto
+            a la tarjeta entera, que es lo que de verdad se ve a simple
+            vista. La banda pasa de franja a todo el ancho a una
+            PEQUEÑA insignia más — un hijo más de la misma columna
+            centrada (etiqueta + icono + valor, los tres con
+            `items-center justify-center` y el mismo padding arriba y
+            abajo), así que ahora si está centrado de verdad respecto a
+            toda la tarjeta, no solo respecto a un trozo de ella. */}
         <div className="grid grid-cols-3 gap-2">
           {onOpenTrainingRecords && (
             <button
               type="button"
               onClick={onOpenTrainingRecords}
               data-testid="training-records-card"
-              className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white text-center"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white px-2 py-2.5 text-center"
             >
-              <span className="w-full truncate px-1 py-1 text-[9px] font-bold uppercase tracking-wide" style={{ backgroundColor: `${BRAND_OCEAN}14`, color: BRAND_NAVY }}>
+              <span className="max-w-full truncate rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide" style={{ backgroundColor: `${BRAND_OCEAN}14`, color: BRAND_NAVY }}>
                 {t("trainingRecordsCard.title")}
               </span>
-              <span className="flex flex-1 flex-col items-center justify-center gap-1 px-2 py-2">
-                <motion.span
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-                  style={{ backgroundColor: generatedCount > 0 ? BRAND_OCEAN : `${BRAND_OCEAN}1A` }}
-                  animate={reducedMotion ? undefined : { scale: [1, 1.06, 1] }}
-                  transition={reducedMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <Award size={12} style={{ color: generatedCount > 0 ? "#fff" : BRAND_OCEAN }} aria-hidden="true" />
-                </motion.span>
-                <span className="w-full min-w-0 truncate text-[11px] font-bold" style={{ color: BRAND_NAVY }}>
-                  {generatedCount > 0
-                    ? `${animatedGeneratedCount} ${t("trainingRecordsCard.generatedLabel")}`
-                    : t("trainingRecordsCard.ctaFirstTime")}
-                </span>
+              <motion.span
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: generatedCount > 0 ? BRAND_OCEAN : `${BRAND_OCEAN}1A` }}
+                animate={reducedMotion ? undefined : { scale: [1, 1.06, 1] }}
+                transition={reducedMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Award size={12} style={{ color: generatedCount > 0 ? "#fff" : BRAND_OCEAN }} aria-hidden="true" />
+              </motion.span>
+              <span className="w-full min-w-0 truncate text-[11px] font-bold" style={{ color: BRAND_NAVY }}>
+                {generatedCount > 0
+                  ? `${animatedGeneratedCount} ${t("trainingRecordsCard.generatedLabel")}`
+                  : t("trainingRecordsCard.ctaFirstTime")}
               </span>
             </button>
           )}
@@ -584,38 +580,34 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             type="button"
             onClick={onOpenTrabajo}
             data-testid="active-school-this-month-card"
-            className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white text-center"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white px-2 py-2.5 text-center"
           >
-            <span className="w-full truncate px-1 py-1 text-[9px] font-bold uppercase tracking-wide" style={{ backgroundColor: `${BRAND_NAVY}14`, color: BRAND_NAVY }}>
+            <span className="max-w-full truncate rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide" style={{ backgroundColor: `${BRAND_NAVY}14`, color: BRAND_NAVY }}>
               {t("activeSchoolThisMonth")}
             </span>
-            <span className="flex flex-1 flex-col items-center justify-center gap-1 px-2 py-2">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
-                <Building2 size={12} style={{ color: BRAND_NAVY }} aria-hidden="true" />
-              </span>
-              <span className="w-full min-w-0 truncate text-[11px] font-bold" style={{ color: BRAND_NAVY }}>
-                {schoolActivityThisMonth
-                  ? `${schoolActivityThisMonth.school} · ${t("activeSchoolCount", { count: schoolActivityThisMonth.count })}`
-                  : t("noActivityThisMonth")}
-              </span>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
+              <Building2 size={12} style={{ color: BRAND_NAVY }} aria-hidden="true" />
+            </span>
+            <span className="w-full min-w-0 truncate text-[11px] font-bold" style={{ color: BRAND_NAVY }}>
+              {schoolActivityThisMonth
+                ? `${schoolActivityThisMonth.school} · ${t("activeSchoolCount", { count: schoolActivityThisMonth.count })}`
+                : t("noActivityThisMonth")}
             </span>
           </button>
           {onOpenDiveGuide && (
             <button
               type="button"
               onClick={onOpenDiveGuide}
-              className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white text-center"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white px-2 py-2.5 text-center"
             >
-              <span className="w-full truncate px-1 py-1 text-[9px] font-bold uppercase tracking-wide" style={{ backgroundColor: `${TEAL}14`, color: BRAND_NAVY }}>
+              <span className="max-w-full truncate rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide" style={{ backgroundColor: `${TEAL}14`, color: BRAND_NAVY }}>
                 {t("diveGuideCard.title")}
               </span>
-              <span className="flex flex-1 flex-col items-center justify-center gap-1 px-2 py-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
-                  <BookOpen size={12} style={{ color: TEAL }} aria-hidden="true" />
-                </span>
-                <span className="w-full min-w-0 truncate text-[11px] font-bold" style={{ color: BRAND_NAVY }}>
-                  {t("diveGuideCard.subtitle")}
-                </span>
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
+                <BookOpen size={12} style={{ color: TEAL }} aria-hidden="true" />
+              </span>
+              <span className="w-full min-w-0 truncate text-[11px] font-bold" style={{ color: BRAND_NAVY }}>
+                {t("diveGuideCard.subtitle")}
               </span>
             </button>
           )}
