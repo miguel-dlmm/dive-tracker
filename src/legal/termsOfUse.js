@@ -11,4 +11,8 @@ export const DOCUMENT_TYPE = "terms_of_use";
 // "de Ocean Flow") a un único nombre, "Ocean Flow" — cambio de contenido
 // real, sube VERSION para forzar la reaceptación (ver nota de
 // privacyPolicy.js sobre cómo funciona VERSION).
-export const VERSION = "v2";
+//
+// v3 (2026-09-28): email de contacto real, legal@oceanflow.money, en vez
+// del placeholder — ver la nota completa en privacyPolicy.js (mismo
+// cambio, mismo motivo).
+export const VERSION = "v3";

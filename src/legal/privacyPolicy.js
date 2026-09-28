@@ -17,4 +17,12 @@ export const DOCUMENT_TYPE = "privacy_policy";
 // "de Ocean Flow") a un único nombre, "Ocean Flow" — cambio de contenido
 // real, sube VERSION para forzar la reaceptación (ver nota de VERSION
 // más abajo).
-export const VERSION = "v2";
+//
+// v3 (2026-09-28): se rellenan los datos de contacto reales —
+// legal@oceanflow.money como email del responsable del tratamiento y para
+// ejercer derechos, y NIF/dirección "disponibles previa solicitud" a esa
+// misma dirección en vez de publicarlos abiertos. Sigue pendiente [PENDIENTE:
+// razón social del responsable] en las 15 traducciones — sin ese dato el
+// documento no puede considerarse definitivo, ver aviso en la sesión que
+// hizo este cambio.
+export const VERSION = "v3";
