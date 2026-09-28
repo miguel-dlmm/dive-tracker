@@ -8,24 +8,8 @@
     "start": "Começar",
     "slides": [
       {
-        "title": "Exporte seu relatório em PDF",
-        "body": "Gere o PDF com todos os seus movimentos para enviar a quem precisar — exporte seus dados com facilidade."
-      },
-      {
-        "title": "Training Records mais leves",
-        "body": "O gerador de Training Records foi otimizado para criar arquivos mais leves."
-      },
-      {
-        "title": "Home, renovada",
-        "body": "Mais dinâmica, com dados interessantes para ver de relance."
-      },
-      {
-        "title": "Meu perfil, reestruturado",
-        "body": "Seções reorganizadas para que tudo fique mais fácil e rápido de encontrar."
-      },
-      {
-        "title": "Reveja quando quiser",
-        "body": "Volte a essas novidades em Ajuda → \"Ver o que há de novo\", sem esperar pela próxima atualização."
+        "title": "O guia de mergulho de Koh Tao, já no Ocean Flow",
+        "body": "Pontos de mergulho, vida marinha e toda a informação para o briefing, com pesquisa instantânea. Acede a partir do cartão da Home."
       }
     ]
   },

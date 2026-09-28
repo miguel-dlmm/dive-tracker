@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { FileDown, LayoutGrid, IdCard, GraduationCap, Sparkles } from "lucide-react";
-import { TEAL, SUN, CORAL, BRAND_NAVY, BRAND_OCEAN } from "./App";
+import { BookOpen } from "lucide-react";
+import { BRAND_OCEAN } from "./App";
 import SlideDeck from "./SlideDeck";
 
 // Píldora de novedades — no un manual: pocas frases por diapositiva,
@@ -37,20 +37,18 @@ import SlideDeck from "./SlideDeck";
 // Contenido reescrito 2026-09-27 (release v1.5.0/v1.5.1, texto aprobado
 // explícitamente por el usuario en el chat antes de comitearse — ver
 // docs/ADR/0010-proceso-de-release.md, addendum 2026-09-09): 4
-// diapositivas de funcionalidad nueva + la meta-diapositiva final de
-// siempre. icon/color no son traducibles — título/cuerpo de cada
-// diapositiva viven en notices.json (whatsNew.slides, mismo orden por
-// índice) y se combinan con este array en el componente. La última
-// diapositiva se queda última a propósito, como siempre: es un
-// meta-mensaje sobre el propio WhatsNew ("consúltalo de nuevo en
-// Ayuda"), no una funcionalidad más — su texto no cambia de release a
-// release, así que no necesita nueva aprobación cada vez.
+// diapositivas de funcionalidad nueva. icon/color no son traducibles —
+// título/cuerpo de cada diapositiva viven en notices.json (whatsNew.slides,
+// mismo orden por índice) y se combinan con este array en el componente.
+//
+// v1.7.0, segunda vuelta (2026-09-28): vuelve a una única diapositiva (el
+// libro digital de Koh Tao) — SLIDE_ICONS debe tener SIEMPRE el mismo
+// número de entradas que notices.json→whatsNew.slides, o el carrusel
+// muestra puntos/diapositivas de más sin título ni cuerpo (bug real: se
+// dejó este array con las 5 entradas de la release anterior al recortar
+// el contenido a 1 sola diapositiva, y SlideDeck seguía contando 5).
 const SLIDE_ICONS = [
-  { icon: FileDown, color: BRAND_OCEAN }, // 1. Exporta tu informe en PDF
-  { icon: GraduationCap, color: SUN }, // 2. Training Records más ligeros
-  { icon: LayoutGrid, color: CORAL }, // 3. Portada renovada
-  { icon: IdCard, color: TEAL }, // 4. Mi perfil, reestructurado
-  { icon: Sparkles, color: BRAND_NAVY }, // 5. Repásalo cuando quieras, desde Ayuda
+  { icon: BookOpen, color: BRAND_OCEAN }, // 1. El libro de buceo de Koh Tao, ya en Ocean Flow
 ];
 
 export default function WhatsNew({ onClose }) {

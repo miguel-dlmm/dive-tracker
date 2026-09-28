@@ -5,6 +5,10 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Added
+- **"Qué hay de nuevo" anuncia el libro digital de Koh Tao**: apertura
+  automática reactivada (llevaba fija en "no mostrar" desde v1.6.0, sin
+  contenido nuevo que anunciar hasta ahora) con una única diapositiva
+  sobre la Guía de Buceo, en los 15 idiomas.
 - **Ayuda: "Exportar tu informe mensual en PDF"**: nuevo artículo en
   "Quiero..." explicando el botón "Exportar informe" de Resumen (escuela,
   rango de fechas, ajustes de curso, mostrar lo ya cobrado), en los 15
@@ -29,6 +33,14 @@ Registro de cambios relevantes de Ocean Flow.
   captura de la sección "Un recorrido corto por lo que hace" pasa de un
   recorte del carnet de instructor a la Home completa de Training
   Records.
+- **"Qué hay de nuevo" con menos diapositivas que iconos**: al recortar
+  el contenido a una única diapositiva, el array interno de iconos se
+  había quedado con 5 entradas de la release anterior — se veían 5 puntos
+  de navegación y diapositivas 2-5 sin título ni cuerpo. Cobertura nueva
+  (`SlideDeck.test.jsx`) para que no vuelva a pasar inadvertido.
+- **"Qué hay de nuevo" y el tour de bienvenida apilados a la vez**: una
+  cuenta recién activada (ambos "no visto" al mismo tiempo) podía llegar
+  a ver los dos diálogos montados encima uno del otro, no solo el tour.
 
 ## [1.7.0] - 2026-09-28
 

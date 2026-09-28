@@ -341,18 +341,22 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
     await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
     onProfileUpdated(patch);
     setOnboardingOpen(false);
+    // whatsNewOpen es un useState propio (no derivado de `profile` en cada
+    // render), así que actualizar `profile.whats_new_seen_version` arriba
+    // no lo vuelve a calcular solo — sin este setWhatsNewOpen(false)
+    // explícito, una cuenta nueva (ambos "no visto" a la vez al montar)
+    // vería el tour y, justo al cerrarlo, "Qué hay de nuevo" detrás.
+    setWhatsNewOpen(false);
   };
 
-  // "Qué hay de nuevo" — apertura automática desactivada a propósito para
-  // v1.6.0 (pedido explícito del usuario: "no muestres whats new"), sin
-  // quitar el mecanismo entero: showWhatsNewAgain (abrirlo a mano desde
-  // Ayuda) sigue funcionando igual, más abajo. Esto es una decisión de
-  // contenido de esta release (no hay nada nuevo que anunciar), no
-  // depende de dónde se guarde "visto" — profiles.whats_new_seen_version
-  // ya está listo (ver hasSeenWhatsNew arriba) para cuando una release
-  // futura quiera volver a depender de él en vez de dejarlo fijo en
-  // `false`.
-  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+  // "Qué hay de nuevo" — apertura automática reactivada (2026-09-28,
+  // pedido explícito: "muestra un whats new en el próximo despliegue a
+  // pro"), tras haber estado fija en `false` desde v1.6.0 ("no muestres
+  // whats new" — no había nada nuevo que anunciar entonces). Esta release
+  // sí trae contenido real (libro digital de Koh Tao), así que vuelve a
+  // depender de profiles.whats_new_seen_version vía hasSeenWhatsNew, tal
+  // como quedó preparado en su momento.
+  const [whatsNewOpen, setWhatsNewOpen] = useState(() => !hasSeenWhatsNew(profile));
   const closeWhatsNew = async () => {
     const patch = { whats_new_seen_version: APP_VERSION };
     await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
@@ -720,7 +724,15 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
       {tab === "dive-guide" && <DiveGuideTab onClose={closeSecondary} onOpenInstallApp={() => changeTab("install-app")} />}
 
       {onboardingOpen && <OnboardingTour onClose={closeOnboardingTour} />}
-      {whatsNewOpen && <WhatsNew onClose={closeWhatsNew} />}
+      {/* !onboardingOpen: una cuenta recién activada puede nacer con AMBOS
+          "no visto" a la vez (el tour y "Qué hay de nuevo"), no solo tras
+          cerrar el tour — sin este guard se montaban los dos diálogos
+          fixed apilados desde el primer render (bug real, detectado al
+          reactivar la apertura automática de WhatsNew en v1.7.0). El tour
+          ya hace de "esto es lo que hay" para quien nunca ha usado la
+          app, así que WhatsNew solo debe poder aparecer cuando el tour no
+          esté (o ya no esté) en pantalla. */}
+      {whatsNewOpen && !onboardingOpen && <WhatsNew onClose={closeWhatsNew} />}
       {/* Fase 6, Release V1 (2026-09-02): generalizado a cualquier cuenta,
           ya no solo superadmin — el gate real de qué fila puede ver cada
           quien vive en RLS (ver schema.sql, "read own audience"), esto

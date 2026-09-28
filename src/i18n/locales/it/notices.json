@@ -8,24 +8,8 @@
     "start": "Inizia",
     "slides": [
       {
-        "title": "Esporta il tuo report in PDF",
-        "body": "Genera il PDF con tutti i tuoi movimenti da inviare a chi ne ha bisogno — esporta i tuoi dati facilmente."
-      },
-      {
-        "title": "Training Records più leggeri",
-        "body": "Il generatore di Training Records è ottimizzato per creare file più leggeri."
-      },
-      {
-        "title": "Home, rinnovata",
-        "body": "Più dinamica, con dati interessanti da cogliere a colpo d'occhio."
-      },
-      {
-        "title": "Il mio profilo, ristrutturato",
-        "body": "Sezioni riorganizzate per rendere tutto più semplice e veloce da trovare."
-      },
-      {
-        "title": "Rivedile quando vuoi",
-        "body": "Torna a queste novità da Aiuto → \"Vedi le novità\", quando vuoi."
+        "title": "La guida subacquea di Koh Tao, ora in Ocean Flow",
+        "body": "Punti di immersione, vita marina e tutte le informazioni per il briefing, con ricerca istantanea. Accedi dalla scheda della Home."
       }
     ]
   },

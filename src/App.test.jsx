@@ -266,12 +266,12 @@ describe("AuthGate", () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText("Ocean Flow");
-    expect(screen.queryByText("Exporta tu informe en PDF")).not.toBeInTheDocument();
+    expect(screen.queryByText("El libro de buceo de Koh Tao, ya en Ocean Flow")).not.toBeInTheDocument();
 
     await user.click(screen.getByLabelText("Ayuda"));
     await user.click(await screen.findByText("Ver qué hay de nuevo en esta versión"));
 
-    expect(await screen.findByText("Exporta tu informe en PDF")).toBeInTheDocument();
+    expect(await screen.findByText("El libro de buceo de Koh Tao, ya en Ocean Flow")).toBeInTheDocument();
   });
 
   // Bug real reportado 2026-09-09: cerrar la Ayuda abierta desde Training
@@ -331,7 +331,7 @@ describe("AuthGate", () => {
     await screen.findByText("Ocean Flow");
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("Tu Home, de un vistazo")).toBeInTheDocument();
-    expect(screen.queryByText("Exporta tu informe en PDF")).not.toBeInTheDocument();
+    expect(screen.queryByText("El libro de buceo de Koh Tao, ya en Ocean Flow")).not.toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "Cerrar" }));
 
