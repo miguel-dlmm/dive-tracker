@@ -525,10 +525,12 @@ function CoverScreen({ t, reduced, onStart, onOpenSection, onSelectSitePage, onC
             su propia tarjeta (pedido explícito 2026-09-27: "quiero que el
             buscador... esté dentro de la pastilla de puntos de buceo en la
             home del libro digital"), no detrás de un enlace aparte que
-            abriera una hoja. maxResultsHeight más bajo que en la hoja del
-            lector (2 filas en vez de ~2,5) — aquí compite por sitio con el
-            resto de la portada; en el lector tiene toda la pantalla para
-            él. */}
+            abriera una hoja. maxResultsHeight = 144 (2026-09-28, pedido
+            explícito: "añade una tercera fila de resultados") — 3 filas
+            completas de min-h-11 (44px) + gap-1.5 (6px) entre ellas: 44×3 +
+            6×2 = 144. Menos que en la hoja del lector (148, ~3 filas con
+            algo más de aire) porque aquí compite por sitio con el resto de
+            la portada; en el lector tiene toda la pantalla para él. */}
         <motion.div {...fadeUpVariant(reduced, 3)} className="w-full max-w-xs overflow-hidden rounded-xl bg-white/10">
           <button
             type="button"
@@ -544,7 +546,7 @@ function CoverScreen({ t, reduced, onStart, onOpenSection, onSelectSitePage, onC
             </span>
           </button>
           <div className="border-t border-white/10 px-3 pb-3 pt-2">
-            <SiteSearch t={t} onSelectPage={onSelectSitePage} variant="dark" maxResultsHeight={100} />
+            <SiteSearch t={t} onSelectPage={onSelectSitePage} variant="dark" maxResultsHeight={144} />
           </div>
         </motion.div>
 
