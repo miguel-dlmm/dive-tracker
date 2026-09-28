@@ -171,14 +171,14 @@ async function main() {
 
   await shot(page, "home");
 
-  console.log("→ Home: 'Escuela más activa' navega a Resumen (puente táctil, 2026-09-07 — antes 'Generado este mes')");
+  console.log("→ Home: 'Escuela del mes' navega a Mi trabajo (2026-09-27, pedido explícito — antes iba a Resumen)");
   await page.getByTestId("active-school-this-month-card").tap();
   await page.waitForTimeout(300);
   const activeTabAfterGeneratedTap = await page.locator('nav button[aria-current="page"]').textContent();
-  if (activeTabAfterGeneratedTap?.trim() !== "Resumen") {
-    consoleIssues.push(`[home->resumen] Al tocar "Escuela más activa", la pestaña activa es "${activeTabAfterGeneratedTap?.trim()}", no "Resumen"`);
+  if (activeTabAfterGeneratedTap?.trim() !== "Mi trabajo") {
+    consoleIssues.push(`[home->mi-trabajo] Al tocar "Escuela del mes", la pestaña activa es "${activeTabAfterGeneratedTap?.trim()}", no "Mi trabajo"`);
   }
-  await shot(page, "resumen-tras-tocar-escuela-mas-activa");
+  await shot(page, "mi-trabajo-tras-tocar-escuela-del-mes");
   await page.locator("text=Home").first().tap();
   await page.waitForTimeout(300);
 

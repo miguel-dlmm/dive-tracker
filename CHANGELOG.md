@@ -4,6 +4,8 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.7.0] - 2026-09-28
+
 ### Added
 - **Libro digital: Guía de Buceo de Koh Tao**: nuevo acceso desde Home
   para enseñar la guía al cliente durante el briefing, a pantalla
