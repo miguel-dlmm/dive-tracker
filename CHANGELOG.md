@@ -17,6 +17,12 @@ Registro de cambios relevantes de Ocean Flow.
   la Política de Privacidad/Términos de Uso tras una actualización, ahora
   explica que se trata de eso ("hemos actualizado nuestras políticas…")
   en vez del texto genérico de primer acceso.
+- **Landing "Meet Ocean Flow" (`/meetOceanFlow`)**: el selector de idioma
+  no quedaba centrado en pantallas estrechas (el texto largo del hint
+  hacía salto de línea sin centrarse) — corregido en Safari/iPhone. La
+  captura de la sección "Un recorrido corto por lo que hace" pasa de un
+  recorte del carnet de instructor a la Home completa de Training
+  Records.
 
 ## [1.7.0] - 2026-09-28
 
