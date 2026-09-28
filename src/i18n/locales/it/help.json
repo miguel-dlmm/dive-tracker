@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Filtri e ricerca",
       "description": "Lo stesso schema in tutta l'app"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Esporta il tuo report mensile in PDF",
+      "description": "Tutto il dettaglio di un periodo, pronto da inviare"
     }
   },
   "articles": {
@@ -269,6 +273,24 @@
         "La ricerca nei cataloghi (Corsi, Valute) filtra mentre scrivi, senza distinguere maiuscole né accenti."
       ],
       "expectedResult": "L'elenco mostra solo ciò che ti interessa, senza perdere di vista quanti filtri hai attivi."
+    },
+    "exportar-informe-pdf": {
+      "title": "Esporta il tuo report mensile in PDF",
+      "summary": "Scarica un PDF con tutto il dettaglio di un periodo e di una scuola, pronto da rivedere o inviare.",
+      "whatYouCanDo": "Genera un report in PDF con i corsi, le commissioni e le rettifiche di corso del periodo e della scuola scelti, con la possibilità di mostrare anche gli importi già incassati.",
+      "whenToUseIt": "Quando ti serve un documento formale per verificare i conti con una scuola, conservarlo come promemoria, o semplicemente avere la tua contabilità in un unico PDF.",
+      "steps": [
+        "In Riepilogo, tocca \"Esporta report\".",
+        "Scegli la Scuola (se ne hai più di una) e l'Intervallo di date — arriva precompilato con quanto stavi guardando in Riepilogo, ma puoi cambiarlo.",
+        "Se vuoi, attiva \"Includi rettifiche di corso\" e decidi se sommarle al totale o mostrarle a parte.",
+        "Attiva \"Mostra gli importi già incassati\" se vuoi che il report distingua tra incassato e in sospeso.",
+        "Tocca \"Genera PDF\" e si scarica subito."
+      ],
+      "tips": [
+        "Il pulsante \"Esporta report\" appare solo se hai già configurato almeno una scuola.",
+        "Con \"Includi rettifiche di corso\" puoi scegliere rettifiche specifiche invece di includerle tutte, se ti servono solo per giustificarne alcune."
+      ],
+      "expectedResult": "Un PDF scaricato con il dettaglio completo del periodo e della scuola scelti, pronto da inviare o conservare."
     }
   }
 }

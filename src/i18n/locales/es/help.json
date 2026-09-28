@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Filtros y búsqueda",
       "description": "El mismo patrón en toda la app"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Exportar tu informe mensual en PDF",
+      "description": "Todo el detalle de un periodo, listo para enviar"
     }
   },
   "articles": {
@@ -269,6 +273,24 @@
         "El buscador de catálogos (Cursos, Monedas) filtra mientras escribes, sin distinguir mayúsculas ni acentos."
       ],
       "expectedResult": "La lista muestra solo lo que te interesa, sin perder de vista cuántos filtros tienes activos."
+    },
+    "exportar-informe-pdf": {
+      "title": "Exportar tu informe mensual en PDF",
+      "summary": "Descarga un PDF con todo el detalle de un periodo y una escuela, listo para revisar o enviar.",
+      "whatYouCanDo": "Genera un informe en PDF con los cursos, comisiones y ajustes de curso del periodo y la escuela que elijas, con la opción de mostrar también lo ya cobrado.",
+      "whenToUseIt": "Cuando necesites un documento formal para contrastar cuentas con una escuela, guardarlo como respaldo, o simplemente tener tu contabilidad en un único PDF.",
+      "steps": [
+        "En Resumen, toca \"Exportar informe\".",
+        "Elige la Escuela (si tienes más de una) y el Rango de fechas — llega precargado con lo que estuvieras mirando en Resumen, pero puedes cambiarlo.",
+        "Si quieres, activa \"Incluir ajustes de curso\" y decide si van sumados al total o aparte.",
+        "Activa \"Mostrar lo ya cobrado\" si quieres que el informe distinga entre lo cobrado y lo pendiente.",
+        "Toca \"Generar PDF\" y se descarga al momento."
+      ],
+      "tips": [
+        "El botón \"Exportar informe\" solo aparece si ya tienes al menos una escuela configurada.",
+        "Con \"Incluir ajustes de curso\" puedes elegir ajustes concretos en vez de incluirlos todos, si solo necesitas justificar algunos."
+      ],
+      "expectedResult": "Un PDF descargado con el detalle completo del periodo y la escuela elegidos, listo para enviar o guardar."
     }
   }
 }

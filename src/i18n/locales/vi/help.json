@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Bộ lọc và tìm kiếm",
       "description": "Cùng một kiểu trong toàn bộ ứng dụng"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Xuất báo cáo hàng tháng của bạn ra PDF",
+      "description": "Toàn bộ chi tiết của một kỳ, sẵn sàng để gửi"
     }
   },
   "articles": {
@@ -269,6 +273,24 @@
         "Ô tìm kiếm trong các danh mục (Khóa học, Tiền tệ) lọc ngay khi bạn gõ, không phân biệt hoa thường hay dấu."
       ],
       "expectedResult": "Danh sách chỉ hiển thị những gì bạn quan tâm, mà vẫn thấy rõ có bao nhiêu bộ lọc đang áp dụng."
+    },
+    "exportar-informe-pdf": {
+      "title": "Xuất báo cáo hàng tháng của bạn ra PDF",
+      "summary": "Tải xuống một file PDF với toàn bộ chi tiết của một kỳ và một trung tâm, sẵn sàng để xem lại hoặc gửi đi.",
+      "whatYouCanDo": "Tạo một báo cáo PDF với các khóa học, hoa hồng và điều chỉnh khóa học của kỳ và trung tâm bạn chọn, có tùy chọn hiển thị cả các khoản đã thu.",
+      "whenToUseIt": "Khi bạn cần một tài liệu chính thức để đối chiếu tài khoản với một trung tâm, lưu lại làm bằng chứng, hoặc đơn giản là có sổ sách kế toán của bạn trong một file PDF duy nhất.",
+      "steps": [
+        "Trong Tóm tắt, chạm vào \"Xuất báo cáo\".",
+        "Chọn Trung tâm (nếu bạn có nhiều hơn một) và Khoảng thời gian — đã được điền sẵn theo những gì bạn đang xem trong Tóm tắt, nhưng bạn có thể thay đổi.",
+        "Nếu muốn, bật \"Bao gồm điều chỉnh khóa học\" và quyết định có cộng vào tổng hay hiển thị riêng.",
+        "Bật \"Hiển thị các khoản đã thu\" nếu bạn muốn báo cáo phân biệt giữa đã thu và đang chờ.",
+        "Chạm \"Tạo PDF\" và nó sẽ tải xuống ngay lập tức."
+      ],
+      "tips": [
+        "Nút \"Xuất báo cáo\" chỉ xuất hiện khi bạn đã thiết lập ít nhất một trung tâm.",
+        "Với \"Bao gồm điều chỉnh khóa học\" bạn có thể chọn các điều chỉnh cụ thể thay vì bao gồm tất cả, nếu bạn chỉ cần chứng minh một vài khoản."
+      ],
+      "expectedResult": "Một file PDF đã tải xuống với chi tiết đầy đủ của kỳ và trung tâm đã chọn, sẵn sàng để gửi đi hoặc lưu giữ."
     }
   }
 }

@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Filter und Suche",
       "description": "Dasselbe Muster in der gesamten App"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Deinen Monatsbericht als PDF exportieren",
+      "description": "Alle Details eines Zeitraums, versandfertig"
     }
   },
   "articles": {
@@ -269,6 +273,24 @@
         "Die Suche in den Katalogen (Kurse, Währungen) filtert während der Eingabe, ohne zwischen Groß-/Kleinschreibung oder Akzenten zu unterscheiden."
       ],
       "expectedResult": "Die Liste zeigt nur das, was dich interessiert, ohne den Überblick zu verlieren, wie viele Filter aktiv sind."
+    },
+    "exportar-informe-pdf": {
+      "title": "Deinen Monatsbericht als PDF exportieren",
+      "summary": "Lade ein PDF mit allen Details eines Zeitraums und einer Schule herunter, bereit zum Durchsehen oder Versenden.",
+      "whatYouCanDo": "Erstelle einen PDF-Bericht mit den Kursen, Provisionen und Kursausgleichen des gewählten Zeitraums und der gewählten Schule, mit der Option, auch bereits eingenommene Beträge anzuzeigen.",
+      "whenToUseIt": "Wenn du ein offizielles Dokument brauchst, um mit einer Schule abzurechnen, es als Beleg aufzubewahren, oder einfach deine Buchhaltung in einem einzigen PDF haben willst.",
+      "steps": [
+        "Tippe in Übersicht auf \"Bericht exportieren\".",
+        "Wähle die Schule (falls du mehrere hast) und den Zeitraum — vorausgefüllt mit dem, was du gerade in Übersicht angesehen hast, aber änderbar.",
+        "Aktiviere bei Bedarf \"Kursausgleiche einschließen\" und entscheide, ob sie zum Gesamtbetrag addiert oder separat angezeigt werden.",
+        "Aktiviere \"Bereits eingenommene Beträge anzeigen\", wenn der Bericht zwischen Eingenommenem und Ausstehendem unterscheiden soll.",
+        "Tippe auf \"PDF erstellen\" — der Download startet sofort."
+      ],
+      "tips": [
+        "Der Button \"Bericht exportieren\" erscheint erst, wenn du mindestens eine Schule eingerichtet hast.",
+        "Mit \"Kursausgleiche einschließen\" kannst du einzelne Ausgleiche auswählen statt alle einzubeziehen, wenn du nur einige belegen musst."
+      ],
+      "expectedResult": "Ein heruntergeladenes PDF mit allen Details des gewählten Zeitraums und der gewählten Schule, bereit zum Versenden oder Aufbewahren."
     }
   }
 }
