@@ -64,7 +64,7 @@ function money(expected) {
   };
 }
 
-function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rates = [], commissionRates = [], currencies = [{ code: "EUR", symbol: "€", is_default: true }], onEditEntry } = {}) {
+function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rates = [], commissionRates = [], currencies = [{ code: "EUR", symbol: "€", is_default: true }], onEditEntry, onOpenSummary } = {}) {
   render(
     <HomeTab
       worklog={rowsHook(worklog)}
@@ -79,6 +79,7 @@ function renderHome({ worklog = [], comisiones = [], colleaguePayments = [], rat
       paymentStatuses={PAYMENT_STATUSES}
       onQuickCreate={vi.fn()}
       onEditEntry={onEditEntry}
+      onOpenSummary={onOpenSummary}
     />
   );
   return {
@@ -235,10 +236,11 @@ describe("HomeTab — acceso rápido 'Nuevo movimiento'", () => {
 // nombre ya visible en la cabecera de Mi trabajo. La tile aporta
 // información de menor "peso" (qué escuela ha dado más cursos este mes,
 // no una cifra de dinero) pero conserva el mismo rol de puente táctil a
-// Resumen.
-describe("HomeTab — 'Escuela del mes' como puente hacia Resumen", () => {
-  it("pulsar la tarjeta llama a onOpenSummary", async () => {
-    const onOpenSummary = vi.fn();
+// Mi Trabajo (2026-09-27, pedido explícito: "enlaza la pastilla escuela
+// del mes a Mi Trabajo" — antes iba a Resumen).
+describe("HomeTab — 'Escuela del mes' como puente hacia Mi Trabajo", () => {
+  it("pulsar la tarjeta llama a onOpenTrabajo", async () => {
+    const onOpenTrabajo = vi.fn();
     render(
       <HomeTab
         worklog={rowsHook([{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }])}
@@ -252,12 +254,12 @@ describe("HomeTab — 'Escuela del mes' como puente hacia Resumen", () => {
         navSections={rowsHook([])}
         paymentStatuses={PAYMENT_STATUSES}
         onQuickCreate={vi.fn()}
-        onOpenSummary={onOpenSummary}
+        onOpenTrabajo={onOpenTrabajo}
       />
     );
 
     await userEvent.click(screen.getByTestId("active-school-this-month-card"));
-    expect(onOpenSummary).toHaveBeenCalledTimes(1);
+    expect(onOpenTrabajo).toHaveBeenCalledTimes(1);
   });
 
   it("muestra el nombre de la única escuela con movimientos este mes, en singular, junto a la etiqueta 'Escuela del mes'", () => {
@@ -541,6 +543,31 @@ describe("HomeTab — KPIs (media diaria, cursos, captados, todos del mes actual
   }, 15000);
 });
 
+// "Media diaria" como puente hacia Resumen (2026-09-27, pedido explícito:
+// "enlaza la pastilla media diaria a Resumen, mantén por encima el click
+// del tooltip de esta pastilla").
+describe("HomeTab — 'Media diaria' como puente hacia Resumen", () => {
+  it("pulsar la tarjeta llama a onOpenSummary", async () => {
+    const onOpenSummary = vi.fn();
+    renderHome({ onOpenSummary });
+    // El testid "daily-average-card" vive en el <div> contenedor del grid
+    // (col-span-2), un nivel POR ENCIMA del propio <motion.div> clicable
+    // de MoneyKpiTile — un click ahí no llega al onClick real (los
+    // eventos burbujean hacia arriba, nunca hacia abajo). Se pulsa el
+    // texto de la propia tarjeta en su lugar.
+    await userEvent.click(screen.getByText("Media diaria"));
+    expect(onOpenSummary).toHaveBeenCalledTimes(1);
+  });
+
+  it("pulsar el '?' del tooltip abre el tooltip sin navegar a Resumen", async () => {
+    const onOpenSummary = vi.fn();
+    renderHome({ onOpenSummary });
+    await userEvent.click(screen.getByRole("button", { name: "Info: Media diaria" }));
+    expect(await screen.findByText(/Lo que ganas de media al día/)).toBeInTheDocument();
+    expect(onOpenSummary).not.toHaveBeenCalled();
+  });
+});
+
 // "Instalar la app" (2026-09-08, tercera vuelta): el banner descartable
 // de antes se retiró entero — sustituido por un texto pequeño
 // ("Descargar app"), junto al título de los KPIs. Sin estado de
@@ -605,8 +632,15 @@ describe("HomeTab — tarjeta de Training Records", () => {
 
   it("sin ningún Training Record generado todavía, es una invitación de verdad, no un contador en cero", () => {
     renderHomeWithTR();
-    expect(screen.getByText("Genera tu primer Training Record")).toBeInTheDocument();
-    expect(screen.queryByText("Training Records")).not.toBeInTheDocument();
+    // "Training Records" (título) sí se muestra siempre desde el
+    // rediseño de tarjeta "stat" (2026-09-27, acceso a la Guía de Buceo
+    // en Home): las tres tarjetas de esa fila comparten ahora una banda
+    // de color con el nombre fijo arriba, icono, y una única línea de
+    // contenido específico debajo. Lo que sigue sin verse — y es lo que
+    // este test protege de verdad — es cualquier "0 Generados", que sí
+    // volvería a sentirse como un contador vacío en vez de una invitación.
+    expect(screen.getByText("Training Records")).toBeInTheDocument();
+    expect(screen.getByText("Genera el primero")).toBeInTheDocument();
     expect(screen.queryByText("Generados")).not.toBeInTheDocument();
   });
 
@@ -614,11 +648,13 @@ describe("HomeTab — tarjeta de Training Records", () => {
     localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount:u1", "7");
     renderHomeWithTR();
     expect(screen.getByText("Training Records")).toBeInTheDocument();
+    // "7 Generados" vive en un único nodo de texto desde el rediseño de
+    // tarjeta "stat" (2026-09-27, banda de color + una sola línea de
+    // contenido) — antes eran dos <span> separados ("7" y "Generados").
     await waitFor(() => {
-      expect(screen.getByText("7")).toBeInTheDocument();
+      expect(screen.getByText("7 Generados")).toBeInTheDocument();
     }, { timeout: 4000 });
-    expect(screen.getByText("Generados")).toBeInTheDocument();
-    expect(screen.queryByText("Genera tu primer Training Record")).not.toBeInTheDocument();
+    expect(screen.queryByText("Genera el primero")).not.toBeInTheDocument();
   });
 
   // Bug real (2026-09-08): "he creado un TR con el admin y cuando entro
@@ -629,19 +665,21 @@ describe("HomeTab — tarjeta de Training Records", () => {
     localStorage.setItem("oceanpulse:trainingRecordsGeneratedCount:admin-1", "12");
     renderHomeWithTR(vi.fn(), "demo-2");
     // Si el bug se reprodujera, esta cuenta ("demo-2") vería el estado
-    // "con actividad" (título + cifra) heredado de "admin-1" en vez de la
-    // invitación real — comprobar la invitación ya es suficiente, sin
-    // buscar "12" suelto en el documento (coincide por casualidad con el
-    // día 12 del calendario de abajo).
-    expect(screen.getByText("Genera tu primer Training Record")).toBeInTheDocument();
-    expect(screen.queryByText("Training Records")).not.toBeInTheDocument();
+    // "con actividad" (cifra + "Generados") heredado de "admin-1" en vez
+    // de la invitación real. "Training Records" (el título) ya no sirve
+    // para distinguir los dos estados — se muestra en ambos desde el lote
+    // de 3 columnas — así que la comprobación real es "Generados" ausente,
+    // sin buscar "12" suelto en el documento (coincide por casualidad con
+    // el día 12 del calendario de abajo).
+    expect(screen.getByText("Genera el primero")).toBeInTheDocument();
+    expect(screen.queryByText("Generados")).not.toBeInTheDocument();
   });
 
   it("pulsar la fila llama a onOpenTrainingRecords", async () => {
     const user = userEvent.setup();
     const onOpenTrainingRecords = vi.fn();
     renderHomeWithTR(onOpenTrainingRecords);
-    await user.click(screen.getByText("Genera tu primer Training Record"));
+    await user.click(screen.getByText("Genera el primero"));
     expect(onOpenTrainingRecords).toHaveBeenCalledTimes(1);
   });
 });

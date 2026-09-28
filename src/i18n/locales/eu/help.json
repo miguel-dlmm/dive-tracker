@@ -34,6 +34,10 @@
       "label": "Kontsultatu zenbat sortu duzun",
       "description": "Begirada batean, edo aldiko xehetasunetan"
     },
+    "quiero-guia-buceo": {
+      "label": "Urpekaritza Gida erakutsi",
+      "description": "Koh Taoko urpekaritza-guneak eta itsas bizitza, briefing-erako"
+    },
     "quiero-generar-tr": {
       "label": "Sortu Training Record bat",
       "description": "Ikasle bakoitzaren aurrerapenaren dokumentu ofiziala"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "Ocean Flow-ek irakasle autonomo gisa dituzun sarrerak kontrolatzen laguntzen dizu. Kontzeptu bakar baten pean, \"mugimendua\", ematen dituzun klaseak, erakarritako bezeroengatiko komisioak eta beste irakasleekiko doikuntza ekonomikoak biltzen ditu.",
       "whenToUseIt": "Aplikazioa lehen aldiz irekitzean, edo pantaila bakoitza zertarako den gogoratu nahi duzunean.",
       "steps": [
-        "Hasiera: zure ikasleak, ikastaroak eta erakarritakoak begirada batean, Training Records-erako sarbidea, zenbat daukazun kobratzeke, hilabeteko egutegia eta mugimendu bat sortzeko zuzeneko sarbidea.",
+        "Hasiera: zure ikastaroak eta erakarritakoak begirada batean, zenbat daukazun kobratzeke eta zure batez besteko eguneroa, Training Records, hileko eskola eta Urpekaritza Gidarako sarbide zuzenak, hilabeteko egutegia eta mugimendu bat sortzeko botoia.",
         "Nire lana: zure mugimendu guztien zerrenda (ikastaroak, komisioak eta doikuntzak), sortzeko, editatzeko, kobratzeko edo ezabatzeko.",
         "Laburpena: aukeratzen duzun aldiko zure balantzea, eskola, ikastaro edo komisioetan sakontzeko aukerarekin."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "Ikasle bakoitzaren Training Record-a deskargatzeko edo partekatzeko prest duzu, bere sinadura eta zurea jada barne."
     },
+    "guia-buceo": {
+      "title": "Urpekaritza Gida bezeroari erakutsi",
+      "summary": "Koh Taoko liburu digitala, pantaila osoan eta zoom eginda, briefing-erako beti prest.",
+      "whatYouCanDo": "Urpekaritza Gida Koh Taoko urpekaritza-guneak, itsas bizitza eta segurtasun-informazioa dituen liburu digitala da, bezeroari briefing-ean aplikaziotik atera gabe erakusteko pentsatua.",
+      "whenToUseIt": "Urpekaritza baino lehen, gunea bezeroarekin errepasatzeko, edo ikusi berri duzun arrain edo koral bat identifikatzeko.",
+      "steps": [
+        "Ireki Urpekaritza Gida Home-ko sarreratik.",
+        "Aukeratu atal bat (Urpekaritza-guneak, Itsas bizitza edo Info gehigarria), edo bilatu zuzenean gune bat azaletik.",
+        "Pasa hatza orria aldatzeko, edo erabili geziak. Estutu edo bi aldiz sakatu mapa edo argazki batean zooma egiteko.",
+        "Ilargi/eguzki ikonoak modu argia eta iluna artean aldatzen du; geziena pantaila osoa aktibatzen du.",
+        "Goiko ezkerreko geziak azalera itzultzen du; azaleko \"✕\" delakoak gida ixten du."
+      ],
+      "tips": [
+        "Azaleko bilatzaileak 37 guneak iragazten ditu idatzi ahala — ez da beharrezkoa atala jakitea.",
+        "Pantaila osoak eta modu ilunak argi gutxirekin laguntzen dute, adibidez itsasontzi batean."
+      ],
+      "expectedResult": "Behar duzun mapa edo fitxa bezeroaren aurrean daukazu segundo gutxitan, Ocean Flow-tik atera gabe."
+    },
     "mi-trabajo-referencia": {
       "title": "Nire lana, begirada batean",
       "summary": "Zure mugimendu guztien zerrenda — ikastaroak, komisioak eta doikuntzak — bere ekintzekin.",
@@ -208,6 +230,9 @@
         "Sakatu menuko edozein errenkada atal horretara sartzeko; \"‹ Ezarpenak\"-ek menura itzultzen zaitu.",
         "Eskolak eta Ikastaroak \"+\" botoi flotagarriaren bidez sortzen dira, Nire lanan bezala.",
         "Tarifak-ek Ikastaroa eta Komisioa zerrenda bakarrean erakusten ditu (mota iragazki gisa aukeratzen da, edo sortzean, orri berean) — Nire lanaren eredu bisual bera."
+      ],
+      "tips": [
+        "Tarifa edo mugimenduak lotuta dituen eskola edo ikastaro bat ezabatzea blokeatu egiten da abisu batekin, datu solteak ez uzteko."
       ],
       "expectedResult": "Edozein katalogo edo ezarpen aurkitzen duzu, lehen zein fitxatan bizi zen gogoratu beharrik gabe."
     },

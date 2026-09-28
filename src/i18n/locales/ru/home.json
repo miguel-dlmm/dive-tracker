@@ -17,7 +17,7 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "ctaFirstTime": "Создай свой первый Training Record",
+    "ctaFirstTime": "Создать первый",
     "generatedLabel": "Создано"
   },
   "installApp": "Скачать приложение",
@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "Новая операция"
+  },
+  "diveGuideCard": {
+    "title": "Гид по дайвингу",
+    "subtitle": "Ко Тао"
   }
 }

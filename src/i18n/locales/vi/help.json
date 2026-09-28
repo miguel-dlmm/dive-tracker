@@ -34,6 +34,10 @@
       "label": "Xem bạn đã tạo ra bao nhiêu",
       "description": "Nhìn nhanh, hoặc chi tiết theo từng kỳ"
     },
+    "quiero-guia-buceo": {
+      "label": "Cho xem Cẩm Nang Lặn",
+      "description": "Điểm lặn và sinh vật biển Koh Tao, cho buổi briefing"
+    },
     "quiero-generar-tr": {
       "label": "Tạo một Training Record",
       "description": "Tài liệu tiến độ chính thức của từng học viên"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "Ocean Flow giúp bạn quản lý thu nhập với tư cách huấn luyện viên tự do. Dưới cùng một khái niệm, \"giao dịch\", ứng dụng gộp chung các lớp bạn dạy, hoa hồng từ khách hàng được giới thiệu và các điều chỉnh tài chính với huấn luyện viên khác.",
       "whenToUseIt": "Lần đầu mở ứng dụng, hoặc khi bạn muốn nhớ lại công dụng của từng màn hình.",
       "steps": [
-        "Home: học viên, khóa học và khách được giới thiệu của bạn trong một cái nhìn nhanh, lối vào Training Records, số tiền đang chờ thu, lịch của tháng và một lối tắt để tạo giao dịch.",
+        "Home: khóa học và khách được giới thiệu của bạn trong một cái nhìn nhanh, số tiền đang chờ thu và mức trung bình hằng ngày, lối tắt đến Training Records, trường của tháng và Cẩm Nang Lặn, lịch của tháng và nút tạo giao dịch.",
         "Công việc của tôi: danh sách đầy đủ các giao dịch của bạn (khóa học, hoa hồng và điều chỉnh), để tạo, sửa, thu tiền hoặc xóa.",
         "Tổng quan: số dư của bạn theo kỳ bạn chọn, với khả năng đào sâu theo trung tâm, theo khóa học hoặc theo hoa hồng."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "Bạn có Training Record của từng học viên sẵn sàng để tải xuống hoặc chia sẻ, đã có chữ ký của họ và của bạn."
     },
+    "guia-buceo": {
+      "title": "Cho khách xem Cẩm Nang Lặn",
+      "summary": "Cuốn sách số của Koh Tao, toàn màn hình và có thể phóng to, luôn sẵn sàng cho buổi briefing.",
+      "whatYouCanDo": "Cẩm Nang Lặn là sách số gồm các điểm lặn, sinh vật biển và thông tin an toàn của Koh Tao, để cho khách xem trong buổi briefing mà không cần rời khỏi ứng dụng.",
+      "whenToUseIt": "Trước khi lặn, để xem lại điểm lặn cùng khách, hoặc để nhận diện một loài cá hay san hô vừa gặp.",
+      "steps": [
+        "Mở Cẩm Nang Lặn từ lối tắt trên Home.",
+        "Chọn một phần (Điểm lặn, Sinh vật biển hoặc Thông tin thêm), hoặc tìm điểm lặn ngay từ trang bìa.",
+        "Vuốt để lật trang, hoặc dùng mũi tên. Chụm hoặc chạm hai lần để phóng to bản đồ hoặc ảnh.",
+        "Biểu tượng mặt trăng/mặt trời chuyển giữa chế độ sáng/tối; biểu tượng mũi tên bật toàn màn hình.",
+        "Mũi tên trên cùng bên trái quay lại trang bìa; \"✕\" ở trang bìa đóng cẩm nang."
+      ],
+      "tips": [
+        "Ô tìm kiếm ở trang bìa lọc cả 37 điểm lặn khi bạn gõ — không cần biết thuộc phần nào.",
+        "Toàn màn hình và chế độ tối hữu ích khi thiếu sáng, ví dụ trên thuyền."
+      ],
+      "expectedResult": "Bạn có bản đồ hoặc thông tin cần thiết trước mặt khách chỉ trong vài giây, không cần rời khỏi Ocean Flow."
+    },
     "mi-trabajo-referencia": {
       "title": "Công việc của tôi, nhìn nhanh",
       "summary": "Danh sách đầy đủ các giao dịch của bạn — khóa học, hoa hồng và điều chỉnh — cùng các thao tác.",
@@ -208,6 +230,9 @@
         "Chạm vào bất kỳ dòng nào trong menu để vào mục đó; \"‹ Cài đặt\" quay lại menu.",
         "Trung tâm và Khóa học được tạo bằng nút \"+\" nổi, giống như trong Công việc của tôi.",
         "Mức giá hiển thị Khóa học và Hoa hồng trong cùng một danh sách (loại được chọn qua bộ lọc, hoặc khi tạo mới, ngay trong biểu mẫu) — cùng kiểu hiển thị như Công việc của tôi."
+      ],
+      "tips": [
+        "Xóa một trường hoặc khóa học có mức giá hoặc giao dịch liên quan sẽ bị chặn kèm cảnh báo, để không để lại dữ liệu mồ côi."
       ],
       "expectedResult": "Bạn tìm thấy bất kỳ danh mục hay cài đặt nào mà không cần nhớ nó từng nằm ở tab nào."
     },

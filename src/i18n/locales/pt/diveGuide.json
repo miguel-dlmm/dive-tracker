@@ -1,0 +1,31 @@
+{
+  "cover": {
+    "title": "Guia de Mergulho",
+    "subtitle": "Koh Tao, Golfo da Tailândia",
+    "tagline": "Pontos de mergulho, vida marinha e todas as informações para o briefing, sempre à mão.",
+    "start": "Começar a ver",
+    "credit": "Conteúdo original: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Pontos de mergulho", "hint": "Mapas e detalhes de cada ponto" },
+    "marine": { "label": "Vida marinha", "hint": "Identifique peixes e corais" },
+    "extra": { "label": "Informação extra", "hint": "Sinais, segurança e curiosidades" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} de {{total}}",
+    "sectionsAria": "Mudar de secção",
+    "closeAria": "Fechar o guia",
+    "backToCoverAria": "Voltar à capa",
+    "fullscreenEnterAria": "Ecrã inteiro",
+    "fullscreenExitAria": "Sair do ecrã inteiro",
+    "darkModeAria": "Modo escuro",
+    "lightModeAria": "Modo claro",
+    "installForFullscreenAria": "Instale a app para o ecrã inteiro",
+    "alreadyFullscreenAria": "Já em ecrã inteiro",
+    "jumpTo": "Ir para…",
+    "siteIndexHeading": "Ir para um ponto de mergulho",
+    "siteIndexEmpty": "Sem resultados",
+    "prevPageAria": "Página anterior",
+    "nextPageAria": "Próxima página"
+  }
+}

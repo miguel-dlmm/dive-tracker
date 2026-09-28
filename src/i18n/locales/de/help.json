@@ -34,6 +34,10 @@
       "label": "Nachsehen, wie viel du erzielt hast",
       "description": "Auf einen Blick, oder im Detail nach Zeitraum"
     },
+    "quiero-guia-buceo": {
+      "label": "Tauchführer zeigen",
+      "description": "Tauchplätze und Meeresleben von Koh Tao, fürs Briefing"
+    },
     "quiero-generar-tr": {
       "label": "Ein Training Record erstellen",
       "description": "Das offizielle Fortschrittsdokument jedes Teilnehmers"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "Ocean Flow hilft dir, deine Einnahmen als freiberuflicher Instructor im Blick zu behalten. Unter einem gemeinsamen Konzept, \"Buchung\", fasst es die Kurse, die du gibst, die Provisionen für vermittelte Kunden und die finanziellen Ausgleiche mit anderen Instructors zusammen.",
       "whenToUseIt": "Beim ersten Öffnen der App, oder wenn du dich daran erinnern möchtest, wofür jeder Bildschirm da ist.",
       "steps": [
-        "Home: deine Teilnehmer, Kurse und Vermittlungen auf einen Blick, der Zugang zu Training Records, wie viel du noch einziehen musst, der Kalender des Monats und ein direkter Zugang, um eine Buchung zu erstellen.",
+        "Home: deine Kurse und Vermittlungen auf einen Blick, wie viel du noch einziehen musst und dein Tagesdurchschnitt, direkte Zugänge zu Training Records, deiner Schule des Monats und dem Tauchführer, der Kalender des Monats und ein Button, um eine Buchung zu erstellen.",
         "Meine Arbeit: die vollständige Liste deiner Buchungen (Kurse, Provisionen und Ausgleiche), um sie zu erstellen, zu bearbeiten, einzuziehen oder zu löschen.",
         "Übersicht: deine Bilanz für den gewählten Zeitraum, mit der Möglichkeit, nach Schule, nach Kurs oder nach Provisionen zu vertiefen."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "Du hast das Training Record jedes Teilnehmers bereit zum Herunterladen oder Teilen, mit dessen Unterschrift und deiner bereits enthalten."
     },
+    "guia-buceo": {
+      "title": "Den Tauchführer dem Kunden zeigen",
+      "summary": "Das digitale Buch von Koh Tao, im Vollbild und mit Zoom, jederzeit bereit fürs Briefing.",
+      "whatYouCanDo": "Der Tauchführer ist ein digitales Buch mit Tauchplätzen, Meeresleben und Sicherheitsinfos von Koh Tao — gemacht, um es dem Kunden während des Briefings zu zeigen, ohne die App zu verlassen.",
+      "whenToUseIt": "Vor einem Tauchgang, um den Platz mit dem Kunden durchzugehen, oder um einen Fisch oder eine Koralle zu bestimmen, die ihr gerade gesehen habt.",
+      "steps": [
+        "Öffne den Tauchführer über den Zugang auf Home.",
+        "Wähle einen Abschnitt (Tauchplätze, Meeresleben oder Extra-Infos), oder suche einen Tauchplatz direkt vom Cover aus.",
+        "Wische, um die Seite umzublättern, oder nutze die Pfeile. Zum Zoomen auf Karte oder Foto zusammenziehen oder doppelt tippen.",
+        "Das Mond/Sonne-Symbol wechselt zwischen hellem und dunklem Modus; das Pfeil-Symbol aktiviert den Vollbildmodus.",
+        "Der Pfeil oben links geht zurück zum Cover; das \"✕\" auf dem Cover schließt den Führer."
+      ],
+      "tips": [
+        "Die Suche auf dem Cover filtert alle 37 Tauchplätze beim Tippen — man muss den Abschnitt nicht kennen.",
+        "Vollbild und dunkler Modus helfen bei wenig Licht, etwa auf einem Boot."
+      ],
+      "expectedResult": "Du hast die Karte oder das Infoblatt in Sekunden vor dem Kunden, ohne Ocean Flow zu verlassen."
+    },
     "mi-trabajo-referencia": {
       "title": "Meine Arbeit, auf einen Blick",
       "summary": "Die vollständige Liste deiner Buchungen — Kurse, Provisionen und Ausgleiche — mit ihren Aktionen.",
@@ -208,6 +230,9 @@
         "Tippe auf eine beliebige Menüzeile, um in diesen Bereich zu gelangen; \"‹ Einstellungen\" bringt dich zurück zum Menü.",
         "Schulen und Kurse werden über den schwebenden \"+\"-Button erstellt, genau wie in Meine Arbeit.",
         "Tarife zeigt Kurs und Provision in einer einzigen Liste (der Typ wird als Filter oder beim Erstellen im Formular selbst gewählt) — dasselbe visuelle Muster wie Meine Arbeit."
+      ],
+      "tips": [
+        "Das Löschen einer Schule oder eines Kurses mit verknüpften Tarifen oder Buchungen wird mit einer Warnung blockiert, damit keine verwaisten Daten entstehen."
       ],
       "expectedResult": "Du findest jeden Katalog oder jede Einstellung, ohne dich erinnern zu müssen, in welcher Registerkarte er/sie früher war."
     },

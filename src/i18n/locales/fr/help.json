@@ -34,6 +34,10 @@
       "label": "Consulter ce que vous avez généré",
       "description": "D'un coup d'œil, ou en détail par période"
     },
+    "quiero-guia-buceo": {
+      "label": "Montrer le Guide de Plongée",
+      "description": "Sites de plongée et vie marine de Koh Tao, pour le briefing"
+    },
     "quiero-generar-tr": {
       "label": "Générer un Training Record",
       "description": "Le document officiel de progression de chaque élève"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "Ocean Flow vous aide à gérer vos revenus en tant qu'instructeur indépendant. Sous un même concept, \"mouvement\", il regroupe les cours que vous dispensez, les commissions pour clients référés et les ajustements financiers avec d'autres instructeurs.",
       "whenToUseIt": "La première fois que vous ouvrez l'app, ou quand vous voulez vous rappeler à quoi sert chaque écran.",
       "steps": [
-        "Accueil : vos élèves, cours et clients référés en un coup d'œil, l'accès aux Training Records, ce qui vous reste à encaisser, le calendrier du mois et un accès direct pour créer un mouvement.",
+        "Accueil : vos cours et clients référés en un coup d'œil, ce qui vous reste à encaisser et votre moyenne quotidienne, accès directs aux Training Records, votre école du mois et le Guide de Plongée, le calendrier du mois et un bouton pour créer un mouvement.",
         "Mon activité : la liste complète de vos mouvements (cours, commissions et ajustements), pour les créer, les modifier, les encaisser ou les supprimer.",
         "Résumé : votre bilan sur la période de votre choix, avec la possibilité d'approfondir par école, par cours ou par commissions."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "Vous avez le Training Record de chaque élève prêt à télécharger ou partager, avec sa signature et la vôtre déjà incluses."
     },
+    "guia-buceo": {
+      "title": "Montrer le Guide de Plongée au client",
+      "summary": "Le livre numérique de Koh Tao, en plein écran et avec zoom, prêt pour le briefing à tout moment.",
+      "whatYouCanDo": "Le Guide de Plongée est un livre numérique avec les sites de plongée, la vie marine et les infos de sécurité de Koh Tao, pensé pour le montrer au client pendant le briefing sans quitter l'appli.",
+      "whenToUseIt": "Avant une plongée, pour revoir le site avec le client, ou pour identifier un poisson ou un corail que vous venez de voir.",
+      "steps": [
+        "Ouvrez le Guide de Plongée depuis l'accès sur Home.",
+        "Choisissez une section (Sites de plongée, Vie marine ou Infos complémentaires), ou cherchez directement un site depuis la couverture.",
+        "Glissez pour tourner la page, ou utilisez les flèches. Pincez ou touchez deux fois pour zoomer sur une carte ou une photo.",
+        "L'icône lune/soleil change entre mode clair et sombre ; celle des flèches passe en plein écran.",
+        "La flèche en haut à gauche revient à la couverture ; le \"✕\" de la couverture ferme le guide."
+      ],
+      "tips": [
+        "La recherche de la couverture filtre les 37 sites de plongée pendant que vous tapez — pas besoin de connaître la section.",
+        "Le plein écran et le mode sombre aident avec peu de lumière, par exemple sur un bateau."
+      ],
+      "expectedResult": "Vous avez la carte ou la fiche voulue devant le client en quelques secondes, sans quitter Ocean Flow."
+    },
     "mi-trabajo-referencia": {
       "title": "Mon activité, en un coup d'œil",
       "summary": "La liste complète de vos mouvements — cours, commissions et ajustements — avec leurs actions.",
@@ -208,6 +230,9 @@
         "Touchez n'importe quelle ligne du menu pour entrer dans cette section ; \"‹ Configuration\" revient au menu.",
         "Écoles et Cours se créent via le bouton \"+\" flottant, comme dans Mon activité.",
         "Tarifs affiche Cours et Commission dans une seule liste (le type se choisit en filtre, ou à la création, dans la fiche elle-même) — même modèle visuel que Mon activité."
+      ],
+      "tips": [
+        "Supprimer une école ou un cours avec des tarifs ou mouvements associés est bloqué avec un avertissement, pour ne pas laisser de données orphelines."
       ],
       "expectedResult": "Vous trouvez n'importe quel catalogue ou réglage sans avoir à vous souvenir de son ancien onglet."
     },

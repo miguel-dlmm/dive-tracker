@@ -1,0 +1,31 @@
+{
+  "cover": {
+    "title": "Urpekaritza Gida",
+    "subtitle": "Koh Tao, Thailandiako Golkoa",
+    "tagline": "Urpekaritza-guneak, itsas bizitza eta briefing-erako behar duzun guztia, beti eskura.",
+    "start": "Begiratzen hasi",
+    "credit": "Jatorrizko edukia: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Urpekaritza-guneak", "hint": "Mapak eta gune bakoitzaren xehetasunak" },
+    "marine": { "label": "Itsas bizitza", "hint": "Arrainak eta koralak identifikatu" },
+    "extra": { "label": "Info gehigarria", "hint": "Seinaleak, segurtasuna eta kuriositateak" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} / {{total}}",
+    "sectionsAria": "Atala aldatu",
+    "closeAria": "Gida itxi",
+    "backToCoverAria": "Itzuli azalera",
+    "fullscreenEnterAria": "Pantaila osoa",
+    "fullscreenExitAria": "Irten pantaila osotik",
+    "darkModeAria": "Modu iluna",
+    "lightModeAria": "Modu argia",
+    "installForFullscreenAria": "Instalatu app-a pantaila osorako",
+    "alreadyFullscreenAria": "Jada pantaila osoan zaude",
+    "jumpTo": "Joan hona…",
+    "siteIndexHeading": "Joan urpekaritza-gune batera",
+    "siteIndexEmpty": "Emaitzarik ez",
+    "prevPageAria": "Aurreko orria",
+    "nextPageAria": "Hurrengo orria"
+  }
+}

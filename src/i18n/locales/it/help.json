@@ -34,6 +34,10 @@
       "label": "Consultare quanto hai generato",
       "description": "A colpo d'occhio, o in dettaglio per periodo"
     },
+    "quiero-guia-buceo": {
+      "label": "Mostrare la Guida alle Immersioni",
+      "description": "Punti di immersione e vita marina di Koh Tao, per il briefing"
+    },
     "quiero-generar-tr": {
       "label": "Generare un Training Record",
       "description": "Il documento ufficiale di progresso di ogni allievo"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "Ocean Flow ti aiuta a tenere sotto controllo le tue entrate come istruttore freelance. Sotto un unico concetto, \"movimento\", raggruppa le lezioni che tieni, le commissioni per i clienti procurati e le rettifiche economiche con altri istruttori.",
       "whenToUseIt": "La prima volta che apri l'app, o quando vuoi ricordare a cosa serve ogni schermata.",
       "steps": [
-        "Home: i tuoi allievi, corsi e clienti procurati a colpo d'occhio, l'accesso a Training Records, quanto hai da incassare, il calendario del mese e un accesso rapido per creare un movimento.",
+        "Home: i tuoi corsi e clienti procurati a colpo d'occhio, quanto hai da incassare e la tua media giornaliera, accessi rapidi a Training Records, la tua scuola del mese e la Guida alle Immersioni, il calendario del mese e un pulsante per creare un movimento.",
         "Il mio lavoro: l'elenco completo dei tuoi movimenti (corsi, commissioni e rettifiche), per crearli, modificarli, incassarli o eliminarli.",
         "Riepilogo: il tuo bilancio per il periodo che scegli, con la possibilità di approfondire per scuola, per corso o per commissioni."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "Hai il Training Record di ogni allievo pronto da scaricare o condividere, con la sua firma e la tua già incluse."
     },
+    "guia-buceo": {
+      "title": "Mostrare la Guida alle Immersioni al cliente",
+      "summary": "Il libro digitale di Koh Tao, a schermo intero e con zoom, pronto per il briefing in qualsiasi momento.",
+      "whatYouCanDo": "La Guida alle Immersioni è un libro digitale con i punti di immersione, la vita marina e le info di sicurezza di Koh Tao, pensato per mostrarlo al cliente durante il briefing senza uscire dall'app.",
+      "whenToUseIt": "Prima di un'immersione, per rivedere il punto con il cliente, o per identificare un pesce o un corallo appena visto.",
+      "steps": [
+        "Apri la Guida alle Immersioni dall'accesso in Home.",
+        "Scegli una sezione (Punti di immersione, Vita marina o Info extra), oppure cerca subito un punto dalla copertina.",
+        "Scorri per cambiare pagina, o usa le frecce. Pizzica o tocca due volte per ingrandire una mappa o una foto.",
+        "L'icona luna/sole passa tra modalità chiara e scura; quella delle frecce attiva lo schermo intero.",
+        "La freccia in alto a sinistra torna alla copertina; la \"✕\" della copertina chiude la guida."
+      ],
+      "tips": [
+        "La ricerca della copertina filtra i 37 punti di immersione mentre scrivi — non serve sapere la sezione.",
+        "Schermo intero e modalità scura aiutano con poca luce, per esempio in barca."
+      ],
+      "expectedResult": "Hai la mappa o la scheda che ti serve davanti al cliente in pochi secondi, senza uscire da Ocean Flow."
+    },
     "mi-trabajo-referencia": {
       "title": "Il mio lavoro, a colpo d'occhio",
       "summary": "L'elenco completo dei tuoi movimenti — corsi, commissioni e rettifiche — con le loro azioni.",
@@ -208,6 +230,9 @@
         "Tocca qualsiasi riga del menu per entrare in quella sezione; \"‹ Configurazione\" torna al menu.",
         "Scuole e Corsi si creano con il pulsante \"+\" flottante, come in Il mio lavoro.",
         "Tariffe mostra Corso e Commissione in un unico elenco (il tipo si sceglie come filtro, o creando, dentro il foglio stesso) — stesso schema visivo di Il mio lavoro."
+      ],
+      "tips": [
+        "Eliminare una scuola o un corso con tariffe o movimenti associati viene bloccato con un avviso, per non lasciare dati orfani."
       ],
       "expectedResult": "Trovi qualsiasi catalogo o impostazione senza dover ricordare in quale scheda si trovava prima."
     },
