@@ -4,6 +4,15 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Fixed
+- **Datos de contacto reales en la Política de Privacidad y los Términos de
+  Uso**: `legal@oceanflow.money` sustituye a los placeholders `[PENDIENTE]`
+  como email del responsable del tratamiento y para ejercer derechos, en
+  los 15 idiomas. El NIF y la dirección física quedan "disponibles previa
+  solicitud" a ese mismo email en vez de publicarse abiertos. Sigue
+  pendiente rellenar la razón social del responsable antes de considerar
+  el documento definitivo.
+
 ## [1.7.0] - 2026-09-28
 
 ### Added
