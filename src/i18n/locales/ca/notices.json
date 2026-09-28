@@ -8,24 +8,8 @@
     "start": "Comença",
     "slides": [
       {
-        "title": "Exporta el teu informe en PDF",
-        "body": "Ja pots generar el PDF amb tots els teus moviments per enviar-lo a qui el necessiti — exporta les teves dades fàcilment."
-      },
-      {
-        "title": "Training Records més lleugers",
-        "body": "El generador de Training Records s'optimitza per crear fitxers més lleugers."
-      },
-      {
-        "title": "Home, renovada",
-        "body": "Més dinàmica, amb dades interessants per veure d'una ullada."
-      },
-      {
-        "title": "El meu perfil, reestructurat",
-        "body": "Seccions reorganitzades perquè tot sigui més fàcil i ràpid de trobar."
-      },
-      {
-        "title": "Repassa-ho quan vulguis",
-        "body": "Torna a aquestes novetats des d'Ajuda → \"Veure què hi ha de nou\", quan vulguis."
+        "title": "La guia de busseig de Koh Tao, ja a Ocean Flow",
+        "body": "Punts de busseig, vida marina i tota la informació per al briefing, amb cerca instantània. Accedeix des de la targeta de l'inici."
       }
     ]
   },

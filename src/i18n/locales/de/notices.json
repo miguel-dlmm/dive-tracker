@@ -8,24 +8,8 @@
     "start": "Los geht's",
     "slides": [
       {
-        "title": "Exportiere deinen Bericht als PDF",
-        "body": "Erstelle das PDF mit all deinen Buchungen, um es an wen auch immer zu schicken — exportiere deine Daten ganz einfach."
-      },
-      {
-        "title": "Leichtere Training Records",
-        "body": "Der Training-Records-Generator wurde optimiert, um leichtere Dateien zu erstellen."
-      },
-      {
-        "title": "Home, neu gestaltet",
-        "body": "Dynamischer, mit interessanten Daten auf einen Blick."
-      },
-      {
-        "title": "Mein Profil, neu strukturiert",
-        "body": "Bereiche neu geordnet, damit du alles schneller und einfacher findest."
-      },
-      {
-        "title": "Sieh es dir jederzeit wieder an",
-        "body": "Kehre zu diesen Neuigkeiten über Hilfe → \"Neuigkeiten ansehen\" zurück, wann immer du willst."
+        "title": "Der Tauchführer von Koh Tao, jetzt in Ocean Flow",
+        "body": "Tauchplätze, Meeresleben und alle Infos fürs Briefing, mit sofortiger Suche. Zugriff über die Kachel auf der Startseite."
       }
     ]
   },
