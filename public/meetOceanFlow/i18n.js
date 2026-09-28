@@ -1,7 +1,7 @@
 window.__OCEANFLOW_I18N__ = {
   es: {
     meta: { title: "Ocean Flow — Bucea más. Gestiona menos." },
-    nav: { enter: "Entrar", langLabel: "Idioma" },
+    nav: { enter: "Entrar", langHint: "Para hacerlo más fácil, elige tu idioma preferido" },
     hero: {
       eyebrow: "Para instructores de buceo, con posibilidad de configurar varias escuelas",
       h1: "Bucea más.<br>Gestiona menos.",
@@ -29,7 +29,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     install: {
       h3: "Ocean Flow, como una app más de tu móvil",
-      p: "Está pensada como una app completa: la añades a la pantalla de inicio y la abres igual que cualquier otra, sin pasar por el navegador cada vez. Acceso rápido, entre inmersión e inmersión."
+      p: "Está pensada como una app completa: la añades a la pantalla de inicio y la abres igual que cualquier otra, sin pasar por el navegador cada vez. Acceso rápido al final del día para actualizar tu trabajo."
     },
     tour: {
       h2: "Un recorrido corto por lo que hace",
@@ -54,17 +54,17 @@ window.__OCEANFLOW_I18N__ = {
     },
     stop: {
       eyebrow: "Parada de descompresión",
-      h2: "Antes de tu próxima clase, prepárala aquí",
+      h2: "No acumules más días sin poner en orden tus finanzas",
       p: "Crea tu cuenta, da de alta tu primera escuela y sus tarifas, y registra tu primer movimiento en menos de lo que tardas en montar el equipo.",
       ctaPrimary: "Crear mi cuenta",
       urlline: "Regístrate en <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Ocean Flow, control de ingresos para instructores de buceo, con o sin varias escuelas." }
+    footer: { text: "Para instructores de buceo, con posibilidad de configurar varias escuelas." }
   },
 
   en: {
     meta: { title: "Ocean Flow — Dive more. Manage less." },
-    nav: { enter: "Sign in", langLabel: "Language" },
+    nav: { enter: "Sign in", langHint: "To make it easier, pick your preferred language" },
     hero: {
       eyebrow: "For dive instructors, with support for several schools",
       h1: "Dive more.<br>Manage less.",
@@ -92,7 +92,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     install: {
       h3: "Ocean Flow, just another app on your phone",
-      p: "Built as a full app: add it to your home screen and open it like any other, without going through the browser every time. Fast access, between dives."
+      p: "Built as a full app: add it to your home screen and open it like any other, without going through the browser every time. Quick access at the end of the day to update your work."
     },
     tour: {
       h2: "A quick tour of what it does",
@@ -117,17 +117,17 @@ window.__OCEANFLOW_I18N__ = {
     },
     stop: {
       eyebrow: "Decompression stop",
-      h2: "Get your next class ready right here",
+      h2: "Don't let more days go by without sorting out your finances",
       p: "Create your account, add your first school and its rates, and log your first movement in less time than it takes to set up your gear.",
       ctaPrimary: "Create my account",
       urlline: "Sign up at <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Ocean Flow, income tracking for dive instructors, with or without several schools." }
+    footer: { text: "For dive instructors, with support for several schools." }
   },
 
   fr: {
     meta: { title: "Ocean Flow — Plonge plus. Gère moins." },
-    nav: { enter: "Se connecter", langLabel: "Langue" },
+    nav: { enter: "Se connecter", langHint: "Pour te simplifier les choses, choisis ta langue préférée" },
     hero: {
       eyebrow: "Pour moniteurs de plongée, avec possibilité de configurer plusieurs écoles",
       h1: "Plonge plus.<br>Gère moins.",
@@ -155,7 +155,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     install: {
       h3: "Ocean Flow, comme n'importe quelle appli de ton téléphone",
-      p: "Pensée comme une vraie appli : tu l'ajoutes à ton écran d'accueil et tu l'ouvres comme n'importe quelle autre, sans passer par le navigateur à chaque fois. Accès rapide, entre deux plongées."
+      p: "Pensée comme une vraie appli : tu l'ajoutes à ton écran d'accueil et tu l'ouvres comme n'importe quelle autre, sans passer par le navigateur à chaque fois. Accès rapide en fin de journée pour mettre à jour ton travail."
     },
     tour: {
       h2: "Un rapide tour de ce qu'elle fait",
@@ -180,17 +180,17 @@ window.__OCEANFLOW_I18N__ = {
     },
     stop: {
       eyebrow: "Palier de décompression",
-      h2: "Prépare ton prochain cours ici même",
+      h2: "Ne laisse pas passer d'autres jours sans mettre tes finances en ordre",
       p: "Crée ton compte, ajoute ta première école et ses tarifs, et enregistre ton premier mouvement en moins de temps qu'il n'en faut pour monter ton équipement.",
       ctaPrimary: "Créer mon compte",
       urlline: "Inscris-toi sur <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Ocean Flow, suivi des revenus pour moniteurs de plongée, avec ou sans plusieurs écoles." }
+    footer: { text: "Pour moniteurs de plongée, avec possibilité de configurer plusieurs écoles." }
   },
 
   de: {
     meta: { title: "Ocean Flow — Mehr tauchen. Weniger verwalten." },
-    nav: { enter: "Anmelden", langLabel: "Sprache" },
+    nav: { enter: "Anmelden", langHint: "Damit es einfacher ist, wähle deine bevorzugte Sprache" },
     hero: {
       eyebrow: "Für Tauchlehrer, mit der Möglichkeit mehrere Schulen zu verwalten",
       h1: "Mehr tauchen.<br>Weniger verwalten.",
@@ -218,7 +218,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     install: {
       h3: "Ocean Flow, wie jede andere App auf deinem Handy",
-      p: "Als vollwertige App konzipiert: Du fügst sie deinem Homescreen hinzu und öffnest sie wie jede andere, ohne jedes Mal über den Browser zu gehen. Schneller Zugriff, zwischen zwei Tauchgängen."
+      p: "Als vollwertige App konzipiert: Du fügst sie deinem Homescreen hinzu und öffnest sie wie jede andere, ohne jedes Mal über den Browser zu gehen. Schneller Zugriff am Ende des Tages, um deine Arbeit zu aktualisieren."
     },
     tour: {
       h2: "Ein kurzer Rundgang durch die App",
@@ -243,17 +243,17 @@ window.__OCEANFLOW_I18N__ = {
     },
     stop: {
       eyebrow: "Dekompressionsstopp",
-      h2: "Bereite hier deinen nächsten Kurs vor",
+      h2: "Lass nicht noch mehr Tage vergehen, ohne deine Finanzen zu ordnen",
       p: "Erstelle dein Konto, lege deine erste Schule und ihre Tarife an, und erfasse deine erste Buchung in weniger Zeit, als du für den Aufbau deiner Ausrüstung brauchst.",
       ctaPrimary: "Konto erstellen",
       urlline: "Registriere dich auf <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Ocean Flow, Einnahmenverwaltung für Tauchlehrer, mit oder ohne mehrere Schulen." }
+    footer: { text: "Für Tauchlehrer, mit der Möglichkeit mehrere Schulen zu verwalten." }
   },
 
   it: {
     meta: { title: "Ocean Flow — Immergiti di più. Gestisci di meno." },
-    nav: { enter: "Accedi", langLabel: "Lingua" },
+    nav: { enter: "Accedi", langHint: "Per semplificarti la vita, scegli la tua lingua preferita" },
     hero: {
       eyebrow: "Per istruttori subacquei, con la possibilità di configurare più scuole",
       h1: "Immergiti di più.<br>Gestisci di meno.",
@@ -281,7 +281,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     install: {
       h3: "Ocean Flow, come un'altra app del tuo telefono",
-      p: "Pensata come un'app completa: la aggiungi alla schermata home e la apri come qualsiasi altra, senza passare dal browser ogni volta. Accesso rapido, tra un'immersione e l'altra."
+      p: "Pensata come un'app completa: la aggiungi alla schermata home e la apri come qualsiasi altra, senza passare dal browser ogni volta. Accesso rapido a fine giornata per aggiornare il tuo lavoro."
     },
     tour: {
       h2: "Un breve giro su cosa fa",
@@ -306,17 +306,17 @@ window.__OCEANFLOW_I18N__ = {
     },
     stop: {
       eyebrow: "Sosta di decompressione",
-      h2: "Prepara qui la tua prossima lezione",
+      h2: "Non lasciare passare altri giorni senza mettere in ordine le tue finanze",
       p: "Crea il tuo account, aggiungi la tua prima scuola e le sue tariffe, e registra il tuo primo movimento in meno tempo di quanto impieghi a montare l'attrezzatura.",
       ctaPrimary: "Crea il mio account",
       urlline: "Registrati su <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Ocean Flow, controllo delle entrate per istruttori subacquei, con o senza più scuole." }
+    footer: { text: "Per istruttori subacquei, con la possibilità di configurare più scuole." }
   },
 
   ru: {
     meta: { title: "Ocean Flow — Больше дайвинга. Меньше управления." },
-    nav: { enter: "Войти", langLabel: "Язык" },
+    nav: { enter: "Войти", langHint: "Чтобы было проще, выберите предпочитаемый язык" },
     hero: {
       eyebrow: "Для дайв-инструкторов, с возможностью настройки нескольких школ",
       h1: "Больше дайвинга.<br>Меньше управления.",
@@ -344,7 +344,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     install: {
       h3: "Ocean Flow, как обычное приложение на телефоне",
-      p: "Приложение продумано как полноценное: добавьте его на главный экран и открывайте как любое другое, не заходя каждый раз через браузер. Быстрый доступ между погружениями."
+      p: "Приложение продумано как полноценное: добавьте его на главный экран и открывайте как любое другое, не заходя каждый раз через браузер. Быстрый доступ в конце дня, чтобы обновить свою работу."
     },
     tour: {
       h2: "Короткая экскурсия по возможностям",
@@ -369,17 +369,17 @@ window.__OCEANFLOW_I18N__ = {
     },
     stop: {
       eyebrow: "Остановка декомпрессии",
-      h2: "Подготовьте здесь свой следующий урок",
+      h2: "Не откладывайте дальше наведение порядка в своих финансах",
       p: "Создайте аккаунт, добавьте первую школу с её тарифами и запишите первое движение быстрее, чем соберёте снаряжение.",
       ctaPrimary: "Создать аккаунт",
       urlline: "Зарегистрируйтесь на <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Ocean Flow, учёт доходов дайв-инструкторов, с одной или несколькими школами." }
+    footer: { text: "Для дайв-инструкторов, с возможностью настройки нескольких школ." }
   },
 
   th: {
     meta: { title: "Ocean Flow — ดำน้ำมากขึ้น จัดการน้อยลง" },
-    nav: { enter: "เข้าสู่ระบบ", langLabel: "ภาษา" },
+    nav: { enter: "เข้าสู่ระบบ", langHint: "เพื่อให้ง่ายขึ้น เลือกภาษาที่คุณต้องการ" },
     hero: {
       eyebrow: "สำหรับผู้สอนดำน้ำ รองรับการตั้งค่าได้หลายโรงเรียน",
       h1: "ดำน้ำมากขึ้น<br>จัดการน้อยลง",
@@ -407,7 +407,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     install: {
       h3: "Ocean Flow เหมือนแอปอื่นๆ บนมือถือของคุณ",
-      p: "ออกแบบมาให้เป็นแอปที่สมบูรณ์: เพิ่มไปที่หน้าจอหลักแล้วเปิดใช้ได้เหมือนแอปทั่วไป ไม่ต้องผ่านเบราว์เซอร์ทุกครั้ง เข้าถึงได้รวดเร็ว ระหว่างไดฟ์"
+      p: "ออกแบบมาให้เป็นแอปที่สมบูรณ์: เพิ่มไปที่หน้าจอหลักแล้วเปิดใช้ได้เหมือนแอปทั่วไป ไม่ต้องผ่านเบราว์เซอร์ทุกครั้ง เข้าถึงได้รวดเร็วในตอนท้ายวันเพื่ออัปเดตงานของคุณ"
     },
     tour: {
       h2: "ทัวร์สั้นๆ ว่าแอปทำอะไรได้บ้าง",
@@ -432,17 +432,17 @@ window.__OCEANFLOW_I18N__ = {
     },
     stop: {
       eyebrow: "จุดพักลดความดัน",
-      h2: "เตรียมคลาสถัดไปของคุณได้ที่นี่",
+      h2: "อย่าปล่อยให้วันเวลาผ่านไปโดยไม่จัดระเบียบการเงินของคุณ",
       p: "สร้างบัญชี เพิ่มโรงเรียนแรกพร้อมอัตราค่าบริการ และบันทึกรายการแรกของคุณในเวลาน้อยกว่าที่ใช้ประกอบอุปกรณ์ดำน้ำ",
       ctaPrimary: "สร้างบัญชีของฉัน",
       urlline: "สมัครที่ <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Ocean Flow ระบบจัดการรายได้สำหรับผู้สอนดำน้ำ ไม่ว่าจะมีโรงเรียนเดียวหรือหลายโรงเรียน" }
+    footer: { text: "สำหรับผู้สอนดำน้ำ รองรับการตั้งค่าได้หลายโรงเรียน" }
   },
 
   pt: {
     meta: { title: "Ocean Flow — Mergulha mais. Gere menos." },
-    nav: { enter: "Entrar", langLabel: "Idioma" },
+    nav: { enter: "Entrar", langHint: "Para facilitar, escolhe o teu idioma preferido" },
     hero: {
       eyebrow: "Para instrutores de mergulho, com possibilidade de configurar várias escolas",
       h1: "Mergulha mais.<br>Gere menos.",
@@ -470,7 +470,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     install: {
       h3: "A Ocean Flow, como mais uma app do teu telemóvel",
-      p: "Pensada como uma app completa: adicionas ao ecrã principal e abres como qualquer outra, sem passares pelo navegador de cada vez. Acesso rápido, entre mergulhos."
+      p: "Pensada como uma app completa: adicionas ao ecrã principal e abres como qualquer outra, sem passares pelo navegador de cada vez. Acesso rápido ao fim do dia para atualizares o teu trabalho."
     },
     tour: {
       h2: "Uma volta rápida pelo que faz",
@@ -495,17 +495,17 @@ window.__OCEANFLOW_I18N__ = {
     },
     stop: {
       eyebrow: "Paragem de descompressão",
-      h2: "Prepara aqui a tua próxima aula",
+      h2: "Não acumules mais dias sem pores as tuas finanças em ordem",
       p: "Cria a tua conta, dá de alta a tua primeira escola e as suas tarifas, e regista o teu primeiro movimento em menos tempo do que demoras a montar o equipamento.",
       ctaPrimary: "Criar a minha conta",
       urlline: "Regista-te em <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Ocean Flow, controlo de rendimentos para instrutores de mergulho, com ou sem várias escolas." }
+    footer: { text: "Para instrutores de mergulho, com possibilidade de configurar várias escolas." }
   },
 
   "pt-BR": {
     meta: { title: "Ocean Flow — Mergulhe mais. Gerencie menos." },
-    nav: { enter: "Entrar", langLabel: "Idioma" },
+    nav: { enter: "Entrar", langHint: "Para facilitar, escolha seu idioma preferido" },
     hero: {
       eyebrow: "Para instrutores de mergulho, com possibilidade de configurar várias escolas",
       h1: "Mergulhe mais.<br>Gerencie menos.",
@@ -533,7 +533,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     install: {
       h3: "Ocean Flow, como mais um app no seu celular",
-      p: "Pensado como um app completo: você adiciona na tela inicial e abre igual a qualquer outro, sem passar pelo navegador toda vez. Acesso rápido, entre um mergulho e outro."
+      p: "Pensado como um app completo: você adiciona na tela inicial e abre igual a qualquer outro, sem passar pelo navegador toda vez. Acesso rápido no fim do dia para atualizar seu trabalho."
     },
     tour: {
       h2: "Um passeio rápido pelo que ele faz",
@@ -558,17 +558,17 @@ window.__OCEANFLOW_I18N__ = {
     },
     stop: {
       eyebrow: "Parada de descompressão",
-      h2: "Prepare aqui a sua próxima aula",
+      h2: "Não deixe mais dias passarem sem organizar suas finanças",
       p: "Crie sua conta, cadastre sua primeira escola e as tarifas dela, e registre seu primeiro movimento em menos tempo do que leva para montar o equipamento.",
       ctaPrimary: "Criar minha conta",
       urlline: "Cadastre-se em <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Ocean Flow, controle de ganhos para instrutores de mergulho, com ou sem várias escolas." }
+    footer: { text: "Para instrutores de mergulho, com possibilidade de configurar várias escolas." }
   },
 
   ar: {
     meta: { title: "Ocean Flow — غُص أكثر. أدِر أقل." },
-    nav: { enter: "تسجيل الدخول", langLabel: "اللغة" },
+    nav: { enter: "تسجيل الدخول", langHint: "لتسهيل الأمر، اختر لغتك المفضلة" },
     hero: {
       eyebrow: "لمدربي الغوص، مع إمكانية إعداد أكثر من مدرسة",
       h1: "غُص أكثر.<br>أدِر أقل.",
@@ -596,7 +596,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     install: {
       h3: "Ocean Flow، كأي تطبيق آخر على هاتفك",
-      p: "مصمم كتطبيق كامل: تضيفه إلى الشاشة الرئيسية وتفتحه مثل أي تطبيق آخر، دون المرور بالمتصفح في كل مرة. وصول سريع، بين غطسة وأخرى."
+      p: "مصمم كتطبيق كامل: تضيفه إلى الشاشة الرئيسية وتفتحه مثل أي تطبيق آخر، دون المرور بالمتصفح في كل مرة. وصول سريع في نهاية اليوم لتحديث عملك."
     },
     tour: {
       h2: "جولة سريعة فيما يقدمه التطبيق",
@@ -621,11 +621,11 @@ window.__OCEANFLOW_I18N__ = {
     },
     stop: {
       eyebrow: "محطة إزالة الضغط",
-      h2: "جهّز درسك القادم هنا",
+      h2: "لا تدع المزيد من الأيام تمر دون تنظيم أمورك المالية",
       p: "أنشئ حسابك، وأضِف مدرستك الأولى وأسعارها، وسجّل حركتك الأولى في وقت أقل من الذي يستغرقه تجهيز معداتك.",
       ctaPrimary: "إنشاء حسابي",
       urlline: "سجّل في <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Ocean Flow، إدارة دخل مدربي الغوص، بمدرسة واحدة أو أكثر." }
+    footer: { text: "لمدربي الغوص، مع إمكانية إعداد أكثر من مدرسة." }
   }
 };
