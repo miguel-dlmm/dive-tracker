@@ -12,9 +12,11 @@ Registro de cambios relevantes de Ocean Flow.
   Uso**: `legal@oceanflow.money` sustituye a los placeholders `[PENDIENTE]`
   como email del responsable del tratamiento y para ejercer derechos, en
   los 15 idiomas. El NIF y la dirección física quedan "disponibles previa
-  solicitud" a ese mismo email en vez de publicarse abiertos. Sigue
-  pendiente rellenar la razón social del responsable antes de considerar
-  el documento definitivo.
+  solicitud" a ese mismo email en vez de publicarse abiertos.
+- **Mensaje de reaceptación legal más claro**: al pedir aceptar de nuevo
+  la Política de Privacidad/Términos de Uso tras una actualización, ahora
+  explica que se trata de eso ("hemos actualizado nuestras políticas…")
+  en vez del texto genérico de primer acceso.
 
 ## [1.7.0] - 2026-09-28
 
