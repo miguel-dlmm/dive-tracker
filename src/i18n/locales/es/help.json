@@ -56,7 +56,7 @@
     },
     "func-perfil": {
       "label": "Mi perfil",
-      "description": "Avatar, carnet de instructor, idioma y moneda favorita"
+      "description": "Avatar, carnet de instructor y Divemaster, idioma y moneda favorita"
     },
     "func-filtros": {
       "label": "Filtros y búsqueda",
@@ -71,7 +71,7 @@
     "primeros-pasos": {
       "title": "Empezar a usar Ocean Flow",
       "summary": "Una vuelta rápida por las tres pantallas principales antes de registrar tu primer movimiento.",
-      "whatYouCanDo": "Ocean Flow te ayuda a llevar el control de tus ingresos como instructor freelance. Bajo un mismo concepto, \"movimiento\", agrupa las clases que impartes, las comisiones por clientes referidos y los ajustes económicos con otros instructores.",
+      "whatYouCanDo": "Ocean Flow te ayuda a llevar el control de tus ingresos como instructor y Divemaster freelance. Bajo un mismo concepto, \"movimiento\", agrupa las clases que impartes, las comisiones por clientes referidos y los ajustes económicos con otros instructores y Divemasters.",
       "whenToUseIt": "La primera vez que abres la app, o cuando quieras recordar para qué sirve cada pantalla.",
       "steps": [
         "Home: tus cursos y clientes captados de un vistazo, cuánto tienes pendiente de cobrar y tu media diaria, accesos directos a Training Records, tu escuela del mes y la Guía de Buceo, el calendario del mes y un botón para crear un movimiento.",
@@ -106,12 +106,12 @@
       "title": "Crear un movimiento",
       "summary": "El mismo formulario sirve para un curso impartido, una comisión o un ajuste con un compañero. Cada tipo tiene sus propios campos.",
       "whatYouCanDo": "\"Añadir movimiento\" es el único acceso de creación de toda la app. El propio formulario te deja elegir el tipo, no hace falta acertar un botón distinto para cada caso.",
-      "whenToUseIt": "Justo después de dar una clase, al cerrar una comisión, o cuando acuerdes un ajuste con otro instructor.",
+      "whenToUseIt": "Justo después de dar una clase, al cerrar una comisión, o cuando acuerdes un ajuste con otro instructor o Divemaster.",
       "steps": [
         "Pulsa \"Añadir movimiento\": el botón \"+\" de la tarjeta \"Pendiente de cobrar\" en Home, el mismo botón tocando un día del calendario de Home, o el \"+\" flotante de Mi trabajo.",
         "Arriba del formulario, elige el tipo: Curso impartido, Comisión o Ajuste de curso.",
         "Curso impartido: escuela, curso, fecha y nº de personas. La tarifa por curso calcula el importe sola.",
-        "Comisión: igual que un curso, pero para un cliente que has referido y que forma otro instructor. Usa su propia tarifa de comisión, no la de curso.",
+        "Comisión: igual que un curso, pero para un cliente que has referido y que forma otro instructor o Divemaster. Usa su propia tarifa de comisión, no la de curso.",
         "Ajuste de curso: no depende de ninguna tarifa, indica tú mismo el importe (positivo si te deben, negativo si tú debes) y con qué compañero es el ajuste.",
         "Guarda. Si abriste el formulario desde Home, verás el movimiento en Mi trabajo justo después de guardar."
       ],
@@ -158,7 +158,7 @@
     "generar-training-record": {
       "title": "Generar un Training Record",
       "summary": "El documento oficial de progreso SSI de cada alumno, con su firma y la tuya. Nada se guarda en la nube, solo se descarga.",
-      "whatYouCanDo": "Desde Training Records generas el documento de progreso oficial de cualquiera de las 10 plantillas SSI, con los datos de cada alumno y tu firma de instructor ya incluidos. Puedes generarlos uno a uno o de golpe, y descargarlos en PDF, en imagen, o compartirlos directamente.",
+      "whatYouCanDo": "Desde Training Records generas el documento de progreso oficial de cualquiera de las 10 plantillas SSI, con los datos de cada alumno y tu firma de instructor y Divemaster ya incluidos. Puedes generarlos uno a uno o de golpe, y descargarlos en PDF, en imagen, o compartirlos directamente.",
       "whenToUseIt": "Al terminar un curso, cuando un alumno necesita su Training Record en papel o para enviarlo a SSI.",
       "steps": [
         "Entra en Training Records desde el acceso en Home.",
@@ -168,7 +168,7 @@
         "Por alumno: \"Descargar PDF\", \"Descargar imagen (JPG)\" o \"Compartir\". Para todos a la vez: \"Descargar todo en PDF/JPG\" o \"Compartir todo\", en un único archivo comprimido."
       ],
       "tips": [
-        "Necesitas tu carnet de instructor completo en Mi perfil (iniciales, número SSI Pro y firma) antes de poder generar nada. Es lo que se imprime en cada Training Record.",
+        "Necesitas tu carnet de instructor y Divemaster completo en Mi perfil (iniciales, número SSI Pro y firma) antes de poder generar nada. Es lo que se imprime en cada Training Record.",
         "Nada de lo que rellenes aquí se guarda en Ocean Flow: cada documento se genera en el momento y solo se descarga."
       ],
       "expectedResult": "Tienes el Training Record de cada alumno listo para descargar o compartir, con su firma y la tuya ya incluidas."
@@ -242,14 +242,14 @@
     },
     "perfil-referencia": {
       "title": "Mi perfil, de un vistazo",
-      "summary": "Tu avatar, tus datos, tu carnet de instructor, tu moneda favorita y tu contraseña, todo en un mismo sitio, accesible desde tu nombre en la cabecera.",
-      "whatYouCanDo": "Toca tu avatar o tu nickname (arriba a la derecha en cualquier pantalla) para entrar en Mi perfil: tu identidad, tu carnet de instructor, tu idioma, tu moneda favorita y tu contraseña, todo en un mismo sitio.",
+      "summary": "Tu avatar, tus datos, tu carnet de instructor y Divemaster, tu moneda favorita y tu contraseña, todo en un mismo sitio, accesible desde tu nombre en la cabecera.",
+      "whatYouCanDo": "Toca tu avatar o tu nickname (arriba a la derecha en cualquier pantalla) para entrar en Mi perfil: tu identidad, tu carnet de instructor y Divemaster, tu idioma, tu moneda favorita y tu contraseña, todo en un mismo sitio.",
       "whenToUseIt": "Cuando quieras personalizar tu cuenta, corregir un dato, o cambiar la contraseña sin tener que cerrar sesión y pasar por \"olvidé mi contraseña\".",
       "steps": [
         "Toca el avatar/nickname de la cabecera para entrar en Mi perfil.",
         "El lápiz sobre el avatar abre el selector de icono y color. El cambio se guarda al elegir, sin botón \"Guardar\" aparte.",
         "\"Editar\" en Datos personales abre nombre, apellidos y nickname; el nickname no puede llevar \"@\" ni coincidir con el de otra cuenta.",
-        "\"Datos de instructor\" es tu carnet: iniciales, número SSI Pro y tu firma. Se guardan aquí una sola vez y son los que se usan para rellenar tus Training Records automáticamente.",
+        "\"Datos de instructor y Divemaster\" es tu carnet: iniciales, número SSI Pro y tu firma. Se guardan aquí una sola vez y son los que se usan para rellenar tus Training Records automáticamente.",
         "Moneda favorita se usa como respaldo en Ajuste de curso cuando no hay una tarifa que la determine. El resto de movimientos siempre usan la moneda de su propia tarifa."
       ],
       "tips": [
@@ -257,7 +257,7 @@
         "El idioma de toda la app se cambia también desde aquí, sin tener que cerrar sesión.",
         "Eliminar tu cuenta es permanente y borra todos tus datos. Para confirmarlo tienes que escribir la palabra CANCELAR, así no se borra nada por un toque accidental."
       ],
-      "expectedResult": "Tu cuenta refleja el avatar, los datos, el carnet de instructor y la moneda que elijas, y puedes cambiar tu contraseña o tu idioma cuando quieras sin salir de la app."
+      "expectedResult": "Tu cuenta refleja el avatar, los datos, el carnet de instructor y Divemaster, y la moneda que elijas, y puedes cambiar tu contraseña o tu idioma cuando quieras sin salir de la app."
     },
     "filtros-referencia": {
       "title": "Filtrar y buscar",

@@ -56,7 +56,7 @@
     },
     "func-perfil": {
       "label": "Mein Profil",
-      "description": "Avatar, Instructor-Ausweis, Sprache und bevorzugte Währung"
+      "description": "Avatar, Instructor- und Divemaster-Ausweis, Sprache und bevorzugte Währung"
     },
     "func-filtros": {
       "label": "Filter und Suche",
@@ -71,7 +71,7 @@
     "primeros-pasos": {
       "title": "Mit Ocean Flow loslegen",
       "summary": "Ein kurzer Rundgang durch die drei Hauptbildschirme, bevor du deine erste Buchung erfasst.",
-      "whatYouCanDo": "Ocean Flow hilft dir, deine Einnahmen als freiberuflicher Instructor im Blick zu behalten. Unter einem gemeinsamen Konzept, \"Buchung\", fasst es die Kurse, die du gibst, die Provisionen für vermittelte Kunden und die finanziellen Ausgleiche mit anderen Instructors zusammen.",
+      "whatYouCanDo": "Ocean Flow hilft dir, deine Einnahmen als freiberuflicher Instructor und Divemaster im Blick zu behalten. Unter einem gemeinsamen Konzept, \"Buchung\", fasst es die Kurse, die du gibst, die Provisionen für vermittelte Kunden und die finanziellen Ausgleiche mit anderen Instructors und Divemastern zusammen.",
       "whenToUseIt": "Beim ersten Öffnen der App, oder wenn du dich daran erinnern möchtest, wofür jeder Bildschirm da ist.",
       "steps": [
         "Home: deine Kurse und Vermittlungen auf einen Blick, wie viel du noch einziehen musst und dein Tagesdurchschnitt, direkte Zugänge zu Training Records, deiner Schule des Monats und dem Tauchführer, der Kalender des Monats und ein Button, um eine Buchung zu erstellen.",
@@ -106,12 +106,12 @@
       "title": "Eine Buchung erstellen",
       "summary": "Dasselbe Formular dient für einen erteilten Kurs, eine Provision oder einen Ausgleich mit einem Kollegen — jeder Typ hat seine eigenen Felder.",
       "whatYouCanDo": "\"Buchung hinzufügen\" ist der einzige Erstellungspunkt der gesamten App — im Formular selbst wählst du den Typ, du musst keinen anderen Button für jeden Fall treffen.",
-      "whenToUseIt": "Direkt nach einem Kurs, beim Abschluss einer Provision, oder wenn du einen Ausgleich mit einem anderen Instructor vereinbarst.",
+      "whenToUseIt": "Direkt nach einem Kurs, beim Abschluss einer Provision, oder wenn du einen Ausgleich mit einem anderen Instructor oder Divemaster vereinbarst.",
       "steps": [
         "Drücke \"Buchung hinzufügen\": den \"+\"-Button der Karte \"Ausstehend\" in Home, denselben Button durch Antippen eines Tages im Home-Kalender, oder den schwebenden \"+\" in Meine Arbeit.",
         "Wähle oben im Formular den Typ: Erteilter Kurs, Provision oder Kursausgleich.",
         "Erteilter Kurs: Schule, Kurs, Datum und Personenzahl — der Kurstarif berechnet den Betrag automatisch.",
-        "Provision: wie ein Kurs, aber für einen Kunden, den du vermittelt hast und der bei einem anderen Instructor ausgebildet wird — verwendet den eigenen Provisionstarif, nicht den des Kurses.",
+        "Provision: wie ein Kurs, aber für einen Kunden, den du vermittelt hast und der bei einem anderen Instructor oder Divemaster ausgebildet wird — verwendet den eigenen Provisionstarif, nicht den des Kurses.",
         "Kursausgleich: hängt von keinem Tarif ab — du gibst selbst den Betrag an (positiv, wenn man dir schuldet, negativ, wenn du schuldest) und mit welchem Kollegen der Ausgleich ist.",
         "Speichern. Wenn du das Formular von Home aus geöffnet hast, siehst du die Buchung direkt nach dem Speichern in Meine Arbeit."
       ],
@@ -158,7 +158,7 @@
     "generar-training-record": {
       "title": "Ein Training Record erstellen",
       "summary": "Das offizielle SSI-Fortschrittsdokument jedes Teilnehmers, mit dessen Unterschrift und deiner — nichts wird in der Cloud gespeichert, es wird nur heruntergeladen.",
-      "whatYouCanDo": "In Training Records erstellst du das offizielle Fortschrittsdokument für jede der 10 SSI-Vorlagen, mit den Daten jedes Teilnehmers und deiner Instructor-Unterschrift bereits eingefügt. Du kannst sie einzeln oder alle auf einmal erstellen und als PDF, als Bild herunterladen oder direkt teilen.",
+      "whatYouCanDo": "In Training Records erstellst du das offizielle Fortschrittsdokument für jede der 10 SSI-Vorlagen, mit den Daten jedes Teilnehmers und deiner Instructor- und Divemaster-Unterschrift bereits eingefügt. Du kannst sie einzeln oder alle auf einmal erstellen und als PDF, als Bild herunterladen oder direkt teilen.",
       "whenToUseIt": "Wenn ein Kurs endet, oder wenn ein Teilnehmer sein Training Record auf Papier oder zum Versenden an SSI benötigt.",
       "steps": [
         "Öffne Training Records über den Zugang in Home.",
@@ -168,7 +168,7 @@
         "Pro Teilnehmer: \"PDF herunterladen\", \"Bild herunterladen (JPG)\" oder \"Teilen\". Für alle auf einmal: \"Alle als PDF/JPG herunterladen\" oder \"Alle teilen\", als ein einziges Archiv."
       ],
       "tips": [
-        "Du brauchst deinen vollständigen Instructor-Ausweis in Mein Profil (Initialen, SSI-Pro-Nummer und Unterschrift), bevor du irgendetwas erstellen kannst — das wird auf jedem Training Record gedruckt.",
+        "Du brauchst deinen vollständigen Instructor- und Divemaster-Ausweis in Mein Profil (Initialen, SSI-Pro-Nummer und Unterschrift), bevor du irgendetwas erstellen kannst — das wird auf jedem Training Record gedruckt.",
         "Nichts von dem, was du hier ausfüllst, wird in Ocean Flow gespeichert: Jedes Dokument wird im Moment erstellt und nur heruntergeladen."
       ],
       "expectedResult": "Du hast das Training Record jedes Teilnehmers bereit zum Herunterladen oder Teilen, mit dessen Unterschrift und deiner bereits enthalten."
@@ -242,14 +242,14 @@
     },
     "perfil-referencia": {
       "title": "Mein Profil, auf einen Blick",
-      "summary": "Dein Avatar, deine Daten, dein Instructor-Ausweis, deine bevorzugte Währung und dein Passwort — alles an einem Ort, zugänglich über deinen Namen in der Kopfzeile.",
-      "whatYouCanDo": "Tippe auf deinen Avatar oder deinen Nickname (oben rechts auf jedem Bildschirm), um in Mein Profil zu gelangen: deine Identität, deinen Instructor-Ausweis, deine Sprache, deine bevorzugte Währung und dein Passwort, alles an einem Ort.",
+      "summary": "Dein Avatar, deine Daten, dein Instructor- und Divemaster-Ausweis, deine bevorzugte Währung und dein Passwort — alles an einem Ort, zugänglich über deinen Namen in der Kopfzeile.",
+      "whatYouCanDo": "Tippe auf deinen Avatar oder deinen Nickname (oben rechts auf jedem Bildschirm), um in Mein Profil zu gelangen: deine Identität, deinen Instructor- und Divemaster-Ausweis, deine Sprache, deine bevorzugte Währung und dein Passwort, alles an einem Ort.",
       "whenToUseIt": "Wenn du dein Konto personalisieren, ein Datum korrigieren oder das Passwort ändern möchtest, ohne dich abzumelden und über \"Passwort vergessen\" zu gehen.",
       "steps": [
         "Tippe auf Avatar/Nickname in der Kopfzeile, um in Mein Profil zu gelangen.",
         "Der Stift über dem Avatar öffnet die Symbol- und Farbauswahl — die Änderung wird bei der Auswahl gespeichert, ohne separaten \"Speichern\"-Button.",
         "\"Bearbeiten\" bei Persönliche Daten öffnet Vorname, Nachname und Nickname; der Nickname darf kein \"@\" enthalten und nicht mit dem eines anderen Kontos übereinstimmen.",
-        "\"Instructor-Daten\" ist dein Ausweis: Initialen, SSI-Pro-Nummer und deine Unterschrift — werden hier einmalig gespeichert und dienen dazu, deine Training Records automatisch auszufüllen.",
+        "\"Instructor- und Divemaster-Daten\" ist dein Ausweis: Initialen, SSI-Pro-Nummer und deine Unterschrift — werden hier einmalig gespeichert und dienen dazu, deine Training Records automatisch auszufüllen.",
         "Die bevorzugte Währung wird bei Kursausgleich als Ersatz verwendet, wenn kein Tarif sie bestimmt — alle anderen Buchungen verwenden immer die Währung ihres eigenen Tarifs."
       ],
       "tips": [
@@ -257,7 +257,7 @@
         "Auch die Sprache der gesamten App wird hier geändert, ohne dass du dich abmelden musst.",
         "Das Löschen deines Kontos ist endgültig und löscht alle deine Daten — zur Bestätigung musst du das Wort ABBRECHEN eingeben, damit nichts durch einen versehentlichen Tipp gelöscht wird."
       ],
-      "expectedResult": "Dein Konto spiegelt den gewählten Avatar, die Daten, den Instructor-Ausweis und die Währung wider, und du kannst dein Passwort oder deine Sprache jederzeit ändern, ohne die App zu verlassen."
+      "expectedResult": "Dein Konto spiegelt den gewählten Avatar, die Daten, den Instructor- und Divemaster-Ausweis und die Währung wider, und du kannst dein Passwort oder deine Sprache jederzeit ändern, ohne die App zu verlassen."
     },
     "filtros-referencia": {
       "title": "Filtern und Suchen",

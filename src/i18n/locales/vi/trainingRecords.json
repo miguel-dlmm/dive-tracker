@@ -5,7 +5,7 @@
   "noSePudoDescargarPlantilla": "Không thể tải mẫu này.",
   "cargandoPlantillas": "Đang tải…",
   "instructorMissing": {
-    "mensaje": "Trước khi tạo, hãy hoàn thiện thông tin huấn luyện viên (họ tên, chữ viết tắt, số SSI Pro và chữ ký) trong hồ sơ của bạn.",
+    "mensaje": "Trước khi tạo, hãy hoàn thiện thông tin huấn luyện viên và Divemaster (họ tên, chữ viết tắt, số SSI Pro và chữ ký) trong hồ sơ của bạn.",
     "boton": "Đến hồ sơ của tôi"
   },
   "roster": {

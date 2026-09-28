@@ -7,8 +7,29 @@
   "dateGroup": {
     "today": "Hôm nay",
     "yesterday": "Hôm qua",
-    "weekdaysShort": ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
-    "monthsShort": ["Th1", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7", "Th8", "Th9", "Th10", "Th11", "Th12"]
+    "weekdaysShort": [
+      "T2",
+      "T3",
+      "T4",
+      "T5",
+      "T6",
+      "T7",
+      "CN"
+    ],
+    "monthsShort": [
+      "Th1",
+      "Th2",
+      "Th3",
+      "Th4",
+      "Th5",
+      "Th6",
+      "Th7",
+      "Th8",
+      "Th9",
+      "Th10",
+      "Th11",
+      "Th12"
+    ]
   },
   "emptyMessage": {
     "pendingWithFilters": "Không có mục nào chờ với bộ lọc này.",
@@ -99,7 +120,7 @@
       "course": "Khóa học",
       "school": "Trung tâm",
       "date": "Ngày",
-      "relatedColleague": "Huấn luyện viên liên quan",
+      "relatedColleague": "Huấn luyện viên hoặc Divemaster liên quan",
       "amount": "Số tiền · {{currency}}",
       "amountHint": "Số dương nếu bạn được trả; số âm nếu bạn phải trả cho người đó",
       "colleaguePlaceholder": "Ana, Marc...",

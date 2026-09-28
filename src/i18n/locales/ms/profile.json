@@ -1,7 +1,7 @@
 {
   "sections": {
     "personalData": "Data peribadi",
-    "instructor": "Data instruktor",
+    "instructor": "Data instruktor dan Divemaster",
     "favoriteCurrency": "Mata wang kegemaran",
     "language": "Bahasa",
     "security": "Keselamatan",
@@ -64,8 +64,8 @@
     "numberLabel": "Nombor SSI Pro",
     "save": "Simpan",
     "saving": "Menyimpan…",
-    "toastSuccess": "Data instruktor dikemas kini",
-    "toastError": "Tidak dapat menyimpan data instruktor. Cuba lagi."
+    "toastSuccess": "Data instruktor dan Divemaster dikemas kini",
+    "toastError": "Tidak dapat menyimpan data instruktor dan Divemaster. Cuba lagi."
   },
   "currency": {
     "hint": "Digunakan sebagai mata wang lalai dalam Pelarasan Kursus, apabila tiada kadar bayaran yang menentukannya. Transaksi lain sentiasa menggunakan mata wang kadar bayarannya sendiri.",

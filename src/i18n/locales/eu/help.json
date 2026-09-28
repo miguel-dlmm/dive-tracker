@@ -56,7 +56,7 @@
     },
     "func-perfil": {
       "label": "Nire profila",
-      "description": "Avatarra, irakaslearen txartela, hizkuntza eta dibisa gogokoena"
+      "description": "Avatarra, irakaslearen eta Divemasterraren txartela, hizkuntza eta dibisa gogokoena"
     },
     "func-filtros": {
       "label": "Iragazkiak eta bilaketa",
@@ -71,7 +71,7 @@
     "primeros-pasos": {
       "title": "Hasi Ocean Flow erabiltzen",
       "summary": "Hiru pantaila nagusietatik bira azkar bat, zure lehen mugimendua erregistratu aurretik.",
-      "whatYouCanDo": "Ocean Flow-ek irakasle autonomo gisa dituzun sarrerak kontrolatzen laguntzen dizu. Kontzeptu bakar baten pean, \"mugimendua\", ematen dituzun klaseak, erakarritako bezeroengatiko komisioak eta beste irakasleekiko doikuntza ekonomikoak biltzen ditu.",
+      "whatYouCanDo": "Ocean Flow-ek irakasle eta Divemaster autonomo gisa dituzun sarrerak kontrolatzen laguntzen dizu. Kontzeptu bakar baten pean, \"mugimendua\", ematen dituzun klaseak, erakarritako bezeroengatiko komisioak eta beste irakasle eta Divemasterrekiko doikuntza ekonomikoak biltzen ditu.",
       "whenToUseIt": "Aplikazioa lehen aldiz irekitzean, edo pantaila bakoitza zertarako den gogoratu nahi duzunean.",
       "steps": [
         "Hasiera: zure ikastaroak eta erakarritakoak begirada batean, zenbat daukazun kobratzeke eta zure batez besteko eguneroa, Training Records, hileko eskola eta Urpekaritza Gidarako sarbide zuzenak, hilabeteko egutegia eta mugimendu bat sortzeko botoia.",
@@ -106,12 +106,12 @@
       "title": "Sortu mugimendu bat",
       "summary": "Formulario berak balio du emandako ikastaro batentzat, komisio batentzat edo lankide batekiko doikuntza batentzat — mota bakoitzak bere eremuak ditu.",
       "whatYouCanDo": "\"Gehitu mugimendua\" da aplikazio osoko sortzeko sarbide bakarra — formularioak berak uzten dizu mota aukeratzen, ez dago kasu bakoitzerako botoi ezberdin bat asmatu beharrik.",
-      "whenToUseIt": "Klase bat eman ondoren, komisio bat itxian, edo beste irakasle batekin doikuntza bat adosten duzunean.",
+      "whenToUseIt": "Klase bat eman ondoren, komisio bat itxian, edo beste irakasle edo Divemaster batekin doikuntza bat adosten duzunean.",
       "steps": [
         "Sakatu \"Gehitu mugimendua\": Hasierako \"Kobratzeke\" txartelaren \"+\" botoia, botoi bera Hasierako egutegiko egun bat sakatuta, edo Nire lanaren \"+\" flotagarria.",
         "Formularioaren goialdean, aukeratu mota: Emandako ikastaroa, Komisioa edo Ikastaro doikuntza.",
         "Emandako ikastaroa: eskola, ikastaroa, data eta pertsona kopurua — ikastaro-tarifak zenbatekoa bakarrik kalkulatzen du.",
-        "Komisioa: ikastaro baten antzera, baina erakarri duzun eta beste irakasle batek entrenatzen duen bezero baterako — bere komisio-tarifa propioa erabiltzen du, ez ikastaroarena.",
+        "Komisioa: ikastaro baten antzera, baina erakarri duzun eta beste irakasle edo Divemaster batek entrenatzen duen bezero baterako — bere komisio-tarifa propioa erabiltzen du, ez ikastaroarena.",
         "Ikastaro doikuntza: ez dago inolako tarifaren mende — zuk zeuk adierazten duzu zenbatekoa (positiboa zorretan badaude, negatiboa zuk baduzu zorra) eta zein lankiderekin den doikuntza.",
         "Gorde. Formularioa Hasieratik ireki baduzu, mugimendua Nire lanan ikusiko duzu gorde eta berehala."
       ],
@@ -158,7 +158,7 @@
     "generar-training-record": {
       "title": "Sortu Training Record bat",
       "summary": "Ikasle bakoitzaren SSI aurrerapenaren dokumentu ofiziala, bere sinadura eta zurea barne — ezer ez da hodeian gordetzen, deskargatu bakarrik egiten da.",
-      "whatYouCanDo": "Training Records atalean 10 SSI txantiloietako edozeinen aurrerapenaren dokumentu ofiziala sortzen duzu, ikasle bakoitzaren datuekin eta zure irakasle-sinadura jada txertatuta. Banan-banan edo denak batera sor ditzakezu, eta PDF gisa, irudi gisa deskarga ditzakezu, edo zuzenean partekatu.",
+      "whatYouCanDo": "Training Records atalean 10 SSI txantiloietako edozeinen aurrerapenaren dokumentu ofiziala sortzen duzu, ikasle bakoitzaren datuekin eta zure irakasle eta Divemaster-sinadura jada txertatuta. Banan-banan edo denak batera sor ditzakezu, eta PDF gisa, irudi gisa deskarga ditzakezu, edo zuzenean partekatu.",
       "whenToUseIt": "Ikastaro bat amaitzean, edo ikasle batek bere Training Record paperean edo SSIri bidaltzeko behar duenean.",
       "steps": [
         "Sartu Training Records atalean Hasierako sarbidetik.",
@@ -168,7 +168,7 @@
         "Ikasle bakoitzeko: \"Deskargatu PDFa\", \"Deskargatu irudia (JPG)\" edo \"Partekatu\". Denentzat batera: \"Deskargatu dena PDFn/JPGn\" edo \"Partekatu dena\", artxibo bakar batean."
       ],
       "tips": [
-        "Nire profilean irakaslearen txartela osatuta izan behar duzu (inizialak, SSI Pro zenbakia eta sinadura) ezer sortu ahal izan aurretik — hori da Training Record bakoitzean inprimatzen dena.",
+        "Nire profilean irakaslearen eta Divemasterraren txartela osatuta izan behar duzu (inizialak, SSI Pro zenbakia eta sinadura) ezer sortu ahal izan aurretik — hori da Training Record bakoitzean inprimatzen dena.",
         "Hemen betetzen duzun ezer ez da Ocean Flow-en gordetzen: dokumentu bakoitza unean sortzen da eta deskargatu bakarrik egiten da."
       ],
       "expectedResult": "Ikasle bakoitzaren Training Record-a deskargatzeko edo partekatzeko prest duzu, bere sinadura eta zurea jada barne."
@@ -242,14 +242,14 @@
     },
     "perfil-referencia": {
       "title": "Nire profila, begirada batean",
-      "summary": "Zure avatarra, zure datuak, zure irakaslearen txartela, zure dibisa gogokoena eta zure pasahitza — dena toki berean, goiburuko zure izenetik eskuragarri.",
-      "whatYouCanDo": "Sakatu zure avatarra edo zure ezizena (goian eskuinean edozein pantailatan) Nire profilera sartzeko: zure identitatea, zure irakaslearen txartela, zure hizkuntza, zure dibisa gogokoena eta zure pasahitza, dena toki berean.",
+      "summary": "Zure avatarra, zure datuak, zure irakaslearen eta Divemasterraren txartela, zure dibisa gogokoena eta zure pasahitza — dena toki berean, goiburuko zure izenetik eskuragarri.",
+      "whatYouCanDo": "Sakatu zure avatarra edo zure ezizena (goian eskuinean edozein pantailatan) Nire profilera sartzeko: zure identitatea, zure irakaslearen eta Divemasterraren txartela, zure hizkuntza, zure dibisa gogokoena eta zure pasahitza, dena toki berean.",
       "whenToUseIt": "Zure kontua pertsonalizatu, datu bat zuzendu, edo saioa itxi eta \"pasahitza ahaztu dut\" bidez pasatu beharrik gabe pasahitza aldatu nahi duzunean.",
       "steps": [
         "Sakatu goiburuko avatarra/ezizena Nire profilera sartzeko.",
         "Avatarraren gaineko arkatzak ikono- eta kolore-hautatzailea irekitzen du — aldaketa aukeratzean gordetzen da, \"Gorde\" botoi bereizirik gabe.",
         "Datu pertsonaletako \"Editatu\"-k izena, abizenak eta ezizena irekitzen ditu; ezizenak ezin du \"@\" eduki ezta beste kontu batenarekin bat etorri ere.",
-        "\"Irakaslearen datuak\" zure txartela da: inizialak, SSI Pro zenbakia eta zure sinadura — hemen behin bakarrik gordetzen dira eta zure Training Recordak automatikoki betetzeko erabiltzen dira.",
+        "\"Irakaslearen eta Divemasterraren datuak\" zure txartela da: inizialak, SSI Pro zenbakia eta zure sinadura — hemen behin bakarrik gordetzen dira eta zure Training Recordak automatikoki betetzeko erabiltzen dira.",
         "Dibisa gogokoena Ikastaro doikuntzan erreserba gisa erabiltzen da, hori zehazten duen tarifarik ez dagoenean — gainerako mugimenduek beti erabiltzen dute beren tarifaren dibisa."
       ],
       "tips": [
@@ -257,7 +257,7 @@
         "Aplikazio osoaren hizkuntza ere hemendik aldatzen da, saioa itxi beharrik gabe.",
         "Zure kontua ezabatzea betikoa da eta zure datu guztiak ezabatzen ditu — berresteko UTZI hitza idatzi behar duzu, ukitu batekin ezer ere ustekabean ezaba ez dadin."
       ],
-      "expectedResult": "Zure kontuak aukeratzen duzun avatarra, datuak, irakaslearen txartela eta dibisa islatzen ditu, eta zure pasahitza edo hizkuntza noiznahi alda ditzakezu aplikaziotik atera gabe."
+      "expectedResult": "Zure kontuak aukeratzen duzun avatarra, datuak, irakaslearen eta Divemasterraren txartela eta dibisa islatzen ditu, eta zure pasahitza edo hizkuntza noiznahi alda ditzakezu aplikaziotik atera gabe."
     },
     "filtros-referencia": {
       "title": "Iragazi eta bilatu",

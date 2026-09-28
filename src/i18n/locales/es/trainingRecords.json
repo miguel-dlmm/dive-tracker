@@ -5,7 +5,7 @@
   "noSePudoDescargarPlantilla": "No se pudo descargar esta plantilla.",
   "cargandoPlantillas": "Cargando…",
   "instructorMissing": {
-    "mensaje": "Antes de generar, completa tus datos de instructor (nombre, iniciales, número SSI Pro y firma) en tu perfil.",
+    "mensaje": "Antes de generar, completa tus datos de instructor y Divemaster (nombre, iniciales, número SSI Pro y firma) en tu perfil.",
     "boton": "Ir a mi perfil"
   },
   "roster": {

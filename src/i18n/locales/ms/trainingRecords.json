@@ -5,7 +5,7 @@
   "noSePudoDescargarPlantilla": "Tidak dapat memuat turun templat ini.",
   "cargandoPlantillas": "Memuatkan…",
   "instructorMissing": {
-    "mensaje": "Sebelum menjana, lengkapkan data instruktor anda (nama, inisial, nombor SSI Pro dan tandatangan) dalam profil anda.",
+    "mensaje": "Sebelum menjana, lengkapkan data instruktor dan Divemaster anda (nama, inisial, nombor SSI Pro dan tandatangan) dalam profil anda.",
     "boton": "Pergi ke profil saya"
   },
   "roster": {

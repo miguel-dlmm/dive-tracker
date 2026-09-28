@@ -1,7 +1,7 @@
 {
   "sections": {
     "personalData": "Data pribadi",
-    "instructor": "Data instruktur",
+    "instructor": "Data instruktur dan Divemaster",
     "favoriteCurrency": "Mata uang favorit",
     "language": "Bahasa",
     "security": "Keamanan",
@@ -64,8 +64,8 @@
     "numberLabel": "Nomor SSI Pro",
     "save": "Simpan",
     "saving": "Menyimpan…",
-    "toastSuccess": "Data instruktur diperbarui",
-    "toastError": "Data instruktur tidak dapat disimpan. Coba lagi."
+    "toastSuccess": "Data instruktur dan Divemaster diperbarui",
+    "toastError": "Data instruktur dan Divemaster tidak dapat disimpan. Coba lagi."
   },
   "currency": {
     "hint": "Digunakan sebagai mata uang bawaan pada Penyesuaian Kursus, saat tidak ada tarif yang menentukannya. Transaksi lain selalu memakai mata uang tarifnya sendiri.",

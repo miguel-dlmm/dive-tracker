@@ -5,7 +5,7 @@
   "noSePudoDescargarPlantilla": "No s'ha pogut descarregar aquesta plantilla.",
   "cargandoPlantillas": "Carregant…",
   "instructorMissing": {
-    "mensaje": "Abans de generar, completa les teves dades d'instructor (nom, inicials, número SSI Pro i signatura) al teu perfil.",
+    "mensaje": "Abans de generar, completa les teves dades d'instructor i Divemaster (nom, inicials, número SSI Pro i signatura) al teu perfil.",
     "boton": "Vés al meu perfil"
   },
   "roster": {

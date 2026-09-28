@@ -1,7 +1,7 @@
 {
   "sections": {
     "personalData": "Persoonlijke gegevens",
-    "instructor": "Instructeursgegevens",
+    "instructor": "Instructeurs- en Divemastergegevens",
     "favoriteCurrency": "Favoriete munteenheid",
     "language": "Taal",
     "security": "Beveiliging",
@@ -64,8 +64,8 @@
     "numberLabel": "SSI Pro-nummer",
     "save": "Opslaan",
     "saving": "Opslaan…",
-    "toastSuccess": "Instructeursgegevens bijgewerkt",
-    "toastError": "De instructeursgegevens konden niet worden opgeslagen. Probeer het opnieuw."
+    "toastSuccess": "Instructeurs- en Divemastergegevens bijgewerkt",
+    "toastError": "De instructeurs- en Divemastergegevens konden niet worden opgeslagen. Probeer het opnieuw."
   },
   "currency": {
     "hint": "Wordt gebruikt als standaardmunt bij Cursusaanpassing, wanneer er geen tarief is dat dit bepaalt. Alle andere boekingen gebruiken altijd de munt van hun eigen tarief.",

@@ -5,7 +5,7 @@
   "noSePudoDescargarPlantilla": "Dit sjabloon kon niet worden gedownload.",
   "cargandoPlantillas": "Laden…",
   "instructorMissing": {
-    "mensaje": "Vul eerst je instructeursgegevens in (naam, initialen, SSI Pro-nummer en handtekening) in je profiel voordat je iets genereert.",
+    "mensaje": "Vul eerst je instructeurs- en Divemastergegevens in (naam, initialen, SSI Pro-nummer en handtekening) in je profiel voordat je iets genereert.",
     "boton": "Naar mijn profiel"
   },
   "roster": {

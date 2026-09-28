@@ -7,8 +7,29 @@
   "dateGroup": {
     "today": "Avui",
     "yesterday": "Ahir",
-    "weekdaysShort": ["dl.", "dt.", "dc.", "dj.", "dv.", "ds.", "dg."],
-    "monthsShort": ["gen.", "feb.", "març", "abr.", "maig", "juny", "jul.", "ag.", "set.", "oct.", "nov.", "des."]
+    "weekdaysShort": [
+      "dl.",
+      "dt.",
+      "dc.",
+      "dj.",
+      "dv.",
+      "ds.",
+      "dg."
+    ],
+    "monthsShort": [
+      "gen.",
+      "feb.",
+      "març",
+      "abr.",
+      "maig",
+      "juny",
+      "jul.",
+      "ag.",
+      "set.",
+      "oct.",
+      "nov.",
+      "des."
+    ]
   },
   "emptyMessage": {
     "pendingWithFilters": "Sense elements pendents amb aquests filtres.",
@@ -99,7 +120,7 @@
       "course": "Curs",
       "school": "Escola",
       "date": "Data",
-      "relatedColleague": "Instructor relacionat",
+      "relatedColleague": "Instructor o Divemaster relacionat",
       "amount": "Import · {{currency}}",
       "amountHint": "Positiu si et paga a tu; negatiu si li pagues tu a ell/ella",
       "colleaguePlaceholder": "Anna, Marc...",

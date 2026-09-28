@@ -856,8 +856,8 @@ describe("ConfigTab — Usuarios: estado, activar/desactivar, regenerar y elimin
     await user.click(screen.getByRole("button", { name: /ana/ }));
     await waitFor(() => expect(screen.getByText("Turtle")).toBeInTheDocument());
     await user.click(screen.getByRole("button", { name: "Editar datos" }));
-    await user.clear(screen.getByLabelText("Iniciales de instructor"));
-    await user.type(screen.getByLabelText("Iniciales de instructor"), "ZZ");
+    await user.clear(screen.getByLabelText("Iniciales de instructor y Divemaster"));
+    await user.type(screen.getByLabelText("Iniciales de instructor y Divemaster"), "ZZ");
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     await waitFor(() => expect(capturedPatch).toMatchObject({

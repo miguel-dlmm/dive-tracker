@@ -7,8 +7,29 @@
   "dateGroup": {
     "today": "Hari ini",
     "yesterday": "Kemarin",
-    "weekdaysShort": ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
-    "monthsShort": ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"]
+    "weekdaysShort": [
+      "Sen",
+      "Sel",
+      "Rab",
+      "Kam",
+      "Jum",
+      "Sab",
+      "Min"
+    ],
+    "monthsShort": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "Mei",
+      "Jun",
+      "Jul",
+      "Ags",
+      "Sep",
+      "Okt",
+      "Nov",
+      "Des"
+    ]
   },
   "emptyMessage": {
     "pendingWithFilters": "Tidak ada item tertunda dengan filter ini.",
@@ -99,7 +120,7 @@
       "course": "Kursus",
       "school": "Sekolah",
       "date": "Tanggal",
-      "relatedColleague": "Instruktur terkait",
+      "relatedColleague": "Instruktur atau Divemaster terkait",
       "amount": "Jumlah · {{currency}}",
       "amountHint": "Positif jika dia membayarmu; negatif jika kamu membayar dia",
       "colleaguePlaceholder": "Ana, Marc...",

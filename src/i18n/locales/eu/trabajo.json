@@ -7,8 +7,29 @@
   "dateGroup": {
     "today": "Gaur",
     "yesterday": "Atzo",
-    "weekdaysShort": ["Al", "As", "Az", "Og", "Or", "Lr", "Ig"],
-    "monthsShort": ["urt", "ots", "mar", "api", "mai", "eka", "uzt", "abu", "ira", "urr", "aza", "abe"]
+    "weekdaysShort": [
+      "Al",
+      "As",
+      "Az",
+      "Og",
+      "Or",
+      "Lr",
+      "Ig"
+    ],
+    "monthsShort": [
+      "urt",
+      "ots",
+      "mar",
+      "api",
+      "mai",
+      "eka",
+      "uzt",
+      "abu",
+      "ira",
+      "urr",
+      "aza",
+      "abe"
+    ]
   },
   "emptyMessage": {
     "pendingWithFilters": "Ez dago zain dagoen elementurik iragazki hauekin.",
@@ -99,7 +120,7 @@
       "course": "Ikastaroa",
       "school": "Eskola",
       "date": "Data",
-      "relatedColleague": "Lotutako irakaslea",
+      "relatedColleague": "Lotutako irakaslea edo Divemasterra",
       "amount": "Zenbatekoa · {{currency}}",
       "amountHint": "Positiboa berak zuri ordaintzen badizu; negatiboa zuk berari ordaintzen badiozu",
       "colleaguePlaceholder": "Ane, Mikel...",

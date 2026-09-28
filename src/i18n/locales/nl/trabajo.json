@@ -7,8 +7,29 @@
   "dateGroup": {
     "today": "Vandaag",
     "yesterday": "Gisteren",
-    "weekdaysShort": ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"],
-    "monthsShort": ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+    "weekdaysShort": [
+      "Ma",
+      "Di",
+      "Wo",
+      "Do",
+      "Vr",
+      "Za",
+      "Zo"
+    ],
+    "monthsShort": [
+      "jan",
+      "feb",
+      "mrt",
+      "apr",
+      "mei",
+      "jun",
+      "jul",
+      "aug",
+      "sep",
+      "okt",
+      "nov",
+      "dec"
+    ]
   },
   "emptyMessage": {
     "pendingWithFilters": "Geen openstaande items met deze filters.",
@@ -99,7 +120,7 @@
       "course": "Cursus",
       "school": "School",
       "date": "Datum",
-      "relatedColleague": "Betrokken instructeur",
+      "relatedColleague": "Betrokken instructeur of Divemaster",
       "amount": "Bedrag · {{currency}}",
       "amountHint": "Positief als jij wordt betaald; negatief als jij hem/haar betaalt",
       "colleaguePlaceholder": "Ana, Marc...",

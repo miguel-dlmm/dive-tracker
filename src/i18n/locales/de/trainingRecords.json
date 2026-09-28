@@ -5,7 +5,7 @@
   "noSePudoDescargarPlantilla": "Diese Vorlage konnte nicht heruntergeladen werden.",
   "cargandoPlantillas": "Wird geladen…",
   "instructorMissing": {
-    "mensaje": "Vervollständige vor dem Erstellen deine Instructor-Daten (Name, Initialen, SSI-Pro-Nummer und Unterschrift) in deinem Profil.",
+    "mensaje": "Vervollständige vor dem Erstellen deine Instructor- und Divemaster-Daten (Name, Initialen, SSI-Pro-Nummer und Unterschrift) in deinem Profil.",
     "boton": "Zu meinem Profil"
   },
   "roster": {

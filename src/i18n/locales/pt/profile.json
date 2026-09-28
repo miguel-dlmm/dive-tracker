@@ -1,7 +1,7 @@
 {
   "sections": {
     "personalData": "Dados pessoais",
-    "instructor": "Dados de instrutor",
+    "instructor": "Dados de instrutor e Divemaster",
     "favoriteCurrency": "Moeda favorita",
     "language": "Idioma",
     "security": "Segurança",
@@ -64,8 +64,8 @@
     "numberLabel": "Número SSI Pro",
     "save": "Salvar",
     "saving": "Salvando…",
-    "toastSuccess": "Dados de instrutor atualizados",
-    "toastError": "Não foi possível salvar os dados de instrutor. Tente novamente."
+    "toastSuccess": "Dados de instrutor e Divemaster atualizados",
+    "toastError": "Não foi possível salvar os dados de instrutor e Divemaster. Tente novamente."
   },
   "currency": {
     "hint": "Usada como moeda padrão em Ajuste de curso, quando não há uma tarifa que a determine. Os demais movimentos sempre usam a moeda da sua tarifa.",

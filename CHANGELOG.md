@@ -38,6 +38,18 @@ Registro de cambios relevantes de Ocean Flow.
   había quedado con 5 entradas de la release anterior — se veían 5 puntos
   de navegación y diapositivas 2-5 sin título ni cuerpo. Cobertura nueva
   (`SlideDeck.test.jsx`) para que no vuelva a pasar inadvertido.
+
+### Changed
+- **"Instructor" pasa a "instructor y Divemaster" (o "instructor o
+  Divemaster" en referencias indefinidas a un tercero) en toda la copy
+  visible de la app y de la landing "Meet Ocean Flow"**: carnet de
+  perfil, textos legales, Ayuda, Training Records, Mi Trabajo y las 5
+  frases de la landing que mencionaban el rol, en los 15 idiomas de la
+  app y los 10 de la landing. El término "Divemaster" (una palabra,
+  mayúscula inicial) se alinea con el que ya usa `ProfileTab` para el
+  nivel profesional, en vez de introducir una segunda grafía distinta.
+  Rama sin fusionar a `develop` todavía, pendiente de revisión visual
+  del usuario sobre su Preview Deployment.
 - **"Qué hay de nuevo" y el tour de bienvenida apilados a la vez**: una
   cuenta recién activada (ambos "no visto" al mismo tiempo) podía llegar
   a ver los dos diálogos montados encima uno del otro, no solo el tour.

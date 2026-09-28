@@ -56,7 +56,7 @@
     },
     "func-perfil": {
       "label": "Hồ sơ của tôi",
-      "description": "Ảnh đại diện, thẻ huấn luyện viên, ngôn ngữ và tiền tệ yêu thích"
+      "description": "Ảnh đại diện, thẻ huấn luyện viên và Divemaster, ngôn ngữ và tiền tệ yêu thích"
     },
     "func-filtros": {
       "label": "Bộ lọc và tìm kiếm",
@@ -71,7 +71,7 @@
     "primeros-pasos": {
       "title": "Bắt đầu sử dụng Ocean Flow",
       "summary": "Một vòng nhanh qua ba màn hình chính trước khi ghi lại giao dịch đầu tiên của bạn.",
-      "whatYouCanDo": "Ocean Flow giúp bạn quản lý thu nhập với tư cách huấn luyện viên tự do. Dưới cùng một khái niệm, \"giao dịch\", ứng dụng gộp chung các lớp bạn dạy, hoa hồng từ khách hàng được giới thiệu và các điều chỉnh tài chính với huấn luyện viên khác.",
+      "whatYouCanDo": "Ocean Flow giúp bạn quản lý thu nhập với tư cách huấn luyện viên và Divemaster tự do. Dưới cùng một khái niệm, \"giao dịch\", ứng dụng gộp chung các lớp bạn dạy, hoa hồng từ khách hàng được giới thiệu và các điều chỉnh tài chính với huấn luyện viên và Divemaster khác.",
       "whenToUseIt": "Lần đầu mở ứng dụng, hoặc khi bạn muốn nhớ lại công dụng của từng màn hình.",
       "steps": [
         "Home: khóa học và khách được giới thiệu của bạn trong một cái nhìn nhanh, số tiền đang chờ thu và mức trung bình hằng ngày, lối tắt đến Training Records, trường của tháng và Cẩm Nang Lặn, lịch của tháng và nút tạo giao dịch.",
@@ -106,12 +106,12 @@
       "title": "Tạo một giao dịch",
       "summary": "Cùng một biểu mẫu dùng cho khóa học đã dạy, hoa hồng hoặc điều chỉnh với đồng nghiệp — mỗi loại có trường riêng.",
       "whatYouCanDo": "\"Thêm giao dịch\" là lối tạo mới duy nhất trong toàn bộ ứng dụng — chính biểu mẫu để bạn chọn loại, không cần bấm đúng nút riêng cho từng trường hợp.",
-      "whenToUseIt": "Ngay sau khi dạy một lớp, khi chốt một khoản hoa hồng, hoặc khi thỏa thuận điều chỉnh với huấn luyện viên khác.",
+      "whenToUseIt": "Ngay sau khi dạy một lớp, khi chốt một khoản hoa hồng, hoặc khi thỏa thuận điều chỉnh với huấn luyện viên hoặc Divemaster khác.",
       "steps": [
         "Nhấn \"Thêm giao dịch\": nút \"+\" trên thẻ \"Chờ thu tiền\" ở Home, cùng nút đó khi chạm vào một ngày trên lịch của Home, hoặc nút \"+\" nổi ở Công việc của tôi.",
         "Ở đầu biểu mẫu, chọn loại: Khóa học đã dạy, Hoa hồng hoặc Điều chỉnh khóa học.",
         "Khóa học đã dạy: trung tâm, khóa học, ngày và số người — mức giá theo khóa học sẽ tự tính số tiền.",
-        "Hoa hồng: giống khóa học, nhưng dành cho khách hàng bạn giới thiệu và một huấn luyện viên khác dạy — dùng mức giá hoa hồng riêng, không phải mức giá khóa học.",
+        "Hoa hồng: giống khóa học, nhưng dành cho khách hàng bạn giới thiệu và một huấn luyện viên hoặc Divemaster khác dạy — dùng mức giá hoa hồng riêng, không phải mức giá khóa học.",
         "Điều chỉnh khóa học: không phụ thuộc vào mức giá nào — bạn tự nhập số tiền (dương nếu được nợ, âm nếu bạn nợ) và với đồng nghiệp nào.",
         "Lưu lại. Nếu bạn mở biểu mẫu từ Home, bạn sẽ thấy giao dịch trong Công việc của tôi ngay sau khi lưu."
       ],
@@ -158,7 +158,7 @@
     "generar-training-record": {
       "title": "Tạo một Training Record",
       "summary": "Tài liệu tiến độ SSI chính thức của từng học viên, kèm chữ ký của họ và của bạn — không lưu gì trên đám mây, chỉ tải xuống.",
-      "whatYouCanDo": "Từ Training Records, bạn tạo tài liệu tiến độ chính thức từ bất kỳ mẫu nào trong 10 mẫu SSI, với thông tin của từng học viên và chữ ký huấn luyện viên đã có sẵn. Bạn có thể tạo từng cái một hoặc cùng lúc, và tải về dạng PDF, ảnh, hoặc chia sẻ trực tiếp.",
+      "whatYouCanDo": "Từ Training Records, bạn tạo tài liệu tiến độ chính thức từ bất kỳ mẫu nào trong 10 mẫu SSI, với thông tin của từng học viên và chữ ký huấn luyện viên và Divemaster đã có sẵn. Bạn có thể tạo từng cái một hoặc cùng lúc, và tải về dạng PDF, ảnh, hoặc chia sẻ trực tiếp.",
       "whenToUseIt": "Khi kết thúc một khóa học, khi học viên cần Training Record bản giấy hoặc để gửi cho SSI.",
       "steps": [
         "Vào Training Records từ lối vào trên Home.",
@@ -168,7 +168,7 @@
         "Theo từng học viên: \"Tải PDF\", \"Tải ảnh (JPG)\" hoặc \"Chia sẻ\". Cho tất cả cùng lúc: \"Tải tất cả dạng PDF/JPG\" hoặc \"Chia sẻ tất cả\", trong một tệp nén duy nhất."
       ],
       "tips": [
-        "Bạn cần hoàn thiện thẻ huấn luyện viên trong Hồ sơ của tôi (chữ viết tắt, số SSI Pro và chữ ký) trước khi có thể tạo bất kỳ tài liệu nào — đây là những gì được in trên mỗi Training Record.",
+        "Bạn cần hoàn thiện thẻ huấn luyện viên và Divemaster trong Hồ sơ của tôi (chữ viết tắt, số SSI Pro và chữ ký) trước khi có thể tạo bất kỳ tài liệu nào — đây là những gì được in trên mỗi Training Record.",
         "Không có gì bạn điền ở đây được lưu trên Ocean Flow: mỗi tài liệu được tạo ngay lúc đó và chỉ để tải xuống."
       ],
       "expectedResult": "Bạn có Training Record của từng học viên sẵn sàng để tải xuống hoặc chia sẻ, đã có chữ ký của họ và của bạn."
@@ -242,14 +242,14 @@
     },
     "perfil-referencia": {
       "title": "Hồ sơ của tôi, nhìn nhanh",
-      "summary": "Ảnh đại diện, thông tin, thẻ huấn luyện viên, tiền tệ yêu thích và mật khẩu của bạn — tất cả ở một nơi, truy cập từ tên của bạn trên đầu trang.",
-      "whatYouCanDo": "Chạm vào ảnh đại diện hoặc biệt danh của bạn (góc trên bên phải ở bất kỳ màn hình nào) để vào Hồ sơ của tôi: danh tính, thẻ huấn luyện viên, ngôn ngữ, tiền tệ yêu thích và mật khẩu, tất cả ở cùng một nơi.",
+      "summary": "Ảnh đại diện, thông tin, thẻ huấn luyện viên và Divemaster, tiền tệ yêu thích và mật khẩu của bạn — tất cả ở một nơi, truy cập từ tên của bạn trên đầu trang.",
+      "whatYouCanDo": "Chạm vào ảnh đại diện hoặc biệt danh của bạn (góc trên bên phải ở bất kỳ màn hình nào) để vào Hồ sơ của tôi: danh tính, thẻ huấn luyện viên và Divemaster, ngôn ngữ, tiền tệ yêu thích và mật khẩu, tất cả ở cùng một nơi.",
       "whenToUseIt": "Khi bạn muốn cá nhân hóa tài khoản, sửa một thông tin, hoặc đổi mật khẩu mà không cần đăng xuất và qua bước \"quên mật khẩu\".",
       "steps": [
         "Chạm vào ảnh đại diện/biệt danh trên đầu trang để vào Hồ sơ của tôi.",
         "Bút chì trên ảnh đại diện mở bộ chọn biểu tượng và màu — thay đổi được lưu ngay khi chọn, không cần nút \"Lưu\" riêng.",
         "\"Sửa\" trong Thông tin cá nhân mở tên, họ và biệt danh; biệt danh không được chứa \"@\" hoặc trùng với tài khoản khác.",
-        "\"Thông tin huấn luyện viên\" là thẻ của bạn: chữ viết tắt, số SSI Pro và chữ ký — chỉ lưu một lần ở đây và được dùng để tự động điền vào Training Records của bạn.",
+        "\"Thông tin huấn luyện viên và Divemaster\" là thẻ của bạn: chữ viết tắt, số SSI Pro và chữ ký — chỉ lưu một lần ở đây và được dùng để tự động điền vào Training Records của bạn.",
         "Tiền tệ yêu thích được dùng làm dự phòng trong Điều chỉnh khóa học khi không có mức giá nào xác định — các giao dịch khác luôn dùng tiền tệ của mức giá riêng."
       ],
       "tips": [
@@ -257,7 +257,7 @@
         "Ngôn ngữ của toàn bộ ứng dụng cũng được đổi từ đây, không cần đăng xuất.",
         "Xóa tài khoản là vĩnh viễn và xóa toàn bộ dữ liệu của bạn — để xác nhận, bạn phải nhập từ HỦY, để không có gì bị xóa do chạm nhầm."
       ],
-      "expectedResult": "Tài khoản của bạn phản ánh ảnh đại diện, thông tin, thẻ huấn luyện viên và tiền tệ bạn chọn, và bạn có thể đổi mật khẩu hoặc ngôn ngữ bất cứ lúc nào mà không cần rời khỏi ứng dụng."
+      "expectedResult": "Tài khoản của bạn phản ánh ảnh đại diện, thông tin, thẻ huấn luyện viên và Divemaster và tiền tệ bạn chọn, và bạn có thể đổi mật khẩu hoặc ngôn ngữ bất cứ lúc nào mà không cần rời khỏi ứng dụng."
     },
     "filtros-referencia": {
       "title": "Lọc và tìm kiếm",

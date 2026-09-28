@@ -7,8 +7,29 @@
   "dateGroup": {
     "today": "Oggi",
     "yesterday": "Ieri",
-    "weekdaysShort": ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"],
-    "monthsShort": ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"]
+    "weekdaysShort": [
+      "Lun",
+      "Mar",
+      "Mer",
+      "Gio",
+      "Ven",
+      "Sab",
+      "Dom"
+    ],
+    "monthsShort": [
+      "gen",
+      "feb",
+      "mar",
+      "apr",
+      "mag",
+      "giu",
+      "lug",
+      "ago",
+      "set",
+      "ott",
+      "nov",
+      "dic"
+    ]
   },
   "emptyMessage": {
     "pendingWithFilters": "Nessun elemento in sospeso con questi filtri.",
@@ -99,7 +120,7 @@
       "course": "Corso",
       "school": "Scuola",
       "date": "Data",
-      "relatedColleague": "Istruttore collegato",
+      "relatedColleague": "Istruttore o Divemaster collegato",
       "amount": "Importo · {{currency}}",
       "amountHint": "Positivo se paga a te; negativo se paghi tu a lui/lei",
       "colleaguePlaceholder": "Anna, Marco...",

@@ -1,7 +1,7 @@
 {
   "sections": {
     "personalData": "Dades personals",
-    "instructor": "Dades d'instructor",
+    "instructor": "Dades d'instructor i Divemaster",
     "favoriteCurrency": "Moneda preferida",
     "language": "Idioma",
     "security": "Seguretat",
@@ -64,8 +64,8 @@
     "numberLabel": "Número SSI Pro",
     "save": "Desa",
     "saving": "Desant…",
-    "toastSuccess": "Dades d'instructor actualitzades",
-    "toastError": "No s'han pogut desar les dades d'instructor. Torna-ho a provar."
+    "toastSuccess": "Dades d'instructor i Divemaster actualitzades",
+    "toastError": "No s'han pogut desar les dades d'instructor i Divemaster. Torna-ho a provar."
   },
   "currency": {
     "hint": "S'utilitza com a moneda per defecte a Ajust de curs, quan no hi ha cap tarifa que la determini. La resta de moviments sempre fan servir la moneda de la seva tarifa.",

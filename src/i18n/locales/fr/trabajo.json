@@ -7,8 +7,29 @@
   "dateGroup": {
     "today": "Aujourd'hui",
     "yesterday": "Hier",
-    "weekdaysShort": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-    "monthsShort": ["jan", "fév", "mar", "avr", "mai", "juin", "juil", "août", "sep", "oct", "nov", "déc"]
+    "weekdaysShort": [
+      "Lun",
+      "Mar",
+      "Mer",
+      "Jeu",
+      "Ven",
+      "Sam",
+      "Dim"
+    ],
+    "monthsShort": [
+      "jan",
+      "fév",
+      "mar",
+      "avr",
+      "mai",
+      "juin",
+      "juil",
+      "août",
+      "sep",
+      "oct",
+      "nov",
+      "déc"
+    ]
   },
   "emptyMessage": {
     "pendingWithFilters": "Aucun élément en attente avec ces filtres.",
@@ -99,7 +120,7 @@
       "course": "Cours",
       "school": "École",
       "date": "Date",
-      "relatedColleague": "Collègue concerné",
+      "relatedColleague": "Instructeur ou Divemaster concerné",
       "amount": "Montant · {{currency}}",
       "amountHint": "Positif s'il vous doit de l'argent ; négatif si vous lui devez de l'argent",
       "colleaguePlaceholder": "Léa, Marc...",

@@ -56,7 +56,7 @@
     },
     "func-perfil": {
       "label": "Il mio profilo",
-      "description": "Avatar, tesserino istruttore, lingua e valuta preferita"
+      "description": "Avatar, tesserino istruttore e Divemaster, lingua e valuta preferita"
     },
     "func-filtros": {
       "label": "Filtri e ricerca",
@@ -71,7 +71,7 @@
     "primeros-pasos": {
       "title": "Iniziare a usare Ocean Flow",
       "summary": "Un rapido giro tra le tre schermate principali prima di registrare il tuo primo movimento.",
-      "whatYouCanDo": "Ocean Flow ti aiuta a tenere sotto controllo le tue entrate come istruttore freelance. Sotto un unico concetto, \"movimento\", raggruppa le lezioni che tieni, le commissioni per i clienti procurati e le rettifiche economiche con altri istruttori.",
+      "whatYouCanDo": "Ocean Flow ti aiuta a tenere sotto controllo le tue entrate come istruttore e Divemaster freelance. Sotto un unico concetto, \"movimento\", raggruppa le lezioni che tieni, le commissioni per i clienti procurati e le rettifiche economiche con altri istruttori e Divemaster.",
       "whenToUseIt": "La prima volta che apri l'app, o quando vuoi ricordare a cosa serve ogni schermata.",
       "steps": [
         "Home: i tuoi corsi e clienti procurati a colpo d'occhio, quanto hai da incassare e la tua media giornaliera, accessi rapidi a Training Records, la tua scuola del mese e la Guida alle Immersioni, il calendario del mese e un pulsante per creare un movimento.",
@@ -106,12 +106,12 @@
       "title": "Creare un movimento",
       "summary": "Lo stesso modulo serve per un corso tenuto, una commissione o una rettifica con un collega — ogni tipo ha i propri campi.",
       "whatYouCanDo": "\"Aggiungi movimento\" è l'unico punto di creazione di tutta l'app — il modulo stesso ti lascia scegliere il tipo, non serve indovinare un pulsante diverso per ogni caso.",
-      "whenToUseIt": "Subito dopo aver tenuto una lezione, chiudendo una commissione, o quando concordi una rettifica con un altro istruttore.",
+      "whenToUseIt": "Subito dopo aver tenuto una lezione, chiudendo una commissione, o quando concordi una rettifica con un altro istruttore o Divemaster.",
       "steps": [
         "Premi \"Aggiungi movimento\": il pulsante \"+\" della scheda \"Da incassare\" in Home, lo stesso pulsante toccando un giorno del calendario di Home, o il \"+\" flottante de Il mio lavoro.",
         "In cima al modulo, scegli il tipo: Corso tenuto, Commissione o Rettifica di corso.",
         "Corso tenuto: scuola, corso, data e numero di persone — la tariffa per corso calcola l'importo da sola.",
-        "Commissione: come un corso, ma per un cliente che hai procurato e che forma un altro istruttore — usa la propria tariffa di commissione, non quella del corso.",
+        "Commissione: come un corso, ma per un cliente che hai procurato e che forma un altro istruttore o Divemaster — usa la propria tariffa di commissione, non quella del corso.",
         "Rettifica di corso: non dipende da nessuna tariffa — indichi tu l'importo (positivo se ti devono, negativo se devi tu) e con quale collega è la rettifica.",
         "Salva. Se hai aperto il modulo da Home, vedrai il movimento in Il mio lavoro subito dopo il salvataggio."
       ],
@@ -158,7 +158,7 @@
     "generar-training-record": {
       "title": "Generare un Training Record",
       "summary": "Il documento ufficiale di progresso SSI di ogni allievo, con la sua firma e la tua — nulla si salva nel cloud, si scarica soltanto.",
-      "whatYouCanDo": "Da Training Records generi il documento di progresso ufficiale di una qualsiasi dei 10 modelli SSI, con i dati di ogni allievo e la tua firma di istruttore già inclusi. Puoi generarli uno alla volta o tutti insieme, e scaricarli in PDF, in immagine, o condividerli direttamente.",
+      "whatYouCanDo": "Da Training Records generi il documento di progresso ufficiale di una qualsiasi dei 10 modelli SSI, con i dati di ogni allievo e la tua firma di istruttore e Divemaster già inclusi. Puoi generarli uno alla volta o tutti insieme, e scaricarli in PDF, in immagine, o condividerli direttamente.",
       "whenToUseIt": "Alla fine di un corso, quando un allievo ha bisogno del suo Training Record su carta o per inviarlo a SSI.",
       "steps": [
         "Entra in Training Records dall'accesso in Home.",
@@ -168,7 +168,7 @@
         "Per ogni allievo: \"Scarica il PDF\", \"Scarica l'immagine (JPG)\" o \"Condividi\". Per tutti insieme: \"Scarica tutto in PDF/JPG\" o \"Condividi tutto\", in un unico archivio."
       ],
       "tips": [
-        "Ti serve il tesserino istruttore completo in Il mio profilo (iniziali, numero SSI Pro e firma) prima di poter generare qualsiasi cosa — è ciò che viene stampato su ogni Training Record.",
+        "Ti serve il tesserino istruttore e Divemaster completo in Il mio profilo (iniziali, numero SSI Pro e firma) prima di poter generare qualsiasi cosa — è ciò che viene stampato su ogni Training Record.",
         "Nulla di ciò che compili qui si salva in Ocean Flow: ogni documento si genera al momento e si scarica soltanto."
       ],
       "expectedResult": "Hai il Training Record di ogni allievo pronto da scaricare o condividere, con la sua firma e la tua già incluse."
@@ -242,14 +242,14 @@
     },
     "perfil-referencia": {
       "title": "Il mio profilo, a colpo d'occhio",
-      "summary": "Il tuo avatar, i tuoi dati, il tuo tesserino istruttore, la tua valuta preferita e la tua password — tutto in un unico posto, accessibile dal tuo nome nell'intestazione.",
-      "whatYouCanDo": "Tocca il tuo avatar o il tuo nickname (in alto a destra in qualsiasi schermata) per entrare in Il mio profilo: la tua identità, il tuo tesserino istruttore, la tua lingua, la tua valuta preferita e la tua password, tutto in un unico posto.",
+      "summary": "Il tuo avatar, i tuoi dati, il tuo tesserino istruttore e Divemaster, la tua valuta preferita e la tua password — tutto in un unico posto, accessibile dal tuo nome nell'intestazione.",
+      "whatYouCanDo": "Tocca il tuo avatar o il tuo nickname (in alto a destra in qualsiasi schermata) per entrare in Il mio profilo: la tua identità, il tuo tesserino istruttore e Divemaster, la tua lingua, la tua valuta preferita e la tua password, tutto in un unico posto.",
       "whenToUseIt": "Quando vuoi personalizzare il tuo account, correggere un dato, o cambiare la password senza dover uscire e passare per \"password dimenticata\".",
       "steps": [
         "Tocca l'avatar/nickname dell'intestazione per entrare in Il mio profilo.",
         "La matita sull'avatar apre il selettore di icona e colore — la modifica si salva alla scelta, senza un pulsante \"Salva\" separato.",
         "\"Modifica\" in Dati personali apre nome, cognome e nickname; il nickname non può contenere \"@\" né coincidere con quello di un altro account.",
-        "\"Dati istruttore\" è il tuo tesserino: iniziali, numero SSI Pro e la tua firma — si salvano qui una sola volta e servono a compilare automaticamente i tuoi Training Records.",
+        "\"Dati istruttore e Divemaster\" è il tuo tesserino: iniziali, numero SSI Pro e la tua firma — si salvano qui una sola volta e servono a compilare automaticamente i tuoi Training Records.",
         "La valuta preferita si usa come riserva in Rettifica di corso quando non c'è una tariffa che la determini — gli altri movimenti usano sempre la valuta della propria tariffa."
       ],
       "tips": [
@@ -257,7 +257,7 @@
         "Anche la lingua di tutta l'app si cambia da qui, senza dover uscire.",
         "Eliminare il tuo account è permanente e cancella tutti i tuoi dati — per confermarlo devi scrivere la parola ANNULLA, così non si cancella nulla per un tocco accidentale."
       ],
-      "expectedResult": "Il tuo account riflette l'avatar, i dati, il tesserino istruttore e la valuta che scegli, e puoi cambiare la password o la lingua quando vuoi senza uscire dall'app."
+      "expectedResult": "Il tuo account riflette l'avatar, i dati, il tesserino istruttore e Divemaster e la valuta che scegli, e puoi cambiare la password o la lingua quando vuoi senza uscire dall'app."
     },
     "filtros-referencia": {
       "title": "Filtrare e cercare",

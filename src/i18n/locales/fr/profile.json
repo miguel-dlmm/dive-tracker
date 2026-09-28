@@ -1,7 +1,7 @@
 {
   "sections": {
     "personalData": "Données personnelles",
-    "instructor": "Données d'instructeur",
+    "instructor": "Données d'instructeur et Divemaster",
     "favoriteCurrency": "Devise favorite",
     "language": "Langue",
     "security": "Sécurité",
@@ -64,8 +64,8 @@
     "numberLabel": "Numéro SSI Pro",
     "save": "Enregistrer",
     "saving": "Enregistrement…",
-    "toastSuccess": "Données d'instructeur mises à jour",
-    "toastError": "Impossible d'enregistrer les données d'instructeur. Réessayez."
+    "toastSuccess": "Données d'instructeur et Divemaster mises à jour",
+    "toastError": "Impossible d'enregistrer les données d'instructeur et Divemaster. Réessayez."
   },
   "currency": {
     "hint": "Utilisée comme devise par défaut dans Ajustement de cours, quand aucun tarif ne la détermine. Les autres mouvements utilisent toujours la devise de leur propre tarif.",

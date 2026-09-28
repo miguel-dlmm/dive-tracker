@@ -1,7 +1,7 @@
 {
   "sections": {
     "personalData": "Persönliche Daten",
-    "instructor": "Instructor-Daten",
+    "instructor": "Instructor- und Divemaster-Daten",
     "favoriteCurrency": "Bevorzugte Währung",
     "language": "Sprache",
     "security": "Sicherheit",
@@ -64,8 +64,8 @@
     "numberLabel": "SSI-Pro-Nummer",
     "save": "Speichern",
     "saving": "Wird gespeichert…",
-    "toastSuccess": "Instructor-Daten aktualisiert",
-    "toastError": "Instructor-Daten konnten nicht gespeichert werden. Versuch es erneut."
+    "toastSuccess": "Instructor- und Divemaster-Daten aktualisiert",
+    "toastError": "Instructor- und Divemaster-Daten konnten nicht gespeichert werden. Versuch es erneut."
   },
   "currency": {
     "hint": "Wird als Standardwährung bei Kursausgleich verwendet, wenn kein Tarif sie bestimmt. Alle anderen Buchungen verwenden immer die Währung ihres Tarifs.",

@@ -1,7 +1,7 @@
 {
   "sections": {
     "personalData": "Dati personali",
-    "instructor": "Dati istruttore",
+    "instructor": "Dati istruttore e Divemaster",
     "favoriteCurrency": "Valuta preferita",
     "language": "Lingua",
     "security": "Sicurezza",
@@ -64,8 +64,8 @@
     "numberLabel": "Numero SSI Pro",
     "save": "Salva",
     "saving": "Salvataggio…",
-    "toastSuccess": "Dati istruttore aggiornati",
-    "toastError": "Impossibile salvare i dati istruttore. Riprova."
+    "toastSuccess": "Dati istruttore e Divemaster aggiornati",
+    "toastError": "Impossibile salvare i dati istruttore e Divemaster. Riprova."
   },
   "currency": {
     "hint": "Si usa come valuta predefinita in Rettifica di corso, quando non c'è una tariffa che la determini. Gli altri movimenti usano sempre la valuta della loro tariffa.",

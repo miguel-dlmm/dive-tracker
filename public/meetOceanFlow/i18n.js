@@ -3,7 +3,7 @@ window.__OCEANFLOW_I18N__ = {
     meta: { title: "Ocean Flow — Bucea más. Gestiona menos." },
     nav: { enter: "Entrar", langHint: "Para hacerlo más fácil, elige tu idioma preferido" },
     hero: {
-      eyebrow: "Para instructores de buceo, con posibilidad de configurar varias escuelas",
+      eyebrow: "Para instructores y Divemasters de buceo, con posibilidad de configurar varias escuelas",
       h1: "Bucea más.<br>Gestiona menos.",
       sub: "Controla tus inmersiones, ingresos y pagos desde un solo lugar.",
       context: "Ocean Flow no se queda solo en gestionar las cuentas de tu trabajo en las escuelas: genera los Training Records oficiales de SSI, exporta todas tus cuentas cuando las necesites y te da acceso digital al libro de buceo de Koh Tao, con un índice para llegar en segundos a cualquier punto de inmersión.",
@@ -11,7 +11,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     compare: {
       h2: "Antes de bajar al agua, ya sabes cómo te ha ido",
-      p: "Sin Ocean Flow, el control de un instructor vive repartido entre notas sueltas, una hoja de Excel y la memoria, y se complica todavía más si trabajas para varias escuelas. Con Ocean Flow, vive en un solo sitio, siempre al día.",
+      p: "Sin Ocean Flow, el control de un instructor o Divemaster vive repartido entre notas sueltas, una hoja de Excel y la memoria, y se complica todavía más si trabajas para varias escuelas. Con Ocean Flow, vive en un solo sitio, siempre al día.",
       beforeTitle: "Sin Ocean Flow",
       before: [
         "Difícil saber cuánto has ganado de verdad",
@@ -33,7 +33,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     tour: {
       h2: "Un recorrido corto por lo que hace",
-      p: "Cinco pantallas, cada una resolviendo un problema real de tu día a día como instructor. Nada que aprender de memoria: el propio formulario te lleva por el flujo correcto.",
+      p: "Cinco pantallas, cada una resolviendo un problema real de tu día a día como instructor y Divemaster. Nada que aprender de memoria: el propio formulario te lleva por el flujo correcto.",
       feat: [
         { title: "Home", tag: "Vistazo diario", body: "Lo que has generado este mes, tu calendario del mes y lo que tienes pendiente de cobrar, todo en la pantalla con la que abres la app. Un toque en cualquier día para añadir o revisar un movimiento.", detail: "Un vistazo, <b>0</b> clics de más" },
         { title: "Mi trabajo", tag: "Registro", body: "Un curso impartido, una comisión por un cliente referido, o un ajuste con un compañero: los tres desde el mismo botón. Eliges el tipo, el formulario cambia solo, y la tarifa ya la sabe.", detail: "De registrar a guardado en <b>segundos</b>" },
@@ -44,7 +44,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     strengths: {
       h2: "Hecho para el agua, no adaptado a ella",
-      p: "Cada decisión de diseño parte del mismo sitio: un instructor real, recién salido del agua, con el móvil en la mano.",
+      p: "Cada decisión de diseño parte del mismo sitio: un instructor y Divemaster real, recién salido del agua, con el móvil en la mano.",
       items: [
         { k: "Manos mojadas", h4: "Pensado para el móvil, no encogido desde el escritorio", p: "Objetivos táctiles grandes, formularios cortos y una app entera pensada para usarse entre inmersión e inmersión, con el sol dándote en la pantalla." },
         { k: "Varias escuelas, varias monedas", h4: "Cada tarifa en su propia moneda, sin conversiones a mano", p: "Trabajas en euros con una escuela y en dólares con otra. Ocean Flow lo distingue solo, sin que tengas que hacer la cuenta cada vez." },
@@ -59,14 +59,14 @@ window.__OCEANFLOW_I18N__ = {
       ctaPrimary: "Crear mi cuenta",
       urlline: "Regístrate en <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Para instructores de buceo, con posibilidad de configurar varias escuelas." }
+    footer: { text: "Para instructores y Divemasters de buceo, con posibilidad de configurar varias escuelas." }
   },
 
   en: {
     meta: { title: "Ocean Flow — Dive more. Manage less." },
     nav: { enter: "Sign in", langHint: "To make it easier, pick your preferred language" },
     hero: {
-      eyebrow: "For dive instructors, with support for several schools",
+      eyebrow: "For dive instructors and Divemasters, with support for several schools",
       h1: "Dive more.<br>Manage less.",
       sub: "Track your dives, income and payments in one place.",
       context: "Ocean Flow does more than manage the accounts from your work at your schools: it generates official SSI Training Records, exports all your accounts whenever you need them, and gives you digital access to the Koh Tao dive guide, with an index that gets you to any dive site in seconds.",
@@ -74,7 +74,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     compare: {
       h2: "Before you're back in the water, you already know how it's going",
-      p: "Without Ocean Flow, an instructor's records end up scattered across loose notes, a spreadsheet and memory, and it gets harder still if you work for several schools. With Ocean Flow, it all lives in one place, always up to date.",
+      p: "Without Ocean Flow, an instructor or Divemaster's records end up scattered across loose notes, a spreadsheet and memory, and it gets harder still if you work for several schools. With Ocean Flow, it all lives in one place, always up to date.",
       beforeTitle: "Without Ocean Flow",
       before: [
         "Hard to know how much you've really earned",
@@ -96,7 +96,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     tour: {
       h2: "A quick tour of what it does",
-      p: "Five screens, each one solving a real problem from your day-to-day as an instructor. Nothing to memorize: the form itself walks you through the right flow.",
+      p: "Five screens, each one solving a real problem from your day-to-day as an instructor and Divemaster. Nothing to memorize: the form itself walks you through the right flow.",
       feat: [
         { title: "Home", tag: "Daily snapshot", body: "What you've earned this month, your calendar and what's still pending to collect, all on the screen you open the app to. Tap any day to add or review a movement.", detail: "One glance, <b>0</b> extra taps" },
         { title: "My work", tag: "Log it", body: "A course taught, a commission from a referred client, or an adjustment with a colleague: all three from the same button. Pick the type, the form adapts itself, and it already knows the rate.", detail: "From logging to saved in <b>seconds</b>" },
@@ -107,7 +107,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     strengths: {
       h2: "Built for the water, not adapted to it",
-      p: "Every design decision starts from the same place: a real instructor, fresh out of the water, phone in hand.",
+      p: "Every design decision starts from the same place: a real instructor and Divemaster, fresh out of the water, phone in hand.",
       items: [
         { k: "Wet hands", h4: "Built for mobile, not shrunk down from desktop", p: "Large tap targets, short forms and a whole app meant to be used between dives, sun glaring on the screen." },
         { k: "Several schools, several currencies", h4: "Each rate in its own currency, no manual conversions", p: "You work in euros with one school and dollars with another. Ocean Flow tells them apart on its own, no need to do the math every time." },
@@ -122,14 +122,14 @@ window.__OCEANFLOW_I18N__ = {
       ctaPrimary: "Create my account",
       urlline: "Sign up at <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "For dive instructors, with support for several schools." }
+    footer: { text: "For dive instructors and Divemasters, with support for several schools." }
   },
 
   fr: {
     meta: { title: "Ocean Flow — Plonge plus. Gère moins." },
     nav: { enter: "Se connecter", langHint: "Pour te simplifier les choses, choisis ta langue préférée" },
     hero: {
-      eyebrow: "Pour moniteurs de plongée, avec possibilité de configurer plusieurs écoles",
+      eyebrow: "Pour moniteurs et Divemasters de plongée, avec possibilité de configurer plusieurs écoles",
       h1: "Plonge plus.<br>Gère moins.",
       sub: "Gère tes plongées, tes revenus et tes paiements en un seul endroit.",
       context: "Ocean Flow ne se limite pas à gérer les comptes de ton travail dans les écoles : il génère les Training Records officiels SSI, exporte tous tes comptes quand tu en as besoin, et te donne un accès numérique au guide de plongée de Koh Tao, avec un index pour rejoindre n'importe quel site de plongée en quelques secondes.",
@@ -137,7 +137,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     compare: {
       h2: "Avant même de redescendre, tu sais déjà comment ça s'est passé",
-      p: "Sans Ocean Flow, le suivi d'un moniteur se disperse entre des notes volantes, une feuille Excel et la mémoire, et ça se complique encore plus si tu travailles pour plusieurs écoles. Avec Ocean Flow, tout vit au même endroit, toujours à jour.",
+      p: "Sans Ocean Flow, le suivi d'un moniteur ou Divemaster se disperse entre des notes volantes, une feuille Excel et la mémoire, et ça se complique encore plus si tu travailles pour plusieurs écoles. Avec Ocean Flow, tout vit au même endroit, toujours à jour.",
       beforeTitle: "Sans Ocean Flow",
       before: [
         "Difficile de savoir combien tu as vraiment gagné",
@@ -159,7 +159,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     tour: {
       h2: "Un rapide tour de ce qu'elle fait",
-      p: "Cinq écrans, chacun résolvant un vrai problème de ton quotidien de moniteur. Rien à apprendre par cœur : le formulaire lui-même te guide dans le bon flux.",
+      p: "Cinq écrans, chacun résolvant un vrai problème de ton quotidien de moniteur et Divemaster. Rien à apprendre par cœur : le formulaire lui-même te guide dans le bon flux.",
       feat: [
         { title: "Accueil", tag: "Vue du jour", body: "Ce que tu as généré ce mois-ci, ton calendrier du mois et ce qu'il te reste à encaisser, tout sur l'écran d'ouverture de l'appli. Un appui sur n'importe quel jour pour ajouter ou consulter un mouvement.", detail: "Un coup d'œil, <b>0</b> clic de plus" },
         { title: "Mon travail", tag: "Enregistrement", body: "Un cours donné, une commission pour un client parrainé, ou un ajustement avec un collègue : les trois depuis le même bouton. Tu choisis le type, le formulaire s'adapte seul, et le tarif est déjà connu.", detail: "De l'enregistrement à l'enregistré en <b>quelques secondes</b>" },
@@ -170,7 +170,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     strengths: {
       h2: "Conçue pour l'eau, pas adaptée après coup",
-      p: "Chaque décision de conception part du même endroit : un moniteur bien réel, tout juste sorti de l'eau, téléphone en main.",
+      p: "Chaque décision de conception part du même endroit : un moniteur et Divemaster bien réel, tout juste sorti de l'eau, téléphone en main.",
       items: [
         { k: "Mains mouillées", h4: "Pensée pour le mobile, pas réduite depuis un ordinateur", p: "Grandes zones tactiles, formulaires courts et une appli entièrement pensée pour être utilisée entre deux plongées, en plein soleil sur l'écran." },
         { k: "Plusieurs écoles, plusieurs monnaies", h4: "Chaque tarif dans sa propre monnaie, sans conversion à la main", p: "Tu travailles en euros avec une école et en dollars avec une autre. Ocean Flow fait la distinction tout seul, sans que tu aies à calculer à chaque fois." },
@@ -185,14 +185,14 @@ window.__OCEANFLOW_I18N__ = {
       ctaPrimary: "Créer mon compte",
       urlline: "Inscris-toi sur <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Pour moniteurs de plongée, avec possibilité de configurer plusieurs écoles." }
+    footer: { text: "Pour moniteurs et Divemasters de plongée, avec possibilité de configurer plusieurs écoles." }
   },
 
   de: {
     meta: { title: "Ocean Flow — Mehr tauchen. Weniger verwalten." },
     nav: { enter: "Anmelden", langHint: "Damit es einfacher ist, wähle deine bevorzugte Sprache" },
     hero: {
-      eyebrow: "Für Tauchlehrer, mit der Möglichkeit mehrere Schulen zu verwalten",
+      eyebrow: "Für Tauchlehrer und Divemaster, mit der Möglichkeit mehrere Schulen zu verwalten",
       h1: "Mehr tauchen.<br>Weniger verwalten.",
       sub: "Behalte deine Tauchgänge, Einnahmen und Zahlungen an einem Ort im Blick.",
       context: "Ocean Flow verwaltet nicht nur die Abrechnungen deiner Arbeit in den Tauchschulen: Es erstellt die offiziellen SSI Training Records, exportiert alle deine Abrechnungen, wenn du sie brauchst, und gibt dir digitalen Zugriff auf den Tauchführer von Koh Tao, mit einem Index, der dich in Sekunden zu jedem Tauchplatz bringt.",
@@ -200,7 +200,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     compare: {
       h2: "Noch bevor du wieder auftauchst, weißt du schon, wie es lief",
-      p: "Ohne Ocean Flow verteilt sich die Buchführung eines Tauchlehrers auf lose Notizen, eine Excel-Tabelle und das Gedächtnis, und es wird noch komplizierter, wenn du für mehrere Schulen arbeitest. Mit Ocean Flow lebt alles an einem Ort, immer aktuell.",
+      p: "Ohne Ocean Flow verteilt sich die Buchführung eines Tauchlehrers oder Divemasters auf lose Notizen, eine Excel-Tabelle und das Gedächtnis, und es wird noch komplizierter, wenn du für mehrere Schulen arbeitest. Mit Ocean Flow lebt alles an einem Ort, immer aktuell.",
       beforeTitle: "Ohne Ocean Flow",
       before: [
         "Schwer zu wissen, wie viel du wirklich verdient hast",
@@ -222,7 +222,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     tour: {
       h2: "Ein kurzer Rundgang durch die App",
-      p: "Fünf Bildschirme, jeder löst ein echtes Problem deines Alltags als Tauchlehrer. Nichts, was du auswendig lernen musst: Das Formular selbst führt dich durch den richtigen Ablauf.",
+      p: "Fünf Bildschirme, jeder löst ein echtes Problem deines Alltags als Tauchlehrer und Divemaster. Nichts, was du auswendig lernen musst: Das Formular selbst führt dich durch den richtigen Ablauf.",
       feat: [
         { title: "Home", tag: "Tagesüberblick", body: "Was du diesen Monat generiert hast, dein Monatskalender und was noch offen ist, alles auf dem Bildschirm, mit dem die App startet. Ein Tipp auf einen Tag, um eine Buchung hinzuzufügen oder anzusehen.", detail: "Ein Blick, <b>0</b> Klicks extra" },
         { title: "Meine Arbeit", tag: "Erfassung", body: "Ein gegebener Kurs, eine Provision für einen empfohlenen Kunden oder ein Ausgleich mit einem Kollegen: alle drei über denselben Button. Du wählst die Art, das Formular passt sich selbst an, und den Tarif kennt es schon.", detail: "Von der Erfassung zum Gespeicherten in <b>Sekunden</b>" },
@@ -233,7 +233,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     strengths: {
       h2: "Gemacht fürs Wasser, nicht nachträglich angepasst",
-      p: "Jede Design-Entscheidung geht vom selben Punkt aus: ein echter Tauchlehrer, gerade aus dem Wasser, Handy in der Hand.",
+      p: "Jede Design-Entscheidung geht vom selben Punkt aus: ein echter Tauchlehrer und Divemaster, gerade aus dem Wasser, Handy in der Hand.",
       items: [
         { k: "Nasse Hände", h4: "Für Mobilgeräte gemacht, nicht vom Desktop verkleinert", p: "Große Berührungsflächen, kurze Formulare und eine App, die komplett für die Nutzung zwischen Tauchgängen gedacht ist, mit Sonne auf dem Display." },
         { k: "Mehrere Schulen, mehrere Währungen", h4: "Jeder Tarif in seiner eigenen Währung, ohne manuelle Umrechnung", p: "Du arbeitest in Euro mit einer Schule und in Dollar mit einer anderen. Ocean Flow unterscheidet das automatisch, ohne dass du jedes Mal rechnen musst." },
@@ -248,14 +248,14 @@ window.__OCEANFLOW_I18N__ = {
       ctaPrimary: "Konto erstellen",
       urlline: "Registriere dich auf <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Für Tauchlehrer, mit der Möglichkeit mehrere Schulen zu verwalten." }
+    footer: { text: "Für Tauchlehrer und Divemaster, mit der Möglichkeit mehrere Schulen zu verwalten." }
   },
 
   it: {
     meta: { title: "Ocean Flow — Immergiti di più. Gestisci di meno." },
     nav: { enter: "Accedi", langHint: "Per semplificarti la vita, scegli la tua lingua preferita" },
     hero: {
-      eyebrow: "Per istruttori subacquei, con la possibilità di configurare più scuole",
+      eyebrow: "Per istruttori e Divemaster subacquei, con la possibilità di configurare più scuole",
       h1: "Immergiti di più.<br>Gestisci di meno.",
       sub: "Tieni sotto controllo le tue immersioni, entrate e pagamenti in un solo posto.",
       context: "Ocean Flow non si limita a gestire i conti del tuo lavoro nelle scuole: genera i Training Record ufficiali SSI, esporta tutti i tuoi conti quando ti servono e ti dà accesso digitale alla guida subacquea di Koh Tao, con un indice per raggiungere qualsiasi punto di immersione in pochi secondi.",
@@ -263,7 +263,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     compare: {
       h2: "Prima ancora di riemergere, sai già come è andata",
-      p: "Senza Ocean Flow, il controllo di un istruttore resta sparso tra appunti sciolti, un foglio Excel e la memoria, e si complica ancora di più se lavori per più scuole. Con Ocean Flow, vive in un unico posto, sempre aggiornato.",
+      p: "Senza Ocean Flow, il controllo di un istruttore o Divemaster resta sparso tra appunti sciolti, un foglio Excel e la memoria, e si complica ancora di più se lavori per più scuole. Con Ocean Flow, vive in un unico posto, sempre aggiornato.",
       beforeTitle: "Senza Ocean Flow",
       before: [
         "Difficile sapere quanto hai davvero guadagnato",
@@ -285,7 +285,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     tour: {
       h2: "Un breve giro su cosa fa",
-      p: "Cinque schermate, ognuna risolve un problema reale della tua giornata da istruttore. Niente da imparare a memoria: è il modulo stesso a guidarti nel flusso corretto.",
+      p: "Cinque schermate, ognuna risolve un problema reale della tua giornata da istruttore e Divemaster. Niente da imparare a memoria: è il modulo stesso a guidarti nel flusso corretto.",
       feat: [
         { title: "Home", tag: "Colpo d'occhio giornaliero", body: "Quanto hai generato questo mese, il tuo calendario del mese e quanto hai ancora da incassare, tutto nella schermata con cui apri l'app. Un tocco su qualsiasi giorno per aggiungere o rivedere un movimento.", detail: "Un colpo d'occhio, <b>0</b> clic in più" },
         { title: "Il mio lavoro", tag: "Registrazione", body: "Un corso tenuto, una commissione per un cliente segnalato, o un conguaglio con un collega: tutti e tre dallo stesso pulsante. Scegli il tipo, il modulo cambia da solo, e la tariffa la sa già.", detail: "Dalla registrazione al salvataggio in <b>pochi secondi</b>" },
@@ -296,7 +296,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     strengths: {
       h2: "Pensata per l'acqua, non adattata dopo",
-      p: "Ogni scelta di design parte dallo stesso punto: un istruttore vero, appena uscito dall'acqua, con il telefono in mano.",
+      p: "Ogni scelta di design parte dallo stesso punto: un istruttore e Divemaster vero, appena uscito dall'acqua, con il telefono in mano.",
       items: [
         { k: "Mani bagnate", h4: "Pensata per il mobile, non rimpicciolita dal desktop", p: "Aree touch ampie, moduli brevi e un'app pensata interamente per essere usata tra un'immersione e l'altra, con il sole che batte sullo schermo." },
         { k: "Più scuole, più valute", h4: "Ogni tariffa nella propria valuta, senza conversioni a mano", p: "Lavori in euro con una scuola e in dollari con un'altra. Ocean Flow lo distingue da solo, senza che tu debba fare il calcolo ogni volta." },
@@ -311,14 +311,14 @@ window.__OCEANFLOW_I18N__ = {
       ctaPrimary: "Crea il mio account",
       urlline: "Registrati su <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Per istruttori subacquei, con la possibilità di configurare più scuole." }
+    footer: { text: "Per istruttori e Divemaster subacquei, con la possibilità di configurare più scuole." }
   },
 
   ru: {
     meta: { title: "Ocean Flow — Больше дайвинга. Меньше управления." },
     nav: { enter: "Войти", langHint: "Чтобы было проще, выберите предпочитаемый язык" },
     hero: {
-      eyebrow: "Для дайв-инструкторов, с возможностью настройки нескольких школ",
+      eyebrow: "Для дайв-инструкторов и дайвмастеров, с возможностью настройки нескольких школ",
       h1: "Больше дайвинга.<br>Меньше управления.",
       sub: "Контролируйте погружения, доходы и платежи в одном месте.",
       context: "Ocean Flow не просто ведёт учёт по вашей работе в дайв-школах: приложение создаёт официальные SSI Training Records, экспортирует все ваши счета, когда это нужно, и даёт цифровой доступ к гиду по дайвингу на Ко Тао с указателем, который за секунды приведёт вас к любому месту погружения.",
@@ -326,7 +326,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     compare: {
       h2: "Ещё до всплытия вы уже знаете, как прошло дело",
-      p: "Без Ocean Flow учёт инструктора разбросан между отдельными заметками, таблицей Excel и памятью, а с несколькими школами всё становится ещё сложнее. С Ocean Flow всё живёт в одном месте и всегда актуально.",
+      p: "Без Ocean Flow учёт инструктора или дайвмастера разбросан между отдельными заметками, таблицей Excel и памятью, а с несколькими школами всё становится ещё сложнее. С Ocean Flow всё живёт в одном месте и всегда актуально.",
       beforeTitle: "Без Ocean Flow",
       before: [
         "Трудно понять, сколько вы заработали на самом деле",
@@ -348,7 +348,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     tour: {
       h2: "Короткая экскурсия по возможностям",
-      p: "Пять экранов, каждый решает реальную проблему из повседневной работы инструктора. Ничего не нужно запоминать: сама форма ведёт вас по нужному пути.",
+      p: "Пять экранов, каждый решает реальную проблему из повседневной работы инструктора и дайвмастера. Ничего не нужно запоминать: сама форма ведёт вас по нужному пути.",
       feat: [
         { title: "Главная", tag: "Обзор дня", body: "Сколько вы заработали в этом месяце, календарь месяца и то, что ещё нужно получить, всё на экране, с которого открывается приложение. Нажмите на любой день, чтобы добавить или посмотреть запись.", detail: "Один взгляд, <b>0</b> лишних нажатий" },
         { title: "Моя работа", tag: "Учёт", body: "Проведённый курс, комиссия за рекомендованного клиента или расчёт с коллегой: всё это через одну и ту же кнопку. Вы выбираете тип, форма меняется сама, а тариф уже известен.", detail: "От записи до сохранения за <b>секунды</b>" },
@@ -359,7 +359,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     strengths: {
       h2: "Создано для воды, а не подогнано под неё",
-      p: "Каждое решение по дизайну исходит из одного и того же: реального инструктора, только что вышедшего из воды, с телефоном в руке.",
+      p: "Каждое решение по дизайну исходит из одного и того же: реального инструктора и дайвмастера, только что вышедшего из воды, с телефоном в руке.",
       items: [
         { k: "Мокрые руки", h4: "Создано для телефона, а не уменьшено с десктопа", p: "Крупные области нажатия, короткие формы и приложение, полностью рассчитанное на использование между погружениями, с солнцем, бьющим по экрану." },
         { k: "Несколько школ, несколько валют", h4: "Каждый тариф в своей валюте, без ручной конвертации", p: "Вы работаете в евро с одной школой и в долларах с другой. Ocean Flow сам их различает, без необходимости каждый раз считать." },
@@ -374,14 +374,14 @@ window.__OCEANFLOW_I18N__ = {
       ctaPrimary: "Создать аккаунт",
       urlline: "Зарегистрируйтесь на <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Для дайв-инструкторов, с возможностью настройки нескольких школ." }
+    footer: { text: "Для дайв-инструкторов и дайвмастеров, с возможностью настройки нескольких школ." }
   },
 
   th: {
     meta: { title: "Ocean Flow — ดำน้ำมากขึ้น จัดการน้อยลง" },
     nav: { enter: "เข้าสู่ระบบ", langHint: "เพื่อให้ง่ายขึ้น เลือกภาษาที่คุณต้องการ" },
     hero: {
-      eyebrow: "สำหรับผู้สอนดำน้ำ รองรับการตั้งค่าได้หลายโรงเรียน",
+      eyebrow: "สำหรับผู้สอนดำน้ำและ Divemaster รองรับการตั้งค่าได้หลายโรงเรียน",
       h1: "ดำน้ำมากขึ้น<br>จัดการน้อยลง",
       sub: "ควบคุมการดำน้ำ รายได้ และการจ่ายเงินของคุณจากที่เดียว",
       context: "Ocean Flow ไม่ได้แค่ช่วยจัดการบัญชีงานของคุณในโรงเรียนดำน้ำเท่านั้น แต่ยังสร้าง Training Record ของ SSI อย่างเป็นทางการ ส่งออกบัญชีทั้งหมดของคุณเมื่อคุณต้องการ และให้คุณเข้าถึงคู่มือดำน้ำเกาะเต่าแบบดิจิทัล พร้อมดัชนีที่พาไปยังจุดดำน้ำใดก็ได้ในไม่กี่วินาที",
@@ -389,7 +389,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     compare: {
       h2: "ก่อนจะขึ้นจากน้ำ คุณก็รู้แล้วว่าเป็นยังไง",
-      p: "หากไม่มี Ocean Flow การจดบันทึกของผู้สอนจะกระจัดกระจายอยู่ในโน้ตแยก สเปรดชีต และความจำ และยิ่งยุ่งยากขึ้นไปอีกถ้าคุณทำงานให้หลายโรงเรียน แต่กับ Ocean Flow ทุกอย่างอยู่ที่เดียว อัปเดตอยู่เสมอ",
+      p: "หากไม่มี Ocean Flow การจดบันทึกของผู้สอนหรือ Divemaster จะกระจัดกระจายอยู่ในโน้ตแยก สเปรดชีต และความจำ และยิ่งยุ่งยากขึ้นไปอีกถ้าคุณทำงานให้หลายโรงเรียน แต่กับ Ocean Flow ทุกอย่างอยู่ที่เดียว อัปเดตอยู่เสมอ",
       beforeTitle: "หากไม่มี Ocean Flow",
       before: [
         "ยากที่จะรู้ว่าคุณได้เงินจริงๆ เท่าไหร่",
@@ -411,7 +411,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     tour: {
       h2: "ทัวร์สั้นๆ ว่าแอปทำอะไรได้บ้าง",
-      p: "ห้าหน้าจอ แต่ละหน้าแก้ปัญหาจริงในชีวิตประจำวันของผู้สอน ไม่ต้องจำอะไรเลย เพราะฟอร์มจะพาคุณไปตามขั้นตอนที่ถูกต้องเอง",
+      p: "ห้าหน้าจอ แต่ละหน้าแก้ปัญหาจริงในชีวิตประจำวันของผู้สอนและ Divemaster ไม่ต้องจำอะไรเลย เพราะฟอร์มจะพาคุณไปตามขั้นตอนที่ถูกต้องเอง",
       feat: [
         { title: "หน้าหลัก", tag: "ภาพรวมรายวัน", body: "สิ่งที่คุณสร้างรายได้ในเดือนนี้ ปฏิทินของเดือน และยอดที่ยังรอเก็บเงิน ทั้งหมดอยู่ในหน้าจอที่คุณเปิดแอปขึ้นมา แตะวันไหนก็ได้เพื่อเพิ่มหรือดูรายการ", detail: "มองแวบเดียว <b>0</b> คลิกเกิน" },
         { title: "งานของฉัน", tag: "บันทึกรายการ", body: "คอร์สที่สอน ค่าคอมมิชชันจากลูกค้าที่แนะนำมา หรือการปรับยอดกับเพื่อนร่วมงาน ทั้งสามอย่างทำได้จากปุ่มเดียวกัน เลือกประเภท ฟอร์มจะปรับเองอัตโนมัติ และรู้อัตราค่าบริการอยู่แล้ว", detail: "จากบันทึกถึงบันทึกสำเร็จใน <b>ไม่กี่วินาที</b>" },
@@ -422,7 +422,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     strengths: {
       h2: "สร้างมาเพื่อสายน้ำ ไม่ใช่แค่ปรับให้เข้ากับมัน",
-      p: "ทุกการตัดสินใจด้านดีไซน์เริ่มต้นจากจุดเดียวกัน: ผู้สอนตัวจริงที่เพิ่งขึ้นจากน้ำ มือถือในมือ",
+      p: "ทุกการตัดสินใจด้านดีไซน์เริ่มต้นจากจุดเดียวกัน: ผู้สอนและ Divemaster ตัวจริงที่เพิ่งขึ้นจากน้ำ มือถือในมือ",
       items: [
         { k: "มือเปียก", h4: "ออกแบบมาเพื่อมือถือ ไม่ใช่ย่อจากเดสก์ท็อป", p: "จุดสัมผัสขนาดใหญ่ ฟอร์มสั้นกระชับ และแอปทั้งหมดออกแบบมาให้ใช้ระหว่างไดฟ์ แม้แดดจะแยงหน้าจอ" },
         { k: "หลายโรงเรียน หลายสกุลเงิน", h4: "แต่ละอัตราค่าบริการใช้สกุลเงินของตัวเอง ไม่ต้องแปลงมือ", p: "คุณทำงานเป็นยูโรกับโรงเรียนหนึ่ง และดอลลาร์กับอีกโรงเรียน Ocean Flow แยกให้เองโดยไม่ต้องคำนวณทุกครั้ง" },
@@ -437,14 +437,14 @@ window.__OCEANFLOW_I18N__ = {
       ctaPrimary: "สร้างบัญชีของฉัน",
       urlline: "สมัครที่ <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "สำหรับผู้สอนดำน้ำ รองรับการตั้งค่าได้หลายโรงเรียน" }
+    footer: { text: "สำหรับผู้สอนดำน้ำและ Divemaster รองรับการตั้งค่าได้หลายโรงเรียน" }
   },
 
   pt: {
     meta: { title: "Ocean Flow — Mergulha mais. Gere menos." },
     nav: { enter: "Entrar", langHint: "Para facilitar, escolhe o teu idioma preferido" },
     hero: {
-      eyebrow: "Para instrutores de mergulho, com possibilidade de configurar várias escolas",
+      eyebrow: "Para instrutores e Divemasters de mergulho, com possibilidade de configurar várias escolas",
       h1: "Mergulha mais.<br>Gere menos.",
       sub: "Controla os teus mergulhos, rendimentos e pagamentos num só sítio.",
       context: "A Ocean Flow não fica só pela gestão das contas do teu trabalho nas escolas: gera os Training Records oficiais da SSI, exporta todas as tuas contas sempre que precisares e dá-te acesso digital ao guia de mergulho de Koh Tao, com um índice para chegares a qualquer ponto de mergulho em segundos.",
@@ -452,7 +452,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     compare: {
       h2: "Antes de voltares a mergulhar, já sabes como te correu",
-      p: "Sem a Ocean Flow, o controlo de um instrutor vive espalhado por notas soltas, uma folha de Excel e a memória, e complica-se ainda mais se trabalhas para várias escolas. Com a Ocean Flow, vive num só sítio, sempre atualizado.",
+      p: "Sem a Ocean Flow, o controlo de um instrutor ou Divemaster vive espalhado por notas soltas, uma folha de Excel e a memória, e complica-se ainda mais se trabalhas para várias escolas. Com a Ocean Flow, vive num só sítio, sempre atualizado.",
       beforeTitle: "Sem Ocean Flow",
       before: [
         "Difícil saber quanto ganhaste mesmo",
@@ -474,7 +474,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     tour: {
       h2: "Uma volta rápida pelo que faz",
-      p: "Cinco ecrãs, cada um a resolver um problema real do teu dia a dia como instrutor. Nada a decorar: o próprio formulário guia-te pelo fluxo certo.",
+      p: "Cinco ecrãs, cada um a resolver um problema real do teu dia a dia como instrutor e Divemaster. Nada a decorar: o próprio formulário guia-te pelo fluxo certo.",
       feat: [
         { title: "Home", tag: "Vista diária", body: "O que geraste este mês, o teu calendário do mês e o que tens pendente de receber, tudo no ecrã com que abres a app. Um toque em qualquer dia para adicionar ou rever um movimento.", detail: "Um olhar, <b>0</b> cliques extra" },
         { title: "O meu trabalho", tag: "Registo", body: "Um curso dado, uma comissão por um cliente referido, ou um ajuste com um colega: os três a partir do mesmo botão. Escolhes o tipo, o formulário muda sozinho, e a tarifa já é conhecida.", detail: "De registar a guardado em <b>segundos</b>" },
@@ -485,7 +485,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     strengths: {
       h2: "Feita para a água, não adaptada a ela",
-      p: "Cada decisão de design parte do mesmo sítio: um instrutor real, acabado de sair da água, com o telemóvel na mão.",
+      p: "Cada decisão de design parte do mesmo sítio: um instrutor e Divemaster real, acabado de sair da água, com o telemóvel na mão.",
       items: [
         { k: "Mãos molhadas", h4: "Pensada para o telemóvel, não encolhida a partir do computador", p: "Alvos táteis grandes, formulários curtos e uma app inteira pensada para se usar entre mergulhos, com o sol a bater no ecrã." },
         { k: "Várias escolas, várias moedas", h4: "Cada tarifa na sua própria moeda, sem conversões manuais", p: "Trabalhas em euros com uma escola e em dólares com outra. A Ocean Flow distingue sozinha, sem teres de fazer a conta de cada vez." },
@@ -500,14 +500,14 @@ window.__OCEANFLOW_I18N__ = {
       ctaPrimary: "Criar a minha conta",
       urlline: "Regista-te em <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Para instrutores de mergulho, com possibilidade de configurar várias escolas." }
+    footer: { text: "Para instrutores e Divemasters de mergulho, com possibilidade de configurar várias escolas." }
   },
 
   "pt-BR": {
     meta: { title: "Ocean Flow — Mergulhe mais. Gerencie menos." },
     nav: { enter: "Entrar", langHint: "Para facilitar, escolha seu idioma preferido" },
     hero: {
-      eyebrow: "Para instrutores de mergulho, com possibilidade de configurar várias escolas",
+      eyebrow: "Para instrutores e Divemasters de mergulho, com possibilidade de configurar várias escolas",
       h1: "Mergulhe mais.<br>Gerencie menos.",
       sub: "Controle seus mergulhos, ganhos e pagamentos em um só lugar.",
       context: "O Ocean Flow não para só na gestão das contas do seu trabalho nas escolas: ele gera os Training Records oficiais da SSI, exporta todas as suas contas sempre que precisar e te dá acesso digital ao guia de mergulho de Koh Tao, com um índice para chegar a qualquer ponto de mergulho em segundos.",
@@ -515,7 +515,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     compare: {
       h2: "Antes mesmo de voltar à superfície, você já sabe como foi",
-      p: "Sem o Ocean Flow, o controle de um instrutor fica espalhado entre anotações soltas, uma planilha e a memória, e complica ainda mais se você trabalha para várias escolas. Com o Ocean Flow, tudo vive em um só lugar, sempre atualizado.",
+      p: "Sem o Ocean Flow, o controle de um instrutor ou Divemaster fica espalhado entre anotações soltas, uma planilha e a memória, e complica ainda mais se você trabalha para várias escolas. Com o Ocean Flow, tudo vive em um só lugar, sempre atualizado.",
       beforeTitle: "Sem Ocean Flow",
       before: [
         "Difícil saber quanto você realmente ganhou",
@@ -537,7 +537,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     tour: {
       h2: "Um passeio rápido pelo que ele faz",
-      p: "Cinco telas, cada uma resolvendo um problema real do seu dia a dia como instrutor. Nada para decorar: o próprio formulário te guia pelo fluxo certo.",
+      p: "Cinco telas, cada uma resolvendo um problema real do seu dia a dia como instrutor e Divemaster. Nada para decorar: o próprio formulário te guia pelo fluxo certo.",
       feat: [
         { title: "Início", tag: "Visão do dia", body: "O que você gerou este mês, seu calendário do mês e o que ainda está pendente de receber, tudo na tela em que o app abre. Um toque em qualquer dia para adicionar ou revisar um movimento.", detail: "Uma olhada, <b>0</b> cliques a mais" },
         { title: "Meu trabalho", tag: "Registro", body: "Uma aula dada, uma comissão por um cliente indicado, ou um acerto com um colega: os três pelo mesmo botão. Você escolhe o tipo, o formulário muda sozinho, e a tarifa já é conhecida.", detail: "Do registro ao salvo em <b>segundos</b>" },
@@ -548,7 +548,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     strengths: {
       h2: "Feito para a água, não adaptado depois",
-      p: "Cada decisão de design parte do mesmo lugar: um instrutor de verdade, recém-saído da água, com o celular na mão.",
+      p: "Cada decisão de design parte do mesmo lugar: um instrutor e Divemaster de verdade, recém-saído da água, com o celular na mão.",
       items: [
         { k: "Mãos molhadas", h4: "Pensado para celular, não encolhido do desktop", p: "Áreas de toque grandes, formulários curtos e um app inteiro pensado para usar entre um mergulho e outro, com o sol batendo na tela." },
         { k: "Várias escolas, várias moedas", h4: "Cada tarifa na sua própria moeda, sem conversão manual", p: "Você trabalha em euros com uma escola e em dólares com outra. O Ocean Flow distingue sozinho, sem você ter que fazer a conta toda vez." },
@@ -563,14 +563,14 @@ window.__OCEANFLOW_I18N__ = {
       ctaPrimary: "Criar minha conta",
       urlline: "Cadastre-se em <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "Para instrutores de mergulho, com possibilidade de configurar várias escolas." }
+    footer: { text: "Para instrutores e Divemasters de mergulho, com possibilidade de configurar várias escolas." }
   },
 
   ar: {
     meta: { title: "Ocean Flow — غُص أكثر. أدِر أقل." },
     nav: { enter: "تسجيل الدخول", langHint: "لتسهيل الأمر، اختر لغتك المفضلة" },
     hero: {
-      eyebrow: "لمدربي الغوص، مع إمكانية إعداد أكثر من مدرسة",
+      eyebrow: "لمدربي الغوص وDivemaster، مع إمكانية إعداد أكثر من مدرسة",
       h1: "غُص أكثر.<br>أدِر أقل.",
       sub: "تابع غطساتك ودخلك ومدفوعاتك من مكان واحد.",
       context: "Ocean Flow لا يكتفي بإدارة حسابات عملك في المدارس فحسب، بل يُنشئ سجلات Training Records الرسمية من SSI، ويصدّر جميع حساباتك متى احتجت إليها، ويمنحك وصولًا رقميًا إلى دليل الغوص في كوه تاو، مع فهرس يوصلك إلى أي موقع غوص في ثوانٍ.",
@@ -578,7 +578,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     compare: {
       h2: "قبل أن تعود إلى السطح، أنت تعرف بالفعل كيف سار الأمر",
-      p: "بدون Ocean Flow، تتوزع سجلات المدرب بين ملاحظات متفرقة وجدول بيانات والذاكرة، ويزداد الأمر تعقيدًا إن كنت تعمل لعدة مدارس. مع Ocean Flow، يعيش كل شيء في مكان واحد، ودائمًا محدّث.",
+      p: "بدون Ocean Flow، تتوزع سجلات المدرب أو Divemaster بين ملاحظات متفرقة وجدول بيانات والذاكرة، ويزداد الأمر تعقيدًا إن كنت تعمل لعدة مدارس. مع Ocean Flow، يعيش كل شيء في مكان واحد، ودائمًا محدّث.",
       beforeTitle: "بدون Ocean Flow",
       before: [
         "من الصعب معرفة كم ربحت فعلًا",
@@ -600,7 +600,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     tour: {
       h2: "جولة سريعة فيما يقدمه التطبيق",
-      p: "خمس شاشات، كل منها تحل مشكلة حقيقية من يومك كمدرب. لا شيء تحفظه عن ظهر قلب: النموذج نفسه يرشدك خلال المسار الصحيح.",
+      p: "خمس شاشات، كل منها تحل مشكلة حقيقية من يومك كمدرب وDivemaster. لا شيء تحفظه عن ظهر قلب: النموذج نفسه يرشدك خلال المسار الصحيح.",
       feat: [
         { title: "الرئيسية", tag: "لمحة يومية", body: "ما حققته هذا الشهر، تقويم شهرك، وما تبقّى تحصيله، كل ذلك في الشاشة التي يفتح بها التطبيق. لمسة واحدة على أي يوم لإضافة حركة أو مراجعتها.", detail: "نظرة واحدة، <b>0</b> نقرات إضافية" },
         { title: "عملي", tag: "تسجيل", body: "دورة قُدّمت، عمولة من عميل تمت إحالته، أو تسوية مع زميل: الثلاثة من نفس الزر. تختار النوع، ويتغيّر النموذج تلقائيًا، والسعر معروف مسبقًا.", detail: "من التسجيل إلى الحفظ خلال <b>ثوانٍ</b>" },
@@ -611,7 +611,7 @@ window.__OCEANFLOW_I18N__ = {
     },
     strengths: {
       h2: "صُمم من أجل الماء، لا كُيّف من أجله لاحقًا",
-      p: "كل قرار تصميم ينطلق من نفس المكان: مدرب حقيقي، خرج للتو من الماء، وهاتفه في يده.",
+      p: "كل قرار تصميم ينطلق من نفس المكان: مدرب وDivemaster حقيقي، خرج للتو من الماء، وهاتفه في يده.",
       items: [
         { k: "أيدٍ مبللة", h4: "مصمم للهاتف، لا مُصغَّر من سطح المكتب", p: "مناطق لمس كبيرة، نماذج قصيرة، وتطبيق كامل مصمم للاستخدام بين الغطسات، حتى مع الشمس على الشاشة." },
         { k: "عدة مدارس، عدة عملات", h4: "كل سعر بعملته الخاصة، دون تحويل يدوي", p: "تعمل باليورو مع مدرسة وبالدولار مع أخرى. يميّز Ocean Flow بينهما تلقائيًا، دون أن تحسب في كل مرة." },
@@ -626,6 +626,6 @@ window.__OCEANFLOW_I18N__ = {
       ctaPrimary: "إنشاء حسابي",
       urlline: "سجّل في <b>oceanflow-web.vercel.app</b>"
     },
-    footer: { text: "لمدربي الغوص، مع إمكانية إعداد أكثر من مدرسة." }
+    footer: { text: "لمدربي الغوص وDivemaster، مع إمكانية إعداد أكثر من مدرسة." }
   }
 };

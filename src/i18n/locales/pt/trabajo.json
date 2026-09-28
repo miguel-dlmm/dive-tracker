@@ -7,8 +7,29 @@
   "dateGroup": {
     "today": "Hoje",
     "yesterday": "Ontem",
-    "weekdaysShort": ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
-    "monthsShort": ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+    "weekdaysShort": [
+      "Seg",
+      "Ter",
+      "Qua",
+      "Qui",
+      "Sex",
+      "Sáb",
+      "Dom"
+    ],
+    "monthsShort": [
+      "jan",
+      "fev",
+      "mar",
+      "abr",
+      "mai",
+      "jun",
+      "jul",
+      "ago",
+      "set",
+      "out",
+      "nov",
+      "dez"
+    ]
   },
   "emptyMessage": {
     "pendingWithFilters": "Nenhum item pendente com esses filtros.",
@@ -99,7 +120,7 @@
       "course": "Curso",
       "school": "Escola",
       "date": "Data",
-      "relatedColleague": "Instrutor relacionado",
+      "relatedColleague": "Instrutor ou Divemaster relacionado",
       "amount": "Valor · {{currency}}",
       "amountHint": "Positivo se ele te paga; negativo se você paga a ele/ela",
       "colleaguePlaceholder": "Ana, Marc...",

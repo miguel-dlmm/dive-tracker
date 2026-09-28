@@ -56,7 +56,7 @@
     },
     "func-perfil": {
       "label": "Mon profil",
-      "description": "Avatar, carte d'instructeur, langue et devise favorite"
+      "description": "Avatar, carte d'instructeur et Divemaster, langue et devise favorite"
     },
     "func-filtros": {
       "label": "Filtres et recherche",
@@ -71,7 +71,7 @@
     "primeros-pasos": {
       "title": "Commencer à utiliser Ocean Flow",
       "summary": "Un tour rapide des trois écrans principaux avant d'enregistrer votre premier mouvement.",
-      "whatYouCanDo": "Ocean Flow vous aide à gérer vos revenus en tant qu'instructeur indépendant. Sous un même concept, \"mouvement\", il regroupe les cours que vous dispensez, les commissions pour clients référés et les ajustements financiers avec d'autres instructeurs.",
+      "whatYouCanDo": "Ocean Flow vous aide à gérer vos revenus en tant qu'instructeur et Divemaster indépendant. Sous un même concept, \"mouvement\", il regroupe les cours que vous dispensez, les commissions pour clients référés et les ajustements financiers avec d'autres instructeurs et Divemasters.",
       "whenToUseIt": "La première fois que vous ouvrez l'app, ou quand vous voulez vous rappeler à quoi sert chaque écran.",
       "steps": [
         "Accueil : vos cours et clients référés en un coup d'œil, ce qui vous reste à encaisser et votre moyenne quotidienne, accès directs aux Training Records, votre école du mois et le Guide de Plongée, le calendrier du mois et un bouton pour créer un mouvement.",
@@ -106,12 +106,12 @@
       "title": "Créer un mouvement",
       "summary": "Le même formulaire sert pour un cours dispensé, une commission ou un ajustement avec un collègue — chaque type a ses propres champs.",
       "whatYouCanDo": "\"Ajouter un mouvement\" est le seul point de création de toute l'app — le formulaire lui-même vous laisse choisir le type, pas besoin de trouver le bon bouton pour chaque cas.",
-      "whenToUseIt": "Juste après avoir donné un cours, en clôturant une commission, ou quand vous convenez d'un ajustement avec un autre instructeur.",
+      "whenToUseIt": "Juste après avoir donné un cours, en clôturant une commission, ou quand vous convenez d'un ajustement avec un autre instructeur ou Divemaster.",
       "steps": [
         "Touchez \"Ajouter un mouvement\" : le bouton \"+\" de la carte \"En attente d'encaissement\" sur l'accueil, le même bouton en touchant un jour du calendrier de l'accueil, ou le \"+\" flottant de Mon activité.",
         "En haut du formulaire, choisissez le type : Cours dispensé, Commission ou Ajustement de cours.",
         "Cours dispensé : école, cours, date et nombre de personnes — le tarif du cours calcule le montant tout seul.",
-        "Commission : comme un cours, mais pour un client que vous avez référé et qu'un autre instructeur forme — utilise son propre tarif de commission, pas celui du cours.",
+        "Commission : comme un cours, mais pour un client que vous avez référé et qu'un autre instructeur ou Divemaster forme — utilise son propre tarif de commission, pas celui du cours.",
         "Ajustement de cours : ne dépend d'aucun tarif — indiquez vous-même le montant (positif si on vous doit de l'argent, négatif si vous devez de l'argent) et avec quel collègue est l'ajustement.",
         "Enregistrez. Si vous avez ouvert le formulaire depuis l'accueil, vous verrez le mouvement dans Mon activité juste après l'enregistrement."
       ],
@@ -158,7 +158,7 @@
     "generar-training-record": {
       "title": "Générer un Training Record",
       "summary": "Le document officiel de progression SSI de chaque élève, avec sa signature et la vôtre — rien n'est stocké dans le cloud, seulement téléchargé.",
-      "whatYouCanDo": "Depuis Training Records, vous générez le document de progression officiel pour n'importe laquelle des 10 plantillas SSI, avec les données de chaque élève et votre signature d'instructeur déjà incluses. Vous pouvez les générer un par un ou tous à la fois, et les télécharger en PDF, en image, ou les partager directement.",
+      "whatYouCanDo": "Depuis Training Records, vous générez le document de progression officiel pour n'importe laquelle des 10 plantillas SSI, avec les données de chaque élève et votre signature d'instructeur et Divemaster déjà incluses. Vous pouvez les générer un par un ou tous à la fois, et les télécharger en PDF, en image, ou les partager directement.",
       "whenToUseIt": "À la fin d'un cours, quand un élève a besoin de son Training Record sur papier ou pour l'envoyer à SSI.",
       "steps": [
         "Ouvrez Training Records depuis le raccourci sur l'accueil.",
@@ -168,7 +168,7 @@
         "Par élève : \"Télécharger le PDF\", \"Télécharger l'image (JPG)\" ou \"Partager\". Pour tous à la fois : \"Tout télécharger en PDF/JPG\" ou \"Tout partager\", dans un seul fichier compressé."
       ],
       "tips": [
-        "Vous devez avoir votre carte d'instructeur complète dans Mon profil (initiales, numéro SSI Pro et signature) avant de pouvoir générer quoi que ce soit — c'est ce qui est imprimé sur chaque Training Record.",
+        "Vous devez avoir votre carte d'instructeur et Divemaster complète dans Mon profil (initiales, numéro SSI Pro et signature) avant de pouvoir générer quoi que ce soit — c'est ce qui est imprimé sur chaque Training Record.",
         "Rien de ce que vous remplissez ici n'est stocké dans Ocean Flow : chaque document est généré à l'instant et seulement téléchargé."
       ],
       "expectedResult": "Vous avez le Training Record de chaque élève prêt à télécharger ou partager, avec sa signature et la vôtre déjà incluses."
@@ -242,20 +242,20 @@
     },
     "perfil-referencia": {
       "title": "Mon profil, en un coup d'œil",
-      "summary": "Votre avatar, vos données, votre devise favorite et votre mot de passe — tout au même endroit, accessible depuis votre nom dans l'en-tête.",
-      "whatYouCanDo": "Touchez votre avatar ou votre pseudo (en haut à droite sur n'importe quel écran) pour entrer dans Mon profil : votre identité, votre devise favorite et votre mot de passe, tout au même endroit.",
+      "summary": "Votre avatar, vos données, votre carte d'instructeur et Divemaster, votre devise favorite et votre mot de passe — tout au même endroit, accessible depuis votre nom dans l'en-tête.",
+      "whatYouCanDo": "Touchez votre avatar ou votre pseudo (en haut à droite sur n'importe quel écran) pour entrer dans Mon profil : votre identité, votre carte d'instructeur et Divemaster, votre langue, votre devise favorite et votre mot de passe, tout au même endroit.",
       "whenToUseIt": "Quand vous voulez personnaliser votre compte, corriger une donnée, ou changer le mot de passe sans avoir à vous déconnecter et passer par \"mot de passe oublié\".",
       "steps": [
         "Touchez l'avatar/pseudo de l'en-tête pour entrer dans Mon profil.",
         "Le crayon sur l'avatar ouvre le sélecteur d'icône et de couleur — le changement est enregistré au moment du choix, sans bouton \"Enregistrer\" séparé.",
         "\"Modifier\" dans Données personnelles ouvre prénom, nom et pseudo ; le pseudo ne peut pas contenir \"@\" ni coïncider avec celui d'un autre compte.",
-        "La devise favorite sert de secours dans Ajustement de cours quand aucun tarif ne la détermine — les autres mouvements utilisent toujours la devise de leur propre tarif."
+        "\"Données d'instructeur et Divemaster\" est votre carte : initiales, numéro SSI Pro et votre signature — enregistrées ici une seule fois et utilisées pour remplir automatiquement vos Training Records."
       ],
       "tips": [
         "Changer le mot de passe ici ne vous demande pas le mot de passe actuel — si vous êtes déjà dans l'app, on fait confiance à la session active.",
         "Supprimer votre compte est définitif et efface toutes vos données — pour le confirmer, vous devez taper le mot ANNULER, pour éviter toute suppression accidentelle."
       ],
-      "expectedResult": "Votre compte reflète l'avatar, les données et la devise que vous choisissez, et vous pouvez changer votre mot de passe quand vous voulez sans quitter l'app."
+      "expectedResult": "Votre compte reflète l'avatar, les données, la carte d'instructeur et Divemaster et la devise que vous choisissez, et vous pouvez changer votre mot de passe ou votre langue quand vous voulez sans quitter l'app."
     },
     "filtros-referencia": {
       "title": "Filtrer et rechercher",

@@ -56,7 +56,7 @@
     },
     "func-perfil": {
       "label": "Profilku",
-      "description": "Avatar, kartu instruktur, bahasa, dan mata uang favorit"
+      "description": "Avatar, kartu instruktur dan Divemaster, bahasa, dan mata uang favorit"
     },
     "func-filtros": {
       "label": "Filter dan pencarian",
@@ -71,7 +71,7 @@
     "primeros-pasos": {
       "title": "Mulai menggunakan Ocean Flow",
       "summary": "Tur singkat tiga layar utama sebelum kamu mencatat transaksi pertamamu.",
-      "whatYouCanDo": "Ocean Flow membantumu mengontrol penghasilan sebagai instruktur lepas. Di bawah satu konsep, \"transaksi\", ia mengelompokkan kelas yang kamu ajarkan, komisi dari klien yang kamu referensikan, dan penyesuaian keuangan dengan instruktur lain.",
+      "whatYouCanDo": "Ocean Flow membantumu mengontrol penghasilan sebagai instruktur dan Divemaster lepas. Di bawah satu konsep, \"transaksi\", ia mengelompokkan kelas yang kamu ajarkan, komisi dari klien yang kamu referensikan, dan penyesuaian keuangan dengan instruktur dan Divemaster lain.",
       "whenToUseIt": "Saat pertama kali membuka aplikasi, atau saat kamu ingin mengingat kegunaan setiap layar.",
       "steps": [
         "Home: kursus dan klien yang kamu dapatkan sekilas, berapa yang masih harus ditagih dan rata-rata harianmu, akses cepat ke Training Records, sekolah bulan ini, dan Panduan Selam, kalender bulan ini, dan tombol untuk membuat transaksi.",
@@ -106,12 +106,12 @@
       "title": "Membuat sebuah transaksi",
       "summary": "Formulir yang sama berlaku untuk kursus yang diajarkan, komisi, atau penyesuaian dengan rekan — setiap jenis punya kolomnya sendiri.",
       "whatYouCanDo": "\"Tambah transaksi\" adalah satu-satunya titik pembuatan di seluruh aplikasi — formulir itu sendiri membiarkanmu memilih jenisnya, tidak perlu mencari tombol yang berbeda untuk setiap kasus.",
-      "whenToUseIt": "Segera setelah mengajar kelas, saat menutup komisi, atau saat menyepakati penyesuaian dengan instruktur lain.",
+      "whenToUseIt": "Segera setelah mengajar kelas, saat menutup komisi, atau saat menyepakati penyesuaian dengan instruktur atau Divemaster lain.",
       "steps": [
         "Ketuk \"Tambah transaksi\": tombol \"+\" di kartu \"Tertunda ditagih\" di Beranda, tombol yang sama saat mengetuk hari di kalender Beranda, atau \"+\" mengambang di Pekerjaanku.",
         "Di atas formulir, pilih jenisnya: Kursus yang diajarkan, Komisi, atau Penyesuaian.",
         "Kursus yang diajarkan: sekolah, kursus, tanggal, dan jumlah orang — tarif kursus menghitung jumlahnya sendiri.",
-        "Komisi: sama seperti kursus, tetapi untuk klien yang kamu referensikan dan dilatih oleh instruktur lain — menggunakan tarif komisinya sendiri, bukan tarif kursus.",
+        "Komisi: sama seperti kursus, tetapi untuk klien yang kamu referensikan dan dilatih oleh instruktur atau Divemaster lain — menggunakan tarif komisinya sendiri, bukan tarif kursus.",
         "Penyesuaian: tidak bergantung pada tarif apa pun — kamu sendiri yang menentukan jumlahnya (positif jika kamu berhak menerima, negatif jika kamu berutang) dan dengan rekan mana penyesuaian ini terkait.",
         "Simpan. Jika kamu membuka formulir dari Beranda, transaksi akan langsung terlihat di Pekerjaanku setelah disimpan."
       ],
@@ -158,7 +158,7 @@
     "generar-training-record": {
       "title": "Membuat Training Record",
       "summary": "Dokumen resmi kemajuan SSI setiap murid, dengan tanda tangannya dan tanda tanganmu — tidak ada yang disimpan di cloud, hanya diunduh.",
-      "whatYouCanDo": "Dari Training Records kamu membuat dokumen kemajuan resmi dari salah satu dari 10 templat SSI, dengan data setiap murid dan tanda tangan instrukturmu yang sudah disertakan. Kamu bisa membuatnya satu per satu atau sekaligus, dan mengunduhnya sebagai PDF, gambar, atau langsung membagikannya.",
+      "whatYouCanDo": "Dari Training Records kamu membuat dokumen kemajuan resmi dari salah satu dari 10 templat SSI, dengan data setiap murid dan tanda tangan instruktur dan Divemaster-mu yang sudah disertakan. Kamu bisa membuatnya satu per satu atau sekaligus, dan mengunduhnya sebagai PDF, gambar, atau langsung membagikannya.",
       "whenToUseIt": "Saat menyelesaikan kursus, saat murid membutuhkan Training Record-nya di atas kertas atau untuk dikirim ke SSI.",
       "steps": [
         "Masuk ke Training Records melalui akses di Beranda.",
@@ -168,7 +168,7 @@
         "Per murid: \"Unduh PDF\", \"Unduh gambar (JPG)\" atau \"Bagikan\". Untuk semua sekaligus: \"Unduh semua sebagai PDF/JPG\" atau \"Bagikan semua\", dalam satu file terkompresi."
       ],
       "tips": [
-        "Kamu butuh kartu instrukturmu lengkap di Profilku (inisial, nomor SSI Pro, dan tanda tangan) sebelum bisa membuat apa pun — itulah yang tercetak di setiap Training Record.",
+        "Kamu butuh kartu instruktur dan Divemaster-mu lengkap di Profilku (inisial, nomor SSI Pro, dan tanda tangan) sebelum bisa membuat apa pun — itulah yang tercetak di setiap Training Record.",
         "Tidak ada yang kamu isi di sini disimpan di Ocean Flow: setiap dokumen dibuat saat itu juga dan hanya diunduh."
       ],
       "expectedResult": "Kamu memiliki Training Record setiap murid siap diunduh atau dibagikan, dengan tanda tangannya dan tanda tanganmu sudah disertakan."
@@ -242,14 +242,14 @@
     },
     "perfil-referencia": {
       "title": "Profilku, sekilas",
-      "summary": "Avatarmu, datamu, kartu instrukturmu, mata uang favoritmu, dan kata sandimu — semua di satu tempat, dapat diakses dari namamu di header.",
-      "whatYouCanDo": "Ketuk avatar atau nickname-mu (kanan atas di layar mana pun) untuk masuk ke Profilku: identitasmu, kartu instrukturmu, bahasamu, mata uang favoritmu, dan kata sandimu, semua di satu tempat.",
+      "summary": "Avatarmu, datamu, kartu instruktur dan Divemaster-mu, mata uang favoritmu, dan kata sandimu — semua di satu tempat, dapat diakses dari namamu di header.",
+      "whatYouCanDo": "Ketuk avatar atau nickname-mu (kanan atas di layar mana pun) untuk masuk ke Profilku: identitasmu, kartu instruktur dan Divemaster-mu, bahasamu, mata uang favoritmu, dan kata sandimu, semua di satu tempat.",
       "whenToUseIt": "Saat kamu ingin mempersonalisasi akunmu, memperbaiki data, atau mengganti kata sandi tanpa harus keluar dan melalui \"lupa kata sandi\".",
       "steps": [
         "Ketuk avatar/nickname di header untuk masuk ke Profilku.",
         "Pensil di atas avatar membuka pemilih ikon dan warna — perubahan langsung tersimpan saat dipilih, tanpa tombol \"Simpan\" terpisah.",
         "\"Edit\" di Data pribadi membuka nama, nama belakang, dan nickname; nickname tidak boleh mengandung \"@\" atau sama dengan akun lain.",
-        "\"Data instruktur\" adalah kartumu: inisial, nomor SSI Pro, dan tanda tanganmu — disimpan di sini sekali dan digunakan secara otomatis untuk mengisi Training Records-mu.",
+        "\"Data instruktur dan Divemaster\" adalah kartumu: inisial, nomor SSI Pro, dan tanda tanganmu — disimpan di sini sekali dan digunakan secara otomatis untuk mengisi Training Records-mu.",
         "Mata uang favorit digunakan sebagai cadangan di Penyesuaian saat tidak ada tarif yang menentukannya — transaksi lain selalu menggunakan mata uang dari tarifnya sendiri."
       ],
       "tips": [
@@ -257,7 +257,7 @@
         "Bahasa seluruh aplikasi juga diganti dari sini, tanpa perlu keluar.",
         "Menghapus akunmu bersifat permanen dan menghapus semua datamu — untuk mengonfirmasi kamu harus mengetik kata BATALKAN, agar tidak ada yang terhapus karena ketukan tidak sengaja."
       ],
-      "expectedResult": "Akunmu mencerminkan avatar, data, kartu instruktur, dan mata uang yang kamu pilih, dan kamu bisa mengganti kata sandi atau bahasamu kapan saja tanpa meninggalkan aplikasi."
+      "expectedResult": "Akunmu mencerminkan avatar, data, kartu instruktur dan Divemaster, dan mata uang yang kamu pilih, dan kamu bisa mengganti kata sandi atau bahasamu kapan saja tanpa meninggalkan aplikasi."
     },
     "filtros-referencia": {
       "title": "Memfilter dan mencari",

@@ -1,7 +1,7 @@
 {
   "sections": {
     "personalData": "Thông tin cá nhân",
-    "instructor": "Thông tin huấn luyện viên",
+    "instructor": "Thông tin huấn luyện viên và Divemaster",
     "favoriteCurrency": "Tiền tệ yêu thích",
     "language": "Ngôn ngữ",
     "security": "Bảo mật",
@@ -64,8 +64,8 @@
     "numberLabel": "Số SSI Pro",
     "save": "Lưu",
     "saving": "Đang lưu…",
-    "toastSuccess": "Đã cập nhật thông tin huấn luyện viên",
-    "toastError": "Không thể lưu thông tin huấn luyện viên. Vui lòng thử lại."
+    "toastSuccess": "Đã cập nhật thông tin huấn luyện viên và Divemaster",
+    "toastError": "Không thể lưu thông tin huấn luyện viên và Divemaster. Vui lòng thử lại."
   },
   "currency": {
     "hint": "Dùng làm tiền tệ mặc định trong Điều chỉnh khóa học, khi không có mức giá nào xác định. Các giao dịch khác luôn dùng tiền tệ của mức giá tương ứng.",

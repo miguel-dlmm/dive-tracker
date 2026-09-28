@@ -5,7 +5,7 @@
   "noSePudoDescargarPlantilla": "Impossibile scaricare questo modello.",
   "cargandoPlantillas": "Caricamento…",
   "instructorMissing": {
-    "mensaje": "Prima di generare, completa i tuoi dati istruttore (nome, iniziali, numero SSI Pro e firma) nel tuo profilo.",
+    "mensaje": "Prima di generare, completa i tuoi dati istruttore e Divemaster (nome, iniziali, numero SSI Pro e firma) nel tuo profilo.",
     "boton": "Vai al mio profilo"
   },
   "roster": {

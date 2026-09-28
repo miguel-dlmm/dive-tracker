@@ -1,7 +1,7 @@
 {
   "sections": {
     "personalData": "Datu pertsonalak",
-    "instructor": "Irakaslearen datuak",
+    "instructor": "Irakaslearen eta Divemasterraren datuak",
     "favoriteCurrency": "Dibisa gogokoena",
     "language": "Hizkuntza",
     "security": "Segurtasuna",
@@ -64,8 +64,8 @@
     "numberLabel": "SSI Pro zenbakia",
     "save": "Gorde",
     "saving": "Gordetzen…",
-    "toastSuccess": "Irakaslearen datuak eguneratuta",
-    "toastError": "Ezin izan dira irakaslearen datuak gorde. Saiatu berriro."
+    "toastSuccess": "Irakaslearen eta Divemasterraren datuak eguneratuta",
+    "toastError": "Ezin izan dira irakaslearen eta Divemasterraren datuak gorde. Saiatu berriro."
   },
   "currency": {
     "hint": "Ikastaro doikuntzan lehenetsitako dibisa gisa erabiltzen da, hori zehazten duen tarifarik ez dagoenean. Gainerako mugimenduek beti erabiltzen dute beren tarifaren dibisa.",

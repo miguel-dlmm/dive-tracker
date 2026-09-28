@@ -7,8 +7,29 @@
   "dateGroup": {
     "today": "Hari ini",
     "yesterday": "Semalam",
-    "weekdaysShort": ["Isn", "Sel", "Rab", "Kha", "Jum", "Sab", "Ahd"],
-    "monthsShort": ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogo", "Sep", "Okt", "Nov", "Dis"]
+    "weekdaysShort": [
+      "Isn",
+      "Sel",
+      "Rab",
+      "Kha",
+      "Jum",
+      "Sab",
+      "Ahd"
+    ],
+    "monthsShort": [
+      "Jan",
+      "Feb",
+      "Mac",
+      "Apr",
+      "Mei",
+      "Jun",
+      "Jul",
+      "Ogo",
+      "Sep",
+      "Okt",
+      "Nov",
+      "Dis"
+    ]
   },
   "emptyMessage": {
     "pendingWithFilters": "Tiada item belum selesai dengan penapis ini.",
@@ -99,7 +120,7 @@
       "course": "Kursus",
       "school": "Sekolah",
       "date": "Tarikh",
-      "relatedColleague": "Instruktor berkaitan",
+      "relatedColleague": "Instruktor atau Divemaster berkaitan",
       "amount": "Jumlah · {{currency}}",
       "amountHint": "Positif jika dia membayar anda; negatif jika anda membayar dia",
       "colleaguePlaceholder": "Ana, Marc...",
