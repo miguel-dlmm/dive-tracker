@@ -663,6 +663,24 @@ function SiteSearch({ t, onSelectPage, variant = "light", maxResultsHeight = 148
     : SITE_INDEX;
   const dark = variant === "dark";
 
+  // Aviso real reportado (2026-09-28): en iOS Safari la barra de scroll
+  // nativa es un overlay del sistema que solo aparece un instante mientras
+  // se desplaza — no hay forma de dejarla siempre visible con CSS (a
+  // diferencia de escritorio). En su lugar, un desvanecido al final de la
+  // lista (el mismo patrón que usa el propio iOS en listas largas) avisa
+  // de que hay más resultados debajo sin depender de esa barra. Se
+  // calcula de verdad (scrollHeight/scrollTop/clientHeight), no un
+  // degradado fijo siempre visible: desaparece en cuanto se llega al
+  // final o cuando los resultados ya caben enteros (p. ej. tras filtrar).
+  const resultsRef = useRef(null);
+  const [hasMoreBelow, setHasMoreBelow] = useState(false);
+  const checkOverflow = () => {
+    const el = resultsRef.current;
+    if (!el) return;
+    setHasMoreBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 1);
+  };
+  useEffect(() => { checkOverflow(); }, [filteredSites.length]);
+
   return (
     <div>
       <div className="relative">
@@ -685,27 +703,45 @@ function SiteSearch({ t, onSelectPage, variant = "light", maxResultsHeight = 148
           style={dark ? undefined : { color: BRAND_NAVY }}
         />
       </div>
-      <div className="mt-2 overflow-y-auto" style={{ maxHeight: maxResultsHeight }}>
-        {filteredSites.length === 0 ? (
-          <p className={`py-4 text-center text-[12.5px] ${dark ? "text-white/50" : "text-gray-400"}`}>{t("viewer.siteIndexEmpty")}</p>
-        ) : (
-          <div className="grid grid-cols-2 gap-1.5">
-            {filteredSites.map((site) => (
-              <button
-                key={site.name}
-                type="button"
-                onClick={() => onSelectPage(site.page)}
-                className={
-                  dark
-                    ? "min-h-11 truncate rounded-lg bg-white/10 px-3 py-2 text-left text-[12.5px] font-medium text-white active:bg-white/20"
-                    : "min-h-11 truncate rounded-lg bg-gray-50 px-3 py-2 text-left text-[12.5px] font-medium active:bg-gray-100"
-                }
-                style={dark ? undefined : { color: BRAND_NAVY }}
-              >
-                {site.name}
-              </button>
-            ))}
-          </div>
+      <div className="relative mt-2">
+        <div
+          ref={resultsRef}
+          onScroll={checkOverflow}
+          className="overflow-y-auto"
+          style={{ maxHeight: maxResultsHeight }}
+        >
+          {filteredSites.length === 0 ? (
+            <p className={`py-4 text-center text-[12.5px] ${dark ? "text-white/50" : "text-gray-400"}`}>{t("viewer.siteIndexEmpty")}</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-1.5">
+              {filteredSites.map((site) => (
+                <button
+                  key={site.name}
+                  type="button"
+                  onClick={() => onSelectPage(site.page)}
+                  className={
+                    dark
+                      ? "min-h-11 truncate rounded-lg bg-white/10 px-3 py-2 text-left text-[12.5px] font-medium text-white active:bg-white/20"
+                      : "min-h-11 truncate rounded-lg bg-gray-50 px-3 py-2 text-left text-[12.5px] font-medium active:bg-gray-100"
+                  }
+                  style={dark ? undefined : { color: BRAND_NAVY }}
+                >
+                  {site.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        {hasMoreBelow && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-5"
+            style={{
+              background: dark
+                ? `linear-gradient(to top, ${BRAND_NAVY}, transparent)`
+                : "linear-gradient(to top, #fff, transparent)",
+            }}
+          />
         )}
       </div>
     </div>

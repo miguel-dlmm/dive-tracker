@@ -14,6 +14,16 @@ Registro de cambios relevantes de Ocean Flow.
   llevaba un anuncio pegado que no se podía separar del contenido.
   Incluye modo oscuro para leer con poca luz.
 
+### Fixed
+- **Botón de pantalla completa del libro digital, sin efecto en Safari de
+  iPhone**: esa combinación nunca ha implementado la Fullscreen API (no es
+  un fallo de la app). El botón ahora reconoce esa situación y, en su
+  lugar, lleva a "Instalar la app" (el camino real a una vista sin barras
+  de Safari en ese dispositivo) o, si ya está instalada, pasa a indicar
+  que ya se está a pantalla completa.
+- **Subtítulo desbordado en la pastilla "Información extra"** de la
+  portada del libro digital.
+
 ## [1.6.0] - 2026-09-27
 
 ### Added
