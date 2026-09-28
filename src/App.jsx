@@ -717,7 +717,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
           pestañas) — ver el comentario largo junto a SECONDARY_TABS más
           arriba para el porqué exacto (containing block de `position:
           fixed` con el `transform` del carrusel de pestañas). */}
-      {tab === "dive-guide" && <DiveGuideTab onClose={closeSecondary} />}
+      {tab === "dive-guide" && <DiveGuideTab onClose={closeSecondary} onOpenInstallApp={() => changeTab("install-app")} />}
 
       {onboardingOpen && <OnboardingTour onClose={closeOnboardingTour} />}
       {whatsNewOpen && <WhatsNew onClose={closeWhatsNew} />}

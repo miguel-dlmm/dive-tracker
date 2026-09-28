@@ -20,6 +20,8 @@
     "fullscreenExitAria": "Quitter le plein écran",
     "darkModeAria": "Mode sombre",
     "lightModeAria": "Mode clair",
+    "installForFullscreenAria": "Installer l'appli pour le plein écran",
+    "alreadyFullscreenAria": "Déjà en plein écran",
     "jumpTo": "Aller à…",
     "siteIndexHeading": "Aller à un site de plongée",
     "siteIndexEmpty": "Aucun résultat",

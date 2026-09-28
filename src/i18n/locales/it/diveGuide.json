@@ -20,6 +20,8 @@
     "fullscreenExitAria": "Esci da schermo intero",
     "darkModeAria": "Modalità scura",
     "lightModeAria": "Modalità chiara",
+    "installForFullscreenAria": "Installa l'app per lo schermo intero",
+    "alreadyFullscreenAria": "Già a schermo intero",
     "jumpTo": "Vai a…",
     "siteIndexHeading": "Vai a un punto di immersione",
     "siteIndexEmpty": "Nessun risultato",

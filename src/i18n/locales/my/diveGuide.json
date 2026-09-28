@@ -20,6 +20,8 @@
     "fullscreenExitAria": "မျက်နှာပြင်အပြည့်မှထွက်ရန်",
     "darkModeAria": "အမှောင်မုဒ်",
     "lightModeAria": "အလင်းမုဒ်",
+    "installForFullscreenAria": "မျက်နှာပြင်အပြည့်အတွက် အက်ပ်ထည့်သွင်းပါ",
+    "alreadyFullscreenAria": "မျက်နှာပြင်အပြည့်တွင်ရှိပြီးဖြစ်သည်",
     "jumpTo": "သွားရန်…",
     "siteIndexHeading": "ရေငုပ်ဆိုက်တစ်ခုသို့ သွားရန်",
     "siteIndexEmpty": "ရလဒ်မရှိပါ",

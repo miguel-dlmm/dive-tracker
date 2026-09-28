@@ -20,6 +20,8 @@
     "fullscreenExitAria": "Выйти из полноэкранного режима",
     "darkModeAria": "Тёмный режим",
     "lightModeAria": "Светлый режим",
+    "installForFullscreenAria": "Установите приложение для полноэкранного режима",
+    "alreadyFullscreenAria": "Уже в полноэкранном режиме",
     "jumpTo": "Перейти к…",
     "siteIndexHeading": "Перейти к месту погружения",
     "siteIndexEmpty": "Ничего не найдено",

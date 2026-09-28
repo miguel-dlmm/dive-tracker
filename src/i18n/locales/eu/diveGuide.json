@@ -20,6 +20,8 @@
     "fullscreenExitAria": "Irten pantaila osotik",
     "darkModeAria": "Modu iluna",
     "lightModeAria": "Modu argia",
+    "installForFullscreenAria": "Instalatu app-a pantaila osorako",
+    "alreadyFullscreenAria": "Jada pantaila osoan zaude",
     "jumpTo": "Joan hona…",
     "siteIndexHeading": "Joan urpekaritza-gune batera",
     "siteIndexEmpty": "Emaitzarik ez",

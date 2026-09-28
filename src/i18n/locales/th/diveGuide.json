@@ -20,6 +20,8 @@
     "fullscreenExitAria": "ออกจากเต็มจอ",
     "darkModeAria": "โหมดมืด",
     "lightModeAria": "โหมดสว่าง",
+    "installForFullscreenAria": "ติดตั้งแอปเพื่อดูแบบเต็มจอ",
+    "alreadyFullscreenAria": "อยู่ในโหมดเต็มจอแล้ว",
     "jumpTo": "ไปที่…",
     "siteIndexHeading": "ไปที่จุดดำน้ำ",
     "siteIndexEmpty": "ไม่พบผลลัพธ์",

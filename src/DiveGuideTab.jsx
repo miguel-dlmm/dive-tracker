@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
   X, ArrowLeft, Expand, Shrink, MapPin, Fish, Info, ChevronLeft, ChevronRight,
-  LayoutGrid, Search, Moon, Sun, BookOpen,
+  LayoutGrid, Search, Moon, Sun, BookOpen, Smartphone, CircleCheck,
 } from "lucide-react";
 import { BRAND_NAVY, BRAND_OCEAN, BRAND_SKY, NAVY, GREEN, CORAL, BG } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
@@ -139,7 +139,7 @@ function pageUrl(n) {
   return `${base}/storage/v1/object/public/dive-guide/koh-tao/page-${String(n).padStart(2, "0")}.webp`;
 }
 
-export default function DiveGuideTab({ onClose }) {
+export default function DiveGuideTab({ onClose, onOpenInstallApp }) {
   const { t } = useTranslation("diveGuide");
   const reduced = usePrefersReducedMotion();
   const [screen, setScreen] = useState("cover"); // "cover" | "reader"
@@ -231,9 +231,37 @@ export default function DiveGuideTab({ onClose }) {
     enabled: !isZoomed,
   });
 
+  // Safari de iPhone nunca ha implementado la Fullscreen API (sí Safari de
+  // Mac/iPad, y Chrome en cualquier plataforma) — no es un bug a arreglar,
+  // es una restricción real de esa plataforma concreta (pedido explícito
+  // 2026-09-28, tras confirmar el matiz con el usuario: "no lo ocultes,
+  // hazlo que funcione para Safari y Chrome al menos"). Donde la API no
+  // existe, el botón deja de intentar activarla (no hay nada que activar)
+  // y en su lugar resuelve lo que el usuario busca de verdad:
+  //   - si la app NO está instalada en la pantalla de inicio, lleva a
+  //     "Instalar la app" — el camino real hacia una vista sin barras de
+  //     Safari en ese dispositivo.
+  //   - si ya está instalada (display-mode: standalone / navigator.
+  //     standalone), Safari ya no muestra ninguna barra desde el primer
+  //     segundo — no hay nada que alternar, así que el icono pasa a ser un
+  //     indicador de "ya estás a pantalla completa" en vez de desaparecer.
+  const fullscreenSupported = typeof document !== "undefined" && typeof document.documentElement.requestFullscreen === "function";
+  const isStandalone =
+    typeof window !== "undefined" &&
+    (window.navigator.standalone === true || window.matchMedia?.("(display-mode: standalone)")?.matches === true);
+
   const toggleFullscreen = () => {
-    if (document.fullscreenElement) safeExitFullscreen();
-    else safeRequestFullscreen(rootRef.current);
+    if (fullscreenSupported) {
+      if (document.fullscreenElement) safeExitFullscreen();
+      else safeRequestFullscreen(rootRef.current);
+      return;
+    }
+    if (!isStandalone && onOpenInstallApp) {
+      if (document.fullscreenElement) safeExitFullscreen();
+      onOpenInstallApp();
+    }
+    // Ya instalada y sin API: no hay acción que ejecutar, el botón es
+    // solo un indicador (ver icono/aria-label en ReaderTopBar).
   };
 
   const toggleDark = () => {
@@ -286,6 +314,8 @@ export default function DiveGuideTab({ onClose }) {
             isFullscreen={isFullscreen}
             onToggleFullscreen={toggleFullscreen}
             onToggleDark={toggleDark}
+            fullscreenSupported={fullscreenSupported}
+            isStandalone={isStandalone}
           />
           {/* touch-none (no touch-pan-y, a diferencia del carrusel de
               SlideDeck/motion.js): aquí no hace falta scroll vertical
@@ -474,7 +504,16 @@ function CoverScreen({ t, reduced, onStart, onOpenSection, onSelectSitePage, onC
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${section.color}40` }}>
                 <section.Icon size={16} style={{ color: "#fff" }} aria-hidden="true" />
               </span>
-              <span className="min-w-0">
+              {/* w-full, no solo min-w-0 (bug real reportado: "el subtítulo
+                  se sale de la pastilla") — el botón es flex-col con
+                  items-center, que NO estira a sus hijos al ancho del
+                  contenedor (a diferencia de items-stretch, el valor por
+                  defecto). Sin w-full, este bloque de texto no tenía
+                  ningún ancho real contra el que recortarse: crecía tanto
+                  como hiciera falta para caber su línea más larga
+                  ("Señales, seguridad y curiosidades"), desbordando la
+                  tarjeta en vez de truncarse. */}
+              <span className="w-full min-w-0">
                 <div className="truncate text-[12.5px] font-bold text-white">{t(`sections.${section.key}.label`)}</div>
                 <div className="truncate text-[10px] text-white/60">{t(`sections.${section.key}.hint`)}</div>
               </span>
@@ -527,8 +566,27 @@ function CoverScreen({ t, reduced, onStart, onOpenSection, onSelectSitePage, onC
   );
 }
 
-function ReaderTopBar({ t, dark, section, current, onClose, onOpenSections, isFullscreen, onToggleFullscreen, onToggleDark }) {
+function ReaderTopBar({ t, dark, section, current, onClose, onOpenSections, isFullscreen, onToggleFullscreen, onToggleDark, fullscreenSupported, isStandalone }) {
   const iconColor = dark ? "#fff" : BRAND_NAVY;
+  // 3 estados reales (ver el comentario largo junto a toggleFullscreen):
+  // API disponible (Chrome/iPad/Mac) → icono y aria normales de siempre;
+  // sin API y sin instalar (iPhone en el navegador) → icono de instalar
+  // app; sin API y ya instalada (iPhone, PWA) → indicador "ya a pantalla
+  // completa", sin acción real que ejecutar.
+  const fullscreenIcon = !fullscreenSupported && !isStandalone
+    ? <Smartphone size={18} style={{ color: iconColor }} aria-hidden="true" />
+    : !fullscreenSupported && isStandalone
+      ? <CircleCheck size={18} style={{ color: iconColor }} aria-hidden="true" />
+      : isFullscreen
+        ? <Shrink size={18} style={{ color: iconColor }} aria-hidden="true" />
+        : <Expand size={18} style={{ color: iconColor }} aria-hidden="true" />;
+  const fullscreenAria = !fullscreenSupported && !isStandalone
+    ? t("viewer.installForFullscreenAria")
+    : !fullscreenSupported && isStandalone
+      ? t("viewer.alreadyFullscreenAria")
+      : isFullscreen
+        ? t("viewer.fullscreenExitAria")
+        : t("viewer.fullscreenEnterAria");
   return (
     <div
       className="z-10 flex items-center justify-between gap-1 border-b px-2 py-2"
@@ -578,10 +636,10 @@ function ReaderTopBar({ t, dark, section, current, onClose, onOpenSections, isFu
         type="button"
         onClick={onToggleFullscreen}
         whileTap={{ scale: 0.85 }}
-        aria-label={isFullscreen ? t("viewer.fullscreenExitAria") : t("viewer.fullscreenEnterAria")}
+        aria-label={fullscreenAria}
         className="flex h-11 w-11 shrink-0 items-center justify-center"
       >
-        {isFullscreen ? <Shrink size={18} style={{ color: iconColor }} aria-hidden="true" /> : <Expand size={18} style={{ color: iconColor }} aria-hidden="true" />}
+        {fullscreenIcon}
       </motion.button>
     </div>
   );

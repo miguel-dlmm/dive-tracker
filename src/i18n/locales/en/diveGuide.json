@@ -20,6 +20,8 @@
     "fullscreenExitAria": "Exit full screen",
     "darkModeAria": "Dark mode",
     "lightModeAria": "Light mode",
+    "installForFullscreenAria": "Install the app for full screen",
+    "alreadyFullscreenAria": "Already full screen",
     "jumpTo": "Jump to…",
     "siteIndexHeading": "Jump to a dive site",
     "siteIndexEmpty": "No results",

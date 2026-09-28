@@ -20,6 +20,8 @@
     "fullscreenExitAria": "Sortir de pantalla completa",
     "darkModeAria": "Mode fosc",
     "lightModeAria": "Mode clar",
+    "installForFullscreenAria": "Instal·la l'app per a pantalla completa",
+    "alreadyFullscreenAria": "Ja estàs a pantalla completa",
     "jumpTo": "Anar a…",
     "siteIndexHeading": "Anar a un punt d'immersió",
     "siteIndexEmpty": "Sense resultats",

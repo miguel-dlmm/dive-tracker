@@ -20,6 +20,8 @@
     "fullscreenExitAria": "Thoát toàn màn hình",
     "darkModeAria": "Chế độ tối",
     "lightModeAria": "Chế độ sáng",
+    "installForFullscreenAria": "Cài đặt ứng dụng để xem toàn màn hình",
+    "alreadyFullscreenAria": "Đã ở chế độ toàn màn hình",
     "jumpTo": "Đi tới…",
     "siteIndexHeading": "Đi đến một điểm lặn",
     "siteIndexEmpty": "Không có kết quả",

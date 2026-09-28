@@ -20,6 +20,8 @@
     "fullscreenExitAria": "Vollbild beenden",
     "darkModeAria": "Dunkler Modus",
     "lightModeAria": "Heller Modus",
+    "installForFullscreenAria": "App installieren für Vollbild",
+    "alreadyFullscreenAria": "Bereits im Vollbild",
     "jumpTo": "Springe zu…",
     "siteIndexHeading": "Zu einem Tauchplatz springen",
     "siteIndexEmpty": "Keine Treffer",
