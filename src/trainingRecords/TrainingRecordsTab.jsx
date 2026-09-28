@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { zipSync } from "fflate";
 import { UserPlus, RefreshCw, FileText, ImageDown, AlertTriangle, Share2, ChevronRight, Award, Download, Loader2, Info, HelpCircle } from "lucide-react";
 import { supabase } from "../supabaseClient";
-import { useToast, RowMenu, DatePicker, Select, ConfirmDialog } from "../shared";
+import { useToast, RowMenu, DatePicker, Select, ConfirmDialog, AppLoading } from "../shared";
 // TEAL: solo queda como último respaldo (`accentColor || TEAL`) si por lo
 // que sea no llega accentColor — feedback real 2026-09-07 ("los campos
 // versión del examen, certificación... se ven del tono verde anterior al
@@ -687,7 +687,15 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
     }
   };
 
-  if (loading) return <p className="text-sm text-gray-400">{t("cargandoPlantillas")}</p>;
+  // Bug real reportado: se veía un "Cargando…" de texto plano en vez del
+  // spinner de marca que usa el resto de la app (ver AppLoading, shared.jsx).
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <AppLoading label={t("cargandoPlantillas")} />
+      </div>
+    );
+  }
 
   if (!instructorComplete) {
     return (
