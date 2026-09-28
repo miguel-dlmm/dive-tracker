@@ -127,6 +127,16 @@ export const HELP_CATEGORIES = [
     icon: "Award",
     articles: [{ id: "generar-training-record" }],
   },
+  // Añadida 2026-09-27 (revisión de la Ayuda tras el lote del libro
+  // digital: "hay funcionalidad... nueva que falta") — la Guía de Buceo
+  // se abre desde Home igual que Training Records, sin pantalla propia en
+  // nav_sections, así que sigue el mismo patrón: sin sectionKey.
+  {
+    id: "quiero-guia-buceo",
+    group: "quiero",
+    icon: "BookOpen",
+    articles: [{ id: "guia-buceo" }],
+  },
 
   // ---------------- Funcionalidades (referencia por pantalla) ----------------
   {

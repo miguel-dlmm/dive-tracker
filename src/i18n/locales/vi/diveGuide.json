@@ -1,0 +1,31 @@
+{
+  "cover": {
+    "title": "Cẩm Nang Lặn",
+    "subtitle": "Koh Tao, Vịnh Thái Lan",
+    "tagline": "Điểm lặn, sinh vật biển và mọi thông tin cho buổi briefing, luôn sẵn trong tay.",
+    "start": "Bắt đầu xem",
+    "credit": "Nội dung gốc: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Điểm lặn", "hint": "Bản đồ và chi tiết từng điểm" },
+    "marine": { "label": "Sinh vật biển", "hint": "Nhận biết cá và san hô" },
+    "extra": { "label": "Thông tin thêm", "hint": "Ký hiệu, an toàn và điều thú vị" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} / {{total}}",
+    "sectionsAria": "Đổi phần",
+    "closeAria": "Đóng cẩm nang",
+    "backToCoverAria": "Quay lại trang bìa",
+    "fullscreenEnterAria": "Toàn màn hình",
+    "fullscreenExitAria": "Thoát toàn màn hình",
+    "darkModeAria": "Chế độ tối",
+    "lightModeAria": "Chế độ sáng",
+    "installForFullscreenAria": "Cài đặt ứng dụng để xem toàn màn hình",
+    "alreadyFullscreenAria": "Đã ở chế độ toàn màn hình",
+    "jumpTo": "Đi tới…",
+    "siteIndexHeading": "Đi đến một điểm lặn",
+    "siteIndexEmpty": "Không có kết quả",
+    "prevPageAria": "Trang trước",
+    "nextPageAria": "Trang sau"
+  }
+}

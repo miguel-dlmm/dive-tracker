@@ -17,7 +17,7 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "ctaFirstTime": "သင်၏ ပထမဆုံး Training Record ကို ဖန်တီးပါ",
+    "ctaFirstTime": "ပထမတစ်ခုဖန်တီးပါ",
     "generatedLabel": "ဖန်တီးပြီး"
   },
   "installApp": "အက်ပ်ဒေါင်းလုဒ်လုပ်ရန်",
@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "မှတ်တမ်းအသစ်"
+  },
+  "diveGuideCard": {
+    "title": "ရေငုပ်လမ်းညွှန်",
+    "subtitle": "ကိုတာအို"
   }
 }

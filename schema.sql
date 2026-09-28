@@ -147,6 +147,11 @@ create table if not exists public.profiles (
   -- el dispositivo por el que entre después. Ver AppShell en App.jsx y
   -- scripts/migrations/0022-onboarding-tour-visto.sql.
   onboarding_tour_seen_at timestamptz,
+  -- "Qué hay de nuevo" ya no vive en localStorage (2026-09-27) — guarda la
+  -- versión vista, no un booleano, para que una versión nueva de la app
+  -- vuelva a mostrarlo solo. Nulo por defecto (nunca visto). Ver AppShell
+  -- en App.jsx y scripts/migrations/0023-whatsnew-seen-version.sql.
+  whats_new_seen_version text,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );

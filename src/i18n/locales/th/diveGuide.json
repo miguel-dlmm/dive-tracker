@@ -1,0 +1,31 @@
+{
+  "cover": {
+    "title": "คู่มือดำน้ำ",
+    "subtitle": "เกาะเต่า อ่าวไทย",
+    "tagline": "จุดดำน้ำ สิ่งมีชีวิตใต้ทะเล และข้อมูลทั้งหมดสำหรับบรีฟฟิ่ง พร้อมใช้เสมอ",
+    "start": "เริ่มดูเลย",
+    "credit": "เนื้อหาต้นฉบับ: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "จุดดำน้ำ", "hint": "แผนที่และรายละเอียดแต่ละจุด" },
+    "marine": { "label": "สิ่งมีชีวิตใต้ทะเล", "hint": "จำแนกปลาและปะการัง" },
+    "extra": { "label": "ข้อมูลเพิ่มเติม", "hint": "สัญญาณมือ ความปลอดภัย และเกร็ดความรู้" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} จาก {{total}}",
+    "sectionsAria": "เปลี่ยนหมวด",
+    "closeAria": "ปิดคู่มือ",
+    "backToCoverAria": "กลับไปหน้าปก",
+    "fullscreenEnterAria": "เต็มจอ",
+    "fullscreenExitAria": "ออกจากเต็มจอ",
+    "darkModeAria": "โหมดมืด",
+    "lightModeAria": "โหมดสว่าง",
+    "installForFullscreenAria": "ติดตั้งแอปเพื่อดูแบบเต็มจอ",
+    "alreadyFullscreenAria": "อยู่ในโหมดเต็มจอแล้ว",
+    "jumpTo": "ไปที่…",
+    "siteIndexHeading": "ไปที่จุดดำน้ำ",
+    "siteIndexEmpty": "ไม่พบผลลัพธ์",
+    "prevPageAria": "หน้าก่อนหน้า",
+    "nextPageAria": "หน้าถัดไป"
+  }
+}

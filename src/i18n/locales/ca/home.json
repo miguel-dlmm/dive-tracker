@@ -17,7 +17,7 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "ctaFirstTime": "Genera el teu primer Training Record",
+    "ctaFirstTime": "Crea el primer",
     "generatedLabel": "Generats"
   },
   "installApp": "Descarrega l'app",
@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "Moviment nou"
+  },
+  "diveGuideCard": {
+    "title": "Guia de busseig",
+    "subtitle": "Koh Tao"
   }
 }

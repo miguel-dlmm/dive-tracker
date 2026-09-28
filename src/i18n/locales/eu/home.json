@@ -17,7 +17,7 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "ctaFirstTime": "Sortu zure lehen Training Record",
+    "ctaFirstTime": "Sortu lehena",
     "generatedLabel": "Sortutakoak"
   },
   "installApp": "Deskargatu aplikazioa",
@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "Mugimendu berria"
+  },
+  "diveGuideCard": {
+    "title": "Urpekaritza gida",
+    "subtitle": "Koh Tao"
   }
 }

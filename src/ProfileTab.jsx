@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Eye, EyeOff, Loader2, Trash2, Check, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { CORAL, BRAND_NAVY, BRAND_SKY } from "./colors";
-import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, DatePicker, shortDate, getFavoriteCurrency, setFavoriteCurrency, useEscapeClose, useBodyScrollLock } from "./shared";
+import { Field, inputCls, EditActions, Avatar, useToast, ConfirmDialog, Select, DatePicker, shortDate, getFavoriteCurrency, setFavoriteCurrency, getDefaultOf, useEscapeClose, useBodyScrollLock } from "./shared";
 import { AVATAR_ICONS, AVATAR_COLORS, AVATAR_ICON_MAP, resolveAvatar } from "./avatarCatalog";
 import { supabase } from "./supabaseClient";
+import { callAdminApi } from "./adminApi";
 import i18n, { setStoredLanguage } from "./i18n";
 import { computeInitials } from "./computeInitials";
 import { COUNTRY_CODES } from "./countries";
@@ -662,7 +663,7 @@ function CurrencySection({ profile, currencies }) {
   // el primer render, antes de que lleguen las filas).
   useEffect(() => {
     if (favorite || !currencies.loaded) return;
-    const globalDefault = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code;
+    const globalDefault = getDefaultOf(currencies.rows, "code");
     if (!globalDefault) return;
     setFavoriteCurrency(profile.user_id, globalDefault);
     setFavoriteState(globalDefault);
@@ -881,21 +882,11 @@ function PrivacySection({ profile, onAccountDeleted }) {
     setLoading(true);
     setError("");
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch("/api/delete-own-account", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-      });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(payload.error || t("deleteAccount.genericError"));
-        setLoading(false);
-        return;
-      }
+      await callAdminApi("/api/delete-own-account", undefined, { fallback: t("deleteAccount.genericError") });
       toast?.success(t("deleteAccount.toastSuccess"));
       onAccountDeleted?.();
-    } catch {
-      setError(t("deleteAccount.networkError"));
+    } catch (err) {
+      setError(err.isApiError ? err.message : t("deleteAccount.networkError"));
       setLoading(false);
     }
   };

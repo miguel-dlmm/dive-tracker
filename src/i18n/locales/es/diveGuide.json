@@ -1,0 +1,31 @@
+{
+  "cover": {
+    "title": "Guía de Buceo",
+    "subtitle": "Koh Tao, Golfo de Tailandia",
+    "tagline": "Puntos de buceo, vida marina y toda la info para el briefing, siempre a mano.",
+    "start": "Empezar a mirar",
+    "credit": "Contenido original: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Puntos de buceo", "hint": "Mapas y datos de cada punto" },
+    "marine": { "label": "Vida marina", "hint": "Identifica peces y coral" },
+    "extra": { "label": "Información extra", "hint": "Señales, seguridad y curiosidades" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} de {{total}}",
+    "sectionsAria": "Cambiar de sección",
+    "closeAria": "Cerrar la guía",
+    "backToCoverAria": "Volver a la portada",
+    "fullscreenEnterAria": "Pantalla completa",
+    "fullscreenExitAria": "Salir de pantalla completa",
+    "darkModeAria": "Modo oscuro",
+    "lightModeAria": "Modo claro",
+    "installForFullscreenAria": "Instalar la app para pantalla completa",
+    "alreadyFullscreenAria": "Ya estás a pantalla completa",
+    "jumpTo": "Ir a…",
+    "siteIndexHeading": "Ir a un punto de buceo",
+    "siteIndexEmpty": "Sin resultados",
+    "prevPageAria": "Página anterior",
+    "nextPageAria": "Página siguiente"
+  }
+}

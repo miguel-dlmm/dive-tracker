@@ -17,7 +17,7 @@
   },
   "trainingRecordsCard": {
     "title": "Training Records",
-    "ctaFirstTime": "สร้าง Training Record แรกของคุณ",
+    "ctaFirstTime": "สร้างอันแรก",
     "generatedLabel": "สร้างแล้ว"
   },
   "installApp": "ดาวน์โหลดแอป",
@@ -29,5 +29,9 @@
   },
   "quickCreate": {
     "label": "รายการใหม่"
+  },
+  "diveGuideCard": {
+    "title": "คู่มือดำน้ำ",
+    "subtitle": "เกาะเต่า"
   }
 }

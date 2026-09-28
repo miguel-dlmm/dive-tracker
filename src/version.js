@@ -29,4 +29,11 @@
 // "1.5.1" a propósito, para no volver a mostrarles "Qué hay de nuevo" a
 // quienes ya lo vieron. Sincronizar de nuevo con la versión real en la
 // próxima release que sí traiga diapositivas nuevas.
+//
+// v1.7.0 (2026-09-28): mismo criterio otra vez — el libro digital (Guía
+// de Buceo de Koh Tao) es funcionalidad nueva real, pero no se ha
+// redactado ni aprobado ninguna diapositiva de WhatsNew para anunciarla
+// en esta release (nadie lo ha pedido). `APP_VERSION` se queda en
+// "1.5.1" a propósito. Sincronizar con la versión real en la próxima
+// release que sí traiga diapositivas nuevas.
 export const APP_VERSION = "1.5.1";

@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "motion/react";
-import { CalendarDays, Award, Handshake, Building2, HelpCircle, Wallet, Plus } from "lucide-react";
+import { CalendarDays, Award, Handshake, Building2, HelpCircle, Wallet, Plus, BookOpen } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
-import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, useFloatingDropdown, FloatingPanel } from "./shared";
-import { buildEntriesBySource, buildIncomeEntries } from "./rateCalc";
+import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, useFloatingDropdown, FloatingPanel, getDefaultCurrency } from "./shared";
+import { buildEntriesBySource, buildIncomeEntries, entriesArgsFromTables } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import { getGeneratedCount } from "./trainingRecords/generatedCounter";
 
@@ -103,16 +103,35 @@ function useTranslatedMovementTypeMeta(t) {
 // otro), a mayor escala; `justify-center` en la fila centra el conjunto
 // icono+texto dentro de la tarjeta ya ancha (2/3 del grid), en vez de
 // dejarlo anclado al borde izquierdo con un hueco vacío a la derecha.
-function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel }) {
+function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, currencyRows, tooltip, tooltipShowLabel, tooltipHideLabel, onClick }) {
   const { open, setOpen, anchorRef, panelRef, pos } = useFloatingDropdown();
   const entries = Object.entries(totals || {});
   const single = entries.length === 1 ? entries[0] : null;
   const animatedCents = useCountUp(single ? Math.round(single[1] * 100) : 0, { reduced });
+  // onClick opcional (pedido explícito 2026-09-27: "enlaza la pastilla
+  // media diaria a Resumen, mantén por encima el click del tooltip") —
+  // "Pendiente de cobrar" (KPI de arriba) sigue sin pasarlo, se queda
+  // como antes. No es un <button> envolvente (el "?" del tooltip YA es
+  // un <button> real — anidar <button> dentro de <button> es HTML
+  // inválido, bug de hidratación real ya detectado antes, ver el
+  // comentario junto a "Pendiente de cobrar" más abajo): es la propia
+  // tarjeta la que se vuelve clicable, con role="button" + teclado para
+  // no perder accesibilidad. stopPropagation en el "?" para que abrir el
+  // tooltip nunca dispare también la navegación de la tarjeta.
+  const clickableProps = onClick
+    ? {
+        role: "button",
+        tabIndex: 0,
+        onClick,
+        onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } },
+      }
+    : {};
   return (
     <motion.div
+      {...clickableProps}
       initial={{ opacity: 0, y: 10, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: reduced ? 0.01 : DURATION.md, ease: EASE.enter, delay: reduced ? 0 : index * 0.08 } }}
-      className="flex h-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3"
+      className={`flex h-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3 ${onClick ? "cursor-pointer" : ""}`}
     >
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${color}1A` }}>
         <Icon size={18} style={{ color }} aria-hidden="true" />
@@ -139,7 +158,7 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
               <button
                 ref={anchorRef}
                 type="button"
-                onClick={() => setOpen((v) => !v)}
+                onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
                 aria-expanded={open}
                 aria-label={open ? tooltipHideLabel : tooltipShowLabel}
                 className="absolute -inset-[15px] flex items-center justify-center text-gray-400"
@@ -152,7 +171,12 @@ function MoneyKpiTile({ icon: Icon, color, totals, label, index, reduced, curren
       </span>
       {tooltip && (
         <FloatingPanel open={open} pos={pos} panelRef={panelRef} matchWidth={false} className="w-48 max-w-[75vw] px-2.5 py-1.5">
-          <span className="block text-[11px] font-normal italic normal-case text-gray-500">{tooltip}</span>
+          {/* stopPropagation: aunque FloatingPanel se porta a document.body
+              (createPortal), los eventos sintéticos de React siguen
+              burbujeando por el árbol de componentes, no por el DOM físico
+              — sin esto, tocar el propio tooltip para leerlo navegaría
+              también a Resumen en cuanto la tarjeta se hizo clicable. */}
+          <span onClick={(e) => e.stopPropagation()} className="block text-[11px] font-normal italic normal-case text-gray-500">{tooltip}</span>
         </FloatingPanel>
       )}
     </motion.div>
@@ -212,7 +236,7 @@ function MiniKpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenSummary, onOpenTrainingRecords, onOpenInstallApp, userId }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenSummary, onOpenTrabajo, onOpenTrainingRecords, onOpenInstallApp, onOpenDiveGuide, userId }) {
   const { t } = useTranslation("home");
   // Oculta el punto de entrada de "Instalar la app" si la propia app ya
   // corre instalada (display-mode: standalone en Chromium/Android,
@@ -256,7 +280,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   const goToNextMonth = () => setCalendarCursor(({ year, month }) => (month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 }));
   const goToCurrentMonth = () => setCalendarCursor({ year: now.getFullYear(), month: now.getMonth() });
 
-  const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
+  const fallbackCurrency = getDefaultCurrency(currencies.rows);
 
   // ganado/comision/companeros: se mantienen separadas porque el calendario
   // de abajo necesita distinguir la fuente de cada apunte del día (incluye
@@ -265,7 +289,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // en SummaryTab.jsx — ver docs/BACKLOG.md, "Reutilizar componente entre
   // Home y Resumen".
   const entriesBySource = useMemo(
-    () => buildEntriesBySource({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    () => buildEntriesBySource(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
   const { ganado: ganadoEntries, comision: comisionEntries, companeros: companerosEntries } = entriesBySource;
@@ -322,7 +346,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // "Generado este mes" y "Pendiente de cobrar" parten de este mismo array,
   // solo cambia el filtro que le aplican.
   const incomeEntries = useMemo(
-    () => buildIncomeEntries({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    () => buildIncomeEntries(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
 
@@ -480,15 +504,19 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
               (botón "?" que abre/cierra un panel, no un texto siempre
               visible — pedido explícito: "deja el tooltip de media
               diaria como tooltip") y la animación de conteo ascendente,
-              sin duplicar nada. Sin `onClick` propio: "Media diaria" no
-              tiene una pantalla a la que navegar, igual que Cursos/
-              Captados en la fila de arriba. */}
+              sin duplicar nada. `onClick={onOpenSummary}` (2026-09-27,
+              pedido explícito: "enlaza la pastilla media diaria a
+              Resumen, mantén por encima el click del tooltip") — a
+              diferencia de "Pendiente de cobrar" arriba, esta SÍ tiene
+              una pantalla natural a la que ir. MoneyKpiTile hace el
+              tooltip inmune a este click nuevo (stopPropagation en el
+              "?" y en el panel), ver su propio comentario. */}
           <div data-testid="daily-average-card" className="col-span-2">
             <MoneyKpiTile
               icon={CalendarDays} color={TEAL} totals={dailyAverageTotals} currencyRows={currencies.rows}
               label={t("kpis.dailyAverageThisMonth")} tooltip={t("kpis.dailyAverageTooltip")}
               tooltipShowLabel={t("kpis.dailyAverageTooltipShow")} tooltipHideLabel={t("kpis.dailyAverageTooltipHide")}
-              index={0} reduced={reducedMotion}
+              index={0} reduced={reducedMotion} onClick={onOpenSummary}
             />
           </div>
           <button
@@ -503,64 +531,86 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
             <span className="text-[10.5px] font-semibold leading-tight text-white">{t("quickCreate.label")}</span>
           </button>
         </div>
-        {/* items-center (pedido explícito, segunda vuelta: "el título y
-            el subtítulo de la pastilla estarán centrados verticalmente
-            entre ellos") — el icono se centra respecto al bloque de
-            texto de cada tarjeta (título+subtítulo), no respecto al
-            principio de la fila. Ambas tarjetas comparten el mismo
-            padding (`p-2.5`) y, con datos, las mismas dos líneas de
-            texto, así que quedan alineadas entre sí sin necesitar nada
-            más — el único caso con una sola línea (Training Records sin
-            generar ninguno todavía) es transitorio, de un usuario
-            recién llegado. */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* Rediseño 2026-09-28 (tercera vuelta, pedido explícito: "me
+            siguen saliendo las tres pastillas sin centrar en el mv") —
+            medido con Playwright sobre el rediseño anterior (banda de
+            color a todo el ancho + cuerpo centrado por separado): el
+            icono+texto SÍ quedaba centrado dentro de su propio hueco
+            (8px arriba, 8px abajo, comprobado), pero la banda ocupaba
+            ~21,5px fijos arriba sin nada equivalente abajo — así que el
+            conjunto quedaba centrado respecto a "su hueco", no respecto
+            a la tarjeta entera, que es lo que de verdad se ve a simple
+            vista. La banda pasa de franja a todo el ancho a una
+            PEQUEÑA insignia más — un hijo más de la misma columna
+            centrada (etiqueta + icono + valor, los tres con
+            `items-center justify-center` y el mismo padding arriba y
+            abajo), así que ahora si está centrado de verdad respecto a
+            toda la tarjeta, no solo respecto a un trozo de ella. */}
+        <div className="grid grid-cols-3 gap-2">
           {onOpenTrainingRecords && (
             <button
               type="button"
               onClick={onOpenTrainingRecords}
-              className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
+              data-testid="training-records-card"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white px-2 py-2.5 text-center"
             >
+              <span className="max-w-full truncate rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide" style={{ backgroundColor: `${BRAND_OCEAN}14`, color: BRAND_NAVY }}>
+                {t("trainingRecordsCard.title")}
+              </span>
               <motion.span
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                style={{ backgroundColor: generatedCount > 0 ? BRAND_NAVY : `${BRAND_OCEAN}1A` }}
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: generatedCount > 0 ? BRAND_OCEAN : `${BRAND_OCEAN}1A` }}
                 animate={reducedMotion ? undefined : { scale: [1, 1.06, 1] }}
                 transition={reducedMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Award size={14} style={{ color: generatedCount > 0 ? "#fff" : BRAND_OCEAN }} aria-hidden="true" />
+                <Award size={12} style={{ color: generatedCount > 0 ? "#fff" : BRAND_OCEAN }} aria-hidden="true" />
               </motion.span>
-              <span className="min-w-0 text-center">
-                {generatedCount > 0 ? (
-                  <>
-                    <div className="truncate text-[11px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>{t("trainingRecordsCard.title")}</div>
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-[11px] font-extrabold tabular-nums" style={{ color: BRAND_OCEAN }}>{animatedGeneratedCount}</span>
-                      <span className="truncate text-[9.5px] font-semibold uppercase text-gray-400">{t("trainingRecordsCard.generatedLabel")}</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-[11px] font-bold leading-tight" style={{ color: BRAND_OCEAN }}>{t("trainingRecordsCard.ctaFirstTime")}</div>
-                )}
+              <span className="w-full min-w-0 truncate text-[11px] font-bold" style={{ color: BRAND_NAVY }}>
+                {generatedCount > 0
+                  ? `${animatedGeneratedCount} ${t("trainingRecordsCard.generatedLabel")}`
+                  : t("trainingRecordsCard.ctaFirstTime")}
               </span>
             </button>
           )}
+          {/* onOpenTrabajo, no onOpenSummary (2026-09-27, pedido explícito:
+              "enlaza la pastilla escuela del mes a Mi Trabajo") — antes
+              llevaba a Resumen; "Mi trabajo" es donde de verdad se ven y
+              filtran los movimientos de esa escuela concreta. */}
           <button
             type="button"
-            onClick={onOpenSummary}
+            onClick={onOpenTrabajo}
             data-testid="active-school-this-month-card"
-            className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-2.5 text-left"
+            className="flex flex-col items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white px-2 py-2.5 text-center"
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
-              <Building2 size={14} style={{ color: TEAL }} aria-hidden="true" />
+            <span className="max-w-full truncate rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide" style={{ backgroundColor: `${BRAND_NAVY}14`, color: BRAND_NAVY }}>
+              {t("activeSchoolThisMonth")}
             </span>
-            <span className="min-w-0 text-center">
-              <div className="truncate text-[11px] font-bold leading-tight" style={{ color: BRAND_NAVY }}>
-                {schoolActivityThisMonth
-                  ? `${schoolActivityThisMonth.school} · ${t("activeSchoolCount", { count: schoolActivityThisMonth.count })}`
-                  : t("noActivityThisMonth")}
-              </div>
-              <div className="truncate text-[10px] text-gray-400">{t("activeSchoolThisMonth")}</div>
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>
+              <Building2 size={12} style={{ color: BRAND_NAVY }} aria-hidden="true" />
+            </span>
+            <span className="w-full min-w-0 truncate text-[11px] font-bold" style={{ color: BRAND_NAVY }}>
+              {schoolActivityThisMonth
+                ? `${schoolActivityThisMonth.school} · ${t("activeSchoolCount", { count: schoolActivityThisMonth.count })}`
+                : t("noActivityThisMonth")}
             </span>
           </button>
+          {onOpenDiveGuide && (
+            <button
+              type="button"
+              onClick={onOpenDiveGuide}
+              className="flex flex-col items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white px-2 py-2.5 text-center"
+            >
+              <span className="max-w-full truncate rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide" style={{ backgroundColor: `${TEAL}14`, color: BRAND_NAVY }}>
+                {t("diveGuideCard.title")}
+              </span>
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${TEAL}1A` }}>
+                <BookOpen size={12} style={{ color: TEAL }} aria-hidden="true" />
+              </span>
+              <span className="w-full min-w-0 truncate text-[11px] font-bold" style={{ color: BRAND_NAVY }}>
+                {t("diveGuideCard.subtitle")}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 

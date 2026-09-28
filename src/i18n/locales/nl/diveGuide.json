@@ -1,0 +1,31 @@
+{
+  "cover": {
+    "title": "Duikgids",
+    "subtitle": "Koh Tao, Golf van Thailand",
+    "tagline": "Duikplekken, zeeleven en alle info voor de briefing, altijd binnen handbereik.",
+    "start": "Begin met bladeren",
+    "credit": "Oorspronkelijke inhoud: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Duikplekken", "hint": "Kaarten en info van elke plek" },
+    "marine": { "label": "Zeeleven", "hint": "Herken vissen en koraal" },
+    "extra": { "label": "Extra info", "hint": "Signalen, veiligheid en weetjes" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} van {{total}}",
+    "sectionsAria": "Sectie wisselen",
+    "closeAria": "Gids sluiten",
+    "backToCoverAria": "Terug naar de cover",
+    "fullscreenEnterAria": "Volledig scherm",
+    "fullscreenExitAria": "Volledig scherm sluiten",
+    "darkModeAria": "Donkere modus",
+    "lightModeAria": "Lichte modus",
+    "installForFullscreenAria": "Installeer de app voor volledig scherm",
+    "alreadyFullscreenAria": "Al op volledig scherm",
+    "jumpTo": "Ga naar…",
+    "siteIndexHeading": "Ga naar een duikplek",
+    "siteIndexEmpty": "Geen resultaten",
+    "prevPageAria": "Vorige pagina",
+    "nextPageAria": "Volgende pagina"
+  }
+}

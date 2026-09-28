@@ -1,0 +1,31 @@
+{
+  "cover": {
+    "title": "Гид по Дайвингу",
+    "subtitle": "Ко Тао, Сиамский залив",
+    "tagline": "Места погружений, морская жизнь и вся информация для брифинга — всегда под рукой.",
+    "start": "Начать просмотр",
+    "credit": "Оригинальный контент: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Места погружений", "hint": "Карты и детали каждого места" },
+    "marine": { "label": "Морская жизнь", "hint": "Определяйте рыб и кораллы" },
+    "extra": { "label": "Доп. информация", "hint": "Сигналы, безопасность и интересные факты" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} из {{total}}",
+    "sectionsAria": "Сменить раздел",
+    "closeAria": "Закрыть гид",
+    "backToCoverAria": "Назад к обложке",
+    "fullscreenEnterAria": "Полный экран",
+    "fullscreenExitAria": "Выйти из полноэкранного режима",
+    "darkModeAria": "Тёмный режим",
+    "lightModeAria": "Светлый режим",
+    "installForFullscreenAria": "Установите приложение для полноэкранного режима",
+    "alreadyFullscreenAria": "Уже в полноэкранном режиме",
+    "jumpTo": "Перейти к…",
+    "siteIndexHeading": "Перейти к месту погружения",
+    "siteIndexEmpty": "Ничего не найдено",
+    "prevPageAria": "Предыдущая страница",
+    "nextPageAria": "Следующая страница"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "cover": {
+    "title": "Panduan Selam",
+    "subtitle": "Koh Tao, Teluk Thailand",
+    "tagline": "Titik selam, kehidupan laut, dan semua info untuk briefing, selalu siap di tangan.",
+    "start": "Mulai jelajahi",
+    "credit": "Konten asli: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Titik selam", "hint": "Peta dan detail tiap titik" },
+    "marine": { "label": "Kehidupan laut", "hint": "Kenali ikan dan karang" },
+    "extra": { "label": "Info tambahan", "hint": "Sinyal, keselamatan, dan fakta menarik" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} dari {{total}}",
+    "sectionsAria": "Ganti bagian",
+    "closeAria": "Tutup panduan",
+    "backToCoverAria": "Kembali ke sampul",
+    "fullscreenEnterAria": "Layar penuh",
+    "fullscreenExitAria": "Keluar layar penuh",
+    "darkModeAria": "Mode gelap",
+    "lightModeAria": "Mode terang",
+    "installForFullscreenAria": "Instal aplikasi untuk layar penuh",
+    "alreadyFullscreenAria": "Sudah dalam layar penuh",
+    "jumpTo": "Lompat ke…",
+    "siteIndexHeading": "Lompat ke titik selam",
+    "siteIndexEmpty": "Tidak ada hasil",
+    "prevPageAria": "Halaman sebelumnya",
+    "nextPageAria": "Halaman berikutnya"
+  }
+}

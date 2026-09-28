@@ -20,6 +20,7 @@ import AcceptLegalScreen from "./AcceptLegalScreen";
 import HomeTab from "./HomeTab";
 import ConfigTab, { clearStoredSection } from "./ConfigTab";
 import TrainingRecordsTab from "./trainingRecords/TrainingRecordsTab";
+import DiveGuideTab from "./DiveGuideTab";
 import MiTrabajoTab from "./MiTrabajoTab";
 import MovementSheet from "./MovementSheet";
 import WhatsNew from "./WhatsNew";
@@ -94,7 +95,21 @@ const PRIMARY_TABS = [
 // de los KPIs en Home (HomeTab.jsx, pedido explícito de después: "quiero
 // q haya un algo en la home"). La pestaña "install-app" en sí no
 // cambia, solo desde dónde se llega a ella.
-const SECONDARY_TABS = ["config", "help", "perfil", "training-records", "install-app"];
+// "dive-guide" (2026-09-27, pedido explícito: "libro digital" con la Guía
+// de Buceo de Koh Tao para que el instructor se lo enseñe al cliente
+// durante el briefing) — mismo patrón que "training-records"/
+// "install-app": pestaña secundaria abierta siempre desde Home, cerrar
+// siempre vuelve a Home (ver closeSecondary). A diferencia de esas dos, su
+// JSX se monta fuera de `<main>` (justo antes de MovementSheet, más abajo)
+// y no dentro del bloque de pestañas: es un overlay `fixed inset-0` a
+// pantalla completa (para lectura tipo libro, con zoom) y el `motion.div`
+// que envuelve el contenido de `<main>` lleva su propio `transform`
+// (animación de entrada/salida) — eso crea un "containing block" para
+// cualquier `position: fixed` que quedara DENTRO de él, rompiendo el
+// overlay (dejaría de cubrir toda la pantalla real). Montado como hermano
+// de `<main>`, ese problema no existe. DiveGuideTab.jsx explica el porqué
+// del contenido en sí (por qué no usa la portada original del libro).
+const SECONDARY_TABS = ["config", "help", "perfil", "training-records", "install-app", "dive-guide"];
 
 // Recuerda la pestaña activa y a cuál "volver" desde una pantalla
 // secundaria — corrige de raíz dos problemas reales, no dos parches
@@ -124,18 +139,20 @@ function clearStoredNav() {
   clearStoredHelpOpen(); // categoría desplegada en Ayuda — misma vida que el resto
 }
 
-// "Qué hay de nuevo" — se muestra una vez por versión y por cuenta (no por
-// dispositivo/navegador): localStorage, no sessionStorage, para que
-// sobreviva a cerrar la pestaña, igual que la moneda favorita (ver
-// docs/ADR/0007-preferencias-personales-en-localstorage.md). Guarda la
-// versión vista, no un booleano — así una futura versión nueva vuelve a
-// mostrarlo automáticamente sin tener que "resetear" nada.
-const whatsNewSeenKey = (userId) => `oceanpulse:whatsNewSeen:${userId || "anon"}`;
-function hasSeenWhatsNew(userId) {
-  try { return localStorage.getItem(whatsNewSeenKey(userId)) === APP_VERSION; } catch { return true; }
-}
-function markWhatsNewSeen(userId) {
-  try { localStorage.setItem(whatsNewSeenKey(userId), APP_VERSION); } catch { /* no-op */ }
+// "Qué hay de nuevo" — se muestra una vez por versión y por cuenta, sea
+// cual sea el dispositivo por el que entre (2026-09-27: migrado de
+// localStorage a profiles.whats_new_seen_version, mismo criterio que
+// profiles.onboarding_tour_seen_at — ver scripts/migrations/
+// 0023-whatsnew-seen-version.sql). Guarda la versión vista, no un
+// booleano — así una futura versión nueva vuelve a mostrarlo
+// automáticamente sin tener que "resetear" nada, y reiniciarlo para
+// todas las cuentas de golpe es un solo UPDATE.
+// Respaldo de lectura única: cuentas que ya lo habían visto bajo el
+// localStorage anterior no deben ver reaparecer el aviso solo por haber
+// migrado dónde se guarda.
+function hasSeenWhatsNew(profile) {
+  if (profile?.whats_new_seen_version === APP_VERSION) return true;
+  try { return localStorage.getItem(`oceanpulse:whatsNewSeen:${profile?.user_id || "anon"}`) === APP_VERSION; } catch { return true; }
 }
 
 function AppShell({ onSignOut, profile, onProfileUpdated }) {
@@ -315,30 +332,31 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
   const [onboardingOpen, setOnboardingOpen] = useState(() => !profile?.onboarding_tour_seen_at);
   const closeOnboardingTour = async () => {
     const seenAt = new Date().toISOString();
-    await supabase.from("profiles").update({ onboarding_tour_seen_at: seenAt }).eq("user_id", profile.user_id);
-    onProfileUpdated({ onboarding_tour_seen_at: seenAt });
     // Marca también como vista la versión actual de WhatsNew para esta
-    // cuenta: sin esto, cerrar el tour dejaría paso de inmediato a "Qué
-    // hay de nuevo" — dos avisos de golpe en el primer acceso, cuando el
-    // propio tour ya cumple ese papel de "esto es lo que hay" para
-    // alguien que nunca ha usado la app.
-    markWhatsNewSeen(profile.user_id);
+    // cuenta en el mismo UPDATE: sin esto, cerrar el tour dejaría paso de
+    // inmediato a "Qué hay de nuevo" — dos avisos de golpe en el primer
+    // acceso, cuando el propio tour ya cumple ese papel de "esto es lo
+    // que hay" para alguien que nunca ha usado la app.
+    const patch = { onboarding_tour_seen_at: seenAt, whats_new_seen_version: APP_VERSION };
+    await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
+    onProfileUpdated(patch);
     setOnboardingOpen(false);
   };
 
   // "Qué hay de nuevo" — apertura automática desactivada a propósito para
   // v1.6.0 (pedido explícito del usuario: "no muestres whats new"), sin
   // quitar el mecanismo entero: showWhatsNewAgain (abrirlo a mano desde
-  // Ayuda) sigue funcionando igual, más abajo. Ver
-  // docs/BACKLOG.md ("Migrar 'Qué hay de nuevo' al mismo modelo que el
-  // tour de bienvenida") para la migración pendiente que sustituirá este
-  // `localStorage` por una columna real en `profiles`, con la que sí se
-  // podrá reiniciar a todas las cuentas de golpe cuando se quiera reabrir
-  // un aviso — hasta entonces, se deja fijo en `false` en vez de volver a
-  // depender de `hasSeenWhatsNew`.
+  // Ayuda) sigue funcionando igual, más abajo. Esto es una decisión de
+  // contenido de esta release (no hay nada nuevo que anunciar), no
+  // depende de dónde se guarde "visto" — profiles.whats_new_seen_version
+  // ya está listo (ver hasSeenWhatsNew arriba) para cuando una release
+  // futura quiera volver a depender de él en vez de dejarlo fijo en
+  // `false`.
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
-  const closeWhatsNew = () => {
-    markWhatsNewSeen(profile?.user_id);
+  const closeWhatsNew = async () => {
+    const patch = { whats_new_seen_version: APP_VERSION };
+    await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
+    onProfileUpdated(patch);
     setWhatsNewOpen(false);
   };
   // Fase 4, Release V1 (rediseño de notificaciones — investigación de
@@ -389,7 +407,7 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
     // siempre") — a diferencia de Ayuda/Configuración/Mi perfil, que
     // vuelven a la pestaña primaria desde la que se entró, esta ignora
     // `returnTab` a propósito.
-    if (tab === "training-records" || tab === "install-app") { changeTab("home"); return; }
+    if (tab === "training-records" || tab === "install-app" || tab === "dive-guide") { changeTab("home"); return; }
     changeTab(returnTab);
   };
   // Cerrar sesión — Fase 4, Release V1 (rediseño de cabecera): antes vivía
@@ -552,8 +570,10 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             onQuickCreate={startHomeCreate}
             onEditEntry={startHomeEdit}
             onOpenSummary={() => changeTab("summary")}
+            onOpenTrabajo={() => changeTab("trabajo")}
             onOpenTrainingRecords={() => changeTab("training-records")}
             onOpenInstallApp={() => changeTab("install-app")}
+            onOpenDiveGuide={() => changeTab("dive-guide")}
             userId={profile?.user_id}
           />
         )}
@@ -692,6 +712,12 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
         worklog={worklog} comisiones={comisiones} colleaguePayments={colleaguePayments}
         accentColor={sectionColor("trabajo")} userId={profile?.user_id}
       />
+
+      {/* Montado aquí, hermano de `<main>` (no dentro del bloque de
+          pestañas) — ver el comentario largo junto a SECONDARY_TABS más
+          arriba para el porqué exacto (containing block de `position:
+          fixed` con el `transform` del carrusel de pestañas). */}
+      {tab === "dive-guide" && <DiveGuideTab onClose={closeSecondary} onOpenInstallApp={() => changeTab("install-app")} />}
 
       {onboardingOpen && <OnboardingTour onClose={closeOnboardingTour} />}
       {whatsNewOpen && <WhatsNew onClose={closeWhatsNew} />}

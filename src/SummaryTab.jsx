@@ -2,9 +2,9 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, Building2, GraduationCap, Handshake, Users, Calendar, TrendingUp, TrendingDown, Minus, FileDown } from "lucide-react";
-import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr, ExpandableCard } from "./shared";
+import { formatMoney, colorFor, DatePicker, Select, MoneyLine, MonthCalendar, MOVEMENT_TYPE_META, todayStr, ExpandableCard, getDefaultCurrency } from "./shared";
 import { listItemVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
-import { buildEntriesBySource, comparePeriods } from "./rateCalc";
+import { buildEntriesBySource, comparePeriods, entriesArgsFromTables } from "./rateCalc";
 import { BRAND_NAVY, CORAL, GREEN, BRAND_SLATE_FILL } from "./App";
 import ExportReportSheet from "./monthlyReport/ExportReportSheet";
 
@@ -425,7 +425,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   // la pantalla, sin repetir SOURCE_META con las claves ya traducidas.
   const SOURCE_TYPE_COLOR = Object.fromEntries(Object.values(SOURCE_META).map((m) => [m.label, m.color]));
 
-  const fallbackCurrency = currencies.rows.find((c) => c.is_default)?.code || currencies.rows[0]?.code || "EUR";
+  const fallbackCurrency = getDefaultCurrency(currencies.rows);
   const activityColor = (name) => colorFor(activities.rows, name, "#94A3B8");
   const schoolColor = (name) => colorFor(schools.rows, name, "#334155");
   // Con una sola escuela, cualquier desglose "por escuela" es idéntico al
@@ -440,7 +440,7 @@ export default function SummaryTab({ worklog, rates, comisiones, commissionRates
   // en HomeTab.jsx — ver docs/BACKLOG.md, "Reutilizar componente entre
   // Home y Resumen".
   const entriesBySource = useMemo(
-    () => buildEntriesBySource({ worklog: worklog.rows, rates: rates.rows, comisiones: comisiones.rows, commissionRates: commissionRates.rows, colleaguePayments: colleaguePayments.rows, fallbackCurrency }),
+    () => buildEntriesBySource(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
   const { ganado: ganadoEntries, comision: comisionEntries, companeros: companerosEntries } = entriesBySource;

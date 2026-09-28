@@ -34,6 +34,10 @@
       "label": "Semak berapa yang telah anda jana",
       "description": "Sekilas pandang, atau butiran mengikut tempoh"
     },
+    "quiero-guia-buceo": {
+      "label": "Tunjukkan Panduan Menyelam",
+      "description": "Tapak menyelam dan hidupan laut Koh Tao, untuk taklimat"
+    },
     "quiero-generar-tr": {
       "label": "Jana satu Training Record",
       "description": "Dokumen rasmi kemajuan setiap pelajar"
@@ -66,7 +70,7 @@
       "whatYouCanDo": "Ocean Flow membantu anda mengawal pendapatan sebagai instruktor bebas. Di bawah satu konsep, \"transaksi\", ia mengumpulkan kelas yang anda ajar, komisen daripada pelanggan yang dirujuk dan pelarasan kewangan dengan instruktor lain.",
       "whenToUseIt": "Kali pertama anda membuka aplikasi, atau apabila anda ingin mengingati kegunaan setiap skrin.",
       "steps": [
-        "Home: pelajar, kursus dan pelanggan yang dirujuk sekilas pandang, akses ke Training Records, berapa yang belum anda kutip, kalendar bulan itu dan akses pantas untuk mencipta transaksi.",
+        "Home: kursus dan pelanggan yang dirujuk sekilas pandang, berapa yang belum anda kutip dan purata harian anda, akses pantas ke Training Records, sekolah bulan ini dan Panduan Menyelam, kalendar bulan itu dan butang untuk mencipta transaksi.",
         "Kerja Saya: senarai penuh transaksi anda (kursus, komisen dan pelarasan), untuk mencipta, menyunting, mengutip atau memadamnya.",
         "Ringkasan: baki anda bagi tempoh yang anda pilih, dengan kemungkinan untuk meneliti lebih lanjut mengikut sekolah, kursus atau komisen."
       ],
@@ -165,6 +169,24 @@
       ],
       "expectedResult": "Anda mempunyai Training Record setiap pelajar sedia untuk dimuat turun atau dikongsi, lengkap dengan tandatangannya dan tandatangan anda."
     },
+    "guia-buceo": {
+      "title": "Menunjukkan Panduan Menyelam kepada pelanggan",
+      "summary": "Buku digital Koh Tao, skrin penuh dan boleh zum, sedia untuk taklimat pada bila-bila masa.",
+      "whatYouCanDo": "Panduan Menyelam ialah buku digital berisi tapak menyelam, hidupan laut dan maklumat keselamatan Koh Tao, direka untuk ditunjukkan kepada pelanggan semasa taklimat tanpa keluar daripada aplikasi.",
+      "whenToUseIt": "Sebelum menyelam, untuk mengulas tapak bersama pelanggan, atau mengenal pasti ikan atau karang yang baru dilihat.",
+      "steps": [
+        "Buka Panduan Menyelam daripada akses di Home.",
+        "Pilih bahagian (Tapak menyelam, Hidupan laut atau Maklumat tambahan), atau cari tapak menyelam terus daripada kulit depan.",
+        "Leret untuk menukar halaman, atau guna anak panah. Cubit atau ketik dua kali untuk zum peta atau foto.",
+        "Ikon bulan/matahari menukar antara mod terang/gelap; ikon anak panah membuka skrin penuh.",
+        "Anak panah kiri atas kembali ke kulit depan; \"✕\" pada kulit depan menutup panduan."
+      ],
+      "tips": [
+        "Carian pada kulit depan menapis kesemua 37 tapak menyelam semasa menaip — tidak perlu tahu bahagiannya.",
+        "Skrin penuh dan mod gelap membantu dalam cahaya malap, contohnya di atas bot."
+      ],
+      "expectedResult": "Anda mempunyai peta atau helaian maklumat yang diperlukan di hadapan pelanggan dalam beberapa saat, tanpa keluar daripada Ocean Flow."
+    },
     "mi-trabajo-referencia": {
       "title": "Kerja Saya, sekilas pandang",
       "summary": "Senarai penuh transaksi anda — kursus, komisen dan pelarasan — dengan tindakannya.",
@@ -208,6 +230,9 @@
         "Ketik mana-mana baris pada menu untuk masuk ke bahagian itu; \"‹ Tetapan\" kembali ke menu.",
         "Sekolah dan Kursus dicipta melalui butang \"+\" terapung, sama seperti di Kerja Saya.",
         "Kadar Bayaran menunjukkan Kursus dan Komisen dalam satu senarai (jenis dipilih sebagai penapis, atau semasa mencipta, dalam helaian itu sendiri) — corak visual yang sama seperti Kerja Saya."
+      ],
+      "tips": [
+        "Memadam sekolah atau kursus yang mempunyai kadar atau transaksi berkaitan disekat dengan amaran, supaya tiada data tertinggal."
       ],
       "expectedResult": "Anda menemui mana-mana katalog atau tetapan tanpa perlu mengingati tab mana ia berada dahulu."
     },

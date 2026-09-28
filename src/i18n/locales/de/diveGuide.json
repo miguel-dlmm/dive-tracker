@@ -1,0 +1,31 @@
+{
+  "cover": {
+    "title": "Tauchführer",
+    "subtitle": "Koh Tao, Golf von Thailand",
+    "tagline": "Tauchplätze, Meeresleben und alle Infos fürs Briefing, immer griffbereit.",
+    "start": "Jetzt durchblättern",
+    "credit": "Originalinhalt: Dive Guide — Gulf of Thailand (dive-guide.org)"
+  },
+  "sections": {
+    "sites": { "label": "Tauchplätze", "hint": "Karten und Details zu jedem Platz" },
+    "marine": { "label": "Meeresleben", "hint": "Fische und Korallen bestimmen" },
+    "extra": { "label": "Extra-Infos", "hint": "Zeichen, Sicherheit und Wissenswertes" }
+  },
+  "viewer": {
+    "pageCounter": "{{current}} von {{total}}",
+    "sectionsAria": "Abschnitt wechseln",
+    "closeAria": "Führer schließen",
+    "backToCoverAria": "Zurück zum Cover",
+    "fullscreenEnterAria": "Vollbild",
+    "fullscreenExitAria": "Vollbild beenden",
+    "darkModeAria": "Dunkler Modus",
+    "lightModeAria": "Heller Modus",
+    "installForFullscreenAria": "App installieren für Vollbild",
+    "alreadyFullscreenAria": "Bereits im Vollbild",
+    "jumpTo": "Springe zu…",
+    "siteIndexHeading": "Zu einem Tauchplatz springen",
+    "siteIndexEmpty": "Keine Treffer",
+    "prevPageAria": "Vorherige Seite",
+    "nextPageAria": "Nächste Seite"
+  }
+}
