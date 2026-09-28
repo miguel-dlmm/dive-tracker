@@ -5,6 +5,9 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Fixed
+- **Spinner de marca al entrar en Training Records**: sustituye al
+  "Cargando…" de texto plano que aparecía antes de que el instructor
+  esté completo.
 - **Datos de contacto reales en la Política de Privacidad y los Términos de
   Uso**: `legal@oceanflow.money` sustituye a los placeholders `[PENDIENTE]`
   como email del responsable del tratamiento y para ejercer derechos, en
