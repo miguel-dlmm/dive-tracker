@@ -4,6 +4,12 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Ayuda: "Exportar tu informe mensual en PDF"**: nuevo artículo en
+  "Quiero..." explicando el botón "Exportar informe" de Resumen (escuela,
+  rango de fechas, ajustes de curso, mostrar lo ya cobrado), en los 15
+  idiomas.
+
 ### Fixed
 - **Spinner de marca al entrar en Training Records**: sustituye al
   "Cargando…" de texto plano que aparecía antes de que el instructor

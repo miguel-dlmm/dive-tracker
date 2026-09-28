@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Filtres et recherche",
       "description": "Le même modèle dans toute l'app"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Exporter ton rapport mensuel en PDF",
+      "description": "Tout le détail d'une période, prêt à envoyer"
     }
   },
   "articles": {
@@ -267,6 +271,24 @@
         "La recherche des catalogues (Cours, Devises) filtre pendant que vous tapez, sans distinguer majuscules ni accents."
       ],
       "expectedResult": "La liste affiche seulement ce qui vous intéresse, sans perdre de vue combien de filtres sont actifs."
+    },
+    "exportar-informe-pdf": {
+      "title": "Exporter ton rapport mensuel en PDF",
+      "summary": "Télécharge un PDF avec tout le détail d'une période et d'une école, prêt à consulter ou à envoyer.",
+      "whatYouCanDo": "Génère un rapport en PDF avec les cours, commissions et ajustements de cours de la période et de l'école choisies, avec la possibilité d'afficher aussi les montants déjà encaissés.",
+      "whenToUseIt": "Quand tu as besoin d'un document formel pour vérifier les comptes avec une école, le garder comme justificatif, ou simplement avoir ta comptabilité dans un seul PDF.",
+      "steps": [
+        "Dans Résumé, appuie sur \"Exporter le rapport\".",
+        "Choisis l'École (si tu en as plusieurs) et la Plage de dates — préremplie avec ce que tu regardais dans Résumé, mais modifiable.",
+        "Si tu veux, active \"Inclure les ajustements de cours\" et choisis s'ils s'ajoutent au total ou s'affichent à part.",
+        "Active \"Afficher les montants déjà encaissés\" si tu veux que le rapport distingue l'encaissé du en attente.",
+        "Appuie sur \"Générer le PDF\" et il se télécharge aussitôt."
+      ],
+      "tips": [
+        "Le bouton \"Exporter le rapport\" n'apparaît que si tu as déjà au moins une école configurée.",
+        "Avec \"Inclure les ajustements de cours\", tu peux choisir des ajustements précis au lieu de tous les inclure, si tu n'as besoin d'en justifier que quelques-uns."
+      ],
+      "expectedResult": "Un PDF téléchargé avec le détail complet de la période et de l'école choisies, prêt à envoyer ou à conserver."
     }
   }
 }

@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Filtres i cerca",
       "description": "El mateix patró a tota l'app"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Exporta el teu informe mensual en PDF",
+      "description": "Tot el detall d'un període, a punt per enviar"
     }
   },
   "articles": {
@@ -269,6 +273,24 @@
         "El cercador dels catàlegs (Cursos, Monedes) filtra mentre escrius, sense distingir majúscules ni accents."
       ],
       "expectedResult": "La llista mostra només el que t'interessa, sense perdre de vista quants filtres tens actius."
+    },
+    "exportar-informe-pdf": {
+      "title": "Exporta el teu informe mensual en PDF",
+      "summary": "Descarrega un PDF amb tot el detall d'un període i una escola, a punt per revisar o enviar.",
+      "whatYouCanDo": "Genera un informe en PDF amb els cursos, comissions i ajustos de curs del període i l'escola que triïs, amb l'opció de mostrar també els imports ja cobrats.",
+      "whenToUseIt": "Quan necessitis un document formal per contrastar comptes amb una escola, desar-lo com a justificant, o simplement tenir la teva comptabilitat en un únic PDF.",
+      "steps": [
+        "A Resum, toca \"Exportar informe\".",
+        "Tria l'Escola (si en tens més d'una) i l'Interval de dates — arriba precarregat amb el que estaves mirant a Resum, però el pots canviar.",
+        "Si vols, activa \"Incloure ajustos de curs\" i decideix si se sumen al total o es mostren a part.",
+        "Activa \"Mostrar els imports ja cobrats\" si vols que l'informe distingeixi entre el cobrat i el pendent.",
+        "Toca \"Generar PDF\" i es descarrega a l'instant."
+      ],
+      "tips": [
+        "El botó \"Exportar informe\" només apareix si ja tens almenys una escola configurada.",
+        "Amb \"Incloure ajustos de curs\" pots triar ajustos concrets en lloc d'incloure'ls tots, si només necessites justificar-ne alguns."
+      ],
+      "expectedResult": "Un PDF descarregat amb el detall complet del període i l'escola triats, a punt per enviar o desar."
     }
   }
 }

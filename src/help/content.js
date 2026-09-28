@@ -114,6 +114,17 @@ export const HELP_CATEGORIES = [
     icon: "TrendingUp",
     articles: [{ id: "consultar-generado" }],
   },
+  // Añadida 2026-09-28 (revisión de la Ayuda: "explica cómo usar el
+  // exportador de la sección Resumen") — el botón "Exportar informe" de
+  // Resumen (ExportReportSheet.jsx) no tenía ningún artículo propio, solo
+  // se mencionaba de pasada dentro de "Consultar cuánto has generado".
+  {
+    id: "quiero-exportar-pdf",
+    group: "quiero",
+    sectionKey: "summary",
+    icon: "FileDown",
+    articles: [{ id: "exportar-informe-pdf" }],
+  },
   // Añadida 2026-09-08 (revisión de la Ayuda: "haz una revisión rápida
   // por la ayuda por si sobra o falta algo") — Training Records es una
   // pantalla completa, con su propio generador de 10 plantillas SSI, que
