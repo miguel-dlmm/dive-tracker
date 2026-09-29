@@ -1,5 +1,5 @@
 import { sendViaResend } from "./providers/resendProvider.js";
-import { renderActivationEmailHtml, renderActivationEmailText, ACTIVATION_EMAIL_COPY } from "./templates/activationEmailTemplate.js";
+import { renderActivationEmailHtml, renderActivationEmailText, resolveActivationEmailCopy } from "./templates/activationEmailTemplate.js";
 import { renderDeploymentNoticeEmailHtml, renderDeploymentNoticeEmailText } from "./templates/deploymentNoticeEmailTemplate.js";
 
 // Única puerta de entrada al envío de emails — createUser.js,
@@ -13,12 +13,15 @@ const sendEmail = sendViaResend;
 // Nunca lanza — envío best-effort a propósito: si falla, la cuenta ya existe
 // y el llamador puede seguir compartiendo el enlace a mano (ver action_link
 // en cada uno de los tres flujos).
-export async function sendActivationEmail({ email, firstName, nickname, actionLink, reason = "signup" }) {
+export async function sendActivationEmail({ email, firstName, nickname, actionLink, reason = "signup", language }) {
   if (!actionLink) {
     return { sent: false, error: "Falta el enlace de acceso." };
   }
 
-  const copy = ACTIVATION_EMAIL_COPY[reason] || ACTIVATION_EMAIL_COPY.signup;
+  // language: 2026-09-29, pedido explícito — hoy solo "en" tiene plantilla
+  // propia (ver resolveActivationEmailCopy), cualquier otro valor cae a
+  // español, el comportamiento de siempre.
+  const copy = resolveActivationEmailCopy(reason, language);
   const displayName = firstName || nickname;
 
   try {

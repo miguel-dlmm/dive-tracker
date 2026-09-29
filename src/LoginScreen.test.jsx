@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LoginScreen from "./LoginScreen";
 import { ACCOUNT_DEACTIVATED_MESSAGE } from "./useSession";
+import i18n from "./i18n";
 
 // signIn se pasa como prop (viene de useSession en AuthGate) — aquí se
 // mockea directamente, sin pasar por Supabase. Ver useSession.test.js para
@@ -61,4 +62,33 @@ describe("LoginScreen", () => {
 
     expect(onForgotPassword).toHaveBeenCalledTimes(1);
   });
+
+  // Selector de idioma arriba a la derecha (2026-09-29, pedido explícito) —
+  // ver EntryLanguagePicker en shared.jsx. Cambiar aquí debe traducir la
+  // propia pantalla al instante (mismo i18n.changeLanguage que ya usaba el
+  // selector de RegisterScreen) para que, al navegar a Registro después, su
+  // combo ya venga cargado en ese idioma — comportamiento cubierto por
+  // compartir el mismo i18n/localStorage, no por props entre pantallas.
+  it("selector de idioma: cambiarlo traduce la propia pantalla de login", async () => {
+    const user = userEvent.setup();
+    render(<LoginScreen signIn={vi.fn()} />);
+    // getByRole("combobox"), no getByLabelText: su propio aria-label está
+    // traducido ("Idioma"/"Language"), así que cambia con el idioma activo
+    // — buscarlo por rol se mantiene estable durante todo el test.
+    const picker = screen.getByRole("combobox");
+
+    await user.selectOptions(picker, "en");
+
+    expect(await screen.findByRole("button", { name: "Log in" })).toBeInTheDocument();
+
+    // Vuelve a español para no dejar el idioma cambiado para el resto de
+    // tests de este archivo (i18n es un singleton compartido en todo el
+    // fichero de test).
+    await user.selectOptions(picker, "es");
+    expect(await screen.findByRole("button", { name: "Entrar" })).toBeInTheDocument();
+  });
+});
+
+afterAll(() => {
+  i18n.changeLanguage("es");
 });

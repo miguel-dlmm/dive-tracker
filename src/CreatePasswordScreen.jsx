@@ -5,6 +5,7 @@ import { BRAND_NAVY, BG, BODY_FONT } from "./App";
 import LegalConsentFields from "./legal/LegalConsentFields";
 import { PasswordField, RequirementRow } from "./auth/PasswordFields";
 import { PASSWORD_MIN_LENGTH, hasUppercase, hasSymbol } from "./passwordPolicy";
+import { EntryLanguagePicker } from "./shared";
 
 // onSubmit: (newPassword) => Promise — en AuthGate es activateAccount() de
 // useSession con tokenHash/type/expectedEmail ya aplicados (ver App.jsx).
@@ -44,7 +45,10 @@ export default function CreatePasswordScreen({ onSubmit }) {
   };
 
   return (
-    <div className="flex min-h-dvh items-start justify-center px-5 py-10" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+    <div className="relative flex min-h-dvh items-start justify-center px-5 py-10" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+      {/* Puerta de entrada por enlace directo — no sabemos el idioma del
+          usuario todavía (ver EntryLanguagePicker, shared.jsx). */}
+      <EntryLanguagePicker className="absolute right-4 top-4" />
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_NAVY}1A` }}>

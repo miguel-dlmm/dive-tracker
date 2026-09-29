@@ -236,8 +236,46 @@ import ptDiveGuide from "./locales/pt/diveGuide.json";
 export const LANGUAGE_STORAGE_KEY = "oceanpulse:language";
 export const SUPPORTED_LANGUAGES = ["es", "en", "fr", "it", "de", "ca", "eu", "nl", "th", "id", "vi", "my", "ms", "ru", "pt"];
 
+// Nombres de idioma en SU PROPIA lengua, no traducidos con el resto de la
+// pantalla — convención estándar de cualquier selector de idioma (un
+// hablante de inglés debe poder reconocer "Español" aunque la interfaz
+// esté en inglés, y viceversa). Vivía solo en RegisterScreen.jsx hasta
+// 2026-09-29 (pedido explícito: mismo selector en Login y en las pantallas
+// de entrada por enlace directo — Reset/CreatePassword/ForcedPasswordUpdate)
+// — única fuente de verdad ahora que hay varios consumidores.
+export const LANGUAGE_NATIVE_NAME = {
+  es: "Español", en: "English", fr: "Français", it: "Italiano", de: "Deutsch", ca: "Català", eu: "Euskara",
+  nl: "Nederlands", th: "ไทย", id: "Bahasa Indonesia", vi: "Tiếng Việt", my: "မြန်မာဘာသာ", ms: "Bahasa Melayu", ru: "Русский", pt: "Português (Brasil)",
+};
+
+// Parámetro de URL ?lang=xx — pedido explícito 2026-09-29: "si al generar
+// los links de lo que sea ya sabemos el idioma del usuario, pasémoslo por
+// parámetro... y así cuando acceda a estas páginas sueltas su idioma venga
+// ya cargado". Se resuelve UNA VEZ aquí, al arrancar i18n (antes de montar
+// ninguna pantalla), en vez de repetir esta lectura en cada pantalla de
+// entrada por separado — cualquier pantalla que monte después ya encuentra
+// `i18n.language`/localStorage correctos sin saber nada de la URL. Gana
+// sobre lo guardado en localStorage (una URL explícita es una señal más
+// fuerte que la última elección de este navegador), y se persiste de
+// inmediato para que la elección sobreviva a navegar entre pantallas sin
+// sesión (Login -> Registro, por ejemplo) aunque el parámetro ya no esté
+// en la URL de la pantalla siguiente.
+function getUrlLanguage() {
+  try {
+    const fromUrl = new URLSearchParams(window.location.search).get("lang");
+    return SUPPORTED_LANGUAGES.includes(fromUrl) ? fromUrl : null;
+  } catch {
+    return null;
+  }
+}
+
 export function getStoredLanguage() {
   try {
+    const fromUrl = getUrlLanguage();
+    if (fromUrl) {
+      setStoredLanguage(fromUrl);
+      return fromUrl;
+    }
     const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
     return SUPPORTED_LANGUAGES.includes(stored) ? stored : "es";
   } catch {

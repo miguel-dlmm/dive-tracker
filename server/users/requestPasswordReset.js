@@ -84,17 +84,22 @@ export async function handleRequestPasswordReset({ method, body, baseUrl }) {
       return { status: 200, payload: GENERIC_RESPONSE };
     }
 
-    const { activationLink, error: linkErrorMessage } = await generateActivationLink(email, { flow: "recovery", baseUrl });
+    // language: 2026-09-29, pedido explícito — esta cuenta ya existe, así
+    // que profiles.language (si lo eligió al registrarse) es un idioma
+    // conocido de verdad. Se consulta ANTES de generar el enlace (a
+    // diferencia de los otros llamadores, que ya tenían el perfil cargado)
+    // porque este flujo público solo tenía el email hasta este punto.
+    const { data: profileRow } = await client
+      .from("profiles")
+      .select("first_name, nickname, language")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const { activationLink, error: linkErrorMessage } = await generateActivationLink(email, { flow: "recovery", baseUrl, lang: profileRow?.language });
     if (linkErrorMessage) {
       console.error("request-password-reset: no se pudo generar el enlace", linkErrorMessage);
       return { status: 200, payload: GENERIC_RESPONSE };
     }
-
-    const { data: profileRow } = await client
-      .from("profiles")
-      .select("first_name, nickname")
-      .eq("user_id", user.id)
-      .maybeSingle();
 
     try {
       const result = await sendActivationEmail({
@@ -103,6 +108,7 @@ export async function handleRequestPasswordReset({ method, body, baseUrl }) {
         nickname: profileRow?.nickname,
         actionLink: activationLink,
         reason: "password_reset_request",
+        language: profileRow?.language,
       });
       if (!result.sent) {
         console.error("request-password-reset: no se pudo enviar el email", result.error);

@@ -72,6 +72,83 @@ export const ACTIVATION_EMAIL_COPY = {
   },
 };
 
+// Copy en inglés (2026-09-29, primer corte de idiomas para el email de
+// bienvenida — pedido explícito: "el email de bienvenida se enviará en el
+// idioma elegido por supuesto"). De los 15 idiomas que soporta la app,
+// solo español (arriba) e inglés (aquí) tienen plantilla propia por ahora;
+// el resto cae a español vía resolveActivationEmailCopy() más abajo hasta
+// un pase de traducción aparte — decisión explícita del usuario para no
+// bloquear el resto del cableado (selector de idioma + enlaces con
+// ?lang=) a tener las 15 traducciones listas de golpe.
+export const ACTIVATION_EMAIL_COPY_EN = {
+  signup: {
+    subject: "Your Ocean Flow access is ready",
+    preheader: "Sign in and create your password to get started.",
+    title: "Welcome to Ocean Flow",
+    greeting: (firstName) => `Hi${firstName ? ` ${firstName}` : ""},`,
+    intro: "You now have an Ocean Flow account, the tool we use to track classes, commissions and payments.",
+    ctaLabel: "Sign in to Ocean Flow",
+    securityNote: "Clicking the button will sign you in directly. As a first step, we'll ask you to create your own password.",
+    expiryNote: "This link is single-use and expires soon — if it has expired, ask an administrator to resend it.",
+    footer: "Ocean Flow",
+  },
+  external_signup: {
+    subject: "Confirm your Ocean Flow account",
+    preheader: "Sign in and create your password to get started.",
+    title: "Thanks for signing up to Ocean Flow!",
+    greeting: (firstName) => `Hi${firstName ? ` ${firstName}` : ""},`,
+    intro: "Almost there — confirm your account to start tracking your classes, commissions and payments.",
+    ctaLabel: "Confirm account",
+    securityNote: "Clicking the button will sign you in directly. As a first step, we'll ask you to create your own password.",
+    expiryNote: "This link is single-use and expires soon — if it has expired, sign up again from the login screen.",
+    footer: "Ocean Flow",
+  },
+  reactivation: {
+    subject: "Your Ocean Flow access has been reactivated",
+    preheader: "Sign in and create your password to access again.",
+    title: "Welcome back to Ocean Flow",
+    greeting: (firstName) => `Hi${firstName ? ` ${firstName}` : ""},`,
+    intro: "Good news! Your Ocean Flow account is active again.",
+    ctaLabel: "Sign in to Ocean Flow",
+    securityNote: "Clicking the button will sign you in directly. As a first step, we'll ask you to create your own password.",
+    expiryNote: "This link is single-use and expires soon — if it has expired, ask an administrator to resend it.",
+    footer: "Ocean Flow",
+  },
+  password_reset: {
+    subject: "Your Ocean Flow password has been reset",
+    preheader: "Create your new password to access again.",
+    title: "Reset your password",
+    greeting: (firstName) => `Hi${firstName ? ` ${firstName}` : ""},`,
+    intro: "We've reset your password on Ocean Flow — create a new one with the link below.",
+    ctaLabel: "Create new password",
+    securityNote: "Clicking the button will sign you in directly. As a first step, we'll ask you to create your new password.",
+    expiryNote: "This link is single-use and expires soon — if it has expired, ask an administrator to resend it.",
+    footer: "Ocean Flow",
+  },
+  password_reset_request: {
+    subject: "Reset your Ocean Flow password",
+    preheader: "Create a new password to access again.",
+    title: "Reset your password",
+    greeting: (firstName) => `Hi${firstName ? ` ${firstName}` : ""},`,
+    intro: "You requested to reset your password on Ocean Flow. If this wasn't you, you can ignore this email — your current password will keep working.",
+    ctaLabel: "Create new password",
+    securityNote: "Clicking the button will sign you in directly. As a first step, we'll ask you to create your new password.",
+    expiryNote: "This link is single-use and expires soon — if it has expired, request password recovery again from the login screen.",
+    footer: "Ocean Flow",
+  },
+};
+
+// Única función que decide qué tabla de copy usar según el idioma elegido
+// en las pantallas de entrada (Login/Registro/recuperar contraseña...) —
+// hoy solo "en" tiene tabla propia; cualquier otro valor (incluido
+// undefined, el comportamiento de siempre antes de esta función) cae a
+// español. EmailService.js es el único llamador — no repitas esta
+// resolución en otro sitio.
+export function resolveActivationEmailCopy(reason, language) {
+  const table = language === "en" ? ACTIVATION_EMAIL_COPY_EN : ACTIVATION_EMAIL_COPY;
+  return table[reason] || table.signup;
+}
+
 // HTML con tabla + CSS inline a propósito: los clientes de email (Outlook
 // sobre todo) no soportan Flexbox/Grid ni <style> externo, así que este
 // template no puede reutilizar las clases Tailwind del resto de la app —

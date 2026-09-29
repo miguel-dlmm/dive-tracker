@@ -21,6 +21,15 @@ async function fillAndSubmit(user, { password, confirm }) {
 }
 
 describe("CreatePasswordScreen", () => {
+  // Puerta de entrada por enlace directo (2026-09-29, pedido explícito) —
+  // el propio comportamiento del selector ya se prueba a fondo contra
+  // EntryLanguagePicker en shared.test.jsx; aquí solo se confirma que esta
+  // pantalla lo monta de verdad.
+  it("muestra el selector de idioma (puerta de entrada por enlace directo)", () => {
+    render(<CreatePasswordScreen onSubmit={vi.fn()} />);
+    expect(screen.getByLabelText("Idioma")).toBeInTheDocument();
+  });
+
   it("mantiene el botón deshabilitado si la contraseña es demasiado corta", async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();

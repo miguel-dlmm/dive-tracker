@@ -41,6 +41,22 @@ it("con flow: 'recovery' (recuperación autoservicio), el enlace lo incluye — 
   expect(url.searchParams.get("flow")).toBe("recovery");
 });
 
+it("con lang: el enlace incluye el parámetro lang para que la pantalla de entrada precargue ese idioma", async () => {
+  const { activationLink, error } = await generateActivationLink(EMAIL, { lang: "fr" });
+
+  expect(error).toBeNull();
+  const url = new URL(activationLink);
+  expect(url.searchParams.get("lang")).toBe("fr");
+});
+
+it("sin lang: el enlace no incluye el parámetro lang (compatibilidad de los demás llamadores)", async () => {
+  const { activationLink, error } = await generateActivationLink(EMAIL);
+
+  expect(error).toBeNull();
+  const url = new URL(activationLink);
+  expect(url.searchParams.has("lang")).toBe(false);
+});
+
 it("baseUrl gana sobre APP_URL cuando se pasa (bug real: Preview Deployments distintos de APP_URL generaban enlaces al dominio equivocado)", async () => {
   const previewUrl = "https://dive-tracker-git-feature-x-ocean-pulse1.vercel.app";
 

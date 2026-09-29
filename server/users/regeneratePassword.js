@@ -70,7 +70,7 @@ export async function handleRegeneratePassword({ method, headers, body }) {
 
   const { data: target, error: targetError } = await client
     .from("profiles")
-    .select("is_superadmin, first_name, nickname")
+    .select("is_superadmin, first_name, nickname, language")
     .eq("user_id", targetUserId)
     .maybeSingle();
   if (targetError) {
@@ -136,7 +136,11 @@ export async function handleRegeneratePassword({ method, headers, body }) {
   const host = getHeader(headers, "host");
   const baseUrl = host ? `${proto}://${host}` : undefined;
 
-  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email, { flow: "recovery", baseUrl });
+  // lang: 2026-09-29, pedido explícito — mismo criterio que
+  // regenerate-activation-link.js: esta cuenta ya existía, profiles.language
+  // es un idioma conocido de verdad, no una suposición del navegador del
+  // superadmin que pulsa "Regenerar contraseña".
+  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email, { flow: "recovery", baseUrl, lang: target.language });
   if (linkErrorMessage) {
     return { status: 500, payload: { error: linkErrorMessage } };
   }
@@ -149,6 +153,7 @@ export async function handleRegeneratePassword({ method, headers, body }) {
       nickname: target.nickname,
       actionLink: activationLink,
       reason: "password_reset",
+      language: target.language,
     });
     emailSent = result.sent;
   } catch (err) {
