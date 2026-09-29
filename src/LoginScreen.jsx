@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { BG, BODY_FONT, BRAND_NAVY } from "./App";
-import { inputCls, Field } from "./shared";
+import { inputCls, Field, EntryLanguagePicker } from "./shared";
 import { ACCOUNT_DEACTIVATED_MESSAGE } from "./useSession";
 
 // signIn: (identifier, password) => Promise — de useSession. identifier
@@ -36,7 +36,10 @@ export default function LoginScreen({ signIn, accountBanned = false, onForgotPas
   };
 
   return (
-    <div className="flex min-h-dvh items-center justify-center px-5" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+    <div className="relative flex min-h-dvh items-center justify-center px-5" style={{ backgroundColor: BG, fontFamily: BODY_FONT }}>
+      {/* Arriba a la derecha, pedido explícito 2026-09-29 — ver
+          EntryLanguagePicker (shared.jsx) para el porqué de este selector. */}
+      <EntryLanguagePicker className="absolute right-4 top-4" />
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <img src="/brand/logo-mark-navy.svg" alt="" width={52} height={52} aria-hidden="true" />

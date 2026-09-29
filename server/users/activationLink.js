@@ -28,12 +28,22 @@ const ACTIVATION_LINK_TYPE = "recovery";
 // ver ADR pendiente de esta sesión). Los otros tres llamadores
 // (createUser/regenerateActivationLink/regeneratePassword) no lo pasan:
 // sus enlaces se comportan exactamente igual que siempre.
-function buildActivationUrl(baseUrl, { tokenHash, email, flow }) {
+function buildActivationUrl(baseUrl, { tokenHash, email, flow, lang }) {
   const url = new URL(baseUrl);
   url.searchParams.set("token_hash", tokenHash);
   url.searchParams.set("type", ACTIVATION_LINK_TYPE);
   url.searchParams.set("email", email);
   if (flow) url.searchParams.set("flow", flow);
+  // lang (opcional, 2026-09-29): cuando el llamador ya conoce el idioma del
+  // destinatario (perfil ya existente, o el que acaba de elegir en la
+  // propia pantalla que generó esta petición), se propaga aquí para que la
+  // pantalla de entrada (Reset/CreatePasswordScreen) cargue ya en ese
+  // idioma en vez de caer al último idioma usado en ESTE navegador — ver
+  // getStoredLanguage() en src/i18n/index.js, que es quien de verdad lo
+  // aplica al leer la URL. Nunca se valida aquí contra SUPPORTED_LANGUAGES
+  // (ese filtro ya lo hace el lado del cliente al leerlo) — un valor
+  // inválido en la URL simplemente se ignora ahí, sin romper nada.
+  if (lang) url.searchParams.set("lang", lang);
   return url.toString();
 }
 
@@ -62,7 +72,7 @@ function buildActivationUrl(baseUrl, { tokenHash, email, flow }) {
 // (regeneratePassword.js) — los cuatro pasan ahora su propio `baseUrl`
 // igual que "olvidé mi contraseña". Un llamador que aun así no lo pase
 // cae al mismo `APP_URL` fijo de siempre, sin romper nada.
-export async function generateActivationLink(email, { flow, baseUrl } = {}) {
+export async function generateActivationLink(email, { flow, baseUrl, lang } = {}) {
   const { data: linkData, error: linkError } = await getServiceRoleClient().auth.admin.generateLink({
     type: ACTIVATION_LINK_TYPE,
     email,
@@ -82,5 +92,5 @@ export async function generateActivationLink(email, { flow, baseUrl } = {}) {
     return { activationLink: null, error: "No se pudo generar el enlace de activación." };
   }
 
-  return { activationLink: buildActivationUrl(resolvedBaseUrl, { tokenHash: linkData.properties.hashed_token, email, flow }), error: null };
+  return { activationLink: buildActivationUrl(resolvedBaseUrl, { tokenHash: linkData.properties.hashed_token, email, flow, lang }), error: null };
 }

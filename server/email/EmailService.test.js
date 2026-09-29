@@ -49,6 +49,21 @@ it("usa el copy de 'password_reset' cuando se indica ese motivo", async () => {
   expect(call.subject).toBe(ACTIVATION_EMAIL_COPY.password_reset.subject);
 });
 
+it("usa el copy en inglés cuando language es 'en'", async () => {
+  await sendActivationEmail({ ...VALID_ARGS, language: "en" });
+
+  const call = sendViaResend.mock.calls[0][0];
+  expect(call.subject).toBe("Your Ocean Flow access is ready");
+  expect(call.html).toContain("Welcome to Ocean Flow");
+});
+
+it("cualquier idioma sin plantilla propia (distinto de 'en') cae a español, igual que sin language", async () => {
+  await sendActivationEmail({ ...VALID_ARGS, language: "th" });
+
+  const call = sendViaResend.mock.calls[0][0];
+  expect(call.subject).toBe(ACTIVATION_EMAIL_COPY.signup.subject);
+});
+
 it("usa el nickname como nombre de pila si no hay firstName", async () => {
   await sendActivationEmail({ ...VALID_ARGS, firstName: null });
 

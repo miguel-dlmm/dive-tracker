@@ -1,4 +1,4 @@
-import { renderActivationEmailHtml, renderActivationEmailText, ACTIVATION_EMAIL_COPY } from "./activationEmailTemplate.js";
+import { renderActivationEmailHtml, renderActivationEmailText, ACTIVATION_EMAIL_COPY, ACTIVATION_EMAIL_COPY_EN, resolveActivationEmailCopy } from "./activationEmailTemplate.js";
 
 const ARGS = { firstName: "Ada", actionLink: "https://example.supabase.co/verify?token=abc" };
 
@@ -26,6 +26,23 @@ describe("renderActivationEmailHtml", () => {
 
     expect(html).not.toContain("<script>alert(1)</script>");
     expect(html).toContain("&lt;script&gt;");
+  });
+});
+
+describe("resolveActivationEmailCopy", () => {
+  it("language 'en' devuelve la tabla en inglés para el motivo indicado", () => {
+    expect(resolveActivationEmailCopy("signup", "en")).toBe(ACTIVATION_EMAIL_COPY_EN.signup);
+    expect(resolveActivationEmailCopy("password_reset", "en")).toBe(ACTIVATION_EMAIL_COPY_EN.password_reset);
+  });
+
+  it("sin language, o con un idioma sin plantilla propia, cae a español", () => {
+    expect(resolveActivationEmailCopy("signup", undefined)).toBe(ACTIVATION_EMAIL_COPY.signup);
+    expect(resolveActivationEmailCopy("signup", "th")).toBe(ACTIVATION_EMAIL_COPY.signup);
+  });
+
+  it("un motivo desconocido cae a 'signup' en la tabla del idioma que corresponda", () => {
+    expect(resolveActivationEmailCopy("no-existe", "en")).toBe(ACTIVATION_EMAIL_COPY_EN.signup);
+    expect(resolveActivationEmailCopy("no-existe", undefined)).toBe(ACTIVATION_EMAIL_COPY.signup);
   });
 });
 

@@ -4,7 +4,7 @@ import { Loader2, ArrowLeft, MailCheck } from "lucide-react";
 import { BG, BODY_FONT, BRAND_NAVY } from "./App";
 import { inputCls, Field, Select, DatePicker } from "./shared";
 import { useToast } from "./shared";
-import i18n, { setStoredLanguage, SUPPORTED_LANGUAGES } from "./i18n";
+import i18n, { setStoredLanguage, SUPPORTED_LANGUAGES, LANGUAGE_NATIVE_NAME } from "./i18n";
 // countryOptionsFor: misma función que ya usa Mi perfil para su propio
 // selector de país de residencia — una sola fuente de verdad (orden
 // alfabético por Intl.Collator, etiqueta en el idioma activo), no una
@@ -28,17 +28,6 @@ const emptyForm = { email: "", first_name: "", last_name: "", nickname: "" };
 // veces un email guardado (mucha gente usa su email como "username" en
 // otros sitios) — sin este aviso, quien acepta esa sugerencia por error
 // solo se enteraría al fallar el envío.
-
-// Nombres de idioma en SU PROPIA lengua, no traducidos con el resto de la
-// pantalla — convención estándar de cualquier selector de idioma (un
-// hablante de inglés debe poder reconocer "Español" aunque la interfaz
-// esté en inglés, y viceversa). SUPPORTED_LANGUAGES (src/i18n/index.js) es
-// la fuente de verdad de qué idiomas existen; este objeto es solo su
-// etiqueta visual.
-const LANGUAGE_NATIVE_NAME = {
-  es: "Español", en: "English", fr: "Français", it: "Italiano", de: "Deutsch", ca: "Català", eu: "Euskara",
-  nl: "Nederlands", th: "ไทย", id: "Bahasa Indonesia", vi: "Tiếng Việt", my: "မြန်မာဘာသာ", ms: "Bahasa Melayu", ru: "Русский", pt: "Português (Brasil)",
-};
 
 // inviteToken (opcional, Release V1 2026-09-02): presente cuando se llega
 // aquí desde un enlace de invitación de un solo uso (?invite=... en la
