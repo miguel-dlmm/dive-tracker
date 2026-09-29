@@ -49,4 +49,11 @@
 // contenido llega de verdad a producción (main seguía en "1.5.1"), así
 // que `APP_VERSION` se sincroniza con "1.8.0" para que se muestre a todo
 // el mundo.
+//
+// v1.9.0 (2026-09-29, pedido explícito: "q se mantenga el whatsnew
+// antiguo a quien todavía no le haya salido"): mismo criterio que
+// v1.4.0/v1.6.0 — esta release no trae ninguna diapositiva nueva
+// (idioma por parámetro en la landing, email traducido a 15 idiomas,
+// auditoría PWA/SEO — nada de eso es contenido para anunciar en "Qué
+// hay de nuevo"). `APP_VERSION` se queda en "1.8.0" a propósito.
 export const APP_VERSION = "1.8.0";
