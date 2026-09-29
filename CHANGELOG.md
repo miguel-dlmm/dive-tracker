@@ -31,6 +31,12 @@ Registro de cambios relevantes de Ocean Flow.
   cachea en `profiles` (no se vuelve a resolver en cada carga).
 
 ### Fixed
+- **Widget de condiciones de buceo: enlace "Usar como favorito" huérfano**:
+  vivía en su propia línea, sin relación visual clara con el sitio al que
+  se refería (feedback: "el enlace de usar como favorito no me gusta
+  mucho donde está, queda como huérfano"). Ahora es un icono de estrella
+  pegado al chip de localización, mismo grupo de la cabecera, objetivo
+  táctil 44×44 igual que el nav de día.
 - **Widget de condiciones de buceo: crash en sitios sin temperatura de
   agua en el modelo marino** (lagos y algunas zonas costeras): Open-Meteo
   Marine devuelve `sea_surface_temperature: null` cuando hay oleaje

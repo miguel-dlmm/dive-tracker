@@ -390,23 +390,28 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
   return (
     <div className={CONTAINER}>
       {/* Fila 1: sitio (izquierda) + nav de día (derecha) — SIEMPRE solo
-          estos dos, para que nunca se desplacen fuera de la tarjeta. */}
+          estos dos grupos, para que nunca se desplacen fuera de la
+          tarjeta. El botón de "usar como favorito" vive DENTRO del grupo
+          de sitio (pegado al chip de localización), no en su propia línea
+          — quedaba huérfano ahí, sin relación visual clara con lo que
+          guarda (bug de UX reportado 2026-09-29). */}
       <div className="flex items-center justify-between gap-2">
-        <div className="relative inline-flex">
-          <button
-            ref={anchorRef}
-            type="button"
-            onClick={() => setSwitcherOpen((v) => !v)}
-            aria-expanded={switcherOpen}
-            aria-label={t("changeSpot")}
-            className="inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 py-1.5"
-            style={{ backgroundColor: "#0632560D" }}
-          >
-            {location.isGps ? <Navigation size={13} style={{ color: BRAND_OCEAN }} aria-hidden="true" /> : <MapPin size={13} style={{ color: BRAND_OCEAN }} aria-hidden="true" />}
-            <span className="max-w-[130px] truncate text-[11.5px] font-bold" style={{ color: BRAND_NAVY }}>{location.name}</span>
-            <ChevronDown size={11} className="opacity-70" style={{ color: BRAND_NAVY }} aria-hidden="true" />
-          </button>
-          <FloatingPanel open={switcherOpen} pos={pos} panelRef={panelRef} matchWidth={false} className="w-[236px] p-2.5">
+        <div className="flex items-center gap-1">
+          <div className="relative inline-flex">
+            <button
+              ref={anchorRef}
+              type="button"
+              onClick={() => setSwitcherOpen((v) => !v)}
+              aria-expanded={switcherOpen}
+              aria-label={t("changeSpot")}
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 py-1.5"
+              style={{ backgroundColor: "#0632560D" }}
+            >
+              {location.isGps ? <Navigation size={13} style={{ color: BRAND_OCEAN }} aria-hidden="true" /> : <MapPin size={13} style={{ color: BRAND_OCEAN }} aria-hidden="true" />}
+              <span className="max-w-[130px] truncate text-[11.5px] font-bold" style={{ color: BRAND_NAVY }}>{location.name}</span>
+              <ChevronDown size={11} className="opacity-70" style={{ color: BRAND_NAVY }} aria-hidden="true" />
+            </button>
+            <FloatingPanel open={switcherOpen} pos={pos} panelRef={panelRef} matchWidth={false} className="w-[236px] p-2.5">
             {favorite && (
               <button
                 type="button"
@@ -451,6 +456,22 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
           </FloatingPanel>
         </div>
 
+        {/* Estrella de "usar como favorito", pegada al chip de sitio —
+            solo cuando el sitio activo viene de una búsqueda y todavía no
+            es el favorito. */}
+        {!isFavoriteActive && lastSelectedFromSearch && (
+          <button
+            type="button"
+            onClick={saveFavorite}
+            aria-label={t("useAsFavorite")}
+            className="box-content flex h-5 w-5 items-center justify-center rounded-full p-3"
+            style={{ backgroundColor: "#0632560D", color: BRAND_OCEAN }}
+          >
+            <Star size={14} aria-hidden="true" />
+          </button>
+        )}
+        </div>
+
         {/* Nav de día — lado contrario a la localización (pedido
             explícito). Tocarlo abre el desplegable si estaba cerrado. */}
         {!loadError && conditions?.days && (
@@ -473,15 +494,6 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
           </div>
         )}
       </div>
-
-      {/* Fila 2 (solo si aplica): enlace de favorito, en su propia línea
-          — antes competía por sitio con el nav de día y lo empujaba fuera
-          de la tarjeta (bug real reportado). */}
-      {!isFavoriteActive && lastSelectedFromSearch && (
-        <button type="button" onClick={saveFavorite} className="self-start text-[10.5px] font-bold underline" style={{ color: BRAND_OCEAN }}>
-          {t("useAsFavorite")}
-        </button>
-      )}
 
       {loadError && <p className="text-[11px] text-gray-400">{t("errorLoad")}</p>}
 
