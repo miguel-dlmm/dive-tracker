@@ -2,7 +2,7 @@ vi.mock("./providers/resendProvider.js", () => ({ sendViaResend: vi.fn() }));
 
 import { sendActivationEmail } from "./EmailService.js";
 import { sendViaResend } from "./providers/resendProvider.js";
-import { ACTIVATION_EMAIL_COPY } from "./templates/activationEmailTemplate.js";
+import { ACTIVATION_EMAIL_COPY, ACTIVATION_EMAIL_COPY_DE } from "./templates/activationEmailTemplate.js";
 
 const VALID_ARGS = {
   email: "diver@example.com",
@@ -57,8 +57,15 @@ it("usa el copy en inglés cuando language es 'en'", async () => {
   expect(call.html).toContain("Welcome to Ocean Flow");
 });
 
-it("cualquier idioma sin plantilla propia (distinto de 'en') cae a español, igual que sin language", async () => {
-  await sendActivationEmail({ ...VALID_ARGS, language: "th" });
+it("usa el copy en alemán cuando language es 'de' (los 15 idiomas de la app tienen plantilla propia desde 2026-09-29)", async () => {
+  await sendActivationEmail({ ...VALID_ARGS, language: "de" });
+
+  const call = sendViaResend.mock.calls[0][0];
+  expect(call.subject).toBe(ACTIVATION_EMAIL_COPY_DE.signup.subject);
+});
+
+it("un idioma sin plantilla propia cae a español, igual que sin language", async () => {
+  await sendActivationEmail({ ...VALID_ARGS, language: "xx" });
 
   const call = sendViaResend.mock.calls[0][0];
   expect(call.subject).toBe(ACTIVATION_EMAIL_COPY.signup.subject);
