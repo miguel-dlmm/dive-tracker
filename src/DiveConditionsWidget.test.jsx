@@ -46,10 +46,13 @@ function hourlyFixture() {
 const TIDE_STATION_FIXTURE = { name: "Ko Lak", timezone: "Asia/Bangkok", chart_datum: "LAT", datums: { LAT: 1, MSL: 2 }, harmonic_constituents: HARMONICS, attribution: "Slackwater database. Licensed CC BY 4.0." };
 const TIDE_INDEX_FIXTURE = [{ id: "ticon/ko_lak-328-tha-uhslc_fd", name: "Ko Lak", country: "Thailand", lat: 11.795, lng: 99.817 }];
 
+const GEOCODING_RESULT = { name: "Ko Lak", country: "Thailand", latitude: 11.795, longitude: 99.817 };
+
 function mockFetchSuccess() {
   const { forecast, marine } = hourlyFixture();
   global.fetch = vi.fn((url) => {
     const u = String(url);
+    if (u.includes("geocoding-api")) return Promise.resolve({ ok: true, json: () => Promise.resolve({ results: [GEOCODING_RESULT] }) });
     if (u.includes("marine-api")) return Promise.resolve({ ok: true, json: () => Promise.resolve(marine) });
     if (u.includes("tide-stations-index.json")) return Promise.resolve({ ok: true, json: () => Promise.resolve(TIDE_INDEX_FIXTURE) });
     if (u.includes("raw.githubusercontent.com")) return Promise.resolve({ ok: true, json: () => Promise.resolve(TIDE_STATION_FIXTURE) });
@@ -167,6 +170,27 @@ it("no muestra el enlace de favorito si el sitio activo ya es el favorito", asyn
   renderWidget(PROFILE_WITH_FAVORITE);
   await waitFor(() => expect(screen.getByText("6")).toBeInTheDocument());
   expect(screen.queryByRole("button", { name: i18n.t("diveConditions:useAsFavorite") })).not.toBeInTheDocument();
+});
+
+it("marca un resultado de búsqueda como favorito al tocar su estrella", async () => {
+  mockGeolocation("denied");
+  mockFetchSuccess();
+  const update = vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ error: null })) }));
+  supabase.from.mockReturnValue({ update });
+  const user = userEvent.setup();
+  renderWidget(PROFILE_WITH_FAVORITE);
+  await waitFor(() => expect(screen.getByText("6")).toBeInTheDocument());
+
+  await user.click(screen.getByRole("button", { name: i18n.t("diveConditions:changeSpot") }));
+  const input = screen.getByPlaceholderText(i18n.t("diveConditions:searchPlaceholder"));
+  await user.type(input, "Ko Lak");
+  const star = await screen.findByRole("button", { name: i18n.t("diveConditions:useAsFavorite") }, { timeout: 2000 });
+  await user.click(star);
+
+  await waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 2000 });
+  const patch = update.mock.calls[0][0];
+  expect(patch.favorite_dive_spot_name).toBe(GEOCODING_RESULT.name);
+  expect(patch.favorite_dive_spot_lat).toBe(GEOCODING_RESULT.latitude);
 });
 
 it("degrada sin romper Home si Open-Meteo falla", async () => {

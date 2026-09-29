@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
 import { Wind, Waves, Thermometer, Moon, MapPin, Navigation, ChevronDown, ChevronLeft, ChevronRight, Search, Star, Sunrise, Sunset, Info, TriangleAlert } from "lucide-react";
-import { BRAND_NAVY, BRAND_OCEAN, TEAL, GREEN, SUN } from "./App";
+import { BRAND_NAVY, BRAND_OCEAN, BRAND_FOAM, TEAL, GREEN, SUN } from "./App";
 import { useFloatingDropdown, FloatingPanel, useToast } from "./shared";
 import { panelVariants, monthSlideVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
 import { fetchDiveConditions, windDirectionLabel, FORECAST_DAYS } from "./diveConditions/openMeteo";
@@ -128,6 +128,41 @@ function HourlyChart({ hours, metric, selectedHour, onSelectHour, isToday, nowHo
   );
 }
 
+// Fila de resultado de búsqueda — look&feel "Ocean Flow" (icono en
+// badge circular color marca, sitio activo con acento de borde) en vez
+// del texto plano genérico anterior. La estrella vive en la propia fila
+// (Variante C, elegida explícitamente entre 3 propuestas — mockup):
+// marcar como favorito no necesita un paso aparte ni un icono huérfano
+// en la cabecera, se hace directamente sobre el resultado que interesa.
+function ResultRow({ r, isActive, isFav, onSelect, onStar, t }) {
+  return (
+    <div
+      className="flex items-center border-t border-gray-100 first:border-t-0"
+      style={isActive ? { backgroundColor: BRAND_FOAM, boxShadow: `inset 3px 0 0 0 ${BRAND_OCEAN}` } : undefined}
+    >
+      <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-2 px-2.5 py-2 text-left">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: `${BRAND_OCEAN}1A` }}>
+          <MapPin size={12} style={{ color: BRAND_OCEAN }} aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[11.5px] font-bold" style={{ color: BRAND_NAVY }}>{r.name}</span>
+          {r.country && <span className="block truncate text-[9.5px] text-gray-400">{r.country}</span>}
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={onStar}
+        aria-label={isFav ? t("yourFavorite") : t("useAsFavorite")}
+        aria-pressed={isFav}
+        disabled={isFav}
+        className="box-content flex h-5 w-5 shrink-0 items-center justify-center rounded-full p-3"
+      >
+        <Star size={13} fill={isFav ? SUN : "none"} style={{ color: isFav ? SUN : "#C7D0D6" }} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
 export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
   const { t } = useTranslation("diveConditions");
   const toast = useToast();
@@ -151,8 +186,13 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
-  const [lastSelectedFromSearch, setLastSelectedFromSearch] = useState(false);
   const searchDebounce = useRef(null);
+
+  // Sitio que se marcará como favorito en cuanto termine de resolverse su
+  // marea (tocar la estrella de un resultado que TODAVÍA no es el sitio
+  // activo primero lo selecciona — guardar necesita su marea ya
+  // resuelta). Null cuando no hay ninguna estrella pendiente.
+  const [pendingFavorite, setPendingFavorite] = useState(null);
 
   const { open: switcherOpen, setOpen: setSwitcherOpen, anchorRef, panelRef, pos } = useFloatingDropdown("left");
 
@@ -172,6 +212,10 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
 
   function isFavoriteActiveFor(loc, fav) {
     return !!(fav && loc && fav.lat === loc.lat && fav.lng === loc.lng);
+  }
+
+  function isSameCoords(a, b) {
+    return !!(a && b && a.lat === b.lat && a.lng === b.lng);
   }
 
   // Resolución inicial de ubicación: GPS del dispositivo primero
@@ -268,9 +312,8 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
     return () => clearTimeout(searchDebounce.current);
   }, [searchQuery]);
 
-  const selectLocation = useCallback((loc, fromSearch) => {
+  const selectLocation = useCallback((loc) => {
     setLocation({ ...loc, isGps: false });
-    setLastSelectedFromSearch(!!fromSearch);
     setSwitcherOpen(false);
     setSearchQuery("");
     setSearchResults([]);
@@ -296,14 +339,37 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
       const { error } = await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
       if (error) throw error;
       onProfileUpdated?.(patch);
-      setLastSelectedFromSearch(false);
       toast.success(t("favoriteSaved"));
     } catch {
       toast.error(t("favoriteSaveError"));
     }
   }, [location, tideData, profile?.user_id, onProfileUpdated, toast, t]);
 
-  const isFavoriteActive = isFavoriteActiveFor(location, favorite);
+  // Estrella tocada sobre un resultado de búsqueda: si ya es el sitio
+  // activo, se guarda directamente (su marea ya está resuelta); si no,
+  // primero se selecciona y se deja pendiente — el efecto de abajo
+  // termina de guardarlo en cuanto la marea de ESE sitio se resuelva
+  // (con éxito o sin él, igual que el resto del widget).
+  const handleStarClick = useCallback((r) => {
+    if (isFavoriteActiveFor(r, favorite)) return;
+    if (isSameCoords(location, r)) {
+      saveFavorite();
+    } else {
+      setPendingFavorite({ lat: r.lat, lng: r.lng });
+      selectLocation(r);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location, favorite, saveFavorite, selectLocation]);
+
+  useEffect(() => {
+    if (!pendingFavorite) return;
+    if (!isSameCoords(location, pendingFavorite)) return;
+    if (tideResolving) return;
+    if (!tideData && !tideError) return; // aún no ha empezado a resolverse
+    saveFavorite();
+    setPendingFavorite(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingFavorite, location?.lat, location?.lng, tideResolving, tideData, tideError]);
 
   const day = conditions?.days?.[dayOffset];
   const selectedHourData = day?.hours?.[selectedHour];
@@ -351,33 +417,29 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
             <Navigation size={13} aria-hidden="true" />{t("useMyLocation")}
           </button>
           <span className="text-[9.5px] text-gray-300">{t("or")}</span>
-          <div className="flex w-full max-w-[220px] items-center gap-1.5 rounded-full border border-gray-200 px-3 py-2">
-            <Search size={12} className="shrink-0 text-gray-400" aria-hidden="true" />
+          <div className="flex w-full max-w-[220px] items-center gap-1.5 rounded-full px-3 py-2" style={{ backgroundColor: BRAND_FOAM }}>
+            <Search size={12} className="shrink-0" style={{ color: BRAND_OCEAN }} aria-hidden="true" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("searchPlaceholder")}
               className="min-w-0 flex-1 border-none bg-transparent text-[11.5px] outline-none"
+              style={{ color: BRAND_NAVY }}
               aria-label={t("searchPlaceholder")}
             />
           </div>
           {searchQuery.trim().length >= 2 && (
-            <div className="w-full max-w-[220px] overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="w-full max-w-[220px] overflow-hidden rounded-lg border border-gray-100 bg-white">
               {searching && <div className="px-3 py-2 text-[10.5px] text-gray-400">…</div>}
               {!searching && searchResults.length === 0 && <div className="px-3 py-2 text-[10.5px] text-gray-400">{t("noResults")}</div>}
               {searchResults.map((r, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => selectLocation(r, true)}
-                  className="block w-full border-t border-gray-100 px-3 py-2 text-left text-[11px] font-medium text-gray-700 first:border-t-0"
-                >
-                  {r.name}{r.country ? `, ${r.country}` : ""}
-                </button>
+                <ResultRow key={i} r={r} isActive={false} isFav={isFavoriteActiveFor(r, favorite)}
+                  onSelect={() => selectLocation(r)} onStar={() => handleStarClick(r)} t={t} />
               ))}
             </div>
           )}
+          <p className="max-w-[220px] px-1 text-center text-[9px] leading-relaxed text-gray-300">{t("searchHint")}</p>
         </div>
       </div>
     );
@@ -390,49 +452,51 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
   return (
     <div className={CONTAINER}>
       {/* Fila 1: sitio (izquierda) + nav de día (derecha) — SIEMPRE solo
-          estos dos grupos, para que nunca se desplacen fuera de la
-          tarjeta. El botón de "usar como favorito" vive DENTRO del grupo
-          de sitio (pegado al chip de localización), no en su propia línea
-          — quedaba huérfano ahí, sin relación visual clara con lo que
-          guarda (bug de UX reportado 2026-09-29). */}
+          estos dos, para que nunca se desplacen fuera de la tarjeta. La
+          marca de favorito vive DENTRO del desplegable de sitio, una
+          estrella por resultado (Variante C, elegida explícitamente
+          entre 3 propuestas de mockup) — no un icono aparte en esta
+          fila, que quedaba huérfano/desconectado (bug de UX reportado
+          2026-09-29). */}
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1">
-          <div className="relative inline-flex">
-            <button
-              ref={anchorRef}
-              type="button"
-              onClick={() => setSwitcherOpen((v) => !v)}
-              aria-expanded={switcherOpen}
-              aria-label={t("changeSpot")}
-              className="inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 py-1.5"
-              style={{ backgroundColor: "#0632560D" }}
-            >
-              {location.isGps ? <Navigation size={13} style={{ color: BRAND_OCEAN }} aria-hidden="true" /> : <MapPin size={13} style={{ color: BRAND_OCEAN }} aria-hidden="true" />}
-              <span className="max-w-[130px] truncate text-[11.5px] font-bold" style={{ color: BRAND_NAVY }}>{location.name}</span>
-              <ChevronDown size={11} className="opacity-70" style={{ color: BRAND_NAVY }} aria-hidden="true" />
-            </button>
-            <FloatingPanel open={switcherOpen} pos={pos} panelRef={panelRef} matchWidth={false} className="w-[236px] p-2.5">
+        <div className="relative inline-flex">
+          <button
+            ref={anchorRef}
+            type="button"
+            onClick={() => setSwitcherOpen((v) => !v)}
+            aria-expanded={switcherOpen}
+            aria-label={t("changeSpot")}
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 py-1.5"
+            style={{ backgroundColor: "#0632560D" }}
+          >
+            {location.isGps ? <Navigation size={13} style={{ color: BRAND_OCEAN }} aria-hidden="true" /> : <MapPin size={13} style={{ color: BRAND_OCEAN }} aria-hidden="true" />}
+            <span className="max-w-[130px] truncate text-[11.5px] font-bold" style={{ color: BRAND_NAVY }}>{location.name}</span>
+            <ChevronDown size={11} className="opacity-70" style={{ color: BRAND_NAVY }} aria-hidden="true" />
+          </button>
+          <FloatingPanel open={switcherOpen} pos={pos} panelRef={panelRef} matchWidth={false} className="w-[236px] p-2.5">
             {favorite && (
               <button
                 type="button"
-                onClick={() => selectLocation(favorite, false)}
-                className="flex min-h-[42px] w-full items-center gap-2.5 rounded-lg bg-[#EAF2F8] px-2.5 py-2 text-left"
+                onClick={() => selectLocation(favorite)}
+                className="flex min-h-[42px] w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left"
+                style={{ backgroundColor: BRAND_FOAM }}
               >
-                <Star size={14} className="shrink-0" style={{ color: "#B45309" }} aria-hidden="true" />
+                <Star size={14} className="shrink-0" fill={SUN} style={{ color: SUN }} aria-hidden="true" />
                 <span className="min-w-0">
                   <span className="block truncate text-[12px] font-bold" style={{ color: BRAND_NAVY }}>{favorite.name}</span>
                   <span className="text-[10px] text-gray-500">{t("yourFavorite")}</span>
                 </span>
               </button>
             )}
-            <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-2">
-              <Search size={13} className="shrink-0 text-gray-400" aria-hidden="true" />
+            <div className="mt-2 flex items-center gap-1.5 rounded-full px-2.5 py-2" style={{ backgroundColor: BRAND_FOAM }}>
+              <Search size={13} className="shrink-0" style={{ color: BRAND_OCEAN }} aria-hidden="true" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("searchPlaceholder")}
                 className="min-w-0 flex-1 border-none bg-transparent text-[12px] outline-none"
+                style={{ color: BRAND_NAVY }}
                 aria-label={t("searchPlaceholder")}
               />
             </div>
@@ -441,35 +505,13 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
                 {searching && <div className="px-2.5 py-2 text-[10.5px] text-gray-400">…</div>}
                 {!searching && searchResults.length === 0 && <div className="px-2.5 py-2 text-[10.5px] text-gray-400">{t("noResults")}</div>}
                 {searchResults.map((r, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => selectLocation(r, true)}
-                    className="block w-full border-t border-gray-100 px-2.5 py-2 text-left text-[11px] font-medium text-gray-700 first:border-t-0"
-                  >
-                    {r.name}{r.country ? `, ${r.country}` : ""}
-                  </button>
+                  <ResultRow key={i} r={r} isActive={isSameCoords(location, r)} isFav={isFavoriteActiveFor(r, favorite)}
+                    onSelect={() => selectLocation(r)} onStar={() => handleStarClick(r)} t={t} />
                 ))}
               </div>
             )}
             <p className="mt-2 px-0.5 text-[9.5px] leading-relaxed text-gray-300">{t("searchHint")}</p>
           </FloatingPanel>
-        </div>
-
-        {/* Estrella de "usar como favorito", pegada al chip de sitio —
-            solo cuando el sitio activo viene de una búsqueda y todavía no
-            es el favorito. */}
-        {!isFavoriteActive && lastSelectedFromSearch && (
-          <button
-            type="button"
-            onClick={saveFavorite}
-            aria-label={t("useAsFavorite")}
-            className="box-content flex h-5 w-5 items-center justify-center rounded-full p-3"
-            style={{ backgroundColor: "#0632560D", color: BRAND_OCEAN }}
-          >
-            <Star size={14} aria-hidden="true" />
-          </button>
-        )}
         </div>
 
         {/* Nav de día — lado contrario a la localización (pedido

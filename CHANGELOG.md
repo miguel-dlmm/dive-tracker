@@ -30,13 +30,22 @@ Registro de cambios relevantes de Ocean Flow.
   más visible por encima de 300 km. La marea del favorito guardado se
   cachea en `profiles` (no se vuelve a resolver en cada carga).
 
+### Changed
+- **Widget de condiciones de buceo: rediseño de "marcar como favorito" y
+  del buscador de sitio**: el enlace de texto en su propia línea (y,
+  antes de eso, un icono suelto junto al chip de localización) quedaba
+  huérfano, sin relación visual clara con lo que guardaba (feedback
+  real). Tras comparar 3 alternativas en mockup, se eligió la estrella
+  por resultado de búsqueda: se marca como favorito un sitio directamente
+  desde la lista, sin pasos aparte ni avisos flotantes. El buscador (input
+  + resultados, tanto en el estado vacío como en el desplegable) se
+  restyled con los colores de marca (fondo `BRAND_FOAM`, iconos en
+  `BRAND_OCEAN`, sitio activo con acento de borde) en vez del gris
+  genérico anterior, y ahora deja explícito en la propia interfaz que
+  busca cualquier lugar del mundo, no solo puntos de buceo (pregunta real
+  del usuario tras un resultado inesperado tipo "Crystal Rock, Ohio").
+
 ### Fixed
-- **Widget de condiciones de buceo: enlace "Usar como favorito" huérfano**:
-  vivía en su propia línea, sin relación visual clara con el sitio al que
-  se refería (feedback: "el enlace de usar como favorito no me gusta
-  mucho donde está, queda como huérfano"). Ahora es un icono de estrella
-  pegado al chip de localización, mismo grupo de la cabecera, objetivo
-  táctil 44×44 igual que el nav de día.
 - **Widget de condiciones de buceo: crash en sitios sin temperatura de
   agua en el modelo marino** (lagos y algunas zonas costeras): Open-Meteo
   Marine devuelve `sea_surface_temperature: null` cuando hay oleaje
