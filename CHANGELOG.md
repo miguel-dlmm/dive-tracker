@@ -5,6 +5,12 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Added
+- **Landing "Meet Ocean Flow"** (`/meetOceanFlow`): página estática de
+  presentación del producto, servida desde el propio dominio de la app,
+  con selector de 10 idiomas (es, en, fr, de, it, pt, pt-BR, ru, th, ar
+  con soporte RTL). Pensada para compartir el enlace fuera de la propia
+  app (redes, mensajería) — no forma parte del bundle de React ni
+  requiere sesión.
 - **"Qué hay de nuevo" anuncia el libro digital de Koh Tao**: apertura
   automática reactivada (llevaba fija en "no mostrar" desde v1.6.0, sin
   contenido nuevo que anunciar hasta ahora) con una única diapositiva
