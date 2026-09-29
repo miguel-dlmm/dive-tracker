@@ -5,6 +5,12 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Added
+- **Landing "Meet Ocean Flow": idioma seleccionable por parámetro de
+  URL** (`?lang=xx`) — pedido explícito: "poder pasarle a la landing el
+  idioma por parámetro para compartirla en el idioma del foro a donde la
+  envió". Gana sobre el idioma guardado y sobre el del navegador; un
+  valor no soportado en el parámetro se ignora sin romper nada, cayendo
+  al comportamiento de detección normal.
 - **Email de bienvenida/activación traducido a los 15 idiomas de la app**:
   hasta ahora solo tenía plantilla propia en español e inglés (v1.8.0), el
   resto caía a español. `resolveActivationEmailCopy` pasa a resolver por
