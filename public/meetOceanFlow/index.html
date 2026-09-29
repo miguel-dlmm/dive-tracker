@@ -14,19 +14,32 @@
      iMessage/Slack la resuelvan sin conocer el dominio de origen).
      Reutiliza og-image.png (1200x630, ya en el tamaño estándar) — no hay
      todavía una imagen específica de la landing, evita construir un
-     activo nuevo solo para esto. -->
+     activo nuevo solo para esto.
+
+     ?v=2 en og:image/twitter:image (2026-09-29, mismo día — bug real de
+     Facebook Sharing Debugger): confirmado con WhatsApp que la imagen en
+     sí ya se sirve y se lee bien (robots.txt bloqueaba antes og-image.png,
+     ya corregido) — el fallo que persistía solo en el Sharing Debugger de
+     Meta era su propia caché de esa URL exacta, marcada como "dañada"
+     desde cuando robots.txt sí la bloqueaba. El parámetro de versión la
+     convierte en una URL que Facebook nunca ha visto, sin arrastrar esa
+     caché vieja. Subir este número si se repite el mismo síntoma en el
+     futuro. -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Ocean Flow">
 <meta property="og:title" content="Ocean Flow — Bucea más. Gestiona menos.">
 <meta property="og:description" content="Control de ingresos, Training Records SSI y la Guía de Buceo de Koh Tao para instructores de buceo.">
-<meta property="og:image" content="https://oceanflow-web.vercel.app/og-image.png">
+<meta property="og:image" content="https://oceanflow-web.vercel.app/og-image.png?v=2">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
 <meta property="og:url" content="https://oceanflow-web.vercel.app/meetOceanFlow/">
 <meta property="og:locale" content="es_ES">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Ocean Flow">
 <meta name="twitter:description" content="Bucea más. Gestiona menos.">
-<meta name="twitter:image" content="https://oceanflow-web.vercel.app/og-image.png">
+<meta name="twitter:image" content="https://oceanflow-web.vercel.app/og-image.png?v=2">
 
 <!-- Datos estructurados (auditoría PWA/SEO, 2026-09-29) — WebSite, no
      SoftwareApplication (ese tipo ya lo usa el index.html de la app):
