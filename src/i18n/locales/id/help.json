@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Filter dan pencarian",
       "description": "Pola yang sama di seluruh aplikasi"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Ekspor laporan bulananmu sebagai PDF",
+      "description": "Semua detail satu periode, siap dikirim"
     }
   },
   "articles": {
@@ -269,6 +273,24 @@
         "Pencarian katalog (Kursus, Mata Uang) memfilter saat kamu mengetik, tanpa membedakan huruf besar/kecil atau aksen."
       ],
       "expectedResult": "Daftar hanya menampilkan yang kamu cari, sambil tetap melihat berapa banyak filter yang aktif."
+    },
+    "exportar-informe-pdf": {
+      "title": "Ekspor laporan bulananmu sebagai PDF",
+      "summary": "Unduh PDF berisi semua detail satu periode dan sekolah, siap ditinjau atau dikirim.",
+      "whatYouCanDo": "Buat laporan PDF berisi kursus, komisi, dan penyesuaian kursus dari periode dan sekolah yang kamu pilih, dengan opsi untuk juga menampilkan jumlah yang sudah diterima.",
+      "whenToUseIt": "Saat kamu butuh dokumen resmi untuk mencocokkan akun dengan sebuah sekolah, menyimpannya sebagai bukti, atau sekadar punya catatan keuanganmu dalam satu PDF.",
+      "steps": [
+        "Di Ringkasan, ketuk \"Ekspor laporan\".",
+        "Pilih Sekolah (jika kamu punya lebih dari satu) dan Rentang tanggal — sudah terisi dengan apa yang sedang kamu lihat di Ringkasan, tapi bisa diubah.",
+        "Jika mau, aktifkan \"Sertakan penyesuaian kursus\" dan tentukan apakah dijumlahkan ke total atau ditampilkan terpisah.",
+        "Aktifkan \"Tampilkan jumlah yang sudah diterima\" jika ingin laporan membedakan yang sudah diterima dari yang masih tertunda.",
+        "Ketuk \"Buat PDF\" dan langsung terunduh."
+      ],
+      "tips": [
+        "Tombol \"Ekspor laporan\" hanya muncul setelah kamu punya setidaknya satu sekolah yang sudah diatur.",
+        "Dengan \"Sertakan penyesuaian kursus\" kamu bisa memilih penyesuaian tertentu, bukan menyertakan semuanya, jika hanya perlu membuktikan beberapa saja."
+      ],
+      "expectedResult": "PDF terunduh berisi detail lengkap periode dan sekolah yang dipilih, siap dikirim atau disimpan."
     }
   }
 }

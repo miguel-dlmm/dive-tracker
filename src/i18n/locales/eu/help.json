@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Iragazkiak eta bilaketa",
       "description": "Aplikazio osoko eredu bera"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Esportatu zure hileroko txostena PDFn",
+      "description": "Aldi baten xehetasun osoa, bidaltzeko prest"
     }
   },
   "articles": {
@@ -269,6 +273,24 @@
         "Katalogoetako bilatzaileak (Ikastaroak, Dibisak) idatzi ahala iragazten du, maiuskula/minuskulak edo azentuak bereizi gabe."
       ],
       "expectedResult": "Zerrendak zuri interesatzen zaizuna bakarrik erakusten du, zenbat iragazki aktibo dituzun ikusteko modua galdu gabe."
+    },
+    "exportar-informe-pdf": {
+      "title": "Esportatu zure hileroko txostena PDFn",
+      "summary": "Deskargatu aldi eta eskola baten xehetasun osoa duen PDF bat, berrikusteko edo bidaltzeko prest.",
+      "whatYouCanDo": "Sortu PDF txosten bat aukeratutako aldiko eta eskolako ikastaro, komisio eta ikastaro doikuntzekin, jadanik kobratutakoa ere erakusteko aukerarekin.",
+      "whenToUseIt": "Eskola batekin kontuak alderatzeko dokumentu formal bat behar duzunean, egiaztagiri gisa gordetzeko, edo zure kontabilitate osoa PDF bakar batean edukitzeko.",
+      "steps": [
+        "Laburpenen, sakatu \"Esportatu txostena\".",
+        "Aukeratu Eskola (bat baino gehiago baduzu) eta Data-tartea — Laburpenen ikusten ari zinena aurrez beteta dator, baina alda dezakezu.",
+        "Nahi izanez gero, aktibatu \"Ikastaro doikuntzak sartu\" eta erabaki guztirakoan batu edo bereizita erakutsi.",
+        "Aktibatu \"Erakutsi jadanik kobratutako zenbatekoak\" txostenak kobratutakoa eta zain dagoena bereizteko.",
+        "Sakatu \"Sortu PDFa\" eta berehala deskargatuko da."
+      ],
+      "tips": [
+        "\"Esportatu txostena\" botoia gutxienez eskola bat konfiguratuta duzunean bakarrik agertzen da.",
+        "\"Ikastaro doikuntzak sartu\" aukerarekin doikuntza zehatzak hauta ditzakezu, guztiak sartu ordez, batzuk justifikatu behar badituzu bakarrik."
+      ],
+      "expectedResult": "Aukeratutako aldiaren eta eskolaren xehetasun osoa duen PDF bat deskargatuta, bidaltzeko edo gordetzeko prest."
     }
   }
 }

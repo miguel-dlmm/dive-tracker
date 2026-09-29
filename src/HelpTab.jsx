@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Smartphone, Award, BookOpen } from "lucide-react";
+import { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Smartphone, Award, BookOpen, FileDown } from "lucide-react";
 import { BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { ExpandableCard } from "./shared";
 import { useSwipeBack, animateScrollBy, usePrefersReducedMotion } from "./motion";
@@ -13,7 +13,7 @@ import HelpArticleBody from "./help/HelpArticleBody";
 // bundle de producción, mismo criterio que AVATAR_ICON_MAP en
 // avatarCatalog.js). Si se añade una categoría con un icono nuevo en
 // content.js, se añade aquí también.
-const CATEGORY_ICONS = { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Award, BookOpen };
+const CATEGORY_ICONS = { Sparkles, Settings, GraduationCap, Wallet, TrendingUp, Briefcase, BarChart3, CircleUserRound, SlidersHorizontal, HelpCircle, Award, BookOpen, FileDown };
 
 // Combina el texto traducido (namespace "help", claves `articles.<id>.*`)
 // con el id del artículo en content.js para dar a HelpArticleBody el

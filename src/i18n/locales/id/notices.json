@@ -8,24 +8,8 @@
     "start": "Mulai",
     "slides": [
       {
-        "title": "Ekspor laporanmu sebagai PDF",
-        "body": "Buat PDF berisi semua transaksimu untuk dikirim ke siapa pun yang membutuhkannya — ekspor datamu dengan mudah."
-      },
-      {
-        "title": "Training Records lebih ringan",
-        "body": "Generator Training Records dioptimalkan untuk membuat file yang lebih ringan."
-      },
-      {
-        "title": "Home, tampilan baru",
-        "body": "Lebih dinamis, dengan data menarik yang bisa dilihat sekilas."
-      },
-      {
-        "title": "Profilku, disusun ulang",
-        "body": "Bagian-bagian ditata ulang agar semuanya lebih mudah dan cepat ditemukan."
-      },
-      {
-        "title": "Lihat lagi kapan saja",
-        "body": "Kembali ke pembaruan ini dari Bantuan → \"Lihat yang baru\", tanpa harus menunggu pembaruan berikutnya."
+        "title": "Panduan menyelam Koh Tao, kini di Ocean Flow",
+        "body": "Titik selam, kehidupan laut, dan semua informasi untuk briefing. Sekarang kamu bisa mencari titik selam secara langsung! Akses dari kartu di Home."
       }
     ]
   },

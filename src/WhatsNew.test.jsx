@@ -1,99 +1,35 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import WhatsNew from "./WhatsNew";
 
-// Mismo patrón ya usado en ConfigTab.test.jsx/HelpTab.test.jsx para
-// useSwipeHorizontal (motion.js) — el hook solo escucha eventos de touch
-// reales (onTouchStart/onTouchEnd), nunca de ratón/puntero, así que
-// fireEvent.touchStart/touchEnd es la única forma de probarlo de verdad
-// (ni userEvent.pointer ni una simulación de arrastre con ratón lo
-// activan — confirmado al auditar `npm run mobile-check`, que simulaba
-// el swipe con page.mouse y por eso nunca lo había estado probando de
-// verdad desde que se reintrodujo, ver 12.5/12.17 de
-// docs/REDISENO-V2-PROGRESS.md).
-function swipe(dx) {
-  // data-testid en vez de un selector de clase Tailwind (CLAUDE.md prohíbe
-  // selectores frágiles basados en clase/estructura): el contenedor
-  // deslizable no tiene rol ni texto propio con el que localizarlo de forma
-  // accesible, así que es el único punto de anclaje estable frente a un
-  // refactor visual futuro.
-  const el = screen.getByTestId("whatsnew-slide");
-  fireEvent.touchStart(el, { touches: [{ clientX: 200, clientY: 100 }] });
-  fireEvent.touchEnd(el, { changedTouches: [{ clientX: 200 + dx, clientY: 100 }] });
-}
-
-// Ver docs/ADR/0010-proceso-de-release.md — cubre el contrato de
-// navegación (Siguiente/Atrás/puntos/Empezar), no el contenido exacto de
-// cada diapositiva (eso cambia en cada release).
+// La mecánica genérica del carrusel (Siguiente/Atrás/puntos/swipe/Empezar)
+// vive en SlideDeck.test.jsx, contra datos de prueba propios — no aquí.
+// Estos tests cubren solo lo específico de WhatsNew: que renderiza el
+// contenido real (notices.json→whatsNew.slides) sin reventar, y que
+// "Empezar"/"Cerrar" funcionan sea cual sea el número real de
+// diapositivas de la release vigente (2026-09-28: pasó de 5 a 1 sola).
 describe("WhatsNew", () => {
-  it("empieza en la primera diapositiva y avanza con 'Siguiente'", async () => {
+  // Regresión real (2026-09-28): SLIDE_ICONS (WhatsNew.jsx) se quedó con
+  // 5 entradas de una release anterior mientras notices.json ya solo
+  // tenía 1 diapositiva real — el carrusel mostraba 5 puntos y diapositivas
+  // 2-5 sin título ni cuerpo. Blindaje: el número de encabezados/puntos
+  // visibles en total (avanzando hasta el final) debe coincidir con el
+  // número de diapositivas reales del contenido i18n.
+  it("todas las diapositivas tienen título y cuerpo reales (ninguna queda vacía por desajuste con SLIDE_ICONS)", async () => {
     const user = userEvent.setup();
     render(<WhatsNew onClose={vi.fn()} />);
 
-    const firstTitle = screen.getByRole("heading").textContent;
-    expect(screen.queryByRole("button", { name: "Atrás" })).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Siguiente" }));
-
-    expect(screen.getByRole("button", { name: "Atrás" })).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole("heading").textContent).not.toBe(firstTitle));
-  });
-
-  // Cobertura nueva (2026-09-07, auditoría de `npm run mobile-check` en
-  // la ronda de QA pre-release): el gesto de deslizar en sí (no solo los
-  // botones "Siguiente"/"Atrás", ya cubiertos arriba) nunca había tenido
-  // un test dedicado — ni aquí ni en mobile-check, que lo simulaba con
-  // eventos de ratón, invisibles para el handler de touch real.
-  it("deslizar hacia la izquierda avanza a la siguiente diapositiva (gesto táctil real)", async () => {
-    render(<WhatsNew onClose={vi.fn()} />);
-    const firstTitle = screen.getByRole("heading").textContent;
-
-    swipe(-150);
-
-    await waitFor(() => expect(screen.getByRole("heading").textContent).not.toBe(firstTitle));
-  });
-
-  it("deslizar hacia la derecha vuelve a la diapositiva anterior (gesto táctil real)", async () => {
-    render(<WhatsNew onClose={vi.fn()} />);
-    const firstTitle = screen.getByRole("heading").textContent;
-    swipe(-150);
-    await waitFor(() => expect(screen.getByRole("heading").textContent).not.toBe(firstTitle));
-
-    swipe(150);
-
-    await waitFor(() => expect(screen.getByRole("heading").textContent).toBe(firstTitle));
-  });
-
-  // Regresión (Bloque 8, job nocturno 2026-09-03): un <AnimatePresence>
-  // mal combinado con el `drag` de Motion dejaba la diapositiva ANTERIOR
-  // permanentemente en el DOM al avanzar — dos títulos a la vez PARA
-  // SIEMPRE, no solo mientras dura la transición de salida (eso sí es
-  // normal e intencionado: es justo lo que anima la salida). Se
-  // reintrodujo AnimatePresence el 2026-09-07 (mode="popLayout" + swipe
-  // nativo en vez de drag, ver WhatsNew.jsx) para recuperar el slide
-  // lateral; este test comprueba que, pasada la animación, vuelve a
-  // quedar un único heading — nunca dos de forma permanente.
-  it("tras avanzar dos veces, no quedan dos headings permanentemente en el DOM (no reaparece el bug de la diapositiva duplicada)", async () => {
-    const user = userEvent.setup();
-    render(<WhatsNew onClose={vi.fn()} />);
-
-    await user.click(screen.getByRole("button", { name: "Siguiente" }));
-    await waitFor(() => expect(screen.getAllByRole("heading")).toHaveLength(1));
-
-    await user.click(screen.getByRole("button", { name: "Siguiente" }));
-    await waitFor(() => expect(screen.getAllByRole("heading")).toHaveLength(1));
-  });
-
-  it("'Atrás' vuelve a la diapositiva anterior", async () => {
-    const user = userEvent.setup();
-    render(<WhatsNew onClose={vi.fn()} />);
-
-    const firstTitle = screen.getByRole("heading").textContent;
-    await user.click(screen.getByRole("button", { name: "Siguiente" }));
-    await waitFor(() => expect(screen.getByRole("heading").textContent).not.toBe(firstTitle));
-    await user.click(screen.getByRole("button", { name: "Atrás" }));
-
-    await waitFor(() => expect(screen.getByRole("heading").textContent).toBe(firstTitle));
+    let guard = 0;
+    while (true) {
+      const heading = screen.getByRole("heading");
+      expect(heading.textContent).toBeTruthy();
+      expect(heading.textContent).not.toMatch(/undefined/);
+      const nextBtn = screen.queryByRole("button", { name: "Siguiente" });
+      if (!nextBtn || guard >= 20) break;
+      await user.click(nextBtn);
+      guard += 1;
+    }
+    expect(screen.getByRole("button", { name: "Empezar" })).toBeInTheDocument();
   });
 
   it("la última diapositiva muestra 'Empezar', y pulsarlo cierra", async () => {
@@ -101,7 +37,6 @@ describe("WhatsNew", () => {
     const onClose = vi.fn();
     render(<WhatsNew onClose={onClose} />);
 
-    // Avanza hasta el final sin asumir cuántas diapositivas hay.
     let guard = 0;
     while (screen.queryByRole("button", { name: "Siguiente" }) && guard < 20) {
       await user.click(screen.getByRole("button", { name: "Siguiente" }));

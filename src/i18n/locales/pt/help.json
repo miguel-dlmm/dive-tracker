@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Filtros e busca",
       "description": "O mesmo padrão em todo o app"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Exporta o teu relatório mensal em PDF",
+      "description": "Todo o detalhe de um período, pronto a enviar"
     }
   },
   "articles": {
@@ -269,6 +273,24 @@
         "O buscador de catálogos (Cursos, Moedas) filtra enquanto você digita, sem diferenciar maiúsculas/minúsculas nem acentos."
       ],
       "expectedResult": "A lista mostra só o que interessa a você, sem perder de vista quantos filtros estão ativos."
+    },
+    "exportar-informe-pdf": {
+      "title": "Exporta o teu relatório mensal em PDF",
+      "summary": "Descarrega um PDF com todo o detalhe de um período e de uma escola, pronto a rever ou enviar.",
+      "whatYouCanDo": "Gera um relatório em PDF com os cursos, comissões e ajustes de curso do período e da escola escolhidos, com a opção de mostrar também os valores já recebidos.",
+      "whenToUseIt": "Quando precisares de um documento formal para conferir contas com uma escola, guardá-lo como comprovativo, ou simplesmente teres a tua contabilidade num único PDF.",
+      "steps": [
+        "No Resumo, toca em \"Exportar relatório\".",
+        "Escolhe a Escola (se tiveres mais do que uma) e o Intervalo de datas — vem pré-preenchido com o que estavas a ver no Resumo, mas podes alterá-lo.",
+        "Se quiseres, ativa \"Incluir ajustes de curso\" e decide se somam ao total ou aparecem à parte.",
+        "Ativa \"Mostrar valores já recebidos\" se quiseres que o relatório distinga entre recebido e pendente.",
+        "Toca em \"Gerar PDF\" e é descarregado na hora."
+      ],
+      "tips": [
+        "O botão \"Exportar relatório\" só aparece depois de teres pelo menos uma escola configurada.",
+        "Com \"Incluir ajustes de curso\" podes escolher ajustes concretos em vez de incluí-los todos, se só precisares de justificar alguns."
+      ],
+      "expectedResult": "Um PDF descarregado com o detalhe completo do período e da escola escolhidos, pronto a enviar ou guardar."
     }
   }
 }

@@ -4,6 +4,67 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.8.0] - 2026-09-29
+
+### Added
+- **Landing "Meet Ocean Flow"** (`/meetOceanFlow`): página estática de
+  presentación del producto, servida desde el propio dominio de la app,
+  con selector de 10 idiomas (es, en, fr, de, it, pt, pt-BR, ru, th, ar
+  con soporte RTL). Pensada para compartir el enlace fuera de la propia
+  app (redes, mensajería) — no forma parte del bundle de React ni
+  requiere sesión.
+- **"Qué hay de nuevo" anuncia el libro digital de Koh Tao**: apertura
+  automática reactivada (llevaba fija en "no mostrar" desde v1.6.0, sin
+  contenido nuevo que anunciar hasta ahora) con una única diapositiva
+  sobre la Guía de Buceo, en los 15 idiomas.
+- **Ayuda: "Exportar tu informe mensual en PDF"**: nuevo artículo en
+  "Quiero..." explicando el botón "Exportar informe" de Resumen (escuela,
+  rango de fechas, ajustes de curso, mostrar lo ya cobrado), en los 15
+  idiomas.
+
+### Fixed
+- **Spinner de marca al entrar en Training Records**: sustituye al
+  "Cargando…" de texto plano que aparecía antes de que el instructor
+  esté completo.
+- **Datos de contacto reales en la Política de Privacidad y los Términos de
+  Uso**: `legal@oceanflow.money` sustituye a los placeholders `[PENDIENTE]`
+  como email del responsable del tratamiento y para ejercer derechos, en
+  los 15 idiomas. El NIF y la dirección física quedan "disponibles previa
+  solicitud" a ese mismo email en vez de publicarse abiertos.
+- **Mensaje de reaceptación legal más claro**: al pedir aceptar de nuevo
+  la Política de Privacidad/Términos de Uso tras una actualización, ahora
+  explica que se trata de eso ("hemos actualizado nuestras políticas…")
+  en vez del texto genérico de primer acceso.
+- **Landing "Meet Ocean Flow" (`/meetOceanFlow`)**: el selector de idioma
+  no quedaba centrado en pantallas estrechas (el texto largo del hint
+  hacía salto de línea sin centrarse) — corregido en Safari/iPhone. La
+  captura de la sección "Un recorrido corto por lo que hace" pasa de un
+  recorte del carnet de instructor a la Home completa de Training
+  Records.
+- **"Qué hay de nuevo" con menos diapositivas que iconos**: al recortar
+  el contenido a una única diapositiva, el array interno de iconos se
+  había quedado con 5 entradas de la release anterior — se veían 5 puntos
+  de navegación y diapositivas 2-5 sin título ni cuerpo. Cobertura nueva
+  (`SlideDeck.test.jsx`) para que no vuelva a pasar inadvertido.
+- **"Qué hay de nuevo" y el tour de bienvenida apilados a la vez**: una
+  cuenta recién activada (ambos "no visto" al mismo tiempo) podía llegar
+  a ver los dos diálogos montados encima uno del otro, no solo el tour.
+- **Cuenta nueva sin ver nunca "Qué hay de nuevo"**: el fix anterior
+  (justo arriba) marcaba también como vista la versión actual de
+  WhatsNew al cerrar el tour de bienvenida, para evitar mostrar los dos
+  avisos de golpe — pero como el propio tour no menciona ninguna
+  novedad de release real, una cuenta nueva se quedaba sin enterarse del
+  libro de Koh Tao. Ahora WhatsNew aparece justo después de cerrar el
+  tour (en secuencia, no superpuesto).
+- **KPI "Cursos" (Home) y "Escuela del mes" no se calculaban igual**:
+  "Cursos" contaba nº de apuntes de Work Log (`.length`), no personas —
+  dos alumnos en una misma clase contaban como uno. "Escuela del mes"
+  contaba movimientos de cualquier tipo (incluidas comisiones y pagos de
+  compañeros), aunque su propia etiqueta ya decía "X cursos". Ahora
+  ambos suman personas de movimientos de Curso únicamente (sin
+  comisiones ni ajustes), con la única diferencia real siendo el filtro
+  de escuela — reportado por el usuario tras notar la inconsistencia.
+
 ## [1.7.0] - 2026-09-28
 
 ### Added

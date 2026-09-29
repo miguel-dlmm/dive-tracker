@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Penapis dan carian",
       "description": "Corak yang sama di seluruh aplikasi"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Eksport laporan bulanan anda sebagai PDF",
+      "description": "Semua butiran satu tempoh, sedia untuk dihantar"
     }
   },
   "articles": {
@@ -269,6 +273,24 @@
         "Carian katalog (Kursus, Mata Wang) menapis semasa anda menaip, tanpa mengira huruf besar/kecil atau tanda diakritik."
       ],
       "expectedResult": "Senarai menunjukkan hanya apa yang anda mahu, tanpa kehilangan pandangan tentang berapa banyak penapis yang aktif."
+    },
+    "exportar-informe-pdf": {
+      "title": "Eksport laporan bulanan anda sebagai PDF",
+      "summary": "Muat turun PDF dengan semua butiran satu tempoh dan sekolah, sedia untuk disemak atau dihantar.",
+      "whatYouCanDo": "Jana laporan PDF dengan kursus, komisen dan pelarasan kursus bagi tempoh dan sekolah yang anda pilih, dengan pilihan untuk turut menunjukkan jumlah yang telah dikutip.",
+      "whenToUseIt": "Apabila anda memerlukan dokumen rasmi untuk menyemak akaun dengan sekolah, menyimpannya sebagai rekod, atau sekadar mahukan perakaunan anda dalam satu PDF.",
+      "steps": [
+        "Dalam Ringkasan, ketik \"Eksport laporan\".",
+        "Pilih Sekolah (jika anda mempunyai lebih daripada satu) dan Julat tarikh — ia datang pra-isi dengan apa yang anda sedang lihat dalam Ringkasan, tetapi anda boleh menukarnya.",
+        "Jika mahu, aktifkan \"Sertakan pelarasan kursus\" dan tentukan sama ada ditambah ke jumlah keseluruhan atau ditunjukkan berasingan.",
+        "Aktifkan \"Tunjukkan jumlah yang telah dikutip\" jika anda mahu laporan membezakan antara yang telah dikutip dan yang belum.",
+        "Ketik \"Jana PDF\" dan ia terus dimuat turun."
+      ],
+      "tips": [
+        "Butang \"Eksport laporan\" hanya muncul selepas anda mempunyai sekurang-kurangnya satu sekolah yang disediakan.",
+        "Dengan \"Sertakan pelarasan kursus\" anda boleh memilih pelarasan tertentu dan bukan menyertakan semuanya, jika anda hanya perlu membuktikan beberapa sahaja."
+      ],
+      "expectedResult": "PDF yang dimuat turun dengan butiran lengkap tempoh dan sekolah yang dipilih, sedia untuk dihantar atau disimpan."
     }
   }
 }

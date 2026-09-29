@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Filters and search",
       "description": "The same pattern across the whole app"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Export your monthly report as PDF",
+      "description": "The full detail of a period, ready to send"
     }
   },
   "articles": {
@@ -269,6 +273,24 @@
         "The catalogue search (Courses, Currencies) filters as you type, ignoring case and accents."
       ],
       "expectedResult": "The list shows only what you're interested in, without losing sight of how many filters you have active."
+    },
+    "exportar-informe-pdf": {
+      "title": "Export your monthly report as PDF",
+      "summary": "Download a PDF with the full detail of a period and school, ready to review or send.",
+      "whatYouCanDo": "Generate a PDF report with the courses, commissions and course adjustments of the period and school you choose, with the option to also show amounts already collected.",
+      "whenToUseIt": "When you need a formal document to reconcile accounts with a school, keep it as a record, or simply have your accounting in a single PDF.",
+      "steps": [
+        "In Summary, tap \"Export report\".",
+        "Choose the School (if you have more than one) and the Date range — it comes pre-filled with what you were viewing in Summary, but you can change it.",
+        "If you want, turn on \"Include course adjustments\" and decide whether they're added to the total or shown apart.",
+        "Turn on \"Show amounts already collected\" if you want the report to distinguish between collected and pending.",
+        "Tap \"Generate PDF\" and it downloads right away."
+      ],
+      "tips": [
+        "The \"Export report\" button only appears once you have at least one school set up.",
+        "With \"Include course adjustments\" you can pick specific adjustments instead of including them all, if you only need to justify a few."
+      ],
+      "expectedResult": "A downloaded PDF with the full detail of the chosen period and school, ready to send or keep."
     }
   }
 }

@@ -30,10 +30,23 @@
 // quienes ya lo vieron. Sincronizar de nuevo con la versión real en la
 // próxima release que sí traiga diapositivas nuevas.
 //
-// v1.7.0 (2026-09-28): mismo criterio otra vez — el libro digital (Guía
-// de Buceo de Koh Tao) es funcionalidad nueva real, pero no se ha
-// redactado ni aprobado ninguna diapositiva de WhatsNew para anunciarla
-// en esta release (nadie lo ha pedido). `APP_VERSION` se queda en
-// "1.5.1" a propósito. Sincronizar con la versión real en la próxima
-// release que sí traiga diapositivas nuevas.
-export const APP_VERSION = "1.5.1";
+// v1.7.0, segunda vuelta (2026-09-28, pedido explícito ya con la sesión
+// anterior dormida: "muestra un whats new en el próximo despliegue a pro,
+// libro de koh tao disponible, una única slide... explica q el acceso
+// está en la home"): sí trae WhatsNew nuevo — una única diapositiva
+// anunciando el libro digital ya desplegado en v1.7.0 (que en su momento
+// no llevó anuncio, ver nota de arriba). Texto redactado por Claude según
+// pedido explícito del usuario ("piensa tú el texto"), sin aprobación
+// palabra por palabra previa por no haber nadie despierto para dársela —
+// preparado en `develop`, sin tocar `main` todavía; revisar el texto
+// exacto antes de que este cambio llegue a producción.
+//
+// v1.8.0 (2026-09-29): el texto de la diapositiva del libro de Koh Tao se
+// mostró y se aprobó palabra por palabra antes de preparar esta release
+// (ADR-0010, addendum 2026-09-09) — el usuario pidió sustituir ", con
+// búsqueda instantánea." por ". ¡Ahora puedes buscar el punto de buceo
+// directamente!" en los 15 idiomas. Esta es la primera vez que ese
+// contenido llega de verdad a producción (main seguía en "1.5.1"), así
+// que `APP_VERSION` se sincroniza con "1.8.0" para que se muestre a todo
+// el mundo.
+export const APP_VERSION = "1.8.0";

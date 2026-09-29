@@ -61,6 +61,10 @@
     "func-filtros": {
       "label": "Filters en zoeken",
       "description": "Hetzelfde patroon in de hele app"
+    },
+    "quiero-exportar-pdf": {
+      "label": "Exporteer je maandrapport als PDF",
+      "description": "Alle details van een periode, klaar om te versturen"
     }
   },
   "articles": {
@@ -269,6 +273,24 @@
         "De zoekfunctie van catalogi (Cursussen, Munten) filtert terwijl je typt, zonder onderscheid tussen hoofdletters of accenten."
       ],
       "expectedResult": "De lijst toont alleen wat je zoekt, terwijl je precies ziet hoeveel filters er actief zijn."
+    },
+    "exportar-informe-pdf": {
+      "title": "Exporteer je maandrapport als PDF",
+      "summary": "Download een PDF met alle details van een periode en school, klaar om te bekijken of te versturen.",
+      "whatYouCanDo": "Genereer een PDF-rapport met de cursussen, commissies en cursusaanpassingen van de gekozen periode en school, met de optie om ook al geïnde bedragen te tonen.",
+      "whenToUseIt": "Wanneer je een formeel document nodig hebt om rekeningen met een school te vergelijken, het als bewijs wilt bewaren, of gewoon je boekhouding in één PDF wilt hebben.",
+      "steps": [
+        "Tik in Overzicht op \"Rapport exporteren\".",
+        "Kies de School (als je er meer dan één hebt) en het Datumbereik — dit is al vooraf ingevuld met wat je in Overzicht bekeek, maar je kunt het wijzigen.",
+        "Zet indien gewenst \"Cursusaanpassingen opnemen\" aan en bepaal of ze bij het totaal worden opgeteld of apart worden getoond.",
+        "Zet \"Al geïnde bedragen tonen\" aan als je wilt dat het rapport onderscheid maakt tussen geïnd en openstaand.",
+        "Tik op \"PDF genereren\" en het wordt meteen gedownload."
+      ],
+      "tips": [
+        "De knop \"Rapport exporteren\" verschijnt pas zodra je minstens één school hebt ingesteld.",
+        "Met \"Cursusaanpassingen opnemen\" kun je specifieke aanpassingen kiezen in plaats van ze allemaal op te nemen, als je er maar een paar hoeft te verantwoorden."
+      ],
+      "expectedResult": "Een gedownload PDF met alle details van de gekozen periode en school, klaar om te versturen of te bewaren."
     }
   }
 }

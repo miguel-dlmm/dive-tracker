@@ -8,24 +8,8 @@
     "start": "Commencer",
     "slides": [
       {
-        "title": "Exportez votre rapport en PDF",
-        "body": "Générez le PDF avec tous vos mouvements à envoyer à qui en a besoin — exportez vos données facilement."
-      },
-      {
-        "title": "Training Records plus légers",
-        "body": "Le générateur de Training Records est optimisé pour créer des fichiers plus légers."
-      },
-      {
-        "title": "Accueil, revisité",
-        "body": "Plus dynamique, avec des données intéressantes à voir d'un coup d'œil."
-      },
-      {
-        "title": "Mon profil, restructuré",
-        "body": "Sections réorganisées pour que tout soit plus simple et plus rapide à trouver."
-      },
-      {
-        "title": "Revoyez-les quand vous voulez",
-        "body": "Retrouvez ces nouveautés depuis Aide → \"Voir les nouveautés\", quand vous le souhaitez."
+        "title": "Le guide de plongée de Koh Tao, maintenant dans Ocean Flow",
+        "body": "Sites de plongée, faune marine et toutes les infos pour le briefing. Vous pouvez maintenant rechercher le site de plongée directement ! Accessible depuis la tuile de l'accueil."
       }
     ]
   },

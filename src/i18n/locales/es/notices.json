@@ -8,24 +8,8 @@
     "start": "Empezar",
     "slides": [
       {
-        "title": "Exporta tu informe en PDF",
-        "body": "Genera el PDF con todos tus movimientos y envíalo a quien lo necesite."
-      },
-      {
-        "title": "Training Records más ligeros",
-        "body": "El generador de Training Records se optimiza para crear ficheros más ligeros."
-      },
-      {
-        "title": "Portada renovada",
-        "body": "Más dinámica, con datos interesantes para consumir de un vistazo."
-      },
-      {
-        "title": "Mi perfil, reestructurado",
-        "body": "Secciones reorganizadas para que todo sea más fácil y rápido."
-      },
-      {
-        "title": "Repásalo cuando quieras",
-        "body": "Vuelve a estas novedades desde Ayuda → \"Ver qué hay de nuevo\", sin esperar al próximo cambio."
+        "title": "El libro de buceo de Koh Tao, ya en Ocean Flow",
+        "body": "Puntos de buceo, vida marina y toda la información para el briefing. ¡Ahora puedes buscar el punto de buceo directamente! Accede desde la pastilla de Home."
       }
     ]
   },

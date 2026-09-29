@@ -8,24 +8,8 @@
     "start": "Beginnen",
     "slides": [
       {
-        "title": "Exporteer je rapport als PDF",
-        "body": "Genereer de PDF met al je boekingen om naar wie dan ook te sturen — exporteer je gegevens moeiteloos."
-      },
-      {
-        "title": "Lichtere Training Records",
-        "body": "De Training Records-generator is geoptimaliseerd om lichtere bestanden te maken."
-      },
-      {
-        "title": "Home, vernieuwd",
-        "body": "Dynamischer, met interessante gegevens in één oogopslag."
-      },
-      {
-        "title": "Mijn profiel, geherstructureerd",
-        "body": "Onderdelen opnieuw georganiseerd, zodat je alles sneller en makkelijker vindt."
-      },
-      {
-        "title": "Bekijk het opnieuw wanneer je wilt",
-        "body": "Kom terug naar deze nieuwtjes via Hulp → \"Wat is er nieuw\", zonder te wachten op de volgende update."
+        "title": "De duikgids van Koh Tao, nu in Ocean Flow",
+        "body": "Duikplekken, zeeleven en alle info voor de briefing. Nu kun je de duikplek direct opzoeken! Toegankelijk via de tegel op Home."
       }
     ]
   },

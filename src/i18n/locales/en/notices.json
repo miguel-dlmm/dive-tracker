@@ -8,24 +8,8 @@
     "start": "Let's go",
     "slides": [
       {
-        "title": "Export your report as PDF",
-        "body": "Generate a PDF with all your entries to send to anyone who needs it — export your data with ease."
-      },
-      {
-        "title": "Lighter Training Records",
-        "body": "The Training Records generator is optimized to create lighter files."
-      },
-      {
-        "title": "Home, reimagined",
-        "body": "More dynamic, with interesting data to take in at a glance."
-      },
-      {
-        "title": "My profile, restructured",
-        "body": "Sections reorganized so everything is easier and faster to find."
-      },
-      {
-        "title": "Revisit it whenever you want",
-        "body": "Find this again from Help → \"What's new\", any time you like."
+        "title": "The Koh Tao dive guide, now in Ocean Flow",
+        "body": "Dive sites, marine life and everything you need for the briefing. Now you can search for the dive site directly! Access it from the Home tile."
       }
     ]
   },
