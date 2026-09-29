@@ -4,6 +4,17 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Fixed
+- **Landing "Meet Ocean Flow": capturas de pantalla estiradas**: al
+  sustituir las imágenes base64 por ficheros `.webp` (auditoría PWA/SEO,
+  v1.9.0), las nuevas capturas quedaban visiblemente deformadas —
+  reportado en producción por usuarios reales entrando ya a la landing.
+  Recapturadas ambas (Home y Training Records) a viewport completo, sin
+  la cabecera de la app (recorte consistente entre las dos), y
+  actualizado `width`/`height` en el HTML para que coincidan con las
+  dimensiones reales — el desajuste anterior entre esos atributos y el
+  contenido real de la imagen es lo que forzaba el estirado.
+
 ## [1.9.0] - 2026-09-29
 
 ### Added
