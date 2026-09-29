@@ -4,6 +4,16 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Email de bienvenida/activación traducido a los 15 idiomas de la app**:
+  hasta ahora solo tenía plantilla propia en español e inglés (v1.8.0), el
+  resto caía a español. `resolveActivationEmailCopy` pasa a resolver por
+  un mapa idioma → tabla con las 15 traducciones completas (5 motivos
+  cada una: alta, registro externo, reactivación, restablecer contraseña
+  por admin, y autoservicio). Registro de tuteo/formalidad verificado
+  contra cómo ya habla la app en cada idioma real (p. ej. francés
+  corregido a "vous" formal, portugués a "você").
+
 ## [1.8.0] - 2026-09-29
 
 ### Added
