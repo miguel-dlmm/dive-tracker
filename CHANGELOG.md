@@ -7,13 +7,20 @@ Registro de cambios relevantes de Ocean Flow.
 ### Fixed
 - **Landing "Meet Ocean Flow": capturas de pantalla estiradas**: al
   sustituir las imágenes base64 por ficheros `.webp` (auditoría PWA/SEO,
-  v1.9.0), las nuevas capturas quedaban visiblemente deformadas —
-  reportado en producción por usuarios reales entrando ya a la landing.
-  Recapturadas ambas (Home y Training Records) a viewport completo, sin
-  la cabecera de la app (recorte consistente entre las dos), y
-  actualizado `width`/`height` en el HTML para que coincidan con las
-  dimensiones reales — el desajuste anterior entre esos atributos y el
-  contenido real de la imagen es lo que forzaba el estirado.
+  v1.9.0), las capturas se veían deformadas en producción — reportado
+  por usuarios reales entrando ya a la landing. Se probaron varios
+  recortes/tamaños nuevos sin éxito, y cada intento seguía viéndose mal
+  en dispositivo real aunque las comprobaciones automáticas (Playwright,
+  sin Service Worker persistente) no detectaban nada. Causa real
+  encontrada: el Service Worker (recién introducido en la misma v1.9.0)
+  precacheaba la landing entera, así que un navegador que ya la había
+  visitado seguía sirviendo HTML/imágenes de un despliegue anterior
+  aunque el servidor ya tuviera la versión corregida — de ahí que cada
+  "arreglo" pareciera empeorar las cosas. Solución final: excluir
+  `meetOceanFlow/**` del precache del Service Worker (ver `vite.config.js`)
+  y revertir las dos capturas a la última versión estable conocida
+  (base64 embebido, sin ficheros `.webp` externos), en vez de seguir
+  generando recortes nuevos.
 
 ## [1.9.0] - 2026-09-29
 
