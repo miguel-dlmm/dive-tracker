@@ -7,23 +7,31 @@ import { useFloatingDropdown, FloatingPanel, useToast } from "./shared";
 import { panelVariants, monthSlideVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
 import { fetchDiveConditions, windDirectionLabel, FORECAST_DAYS } from "./diveConditions/openMeteo";
 import { searchDiveSpots } from "./diveConditions/geocoding";
-import { resolveTideForLocation, predictTide, TIDE_WARN_DISTANCE_KM } from "./diveConditions/tide";
+import { resolveTideForLocation, predictTide, localIsoToDate, TIDE_WARN_DISTANCE_KM } from "./diveConditions/tide";
 import { supabase } from "./supabaseClient";
 
 // Widget de condiciones de buceo en Home (viento/oleaje/temperatura del
-// agua + previsión por horas hasta 7 días adelante) — ver docs/BACKLOG.md,
-// "Widget de condiciones de buceo en Home", y el análisis/mockup previos
-// de esta misma sesión. Variante "tarjeta continua" (elegida explícitamente
-// por el usuario entre 3 propuestas) — mismo lenguaje visual que el resto
-// de tarjetas de Home (borde gray-200, rounded-xl, bg-white).
+// agua + marea real + previsión por horas hasta 7 días adelante) — ver
+// docs/BACKLOG.md, "Widget de condiciones de buceo en Home". Variante
+// "tarjeta continua" (elegida explícitamente por el usuario entre 3
+// propuestas) — mismo lenguaje visual que el resto de tarjetas de Home
+// (borde gray-200, rounded-xl, bg-white).
 //
-// Marea: NO implementada en este MVP a propósito (la resolución de
-// estación real, Slackwater + TICON-4, es un sub-sistema aparte — ver el
-// análisis enlazado en el backlog). La tarjeta reserva su hueco visual
-// ("Próximamente") en vez de romper la cuadrícula de 4 columnas o
-// inventar un dato que no existe todavía.
+// Tocar cualquier hora del gráfico mueve TODA la tarjeta (KPIs de arriba
+// + marea) a esa hora, no solo el propio gráfico — pedido explícito del
+// usuario: "cuando cambio las horas en el gráfico debería cambiar los
+// KPIs de arriba para darme los de esa hora".
 
 const CONTAINER = "flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3.5";
+
+// Objetivo táctil real de 44px vía padding (box-content, no border-box):
+// h-5 w-5 (20px de contenido) + p-3 (12px) = 44×44 renderizados, con el
+// icono a tamaño completo dentro — con border-box (el valor por defecto
+// de Tailwind) el padding se come el propio contenido y el icono
+// desaparece aunque el botón siga respondiendo al toque (bug real
+// encontrado en producción, mismo patrón que ya se corrigió en el
+// mockup de esta función).
+const DAY_NAV_BTN = "box-content flex h-5 w-5 items-center justify-center rounded-full p-3 disabled:text-gray-200";
 
 function dayLabel(t, offset, dateStr) {
   if (offset === 0) return t("today");
@@ -55,15 +63,19 @@ function buildSparkPath(values, w, h) {
   return { line, area, pts };
 }
 
-function HourlyChart({ hours, metric, currentHourIndex }) {
+// Controlado desde fuera (selectedHour/onSelectHour) — tocar el gráfico
+// cambia la hora de TODA la tarjeta, no solo del propio gráfico. Lleva su
+// propia lectura (hora · valor), pedido explícito ("en la gráfica no
+// tengo ningún dato del valor para cada hora").
+function HourlyChart({ hours, metric, selectedHour, onSelectHour, isToday, nowHour, t }) {
   const W = 300, H = 62;
-  const [hoverIndex, setHoverIndex] = useState(currentHourIndex);
-  useEffect(() => { setHoverIndex(currentHourIndex); }, [currentHourIndex, metric]);
   const values = hours.map((h) => (metric === "wave" ? h.wave : h.wind));
   const { line, area, pts } = useMemo(() => buildSparkPath(values, W, H), [values]);
   const svgRef = useRef(null);
-
-  const point = pts[Math.min(hoverIndex, pts.length - 1)];
+  const point = pts[Math.min(selectedHour, pts.length - 1)];
+  const rawValue = hours[selectedHour]?.[metric === "wave" ? "wave" : "wind"];
+  const readoutValue = metric === "wave" ? `${rawValue.toFixed(1)} m` : `${Math.round(rawValue)} km/h`;
+  const isNow = isToday && selectedHour === nowHour;
 
   function handlePoint(clientX) {
     const rect = svgRef.current.getBoundingClientRect();
@@ -71,11 +83,18 @@ function HourlyChart({ hours, metric, currentHourIndex }) {
     const stepX = (W - 6) / (values.length - 1);
     let idx = Math.round((relX - 3) / stepX);
     idx = Math.max(0, Math.min(values.length - 1, idx));
-    setHoverIndex(idx);
+    onSelectHour(idx);
   }
 
   return (
     <div>
+      <div className="mb-1 flex items-baseline gap-1.5">
+        <span className="text-[11px] font-extrabold tabular-nums" style={{ color: BRAND_NAVY }}>
+          {hours[selectedHour]?.time}{isNow ? ` (${t("today").toLowerCase()})` : ""}
+        </span>
+        <span className="text-[11px] font-bold tabular-nums" style={{ color: BRAND_OCEAN }}>{readoutValue}</span>
+        <span className="text-[9.5px] text-gray-300">{t(metric)}</span>
+      </div>
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
@@ -121,6 +140,8 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
   const [expandOpen, setExpandOpen] = useState(false);
   const [dayOffset, setDayOffset] = useState(0);
   const [metric, setMetric] = useState("wind");
+  const nowHour = new Date().getHours();
+  const [selectedHour, setSelectedHour] = useState(nowHour);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -222,6 +243,13 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
     return () => { cancelled = true; };
   }, [location?.lat, location?.lng]);
 
+  // Al cambiar de día, la hora seleccionada vuelve a un valor sensato:
+  // la hora real de "ahora" si se vuelve a Hoy, mediodía para el resto —
+  // nunca se queda apuntando a una hora que ya no tiene sentido.
+  useEffect(() => {
+    setSelectedHour(dayOffset === 0 ? new Date().getHours() : 12);
+  }, [dayOffset]);
+
   // Búsqueda con pequeño debounce, mientras el desplegable de sitio está abierto.
   useEffect(() => {
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
@@ -272,14 +300,25 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
 
   const isFavoriteActive = isFavoriteActiveFor(location, favorite);
 
+  const day = conditions?.days?.[dayOffset];
+  const selectedHourData = day?.hours?.[selectedHour];
+  const sunrise = conditions?.daily?.sunrise?.[dayOffset];
+  const sunset = conditions?.daily?.sunset?.[dayOffset];
+  const bestWindow = day ? computeBestWindow(day.hours) : null;
+  const tideFar = tideData && tideData.distanceKm > TIDE_WARN_DISTANCE_KM;
+
+  // La marea responde a la MISMA hora seleccionada que el resto de la
+  // tarjeta (pedido explícito) — instante UTC real calculado a partir de
+  // la hora local del sitio, nunca de la hora local del dispositivo.
   const tidePrediction = useMemo(() => {
-    if (!tideData?.harmonicConstituents) return null;
+    if (!tideData?.harmonicConstituents || !selectedHourData?.isoLocal) return null;
     try {
-      return predictTide(tideData);
+      const at = localIsoToDate(selectedHourData.isoLocal, conditions?.utcOffsetSeconds);
+      return predictTide(tideData, at);
     } catch {
       return null;
     }
-  }, [tideData]);
+  }, [tideData, selectedHourData?.isoLocal, conditions?.utcOffsetSeconds]);
 
   // ---- Estado vacío: sin GPS ni favorito ----
   if (!resolving && !location) {
@@ -343,16 +382,10 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
     return <div className={CONTAINER + " min-h-[92px] items-center justify-center text-[11px] text-gray-400"}>{t("loading")}</div>;
   }
 
-  const day = conditions?.days?.[dayOffset];
-  const nowHour = new Date().getHours();
-  const currentHourData = dayOffset === 0 ? conditions?.days?.[0]?.hours?.[nowHour] : null;
-  const sunrise = conditions?.daily?.sunrise?.[dayOffset];
-  const sunset = conditions?.daily?.sunset?.[dayOffset];
-  const bestWindow = day ? computeBestWindow(day.hours) : null;
-  const tideFar = tideData && tideData.distanceKm > TIDE_WARN_DISTANCE_KM;
-
   return (
     <div className={CONTAINER}>
+      {/* Fila 1: sitio (izquierda) + nav de día (derecha) — SIEMPRE solo
+          estos dos, para que nunca se desplacen fuera de la tarjeta. */}
       <div className="flex items-center justify-between gap-2">
         <div className="relative inline-flex">
           <button
@@ -413,21 +446,14 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
           </FloatingPanel>
         </div>
 
-        {!isFavoriteActive && lastSelectedFromSearch && (
-          <button type="button" onClick={saveFavorite} className="shrink-0 text-[10.5px] font-bold underline" style={{ color: BRAND_OCEAN }}>
-            {t("useAsFavorite")}
-          </button>
-        )}
-
-        {/* Nav de día — lado contrario a la localización, arriba (pedido
-            explícito). Tocarlo abre el desplegable si estaba cerrado, para
-            que el cambio de día se vea al momento. */}
+        {/* Nav de día — lado contrario a la localización (pedido
+            explícito). Tocarlo abre el desplegable si estaba cerrado. */}
         {!loadError && conditions?.days && (
           <div className="flex items-center">
             <button type="button" disabled={dayOffset <= 0}
               onClick={() => { setDayOffset((d) => d - 1); if (!expandOpen) setExpandOpen(true); }}
               aria-label={t("prevDay")}
-              className="flex h-5 w-5 items-center justify-center rounded-full p-3 disabled:text-gray-200" style={{ color: BRAND_OCEAN }}>
+              className={DAY_NAV_BTN} style={{ color: BRAND_OCEAN }}>
               <ChevronLeft size={14} aria-hidden="true" />
             </button>
             <span className="min-w-[64px] text-center text-[10.5px] font-extrabold" style={{ color: BRAND_NAVY }}>
@@ -436,24 +462,33 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
             <button type="button" disabled={dayOffset >= Math.min(FORECAST_DAYS - 1, conditions.days.length - 1)}
               onClick={() => { setDayOffset((d) => d + 1); if (!expandOpen) setExpandOpen(true); }}
               aria-label={t("nextDay")}
-              className="flex h-5 w-5 items-center justify-center rounded-full p-3 disabled:text-gray-200" style={{ color: BRAND_OCEAN }}>
+              className={DAY_NAV_BTN} style={{ color: BRAND_OCEAN }}>
               <ChevronRight size={14} aria-hidden="true" />
             </button>
           </div>
         )}
       </div>
 
+      {/* Fila 2 (solo si aplica): enlace de favorito, en su propia línea
+          — antes competía por sitio con el nav de día y lo empujaba fuera
+          de la tarjeta (bug real reportado). */}
+      {!isFavoriteActive && lastSelectedFromSearch && (
+        <button type="button" onClick={saveFavorite} className="self-start text-[10.5px] font-bold underline" style={{ color: BRAND_OCEAN }}>
+          {t("useAsFavorite")}
+        </button>
+      )}
+
       {loadError && <p className="text-[11px] text-gray-400">{t("errorLoad")}</p>}
 
       {!loadError && (
         <div className="grid grid-cols-4 gap-1.5">
           <MetricTile icon={Wind} color={BRAND_OCEAN}
-            value={currentHourData ? Math.round(currentHourData.wind) : "—"}
-            sub={currentHourData ? `km/h · ${windDirectionLabel(currentHourData.windDir)}` : ""}
+            value={selectedHourData ? Math.round(selectedHourData.wind) : "—"}
+            sub={selectedHourData ? `km/h · ${windDirectionLabel(selectedHourData.windDir)}` : ""}
             label={t("wind")} />
           <MetricTile icon={Waves} color={BRAND_NAVY}
-            value={currentHourData ? `${currentHourData.wave.toFixed(1)} m` : "—"}
-            sub={currentHourData ? t("period", { seconds: Math.round(currentHourData.wavePeriod) }) : ""}
+            value={selectedHourData ? `${selectedHourData.wave.toFixed(1)} m` : "—"}
+            sub={selectedHourData ? t("period", { seconds: Math.round(selectedHourData.wavePeriod) }) : ""}
             label={t("wave")} />
           <MetricTile icon={Moon} color={tideFar ? SUN : BRAND_OCEAN}
             value={tidePrediction ? (tidePrediction.rising ? t("tideRising") : t("tideFalling")) : (tideError ? "—" : (tideResolving ? "…" : "—"))}
@@ -461,7 +496,7 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
             label={t("tide")}
             muted={!tidePrediction} />
           <MetricTile icon={Thermometer} color={GREEN}
-            value={currentHourData ? `${currentHourData.waterTemp.toFixed(1)}°` : "—"}
+            value={selectedHourData ? `${selectedHourData.waterTemp.toFixed(1)}°` : "—"}
             sub="" label={t("waterTemp")} />
         </div>
       )}
@@ -495,7 +530,8 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
               </div>
             </div>
 
-            <HourlyChart hours={day.hours} metric={metric} currentHourIndex={dayOffset === 0 ? nowHour : 12} />
+            <HourlyChart hours={day.hours} metric={metric} selectedHour={selectedHour} onSelectHour={setSelectedHour}
+              isToday={dayOffset === 0} nowHour={nowHour} t={t} />
 
             <div className="flex gap-3 rounded-lg bg-gray-50 px-2.5 py-2">
               <div className="flex flex-1 items-center gap-1.5">

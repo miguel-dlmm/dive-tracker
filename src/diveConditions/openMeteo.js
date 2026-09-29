@@ -64,6 +64,7 @@ function groupByDay(hourlyTime, series) {
     }
     days[dayIndex].hours.push({
       time: iso.slice(11, 16),
+      isoLocal: iso,
       wind: series.windSpeed[i],
       windDir: series.windDirection[i],
       wave: series.waveHeight[i],
@@ -99,6 +100,10 @@ export async function fetchDiveConditions(lat, lng, { skipCache = false } = {}) 
 
   const data = {
     timezone: forecast.timezone,
+    // Necesario para convertir una hora local del sitio (p. ej. "14:00 en
+    // Koh Tao") al instante UTC real que espera el motor de marea — la
+    // hora local sola es ambigua sin saber a qué huso horario pertenece.
+    utcOffsetSeconds: forecast.utc_offset_seconds,
     days,
     daily: {
       date: forecast.daily.time,

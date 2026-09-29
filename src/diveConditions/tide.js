@@ -117,6 +117,20 @@ export async function resolveTideForLocation(lat, lng) {
   return result;
 }
 
+// Convierte una hora LOCAL del sitio de buceo (p. ej. "2026-09-29T14:00",
+// sin marca de huso horario, tal como la devuelve Open-Meteo con
+// timezone=auto) al instante UTC real que necesita el motor de marea.
+// Date.UTC() lee los componentes tal cual, como si fueran UTC — restar el
+// offset del sitio da el instante UTC correcto, sin depender en ningún
+// momento de la zona horaria del dispositivo que está mirando el móvil.
+export function localIsoToDate(isoLocal, utcOffsetSeconds) {
+  const [datePart, timePart] = isoLocal.split("T");
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+  const asUtc = Date.UTC(year, month - 1, day, hour, minute);
+  return new Date(asUtc - (utcOffsetSeconds || 0) * 1000);
+}
+
 // A partir de los datos ya resueltos (de profiles, o de resolveTideForLocation)
 // calcula el nivel actual (tendencia subiendo/bajando) y la próxima
 // pleamar/bajamar — reconstruye el objeto de estación que espera

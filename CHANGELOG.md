@@ -8,8 +8,10 @@ Registro de cambios relevantes de Ocean Flow.
 - **Widget de condiciones de buceo en Home (MVP)**: nueva tarjeta justo
   debajo de los KPIs con viento, oleaje y temperatura del agua en vivo
   (Open-Meteo, sin backend nuevo) para el sitio de buceo del instructor,
-  con previsión por horas navegable hasta 7 días adelante, amanecer/
-  atardecer y la franja más tranquila del día. La ubicación se resuelve
+  con previsión por horas navegable hasta 7 días adelante (tocar
+  cualquier hora del gráfico actualiza también el viento/oleaje/temp./
+  marea de arriba, para esa hora concreta), amanecer/atardecer y la
+  franja más tranquila del día. La ubicación se resuelve
   con geolocalización automática, cae al favorito guardado en el perfil
   si el GPS falla, y por último a un buscador — el favorito se guarda en
   `profiles`, sincronizado entre dispositivos por decisión explícita del
