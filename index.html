@@ -36,6 +36,17 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#063256" />
 
+    <!-- Meta tags de instalación en iOS (auditoría PWA/SEO, 2026-09-29) —
+         iOS Safari no lee manifest.json de la misma forma que Chrome/
+         Android (ver InstallAppTab.jsx, ya documentado: no hay
+         beforeinstallprompt en iOS). Estas tres etiquetas son la vía
+         documentada por Apple para que, al "Añadir a inicio", se abra en
+         modo standalone con barra de estado y nombre corto coherentes con
+         la marca — https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Ocean Flow" />
+
     <!-- Open Graph / redes sociales — investigado 2026-09-07 (fuentes:
          https://www.krumzi.com/blog/open-graph-image-sizes-for-social-media-the-complete-2026-guide,
          https://env.dev/guides/opengraph-image-sizes): la URL de
@@ -53,15 +64,15 @@
     <meta property="og:site_name" content="Ocean Flow" />
     <meta property="og:title" content="Ocean Flow — Control de ingresos para instructores de buceo" />
     <meta property="og:description" content="Registra clases, comisiones y pagos por escuela, con resumen mensual y anual." />
-    <meta property="og:image" content="https://dive-tracker-exgg.vercel.app/og-image.png" />
-    <meta property="og:url" content="https://dive-tracker-exgg.vercel.app/" />
+    <meta property="og:image" content="https://oceanflow-web.vercel.app/og-image.png" />
+    <meta property="og:url" content="https://oceanflow-web.vercel.app/" />
     <meta property="og:locale" content="es_ES" />
 
     <!-- Twitter/X card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Ocean Flow" />
     <meta name="twitter:description" content="Control de ingresos para instructores de buceo." />
-    <meta name="twitter:image" content="https://dive-tracker-exgg.vercel.app/og-image.png" />
+    <meta name="twitter:image" content="https://oceanflow-web.vercel.app/og-image.png" />
 
     <!-- Datos estructurados: ayuda tanto a buscadores clásicos como a
          motores de respuesta con IA (Google SGE, Perplexity, etc.) a

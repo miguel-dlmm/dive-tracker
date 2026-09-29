@@ -13,6 +13,30 @@ Registro de cambios relevantes de Ocean Flow.
   por admin, y autoservicio). Registro de tuteo/formalidad verificado
   contra cómo ya habla la app en cada idioma real (p. ej. francés
   corregido a "vous" formal, portugués a "você").
+- **Auditoría PWA/SEO implementada** (los 7 puntos del informe entregado
+  antes, `docs/INFORME-AUDITORIA-PWA-SEO-2026-09.md`):
+  - `robots.txt`: excepción explícita para `/meetOceanFlow/` (antes
+    bloqueada por el `Disallow: /` general de toda la app) + nuevo
+    `sitemap.xml` con esa misma URL.
+  - Landing "Meet Ocean Flow": las dos capturas de pantalla pasan de ir
+    embebidas en base64 dentro del HTML (196 KB, el 88% del fichero) a
+    ficheros `.webp` aparte, cacheables y con `loading="lazy"` +
+    `width`/`height` (evita *layout shift*).
+  - Landing: Open Graph, Twitter Card, `canonical` y datos estructurados
+    (`schema.org/WebSite`) — no tenía ninguno hasta ahora.
+  - `index.html` de la app: `apple-mobile-web-app-*` para que "Añadir a
+    inicio" en iOS abra en modo standalone con el nombre/barra de estado
+    correctos. De paso, corrige `og:url`/`og:image` que seguían apuntando
+    al dominio antiguo (`dive-tracker-exgg`) en vez del canónico actual
+    (`oceanflow-web`).
+  - `manifest.json`: icono con `purpose: "maskable"` (el icono ya tenía
+    suficiente zona de seguridad, se reutiliza el mismo fichero).
+  - Service Worker (`vite-plugin-pwa`) — alcance mínimo a propósito: solo
+    precachea el shell estático de la app (nunca datos de Supabase ni
+    `/api/*`), excluyendo los 3 chunks de PDF (~4.6 MB, `import()`
+    dinámico, no forman parte del shell). Habilita el criterio real de
+    instalabilidad de Chrome/Android y que el shell cargue aunque falle
+    la conexión justo al abrir.
 
 ## [1.8.0] - 2026-09-29
 

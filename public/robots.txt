@@ -1,4 +1,11 @@
 # Ocean Flow es una herramienta personal/privada (datos de facturación),
-# no un sitio de contenido — se pide a los rastreadores que no la indexen.
+# no un sitio de contenido — se pide a los rastreadores que no indexen la
+# app en sí. Excepción explícita (2026-09-29, auditoría PWA/SEO): la
+# landing "Meet Ocean Flow" sí es contenido público pensado para
+# descubrirse — Allow dentro de un Disallow general es sintaxis estándar
+# soportada por todos los rastreadores relevantes (Google, Bing...).
 User-agent: *
 Disallow: /
+Allow: /meetOceanFlow/
+
+Sitemap: https://oceanflow-web.vercel.app/sitemap.xml

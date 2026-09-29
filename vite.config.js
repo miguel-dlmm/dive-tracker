@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite'
 import { configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // api/*.js (Vercel) es un adaptador fino sobre server/users/*.js — recibe
 // {method, headers, body} y devuelve {status, payload}, sin nada
@@ -89,7 +90,46 @@ export default defineConfig(({ mode }) => {
   Object.assign(process.env, loadEnv(mode, process.cwd(), ''))
 
   return {
-    plugins: [react(), tailwindcss(), localApiRoutes()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      localApiRoutes(),
+      // Service Worker (auditoría PWA/SEO, 2026-09-29) — alcance
+      // deliberadamente mínimo: cachea solo el shell estático de la app
+      // (JS/CSS/HTML/iconos ya construidos), nunca datos de Supabase ni
+      // ninguna llamada a /api/* (excluida explícitamente de
+      // navigateFallback y sin ninguna entrada runtimeCaching). Con eso
+      // basta para lo que de verdad aporta un Service Worker aquí: que
+      // Chrome/Android considere la app instalable de forma nativa
+      // (criterio real, ver web.dev/articles/install-criteria) y que el
+      // shell cargue aunque la conexión falle justo al abrir — la app
+      // sigue necesitando red real para cualquier dato (Supabase), eso no
+      // cambia ni se pretende que cambie.
+      // manifest: false — ya existe public/manifest.json, enlazado a mano
+      // en index.html; no hace falta que este plugin genere uno segundo.
+      VitePWA({
+        registerType: 'autoUpdate',
+        manifest: false,
+        workbox: {
+          navigateFallback: '/index.html',
+          navigateFallbackDenylist: [/^\/api\//],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+          // Los 3 chunks de PDF (pdfWorkerEntry/pdfToJpg/generateExportReportPdf)
+          // son import() dinámico, cargados solo al exportar/convertir un
+          // PDF — no forman parte del "shell" que este Service Worker
+          // debe precachear, y entre los tres suman ~4.6 MB que inflarían
+          // el precache sin aportar nada al objetivo real (que la app
+          // abra aunque falle la conexión justo al entrar). El navegador
+          // los sigue pidiendo normalmente cuando de verdad hacen falta.
+          globIgnores: ['**/pdfWorkerEntry-*.js', '**/pdfToJpg-*.js', '**/generateExportReportPdf-*.js'],
+          // El bundle principal (core de React + toda la app, no lazy)
+          // pesa ~2.6 MB, por encima del límite por defecto de Workbox
+          // (2 MiB) — se sube lo justo para que quepa, no un valor
+          // arbitrariamente alto.
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        },
+      }),
+    ],
     server: {
       host: true,
       allowedHosts: ['.trycloudflare.com'],
