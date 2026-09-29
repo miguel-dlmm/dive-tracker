@@ -803,7 +803,30 @@
     try { localStorage.setItem("oceanflow:meetLang", code); } catch (e) {}
   }
 
+  // ?lang= en la URL (pedido explícito, 2026-09-29): "poder pasarle a la
+  // landing el idioma por parámetro para compartirla en el idioma del
+  // foro a donde la envió" — gana sobre localStorage y sobre el idioma
+  // del navegador, porque es una señal más fuerte y deliberada (quien
+  // comparte el enlace ya sabe en qué idioma quiere que se abra, no hay
+  // que adivinarlo). Mismo criterio ya aplicado a getStoredLanguage() en
+  // src/i18n/index.js para las pantallas de la app sin sesión.
+  function getUrlLang() {
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var fromUrl = params.get("lang");
+      if (!fromUrl) return null;
+      for (var i = 0; i < LANGS.length; i++) {
+        if (LANGS[i].code.toLowerCase() === fromUrl.toLowerCase()) return LANGS[i].code;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   function detectDefault() {
+    var fromUrl = getUrlLang();
+    if (fromUrl) return fromUrl;
     try {
       var stored = localStorage.getItem("oceanflow:meetLang");
       if (stored && I18N[stored]) return stored;
