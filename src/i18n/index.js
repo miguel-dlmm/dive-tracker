@@ -15,6 +15,7 @@ import esRates from "./locales/es/rates.json";
 import esTrainingRecords from "./locales/es/trainingRecords.json";
 import esInstallApp from "./locales/es/installApp.json";
 import esDiveGuide from "./locales/es/diveGuide.json";
+import esDiveConditions from "./locales/es/diveConditions.json";
 
 import enCommon from "./locales/en/common.json";
 import enAuth from "./locales/en/auth.json";
@@ -30,6 +31,7 @@ import enRates from "./locales/en/rates.json";
 import enTrainingRecords from "./locales/en/trainingRecords.json";
 import enInstallApp from "./locales/en/installApp.json";
 import enDiveGuide from "./locales/en/diveGuide.json";
+import enDiveConditions from "./locales/en/diveConditions.json";
 
 import frCommon from "./locales/fr/common.json";
 import frAuth from "./locales/fr/auth.json";
@@ -45,6 +47,7 @@ import frRates from "./locales/fr/rates.json";
 import frTrainingRecords from "./locales/fr/trainingRecords.json";
 import frInstallApp from "./locales/fr/installApp.json";
 import frDiveGuide from "./locales/fr/diveGuide.json";
+import frDiveConditions from "./locales/fr/diveConditions.json";
 
 import itCommon from "./locales/it/common.json";
 import itAuth from "./locales/it/auth.json";
@@ -60,6 +63,7 @@ import itRates from "./locales/it/rates.json";
 import itTrainingRecords from "./locales/it/trainingRecords.json";
 import itInstallApp from "./locales/it/installApp.json";
 import itDiveGuide from "./locales/it/diveGuide.json";
+import itDiveConditions from "./locales/it/diveConditions.json";
 
 import deCommon from "./locales/de/common.json";
 import deAuth from "./locales/de/auth.json";
@@ -75,6 +79,7 @@ import deRates from "./locales/de/rates.json";
 import deTrainingRecords from "./locales/de/trainingRecords.json";
 import deInstallApp from "./locales/de/installApp.json";
 import deDiveGuide from "./locales/de/diveGuide.json";
+import deDiveConditions from "./locales/de/diveConditions.json";
 
 import caCommon from "./locales/ca/common.json";
 import caAuth from "./locales/ca/auth.json";
@@ -90,6 +95,7 @@ import caRates from "./locales/ca/rates.json";
 import caTrainingRecords from "./locales/ca/trainingRecords.json";
 import caInstallApp from "./locales/ca/installApp.json";
 import caDiveGuide from "./locales/ca/diveGuide.json";
+import caDiveConditions from "./locales/ca/diveConditions.json";
 
 import euCommon from "./locales/eu/common.json";
 import euAuth from "./locales/eu/auth.json";
@@ -105,6 +111,7 @@ import euRates from "./locales/eu/rates.json";
 import euTrainingRecords from "./locales/eu/trainingRecords.json";
 import euInstallApp from "./locales/eu/installApp.json";
 import euDiveGuide from "./locales/eu/diveGuide.json";
+import euDiveConditions from "./locales/eu/diveConditions.json";
 
 import nlCommon from "./locales/nl/common.json";
 import nlAuth from "./locales/nl/auth.json";
@@ -120,6 +127,7 @@ import nlRates from "./locales/nl/rates.json";
 import nlTrainingRecords from "./locales/nl/trainingRecords.json";
 import nlInstallApp from "./locales/nl/installApp.json";
 import nlDiveGuide from "./locales/nl/diveGuide.json";
+import nlDiveConditions from "./locales/nl/diveConditions.json";
 
 import thCommon from "./locales/th/common.json";
 import thAuth from "./locales/th/auth.json";
@@ -135,6 +143,7 @@ import thRates from "./locales/th/rates.json";
 import thTrainingRecords from "./locales/th/trainingRecords.json";
 import thInstallApp from "./locales/th/installApp.json";
 import thDiveGuide from "./locales/th/diveGuide.json";
+import thDiveConditions from "./locales/th/diveConditions.json";
 
 import idCommon from "./locales/id/common.json";
 import idAuth from "./locales/id/auth.json";
@@ -150,6 +159,7 @@ import idRates from "./locales/id/rates.json";
 import idTrainingRecords from "./locales/id/trainingRecords.json";
 import idInstallApp from "./locales/id/installApp.json";
 import idDiveGuide from "./locales/id/diveGuide.json";
+import idDiveConditions from "./locales/id/diveConditions.json";
 
 import viCommon from "./locales/vi/common.json";
 import viAuth from "./locales/vi/auth.json";
@@ -165,6 +175,7 @@ import viRates from "./locales/vi/rates.json";
 import viTrainingRecords from "./locales/vi/trainingRecords.json";
 import viInstallApp from "./locales/vi/installApp.json";
 import viDiveGuide from "./locales/vi/diveGuide.json";
+import viDiveConditions from "./locales/vi/diveConditions.json";
 
 import myCommon from "./locales/my/common.json";
 import myAuth from "./locales/my/auth.json";
@@ -180,6 +191,7 @@ import myRates from "./locales/my/rates.json";
 import myTrainingRecords from "./locales/my/trainingRecords.json";
 import myInstallApp from "./locales/my/installApp.json";
 import myDiveGuide from "./locales/my/diveGuide.json";
+import myDiveConditions from "./locales/my/diveConditions.json";
 
 import msCommon from "./locales/ms/common.json";
 import msAuth from "./locales/ms/auth.json";
@@ -195,6 +207,7 @@ import msRates from "./locales/ms/rates.json";
 import msTrainingRecords from "./locales/ms/trainingRecords.json";
 import msInstallApp from "./locales/ms/installApp.json";
 import msDiveGuide from "./locales/ms/diveGuide.json";
+import msDiveConditions from "./locales/ms/diveConditions.json";
 
 import ruCommon from "./locales/ru/common.json";
 import ruAuth from "./locales/ru/auth.json";
@@ -210,6 +223,7 @@ import ruRates from "./locales/ru/rates.json";
 import ruTrainingRecords from "./locales/ru/trainingRecords.json";
 import ruInstallApp from "./locales/ru/installApp.json";
 import ruDiveGuide from "./locales/ru/diveGuide.json";
+import ruDiveConditions from "./locales/ru/diveConditions.json";
 
 import ptCommon from "./locales/pt/common.json";
 import ptAuth from "./locales/pt/auth.json";
@@ -225,6 +239,7 @@ import ptRates from "./locales/pt/rates.json";
 import ptTrainingRecords from "./locales/pt/trainingRecords.json";
 import ptInstallApp from "./locales/pt/installApp.json";
 import ptDiveGuide from "./locales/pt/diveGuide.json";
+import ptDiveConditions from "./locales/pt/diveConditions.json";
 
 // Idioma preferido — Release V1 Fase 2. Fuente de verdad real: la columna
 // profiles.language (se sincroniza tras cargar sesión, ver useSession.js/
@@ -298,25 +313,25 @@ export function setStoredLanguage(lang) {
 // complejidad sin beneficio real todavía.
 i18n.use(initReactI18next).init({
   resources: {
-    es: { common: esCommon, auth: esAuth, app: esApp, home: esHome, trabajo: esTrabajo, summary: esSummary, config: esConfig, profile: esProfile, help: esHelp, notices: esNotices, rates: esRates, trainingRecords: esTrainingRecords, installApp: esInstallApp, diveGuide: esDiveGuide },
-    en: { common: enCommon, auth: enAuth, app: enApp, home: enHome, trabajo: enTrabajo, summary: enSummary, config: enConfig, profile: enProfile, help: enHelp, notices: enNotices, rates: enRates, trainingRecords: enTrainingRecords, installApp: enInstallApp, diveGuide: enDiveGuide },
-    fr: { common: frCommon, auth: frAuth, app: frApp, home: frHome, trabajo: frTrabajo, summary: frSummary, config: frConfig, profile: frProfile, help: frHelp, notices: frNotices, rates: frRates, trainingRecords: frTrainingRecords, installApp: frInstallApp, diveGuide: frDiveGuide },
-    it: { common: itCommon, auth: itAuth, app: itApp, home: itHome, trabajo: itTrabajo, summary: itSummary, config: itConfig, profile: itProfile, help: itHelp, notices: itNotices, rates: itRates, trainingRecords: itTrainingRecords, installApp: itInstallApp, diveGuide: itDiveGuide },
-    de: { common: deCommon, auth: deAuth, app: deApp, home: deHome, trabajo: deTrabajo, summary: deSummary, config: deConfig, profile: deProfile, help: deHelp, notices: deNotices, rates: deRates, trainingRecords: deTrainingRecords, installApp: deInstallApp, diveGuide: deDiveGuide },
-    ca: { common: caCommon, auth: caAuth, app: caApp, home: caHome, trabajo: caTrabajo, summary: caSummary, config: caConfig, profile: caProfile, help: caHelp, notices: caNotices, rates: caRates, trainingRecords: caTrainingRecords, installApp: caInstallApp, diveGuide: caDiveGuide },
-    eu: { common: euCommon, auth: euAuth, app: euApp, home: euHome, trabajo: euTrabajo, summary: euSummary, config: euConfig, profile: euProfile, help: euHelp, notices: euNotices, rates: euRates, trainingRecords: euTrainingRecords, installApp: euInstallApp, diveGuide: euDiveGuide },
-    nl: { common: nlCommon, auth: nlAuth, app: nlApp, home: nlHome, trabajo: nlTrabajo, summary: nlSummary, config: nlConfig, profile: nlProfile, help: nlHelp, notices: nlNotices, rates: nlRates, trainingRecords: nlTrainingRecords, installApp: nlInstallApp, diveGuide: nlDiveGuide },
-    th: { common: thCommon, auth: thAuth, app: thApp, home: thHome, trabajo: thTrabajo, summary: thSummary, config: thConfig, profile: thProfile, help: thHelp, notices: thNotices, rates: thRates, trainingRecords: thTrainingRecords, installApp: thInstallApp, diveGuide: thDiveGuide },
-    id: { common: idCommon, auth: idAuth, app: idApp, home: idHome, trabajo: idTrabajo, summary: idSummary, config: idConfig, profile: idProfile, help: idHelp, notices: idNotices, rates: idRates, trainingRecords: idTrainingRecords, installApp: idInstallApp, diveGuide: idDiveGuide },
-    vi: { common: viCommon, auth: viAuth, app: viApp, home: viHome, trabajo: viTrabajo, summary: viSummary, config: viConfig, profile: viProfile, help: viHelp, notices: viNotices, rates: viRates, trainingRecords: viTrainingRecords, installApp: viInstallApp, diveGuide: viDiveGuide },
-    my: { common: myCommon, auth: myAuth, app: myApp, home: myHome, trabajo: myTrabajo, summary: mySummary, config: myConfig, profile: myProfile, help: myHelp, notices: myNotices, rates: myRates, trainingRecords: myTrainingRecords, installApp: myInstallApp, diveGuide: myDiveGuide },
-    ms: { common: msCommon, auth: msAuth, app: msApp, home: msHome, trabajo: msTrabajo, summary: msSummary, config: msConfig, profile: msProfile, help: msHelp, notices: msNotices, rates: msRates, trainingRecords: msTrainingRecords, installApp: msInstallApp, diveGuide: msDiveGuide },
-    ru: { common: ruCommon, auth: ruAuth, app: ruApp, home: ruHome, trabajo: ruTrabajo, summary: ruSummary, config: ruConfig, profile: ruProfile, help: ruHelp, notices: ruNotices, rates: ruRates, trainingRecords: ruTrainingRecords, installApp: ruInstallApp, diveGuide: ruDiveGuide },
-    pt: { common: ptCommon, auth: ptAuth, app: ptApp, home: ptHome, trabajo: ptTrabajo, summary: ptSummary, config: ptConfig, profile: ptProfile, help: ptHelp, notices: ptNotices, rates: ptRates, trainingRecords: ptTrainingRecords, installApp: ptInstallApp, diveGuide: ptDiveGuide },
+    es: { common: esCommon, auth: esAuth, app: esApp, home: esHome, trabajo: esTrabajo, summary: esSummary, config: esConfig, profile: esProfile, help: esHelp, notices: esNotices, rates: esRates, trainingRecords: esTrainingRecords, installApp: esInstallApp, diveGuide: esDiveGuide, diveConditions: esDiveConditions },
+    en: { common: enCommon, auth: enAuth, app: enApp, home: enHome, trabajo: enTrabajo, summary: enSummary, config: enConfig, profile: enProfile, help: enHelp, notices: enNotices, rates: enRates, trainingRecords: enTrainingRecords, installApp: enInstallApp, diveGuide: enDiveGuide, diveConditions: enDiveConditions },
+    fr: { common: frCommon, auth: frAuth, app: frApp, home: frHome, trabajo: frTrabajo, summary: frSummary, config: frConfig, profile: frProfile, help: frHelp, notices: frNotices, rates: frRates, trainingRecords: frTrainingRecords, installApp: frInstallApp, diveGuide: frDiveGuide, diveConditions: frDiveConditions },
+    it: { common: itCommon, auth: itAuth, app: itApp, home: itHome, trabajo: itTrabajo, summary: itSummary, config: itConfig, profile: itProfile, help: itHelp, notices: itNotices, rates: itRates, trainingRecords: itTrainingRecords, installApp: itInstallApp, diveGuide: itDiveGuide, diveConditions: itDiveConditions },
+    de: { common: deCommon, auth: deAuth, app: deApp, home: deHome, trabajo: deTrabajo, summary: deSummary, config: deConfig, profile: deProfile, help: deHelp, notices: deNotices, rates: deRates, trainingRecords: deTrainingRecords, installApp: deInstallApp, diveGuide: deDiveGuide, diveConditions: deDiveConditions },
+    ca: { common: caCommon, auth: caAuth, app: caApp, home: caHome, trabajo: caTrabajo, summary: caSummary, config: caConfig, profile: caProfile, help: caHelp, notices: caNotices, rates: caRates, trainingRecords: caTrainingRecords, installApp: caInstallApp, diveGuide: caDiveGuide, diveConditions: caDiveConditions },
+    eu: { common: euCommon, auth: euAuth, app: euApp, home: euHome, trabajo: euTrabajo, summary: euSummary, config: euConfig, profile: euProfile, help: euHelp, notices: euNotices, rates: euRates, trainingRecords: euTrainingRecords, installApp: euInstallApp, diveGuide: euDiveGuide, diveConditions: euDiveConditions },
+    nl: { common: nlCommon, auth: nlAuth, app: nlApp, home: nlHome, trabajo: nlTrabajo, summary: nlSummary, config: nlConfig, profile: nlProfile, help: nlHelp, notices: nlNotices, rates: nlRates, trainingRecords: nlTrainingRecords, installApp: nlInstallApp, diveGuide: nlDiveGuide, diveConditions: nlDiveConditions },
+    th: { common: thCommon, auth: thAuth, app: thApp, home: thHome, trabajo: thTrabajo, summary: thSummary, config: thConfig, profile: thProfile, help: thHelp, notices: thNotices, rates: thRates, trainingRecords: thTrainingRecords, installApp: thInstallApp, diveGuide: thDiveGuide, diveConditions: thDiveConditions },
+    id: { common: idCommon, auth: idAuth, app: idApp, home: idHome, trabajo: idTrabajo, summary: idSummary, config: idConfig, profile: idProfile, help: idHelp, notices: idNotices, rates: idRates, trainingRecords: idTrainingRecords, installApp: idInstallApp, diveGuide: idDiveGuide, diveConditions: idDiveConditions },
+    vi: { common: viCommon, auth: viAuth, app: viApp, home: viHome, trabajo: viTrabajo, summary: viSummary, config: viConfig, profile: viProfile, help: viHelp, notices: viNotices, rates: viRates, trainingRecords: viTrainingRecords, installApp: viInstallApp, diveGuide: viDiveGuide, diveConditions: viDiveConditions },
+    my: { common: myCommon, auth: myAuth, app: myApp, home: myHome, trabajo: myTrabajo, summary: mySummary, config: myConfig, profile: myProfile, help: myHelp, notices: myNotices, rates: myRates, trainingRecords: myTrainingRecords, installApp: myInstallApp, diveGuide: myDiveGuide, diveConditions: myDiveConditions },
+    ms: { common: msCommon, auth: msAuth, app: msApp, home: msHome, trabajo: msTrabajo, summary: msSummary, config: msConfig, profile: msProfile, help: msHelp, notices: msNotices, rates: msRates, trainingRecords: msTrainingRecords, installApp: msInstallApp, diveGuide: msDiveGuide, diveConditions: msDiveConditions },
+    ru: { common: ruCommon, auth: ruAuth, app: ruApp, home: ruHome, trabajo: ruTrabajo, summary: ruSummary, config: ruConfig, profile: ruProfile, help: ruHelp, notices: ruNotices, rates: ruRates, trainingRecords: ruTrainingRecords, installApp: ruInstallApp, diveGuide: ruDiveGuide, diveConditions: ruDiveConditions },
+    pt: { common: ptCommon, auth: ptAuth, app: ptApp, home: ptHome, trabajo: ptTrabajo, summary: ptSummary, config: ptConfig, profile: ptProfile, help: ptHelp, notices: ptNotices, rates: ptRates, trainingRecords: ptTrainingRecords, installApp: ptInstallApp, diveGuide: ptDiveGuide, diveConditions: ptDiveConditions },
   },
   lng: getStoredLanguage(),
   fallbackLng: "es",
-  ns: ["common", "auth", "app", "home", "trabajo", "summary", "config", "profile", "help", "notices", "rates", "trainingRecords", "installApp", "diveGuide"],
+  ns: ["common", "auth", "app", "home", "trabajo", "summary", "config", "profile", "help", "notices", "rates", "trainingRecords", "installApp", "diveGuide", "diveConditions"],
   defaultNS: "common",
   interpolation: { escapeValue: false }, // React ya escapa — evita doble escape de acentos/símbolos
   returnNull: false,

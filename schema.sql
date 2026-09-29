@@ -152,6 +152,23 @@ create table if not exists public.profiles (
   -- vuelva a mostrarlo solo. Nulo por defecto (nunca visto). Ver AppShell
   -- en App.jsx y scripts/migrations/0023-whatsnew-seen-version.sql.
   whats_new_seen_version text,
+  -- Sitio de buceo favorito del widget de condiciones en Home (viento/
+  -- oleaje/temperatura + previsión por horas) — vive aquí, no en
+  -- localStorage, por decisión explícita del usuario de que sincronice
+  -- entre dispositivos desde el primer día (ver scripts/migrations/
+  -- 0025-favorite-dive-spot.sql). Todo nullable: null = sin favorito
+  -- todavía. Los campos de marea (tide_*) están reservados para cuando se
+  -- implemente la resolución de estación real (Slackwater/TICON-4) — no
+  -- se usan en la v1 del widget.
+  favorite_dive_spot_name text,
+  favorite_dive_spot_country text,
+  favorite_dive_spot_lat double precision,
+  favorite_dive_spot_lng double precision,
+  favorite_tide_station_id text,
+  favorite_tide_station_name text,
+  favorite_tide_station_distance_km double precision,
+  favorite_tide_harmonic_constituents jsonb,
+  favorite_tide_station_attribution text,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );

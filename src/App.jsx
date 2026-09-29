@@ -577,6 +577,8 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
             onOpenInstallApp={() => changeTab("install-app")}
             onOpenDiveGuide={() => changeTab("dive-guide")}
             userId={profile?.user_id}
+            profile={profile}
+            onProfileUpdated={onProfileUpdated}
           />
         )}
         {tab === "trabajo" && (

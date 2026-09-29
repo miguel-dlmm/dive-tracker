@@ -4,6 +4,19 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Widget de condiciones de buceo en Home (MVP)**: nueva tarjeta justo
+  debajo de los KPIs con viento, oleaje y temperatura del agua en vivo
+  (Open-Meteo, sin backend nuevo) para el sitio de buceo del instructor,
+  con previsión por horas navegable hasta 7 días adelante, amanecer/
+  atardecer y la franja más tranquila del día. La ubicación se resuelve
+  con geolocalización automática, cae al favorito guardado en el perfil
+  si el GPS falla, y por último a un buscador — el favorito se guarda en
+  `profiles`, sincronizado entre dispositivos por decisión explícita del
+  usuario. La marea real queda fuera de este MVP a propósito (la tarjeta
+  reserva su hueco con "Próximamente" en vez de un dato inventado) — ver
+  docs/BACKLOG.md para el análisis completo y la fase 2 pendiente.
+
 ### Fixed
 - **Landing "Meet Ocean Flow": capturas de pantalla estiradas**: al
   sustituir las imágenes base64 por ficheros `.webp` (auditoría PWA/SEO,

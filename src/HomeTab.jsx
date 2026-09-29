@@ -7,6 +7,7 @@ import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, us
 import { buildEntriesBySource, buildIncomeEntries, entriesArgsFromTables } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import { getGeneratedCount } from "./trainingRecords/generatedCounter";
+import DiveConditionsWidget from "./DiveConditionsWidget";
 
 // worklog / rates / comisiones / commissionRates / colleaguePayments / activities /
 // schools / currencies / paymentStatuses: hooks de useSupabaseTable
@@ -236,7 +237,7 @@ function MiniKpiTile({ icon: Icon, color, value, label, index, reduced }) {
   );
 }
 
-export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenSummary, onOpenTrabajo, onOpenTrainingRecords, onOpenInstallApp, onOpenDiveGuide, userId }) {
+export default function HomeTab({ worklog, rates, comisiones, commissionRates, colleaguePayments, activities, currencies, paymentStatuses, onQuickCreate, onEditEntry, onOpenSummary, onOpenTrabajo, onOpenTrainingRecords, onOpenInstallApp, onOpenDiveGuide, userId, profile, onProfileUpdated }) {
   const { t } = useTranslation("home");
   // Oculta el punto de entrada de "Instalar la app" si la propia app ya
   // corre instalada (display-mode: standalone en Chromium/Android,
@@ -480,6 +481,14 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           </div>
         </div>
       </div>
+
+      {/* 1.5. Condiciones de buceo (2026-09-29, pedido explícito) — justo
+          debajo de los KPIs, antes del bento de accesos, para que no
+          empuje el calendario más abajo (restricción explícita del
+          usuario, misma que ya regía el propio bento). Variante "tarjeta
+          continua", elegida explícitamente entre 3 propuestas — ver el
+          mockup y el análisis enlazados en docs/BACKLOG.md. */}
+      <DiveConditionsWidget profile={profile} onProfileUpdated={onProfileUpdated} />
 
       {/* 2. Bento de accesos — rediseño de portada (lote 2026-09-26,
           pedido explícito del usuario). Sustituye a la fila fina de
