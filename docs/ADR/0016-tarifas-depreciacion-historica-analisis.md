@@ -125,3 +125,25 @@ tocarlo otra vez enseguida.
 Como cualquier cambio de esquema de este proyecto: migración incremental,
 plan propuesto antes de tocar nada, no en un único paso (regla ya
 existente en `CLAUDE.md`, "For database and architecture changes").
+
+## Addendum (2026-09-29) — dependencia resuelta, sigue sin implementarse
+
+`ADR-0003` (eliminar `payment_type`) ya tiene sus pasos de BD 3-5
+preparados en `chore/eliminar-payment-type-bd` (ver su propio addendum),
+así que la dependencia de orden que señala este documento ("mejor
+después de ADR-0003") queda resuelta en cuanto esa rama se aplique y
+fusione — no antes.
+
+**Deliberadamente no implementado esta noche**, pese a la limpieza de
+backlog en curso: a diferencia de un contador de solo lectura o un
+cambio de indexación de buscadores, esto reescribe cómo se calcula el
+importe de ingresos reales de un instructor — el backfill del paso 2
+(boceto de arriba) fija un valor histórico para movimientos ya
+existentes a partir de una tarifa que podría no ser ya la vigente en
+aquel momento (mismo sesgo que el propio boceto ya reconoce). Un error
+aquí no rompe la app, corrompe silenciosamente cifras de dinero ya
+mostradas al usuario como correctas — el tipo de cambio que sí necesita
+su aprobación explícita antes de escribir una sola línea de migración,
+no solo de código. El boceto de la sección anterior sigue siendo el
+plan a ejecutar cuando el usuario decida priorizarlo; no se ha añadido
+ningún fichero de migración nuevo para este ítem.
