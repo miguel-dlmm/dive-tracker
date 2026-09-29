@@ -335,8 +335,20 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // siempre con dos del mes actual). Personas captadas: sobre
   // comisionEntries (aclaración explícita del usuario: "personas por las
   // que he comisionado" — clientes referidos, no formados por ti).
-  const coursesTotal = useMemo(() => worklog.rows
-    .filter((e) => e.date.slice(0, 7) === currentMonthKey).length, [worklog.rows, currentMonthKey]);
+  //
+  // Corregido 2026-09-29 (bug real reportado por el usuario): sumaba
+  // `.length` de worklog.rows (nº de apuntes de Curso), no personas —
+  // dos alumnos en una misma clase grupal contaban como 1. El propio
+  // texto ya decía "cursos" pero el usuario aclaró que la cifra real
+  // debe ser "sumar todas las personas que he tenido haciendo cursos
+  // este mes" — se alinea aquí con el mismo criterio de suma que ya usa
+  // referredThisMonth (reduce sobre `people`), sobre ganadoEntries (solo
+  // Curso, sin comisiones ni ajustes) en vez de worklog.rows directo —
+  // mismo conjunto de filas, pero es la fuente que comparte metodología
+  // con schoolActivityThisMonth de más abajo.
+  const coursesTotal = useMemo(() => ganadoEntries
+    .filter((e) => e.date.slice(0, 7) === currentMonthKey)
+    .reduce((sum, e) => sum + (e.people || 0), 0), [ganadoEntries, currentMonthKey]);
   const referredThisMonth = useMemo(() => comisionEntries
     .filter((e) => e.date.slice(0, 7) === currentMonthKey)
     .reduce((sum, e) => sum + (e.people || 0), 0), [comisionEntries, currentMonthKey]);
@@ -364,23 +376,27 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   // de movimientos [Mi trabajo] — piensa algo de menos valor que combine
   // con el diseño de la home"). Sustituye la cifra financiera (ya
   // duplicada con el KPI "Generado este mes" de Mi trabajo) por un ángulo
-  // nuevo — CON QUIÉN trabajas, no CUÁNTO generas — de menor peso
-  // informativo a propósito (no decide nada, solo da contexto) pero
-  // coherente con el resto de la pantalla: reutiliza `incomeEntries`
-  // (ya calculado arriba, `.school` viene directo de worklog/comisiones,
-  // convención #1 de CLAUDE.md) en vez de una fuente de datos nueva.
-  // Se cuentan MOVIMIENTOS (cuántas veces aparece esa escuela este mes),
-  // no personas — "más activa" se lee mejor como frecuencia de trabajo
-  // que como volumen de alumnos.
+  // nuevo — CON QUIÉN trabajas, no CUÁNTO generas.
+  //
+  // Corregido 2026-09-29 (bug real reportado por el usuario): "no
+  // deberían el KPI de Cursos y este contar lo mismo, de la misma
+  // forma?" — antes contaba MOVIMIENTOS de cualquier tipo (Curso,
+  // Comisión, Ajuste) sobre `incomeEntries`, aunque la propia etiqueta ya
+  // decía "X cursos" (`activeSchoolCount`, home.json) — una cifra que no
+  // era lo que decía ser. Ahora usa la misma metodología que
+  // `coursesTotal` de arriba (sumar `people` de `ganadoEntries`, solo
+  // Curso, sin comisiones ni ajustes), filtrada a una escuela en vez de
+  // a todas — la única diferencia real entre los dos KPIs debe ser ESE
+  // filtro de escuela, no el criterio de cálculo.
   const schoolActivityThisMonth = useMemo(() => {
     const counts = {};
-    incomeEntries
+    ganadoEntries
       .filter((e) => e.date.slice(0, 7) === currentMonthKey)
-      .forEach((e) => { counts[e.school] = (counts[e.school] || 0) + 1; });
-    const bySchool = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      .forEach((e) => { counts[e.school] = (counts[e.school] || 0) + (e.people || 0); });
+    const bySchool = Object.entries(counts).filter(([, count]) => count > 0).sort((a, b) => b[1] - a[1]);
     if (bySchool.length === 0) return null;
     return { school: bySchool[0][0], count: bySchool[0][1] };
-  }, [incomeEntries, currentMonthKey]);
+  }, [ganadoEntries, currentMonthKey]);
 
   return (
     <div className="space-y-4">

@@ -48,6 +48,14 @@ Registro de cambios relevantes de Ocean Flow.
   novedad de release real, una cuenta nueva se quedaba sin enterarse del
   libro de Koh Tao. Ahora WhatsNew aparece justo después de cerrar el
   tour (en secuencia, no superpuesto).
+- **KPI "Cursos" (Home) y "Escuela del mes" no se calculaban igual**:
+  "Cursos" contaba nº de apuntes de Work Log (`.length`), no personas —
+  dos alumnos en una misma clase contaban como uno. "Escuela del mes"
+  contaba movimientos de cualquier tipo (incluidas comisiones y pagos de
+  compañeros), aunque su propia etiqueta ya decía "X cursos". Ahora
+  ambos suman personas de movimientos de Curso únicamente (sin
+  comisiones ni ajustes), con la única diferencia real siendo el filtro
+  de escuela — reportado por el usuario tras notar la inconsistencia.
 
 ## [1.7.0] - 2026-09-28
 

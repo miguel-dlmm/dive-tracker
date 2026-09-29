@@ -264,7 +264,7 @@ describe("HomeTab — 'Escuela del mes' como puente hacia Mi Trabajo", () => {
 
   it("muestra el nombre de la única escuela con movimientos este mes, en singular, junto a la etiqueta 'Escuela del mes'", () => {
     const { activeSchool } = renderHome({
-      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }],
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 1, status: "Paid" }],
       rates: RATES,
     });
     expect(activeSchool.getByText("Escuela del mes")).toBeInTheDocument();
@@ -286,6 +286,24 @@ describe("HomeTab — 'Escuela del mes' como puente hacia Mi Trabajo", () => {
   it("sin movimientos este mes, muestra el estado vacío en vez de una escuela", () => {
     const { activeSchool } = renderHome({ worklog: [], rates: RATES });
     expect(activeSchool.getByText("Sin actividad este mes")).toBeInTheDocument();
+  });
+
+  // Bug real reportado 2026-09-29: el usuario notó que el KPI "Cursos" y
+  // "Escuela del mes" deberían calcularse igual (sumar personas de Curso,
+  // sin comisiones ni ajustes), con la única diferencia real siendo el
+  // filtro de escuela. Antes esta tarjeta contaba MOVIMIENTOS de
+  // cualquier tipo (incluidas comisiones) — una comisión grande en una
+  // escuela con pocos cursos reales podía "ganar" el puesto de forma
+  // engañosa. Ver también el test de coursesTotal en el describe de KPIs.
+  it("no cuenta comisiones ni pagos de compañeros, solo personas en cursos (misma metodología que el KPI 'Cursos')", () => {
+    const { activeSchool } = renderHome({
+      worklog: [{ id: "w1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 2, status: "Paid" }],
+      comisiones: [{ id: "c1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", people: 10, status: "Paid" }],
+      colleaguePayments: [{ id: "p1", date: TODAY, school: "PADI Cozumel", amount: 50, colleague_name: "Ana", status: "Paid" }],
+      rates: RATES,
+      commissionRates: COMMISSION_RATES,
+    });
+    expect(activeSchool.getByText("PADI Cozumel · 2 cursos")).toBeInTheDocument();
   });
 });
 
@@ -531,7 +549,9 @@ describe("HomeTab — KPIs (media diaria, cursos, captados, todos del mes actual
     // no aquí.
     await waitFor(() => {
       expect(screen.getByText(money(`${dailyAverageText} €`))).toBeInTheDocument();
-      expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("2"); // w1 + w2, solo este mes (w3 es del mes pasado)
+      // "Cursos" suma personas, no apuntes (bug real corregido 2026-09-29):
+      // w1 (2 personas) + w2 (1 persona) = 3, solo este mes (w3 es del mes pasado).
+      expect(screen.getByText("Cursos").previousSibling).toHaveTextContent("3");
       expect(screen.getByText("Captados").previousSibling).toHaveTextContent("4"); // solo c1, este mes
     }, { timeout: 12000 });
     // testTimeout explícito 15000 (2026-09-27, hallazgo de robustez): el
