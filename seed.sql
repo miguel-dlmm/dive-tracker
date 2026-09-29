@@ -72,8 +72,8 @@ from setup_datasets, (values
 where setup_datasets.key = 'ihasia'
 on conflict (dataset_id, name) do nothing;
 
-insert into setup_dataset_rates (dataset_id, school, activity, payment_type, rate, currency)
-select id, 'Ihasia', v.activity, 'Per Person', v.rate, 'THB'
+insert into setup_dataset_rates (dataset_id, school, activity, rate, currency)
+select id, 'Ihasia', v.activity, v.rate, 'THB'
 from setup_datasets, (values
   ('Try Scuba', 800),
   ('Refresh', 650),
@@ -84,17 +84,17 @@ from setup_datasets, (values
   ('Adventure Dive', 500)
 ) as v(activity, rate)
 where setup_datasets.key = 'ihasia'
-on conflict (dataset_id, school, activity, payment_type) do nothing;
+on conflict (dataset_id, school, activity) do nothing;
 
-insert into setup_dataset_commission_rates (dataset_id, school, activity, payment_type, rate, currency)
-select id, 'Ihasia', v.activity, 'Per Person', v.rate, 'THB'
+insert into setup_dataset_commission_rates (dataset_id, school, activity, rate, currency)
+select id, 'Ihasia', v.activity, v.rate, 'THB'
 from setup_datasets, (values
   ('Try Scuba', 300),
   ('Open Water', 900),
   ('Advanced', 900)
 ) as v(activity, rate)
 where setup_datasets.key = 'ihasia'
-on conflict (dataset_id, school, activity, payment_type) do nothing;
+on conflict (dataset_id, school, activity) do nothing;
 
 -- Dataset "prueba" — mismo contenido que "ihasia" (cursos, tarifas,
 -- comisiones), pero con una escuela genérica "Escuela de prueba" en vez
@@ -120,16 +120,16 @@ join public.setup_datasets src on src.id = a.dataset_id and src.key = 'ihasia'
 join public.setup_datasets d on d.key = 'prueba'
 on conflict (dataset_id, name) do nothing;
 
-insert into setup_dataset_rates (dataset_id, school, activity, payment_type, rate, currency)
-select d.id, 'Escuela de prueba', r.activity, r.payment_type, r.rate, r.currency
+insert into setup_dataset_rates (dataset_id, school, activity, rate, currency)
+select d.id, 'Escuela de prueba', r.activity, r.rate, r.currency
 from public.setup_dataset_rates r
 join public.setup_datasets src on src.id = r.dataset_id and src.key = 'ihasia'
 join public.setup_datasets d on d.key = 'prueba'
-on conflict (dataset_id, school, activity, payment_type) do nothing;
+on conflict (dataset_id, school, activity) do nothing;
 
-insert into setup_dataset_commission_rates (dataset_id, school, activity, payment_type, rate, currency)
-select d.id, 'Escuela de prueba', r.activity, r.payment_type, r.rate, r.currency
+insert into setup_dataset_commission_rates (dataset_id, school, activity, rate, currency)
+select d.id, 'Escuela de prueba', r.activity, r.rate, r.currency
 from public.setup_dataset_commission_rates r
 join public.setup_datasets src on src.id = r.dataset_id and src.key = 'ihasia'
 join public.setup_datasets d on d.key = 'prueba'
-on conflict (dataset_id, school, activity, payment_type) do nothing;
+on conflict (dataset_id, school, activity) do nothing;

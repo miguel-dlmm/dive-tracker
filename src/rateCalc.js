@@ -3,16 +3,16 @@
 // Antes duplicado en varias pantallas, incluidas algunas ya eliminadas
 // del todo (WorkLogTab, ComisionesTab, PaymentsTab — 2026-09-08).
 //
-// Sin distinción por payment_type desde 2026-09-02 (ADR-0003, pasos 1-2 del
-// plan de migración — la columna payment_type sigue existiendo en BD por
-// ahora, solo el frontend deja de leerla/depender de ella): auditoría
+// Sin distinción por payment_type desde 2026-09-02 (ADR-0003): auditoría
 // completa confirmó que ningún formulario de la app expuso nunca un
 // selector real para elegir tarifa fija — "Per Person" era el único valor
 // que cualquier flujo llegaba a escribir a propósito. La excepción real
 // encontrada (ADR-0003, addendum 2026-08-30) no era una tarifa fija
 // intencional: una cuenta cuyo catálogo payment_types no incluía
 // exactamente "Per Person" obtenía tarifas fijas de forma silenciosa,
-// sin aviso — el propio bug que esta simplificación elimina de raíz.
+// sin aviso — el propio bug que esta simplificación elimina de raíz. La
+// columna payment_type y la tabla payment_types se eliminaron de BD el
+// 2026-09-29 (pasos 3-5 de la ADR) — el concepto ya no existe en absoluto.
 export function computeRateTotal(rate, people) {
   if (!rate) return 0;
   return rate.rate * (Number(people) || 0);

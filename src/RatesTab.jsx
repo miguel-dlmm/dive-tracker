@@ -83,13 +83,10 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
   const tableFor = (source) => (source === "ganado" ? rates : commissionRates);
   const entriesForSource = (source) => (source === "ganado" ? worklog.rows : comisiones.rows);
 
-  // payment_type: "Per Person" — literal fijo, no una elección real (ver
-  // ADR-0003, pasos 1-2: la columna sigue en BD por ahora con NOT NULL,
-  // pero deja de ser un concepto que el usuario vea o elija; el importe
-  // siempre es tarifa × personas, ver rateCalc.js). Solo hace falta al
-  // CREAR (insert) — al editar (ver startEdit) ni se lee ni se reenvía,
-  // la columna ya tiene un valor de cuando se creó la fila.
-  const emptyForm = { school: "", activity: "", payment_type: "Per Person", currency: defaultCurrency, rate: "" };
+  // payment_type ya no existe (ADR-0003, pasos 3-5: columna eliminada de
+  // rates/commission_rates) — el importe siempre es tarifa × personas,
+  // ver rateCalc.js.
+  const emptyForm = { school: "", activity: "", currency: defaultCurrency, rate: "" };
   const [form, setForm] = useState(emptyForm);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -316,11 +313,10 @@ export default function RatesTab({ schools, activities, currencies, rates, commi
                 filtros compartiendo el mismo placeholder genérico, quedarían
                 indistinguibles para un lector de pantalla.
                 Sin filtro "Pago" a propósito (2026-08-30, feedback
-                explícito: quitar "per person" de todo el frontal) — ningún
-                formulario expone `payment_type` y hoy vale siempre "Per
-                Person" (ver docs/ADR/0003), así que filtrar por él nunca
-                reducía la lista a nada: era una opción de filtro sin ningún
-                efecto real, solo exponía el nombre interno del concepto. */}
+                explícito: quitar "per person" de todo el frontal) —
+                `payment_type` ya no existe en absoluto (ver
+                docs/ADR/0003, pasos 3-5), así que filtrar por él nunca
+                habría tenido ningún efecto real. */}
             <Field label={t("filter.type")}><Select value={filters.type} onChange={(v) => setFilters({ ...filters, type: v })} options={TYPE_OPTIONS} placeholder={t("filter.typeAll")} label={t("filter.type")} /></Field>
             {/* Con una sola escuela configurada, filtrar por escuela no
                 filtra nada — se oculta hasta que exista una segunda

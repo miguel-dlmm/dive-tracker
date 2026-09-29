@@ -170,6 +170,43 @@ tarifa de comisión para esa misma escuela+curso no existe
 y correcta, de que Comisión no tenga total ahí; no relacionado con este
 bug.
 
+## Addendum (2026-09-29) — pasos 3-5 preparados, pendientes de aplicar
+
+Código y migración de los pasos 3-5 listos en la rama
+`chore/eliminar-payment-type-bd` (limpieza de backlog nocturna,
+`docs/BACKLOG.md`):
+
+- `scripts/migrations/0027-eliminar-payment-type.sql`: dedup defensivo
+  de `setup_dataset_rates`/`setup_dataset_commission_rates` (por si dos
+  filas solo difirieran en `payment_type`), redefine sus PK sin
+  `payment_type`, redefine `clone_setup_dataset()` sin la columna, y
+  hace el `DROP` de las 4 columnas (`rates`, `commission_rates`,
+  `setup_dataset_rates`, `setup_dataset_commission_rates`) más la tabla
+  `payment_types` completa.
+- `schema.sql`/`seed.sql` actualizados a juego (sin `payment_type` en
+  ningún sitio).
+- Frontend: `RatesTab.jsx`/`MovementSheet.jsx` ya no escriben el literal
+  `payment_type: "Per Person"` en ningún insert (dejaría de existir la
+  columna a la que escribían) — sin esto, aplicar la migración rompería
+  la creación de tarifas en producción. Tests actualizados a juego.
+- **Paso 4 (verificación) — solo hecho en TEST**, vía consulta de solo
+  lectura: `rates` tenía 52 filas "Per Person" + 4 "Instructor";
+  `commission_rates` tenía 16 "Per Person" + 12 "Comisión" + 1
+  "Instructor" — exactamente el caso ya documentado arriba (cuentas con
+  catálogo propio sin fila "Per Person"). Sin efecto en el cálculo real
+  desde el paso 1, así que no bloquea el `DROP`.
+- **Pendiente, no resuelto en esta sesión**: (a) repetir la misma
+  verificación de solo lectura contra producción — el acceso a la base
+  de producción está bloqueado para el agente en esta sesión (acción
+  aprobada individualmente, no concedida); (b) aplicar
+  `0027-eliminar-payment-type.sql` contra TEST con
+  `scripts/apply-migration.mjs` — el propio `DROP` fue bloqueado por el
+  mismo motivo (acción destructiva de esquema, incluso contra TEST). El
+  fichero de migración no se ha ejecutado todavía contra ninguna base de
+  datos real, solo escrito y revisado a nivel de SQL. Antes de fusionar
+  esta rama: aplicar contra TEST, comprobar de verdad que crear una
+  tarifa sigue funcionando, y solo entonces aplicar contra producción.
+
 ## Consecuencias
 
 - El bootstrap de una cuenta nueva deja de depender de `payment_types` en

@@ -4,10 +4,9 @@ import RatesTab from "./RatesTab";
 import { TEAL, BRAND_GOLD } from "./colors";
 import { ToastProvider } from "./shared";
 
-// ADR-0003, pasos 1-2: payment_type ya no es un concepto del frontend —
-// nunca se elige en ningún formulario, se escribe siempre como el literal
-// fijo "Per Person" (la columna sigue existiendo en BD, NOT NULL, hasta que
-// los pasos 3-5 de la migración la eliminen).
+// ADR-0003: payment_type se eliminó del todo (frontend 2026-09-02, BD
+// 2026-09-29) — nunca se elige en ningún formulario ni existe ya la
+// columna.
 const rowsHook = (rows) => ({
   rows, loaded: true,
   insertRow: vi.fn().mockResolvedValue(rows[0]),
@@ -46,7 +45,7 @@ describe("RatesTab — botón 'Crear' dentro de la tabla con pocas tarifas", () 
   });
 
   it("con más de 5 tarifas, solo queda el FAB", () => {
-    const rates = rowsHook(Array.from({ length: 6 }, (_, i) => ({ id: `r${i}`, school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 20, currency: "EUR", is_active: true, created_at: "2026-01-01T00:00:00Z" })));
+    const rates = rowsHook(Array.from({ length: 6 }, (_, i) => ({ id: `r${i}`, school: "PADI Cozumel", activity: "Open Water", rate: 20, currency: "EUR", is_active: true, created_at: "2026-01-01T00:00:00Z" })));
     renderRatesTab({ rates });
 
     expect(screen.getAllByRole("button", { name: "Nueva tarifa" })).toHaveLength(1);
@@ -54,7 +53,7 @@ describe("RatesTab — botón 'Crear' dentro de la tabla con pocas tarifas", () 
 });
 
 describe("RatesTab — alta de tarifa sin ningún selector de tipo de pago", () => {
-  it("crea la tarifa con payment_type fijo 'Per Person', sin que el formulario lo pida", async () => {
+  it("crea la tarifa sin payment_type (concepto eliminado del todo, ADR-0003)", async () => {
     const user = userEvent.setup();
     const { rates } = renderRatesTab();
 
@@ -71,8 +70,9 @@ describe("RatesTab — alta de tarifa sin ningún selector de tipo de pago", () 
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     expect(rates.insertRow).toHaveBeenCalledWith(
-      expect.objectContaining({ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 25 })
+      expect.objectContaining({ school: "PADI Cozumel", activity: "Open Water", rate: 25 })
     );
+    expect(rates.insertRow.mock.calls[0][0]).not.toHaveProperty("payment_type");
   });
 });
 
@@ -83,7 +83,7 @@ describe("RatesTab — editar abre la hoja de creación, precargada", () => {
   it("pulsar Editar abre la hoja con los valores de la tarifa, y Guardar llama a updateRow", async () => {
     const user = userEvent.setup();
     const { rates } = renderRatesTab({
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20 }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20 }]),
     });
 
     await user.click(screen.getByRole("button", { name: "Más acciones" }));
@@ -112,8 +112,8 @@ describe("RatesTab — lista combinada de Curso y Comisión", () => {
   it("muestra tarifas de ambos tipos a la vez, con un icono de tipo distinto por fila", () => {
     renderRatesTab({
       activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20 }]),
-      commissionRates: rowsHook([{ id: "c1", school: "PADI Cozumel", activity: "Advanced", payment_type: "Per Person", currency: "EUR", rate: 15 }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20 }]),
+      commissionRates: rowsHook([{ id: "c1", school: "PADI Cozumel", activity: "Advanced", currency: "EUR", rate: 15 }]),
     });
 
     expect(screen.getByText("Open Water")).toBeInTheDocument();
@@ -133,8 +133,8 @@ describe("RatesTab — lista combinada de Curso y Comisión", () => {
     const user = userEvent.setup();
     renderRatesTab({
       activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20 }]),
-      commissionRates: rowsHook([{ id: "c1", school: "PADI Cozumel", activity: "Advanced", payment_type: "Per Person", currency: "EUR", rate: 15 }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20 }]),
+      commissionRates: rowsHook([{ id: "c1", school: "PADI Cozumel", activity: "Advanced", currency: "EUR", rate: 15 }]),
     });
 
     await user.click(screen.getByRole("button", { name: "Filtrar" }));
@@ -196,13 +196,13 @@ describe("RatesTab — filtro de Escuela, solo con más de una escuela", () => {
 // metadato de la segunda línea ("Alta: ... · Tipo"), igual que Mi trabajo
 // muestra "fecha · tipo" — no un badge propio de Tarifas. "per person"
 // sigue fuera del frontal (ni en la card ni como filtro — payment_type
-// vale siempre "Per Person" en la práctica, ver ADR-0003).
+// no existe ya en absoluto, ver ADR-0003).
 describe("RatesTab — card de dos líneas (estilo Mi trabajo), sin 'per person', orden por más reciente", () => {
   it("no muestra 'Per Person' en ningún sitio de la card, y ordena por creación descendente", () => {
     renderRatesTab({
       rates: rowsHook([
-        { id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, created_at: "2026-08-01T00:00:00Z" },
-        { id: "r2", school: "PADI Cozumel", activity: "Advanced", payment_type: "Per Person", currency: "EUR", rate: 30, created_at: "2026-08-15T00:00:00Z" },
+        { id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20, created_at: "2026-08-01T00:00:00Z" },
+        { id: "r2", school: "PADI Cozumel", activity: "Advanced", currency: "EUR", rate: 30, created_at: "2026-08-15T00:00:00Z" },
       ]),
       activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
     });
@@ -215,7 +215,7 @@ describe("RatesTab — card de dos líneas (estilo Mi trabajo), sin 'per person'
 
   it("la fecha de alta y el tipo se ven en el listado, como metadato de la segunda línea", () => {
     renderRatesTab({
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, created_at: "2026-08-15T00:00:00Z" }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20, created_at: "2026-08-15T00:00:00Z" }]),
     });
 
     expect(screen.getByText("Alta: 15/8/2026 · Curso")).toBeInTheDocument();
@@ -262,7 +262,7 @@ describe("RatesTab — moneda visible-no-editable en el formulario", () => {
   it("con una tarifa previa de la escuela en otra moneda, 'Tarifa' adopta esa moneda sola", async () => {
     const user = userEvent.setup();
     renderRatesTab({
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "THB", rate: 1500 }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "THB", rate: 1500 }]),
     });
     await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
     await user.click(screen.getByRole("button", { name: "Escuela" }));
@@ -279,7 +279,7 @@ describe("RatesTab — no permite dos tarifas activas para la misma escuela+curs
   it("al crear, si ya hay una tarifa ACTIVA para esa escuela+curso, avisa y no llama a insertRow", async () => {
     const user = userEvent.setup();
     const { rates } = renderRatesTab({
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: true }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20, is_active: true }]),
     });
 
     await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
@@ -297,7 +297,7 @@ describe("RatesTab — no permite dos tarifas activas para la misma escuela+curs
   it("con la tarifa existente DESACTIVADA para esa escuela+curso, sí deja crear una nueva activa", async () => {
     const user = userEvent.setup();
     const { rates } = renderRatesTab({
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: false }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20, is_active: false }]),
     });
 
     await user.click(screen.getAllByRole("button", { name: "Nueva tarifa" })[0]);
@@ -314,7 +314,7 @@ describe("RatesTab — no permite dos tarifas activas para la misma escuela+curs
   it("editar una tarifa sin cambiar su escuela+curso no choca consigo misma (no se compara con la propia fila)", async () => {
     const user = userEvent.setup();
     const { rates } = renderRatesTab({
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: true }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20, is_active: true }]),
     });
 
     await user.click(screen.getByRole("button", { name: "Más acciones" }));
@@ -349,8 +349,8 @@ describe("RatesTab — baja lógica: desactivar/reactivar en vez de (o además d
   it("una tarifa desactivada NO aparece en la lista por defecto", () => {
     renderRatesTab({
       rates: rowsHook([
-        { id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: true },
-        { id: "r2", school: "PADI Cozumel", activity: "Advanced", payment_type: "Per Person", currency: "EUR", rate: 30, is_active: false },
+        { id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20, is_active: true },
+        { id: "r2", school: "PADI Cozumel", activity: "Advanced", currency: "EUR", rate: 30, is_active: false },
       ]),
       activities: rowsHook([{ name: "Open Water" }, { name: "Advanced" }]),
     });
@@ -362,7 +362,7 @@ describe("RatesTab — baja lógica: desactivar/reactivar en vez de (o además d
   it("marcando 'Mostrar desactivadas' aparece también, con el menú ofreciendo 'Reactivar'", async () => {
     const user = userEvent.setup();
     renderRatesTab({
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: false }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20, is_active: false }]),
     });
 
     // El interruptor vive siempre visible junto al contador de la lista
@@ -382,7 +382,7 @@ describe("RatesTab — baja lógica: desactivar/reactivar en vez de (o además d
   it("una tarifa desactivada se muestra atenuada (opacity-60) cuando 'Mostrar desactivadas' está activo", async () => {
     const user = userEvent.setup();
     renderRatesTab({
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: false }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20, is_active: false }]),
     });
 
     await user.click(screen.getByRole("switch", { name: "Mostrar desactivadas" }));
@@ -394,7 +394,7 @@ describe("RatesTab — baja lógica: desactivar/reactivar en vez de (o además d
   it("'Desactivar' en el menú de una tarifa activa llama a updateRow con is_active: false", async () => {
     const user = userEvent.setup();
     const { rates } = renderRatesTab({
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: true }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20, is_active: true }]),
     });
 
     await user.click(screen.getByRole("button", { name: "Más acciones" }));
@@ -407,8 +407,8 @@ describe("RatesTab — baja lógica: desactivar/reactivar en vez de (o además d
     const user = userEvent.setup();
     const { rates } = renderRatesTab({
       rates: rowsHook([
-        { id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: false },
-        { id: "r2", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 25, is_active: true },
+        { id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20, is_active: false },
+        { id: "r2", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 25, is_active: true },
       ]),
     });
 
@@ -428,7 +428,7 @@ describe("RatesTab — baja lógica: desactivar/reactivar en vez de (o además d
   it("eliminar (borrado físico) sigue disponible además de desactivar, para una tarifa nunca usada", async () => {
     const user = userEvent.setup();
     const { rates } = renderRatesTab({
-      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", currency: "EUR", rate: 20, is_active: true }]),
+      rates: rowsHook([{ id: "r1", school: "PADI Cozumel", activity: "Open Water", currency: "EUR", rate: 20, is_active: true }]),
     });
 
     await user.click(screen.getByRole("button", { name: "Más acciones" }));

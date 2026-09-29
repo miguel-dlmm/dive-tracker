@@ -253,7 +253,9 @@ $$;
 
 -- ---------- Catálogos de configuración ----------
 
--- schools/activities/payment_types/payment_statuses: user-owned catálogos.
+-- schools/activities/payment_statuses: user-owned catálogos. payment_types
+-- existió aquí hasta 2026-09-29 — eliminada por completo (ADR-0003, pasos
+-- 3-5): el concepto ya no tiene ningún caso de uso real en la app.
 -- unique(user_id, name) en vez de unique(name) — cada usuario tiene su
 -- propio espacio de nombres, dos usuarios pueden tener ambos una escuela
 -- "PADI Cozumel" sin chocar entre sí.
@@ -270,14 +272,6 @@ create table if not exists activities (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   color text not null default '#0E7C7B',
-  is_default boolean not null default false,
-  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
-  unique (user_id, name)
-);
-
-create table if not exists payment_types (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
   is_default boolean not null default false,
   user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
   unique (user_id, name)
@@ -300,10 +294,6 @@ create policy "own rows" on schools for all using (auth.uid() = user_id) with ch
 alter table activities enable row level security;
 drop policy if exists "allow all" on activities;
 create policy "own rows" on activities for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-
-alter table payment_types enable row level security;
-drop policy if exists "allow all" on payment_types;
-create policy "own rows" on payment_types for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 alter table payment_statuses enable row level security;
 drop policy if exists "allow all" on payment_statuses;
@@ -376,7 +366,6 @@ create table if not exists rates (
   id uuid primary key default gen_random_uuid(),
   school text not null,
   activity text not null,
-  payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
   -- Fecha de alta de la tarifa — no editable, no es un campo del
@@ -408,7 +397,6 @@ create table if not exists commission_rates (
   id uuid primary key default gen_random_uuid(),
   school text not null,
   activity text not null,
-  payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
   created_at timestamptz not null default now(), -- ver nota en rates.created_at
@@ -721,9 +709,9 @@ create policy "update own or admin updates any" on public.profiles
 -- alter table public.profiles enable trigger protect_profile_roles_trigger;
 
 -- ---------- RLS ----------
--- Estado actual — migración de RLS completa en las 12 tablas:
+-- Estado actual — migración de RLS completa en las 11 tablas:
 -- - profiles: privado por defecto, admins ven/editan todo (ver arriba).
--- - schools/activities/payment_types/payment_statuses/rates/commission_rates/
+-- - schools/activities/payment_statuses/rates/commission_rates/
 --   worklog/comisiones/colleague_payments: auth.uid() = user_id (ver arriba).
 -- - currencies/nav_sections/app_config: select abierto a cualquier
 --   autenticado, insert/update/delete solo is_admin(auth.uid()) (ver arriba).
@@ -790,14 +778,21 @@ create table if not exists public.setup_dataset_activities (
   primary key (dataset_id, name)
 );
 
+-- payment_type se elimina del todo aquí (docs/ADR/0003, pasos 3-5) — de
+-- aquí, de `rates`/`commission_rates` y de `setup_dataset_commission_rates`
+-- más abajo, además de la tabla `payment_types` completa. Este schema.sql
+-- ya refleja el estado FINAL (sin payment_type, para una BD nueva) —
+-- migración destructiva para una BD existente en
+-- scripts/migrations/0027-eliminar-payment-type.sql, **todavía sin
+-- aplicar contra ninguna base de datos real** (ni TEST ni producción, ver
+-- ese mismo fichero para el porqué y los pasos pendientes).
 create table if not exists public.setup_dataset_rates (
   dataset_id uuid not null references public.setup_datasets(id) on delete cascade,
   school text not null,
   activity text not null,
-  payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
-  primary key (dataset_id, school, activity, payment_type)
+  primary key (dataset_id, school, activity)
 );
 
 -- Igual que setup_dataset_rates pero para comisiones (referir un cliente a
@@ -806,20 +801,19 @@ create table if not exists public.setup_dataset_commission_rates (
   dataset_id uuid not null references public.setup_datasets(id) on delete cascade,
   school text not null,
   activity text not null,
-  payment_type text not null,
   rate numeric not null,
   currency text not null default 'EUR',
-  primary key (dataset_id, school, activity, payment_type)
+  primary key (dataset_id, school, activity)
 );
 
--- payment_statuses/payment_types NO forman parte del dataset a propósito:
--- a diferencia de schools/activities/rates/commission_rates, no dependen
--- del contexto de una escuela — son configuración de la cuenta/aplicación.
--- Hoy siguen siendo tablas por usuario (unique(user_id, name), sin tabla
--- global todavía) y no se siembran en el alta de usuario ni por dataset ni
--- por ningún otro mecanismo — gestión global pendiente de una fase futura.
--- El dataset se mantiene deliberadamente estrecho: solo lo que varía de
--- una escuela/negocio a otra, para no mezclar dos responsabilidades.
+-- payment_statuses NO forma parte del dataset a propósito: a diferencia de
+-- schools/activities/rates/commission_rates, no depende del contexto de
+-- una escuela — es configuración de la cuenta/aplicación. Hoy sigue siendo
+-- una tabla por usuario (unique(user_id, name), sin tabla global todavía)
+-- y no se siembra en el alta de usuario ni por dataset ni por ningún otro
+-- mecanismo — gestión global pendiente de una fase futura. El dataset se
+-- mantiene deliberadamente estrecho: solo lo que varía de una
+-- escuela/negocio a otra, para no mezclar dos responsabilidades.
 
 -- setup_datasets — corregido en el Bloque 4 (2026-09-01, decisión
 -- explícita del usuario): lectura sigue abierta a cualquier admin (mismo
@@ -874,8 +868,8 @@ create policy "superadmin manages dataset commission rates" on public.setup_data
 -- activities/rates/commission_rates, filtradas por dataset_id — nunca lee
 -- schools/activities/rates/... de ningún otro usuario, ni referencia la
 -- cuenta admin en absoluto (esa conexión se cortó en el volcado puntual
--- del paso 2). payment_statuses/payment_types quedan fuera del dataset a
--- propósito (ver comentario más arriba) — esta función nunca las toca.
+-- del paso 2). payment_statuses queda fuera del dataset a propósito (ver
+-- comentario más arriba) — esta función nunca la toca.
 -- Cada fila insertada obtiene un id nuevo (default gen_random_uuid()) y
 -- user_id = p_target_user_id — sin ninguna referencia compartida con las
 -- filas del dataset ni con la cuenta origen del volcado.
@@ -917,13 +911,13 @@ begin
   from public.setup_dataset_activities
   where dataset_id = v_dataset_id;
 
-  insert into public.rates (school, activity, payment_type, rate, currency, user_id)
-  select school, activity, payment_type, rate, currency, p_target_user_id
+  insert into public.rates (school, activity, rate, currency, user_id)
+  select school, activity, rate, currency, p_target_user_id
   from public.setup_dataset_rates
   where dataset_id = v_dataset_id;
 
-  insert into public.commission_rates (school, activity, payment_type, rate, currency, user_id)
-  select school, activity, payment_type, rate, currency, p_target_user_id
+  insert into public.commission_rates (school, activity, rate, currency, user_id)
+  select school, activity, rate, currency, p_target_user_id
   from public.setup_dataset_commission_rates
   where dataset_id = v_dataset_id;
 end;

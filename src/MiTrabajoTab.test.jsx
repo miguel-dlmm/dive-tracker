@@ -244,8 +244,8 @@ const CURRENCIES = rowsHook([
   { code: "EUR", symbol: "€", name: "Euro", is_default: true },
   { code: "USD", symbol: "$", name: "Dólar estadounidense", is_default: false },
 ]);
-const RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 20, currency: "EUR" }];
-const COMMISSION_RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 5, currency: "EUR" }];
+const RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water", rate: 20, currency: "EUR" }];
+const COMMISSION_RATES_ROWS = [{ school: "PADI Cozumel", activity: "Open Water", rate: 5, currency: "EUR" }];
 
 // <Money> separa cifra y símbolo en nodos distintos; este matcher compara
 // el texto combinado del nodo sin espacios.
@@ -710,7 +710,7 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
     const user = userEvent.setup();
     // Sustituye RATES_ROWS (activa, Open Water) por una desactivada
     // para el mismo curso.
-    renderMiTrabajo({ rates: rowsHook([{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 20, currency: "EUR", is_active: false }]) });
+    renderMiTrabajo({ rates: rowsHook([{ school: "PADI Cozumel", activity: "Open Water", rate: 20, currency: "EUR", is_active: false }]) });
 
     await user.click(screen.getByRole("button", { name: "Añadir" })); // abre directo en Curso impartido
     await user.click(screen.getByLabelText("Curso"));

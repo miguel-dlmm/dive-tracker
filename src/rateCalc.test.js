@@ -1,9 +1,9 @@
 import { computeRateTotal, buildEntriesBySource, buildActivityEntries } from "./rateCalc";
 
-// computeRateTotal — desde 2026-09-02 (ADR-0003, pasos 1-2) siempre
-// multiplica tarifa × personas, sin distinguir por payment_type — ver el
-// comentario del propio rateCalc.js para el porqué (columna todavía en BD,
-// pero el frontend deja de leerla/depender de ella).
+// computeRateTotal — desde 2026-09-02 (ADR-0003) siempre multiplica
+// tarifa × personas, sin distinguir por payment_type — ver el comentario
+// del propio rateCalc.js para el porqué. La columna se eliminó de BD del
+// todo el 2026-09-29 (pasos 3-5 de la misma ADR).
 
 describe("computeRateTotal", () => {
   it("multiplica rate * people, siempre", () => {
@@ -49,7 +49,7 @@ describe("computeRateTotal", () => {
     expect(computeRateTotal(rate, 4)).toBe(0);
   });
 
-  it("un payment_type todavía presente en el objeto (columna aún en BD) se ignora por completo", () => {
+  it("un payment_type todavía presente en el objeto (p. ej. un rate cacheado de antes de la migración) se ignora por completo", () => {
     const rate = { payment_type: "Instructor", rate: 40 };
     expect(computeRateTotal(rate, 7)).toBe(280);
   });

@@ -17,7 +17,7 @@ const THIS_MONTH = new Date(NOW.getFullYear(), NOW.getMonth(), 10).toISOString()
 const LAST_MONTH = new Date(NOW.getFullYear(), NOW.getMonth() - 1, 10).toISOString().slice(0, 10);
 
 const CURRENCIES = rowsHook([{ code: "EUR", symbol: "€", is_default: true }]);
-const RATES = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 50, currency: "EUR" }];
+const RATES = [{ school: "PADI Cozumel", activity: "Open Water", rate: 50, currency: "EUR" }];
 const PAYMENT_STATUSES = rowsHook([{ name: "Pending", is_default: true }, { name: "Paid", is_default: false }]);
 const PROFILE = { first_name: "Nerea", last_name: "Lizarraga", nickname: "nerea.dive" };
 
@@ -207,8 +207,8 @@ describe("SummaryTab — tarjetas plegables", () => {
 // entendía sin explicación). Ahora es solo información añadida junto al
 // nombre, en la misma lista de siempre, ordenada siempre por importe.
 const SCHOOL_RATES = [
-  { school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 50, currency: "EUR" },
-  { school: "Ihasia", activity: "Open Water", payment_type: "Per Person", rate: 50, currency: "EUR" },
+  { school: "PADI Cozumel", activity: "Open Water", rate: 50, currency: "EUR" },
+  { school: "Ihasia", activity: "Open Water", rate: 50, currency: "EUR" },
 ];
 
 describe("SummaryTab — 'Por escuela': evolución vs. el periodo anterior", () => {

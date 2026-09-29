@@ -244,11 +244,9 @@ export default function MovementSheet({
   };
 
   const openInlineRate = () => {
-    // payment_type: "Per Person" — literal fijo, no una elección real (ver
-    // ADR-0003, pasos 1-2: la columna sigue en BD por ahora con NOT NULL,
-    // pero deja de ser un concepto que el usuario vea o elija; el importe
-    // siempre es tarifa × personas).
-    setRateForm({ school: form.school, activity: form.activity, payment_type: "Per Person", currency: lastCurrencyFor(form.school), rate: "" });
+    // payment_type ya no existe (ADR-0003, pasos 3-5) — el importe
+    // siempre es tarifa × personas.
+    setRateForm({ school: form.school, activity: form.activity, currency: lastCurrencyFor(form.school), rate: "" });
     setAddingRate(true);
   };
   const saveRate = async () => {

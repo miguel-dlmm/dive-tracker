@@ -2040,14 +2040,11 @@ const BUSINESS_SECTIONS = [
   { key: "cursos", i18nKey: "cursos", icon: GraduationCap },
   { key: "tarifas", i18nKey: "tarifas", icon: Coins },
 ];
-// "Tipos de pago" retirado del menú 2026-09-02 (ADR-0003, pasos 1-2): el
-// concepto desaparece de la app — importe siempre es tarifa × personas
-// (rateCalc.js), sin excepciones que gestionar. La tabla payment_types
-// sigue existiendo en BD por ahora (columnas rates.payment_type/
-// commission_rates.payment_type con NOT NULL, escritas con el literal fijo
-// "Per Person" — ver RatesTab.jsx/MovementSheet.jsx); su DROP real es el
-// paso 3-5 de esa misma ADR, deliberadamente no hecho en este cambio
-// (solo frontend, sin migraciones).
+// "Tipos de pago" retirado del menú 2026-09-02 (ADR-0003): el concepto
+// desaparece de la app entera — importe siempre es tarifa × personas
+// (rateCalc.js), sin excepciones que gestionar. La tabla payment_types y
+// las columnas rates.payment_type/commission_rates.payment_type se
+// eliminaron de BD en los pasos 3-5 de esa misma ADR (2026-09-29).
 // "Training Records" vivió aquí como una "sección oculta" de Configuración
 // (Bloque 10, job nocturno 2026-09-03) desde que se movió su enlace a
 // Home — real por dentro pero fuera del menú visible. Se retira del todo

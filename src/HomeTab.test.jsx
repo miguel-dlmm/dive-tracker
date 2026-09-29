@@ -48,8 +48,8 @@ const PAYMENT_STATUSES = rowsHook([
   { name: "Paid", is_default: false },
 ]);
 
-const RATES = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 20, currency: "EUR" }];
-const COMMISSION_RATES = [{ school: "PADI Cozumel", activity: "Open Water", payment_type: "Per Person", rate: 5, currency: "EUR" }];
+const RATES = [{ school: "PADI Cozumel", activity: "Open Water", rate: 20, currency: "EUR" }];
+const COMMISSION_RATES = [{ school: "PADI Cozumel", activity: "Open Water", rate: 5, currency: "EUR" }];
 
 // <Money> (tarjeta "Generado") separa cifra y símbolo en nodos distintos,
 // para atenuar el símbolo; <MoneyLine> (tarjeta "Pendiente") los renderiza
