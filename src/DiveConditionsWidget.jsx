@@ -79,7 +79,7 @@ function HourlyChart({ hours, metric, selectedHour, onSelectHour, isToday, nowHo
   const svgRef = useRef(null);
   const point = pts[Math.min(selectedHour, pts.length - 1)];
   const rawValue = hours[selectedHour]?.[metric === "wave" ? "wave" : "wind"];
-  const readoutValue = metric === "wave" ? `${rawValue.toFixed(1)} m` : `${Math.round(rawValue)} km/h`;
+  const readoutValue = rawValue == null ? "—" : metric === "wave" ? `${rawValue.toFixed(1)} m` : `${Math.round(rawValue)} km/h`;
   const isNow = isToday && selectedHour === nowHour;
 
   function handlePoint(clientX) {
@@ -488,12 +488,12 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
       {!loadError && (
         <div className="grid grid-cols-4 gap-1.5">
           <MetricTile icon={Wind} color={BRAND_OCEAN}
-            value={selectedHourData ? Math.round(selectedHourData.wind) : "—"}
-            sub={selectedHourData ? `km/h · ${windDirectionLabel(selectedHourData.windDir)}` : ""}
+            value={selectedHourData?.wind != null ? Math.round(selectedHourData.wind) : "—"}
+            sub={selectedHourData?.wind != null ? `km/h · ${windDirectionLabel(selectedHourData.windDir)}` : ""}
             label={t("wind")} />
           <MetricTile icon={Waves} color={BRAND_NAVY}
-            value={selectedHourData ? `${selectedHourData.wave.toFixed(1)} m` : "—"}
-            sub={selectedHourData ? t("period", { seconds: Math.round(selectedHourData.wavePeriod) }) : ""}
+            value={selectedHourData?.wave != null ? `${selectedHourData.wave.toFixed(1)} m` : "—"}
+            sub={selectedHourData?.wavePeriod != null ? t("period", { seconds: Math.round(selectedHourData.wavePeriod) }) : ""}
             label={t("wave")} />
           <MetricTile icon={Moon} color={tideFar ? SUN : BRAND_OCEAN}
             value={tidePrediction ? (tidePrediction.rising ? t("tideRising") : t("tideFalling")) : (tideError ? "—" : (tideResolving ? "…" : "—"))}
@@ -501,7 +501,12 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
             label={t("tide")}
             muted={!tidePrediction} />
           <MetricTile icon={Thermometer} color={GREEN}
-            value={selectedHourData ? `${selectedHourData.waterTemp.toFixed(1)}°` : "—"}
+            // sea_surface_temperature de Open-Meteo Marine llega null en
+            // lagos/zonas sin modelo de temperatura de agua (bug real
+            // reportado 2026-09-29: Crystal Rock, Ohio, en el lago Erie,
+            // sí tiene oleaje pero no SST — crasheaba el widget entero
+            // con un .toFixed() sobre null).
+            value={selectedHourData?.waterTemp != null ? `${selectedHourData.waterTemp.toFixed(1)}°` : "—"}
             sub="" label={t("waterTemp")} />
         </div>
       )}

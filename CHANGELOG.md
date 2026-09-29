@@ -31,6 +31,15 @@ Registro de cambios relevantes de Ocean Flow.
   cachea en `profiles` (no se vuelve a resolver en cada carga).
 
 ### Fixed
+- **Widget de condiciones de buceo: crash en sitios sin temperatura de
+  agua en el modelo marino** (lagos y algunas zonas costeras): Open-Meteo
+  Marine devuelve `sea_surface_temperature: null` cuando hay oleaje
+  modelado pero no temperatura (p. ej. el lago Erie — reportado buscando
+  "Crystal Rock, Ohio, Estados Unidos": "algo se ha torcido, esta
+  pantalla ha dado un problema inesperado"). El widget hacía
+  `.toFixed(1)` directamente sobre ese valor y crasheaba la tarjeta
+  entera. Ahora cualquier métrica (viento/oleaje/periodo/temperatura)
+  que llegue `null` se muestra como "—" en vez de romper el render.
 - **Home: el calendario asomaba apenas sobre la barra inferior en
   móvil**: con el widget de condiciones nuevo delante, el calendario
   quedaba casi entero por debajo del pliegue — recorte de espaciado
