@@ -1,4 +1,4 @@
-import { renderActivationEmailHtml, renderActivationEmailText, ACTIVATION_EMAIL_COPY, ACTIVATION_EMAIL_COPY_EN, resolveActivationEmailCopy } from "./activationEmailTemplate.js";
+import { renderActivationEmailHtml, renderActivationEmailText, ACTIVATION_EMAIL_COPY, ACTIVATION_EMAIL_COPY_EN, ACTIVATION_EMAIL_COPY_FR, ACTIVATION_EMAIL_COPY_RU, ACTIVATION_EMAIL_COPY_TH, resolveActivationEmailCopy } from "./activationEmailTemplate.js";
 
 const ARGS = { firstName: "Ada", actionLink: "https://example.supabase.co/verify?token=abc" };
 
@@ -35,9 +35,19 @@ describe("resolveActivationEmailCopy", () => {
     expect(resolveActivationEmailCopy("password_reset", "en")).toBe(ACTIVATION_EMAIL_COPY_EN.password_reset);
   });
 
+  // Los 15 idiomas de la app tienen tabla propia desde 2026-09-29 — una
+  // muestra de 3, no las 15, ya que resolveActivationEmailCopy es la
+  // misma función de lookup para todas (probar 15 veces el mismo camino
+  // de código no añade cobertura real).
+  it("otros idiomas con plantilla propia (fr, ru, th) devuelven su propia tabla", () => {
+    expect(resolveActivationEmailCopy("signup", "fr")).toBe(ACTIVATION_EMAIL_COPY_FR.signup);
+    expect(resolveActivationEmailCopy("password_reset_request", "ru")).toBe(ACTIVATION_EMAIL_COPY_RU.password_reset_request);
+    expect(resolveActivationEmailCopy("reactivation", "th")).toBe(ACTIVATION_EMAIL_COPY_TH.reactivation);
+  });
+
   it("sin language, o con un idioma sin plantilla propia, cae a español", () => {
     expect(resolveActivationEmailCopy("signup", undefined)).toBe(ACTIVATION_EMAIL_COPY.signup);
-    expect(resolveActivationEmailCopy("signup", "th")).toBe(ACTIVATION_EMAIL_COPY.signup);
+    expect(resolveActivationEmailCopy("signup", "xx")).toBe(ACTIVATION_EMAIL_COPY.signup);
   });
 
   it("un motivo desconocido cae a 'signup' en la tabla del idioma que corresponda", () => {
