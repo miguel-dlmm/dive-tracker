@@ -688,11 +688,16 @@ export default function TrainingRecordsTab({ profile, accentColor, onOpenProfile
   };
 
   // Bug real reportado: se veía un "Cargando…" de texto plano en vez del
-  // spinner de marca que usa el resto de la app (ver AppLoading, shared.jsx).
+  // spinner de marca que usa el resto de la app (ver AppLoading,
+  // shared.jsx). size={64} — sin pasarlo caía al valor por defecto (40),
+  // visiblemente más pequeño que el de la carga inicial de la app
+  // (App.jsx, mismo componente con size={64}) — bug real reportado
+  // (2026-09-29): "el spinner sale muy pequeño, quiero el mismo que sale
+  // cuando entras a la app y carga la portada".
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <AppLoading label={t("cargandoPlantillas")} />
+        <AppLoading size={64} label={t("cargandoPlantillas")} />
       </div>
     );
   }

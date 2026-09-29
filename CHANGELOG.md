@@ -5,6 +5,15 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Fixed
+- **Generador de Training Records: spinner de carga demasiado pequeño**:
+  usaba `AppLoading` sin indicar `size`, cayendo al valor por defecto del
+  componente (40px) — visiblemente más pequeño que el spinner de marca
+  que se ve al abrir la app (`size={64}`, App.jsx). Reportado por el
+  usuario: "cuando entro al generador de TR el spinner sale muy pequeño,
+  quiero el mismo que sale cuando entras a la APP y carga la portada".
+  Se añade `size={64}` en `TrainingRecordsTab.jsx` para igualarlo — único
+  otro uso de `AppLoading` en la app aparte de los dos ya correctos de
+  App.jsx.
 - **Landing "Meet Ocean Flow": capturas de pantalla estiradas**: al
   sustituir las imágenes base64 por ficheros `.webp` (auditoría PWA/SEO,
   v1.9.0), las capturas se veían deformadas en producción — reportado
