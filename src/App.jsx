@@ -332,21 +332,19 @@ function AppShell({ onSignOut, profile, onProfileUpdated }) {
   const [onboardingOpen, setOnboardingOpen] = useState(() => !profile?.onboarding_tour_seen_at);
   const closeOnboardingTour = async () => {
     const seenAt = new Date().toISOString();
-    // Marca también como vista la versión actual de WhatsNew para esta
-    // cuenta en el mismo UPDATE: sin esto, cerrar el tour dejaría paso de
-    // inmediato a "Qué hay de nuevo" — dos avisos de golpe en el primer
-    // acceso, cuando el propio tour ya cumple ese papel de "esto es lo
-    // que hay" para alguien que nunca ha usado la app.
-    const patch = { onboarding_tour_seen_at: seenAt, whats_new_seen_version: APP_VERSION };
+    // Bug real reportado 2026-09-29: esto marcaba también como vista la
+    // versión actual de WhatsNew y forzaba setWhatsNewOpen(false) para
+    // evitar "dos avisos de golpe" — pero el propio tour de bienvenida no
+    // menciona ninguna novedad de release concreta (libro de Koh Tao
+    // incluido), así que una cuenta nueva se quedaba sin enterarse nunca
+    // de esa novedad. Ahora solo se marca el tour como visto; WhatsNew
+    // sigue su ciclo normal (el guard !onboardingOpen de más abajo ya
+    // evita que ambos se muestren SUPERPUESTOS a la vez — aquí solo se
+    // deja que aparezca justo después, uno tras otro, no en simultáneo).
+    const patch = { onboarding_tour_seen_at: seenAt };
     await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
     onProfileUpdated(patch);
     setOnboardingOpen(false);
-    // whatsNewOpen es un useState propio (no derivado de `profile` en cada
-    // render), así que actualizar `profile.whats_new_seen_version` arriba
-    // no lo vuelve a calcular solo — sin este setWhatsNewOpen(false)
-    // explícito, una cuenta nueva (ambos "no visto" a la vez al montar)
-    // vería el tour y, justo al cerrarlo, "Qué hay de nuevo" detrás.
-    setWhatsNewOpen(false);
   };
 
   // "Qué hay de nuevo" — apertura automática reactivada (2026-09-28,
