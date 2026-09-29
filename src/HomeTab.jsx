@@ -400,7 +400,13 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
   }, [ganadoEntries, currentMonthKey]);
 
   return (
-    <div className="space-y-4">
+    // space-y-4 -> space-y-3 (2026-09-29, pedido explícito): con el
+    // widget de condiciones nuevo, el calendario quedaba casi entero por
+    // debajo del pliegue en móvil (solo una línea muy fina asomaba sobre
+    // la barra inferior) — verificado con mobile-check real, no a ojo.
+    // Recorte pequeño y global, no del aire de ninguna sección en
+    // concreto, para no tocar el espaciado ya afinado de KPIs/bento.
+    <div className="space-y-3">
       {/* 1. KPIs — Fase 3, Release V1 ("algún KPI interesante en formato
           animado y chulo"). Movido a primera posición (job nocturno,
           Bloque 9, pedido explícito del usuario) — antes cerraba la
@@ -409,7 +415,7 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           ascendente + entrada escalonada (MoneyKpiTile/MiniKpiTile, arriba) en vez de
           aparecer estáticas de golpe. */}
       <div>
-        <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
+        <div className="mb-1.5 flex items-center justify-between gap-2 px-0.5">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-400">
             {t("kpis.sectionTitle", { month: t("common:calendar.months", { returnObjects: true })[now.getMonth()] })}
           </h2>
@@ -519,7 +525,11 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
           explícita de la tile, acortada de nuevo el mismo lote porque
           ese texto se cortaba en móvil real — y su cifra pasa de "N
           movimientos este mes" a "N cursos", más directo). */}
-      <div className="mb-4 flex flex-col gap-2">
+      {/* mb-4 -> mb-3 (2026-09-29): mismo recorte pequeño y puntual que
+          space-y-3 arriba, para el mismo objetivo (que asome el
+          calendario) — las proporciones internas del bento (grid-cols-3,
+          gap-2 de cada tarjeta) no se tocan. */}
+      <div className="mb-3 flex flex-col gap-2">
         <div className="grid grid-cols-3 gap-2">
           {/* Media diaria ocupa ahora este hueco (antes Pendiente de
               cobrar) — mismo intercambio de contenido descrito arriba,

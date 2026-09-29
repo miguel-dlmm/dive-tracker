@@ -22,7 +22,12 @@ import { supabase } from "./supabaseClient";
 // usuario: "cuando cambio las horas en el gráfico debería cambiar los
 // KPIs de arriba para darme los de esa hora".
 
-const CONTAINER = "flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3.5";
+// gap-3/p-3.5 -> gap-2.5/p-3 (2026-09-29, pedido explícito): el
+// calendario de Home quedaba casi oculto bajo el pliegue en móvil con
+// este widget nuevo delante — recorte real, medido con Playwright/iPhone
+// 14 Pro Max, no solo el toggle "Ver el día por horas" que ya era el más
+// compacto posible.
+const CONTAINER = "flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-2.5";
 
 // Objetivo táctil real de 44px vía padding (box-content, no border-box):
 // h-5 w-5 (20px de contenido) + p-3 (12px) = 44×44 renderizados, con el
@@ -505,7 +510,7 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
         type="button"
         onClick={() => setExpandOpen((v) => !v)}
         aria-expanded={expandOpen}
-        className="flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg text-[11px] font-bold"
+        className="flex min-h-8 w-full items-center justify-center gap-1.5 rounded-lg text-[11px] font-bold"
         style={{ backgroundColor: "#EAF2F8", color: BRAND_OCEAN }}
       >
         {t("viewByHour")}

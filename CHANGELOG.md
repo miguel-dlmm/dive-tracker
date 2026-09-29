@@ -31,6 +31,11 @@ Registro de cambios relevantes de Ocean Flow.
   cachea en `profiles` (no se vuelve a resolver en cada carga).
 
 ### Fixed
+- **Home: el calendario asomaba apenas sobre la barra inferior en
+  móvil**: con el widget de condiciones nuevo delante, el calendario
+  quedaba casi entero por debajo del pliegue — recorte de espaciado
+  pequeño y puntual (verificado con Playwright/iPhone 14 Pro Max real),
+  sin tocar las proporciones internas de KPIs ni del bento de accesos.
 - **Landing "Meet Ocean Flow": capturas de pantalla estiradas**: al
   sustituir las imágenes base64 por ficheros `.webp` (auditoría PWA/SEO,
   v1.9.0), las capturas se veían deformadas en producción — reportado
