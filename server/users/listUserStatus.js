@@ -78,6 +78,44 @@ async function latestActivityAt(admin, table, userId) {
   return { updatedAt: data?.updated_at || null };
 }
 
+// Nombres de estado de pago que cuentan como "cobrado" para ESTE usuario —
+// payment_statuses es un catálogo propio por cuenta (cada quien puede
+// llamar a sus estados como quiera), y worklog/comisiones/colleague_payments
+// guardan el NOMBRE del estado en texto plano, no una referencia a la fila
+// del catálogo (mismo patrón que school/activity). "Pendiente" se marca con
+// is_default (ver isPendingStatus, src/shared.jsx) — "cobrado" es, por
+// exclusión, cualquier estado que NO sea el que hace de pendiente.
+async function collectedStatusNamesFor(admin, userId) {
+  const { data, error } = await admin.from("payment_statuses").select("name, is_default").eq("user_id", userId);
+  if (error) return { error };
+  return { names: (data || []).filter((s) => !s.is_default).map((s) => s.name) };
+}
+
+// Movimientos marcados como cobrados de UN usuario, sumando worklog +
+// comisiones + colleague_payments (pedido explícito 2026-09-29, ver
+// docs/BACKLOG.md) — a diferencia de los dos contadores nuevos de
+// profiles (aperturas de la Guía, PDFs exportados), este dato SÍ se puede
+// derivar con un COUNT en vivo sobre las tablas de negocio existentes,
+// igual que activitySummaryFor ya hace para "Movimientos".
+async function collectedCountFor(admin, userId) {
+  const { names: collectedNames, error: namesError } = await collectedStatusNamesFor(admin, userId);
+  if (namesError) return { error: namesError };
+  if (collectedNames.length === 0) return { collectedCount: 0 };
+
+  let collectedCount = 0;
+  for (const table of ACTIVITY_TABLES) {
+    const { count: tableCount, error: countError } = await admin
+      .from(table)
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .in("status", collectedNames)
+      .is("deleted_at", null);
+    if (countError) return { error: countError };
+    collectedCount += tableCount || 0;
+  }
+  return { collectedCount };
+}
+
 async function activitySummaryFor(admin, userId) {
   let count = 0;
   let lastActivityAt = null;
@@ -94,7 +132,9 @@ async function activitySummaryFor(admin, userId) {
     if (latestError) return { error: latestError };
     if (updatedAt && (!lastActivityAt || updatedAt > lastActivityAt)) lastActivityAt = updatedAt;
   }
-  return { count, lastActivityAt };
+  const { collectedCount, error: collectedError } = await collectedCountFor(admin, userId);
+  if (collectedError) return { error: collectedError };
+  return { count, lastActivityAt, collectedCount };
 }
 
 // Última actividad de TODOS los usuarios a la vez, para el listado

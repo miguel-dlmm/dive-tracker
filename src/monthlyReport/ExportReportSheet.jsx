@@ -4,6 +4,7 @@ import { FileDown, X, Check, Loader2 } from "lucide-react";
 import { Sheet, Field, Select, DateRangePicker, BooleanToggle, ChipGroup, formatMoney, useToast } from "../shared";
 import { BRAND_NAVY, BRAND_SLATE } from "../App";
 import { buildExportReportData, listAdjustmentCandidates } from "./buildExportReportData";
+import { supabase } from "../supabaseClient";
 
 const pad2 = (n) => String(n).padStart(2, "0");
 const dstr = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
@@ -88,6 +89,14 @@ export default function ExportReportSheet({
         t,
       });
       toast.success(t("export.success"));
+      // Contador de PDFs de resumen exportados (Config → Usuarios, pedido
+      // explícito 2026-09-29) — mismo patrón fire-and-forget que
+      // increment_training_records_count: el PDF ya se descargó con
+      // éxito, un fallo de red al sincronizar este dato puramente
+      // informativo para el admin no debe bloquear ni avisar al usuario.
+      supabase.rpc("increment_summary_pdf_exported_count").then(({ error }) => {
+        if (error) console.error("No se pudo sincronizar el contador de PDFs de resumen exportados", error);
+      });
       onClose();
     } catch {
       toast.error(t("export.genericError"));

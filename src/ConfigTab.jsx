@@ -921,6 +921,15 @@ function UserDetailSheet({
                 {!activitySummary ? <FieldSkeleton width={64} /> : activitySummary.lastActivityAt ? shortDate(activitySummary.lastActivityAt) : t("userStatus.nunca")}
               </span>
             </div>
+            {/* Movimientos cobrados (pedido explícito 2026-09-29, ver
+                docs/BACKLOG.md) — mismo dato que activitySummary de
+                arriba (una sola llamada a /api/list-user-status), se
+                deriva con un COUNT filtrando por estado de pago, no es un
+                contador nuevo en profiles. */}
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.cobrados")}</span>
+              <span className="text-gray-700">{activitySummary ? activitySummary.collectedCount : <FieldSkeleton width={20} />}</span>
+            </div>
             {/* Training Records generados + fecha del último (lote
                 2026-09-17/18, pedido explícito) — mismo criterio de
                 FieldSkeleton mientras fullProfile carga que el resto de
@@ -936,6 +945,29 @@ function UserDetailSheet({
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.trUltimaGeneracion")}</span>
               <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={64} /> : fullProfile.training_records_last_generated_at ? shortDate(fullProfile.training_records_last_generated_at) : "—"}</span>
+            </div>
+            {/* Aperturas de la Guía de Koh Tao + PDFs de resumen
+                exportados (pedido explícito 2026-09-29, ver
+                docs/BACKLOG.md) — mismo patrón exacto que Training
+                Records de arriba: solo lectura, se incrementan desde su
+                disparador real (DiveGuideTab.jsx / ExportReportSheet.jsx
+                vía increment_dive_guide_opened_count()/
+                increment_summary_pdf_exported_count()). */}
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.guiaAperturas")}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={20} /> : fullProfile.dive_guide_opened_count ?? 0}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.guiaUltimaApertura")}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={64} /> : fullProfile.dive_guide_last_opened_at ? shortDate(fullProfile.dive_guide_last_opened_at) : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.pdfResumenExportados")}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={20} /> : fullProfile.summary_pdf_exported_count ?? 0}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="shrink-0 text-xs text-gray-400">{t("userDetailSheet.pdfResumenUltimaExportacion")}</span>
+              <span className="text-gray-700">{!fullProfile ? <FieldSkeleton width={64} /> : fullProfile.summary_pdf_last_exported_at ? shortDate(fullProfile.summary_pdf_last_exported_at) : "—"}</span>
             </div>
             {/* Solo se muestra con una fecha real (2026-09-04, pedido
                 explícito) — antes se gateaba en status === "desactivado" y,

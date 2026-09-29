@@ -9,6 +9,7 @@ import {
 import { BRAND_NAVY, BRAND_OCEAN, BRAND_SKY, NAVY, GREEN, CORAL, BG } from "./App";
 import { useEscapeClose, useBodyScrollLock } from "./shared";
 import { DURATION, EASE, carouselSlideVariants, usePrefersReducedMotion, useSwipeHorizontal } from "./motion";
+import { supabase } from "./supabaseClient";
 
 // Guía de Buceo (Koh Tao) — "libro digital" pensado para que el instructor
 // se lo enseñe al cliente durante el briefing (pedido explícito
@@ -150,6 +151,7 @@ export default function DiveGuideTab({ onClose, onOpenInstallApp }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [dark, setDark] = useState(readStoredDarkMode);
   const rootRef = useRef(null);
+  const openTrackedRef = useRef(false);
 
   useEscapeClose(true, onClose);
   useBodyScrollLock(true);
@@ -158,6 +160,22 @@ export default function DiveGuideTab({ onClose, onOpenInstallApp }) {
     function handler() { setIsFullscreen(!!document.fullscreenElement); }
     document.addEventListener("fullscreenchange", handler);
     return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+  // Contador de aperturas de la Guía (Config → Usuarios, pedido explícito
+  // 2026-09-29) — mismo patrón que increment_training_records_count:
+  // fire-and-forget, sin bloquear la apertura si falla la red. Este
+  // componente se monta/desmonta con la navegación a "dive-guide" (ver
+  // App.jsx), así que un montaje real equivale a una apertura real. La
+  // ref evita contar dos veces el doble-montaje de StrictMode en
+  // desarrollo (persiste entre el montaje/limpieza/remontaje sintético,
+  // a diferencia de un simple useEffect sin guarda).
+  useEffect(() => {
+    if (openTrackedRef.current) return;
+    openTrackedRef.current = true;
+    supabase.rpc("increment_dive_guide_opened_count").then(({ error }) => {
+      if (error) console.error("No se pudo sincronizar el contador de aperturas de la Guía", error);
+    });
   }, []);
 
   const current = PAGES[pageIdx];

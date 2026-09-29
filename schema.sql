@@ -152,6 +152,17 @@ create table if not exists public.profiles (
   -- vuelva a mostrarlo solo. Nulo por defecto (nunca visto). Ver AppShell
   -- en App.jsx y scripts/migrations/0023-whatsnew-seen-version.sql.
   whats_new_seen_version text,
+  -- Más contadores de actividad (pedido explícito 2026-09-29, ver
+  -- docs/BACKLOG.md): aperturas de la Guía de Buceo de Koh Tao y PDFs de
+  -- resumen exportados, mismo criterio exacto que
+  -- training_records_generated_count de arriba — solo un entero y una
+  -- fecha por contador, se incrementan únicamente vía
+  -- increment_dive_guide_opened_count()/increment_summary_pdf_exported_count()
+  -- (más abajo), nunca con un UPDATE directo del cliente.
+  dive_guide_opened_count integer not null default 0,
+  dive_guide_last_opened_at timestamptz,
+  summary_pdf_exported_count integer not null default 0,
+  summary_pdf_last_exported_at timestamptz,
   created_at timestamptz not null default now(),
   constraint profiles_nickname_no_at check (nickname !~ '@')
 );
@@ -216,6 +227,20 @@ create table if not exists public.profiles (
 -- is_admin()/is_superadmin()) — sin ella, esta migración por sí sola no
 -- habilita nada nuevo en el cliente.
 
+-- Migración aditiva 2026-09-29 (más contadores de actividad: aperturas de
+-- la Guía de Koh Tao + PDFs de resumen exportados) para instalaciones
+-- existentes — scripts/migrations/0026-mas-contadores-actividad.sql tiene
+-- el mismo DDL, aplicarlo con scripts/apply-migration.mjs:
+--
+--   alter table public.profiles
+--     add column if not exists dive_guide_opened_count integer not null default 0,
+--     add column if not exists dive_guide_last_opened_at timestamptz,
+--     add column if not exists summary_pdf_exported_count integer not null default 0,
+--     add column if not exists summary_pdf_last_exported_at timestamptz;
+--
+-- Más increment_dive_guide_opened_count()/increment_summary_pdf_exported_count()
+-- (ver más abajo, junto a increment_training_records_count()).
+
 create unique index if not exists profiles_nickname_lower_key on public.profiles (lower(nickname));
 
 -- Helper para políticas de otras tablas ("¿es admin quien llama?"). security
@@ -248,6 +273,26 @@ returns void language sql security definer set search_path = public as $$
   update public.profiles
   set training_records_generated_count = training_records_generated_count + by_amount,
       training_records_last_generated_at = now()
+  where user_id = auth.uid();
+$$;
+
+-- Gemelas de increment_training_records_count, mismo criterio exacto
+-- (atómico, sobre la fila de quien llama, security definer) — para los
+-- dos contadores de actividad añadidos 2026-09-29 (ver la migración
+-- aditiva de arriba, junto a profiles).
+create or replace function public.increment_dive_guide_opened_count()
+returns void language sql security definer set search_path = public as $$
+  update public.profiles
+  set dive_guide_opened_count = dive_guide_opened_count + 1,
+      dive_guide_last_opened_at = now()
+  where user_id = auth.uid();
+$$;
+
+create or replace function public.increment_summary_pdf_exported_count()
+returns void language sql security definer set search_path = public as $$
+  update public.profiles
+  set summary_pdf_exported_count = summary_pdf_exported_count + 1,
+      summary_pdf_last_exported_at = now()
   where user_id = auth.uid();
 $$;
 

@@ -237,18 +237,24 @@ describe("resumen de actividad de un usuario (user_id en el cuerpo)", () => {
     return request({ body: JSON.stringify({ user_id: TARGET_ID }), ...overrides });
   }
 
-  // tables: { worklog: { count, countError, latest: { updated_at } | null, latestError }, ... }
+  // tables: { worklog: { count, countError, latest: { updated_at } | null, latestError }, ...,
+  //           payment_statuses: { data: [{ name, is_default }], countError } }
+  // — .then() resuelve { data, count, error } a la vez, igual que el cliente
+  // real de supabase-js: la consulta de recuento (`.is(deleted_at)`/`.in(status)`)
+  // solo lee `count`, la de payment_statuses (collectedStatusNamesFor) solo
+  // lee `data`, ambas comparten el mismo mock genérico sin pisarse.
   function makeActivityClient(tables) {
     const from = vi.fn((table) => {
       const cfg = tables[table] || {};
       const chain = {
         select: () => chain,
         eq: () => chain,
+        in: () => chain,
         is: () => chain,
         order: () => chain,
         limit: () => chain,
         maybeSingle: () => Promise.resolve({ data: cfg.latest ?? null, error: cfg.latestError ?? null }),
-        then: (resolve) => Promise.resolve({ count: cfg.count ?? 0, error: cfg.countError ?? null }).then(resolve),
+        then: (resolve) => Promise.resolve({ data: cfg.data ?? null, count: cfg.count ?? 0, error: cfg.countError ?? null }).then(resolve),
       };
       return chain;
     });
@@ -286,7 +292,7 @@ describe("resumen de actividad de un usuario (user_id en el cuerpo)", () => {
 
     const result = await handleListUserStatus(summaryRequest());
 
-    expect(result).toEqual({ status: 200, payload: { count: 6, lastActivityAt: "2026-09-05T08:00:00.000Z" } });
+    expect(result).toEqual({ status: 200, payload: { count: 6, lastActivityAt: "2026-09-05T08:00:00.000Z", collectedCount: 0 } });
   });
 
   it("cuenta también una baja lógica reciente (deleted_at) como la actividad más reciente, aunque el recuento activo no la incluya", async () => {
@@ -298,7 +304,7 @@ describe("resumen de actividad de un usuario (user_id en el cuerpo)", () => {
 
     const result = await handleListUserStatus(summaryRequest());
 
-    expect(result).toEqual({ status: 200, payload: { count: 0, lastActivityAt: "2026-09-07T09:00:00.000Z" } });
+    expect(result).toEqual({ status: 200, payload: { count: 0, lastActivityAt: "2026-09-07T09:00:00.000Z", collectedCount: 0 } });
   });
 
   it("devuelve lastActivityAt null si el usuario no tiene ningún movimiento", async () => {
@@ -310,12 +316,50 @@ describe("resumen de actividad de un usuario (user_id en el cuerpo)", () => {
 
     const result = await handleListUserStatus(summaryRequest());
 
-    expect(result).toEqual({ status: 200, payload: { count: 0, lastActivityAt: null } });
+    expect(result).toEqual({ status: 200, payload: { count: 0, lastActivityAt: null, collectedCount: 0 } });
   });
 
   it("devuelve 500 si falla la consulta de recuento", async () => {
     getServiceRoleClient.mockReturnValue(makeActivityClient({
       worklog: { countError: { message: "boom" } },
+    }));
+
+    const result = await handleListUserStatus(summaryRequest());
+
+    expect(result).toEqual({ status: 500, payload: { error: "No se pudo consultar la actividad de la cuenta." } });
+  });
+
+  // Movimientos "cobrados" (pedido explícito 2026-09-29, ver docs/BACKLOG.md)
+  // — "cobrado" se determina por exclusión: cualquier estado del catálogo
+  // propio del usuario que NO sea is_default (el que hace de "pendiente",
+  // ver isPendingStatus en src/shared.jsx).
+  it("suma solo los movimientos cuyo estado NO es el que hace de \"pendiente\" (is_default) en el catálogo del usuario", async () => {
+    getServiceRoleClient.mockReturnValue(makeActivityClient({
+      payment_statuses: { data: [{ name: "Pending", is_default: true }, { name: "Paid", is_default: false }] },
+      worklog: { count: 2 },
+      comisiones: { count: 1 },
+      colleague_payments: { count: 0 },
+    }));
+
+    const result = await handleListUserStatus(summaryRequest());
+
+    expect(result.payload.collectedCount).toBe(3);
+  });
+
+  it("no consulta ninguna tabla de movimientos si el catálogo no tiene ningún estado no-pendiente", async () => {
+    getServiceRoleClient.mockReturnValue(makeActivityClient({
+      payment_statuses: { data: [{ name: "Pending", is_default: true }] },
+      worklog: { count: 5 }, // no debería contarse: sin nombres "cobrado" que filtrar
+    }));
+
+    const result = await handleListUserStatus(summaryRequest());
+
+    expect(result.payload.collectedCount).toBe(0);
+  });
+
+  it("devuelve 500 si falla la consulta del catálogo de estados de pago", async () => {
+    getServiceRoleClient.mockReturnValue(makeActivityClient({
+      payment_statuses: { countError: { message: "boom" } },
     }));
 
     const result = await handleListUserStatus(summaryRequest());
