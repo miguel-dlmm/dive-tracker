@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Único punto público del dominio (auditoría PWA/SEO, 2026-09-29) — la app
-  en sí (todo lo que hay tras /) está deliberadamente fuera de este mapa,
-  igual que está fuera de robots.txt (ver ese fichero). Si en el futuro la
-  landing gana más URLs reales (no solo el selector de idioma en cliente
-  de hoy, ver el propio informe de la auditoría sobre esta limitación),
-  añadir aquí una entrada <url> por cada una.
+  La landing "Meet Ocean Flow" es el contenido pensado para descubrirse
+  (una entrada por idioma real — el selector de idioma de la app en sí es
+  en cliente, no URLs propias, ver el informe de la auditoría PWA/SEO,
+  2026-09-29, sobre esta limitación). La app en sí (/) se sumó al mapa el
+  mismo día, al abrirse a indexación (ver docs/PRODUCT.md, "Visibilidad
+  en buscadores") — una única entrada, sin URLs por pantalla porque no
+  hay router (navegación por estado, ver CLAUDE.md).
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://oceanflow-web.vercel.app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
     <loc>https://oceanflow-web.vercel.app/meetOceanFlow/</loc>
     <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://oceanflow-web.vercel.app/meetOceanFlow/en/</loc>

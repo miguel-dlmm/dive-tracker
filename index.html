@@ -19,17 +19,21 @@
 
     <title>Ocean Flow — Control de ingresos para instructores de buceo</title>
     <meta name="description" content="Ocean Flow: registra tus clases de buceo, comisiones y pagos por escuela, con resumen mensual y anual." />
-    <meta name="robots" content="noindex, nofollow" />
-    <!-- noindex a propósito: es una herramienta personal/privada con datos
-         de facturación, no contenido pensado para aparecer en buscadores.
-         Si en algún momento tiene login multiusuario y quieres promocionarla
-         como producto, cambia esto a "index, follow" y añade contenido
-         público real (una landing, no la app en sí).
-         Reforzado por /robots.txt (public/robots.txt, Disallow: /) desde
-         2026-09-07 — antes vivía en la raíz del repo, no en public/, así
+    <meta name="robots" content="index, follow" />
+    <!-- index, follow desde 2026-09-29 (decisión de alcance/SEO, ver
+         docs/PRODUCT.md) — antes "noindex, nofollow": el login sigue
+         cerrando el acceso real a cualquier dato, así que abrir la app en
+         sí a buscadores solo añade una vía más de descubrimiento (aparecer
+         en resultados), no expone nada. El HTML inicial (antes de
+         autenticar) es solo el shell de la SPA — revisado, no contiene
+         ningún dato de negocio que no deba salir en resultados de
+         búsqueda.
+         Coherente con /robots.txt (public/robots.txt, que ahora también
+         permite `/` — ver ese fichero para el detalle). robots.txt vive en
+         public/ desde 2026-09-07 — antes vivía en la raíz del repo, así
          que Vite nunca lo incluía en el build real y devolvía 404 en
          producción (mismo bug de fondo que manifest.json, corregido
-         antes en esta misma sesión: publicDir es solo public/). -->
+         antes en esa misma sesión: publicDir es solo public/). -->
 
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />

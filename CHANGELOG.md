@@ -4,6 +4,15 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Changed
+- **La app en sí (`/`) se abre a indexación de buscadores** — pedido
+  explícito 2026-09-29 (ver docs/PRODUCT.md, "Visibilidad en
+  buscadores"). Antes `noindex, nofollow` + `robots.txt` bloqueaba toda
+  la raíz salvo la landing "Meet Ocean Flow"; ahora `index, follow` y
+  `robots.txt` solo excluye `/api/`. El login sigue cerrando el acceso
+  real a cualquier dato — esto solo añade una vía más de descubrimiento
+  orgánico, no expone nada nuevo.
+
 ### Fixed
 - **Landing "Meet Ocean Flow": capturas de pantalla estiradas**: al
   sustituir las imágenes base64 por ficheros `.webp` (auditoría PWA/SEO,

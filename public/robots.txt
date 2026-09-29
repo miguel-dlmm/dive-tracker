@@ -1,25 +1,13 @@
-# Ocean Flow es una herramienta personal/privada (datos de facturación),
-# no un sitio de contenido — se pide a los rastreadores que no indexen la
-# app en sí. Excepción explícita (2026-09-29, auditoría PWA/SEO): la
-# landing "Meet Ocean Flow" sí es contenido público pensado para
-# descubrirse — Allow dentro de un Disallow general es sintaxis estándar
-# soportada por todos los rastreadores relevantes (Google, Bing...).
-#
-# Allow: /og-image.png y /icon.svg (2026-09-29, mismo día — bug real
-# encontrado compartiendo la landing en Facebook): son los dos únicos
-# recursos que la landing referencia en la raíz, fuera de
-# /meetOceanFlow/, así que ambos caían bajo el Disallow general. A
-# diferencia de curl (que ignora robots.txt por completo), el rastreador
-# de Meta sí lo respeta antes de ir a buscar la imagen de la tarjeta —
-# sin este Allow explícito, nunca llegaba a pedirla, de ahí el "no se ha
-# podido procesar como imagen" del Sharing Debugger pese a que la imagen
-# en sí siempre fue válida. /icon.svg (favicon de la landing) tiene la
-# misma exposición aunque no cause el mismo síntoma en Facebook — se
-# corrige a la vez por ser el mismo patrón exacto de bug.
+# Ocean Flow abre la app en sí (`/`) a indexación desde 2026-09-29
+# (decisión de alcance/SEO, ver docs/PRODUCT.md) — antes bloqueaba todo
+# con "Disallow: /" y solo dejaba pasar la landing "Meet Ocean Flow" con
+# excepciones puntuales (Allow: /meetOceanFlow/, /og-image.png, /icon.svg).
+# El login sigue cerrando el acceso real a cualquier dato: abrir la raíz
+# a los rastreadores solo añade una vía más de descubrimiento orgánico
+# (que la app exista y tenga una entrada en los resultados), no expone
+# nada — de ahí que ya no haga falta ninguna excepción puntual, la única
+# ruta que de verdad no es contenido son los endpoints de /api/.
 User-agent: *
-Disallow: /
-Allow: /meetOceanFlow/
-Allow: /og-image.png
-Allow: /icon.svg
+Disallow: /api/
 
 Sitemap: https://oceanflow-web.vercel.app/sitemap.xml

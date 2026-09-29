@@ -103,6 +103,25 @@ consecuencia automática de "ya tenemos roles".
 5. Se mantienen además las convenciones de `CLAUDE.md` (patrones de UI,
    reglas de commits/tests, nada de configuración de negocio hardcodeada).
 
+## Visibilidad en buscadores (SEO)
+
+Decisión de alcance 2026-09-29 (pedido explícito): la app en sí (`/`, no
+solo la landing "Meet Ocean Flow") se abre a indexación de buscadores —
+`index, follow` en `index.html` y `robots.txt` sin bloquear la raíz
+(solo `/api/` queda fuera, por no ser contenido). Antes era `noindex,
+nofollow` con la app entera bloqueada en `robots.txt`, pensada como
+"herramienta personal/privada" sin más vía de descubrimiento que
+compartir el enlace a mano o la landing.
+
+El motivo del cambio no es que la app deje de ser privada — **el login
+sigue cerrando el acceso real a cualquier dato**, nada de eso cambia.
+Es que el usuario quiere que la propia app se pueda encontrar en
+buscadores como una vía más de descubrimiento orgánico, no solo a través
+de la landing. Verificado antes de aplicarlo: el HTML inicial servido
+(antes de cualquier autenticación) es solo el shell vacío de la SPA — no
+hay ningún dato de negocio ni de usuario que un rastreador pueda leer sin
+pasar por el login.
+
 ## Estado de las decisiones abiertas
 
 Ver `docs/BACKLOG.md` para el detalle priorizado y `docs/ADR/` para las
