@@ -4,6 +4,8 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.8.0] - 2026-09-29
+
 ### Added
 - **Landing "Meet Ocean Flow"** (`/meetOceanFlow`): página estática de
   presentación del producto, servida desde el propio dominio de la app,
