@@ -22,12 +22,6 @@
       "headers": [
         { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
       ]
-    },
-    {
-      "source": "/og-image.png",
-      "headers": [
-        { "key": "Accept-Ranges", "value": "none" }
-      ]
     }
   ]
 }
