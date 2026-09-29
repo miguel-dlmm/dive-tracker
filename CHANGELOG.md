@@ -4,6 +4,8 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.8.0] - 2026-09-29
+
 ### Added
 - **Landing "Meet Ocean Flow"** (`/meetOceanFlow`): página estática de
   presentación del producto, servida desde el propio dominio de la app,
@@ -14,7 +16,21 @@ Registro de cambios relevantes de Ocean Flow.
 - **"Qué hay de nuevo" anuncia el libro digital de Koh Tao**: apertura
   automática reactivada (llevaba fija en "no mostrar" desde v1.6.0, sin
   contenido nuevo que anunciar hasta ahora) con una única diapositiva
-  sobre la Guía de Buceo, en los 15 idiomas.
+  sobre la Guía de Buceo, en los 15 idiomas — título en dos líneas
+  ("El libro de buceo de Koh Tao" / "ya en Ocean Flow") y un salto de
+  línea antes de "Accede desde la Home" en el cuerpo, texto aprobado
+  palabra por palabra antes de esta release.
+- **Selector de idioma en las pantallas sin sesión**: el login incorpora
+  un selector arriba a la derecha, igual que las "puertas de entrada" a
+  las que se llega por enlace directo sin sesión todavía (crear/reset de
+  contraseña) — Registro ya tenía el suyo propio, ahora comparten la
+  misma fuente de idiomas. Cualquier enlace de activación/recuperación
+  generado para una cuenta cuyo idioma ya se conoce (`profiles.language`)
+  lo incluye como `?lang=` en la URL, así la pantalla de destino carga ya
+  en ese idioma sin depender del último idioma usado en ese navegador. El
+  email de bienvenida/activación se envía en el idioma elegido — de
+  momento con plantilla propia en español e inglés; el resto de los 15
+  idiomas de la app cae a español hasta un pase de traducción aparte.
 - **Ayuda: "Exportar tu informe mensual en PDF"**: nuevo artículo en
   "Quiero..." explicando el botón "Exportar informe" de Resumen (escuela,
   rango de fechas, ajustes de curso, mostrar lo ya cobrado), en los 15

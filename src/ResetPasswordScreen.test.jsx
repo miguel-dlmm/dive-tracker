@@ -13,6 +13,15 @@ async function fillAndSubmit(user, { password, confirm }) {
 }
 
 describe("ResetPasswordScreen", () => {
+  // Puerta de entrada por enlace directo (2026-09-29, pedido explícito) —
+  // el propio comportamiento del selector ya se prueba a fondo contra
+  // EntryLanguagePicker en shared.test.jsx; aquí solo se confirma que esta
+  // pantalla lo monta de verdad.
+  it("muestra el selector de idioma (puerta de entrada por enlace directo)", () => {
+    render(<ResetPasswordScreen onSubmit={vi.fn()} />);
+    expect(screen.getByLabelText("Idioma")).toBeInTheDocument();
+  });
+
   it("no pide ningún consentimiento legal — ni checkbox ni enlaces a Política de Privacidad/Términos", async () => {
     render(<ResetPasswordScreen onSubmit={vi.fn()} />);
 

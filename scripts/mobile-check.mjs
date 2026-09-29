@@ -136,20 +136,33 @@ async function main() {
         }));
       }, { selector: swipeTarget, startX, endX, y });
     }
-    // Swipe a la izquierda → avanza a la siguiente diapositiva.
-    await touchSwipe(260, 110, 300);
-    await page.waitForTimeout(300);
-    const afterSwipeLeftTitle = await dialog.getByRole("heading").textContent();
-    if (afterSwipeLeftTitle === firstSlideTitle) {
-      consoleIssues.push("[whats-new] El swipe hacia la izquierda no avanzó de diapositiva");
-    }
-    await shot(page, "whats-new-tras-swipe-izquierda");
-    // Swipe a la derecha → vuelve a la diapositiva anterior.
-    await touchSwipe(110, 260, 300);
-    await page.waitForTimeout(300);
-    const afterSwipeRightTitle = await dialog.getByRole("heading").textContent();
-    if (afterSwipeRightTitle !== firstSlideTitle) {
-      consoleIssues.push("[whats-new] El swipe hacia la derecha no volvió a la diapositiva anterior");
+    // El swipe solo tiene algo que probar con más de una diapositiva real
+    // (2026-09-29, hallazgo real: con el contenido de v1.7.0/v1.8.0 —una
+    // única diapositiva del libro de Koh Tao— el swipe a la izquierda no
+    // tiene ningún sitio al que avanzar, así que "no avanza" es el
+    // comportamiento correcto, no una regresión; este script lo daba por
+    // fallo porque se escribió cuando WhatsNew siempre tenía varias
+    // diapositivas). Mismo indicio que ya usa el bucle de "Siguiente" más
+    // abajo para el mismo propósito.
+    const hasMultipleSlides = await dialog.getByRole("button", { name: "Siguiente", exact: true }).isVisible().catch(() => false);
+    if (hasMultipleSlides) {
+      // Swipe a la izquierda → avanza a la siguiente diapositiva.
+      await touchSwipe(260, 110, 300);
+      await page.waitForTimeout(300);
+      const afterSwipeLeftTitle = await dialog.getByRole("heading").textContent();
+      if (afterSwipeLeftTitle === firstSlideTitle) {
+        consoleIssues.push("[whats-new] El swipe hacia la izquierda no avanzó de diapositiva");
+      }
+      await shot(page, "whats-new-tras-swipe-izquierda");
+      // Swipe a la derecha → vuelve a la diapositiva anterior.
+      await touchSwipe(110, 260, 300);
+      await page.waitForTimeout(300);
+      const afterSwipeRightTitle = await dialog.getByRole("heading").textContent();
+      if (afterSwipeRightTitle !== firstSlideTitle) {
+        consoleIssues.push("[whats-new] El swipe hacia la derecha no volvió a la diapositiva anterior");
+      }
+    } else {
+      console.log("  (una única diapositiva real — se omite la comprobación de swipe)");
     }
 
     // Acotado a `dialog`, con exact:true: sin esto, "Siguiente" también

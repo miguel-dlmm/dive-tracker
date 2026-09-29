@@ -76,7 +76,7 @@ export async function handleRegenerateActivationLink({ method, headers, body }) 
 
   const { data: target, error: targetError } = await client
     .from("profiles")
-    .select("is_superadmin, first_name, nickname")
+    .select("is_superadmin, first_name, nickname, language")
     .eq("user_id", targetUserId)
     .maybeSingle();
   if (targetError) {
@@ -149,7 +149,12 @@ export async function handleRegenerateActivationLink({ method, headers, body }) 
   const host = getHeader(headers, "host");
   const baseUrl = host ? `${proto}://${host}` : undefined;
 
-  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email, { ...(alreadyAcceptedLegal ? { flow: "recovery" } : {}), baseUrl });
+  // lang: 2026-09-29, pedido explícito — esta cuenta ya existía antes de
+  // desactivarse/quedar pendiente, así que su profiles.language (si lo
+  // eligió al registrarse) ya es un idioma conocido de verdad, no una
+  // suposición — se reutiliza en vez de dejar que el enlace caiga al
+  // idioma que tenga este navegador del superadmin.
+  const { activationLink, error: linkErrorMessage } = await generateActivationLink(authUser.user.email, { ...(alreadyAcceptedLegal ? { flow: "recovery" } : {}), baseUrl, lang: target.language });
   if (linkErrorMessage) {
     return { status: 500, payload: { error: linkErrorMessage } };
   }
@@ -162,6 +167,7 @@ export async function handleRegenerateActivationLink({ method, headers, body }) 
       nickname: target.nickname,
       actionLink: activationLink,
       reason: "reactivation",
+      language: target.language,
     });
     emailSent = result.sent;
   } catch (err) {

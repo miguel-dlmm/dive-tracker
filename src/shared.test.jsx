@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { colorFor, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect, DatePicker, MoneyInput, Field } from "./shared";
+import { colorFor, formatMoney, oppositeStatus, isPendingStatus, lighten, SearchSelect, DatePicker, MoneyInput, Field, EntryLanguagePicker } from "./shared";
+import i18n, { getStoredLanguage, setStoredLanguage } from "./i18n";
 
 // Estos tests documentan el comportamiento ACTUAL de las funciones puras de
 // shared.jsx, como red de seguridad antes de dividir/refactorizar el
@@ -490,5 +491,81 @@ describe("MoneyInput — allowNegative", () => {
   it("sin allowNegative, no se renderiza ningún botón de signo", () => {
     render(<ControlledMoneyInput initial="30" allowNegative={false} />);
     expect(screen.queryByRole("button", { name: /Cambiar a/ })).not.toBeInTheDocument();
+  });
+});
+
+// Selector de idioma compacto para pantallas sin sesión (Login,
+// Reset/CreatePassword...) — 2026-09-29, pedido explícito. Un solo pase de
+// pruebas aquí, directamente sobre el componente compartido, en vez de
+// repetir la misma verificación de "cambia i18n.language/localStorage" en
+// cada pantalla que lo monta (esas solo comprueban que lo montan, ver
+// LoginScreen.test.jsx).
+describe("EntryLanguagePicker", () => {
+  afterEach(() => {
+    i18n.changeLanguage("es");
+    setStoredLanguage("es");
+  });
+
+  it("arranca mostrando el idioma activo de i18n", () => {
+    render(<EntryLanguagePicker />);
+    expect(screen.getByLabelText("Idioma")).toHaveValue("es");
+  });
+
+  it("elegir un idioma distinto llama a i18n.changeLanguage y lo persiste en localStorage", async () => {
+    const user = userEvent.setup();
+    render(<EntryLanguagePicker />);
+
+    await user.selectOptions(screen.getByLabelText("Idioma"), "en");
+
+    expect(i18n.language).toBe("en");
+    expect(getStoredLanguage()).toBe("en");
+  });
+});
+
+// getStoredLanguage() con ?lang= en la URL — 2026-09-29, pedido explícito:
+// "si al generar los links de lo que sea ya sabemos el idioma del
+// usuario, pasémoslo por parámetro... y así cuando acceda a estas páginas
+// sueltas su idioma venga ya cargado". Se resuelve una sola vez aquí, no
+// en cada pantalla — ver getUrlLanguage en src/i18n/index.js.
+describe("getStoredLanguage — parámetro ?lang= de la URL", () => {
+  const originalLocation = window.location;
+
+  function setUrl(search) {
+    delete window.location;
+    window.location = { ...originalLocation, search };
+  }
+
+  afterEach(() => {
+    window.location = originalLocation;
+    setStoredLanguage("es");
+  });
+
+  it("?lang= con un idioma soportado gana sobre lo guardado en localStorage", () => {
+    setStoredLanguage("es");
+    setUrl("?lang=fr");
+
+    expect(getStoredLanguage()).toBe("fr");
+  });
+
+  it("?lang= con un idioma soportado se persiste, para que sobreviva a navegar a otra pantalla sin sesión", () => {
+    setUrl("?lang=de");
+    getStoredLanguage();
+
+    setUrl(""); // simula que la pantalla siguiente ya no lleva el parámetro
+    expect(getStoredLanguage()).toBe("de");
+  });
+
+  it("?lang= con un valor no soportado se ignora, cae a lo ya guardado", () => {
+    setStoredLanguage("it");
+    setUrl("?lang=xx");
+
+    expect(getStoredLanguage()).toBe("it");
+  });
+
+  it("sin ?lang= en la URL, se comporta igual que siempre (lo guardado, o 'es' por defecto)", () => {
+    setStoredLanguage("pt");
+    setUrl("");
+
+    expect(getStoredLanguage()).toBe("pt");
   });
 });

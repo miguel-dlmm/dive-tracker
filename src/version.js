@@ -39,7 +39,14 @@
 // pedido explícito del usuario ("piensa tú el texto"), sin aprobación
 // palabra por palabra previa por no haber nadie despierto para dársela —
 // preparado en `develop`, sin tocar `main` todavía; revisar el texto
-// exacto antes de que este cambio llegue a producción. `APP_VERSION` se
-// sincroniza con "1.7.0" para que se muestre a todo el mundo (nadie lo ha
-// visto con esta versión todavía).
-export const APP_VERSION = "1.7.0";
+// exacto antes de que este cambio llegue a producción.
+//
+// v1.8.0 (2026-09-29): el texto de la diapositiva del libro de Koh Tao se
+// mostró y se aprobó palabra por palabra antes de preparar esta release
+// (ADR-0010, addendum 2026-09-09) — el usuario pidió sustituir ", con
+// búsqueda instantánea." por ". ¡Ahora puedes buscar el punto de buceo
+// directamente!" en los 15 idiomas. Esta es la primera vez que ese
+// contenido llega de verdad a producción (main seguía en "1.5.1"), así
+// que `APP_VERSION` se sincroniza con "1.8.0" para que se muestre a todo
+// el mundo.
+export const APP_VERSION = "1.8.0";

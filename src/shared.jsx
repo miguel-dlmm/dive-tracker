@@ -9,6 +9,7 @@ import { ChevronDown, Check, Trash2, Calendar as CalendarIcon, ChevronLeft, Chev
 import { TEAL, CORAL, GREEN, BRAND_NAVY, BRAND_GOLD, BRAND_SLATE, ENTITY_COLOR_PALETTE } from "./colors";
 import { DURATION, panelVariants, sheetVariants, listItemVariants, toastVariants, monthSlideVariants, usePrefersReducedMotion, useSwipeHorizontal, animateScrollBy } from "./motion";
 import { AVATAR_ICON_MAP } from "./avatarCatalog";
+import i18n, { SUPPORTED_LANGUAGES, LANGUAGE_NATIVE_NAME, setStoredLanguage } from "./i18n";
 
 // focus: borde navy de marca + halo sky suave (docs/DESIGN-SYSTEM.md §6.3)
 // — antes un gris genérico sin relación con la marca nueva.
@@ -100,6 +101,52 @@ export function ToastProvider({ children }) {
 
 export function useToast() {
   return useContext(ToastContext);
+}
+
+// =================================================================
+// Selector de idioma compacto para pantallas SIN sesión — Login y las
+// "puertas de entrada" a las que se llega por enlace directo sin saber
+// todavía el idioma del usuario (Reset/CreatePassword, forzar cambio de
+// contraseña). Pedido explícito 2026-09-29: "en la pantalla de login
+// arriba a la derecha añade un selector de idioma... añadir el mismo
+// selector... a toda aquellas pantallas a las q se accede de forma suelta
+// mediante enlace directo". RegisterScreen.jsx ya tenía su propio selector
+// (un <Field><Select> completo, con etiqueta, dentro del formulario) desde
+// antes — ese no se toca ni se sustituye por este: ya se precarga solo con
+// el idioma elegido aquí, porque los dos leen/escriben el mismo
+// `i18n.language`/localStorage (ver getStoredLanguage/setStoredLanguage,
+// src/i18n/index.js).
+//
+// Un <select> nativo a propósito, no el patrón `Select`/`FloatingPanel` de
+// paneles flotantes que usa el resto de formularios de la app (convención
+// 7 de CLAUDE.md) — esa convención es para campos de negocio dentro de la
+// identidad visual de la app ya autenticada; esta es una esquina utilitaria
+// de una pantalla pre-sesión, el mismo criterio que ya usa la propia
+// landing "Meet Ocean Flow" para su selector de idioma. Un <select> nativo
+// es accesible de fábrica (teclado, lector de pantalla) sin necesitar
+// ningún hook de posicionamiento de panel.
+export function EntryLanguagePicker({ className = "" }) {
+  const { t } = useTranslation("auth");
+  const [language, setLanguage] = useState(() => (SUPPORTED_LANGUAGES.includes(i18n.language) ? i18n.language : "es"));
+
+  const changeLanguage = (lang) => {
+    setLanguage(lang);
+    i18n.changeLanguage(lang);
+    setStoredLanguage(lang);
+  };
+
+  return (
+    <select
+      value={language}
+      onChange={(e) => changeLanguage(e.target.value)}
+      aria-label={t("register.languageLabel")}
+      className={`min-h-11 rounded-md border border-gray-200 bg-white px-2 text-xs font-medium text-gray-600 ${className}`}
+    >
+      {SUPPORTED_LANGUAGES.map((code) => (
+        <option key={code} value={code}>{LANGUAGE_NATIVE_NAME[code]}</option>
+      ))}
+    </select>
+  );
 }
 
 // =================================================================

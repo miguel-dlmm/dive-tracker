@@ -75,8 +75,15 @@ export default function SlideDeck({ slides, onClose, labels, testId }) {
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: `${slide.color}1A` }}>
                 <Icon size={26} style={{ color: slide.color }} aria-hidden="true" />
               </div>
-              <h2 id="slide-deck-title" className="mb-2 text-base font-bold" style={{ color: BRAND_NAVY }}>{slide.title}</h2>
-              <p className="text-sm leading-relaxed text-gray-500">{slide.body}</p>
+              {/* whitespace-pre-line (2026-09-29, pedido explícito: título del
+                  libro de Koh Tao en 2 líneas, salto antes de "Accede desde la
+                  Home" en el cuerpo): un "\n" literal en la traducción no
+                  hace nada por sí solo en HTML/CSS (los saltos de línea se
+                  colapsan como cualquier otro espacio) — esta clase respeta
+                  los "\n" que traiga la cadena, sin afectar a ninguna
+                  diapositiva que no incluya ninguno. */}
+              <h2 id="slide-deck-title" className="mb-2 whitespace-pre-line text-base font-bold" style={{ color: BRAND_NAVY }}>{slide.title}</h2>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-gray-500">{slide.body}</p>
             </motion.div>
           </AnimatePresence>
         </div>

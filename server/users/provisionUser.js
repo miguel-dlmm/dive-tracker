@@ -137,13 +137,18 @@ export async function provisionUser({ email, first_name, last_name, nickname, da
   // de APP_URL en vez del dominio real desde el que se pidió el alta.
   let emailSent = false;
   let emailError = null;
-  const { activationLink, error: linkErrorMessage } = await generateActivationLink(email, { baseUrl });
+  // lang: 2026-09-29, pedido explícito — el registro externo ya recoge el
+  // idioma elegido en su propio selector (RegisterScreen.jsx) y lo manda
+  // aquí; un alta hecha por un admin normalmente no trae idioma explícito
+  // (`language` queda null), así que el enlace y el email caen a español,
+  // comportamiento idéntico al de siempre.
+  const { activationLink, error: linkErrorMessage } = await generateActivationLink(email, { baseUrl, lang: language });
 
   if (linkErrorMessage) {
     emailError = linkErrorMessage;
   } else {
     try {
-      const result = await sendActivationEmail({ email, firstName: first_name, nickname, actionLink: activationLink, reason });
+      const result = await sendActivationEmail({ email, firstName: first_name, nickname, actionLink: activationLink, reason, language });
       emailSent = result.sent;
       if (!result.sent) emailError = result.error;
     } catch (err) {
