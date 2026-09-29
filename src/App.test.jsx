@@ -314,7 +314,14 @@ describe("AuthGate", () => {
   // activada), AuthGate muestra OnboardingTour ANTES de montar AppShell,
   // no WhatsNew — ver el mecanismo "cuenta nueva" que antes describía
   // este mismo test (2026-09-07), sustituido por este.
-  it("una cuenta sin onboarding_tour_seen_at ve el tour de bienvenida, no 'Qué hay de nuevo'", async () => {
+  //
+  // Actualizado 2026-09-29 (bug real reportado): cerrar el tour solía
+  // marcar también como "visto" WhatsNew de la versión actual, así que
+  // una cuenta nueva no se enteraba nunca de una novedad de release real
+  // (el tour no la menciona). Ahora WhatsNew sigue su ciclo normal justo
+  // DESPUÉS de cerrar el tour — no superpuesto (eso sigue cubierto por
+  // el guard !onboardingOpen), sino en secuencia.
+  it("una cuenta sin onboarding_tour_seen_at ve primero el tour de bienvenida y, al cerrarlo, 'Qué hay de nuevo'", async () => {
     sessionStorage.clear();
     mockUseSession({
       session: SESSION,
@@ -335,14 +342,18 @@ describe("AuthGate", () => {
 
     await user.click(within(dialog).getByRole("button", { name: "Cerrar" }));
 
-    // Al cerrar: se marca la cuenta como "ya visto" en Supabase, y de
-    // paso también la versión actual de WhatsNew como vista para esta
-    // cuenta (mismo UPDATE), para no encadenar un segundo aviso.
+    // Al cerrar el tour: solo se marca la cuenta como "tour ya visto" en
+    // Supabase — no se toca whats_new_seen_version, para no saltarse el
+    // aviso de la novedad real de esta versión.
     await waitFor(() => expect(supabase.from).toHaveBeenCalledWith("profiles"));
-    expect(updateSpy).toHaveBeenCalledWith(expect.objectContaining({
-      onboarding_tour_seen_at: expect.any(String),
-      whats_new_seen_version: APP_VERSION,
-    }));
+    expect(updateSpy).toHaveBeenCalledWith({ onboarding_tour_seen_at: expect.any(String) });
+
+    // Justo después, sin solaparse con el tour, aparece "Qué hay de nuevo".
+    const whatsNewDialog = await screen.findByRole("dialog");
+    expect(within(whatsNewDialog).getByText("El libro de buceo de Koh Tao, ya en Ocean Flow")).toBeInTheDocument();
+
+    await user.click(within(whatsNewDialog).getByRole("button", { name: "Empezar" }));
+    await waitFor(() => expect(updateSpy).toHaveBeenCalledWith({ whats_new_seen_version: APP_VERSION }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByText(`Tu impacto en ${CURRENT_MONTH_NAME}`)).toBeInTheDocument();
   });

@@ -41,6 +41,13 @@ Registro de cambios relevantes de Ocean Flow.
 - **"Qué hay de nuevo" y el tour de bienvenida apilados a la vez**: una
   cuenta recién activada (ambos "no visto" al mismo tiempo) podía llegar
   a ver los dos diálogos montados encima uno del otro, no solo el tour.
+- **Cuenta nueva sin ver nunca "Qué hay de nuevo"**: el fix anterior
+  (justo arriba) marcaba también como vista la versión actual de
+  WhatsNew al cerrar el tour de bienvenida, para evitar mostrar los dos
+  avisos de golpe — pero como el propio tour no menciona ninguna
+  novedad de release real, una cuenta nueva se quedaba sin enterarse del
+  libro de Koh Tao. Ahora WhatsNew aparece justo después de cerrar el
+  tour (en secuencia, no superpuesto).
 
 ## [1.7.0] - 2026-09-28
 
