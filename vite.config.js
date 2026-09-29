@@ -121,7 +121,15 @@ export default defineConfig(({ mode }) => {
           // el precache sin aportar nada al objetivo real (que la app
           // abra aunque falle la conexión justo al entrar). El navegador
           // los sigue pidiendo normalmente cuando de verdad hacen falta.
-          globIgnores: ['**/pdfWorkerEntry-*.js', '**/pdfToJpg-*.js', '**/generateExportReportPdf-*.js'],
+          // meetOceanFlow/**: causa raíz real de las capturas "estiradas"
+          // que se seguían viendo tras cada arreglo (2026-09-29) — el
+          // Service Worker precacheaba las imágenes de la landing, así
+          // que un navegador que ya había visitado la página seguía
+          // sirviendo las versiones viejas desde caché aunque el
+          // servidor ya tuviera las corregidas. La landing es una página
+          // estática aparte, no el "shell" que este Service Worker debe
+          // cachear — se excluye entera, no solo las imágenes.
+          globIgnores: ['**/pdfWorkerEntry-*.js', '**/pdfToJpg-*.js', '**/generateExportReportPdf-*.js', '**/meetOceanFlow/**'],
           // El bundle principal (core de React + toda la app, no lazy)
           // pesa ~2.6 MB, por encima del límite por defecto de Workbox
           // (2 MiB) — se sube lo justo para que quepa, no un valor
