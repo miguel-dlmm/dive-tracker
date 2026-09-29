@@ -4,6 +4,8 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.9.0] - 2026-09-29
+
 ### Added
 - **Landing "Meet Ocean Flow": idioma seleccionable por parámetro de
   URL** (`?lang=xx`) — pedido explícito: "poder pasarle a la landing el
