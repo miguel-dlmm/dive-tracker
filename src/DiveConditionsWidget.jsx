@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "motion/react";
-import { Wind, Waves, Thermometer, Moon, MapPin, Navigation, ChevronDown, ChevronLeft, ChevronRight, Search, Star, Sunrise, Sunset, Info } from "lucide-react";
-import { BRAND_NAVY, BRAND_OCEAN, TEAL, GREEN } from "./App";
+import { Wind, Waves, Thermometer, Moon, MapPin, Navigation, ChevronDown, ChevronLeft, ChevronRight, Search, Star, Sunrise, Sunset, Info, TriangleAlert } from "lucide-react";
+import { BRAND_NAVY, BRAND_OCEAN, TEAL, GREEN, SUN } from "./App";
 import { useFloatingDropdown, FloatingPanel, useToast } from "./shared";
 import { panelVariants, monthSlideVariants, usePrefersReducedMotion, DURATION, EASE } from "./motion";
 import { fetchDiveConditions, windDirectionLabel, FORECAST_DAYS } from "./diveConditions/openMeteo";
 import { searchDiveSpots } from "./diveConditions/geocoding";
+import { resolveTideForLocation, predictTide, TIDE_WARN_DISTANCE_KM } from "./diveConditions/tide";
 import { supabase } from "./supabaseClient";
 
 // Widget de condiciones de buceo en Home (viento/oleaje/temperatura del
@@ -113,6 +114,10 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
   const [conditions, setConditions] = useState(null);
   const [loadError, setLoadError] = useState(false);
 
+  const [tideData, setTideData] = useState(null); // { stationId, stationName, distanceKm, harmonicConstituents, attribution, timezone, chartDatum, datums }
+  const [tideResolving, setTideResolving] = useState(false);
+  const [tideError, setTideError] = useState(false);
+
   const [expandOpen, setExpandOpen] = useState(false);
   const [dayOffset, setDayOffset] = useState(0);
   const [metric, setMetric] = useState("wind");
@@ -131,8 +136,17 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
         country: profile.favorite_dive_spot_country,
         lat: profile.favorite_dive_spot_lat,
         lng: profile.favorite_dive_spot_lng,
+        tideStationId: profile.favorite_tide_station_id,
+        tideStationName: profile.favorite_tide_station_name,
+        tideStationDistanceKm: profile.favorite_tide_station_distance_km,
+        tideHarmonicConstituents: profile.favorite_tide_harmonic_constituents,
+        tideStationAttribution: profile.favorite_tide_station_attribution,
       }
     : null;
+
+  function isFavoriteActiveFor(loc, fav) {
+    return !!(fav && loc && fav.lat === loc.lat && fav.lng === loc.lng);
+  }
 
   // Resolución inicial de ubicación: GPS del dispositivo primero
   // (automático, pedido explícito del usuario) -> favorito guardado en
@@ -174,6 +188,40 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
     return () => { cancelled = true; };
   }, [location?.lat, location?.lng]);
 
+  // Resolución de marea (fase 2) — si el sitio activo es el favorito y ya
+  // tiene la estación resuelta y guardada en profiles, se reutiliza tal
+  // cual, sin volver a pedir nada a GitHub. Si no, se resuelve de cero
+  // (índice ligero + estación ganadora), cacheado en localStorage por
+  // coordenada redondeada para no repetirlo en cada carga.
+  useEffect(() => {
+    if (!location) return;
+    let cancelled = false;
+    setTideData(null);
+    setTideError(false);
+
+    const favoriteHasTide = isFavoriteActiveFor(location, favorite) && favorite?.tideStationId && favorite?.tideHarmonicConstituents;
+    if (favoriteHasTide) {
+      setTideData({
+        stationId: favorite.tideStationId,
+        stationName: favorite.tideStationName,
+        distanceKm: favorite.tideStationDistanceKm,
+        harmonicConstituents: favorite.tideHarmonicConstituents,
+        attribution: favorite.tideStationAttribution,
+        timezone: undefined,
+        chartDatum: undefined,
+        datums: undefined,
+      });
+      return;
+    }
+
+    setTideResolving(true);
+    resolveTideForLocation(location.lat, location.lng)
+      .then((data) => { if (!cancelled) setTideData(data); })
+      .catch(() => { if (!cancelled) setTideError(true); })
+      .finally(() => { if (!cancelled) setTideResolving(false); });
+    return () => { cancelled = true; };
+  }, [location?.lat, location?.lng]);
+
   // Búsqueda con pequeño debounce, mientras el desplegable de sitio está abierto.
   useEffect(() => {
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
@@ -203,6 +251,13 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
       favorite_dive_spot_country: location.country || null,
       favorite_dive_spot_lat: location.lat,
       favorite_dive_spot_lng: location.lng,
+      // La marea ya resuelta para este sitio (si la hay) se guarda a la
+      // vez — evita una segunda resolución la próxima vez que se abra.
+      favorite_tide_station_id: tideData?.stationId ?? null,
+      favorite_tide_station_name: tideData?.stationName ?? null,
+      favorite_tide_station_distance_km: tideData?.distanceKm ?? null,
+      favorite_tide_harmonic_constituents: tideData?.harmonicConstituents ?? null,
+      favorite_tide_station_attribution: tideData?.attribution ?? null,
     };
     try {
       const { error } = await supabase.from("profiles").update(patch).eq("user_id", profile.user_id);
@@ -213,9 +268,18 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
     } catch {
       toast.error(t("favoriteSaveError"));
     }
-  }, [location, profile?.user_id, onProfileUpdated, toast, t]);
+  }, [location, tideData, profile?.user_id, onProfileUpdated, toast, t]);
 
-  const isFavoriteActive = favorite && location && favorite.lat === location.lat && favorite.lng === location.lng;
+  const isFavoriteActive = isFavoriteActiveFor(location, favorite);
+
+  const tidePrediction = useMemo(() => {
+    if (!tideData?.harmonicConstituents) return null;
+    try {
+      return predictTide(tideData);
+    } catch {
+      return null;
+    }
+  }, [tideData]);
 
   // ---- Estado vacío: sin GPS ni favorito ----
   if (!resolving && !location) {
@@ -285,6 +349,7 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
   const sunrise = conditions?.daily?.sunrise?.[dayOffset];
   const sunset = conditions?.daily?.sunset?.[dayOffset];
   const bestWindow = day ? computeBestWindow(day.hours) : null;
+  const tideFar = tideData && tideData.distanceKm > TIDE_WARN_DISTANCE_KM;
 
   return (
     <div className={CONTAINER}>
@@ -353,6 +418,29 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
             {t("useAsFavorite")}
           </button>
         )}
+
+        {/* Nav de día — lado contrario a la localización, arriba (pedido
+            explícito). Tocarlo abre el desplegable si estaba cerrado, para
+            que el cambio de día se vea al momento. */}
+        {!loadError && conditions?.days && (
+          <div className="flex items-center">
+            <button type="button" disabled={dayOffset <= 0}
+              onClick={() => { setDayOffset((d) => d - 1); if (!expandOpen) setExpandOpen(true); }}
+              aria-label={t("prevDay")}
+              className="flex h-5 w-5 items-center justify-center rounded-full p-3 disabled:text-gray-200" style={{ color: BRAND_OCEAN }}>
+              <ChevronLeft size={14} aria-hidden="true" />
+            </button>
+            <span className="min-w-[64px] text-center text-[10.5px] font-extrabold" style={{ color: BRAND_NAVY }}>
+              {dayLabel(t, dayOffset, conditions.days[dayOffset]?.date)}
+            </span>
+            <button type="button" disabled={dayOffset >= Math.min(FORECAST_DAYS - 1, conditions.days.length - 1)}
+              onClick={() => { setDayOffset((d) => d + 1); if (!expandOpen) setExpandOpen(true); }}
+              aria-label={t("nextDay")}
+              className="flex h-5 w-5 items-center justify-center rounded-full p-3 disabled:text-gray-200" style={{ color: BRAND_OCEAN }}>
+              <ChevronRight size={14} aria-hidden="true" />
+            </button>
+          </div>
+        )}
       </div>
 
       {loadError && <p className="text-[11px] text-gray-400">{t("errorLoad")}</p>}
@@ -367,8 +455,11 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
             value={currentHourData ? `${currentHourData.wave.toFixed(1)} m` : "—"}
             sub={currentHourData ? t("period", { seconds: Math.round(currentHourData.wavePeriod) }) : ""}
             label={t("wave")} />
-          <MetricTile icon={Moon} color="#B7C1C9"
-            value="—" sub={t("tideComingSoon")} label={t("tide")} muted />
+          <MetricTile icon={Moon} color={tideFar ? SUN : BRAND_OCEAN}
+            value={tidePrediction ? (tidePrediction.rising ? t("tideRising") : t("tideFalling")) : (tideError ? "—" : (tideResolving ? "…" : "—"))}
+            sub={tidePrediction?.next ? t(tidePrediction.next.high ? "tideHighAt" : "tideLowAt", { time: tidePrediction.next.time }) : ""}
+            label={t("tide")}
+            muted={!tidePrediction} />
           <MetricTile icon={Thermometer} color={GREEN}
             value={currentHourData ? `${currentHourData.waterTemp.toFixed(1)}°` : "—"}
             sub="" label={t("waterTemp")} />
@@ -392,19 +483,7 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
         {expandOpen && !loadError && day && (
           <motion.div {...panelVariants(reduced)} className="flex flex-col gap-2.5 overflow-hidden">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center">
-                <button type="button" disabled={dayOffset <= 0} onClick={() => setDayOffset((d) => d - 1)} aria-label={t("prevDay")}
-                  className="flex h-5 w-5 items-center justify-center rounded-full p-3 disabled:text-gray-200" style={{ color: BRAND_OCEAN }}>
-                  <ChevronLeft size={14} aria-hidden="true" />
-                </button>
-                <span className="min-w-[80px] text-center text-[10.5px] font-extrabold" style={{ color: BRAND_NAVY }}>
-                  {conditions?.days && dayLabel(t, dayOffset, conditions.days[dayOffset]?.date)}
-                </span>
-                <button type="button" disabled={dayOffset >= Math.min(FORECAST_DAYS - 1, (conditions?.days?.length || 1) - 1)} onClick={() => setDayOffset((d) => d + 1)} aria-label={t("nextDay")}
-                  className="flex h-5 w-5 items-center justify-center rounded-full p-3 disabled:text-gray-200" style={{ color: BRAND_OCEAN }}>
-                  <ChevronRight size={14} aria-hidden="true" />
-                </button>
-              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{t("byHour")}</span>
               <div className="flex gap-0.5 rounded-md border border-gray-200 bg-gray-50 p-0.5">
                 {["wind", "wave"].map((m) => (
                   <button key={m} type="button" onClick={() => setMetric(m)}
@@ -449,7 +528,18 @@ export default function DiveConditionsWidget({ profile, onProfileUpdated }) {
         )}
       </AnimatePresence>
 
-      <p className="px-0.5 text-[9px] leading-relaxed text-gray-300">{t("orientative")}</p>
+      {tidePrediction && !tideFar && (
+        <p className="px-0.5 text-[9px] leading-relaxed text-gray-300">
+          {t("orientative")} · {t("tideStationNote", { station: tideData.stationName, distance: Math.round(tideData.distanceKm) })}
+        </p>
+      )}
+      {tidePrediction && tideFar && (
+        <div className="flex items-start gap-1.5 rounded-lg border px-2.5 py-2 text-[9.5px] leading-relaxed" style={{ backgroundColor: "#FDF1E4", borderColor: "#EFD2AE", color: "#8A5A15" }}>
+          <TriangleAlert size={12} className="mt-0.5 shrink-0" style={{ color: SUN }} aria-hidden="true" />
+          <span>{t("tideDistanceWarning", { station: tideData.stationName, distance: Math.round(tideData.distanceKm) })}</span>
+        </div>
+      )}
+      {!tidePrediction && <p className="px-0.5 text-[9px] leading-relaxed text-gray-300">{t("orientative")}</p>}
     </div>
   );
 }

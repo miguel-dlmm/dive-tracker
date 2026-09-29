@@ -15,6 +15,15 @@ const PROFILE_WITH_FAVORITE = {
   favorite_dive_spot_lat: 10.0956,
   favorite_dive_spot_lng: 99.8402,
 };
+const HARMONICS = [{ name: "M2", amplitude: 0.5, phase: 0 }, { name: "K1", amplitude: 0.3, phase: 90 }];
+const PROFILE_WITH_FAVORITE_AND_TIDE = {
+  ...PROFILE_WITH_FAVORITE,
+  favorite_tide_station_id: "ticon/ko_lak-328-tha-uhslc_fd",
+  favorite_tide_station_name: "Ko Lak",
+  favorite_tide_station_distance_km: 188.9,
+  favorite_tide_harmonic_constituents: HARMONICS,
+  favorite_tide_station_attribution: "Slackwater database. Licensed CC BY 4.0.",
+};
 
 function hourlyFixture() {
   const time = Array.from({ length: 24 }, (_, h) => `2026-09-29T${String(h).padStart(2, "0")}:00`);
@@ -30,11 +39,21 @@ function hourlyFixture() {
   };
 }
 
+// datums necesita MSL además de LAT — el motor lo usa como referencia
+// para convertir entre datums; sin él lanza ("Station missing MSL datum")
+// y el widget lo oculta en silencio (nunca rompe Home), lo que hizo este
+// fixture incompleto difícil de diagnosticar la primera vez.
+const TIDE_STATION_FIXTURE = { name: "Ko Lak", timezone: "Asia/Bangkok", chart_datum: "LAT", datums: { LAT: 1, MSL: 2 }, harmonic_constituents: HARMONICS, attribution: "Slackwater database. Licensed CC BY 4.0." };
+const TIDE_INDEX_FIXTURE = [{ id: "ticon/ko_lak-328-tha-uhslc_fd", name: "Ko Lak", country: "Thailand", lat: 11.795, lng: 99.817 }];
+
 function mockFetchSuccess() {
   const { forecast, marine } = hourlyFixture();
   global.fetch = vi.fn((url) => {
-    const body = String(url).includes("marine-api") ? marine : forecast;
-    return Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
+    const u = String(url);
+    if (u.includes("marine-api")) return Promise.resolve({ ok: true, json: () => Promise.resolve(marine) });
+    if (u.includes("tide-stations-index.json")) return Promise.resolve({ ok: true, json: () => Promise.resolve(TIDE_INDEX_FIXTURE) });
+    if (u.includes("raw.githubusercontent.com")) return Promise.resolve({ ok: true, json: () => Promise.resolve(TIDE_STATION_FIXTURE) });
+    return Promise.resolve({ ok: true, json: () => Promise.resolve(forecast) });
   });
 }
 
@@ -85,12 +104,48 @@ it("resuelve la ubicación automáticamente vía GPS cuando está disponible", a
   expect(await screen.findByText(i18n.t("diveConditions:currentLocation"))).toBeInTheDocument();
 });
 
-it("el hueco de marea muestra 'Próximamente', nunca un dato inventado", async () => {
+it("usa la marea ya guardada en el favorito sin volver a pedirla a GitHub", async () => {
+  mockGeolocation("denied");
+  mockFetchSuccess();
+  renderWidget(PROFILE_WITH_FAVORITE_AND_TIDE);
+  await waitFor(() => expect(screen.getByText("6")).toBeInTheDocument());
+  await waitFor(() => {
+    const rising = screen.queryByText(i18n.t("diveConditions:tideRising"));
+    const falling = screen.queryByText(i18n.t("diveConditions:tideFalling"));
+    expect(rising || falling).toBeTruthy();
+  });
+  const calledUrls = global.fetch.mock.calls.map(([url]) => String(url));
+  expect(calledUrls.some((u) => u.includes("raw.githubusercontent.com"))).toBe(false);
+  expect(calledUrls.some((u) => u.includes("tide-stations-index.json"))).toBe(false);
+});
+
+it("resuelve la marea de cero (índice + estación) cuando el sitio no tiene marea guardada", async () => {
   mockGeolocation("denied");
   mockFetchSuccess();
   renderWidget(PROFILE_WITH_FAVORITE);
   await waitFor(() => expect(screen.getByText("6")).toBeInTheDocument());
-  expect(screen.getByText(i18n.t("diveConditions:tideComingSoon"))).toBeInTheDocument();
+  await waitFor(() => {
+    const rising = screen.queryByText(i18n.t("diveConditions:tideRising"));
+    const falling = screen.queryByText(i18n.t("diveConditions:tideFalling"));
+    expect(rising || falling).toBeTruthy();
+  });
+  // No se comprueba aquí si "tide-stations-index.json" se pidió en ESTE
+  // test en concreto: el índice se cachea a nivel de módulo (deliberado en
+  // producción, para no volver a descargarlo en la misma sesión) y un test
+  // anterior de este mismo archivo puede haberlo resuelto ya — lo que sí
+  // es fiable siempre es que la estación ganadora se pide fresca (la caché
+  // de esa parte vive en localStorage, limpiado en cada test).
+  const calledUrls = global.fetch.mock.calls.map(([url]) => String(url));
+  expect(calledUrls.some((u) => u.includes("raw.githubusercontent.com"))).toBe(true);
+});
+
+it("avisa con más fuerza cuando la estación de marea está lejos (>300 km)", async () => {
+  mockGeolocation("denied");
+  mockFetchSuccess();
+  const farProfile = { ...PROFILE_WITH_FAVORITE_AND_TIDE, favorite_tide_station_distance_km: 410 };
+  renderWidget(farProfile);
+  await waitFor(() => expect(screen.getByText("6")).toBeInTheDocument());
+  expect(await screen.findByText(/410/)).toBeInTheDocument();
 });
 
 it("despliega el detalle por horas al tocar 'Ver el día por horas'", async () => {

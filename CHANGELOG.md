@@ -13,9 +13,20 @@ Registro de cambios relevantes de Ocean Flow.
   con geolocalización automática, cae al favorito guardado en el perfil
   si el GPS falla, y por último a un buscador — el favorito se guarda en
   `profiles`, sincronizado entre dispositivos por decisión explícita del
-  usuario. La marea real queda fuera de este MVP a propósito (la tarjeta
-  reserva su hueco con "Próximamente" en vez de un dato inventado) — ver
-  docs/BACKLOG.md para el análisis completo y la fase 2 pendiente.
+  usuario.
+- **Marea real en el widget de condiciones (fase 2)**: sustituye el
+  "Próximamente" del MVP anterior por una marea calculada de verdad —
+  motor de predicción armónica `@slackwater/engine` (MIT, validado en CI
+  contra NOAA) sobre los constituyentes reales de la estación de marea
+  más cercana. La estación se resuelve en el cliente (índice ligero de
+  ~3.600 estaciones de licencia comercial, generado a partir de
+  `@slackwater/database` — solo dependencia de desarrollo, nunca se
+  envía al navegador) y sus datos completos se piden directos a GitHub
+  (CORS abierto, verificado), sin backend nuevo. Honestidad sobre la
+  precisión: la estación real casi nunca está en el propio sitio de
+  buceo — el widget siempre muestra su nombre y distancia, con un aviso
+  más visible por encima de 300 km. La marea del favorito guardado se
+  cachea en `profiles` (no se vuelve a resolver en cada carga).
 
 ### Fixed
 - **Landing "Meet Ocean Flow": capturas de pantalla estiradas**: al

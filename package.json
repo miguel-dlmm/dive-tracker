@@ -20,6 +20,7 @@
     "render-training-record-debug": "node scripts/render-training-record-debug.mjs"
   },
   "dependencies": {
+    "@slackwater/engine": "^1.0.0-beta.0",
     "@supabase/supabase-js": "^2.112.4",
     "botid": "^1.5.11",
     "fflate": "^0.8.3",
@@ -38,6 +39,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@napi-rs/canvas": "^1.0.8",
+    "@slackwater/database": "^1.0.0-beta.0",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
