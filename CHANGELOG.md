@@ -4,6 +4,19 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+### Added
+- **Config → Usuarios: más contadores de actividad real** — pedido
+  explícito 2026-09-29. Junto a los Training Records generados (ya
+  existentes), la ficha de detalle de un usuario ahora también muestra
+  cuántas veces abrió la Guía de Buceo de Koh Tao, cuántos PDFs de
+  resumen exportó, y cuántos de sus movimientos están marcados como
+  cobrados. Mismo patrón exacto que Training Records: dos contadores
+  nuevos en el perfil (`dive_guide_opened_count`, `summary_pdf_exported_count`,
+  cada uno con su fecha) que se incrementan justo en el disparador real
+  (abrir la Guía, exportar el informe), nunca por un cálculo indirecto;
+  "cobrados" no necesita columna nueva, se deriva con un `COUNT` sobre
+  las tablas de movimientos existentes.
+
 ### Fixed
 - **Landing "Meet Ocean Flow": capturas de pantalla estiradas**: al
   sustituir las imágenes base64 por ficheros `.webp` (auditoría PWA/SEO,
