@@ -73,18 +73,20 @@ export function buildEntriesBySource({ worklog, rates, comisiones, commissionRat
 // Registro + Comisiones + TODOS los pagos de compañeros, incluidos los
 // negativos (lo que tú debes, no solo lo que te deben). Es la base de "Mi
 // trabajo" — ver docs/ADR/0005-mi-trabajo-unificacion-economica.md.
+//
+// También es la base de "Pendiente de cobrar"/"Generado"/"Cobrado" en
+// Home y en la cabecera de Mi trabajo (2026-09-30, pedido explícito del
+// usuario tras un reporte de bug en producción: "los ajustes con los
+// compañeros son parte del total, lo que me deben y lo que debo influye
+// en la cantidad que gano a final de mes, tiene que contemplar todo").
+// Antes existía `buildIncomeEntries()`, un filtro aparte que descartaba
+// los ajustes negativos de esas tres cifras — retirada por completo, no
+// solo dejada de usar: con el filtro quitado quedaba idéntica a esta
+// función, así que mantenerla como una segunda función habría sido
+// duplicar la misma lógica sin ningún filtro real detrás.
 export function buildActivityEntries(args) {
   const { ganado, comision, companeros } = buildEntriesBySource(args);
   return [...ganado, ...comision, ...companeros];
-}
-
-// Única fuente de verdad de qué cuenta como "dinero que generas o te
-// deben" — un filtro sobre buildActivityEntries que descarta los ajustes
-// de compañero negativos (lo que tú debes, un concepto distinto que no
-// cuenta aquí). HomeTab parte de esta función — ver
-// docs/ADR/0004-home-dashboard-operativo-instructor.md.
-export function buildIncomeEntries(args) {
-  return buildActivityEntries(args).filter((e) => e._source !== "companeros" || e.total > 0);
 }
 
 // Único punto de comparación entre dos totales por moneda (mapa moneda ->

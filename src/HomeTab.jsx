@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { CalendarDays, Award, Handshake, Building2, HelpCircle, Wallet, Plus, BookOpen } from "lucide-react";
 import { TEAL, SUN, GREEN, BRAND_NAVY, BRAND_OCEAN } from "./App";
 import { MonthCalendar, colorFor, isPendingStatus, MOVEMENT_TYPE_META, Money, useFloatingDropdown, FloatingPanel, getDefaultCurrency } from "./shared";
-import { buildEntriesBySource, buildIncomeEntries, entriesArgsFromTables } from "./rateCalc";
+import { buildEntriesBySource, buildActivityEntries, entriesArgsFromTables } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import { getGeneratedCount } from "./trainingRecords/generatedCounter";
 
@@ -354,22 +354,26 @@ export default function HomeTab({ worklog, rates, comisiones, commissionRates, c
     .reduce((sum, e) => sum + (e.people || 0), 0), [comisionEntries, currentMonthKey]);
 
   // Base común de las dos métricas financieras del dashboard — ver
-  // buildIncomeEntries en rateCalc.js y docs/ADR/0004-home-dashboard-operativo-instructor.md.
-  // "Generado este mes" y "Pendiente de cobrar" parten de este mismo array,
-  // solo cambia el filtro que le aplican.
-  const incomeEntries = useMemo(
-    () => buildIncomeEntries(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
+  // buildActivityEntries en rateCalc.js y docs/ADR/0004-home-dashboard-operativo-instructor.md
+  // (addendum 2026-09-30). "Generado este mes" y "Pendiente de cobrar"
+  // parten de este mismo array, solo cambia el filtro que le aplican —
+  // incluye los ajustes de compañero negativos (lo que tú debes), a
+  // diferencia de la extinta `buildIncomeEntries()`: pedido explícito del
+  // usuario, "lo que me deben y lo que debo influye en la cantidad que
+  // gano a final de mes, tiene que contemplar todo".
+  const activityEntries = useMemo(
+    () => buildActivityEntries(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
 
   // "Pendiente de cobrar": sin filtro de fecha (una deuda de hace 2 meses
   // sigue siendo una deuda), solo estado pendiente.
   const pendingSummary = useMemo(() => {
-    const pendingEntries = incomeEntries.filter((e) => isPendingStatus(e.status, paymentStatuses.rows));
+    const pendingEntries = activityEntries.filter((e) => isPendingStatus(e.status, paymentStatuses.rows));
     const totals = {};
     pendingEntries.forEach((e) => { totals[e.currency] = (totals[e.currency] || 0) + e.total; });
     return { totals, count: pendingEntries.length };
-  }, [incomeEntries, paymentStatuses.rows]);
+  }, [activityEntries, paymentStatuses.rows]);
 
   // Escuela más activa este mes (2026-09-07, pedido explícito: "el módulo
   // 'generado este mes' duplica información ya disponible en la cabecera
