@@ -5,6 +5,13 @@ Registro de cambios relevantes de Ocean Flow.
 ## Unreleased
 
 ### Fixed
+- **"Pendiente de cobrar"/"Generado este mes"/"Cobrado este mes" ya
+  cuentan los ajustes de compañero negativos** — bug reportado en
+  producción: sumar a mano los movimientos de un mes no coincidía con
+  estas cifras. Antes se descartaban a propósito los ajustes negativos
+  (lo que tú debes) de esas tres tarjetas, un criterio heredado de una
+  pantalla ya eliminada; ahora cuentan igual que ya hacía Resumen —
+  "lo que me deben y lo que debo influye en lo que gano a final de mes".
 - **Landing "Meet Ocean Flow": capturas de pantalla estiradas**: al
   sustituir las imágenes base64 por ficheros `.webp` (auditoría PWA/SEO,
   v1.9.0), las capturas se veían deformadas en producción — reportado

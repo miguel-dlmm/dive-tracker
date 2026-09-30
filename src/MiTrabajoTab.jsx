@@ -8,7 +8,7 @@ import {
   isPendingStatus, oppositeStatus, useToast, RowMenu, todayStr, addDays, MOVEMENT_TYPE_META, Fab, EntryTitle,
   useFloatingDropdown, FloatingPanel, getDefaultCurrency,
 } from "./shared";
-import { buildActivityEntries, buildIncomeEntries, entriesArgsFromTables } from "./rateCalc";
+import { buildActivityEntries, entriesArgsFromTables } from "./rateCalc";
 import { DURATION, EASE, usePrefersReducedMotion, useCountUp } from "./motion";
 import MovementSheet from "./MovementSheet";
 
@@ -514,14 +514,6 @@ export default function MiTrabajoTab({
     () => buildActivityEntries(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
     [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
   );
-  // La cabecera "Pendiente de cobrar" es una cifra más estrecha que la
-  // lista de abajo: solo lo que te deben a ti, igual que en Home/Pagos —
-  // un ajuste negativo pendiente aparece en la lista pero no aquí.
-  const incomeEntries = useMemo(
-    () => buildIncomeEntries(entriesArgsFromTables({ worklog, rates, comisiones, commissionRates, colleaguePayments }, fallbackCurrency)),
-    [worklog.rows, rates.rows, comisiones.rows, commissionRates.rows, colleaguePayments.rows, fallbackCurrency]
-  );
-
   const [statusFilter, setStatusFilter] = useState("pendientes"); // "pendientes" | "cobrados"
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({ from: "", to: "", school: "", activity: [], type: "" });
@@ -555,9 +547,9 @@ export default function MiTrabajoTab({
 
   const pendingTotals = useMemo(() => {
     const map = {};
-    incomeEntries.filter((e) => isPendingStatus(e.status, paymentStatuses.rows)).forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
+    activityEntries.filter((e) => isPendingStatus(e.status, paymentStatuses.rows)).forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
     return map;
-  }, [incomeEntries, paymentStatuses.rows]);
+  }, [activityEntries, paymentStatuses.rows]);
 
   // KPIs de cabecera (Bloque 11, job nocturno 2026-09-03, sustituyen a la
   // pastilla "Pendiente de cobrar" que antes vivía aquí sola) — "YYYY-MM"
@@ -577,21 +569,21 @@ export default function MiTrabajoTab({
   // ANTES de este mes; si todo lo pendiente es del mes en curso, la
   // cifra ya cuadra sola y el tooltip no aporta nada, solo ruido.
   const hasPendingBeforeCurrentMonth = useMemo(
-    () => incomeEntries.some((e) => isPendingStatus(e.status, paymentStatuses.rows) && e.date.slice(0, 7) < currentMonthKey),
-    [incomeEntries, paymentStatuses.rows, currentMonthKey]
+    () => activityEntries.some((e) => isPendingStatus(e.status, paymentStatuses.rows) && e.date.slice(0, 7) < currentMonthKey),
+    [activityEntries, paymentStatuses.rows, currentMonthKey]
   );
   const monthGeneratedTotals = useMemo(() => {
     const map = {};
-    incomeEntries.filter((e) => e.date.slice(0, 7) === currentMonthKey).forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
+    activityEntries.filter((e) => e.date.slice(0, 7) === currentMonthKey).forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
     return map;
-  }, [incomeEntries, currentMonthKey]);
+  }, [activityEntries, currentMonthKey]);
   const monthCollectedTotals = useMemo(() => {
     const map = {};
-    incomeEntries
+    activityEntries
       .filter((e) => e.date.slice(0, 7) === currentMonthKey && !isPendingStatus(e.status, paymentStatuses.rows))
       .forEach((e) => { map[e.currency] = (map[e.currency] || 0) + e.total; });
     return map;
-  }, [incomeEntries, currentMonthKey, paymentStatuses.rows]);
+  }, [activityEntries, currentMonthKey, paymentStatuses.rows]);
 
   const tableFor = (source) => (source === "ganado" ? worklog : source === "comision" ? comisiones : colleaguePayments);
 

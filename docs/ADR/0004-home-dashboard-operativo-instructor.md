@@ -313,3 +313,37 @@ abrir el segundo tramo.
 funcionalidad añadida — es exclusivamente una revisión de orden y de qué
 tarjeta antecede a cuál. `docs/BACKLOG.md` cierra el ítem "Revisar la
 información bajo el calendario de Home" con esta decisión.
+
+## Addendum (2026-09-30) — se revierte la exclusión de ajustes negativos: ahora SÍ cuentan
+
+Reportado como bug real en producción (cuenta `admin`): sumando a mano
+los movimientos de septiembre daba una cifra distinta a la de "Pendiente
+de cobrar"/"Generado este mes". Verificado contra los datos reales de
+producción (consulta de solo lectura, con permiso explícito del usuario)
+— la cifra de la app era la aritméticamente correcta según el diseño
+original de esta ADR: `buildIncomeEntries()` descartaba a propósito los
+ajustes de compañero negativos ("lo que tú debes, un concepto distinto
+que no cuenta aquí") porque esa función nació para alimentar la
+herramienta de cobro por lotes "Pagos" (`PaymentsTab.jsx`, eliminada del
+todo el 2026-09-08 al unificarse en "Mi trabajo", ver ADR-0005) — un
+ajuste negativo, en efecto, no es "algo que cobras" en esa herramienta
+concreta.
+
+**Decisión revertida, pedido explícito del usuario**: "los ajustes con
+los compañeros son parte del total, lo que me deben y lo que debo
+influye en la cantidad que gano a final de mes, tiene que contemplar
+todo". La razón original ya no aplica — la herramienta que la motivó no
+existe — y el criterio de negocio real es que el dinero que un
+instructor "gana" a fin de mes es neto, no solo lo que le deben.
+
+**Qué cambia:** `buildIncomeEntries()` se retira por completo de
+`rateCalc.js` — con el filtro quitado quedaba idéntica a
+`buildActivityEntries()` (ADR-0005), así que HomeTab y la cabecera de Mi
+trabajo pasan a usar esa función directamente, sin una segunda capa que
+ya no filtraba nada. Afecta a "Pendiente de cobrar" (Home y Mi trabajo),
+"Generado este mes" y "Cobrado este mes" (Mi trabajo) — las tres cifras
+ahora sí incluyen los ajustes negativos, exactamente igual que ya hacía
+Resumen (`SummaryTab.jsx` parte de `buildEntriesBySource` sin ningún
+filtro de este tipo, así que no necesitó ningún cambio: ya estaba bien).
+Una de esas cifras puede ahora ser negativa (deuda neta) — es el
+resultado esperado, no un caso a evitar.
