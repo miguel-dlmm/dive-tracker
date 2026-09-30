@@ -4,6 +4,8 @@ Registro de cambios relevantes de Ocean Flow.
 
 ## Unreleased
 
+## [1.9.1] - 2026-09-30
+
 ### Fixed
 - **"Pendiente de cobrar"/"Generado este mes"/"Cobrado este mes" ya
   cuentan los ajustes de compañero negativos** — bug reportado en
