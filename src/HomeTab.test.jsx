@@ -141,13 +141,21 @@ describe("HomeTab — Pendiente de cobrar", () => {
     }, { timeout: 12000 });
   }, 15000);
 
-  it("excluye pagos de compañeros con importe negativo (es lo que tú debes, no lo que te deben)", async () => {
+  it("incluye pagos de compañeros con importe negativo (lo que debes resta de lo que te deben, no se descarta)", async () => {
     const { pending } = renderHome({
       colleaguePayments: [
         { id: "p1", date: TODAY, school: "PADI Cozumel", activity: "Open Water", colleague_name: "Marc", amount: -10, currency: "EUR", status: "Pending" },
       ],
     });
-    expect(pending.queryByText(money("10,00 €"))).not.toBeInTheDocument();
+    // Pedido explícito del usuario (2026-09-30, bug real en producción):
+    // "lo que me deben y lo que debo influye en la cantidad que gano a
+    // final de mes, tiene que contemplar todo" — un ajuste negativo ya no
+    // se descarta de "Pendiente de cobrar", resta del total como
+    // cualquier otro pendiente. timeout de 12000ms: mismo motivo que el
+    // resto de tests de este describe (KPI animado, useCountUp).
+    await waitFor(() => {
+      expect(pending.getByText(money("-10,00 €"))).toBeInTheDocument();
+    }, { timeout: 12000 });
     // El detalle ("Nada pendiente"/"N pagos pendientes") vive ahora en el
     // tooltip de la tarjeta (rediseño de portada, lote 2026-09-26: esta
     // información pasó del bento a la fila de KPIs, reutilizando
@@ -155,8 +163,8 @@ describe("HomeTab — Pendiente de cobrar", () => {
     // hace `createPortal` fuera del propio botón, así que se busca con
     // `screen`, no con `pending` (acotado al testid de la tarjeta).
     await userEvent.click(pending.getByLabelText("Info: Pendiente de cobrar"));
-    expect(screen.getByText("Nada pendiente")).toBeInTheDocument();
-  });
+    expect(screen.getByText("1 pago pendiente")).toBeInTheDocument();
+  }, 15000);
 
   // testTimeout explícito: mismo motivo que los tests anteriores del
   // describe (waitFor a 12000ms bajo un testTimeout de Vitest de 5000ms

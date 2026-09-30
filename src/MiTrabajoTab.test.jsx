@@ -316,7 +316,7 @@ function mixedDataset() {
 describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
   beforeEach(() => localStorage.clear());
 
-  it("por defecto muestra los pendientes de los 3 tipos, con el KPI 'Pendiente de cobrar' limitado a lo que te deben (sin el ajuste negativo)", () => {
+  it("por defecto muestra los pendientes de los 3 tipos, con los KPIs 'Generado'/'Pendiente' contemplando también el ajuste negativo", () => {
     // KPI animado en céntimos (useCountUp, motion.js) — un waitFor con
     // timeout fijo resultó frágil bajo carga (toda la suite a la vez):
     // el conteo necesita llegar prácticamente al 100% de su propia
@@ -332,10 +332,21 @@ describe("MiTrabajoTab — unificación de Curso/Comisión/Ajuste", () => {
       renderMiTrabajo(mixedDataset());
 
       expect(screen.getByRole("button", { name: "Pendientes · 3" })).toHaveAttribute("aria-pressed", "true");
-      expect(screen.getByText(money("30,00 €"))).toBeInTheDocument(); // KPI: 20 (curso) + 10 (comisión), sin el ajuste
+      // Pedido explícito del usuario (2026-09-30, bug real en producción):
+      // "lo que me deben y lo que debo influye en la cantidad que gano a
+      // final de mes, tiene que contemplar todo" — 20 (curso) + 10
+      // (comisión) - 15 (ajuste negativo) = 15 en "Pendiente de cobrar"
+      // (deuda acumulada de siempre, sin filtro de mes — los 3
+      // movimientos del dataset son de agosto 2026, así que "Generado"/
+      // "Cobrado", que SÍ filtran por el mes real de hoy, se quedan en
+      // "—", sin datos). Con esa cifra coincidiendo con la del propio
+      // ajuste en la lista, se acota la aserción a la tarjeta para no
+      // confundir una con otra.
+      const pendingTile = screen.getByText("Pendiente de cobrar").closest(".rounded-xl");
+      expect(within(pendingTile).getByText(money("15,00 €"))).toBeInTheDocument();
       expect(screen.getByText(money("20,00 €"))).toBeInTheDocument();
       expect(screen.getByText(money("10,00 €"))).toBeInTheDocument();
-      expect(screen.getByText(money("15,00 €"))).toBeInTheDocument(); // el ajuste sí aparece en la lista
+      expect(screen.getAllByText(money("15,00 €"))).toHaveLength(2); // Pendiente + la fila del ajuste en la lista
       expect(screen.getByText("con Ana", { exact: false })).toBeInTheDocument();
     } finally {
       window.matchMedia = original;
